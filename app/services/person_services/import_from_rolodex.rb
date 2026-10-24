@@ -15,7 +15,8 @@ module PersonServices
   #                        field the archive disagrees on keeps the person's value —
   #                        noted in #differences and as a comment on the person
   #   * already_imported — a person already carries the row's ID
-  #   * skipped          — agency, soft-deleted, or nameless rows
+  #   * skipped          — soft-deleted or nameless rows (an agency row naming no contact
+  #                        person is the agency itself, which the organizations import reads)
   #   * failed           — the Person didn't validate
   #
   # An email field holding no address the person's email validation accepts ("ada@@x.org",
@@ -35,23 +36,16 @@ module PersonServices
   # named handful of rows (the task's FM_IDS), since a row whose created person has since
   # changed their email no longer matches and would be created again.
   class ImportFromRolodex
+    include FilemakerValues
+
     OUTCOMES = %i[created linked already_imported skipped failed].freeze
-    FALSE_FLAGS = %w[0 n no false].freeze
-    DATE_FORMATS = %w[%m/%d/%Y %Y-%m-%d %m-%d-%Y %Y/%m/%d].freeze
-    # A two-digit year below this is read as 20xx, at or above it as 19xx.
-    TWO_DIGIT_YEAR_PIVOT = 10
-    CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "cell" => "personal",
-                      "mobile" => "personal", "work" => "work", "business" => "work",
-                      "professional" => "work", "mailing" => "mailing" }.freeze
     # Answers to "which kind of email is this?" that aren't a kind at all.
     PRECEDENCE_TYPES = %w[preferred primary main].freeze
-    EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
     # EmailPrimary holds a flag, never an address, so only EMail is read for one. The flag
     # says whether EMail is the person's primary email ("1") or their secondary ("2").
     EMAIL_FIELDS = %w[EMail].freeze
     EMAIL_FLAG_FIELD = "EmailPrimary"
     SECONDARY_EMAIL_FLAG = "2"
-    STRING_LIMIT = 255
     BATCH_SIZE = 1_000
 
     # Whether a translated tag lands as primary or additional follows the field (ADR-0007).
@@ -78,6 +72,7 @@ module PersonServices
       @translation = TagTranslation.new
       @staff = StaffTranslation.new
       @import_user_id = Setting.import_user&.id
+      @address_attributes = FmAddressAttributes.new
     end
 
     def call
@@ -125,8 +120,8 @@ module PersonServices
       label = "#{rolodex.fm_id} #{first_name} #{last_name}".squish
 
       return record(:already_imported, label) if !@relink && @imported_codes.include?(rolodex.fm_id)
-      return record(:skipped, "#{label}: agency") if flag?(data["isAgency__c"])
       return record(:skipped, "#{label}: marked deleted") if flag?(data["Delete"])
+      return record(:skipped, "#{label}: agency with no contact person — the organizations import reads it") if rolodex.agency? && (first_name.blank? || last_name.blank?)
       return record(:skipped, "#{label}: missing first or last name") if first_name.blank? || last_name.blank?
 
       row_emails = emails(data)
@@ -261,7 +256,7 @@ module PersonServices
     # The archive words an email field freely ("Attn: someone", a note, two addresses at
     # once), so each is read for the addresses in it; the same one twice counts once.
     def emails(data)
-      EMAIL_FIELDS.flat_map { |field| data[field].to_s.scan(EMAIL_PATTERN) }.select { |email| valid_email?(email) }.uniq(&:downcase)
+      EMAIL_FIELDS.flat_map { |field| email_addresses(data[field]) }.uniq(&:downcase)
     end
 
     def invalid_email_values(data)
@@ -272,10 +267,6 @@ module PersonServices
     def usable_email_value?(value)
       addresses = value.scan(EMAIL_PATTERN)
       addresses.any? && addresses.all? { |email| valid_email?(email) }
-    end
-
-    def valid_email?(email)
-      email.length <= STRING_LIMIT && email.match?(URI::MailTo::EMAIL_REGEXP)
     end
 
     def same?(portal, archive)
@@ -391,20 +382,15 @@ module PersonServices
 
     # Every address the row answers to, not just the one it names as primary —
     # FmRolodex#addresses lists the primary first, so the first that can be built is the
-    # person's primary and the rest ride along. A work address, one the person already
-    # has, and a primary they already hold are all left as they are.
+    # person's primary and the rest ride along. An organization's address (a work address,
+    # or any address on an agency's row), one the person already has, and a primary they
+    # already hold are all left as they are; the organizations import places the first.
     def build_addresses(person, rolodex)
       held = person.addresses.map { |address| address_key(address.street_address, address.city) }
-      attributes = rolodex.addresses.reject { |address| work_address?(rolodex, address) }
-                          .filter_map { |address| address_attributes(address.data) }
+      attributes = rolodex.addresses.reject { |address| rolodex.organization_address?(address) }
+                          .filter_map { |address| @address_attributes.call(address.data) }
                           .reject { |attrs| held.include?(address_key(attrs[:street_address], attrs[:city])) }
       build_primary_first(person.addresses, attributes)
-    end
-
-    # A work address belongs to the person's organization, so the affiliations import brings it in.
-    def work_address?(rolodex, address)
-      address.fm_id == rolodex.data["WorksiteAddrsID"] ||
-        contact_type(address.data["AddrsType"], allowed: Address::CONTACT_TYPES) == "work"
     end
 
     def build_phones(person, rolodex)
@@ -427,113 +413,11 @@ module PersonServices
       value.to_s.gsub(/\D/, "")
     end
 
-    def address_attributes(fields)
-      street = [ street_line(fields), fields["AddrsLine2"] ].filter_map { |line| line.to_s.strip.presence }.join(", ")
-      city = clip(fields["AddrsCity"].to_s.strip)
-      state = clip(fields["AddrsState"].to_s.strip)
-      return if street.blank? || city.blank? || state.blank?
-
-      country = clip(fields["AddrsCountry"])
-      county = county(fields)
-      {
-        street_address: clip(street),
-        city:,
-        state:,
-        zip_code: zip_code(fields),
-        country:,
-        county:,
-        address_type: contact_type(fields["AddrsType"], allowed: Address::CONTACT_TYPES),
-        # FileMaker records a locality only on a project, so a person's own address has
-        # none to carry over and the parts have to say.
-        locality: AddressLocality.for(city:, state:, country:, county:)
-      }
-    end
-
-    # The address's own postal code, or the one it points at in the archive's ZIP table
-    # when it carries none itself — the field it mirrors, and where the county is read.
-    def zip_code(fields)
-      [ fields["AddrsPostalCode"], fields["PostalCodeLookup"] ]
-        .filter_map { |value| value.to_s.strip.presence }.first.to_s.truncate(STRING_LIMIT)
-    end
-
-    def county(fields)
-      zip_counties[zip_lookup(fields)[/\A\d{5}/]]
-    end
-
-    def zip_lookup(fields)
-      (fields["PostalCodeLookup"].presence || fields["AddrsPostalCode"]).to_s.strip
-    end
-
-    # One query for the archive's ~80,000 zip codes beats one per address across a full import.
-    def zip_counties
-      @zip_counties ||= FmPostalCode.pluck(:fm_id, Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(data, '$.County'))"))
-                                    .to_h { |zip, county| [ zip, clip(county) ] }
-    end
-
     def phone_attributes(fields)
       number = clip(fields["PhoneNumber"])
       return if number.blank?
 
       { kind: "phone", value: number, contact_type: contact_type(fields["PhoneType"], allowed: ContactMethod::CONTACT_TYPES) }
-    end
-
-    # The archive's types map onto one set of ours, but each model declares the slice it
-    # accepts — an address can be the mailing one, a phone number can't. A type we can't
-    # place is left blank, which both models then record as unknown.
-    def contact_type(value, allowed:)
-      CONTACT_TYPES[value.to_s.strip.downcase].presence_in(allowed)
-    end
-
-    # The house number has its own field, sometimes already repeated at the front of
-    # the first line.
-    def street_line(fields)
-      number = fields["StreetNo"].to_s.strip
-      line = fields["AddrsLine1"].to_s.strip
-      return line if number.blank? || line[/\A\S+/] == number
-
-      "#{number} #{line}".strip
-    end
-
-    # Every string copied here lands in a varchar(255) the archive's free text isn't
-    # bounded by, and an over-long incidental field would otherwise cost the person —
-    # or, for a column with no length validation behind it, raise mid-import.
-    def clip(value)
-      value.presence && value.to_s.truncate(STRING_LIMIT)
-    end
-
-    def parse_date(value)
-      value = value.to_s.strip
-      return if value.blank?
-
-      DATE_FORMATS.each do |format|
-        parsed = parse_with(value, format)
-        return parsed if parsed
-      end
-      nil
-    end
-
-    # Parsing stops where the format ends, so "10-5-1983" read as %Y-%m-%d takes 19
-    # as the day and drops the 83 — digits left over mean the format split the value
-    # in the wrong place, so the next one gets its turn.
-    def parse_with(value, format)
-      parts = Date._strptime(value, format)
-      return if parts.nil? || parts[:leftover].to_s.match?(/\A\d/)
-
-      expand_century(Date.new(parts[:year], parts[:mon], parts[:mday]))
-    rescue Date::Error, TypeError
-      nil
-    end
-
-    # %Y reads a two-digit year as the year itself, so "10/5/83" is 83 AD. The archive
-    # mixes two- and four-digit years, so a bare pair gets a century: 83 is 1983, 05 is 2005.
-    def expand_century(date)
-      return date if date.year >= 100
-
-      date.change(year: date.year + (date.year < TWO_DIGIT_YEAR_PIVOT ? 2000 : 1900))
-    end
-
-    def flag?(value)
-      value.to_s.strip.presence && !FALSE_FLAGS.include?(value.to_s.strip.downcase)
     end
 
     def ids(people)
