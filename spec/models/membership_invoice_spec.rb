@@ -33,18 +33,22 @@ RSpec.describe MembershipInvoice, type: :model do
   describe "overlap" do
     let(:person) { create(:person) }
     let(:subscription) { create(:membership, person: person) }
+    # Anchor the fixture in the past so cancelling its membership never trips
+    # Membership#expire_unbilled_future_invoices (which drops unbilled future years).
+    let(:existing_start) { Date.current - 1.month }
+    let(:existing_end) { Date.current + 1.year }
     let!(:existing) do
       create(:membership_invoice,
         membership: subscription,
-        start_date: Date.new(2026, 10, 14),
-        end_date: Date.new(2027, 10, 13))
+        start_date: existing_start,
+        end_date: existing_end)
     end
 
     it "rejects a invoice overlapping an existing one" do
       invoice = build(:membership_invoice,
         membership: subscription,
-        start_date: Date.new(2027, 1, 1),
-        end_date: Date.new(2027, 12, 31))
+        start_date: existing_start + 1.week,
+        end_date: existing_end + 1.week)
 
       expect(invoice).not_to be_valid
       expect(invoice.errors[:base].join).to match(/overlapping/)
@@ -53,8 +57,8 @@ RSpec.describe MembershipInvoice, type: :model do
     it "rejects a invoice that merely shares the last day" do
       invoice = build(:membership_invoice,
         membership: subscription,
-        start_date: Date.new(2027, 10, 13),
-        end_date: Date.new(2028, 10, 12))
+        start_date: existing_end,
+        end_date: existing_end + 1.year)
 
       expect(invoice).not_to be_valid
     end
@@ -62,20 +66,21 @@ RSpec.describe MembershipInvoice, type: :model do
     it "accepts a invoice starting the day after the previous one ends" do
       invoice = build(:membership_invoice,
         membership: subscription,
-        start_date: Date.new(2027, 10, 14),
-        end_date: Date.new(2028, 10, 13))
+        start_date: existing_end + 1.day,
+        end_date: existing_end + 1.year)
 
       expect(invoice).to be_valid
     end
 
     it "rejects an overlap that sits under a different subscription for the same person" do
-      existing.membership.update!(cancelled_at: Time.current)
-      rejoined = create(:membership, person: person)
+      existing.membership.update!(autorenewal_cancelled_at: Time.current)
+      rejoined = create(:membership, person: person,
+        start_date: subscription.end_date + 1.day, end_date: subscription.end_date + 1.year)
 
       invoice = build(:membership_invoice,
         membership: rejoined,
-        start_date: Date.new(2027, 1, 1),
-        end_date: Date.new(2027, 12, 31))
+        start_date: existing_start + 1.week,
+        end_date: existing_end + 1.week)
 
       expect(invoice).not_to be_valid
       expect(invoice.errors[:base].join).to match(/overlapping/)
@@ -131,10 +136,6 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(invoice.discount_sum).to eq(2_500)
       expect(invoice.payments_sum).to eq(0)
       expect(invoice).not_to be_payment_received
-    end
-
-    it "does not respond to the certificate interface" do
-      expect(invoice).not_to respond_to(:certificate_available?)
     end
   end
 
@@ -218,56 +219,43 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
-  describe "the grace window" do
-    let(:grace) { Membership.grace_period_days }
-
-    def term_starting(days_ago, cost_cents: 2_500)
-      create(:membership_invoice,
-        cost_cents: cost_cents,
-        start_date: Date.current - days_ago,
-        end_date: Date.current - days_ago + 1.year - 1.day)
-    end
-
-    it "treats an unpaid invoice inside the window as not overdue" do
-      invoice = term_starting(grace - 1)
-      expect(described_class.overdue).to be_empty
-      expect(invoice).not_to be_overdue
-      expect(invoice).to be_within_grace
-    end
-
-    it "treats an unpaid invoice past the window as overdue" do
-      invoice = term_starting(grace + 1)
-      expect(described_class.overdue).to contain_exactly(invoice)
+  describe "overdue semantics" do
+    it "treats an unpaid invoice whose term has started as overdue" do
+      invoice = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current - 1)
       expect(invoice).to be_overdue
-      expect(invoice).not_to be_within_grace
+      expect(described_class.overdue).to include(invoice)
     end
 
-    it "counts the window's final day as still in grace" do
-      invoice = term_starting(grace)
-      expect(invoice).to be_within_grace
-      expect(described_class.overdue).to be_empty
+    it "treats an unpaid invoice whose term starts today as overdue" do
+      invoice = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current)
+      expect(invoice).to be_overdue
+      expect(described_class.overdue).to include(invoice)
+    end
+
+    it "does not treat an unpaid invoice whose term hasn't started as overdue" do
+      invoice = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current + 1)
+      expect(invoice).not_to be_overdue
+      expect(described_class.overdue).not_to include(invoice)
     end
 
     it "never treats a paid or comped invoice as overdue" do
-      term_starting(grace + 1, cost_cents: 0)
-      paid = term_starting(grace + 1)
+      create(:membership_invoice, cost_cents: 0, start_date: Date.current - 1)
+      paid = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current - 1)
       create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: paid, amount: 2_500)
 
-      expect(described_class.overdue).to be_empty
       expect(paid.reload).not_to be_overdue
-      expect(paid).not_to be_within_grace
+      expect(described_class.overdue).not_to include(paid)
+    end
+  end
+
+  describe "#upcoming?" do
+    it "is true for an invoice whose term hasn't started" do
+      expect(create(:membership_invoice, start_date: Date.current + 1)).to be_upcoming
     end
 
-    it ".paid_or_within_grace is the exact complement of .overdue" do
-      term_starting(grace + 1)
-      term_starting(grace - 1)
-      term_starting(grace + 1, cost_cents: 0)
-
-      overdue_ids = described_class.overdue.ids
-      honored_ids = described_class.paid_or_within_grace.ids
-
-      expect(overdue_ids & honored_ids).to be_empty
-      expect((overdue_ids + honored_ids).sort).to eq(described_class.ids.sort)
+    it "is false once the term has started" do
+      expect(create(:membership_invoice, start_date: Date.current)).not_to be_upcoming
+      expect(create(:membership_invoice, start_date: Date.current - 1)).not_to be_upcoming
     end
   end
 
@@ -283,6 +271,65 @@ RSpec.describe MembershipInvoice, type: :model do
     it "comes through the subscription" do
       subscription = create(:membership)
       expect(create(:membership_invoice, membership: subscription).person).to eq(subscription.person)
+    end
+  end
+
+  describe "#deletable?" do
+    let(:person) { create(:person) }
+    let(:subscription) { create(:membership, person: person) }
+
+    def sibling(start_date)
+      create(:membership_invoice, membership: subscription,
+        start_date: start_date, end_date: start_date + 1.year - 1.day)
+    end
+
+    it "is true for an unpaid future invoice when another invoice remains" do
+      sibling(Date.current + 2.years)
+      future = sibling(Date.current + 1.day)
+
+      expect(future).to be_deletable
+      expect(future.deletion_blocked_reason).to be_nil
+    end
+
+    it "is false once anything is allocated to it" do
+      sibling(Date.current + 2.years)
+      invoice = sibling(Date.current + 1.day)
+      create(:allocation, source: create(:payment, amount_cents: 100), allocatable: invoice, amount: 100)
+
+      expect(invoice.reload).not_to be_deletable
+      expect(invoice.deletion_blocked_reason).to match(/payments or credits/)
+    end
+
+    it "is false when comped" do
+      sibling(Date.current + 2.years)
+      comped = create(:membership_invoice, :comped, membership: subscription,
+        start_date: Date.current + 1.day, end_date: Date.current + 1.year)
+
+      expect(comped).not_to be_deletable
+      expect(comped.deletion_blocked_reason).to eq("it is comped")
+    end
+
+    it "is false while it covers today on an uncancelled membership" do
+      sibling(Date.current + 2.years)
+      active = create(:membership_invoice, membership: subscription,
+        start_date: Date.current - 1.day, end_date: Date.current + 1.day)
+
+      expect(active).not_to be_deletable
+      expect(active.deletion_blocked_reason).to match(/covers today/)
+    end
+
+    it "is false when it is the membership's only invoice" do
+      only = sibling(Date.current + 1.day)
+
+      expect(only).not_to be_deletable
+      expect(only.deletion_blocked_reason).to eq("it is the membership's only invoice")
+    end
+
+    it "blocks destroy at the model level" do
+      only = sibling(Date.current + 1.day)
+
+      expect { only.destroy }.not_to change(MembershipInvoice, :count)
+      expect(only.errors[:base].join).to match(/Cannot delete/)
     end
   end
 

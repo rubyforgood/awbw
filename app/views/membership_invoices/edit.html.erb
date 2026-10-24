@@ -21,6 +21,12 @@
       </div>
     </div>
   <% end %>
+
+  <div class="mt-6 flex justify-end border-t border-gray-200 pt-6">
+    <%= button_to "Delete invoice", membership_invoice_path(@membership_invoice),
+          method: :delete, class: button_classes(:danger_outline),
+          data: { turbo_confirm: "Delete this invoice? This cannot be undone." } %>
+  </div>
   <%= render "shared/audit_info", resource: @membership_invoice %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
     <div class="mt-4 flex justify-end">

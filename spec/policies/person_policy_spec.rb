@@ -17,36 +17,6 @@ RSpec.describe PersonPolicy, type: :policy do
     allow(Rails.env).to receive(:production?).and_return(true)
   end
 
-  describe "#own_membership?" do
-    subject { policy_for(record: owned_person, user: user) }
-
-    context "with the person's own user" do
-      let(:user) { owner_user }
-
-      it { is_expected.to be_allowed_to(:own_membership?) }
-    end
-
-    context "with an admin looking at someone else" do
-      let(:user) { admin_user }
-
-      it { is_expected.not_to be_allowed_to(:own_membership?) }
-    end
-
-    context "with another signed-in user" do
-      let(:user) { regular_user }
-
-      it { is_expected.not_to be_allowed_to(:own_membership?) }
-    end
-
-    context "when membership is disabled" do
-      let(:user) { owner_user }
-
-      before { allow(Membership).to receive(:enabled?).and_return(false) }
-
-      it { is_expected.not_to be_allowed_to(:own_membership?) }
-    end
-  end
-
   describe "#index?" do
     context "with admin user" do
       subject { policy_for(user: admin_user) }
@@ -414,7 +384,7 @@ RSpec.describe PersonPolicy, type: :policy do
       ActionController::Parameters.new(
         contact_info: "ada", role: "story_authors", staff_tag_ids: [ "1" ],
         topic_subscription_type_id: [ "2" ], facilitator_status: "active",
-        membership_status: "paid", sector_ids: [ "4" ], age_range_ids: [ "5" ],
+        sector_ids: [ "4" ], age_range_ids: [ "5" ],
         organization_name: "Acme", organization_id: "3"
       )
     end

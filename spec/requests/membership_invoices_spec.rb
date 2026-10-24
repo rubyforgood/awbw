@@ -22,6 +22,14 @@ RSpec.describe "MembershipInvoices", type: :request do
       let(:record) { term_for("Renewal") }
       let(:page_path) { edit_membership_invoice_path(record) }
     end
+
+    it "offers deleting the invoice" do
+      invoice = term_for("Renewal")
+
+      get edit_membership_invoice_path(invoice)
+
+      expect(response.body).to include("Delete invoice")
+    end
   end
 
   describe "GET /membership_invoices" do
@@ -61,7 +69,7 @@ RSpec.describe "MembershipInvoices", type: :request do
       end
 
       it "shows the status badge for an overdue year" do
-        term_for("Behind", start_date: Date.current - Membership.grace_period_days - 1)
+        term_for("Behind", start_date: 60.days.ago)
 
         get membership_invoices_path, headers: frame
 
@@ -70,11 +78,11 @@ RSpec.describe "MembershipInvoices", type: :request do
 
       it "notes a cancelled subscription" do
         invoice = term_for("Gone")
-        invoice.membership.update!(cancelled_at: Time.current)
+        invoice.membership.update!(autorenewal_cancelled_at: Time.current)
 
         get membership_invoices_path, headers: frame
 
-        expect(response.body).to include("Membership cancelled")
+        expect(response.body).to include("Membership renewals stopped")
       end
 
       it "says so when there are none" do
@@ -206,7 +214,7 @@ RSpec.describe "MembershipInvoices", type: :request do
       end
 
       it "adds a year to a cancelled subscription" do
-        subscription.update!(cancelled_at: Time.current)
+        subscription.update!(autorenewal_cancelled_at: Time.current)
 
         expect { post membership_membership_invoices_path(subscription), params: valid_params }
           .to change(MembershipInvoice, :count).by(1)
@@ -280,6 +288,54 @@ RSpec.describe "MembershipInvoices", type: :request do
         }
 
         expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+  end
+
+  describe "DELETE /membership_invoices/:id" do
+    let(:person) { create(:person) }
+    let(:subscription) { create(:membership, person: person) }
+
+    def invoice(start_date)
+      create(:membership_invoice, membership: subscription,
+        start_date: start_date, end_date: start_date + 1.year - 1.day)
+    end
+
+    it "is not available to a non-admin" do
+      record = invoice(Date.current + 1.day)
+      sign_in create(:user)
+
+      expect { delete membership_invoice_path(record) }.not_to change(MembershipInvoice, :count)
+      expect(response).to redirect_to(root_path)
+    end
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "deletes an unpaid invoice when another invoice remains" do
+        invoice(Date.current + 2.years)
+        record = invoice(Date.current + 1.day)
+
+        expect { delete membership_invoice_path(record) }.to change(MembershipInvoice, :count).by(-1)
+        expect(response).to redirect_to(person_memberships_path(person))
+        expect(flash[:notice]).to eq("Membership invoice deleted.")
+      end
+
+      it "refuses to delete the membership's only invoice" do
+        record = invoice(Date.current + 1.day)
+
+        expect { delete membership_invoice_path(record) }.not_to change(MembershipInvoice, :count)
+        expect(response).to redirect_to(person_memberships_path(person))
+        expect(flash[:alert]).to match(/only invoice/)
+      end
+
+      it "refuses to delete an invoice with payments" do
+        invoice(Date.current + 2.years)
+        record = invoice(Date.current + 1.day)
+        create(:allocation, source: create(:payment, amount_cents: 100), allocatable: record, amount: 100)
+
+        expect { delete membership_invoice_path(record) }.not_to change(MembershipInvoice, :count)
+        expect(flash[:alert]).to match(/payments or credits/)
       end
     end
   end

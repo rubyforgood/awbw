@@ -49,12 +49,6 @@
               blank: "Any status", field_class: search_field_class,
               wrapper_class: "w-full" %>
 
-        <!-- Membership status -->
-        <%= render "shared/filter_select", param: :membership_status, label: "Membership status",
-              options: Person::MEMBERSHIP_STATUS_FILTER_OPTIONS, selected: params[:membership_status],
-              blank: "Any status", field_class: search_field_class,
-              wrapper_class: "w-full" %>
-
         <!-- Staff tag -->
         <% if allowed_to?(:index?, StaffTag) %>
           <%= render "shared/filter_multiselect", param: :staff_tag_ids, label: "Staff tag",

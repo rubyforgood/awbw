@@ -181,10 +181,6 @@
                   label: "Renewal window (days)",
                   placeholder: Setting.membership_renewal_window_days,
                   hint: "How many days before a membership term ends its renewal invoice is generated" %>
-      <%= f.input :membership_grace_period_days,
-                  label: "Grace period (days)",
-                  placeholder: Setting.membership_grace_period_days,
-                  hint: "How long past a term's start an unpaid membership invoice still reads as current" %>
     </section>
 
     <%= f.button :submit, "Save settings", class: button_classes(:primary) %>

@@ -66,16 +66,15 @@ RSpec.describe Setting do
     it "degrades to the built-in defaults with nothing configured" do
       expect(described_class.organization_name).to eq("A Window Between Worlds")
       expect(described_class.invoice_prefix).to eq("INV")
-      expect(described_class.annual_membership_cents).to eq(2500)
+      expect(described_class.annual_membership_cents).to eq(10000)
       expect(described_class.membership_renewal_window_days).to eq(30)
-      expect(described_class.membership_grace_period_days).to eq(30)
       expect(described_class.home_featured_stories_limit).to be_nil
     end
 
     it "lets a stored zero win over the default" do
-      described_class.create!(membership_grace_period_days: 0)
+      described_class.create!(membership_renewal_window_days: 0)
 
-      expect(described_class.membership_grace_period_days).to eq(0)
+      expect(described_class.membership_renewal_window_days).to eq(0)
     end
   end
 

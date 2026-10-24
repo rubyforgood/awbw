@@ -315,7 +315,7 @@ Rails.application.routes.draw do
       post :send_form_link
     end
     resources :comments, only: [ :create, :update ]
-    resources :memberships, only: [ :index, :new, :create ]
+    resources :memberships, only: [ :index, :new, :create ], controller: "people/memberships"
   end
   resources :comments_and_communications, only: [ :index ] do
     collection do
@@ -375,12 +375,17 @@ Rails.application.routes.draw do
     post :revert, on: :member
   end
 
-  resources :memberships, only: [ :edit, :update ] do
+  resources :memberships, only: [ :index, :edit, :update, :destroy ] do
     resources :membership_invoices, only: [ :new, :create ]
   end
 
-  resources :membership_invoices, only: [ :index, :show, :edit, :update ]
-  resources :membership_checkouts, only: [ :create ]
+  resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ]
+
+  namespace :memberships do
+    resources :subscription_checkouts, only: [ :create ]
+    resources :invoice_checkouts, only: [ :create ]
+    resources :billing_portals, only: [ :create ]
+  end
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses

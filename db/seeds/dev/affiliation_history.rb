@@ -114,7 +114,9 @@ else
     note.(first_facilitator, "Minted from the Foundations training roster.", year.(7) + 2.days)
 
     # ── 6 years ago: first membership year, paid ─────────────────────────────
-    subscription = person.memberships.create!
+    # Reuse an existing uncancelled membership if another seed gave this person
+    # one (e.g. membership.rb's checkout demos), so seed order can't collide.
+    subscription = person.memberships.autorenewal_not_cancelled.first || person.memberships.create!
     subscription.update_columns(created_at: year.(6), updated_at: year.(6))
     track.("create", subscription, year.(6), { resource_title: "Membership" })
 

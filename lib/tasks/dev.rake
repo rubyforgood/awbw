@@ -131,6 +131,11 @@ namespace :db do
       load Rails.root.join("db/seeds/dev/membership.rb")
     end
 
+    desc "Seed 90 more memberships so every admin overview tab paginates (dev only)"
+    task membership_pagination: :environment do
+      load Rails.root.join("db/seeds/dev/membership_pagination.rb")
+    end
+
     desc "Seed several years of trainings, memberships, comments and affiliation edits for one person (dev only)"
     task affiliation_history: :environment do
       load Rails.root.join("db/seeds/dev/affiliation_history.rb")

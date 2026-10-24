@@ -1,70 +1,6 @@
 require "rails_helper"
 
 RSpec.describe Person, type: :model do
-  describe "#membership_current?" do
-    let(:person) { create(:person) }
-    let(:subscription) { create(:membership, person: person) }
-
-    def term(cost_cents:, start_date: Date.current, subscription: nil)
-      create(:membership_invoice,
-        membership: subscription || create(:membership, person: person),
-        cost_cents: cost_cents,
-        start_date: start_date,
-        end_date: start_date + 1.year - 1.day)
-    end
-
-    it "is false with no membership at all" do
-      expect(person).not_to be_membership_current
-    end
-
-    it "is true on a comped term" do
-      term(cost_cents: 0, subscription: subscription)
-      expect(person).to be_membership_current
-    end
-
-    it "is true on a paid term" do
-      paid = term(cost_cents: 2_500, subscription: subscription)
-      create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: paid, amount: 2_500)
-
-      expect(person).to be_membership_current
-    end
-
-    it "is true on an unpaid term still inside the grace window" do
-      term(cost_cents: 2_500, start_date: Date.current - 1, subscription: subscription)
-      expect(person).to be_membership_current
-    end
-
-    it "is false on an unpaid term past the grace window" do
-      term(cost_cents: 2_500,
-        start_date: Date.current - Membership.grace_period_days - 1,
-        subscription: subscription)
-
-      expect(person).not_to be_membership_current
-    end
-
-    it "is false when the only comped term has expired" do
-      term(cost_cents: 0, start_date: Date.current - 2.years, subscription: subscription)
-      expect(person).not_to be_membership_current
-    end
-
-    it "is false when a comped term has not started yet" do
-      term(cost_cents: 0, start_date: Date.current + 1.day, subscription: subscription)
-      expect(person).not_to be_membership_current
-    end
-
-    it "still counts a term whose subscription was cancelled, until the term ends" do
-      term(cost_cents: 0, subscription: subscription)
-      subscription.update!(cancelled_at: Time.current)
-
-      expect(person.reload).to be_membership_current
-    end
-
-    it "answers for a past date too" do
-      term(cost_cents: 0, start_date: Date.current - 2.years, subscription: subscription)
-      expect(person.membership_current?(as_of: Date.current - 18.months)).to be(true)
-    end
-  end
-
   describe "associations" do
     it { should have_one(:user) }
     it { should belong_to(:created_by).class_name("User").optional(true) }
@@ -906,47 +842,6 @@ RSpec.describe Person, type: :model do
       end
     end
 
-    context "membership_status" do
-      it "active: includes people with a non-cancelled membership" do
-        member = create(:person, first_name: "Member", last_name: "Active")
-        create(:membership, person: member)
-        results = Person.search_by_params(membership_status: "active")
-        expect(results).to include(member)
-        expect(results).not_to include(person_alice)
-      end
-
-      it "inactive: includes people whose only membership is cancelled" do
-        former = create(:person, first_name: "Former", last_name: "Member")
-        create(:membership, :cancelled, person: former)
-        results = Person.search_by_params(membership_status: "inactive")
-        expect(results).to include(former)
-        expect(results).not_to include(person_alice)
-      end
-
-      it "paid: includes people with a covered current invoice" do
-        member = create(:person, first_name: "Paid", last_name: "Member")
-        create(:membership_invoice, :comped, membership: create(:membership, person: member))
-        results = Person.search_by_params(membership_status: "paid")
-        expect(results).to include(member)
-      end
-
-      it "due: includes people owing on a current invoice still within grace" do
-        member = create(:person, first_name: "Due", last_name: "Member")
-        create(:membership_invoice, membership: create(:membership, person: member),
-                                    start_date: Date.current)
-        results = Person.search_by_params(membership_status: "due")
-        expect(results).to include(member)
-      end
-
-      it "overdue: includes people owing past the grace period" do
-        member = create(:person, first_name: "Overdue", last_name: "Member")
-        create(:membership_invoice, membership: create(:membership, person: member),
-                                    start_date: 60.days.ago, end_date: 305.days.from_now)
-        results = Person.search_by_params(membership_status: "overdue")
-        expect(results).to include(member)
-      end
-    end
-
     context "facilitator_status" do
       # person_alice and person_bob each already have one active facilitator affiliation.
 
@@ -1254,5 +1149,53 @@ RSpec.describe Person, "scholarship index helpers" do
       expect(Person.find_by_any_email(nil)).to be_nil
       expect(Person.find_by_any_email("nobody@example.com")).to be_nil
     end
+  end
+end
+
+RSpec.describe Person, "#current_membership" do
+  let(:person) { create(:person) }
+
+  def subscribe_to(membership)
+    customer = Pay::Customer.create!(owner: person, processor: "stripe", processor_id: "cus_test", default: true)
+    Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_test",
+      processor_plan: "membership", status: "active", quantity: 1,
+      metadata: { "membership_id" => membership.id })
+  end
+
+  it "prefers the membership the live subscription belongs to over a newer cancelled one" do
+    live = create(:membership, person: person)
+    subscribe_to(live)
+    create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current + 2.years, end_date: Date.current + 3.years)
+
+    expect(person.current_membership).to eq(live)
+  end
+
+  it "falls back to the active membership when there is no subscription" do
+    active = create(:membership, person: person)
+
+    expect(person.current_membership).to eq(active)
+  end
+
+  it "falls back to the soonest upcoming membership" do
+    create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current + 2.years, end_date: Date.current + 3.years)
+    sooner = create(:membership, person: person,
+      start_date: Date.current + 1.month, end_date: Date.current + 1.year)
+
+    expect(person.current_membership).to eq(sooner)
+  end
+
+  it "falls back to the most recent membership when all have ended" do
+    create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current - 3.years, end_date: Date.current - 2.years)
+    newer = create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current - 1.year, end_date: Date.current - 1.day)
+
+    expect(person.current_membership).to eq(newer)
+  end
+
+  it "returns nil when the person has no membership" do
+    expect(person.current_membership).to be_nil
   end
 end

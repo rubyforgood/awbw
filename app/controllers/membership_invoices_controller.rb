@@ -1,6 +1,6 @@
 class MembershipInvoicesController < ApplicationController
   before_action :set_membership, only: [ :new, :create ]
-  before_action :set_membership_invoice, only: [ :show, :edit, :update ]
+  before_action :set_membership_invoice, only: [ :show, :edit, :update, :destroy ]
 
   def index
     authorize!
@@ -50,6 +50,21 @@ class MembershipInvoicesController < ApplicationController
         notice: "Membership invoice updated.", status: :see_other
     else
       render :edit, status: :unprocessable_content
+    end
+  end
+
+  def destroy
+    authorize! @membership_invoice
+    person = @membership_invoice.person
+
+    if @membership_invoice.deletable?
+      @membership_invoice.destroy!
+      redirect_to person_memberships_path(person),
+        notice: "Membership invoice deleted.", status: :see_other
+    else
+      redirect_to person_memberships_path(person),
+        alert: "Cannot delete this invoice because #{@membership_invoice.deletion_blocked_reason}.",
+        status: :see_other
     end
   end
 

@@ -1,5 +1,5 @@
 class MembershipInvoice < ApplicationRecord
-  include Registerable
+  include PersonNameSearchable, Registerable
 
   has_paper_trail
 
@@ -7,34 +7,25 @@ class MembershipInvoice < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :allocations, as: :allocatable, dependent: :destroy
-  has_many :payments, through: :allocations, source: :source, source_type: "Payment"
 
   delegate :person, to: :membership
   alias_method :registrant, :person
 
-  scope :by_person_name, ->(query) {
-    return all if query.blank?
-    needle = "%#{sanitize_sql_like(query.to_s.strip.downcase)}%"
-    joins(membership: :person).where(
-      "LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :needle " \
-      "OR LOWER(people.first_name) LIKE :needle OR LOWER(people.last_name) LIKE :needle",
-      needle: needle)
-  }
+  def self.person_name_join = { membership: :person }
 
   scope :active_on, ->(date = Date.current) { where(start_date: ..date, end_date: date..) }
   scope :expiring_between, ->(from, to) { where(end_date: from..to) }
 
   scope :paid_in_full, -> { where(cost_covered_by_allocations) }
   scope :not_paid_in_full, -> { where(chargeable.and(cost_covered_by_allocations.not)) }
+
   scope :overdue, ->(as_of = Date.current) {
-    not_paid_in_full.where(start_date: ...(as_of - Membership.grace_period_days))
-  }
-  # Defined as the complement to `overdue` so it can't drift.
-  scope :paid_or_within_grace, ->(as_of = Date.current) {
-    where.not(id: MembershipInvoice.overdue(as_of))
+    not_paid_in_full.where(start_date: ..as_of)
   }
 
   before_validation :derive_end_date, on: :create
+  before_destroy :prevent_destroy_unless_deletable
+  after_save :sync_membership_dates, if: :paid_in_full?
 
   validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
@@ -69,13 +60,11 @@ class MembershipInvoice < ApplicationRecord
   def overdue?(as_of = Date.current)
     return false if paid_in_full? || start_date.blank?
 
-    as_of > start_date + Membership.grace_period_days
+    start_date <= as_of
   end
 
-  def within_grace?(as_of = Date.current)
-    return false if paid_in_full?
-
-    !overdue?(as_of)
+  def upcoming?(as_of = Date.current)
+    start_date.present? && start_date > as_of
   end
 
   def cost_dollars
@@ -86,7 +75,31 @@ class MembershipInvoice < ApplicationRecord
     self.cost_cents = (value.to_d * 100).to_i if value.present?
   end
 
-  private
+  attr_accessor :skip_deletion_guard
+
+  def deletable?
+    deletion_blocked_reason.nil?
+  end
+
+  def deletion_blocked_reason
+    return "it has payments or credits applied" if allocations.exists?
+    return "it is comped" if cost_cents.to_i.zero?
+    return "it covers today — click Cancel recurring first" if active_on?(Date.current) && !membership.autorenewal_cancelled?
+    return "it is the membership's only invoice" unless other_invoices?
+
+    nil
+  end
+
+  def other_invoices?
+    membership.membership_invoices.where.not(id: id).exists?
+  end
+
+  def prevent_destroy_unless_deletable
+    return if skip_deletion_guard || deletable?
+
+    errors.add(:base, "Cannot delete this invoice because #{deletion_blocked_reason}.")
+    throw :abort
+  end
 
   def derive_end_date
     return if end_date.present? || start_date.blank?
@@ -118,5 +131,11 @@ class MembershipInvoice < ApplicationRecord
 
     errors.add(:cost_cents,
       "can't be less than the amount already allocated (#{MoneyFormatter.dollars_from_cents(allocations_sum)})")
+  end
+
+  private
+
+  def sync_membership_dates
+    membership.sync_dates_from_invoice(self)
   end
 end
