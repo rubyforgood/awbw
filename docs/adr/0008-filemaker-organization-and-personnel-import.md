@@ -53,6 +53,12 @@ Constraints already decided elsewhere:
   - **A name match only reaches an org carrying no code from the same table.** One already
     holding another project's code is a namesake; the new org is named `"Name (P1234)"`,
     since org names are unique.
+  - **Organization type** comes from the FileMaker organization's `OrgType`, else the
+    project's `AgencyType`, first match winning: "501" or "nonprofit" → 501c3/nonprofit;
+    "for-profit" or "LLC" → For-profit; "government" or "govt" → Government agency; "Other"
+    → Other. Any other word ("School", "Educational Institution", "Individual", "Grassroots")
+    is Other with the word as its description. A value naming two types, as FileMaker's
+    multi-select stored them, takes the first.
   - Every FileMaker organization comes over, whether or not a project or person points at it
     (decided 2026-10-24).
 - **Agencies:** a Rolodex card flagged `isAgency__c` is the agency's own card. Its website,
@@ -64,14 +70,15 @@ Constraints already decided elsewhere:
   between the person (by Rolodex code) and the project's org, carrying `PrsnlRecID` as its
   `filemaker_code` so each row imports once. `event_registration_id` stays NULL — these are
   historical, not training-minted.
-  - **Role:** a blank role or "Facilitator" is a Facilitator affiliation. A role naming more
-    ("Lead Facilitator") is a Facilitator affiliation plus a job affiliation with that title,
-    as registration mints them (ADR-0003 D1); any other role ("Supervisor") is a job
-    affiliation alone.
+  - **Role:** FileMaker calls a facilitator a **Leader** (8,112 of 8,907 rows). A Leader is a
+    Facilitator affiliation. A **Liaison** (611) or **Assistant** (232) supports the program
+    without facilitating it, so each is an undated job affiliation with that title
+    (ADR-0003 D1). A blank (80) or stray role reads as a Leader.
   - **Dates:** Personnel rows carry none of their own, so the assignment starts on
-    `DateEntered` and ends on the project's `CloseDate` (else `EndDate`). A `Status` outside
-    `ACTIVE_STATUSES` ends it now, undated (`inactive`). The run tallies every Status value
-    and how it was read, so the list can be corrected before the real run.
+    `DateEntered` and ends on the project's `CloseDate` (else `EndDate`). Only `Status`
+    "Active" (1,774) stays open; Inactive (7,220), Pending, Suspended, blank, and values
+    typed over each other ("ActiveInactive") end it now, undated (`inactive`). The run tallies
+    every Status and Role value and how it was read.
   - An existing same-title affiliation at that org is linked (takes the code, fills blank
     dates) unless it already records another Personnel row — a second stint stays its own row.
 - **People-to-organizations → job affiliation:** an `fm_people_to_organizations` row becomes
@@ -110,10 +117,11 @@ the real run.
 - **Reconcile vs. history.** Still open. The reconcile page ends facilitator affiliations no
   attended training backs, hand-entered ones included, and imported personnel rows are
   hand-entered by that test. Exempt rows carrying a `PS…` code, or let reconcile end them?
-- **Which `Status` values mean active** — provisionally "Active" and "Current"
-  (`AffiliationServices::ImportFromFilemaker::ACTIVE_STATUSES`); the dry run's tally is the
-  check. A closed project's `CloseDate` (else `EndDate`) ends every affiliation under it.
-  `AgreementStatus` isn't read.
+- **Which `Status` values mean active** — only "Active", from the production values profiled
+  2026-10-24 (see Personnel above). A closed project's `CloseDate` (else `EndDate`) ends every
+  affiliation under it. `AgreementStatus` isn't read: 8,376 of 8,907 rows leave it blank.
+- **Is an Assistant a facilitator?** Read as a job for now, so assistants don't count toward
+  program status.
 - **Merged projects** (`MergerWithID`): folded — the merged-away project's code joins the
   survivor's org, so its personnel land there. One the portal already keeps as its own org
   is reported for a hand merge rather than merged automatically.

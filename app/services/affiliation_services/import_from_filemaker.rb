@@ -3,11 +3,10 @@ module AffiliationServices
   # (ADR-0008), after the Rolodex and organizations passes have made both ends. Reads, in
   # order:
   #
-  #   1. Personnel (FmPersonnel) — a person staffing a project's art program. A facilitating
-  #      role becomes a Facilitator affiliation, dated from when the row was entered to when
-  #      the project closed; any more specific role ("Lead Facilitator", "Supervisor") also
-  #      becomes a job affiliation with that title (ADR-0003 D1). Each carries the row's
-  #      PrsnlRecID as its filemaker_code.
+  #   1. Personnel (FmPersonnel) — a person staffing a project's art program. A Leader
+  #      becomes a Facilitator affiliation, dated from when the row was entered to when the
+  #      project closed; a Liaison or Assistant becomes an undated job affiliation with that
+  #      title (ADR-0003 D1). Each carries the row's PrsnlRecID as its filemaker_code.
   #   2. People-to-organizations (FmPeopleToOrganization) — a job at an organization, with
   #      its title, carrying the row's RecordID.
   #   3. The Rolodex card itself (FmRolodex) — the organization its OrgID (or its typed
@@ -22,17 +21,20 @@ module AffiliationServices
   # dates, keeping its own where FileMaker disagrees (noted in #differences and as a
   # comment on the affiliation).
   #
-  # None of these is minted from a training, so event_registration_id stays NULL and the
-  # training reconciliation leaves them alone unless an admin includes hand-made rows.
+  # None of these is minted from a training, so event_registration_id stays NULL: the
+  # reconcile page treats them as hand-entered rows.
   class ImportFromFilemaker
     include FilemakerValues
 
     OUTCOMES = %i[created linked already_imported skipped failed].freeze
     BATCH_SIZE = 1_000
-    # Personnel Status values that mean the person still staffs the program. Anything else
-    # reads as ended — over-reporting active programs would skew program status.
-    ACTIVE_STATUSES = %w[active current].freeze
-    FACILITATING_ROLE = /facilitat/i
+    # Personnel Status values that mean the person still staffs the program. Anything else —
+    # Inactive, Pending, Suspended, a blank, or two values typed over each other — reads as
+    # ended, since over-reporting active programs would skew program status.
+    ACTIVE_STATUSES = %w[active].freeze
+    # FileMaker calls a facilitator a Leader. These other roles support the program without
+    # facilitating it, so they're jobs at the organization rather than facilitation.
+    JOB_ROLES = { "liaison" => "Liaison", "assistant" => "Assistant" }.freeze
     SOURCES = { FmPersonnel => "Personnel", FmPeopleToOrganization => "People-to-organizations", FmRolodex => "Rolodex" }.freeze
 
     attr_reader :results, :differences, :statuses, :roles
@@ -96,21 +98,17 @@ module AffiliationServices
       return record(:skipped, "#{label}: project #{data["ProjectID"].presence || "(none)"} wasn't imported") unless organization
 
       dates = personnel_dates(data, @projects[data["ProjectID"].to_s])
-      titles(data["Role"]).each do |title|
-        attributes = title == Affiliation::FACILITATOR_TITLE ? dates : dates.except(:start_date)
-        people.each { |person| affiliate(person, organization, row, label, title:, attributes:, codes: @personnel_ids) }
-      end
+      title = title_for(data["Role"])
+      attributes = title == Affiliation::FACILITATOR_TITLE ? dates : dates.except(:start_date)
+      people.each { |person| affiliate(person, organization, row, label, title:, attributes:, codes: @personnel_ids) }
     end
 
-    # Personnel are the people staffing the art program, so a row with no role is a
-    # facilitator. A role saying more than that is also a job title (ADR-0003 D1).
-    def titles(role)
-      role = clip(role.to_s.squish)
-      @roles[role.presence || "(blank)"] += 1
-      return [ Affiliation::FACILITATOR_TITLE ] if role.blank? || role.casecmp?(Affiliation::FACILITATOR_TITLE)
-      return [ role ] unless role.match?(FACILITATING_ROLE)
-
-      [ Affiliation::FACILITATOR_TITLE, role ]
+    # Nearly every Personnel row is a Leader, so a blank or unrecognized role is one too.
+    def title_for(role)
+      role = role.to_s.squish
+      title = JOB_ROLES.fetch(role.downcase, Affiliation::FACILITATOR_TITLE)
+      @roles["#{role.presence || "(blank)"} → #{title}"] += 1
+      title
     end
 
     # Personnel rows carry no dates of their own: the assignment starts when it was entered

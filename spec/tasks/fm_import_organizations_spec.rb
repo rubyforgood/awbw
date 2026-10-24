@@ -13,7 +13,7 @@ RSpec.describe "fm:import_organizations" do
   before do
     FmOrganization.create!(fm_id: "ORG00001", data: { "OrgName" => "Harbor House" })
     FmProject.create!(fm_id: "P0001", data: { "OrgID" => "ORG00001", "ProjectName" => "Harbor House Art Program" })
-    FmPersonnel.create!(fm_id: "PS0001", data: { "PersonID" => "00200", "ProjectID" => "P0001", "Role" => "Facilitator", "Status" => "Active" })
+    FmPersonnel.create!(fm_id: "PS0001", data: { "PersonID" => "00200", "ProjectID" => "P0001", "Role" => "Leader", "Status" => "Active" })
   end
 
   def run_task(dry_run: true, task: "fm:import_organizations", run: nil)
