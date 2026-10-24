@@ -3,11 +3,12 @@ module AffiliationServices
   # (ADR-0008), after the Rolodex and organizations passes have made both ends. Reads, in
   # order:
   #
-  #   1. Personnel (FmPersonnel) — a person staffing a project's art program. A Leader
-  #      becomes a Facilitator affiliation marked primary contact, dated from when the row
-  #      was entered to when the project closed. A Liaison (also a primary contact) or Assistant becomes an affiliation
-  #      with that title over the same dates, plus a Facilitator affiliation beside it unless
-  #      one with those dates already exists. Each carries the row's PrsnlRecID as its filemaker_code.
+  #   1. Personnel (FmPersonnel) — a person staffing a project's art program. A Leader or
+  #      Liaison becomes a Facilitator affiliation marked primary contact, dated from when the
+  #      row was entered to when the project closed, with a comment naming the role. An
+  #      Assistant becomes an Assistant affiliation over the same dates, plus a Facilitator
+  #      affiliation beside it unless one with those dates already exists. Each carries the
+  #      row's PrsnlRecID as its filemaker_code.
   #   2. People-to-organizations (FmPeopleToOrganization) — a job at an organization, with
   #      its title, carrying the row's RecordID.
   #   3. The Rolodex card itself (FmRolodex) — the organization its OrgID (or its typed
@@ -33,13 +34,11 @@ module AffiliationServices
     # Inactive, Pending, Suspended, a blank, or two values typed over each other — reads as
     # ended, since over-reporting active programs would skew program status.
     ACTIVE_STATUSES = %w[active].freeze
-    # FileMaker calls a facilitator a Leader, which the portal records as a Facilitator who is
-    # a primary contact; prod's Liaisons are primary contacts too. A Liaison or Assistant
-    # title isn't itself facilitation, so it never counts toward program status.
-    JOB_ROLES = { "liaison" => { title: "Liaison", primary_contact: true },
-                  "assistant" => { title: "Assistant", primary_contact: false } }.freeze
-    LEADER = { title: Affiliation::FACILITATOR_TITLE, primary_contact: true }.freeze
+    # A Leader or Liaison is a Facilitator who is a primary contact, the shape prod already
+    # gives them. An Assistant keeps the title, which isn't itself facilitation.
+    JOB_ROLES = { "assistant" => "Assistant" }.freeze
     LEGACY_LEADER_TITLE = "Leader"
+    ROLE_COMMENT_TOPIC = "FileMaker import"
     SOURCES = { FmPersonnel => "Personnel", FmPeopleToOrganization => "People-to-organizations", FmRolodex => "Rolodex" }.freeze
 
     attr_reader :results, :differences, :statuses, :roles
@@ -103,19 +102,33 @@ module AffiliationServices
       return record(:skipped, "#{label}: project #{data["ProjectID"].presence || "(none)"} wasn't imported") unless organization
 
       dates = personnel_dates(data, @projects[data["ProjectID"].to_s])
-      role = role_for(data["Role"])
+      role = data["Role"].to_s.squish
+      title = title_for(role)
       people.each do |person|
-        affiliate(person, organization, row, label, title: role[:title], attributes: dates.merge(primary_contact: role[:primary_contact]), codes: @personnel_ids)
-        next if role == LEADER || facilitator_for?(person, organization, dates)
+        if title == Affiliation::FACILITATOR_TITLE
+          affiliation = affiliate(person, organization, row, label, title:, attributes: dates.merge(primary_contact: true), codes: @personnel_ids)
+          note_role(affiliation, row, role) if affiliation && role.present?
+          next
+        end
+
+        affiliate(person, organization, row, label, title:, attributes: dates.merge(primary_contact: false), codes: @personnel_ids)
+        next if facilitator_for?(person, organization, dates)
 
         create(person, organization, row, label, title: Affiliation::FACILITATOR_TITLE,
                attributes: dates.merge(primary_contact: false), code: row.fm_id)
       end
     end
 
-    # A Liaison or Assistant also facilitated over the same stretch, as prod's January 2026
-    # conversion recorded them: a Facilitator affiliation beside the role, unless one with the
-    # same dates is already there.
+    # Folding Leader and Liaison into Facilitator drops the word FileMaker used, so the
+    # affiliation keeps it.
+    def note_role(affiliation, row, role)
+      affiliation.comments.create!(topic: ROLE_COMMENT_TOPIC,
+                                   body: "Marked as #{role} in FileMaker (Personnel #{row.fm_id}) at the time of the FileMaker import.")
+    end
+
+    # An Assistant also facilitated over the same stretch, as prod's January 2026 conversion
+    # recorded them: a Facilitator affiliation beside the role, unless one with the same
+    # dates is already there.
     def facilitator_for?(person, organization, dates)
       person.affiliations.where(organization:).any? do |affiliation|
         same_title?(affiliation.title, Affiliation::FACILITATOR_TITLE) &&
@@ -124,11 +137,10 @@ module AffiliationServices
     end
 
     # Nearly every Personnel row is a Leader, so a blank or unrecognized role is one too.
-    def role_for(role)
-      role = role.to_s.squish
-      mapped = JOB_ROLES.fetch(role.downcase, LEADER)
-      @roles["#{role.presence || "(blank)"} → #{mapped[:title]}"] += 1
-      mapped
+    def title_for(role)
+      title = JOB_ROLES.fetch(role.downcase, Affiliation::FACILITATOR_TITLE)
+      @roles["#{role.presence || "(blank)"} → #{title}"] += 1
+      title
     end
 
     # Personnel rows carry no dates of their own: the assignment starts when it was entered
@@ -222,6 +234,7 @@ module AffiliationServices
       @affiliations.add(row.fm_id, affiliation.id) if codes
       note_differences(affiliation, row, label, kept) if kept.any?
       record(:linked, "#{label} → affiliation ##{affiliation.id}")
+      affiliation
     end
 
     # A blank date takes the archive's. The archive's status only ends an affiliation the
@@ -257,6 +270,7 @@ module AffiliationServices
 
       @affiliations.add(code, affiliation.id) if code
       record(:created, "#{label} → affiliation ##{affiliation.id}#{" (#{title})" if title}")
+      affiliation
     end
 
     def updated_by(data)

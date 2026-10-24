@@ -42,25 +42,43 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       expect(import.statuses).to eq("Dropped → ended" => 1)
     end
 
-    it "gives a Liaison or Assistant their role plus a Facilitator affiliation over the same dates" do
+    it "makes a Liaison a primary-contact Facilitator, noting the role FileMaker gave" do
       personnel("PS0001", Role: "Liaison")
+
+      import = described_class.new.call
+
+      affiliation = person.affiliations.sole
+      expect(affiliation).to have_attributes(title: "Facilitator", primary_contact: true, start_date: Date.new(2015, 3, 1))
+      expect(affiliation.comments.sole).to have_attributes(topic: "FileMaker import", body: a_string_including("Liaison", "PS0001"))
+      expect(import.roles).to eq("Liaison → Facilitator" => 1)
+    end
+
+    it "notes a Leader's role too, but not a blank one" do
+      personnel("PS0001")
+      personnel("PS0002", Role: "", DateEntered: "1/5/2018")
+
+      import
+
+      expect(Comment.where(commentable: person.affiliations).pluck(:body)).to contain_exactly(a_string_including("Leader", "PS0001"))
+    end
+
+    it "gives an Assistant their role plus a Facilitator affiliation over the same dates" do
       personnel("PS0002", Role: "assistant", DateEntered: "1/5/2018")
 
       import = described_class.new.call
 
-      expect(person.affiliations.order(:start_date, :title).pluck(:filemaker_code, :title, :start_date, :primary_contact))
-        .to eq([ [ "PS0001", "Facilitator", Date.new(2015, 3, 1), false ], [ "PS0001", "Liaison", Date.new(2015, 3, 1), true ],
-                 [ "PS0002", "Assistant", Date.new(2018, 1, 5), false ], [ "PS0002", "Facilitator", Date.new(2018, 1, 5), false ] ])
-      expect(import.roles).to eq("Liaison → Liaison" => 1, "assistant → Assistant" => 1)
+      expect(person.affiliations.order(:title).pluck(:filemaker_code, :title, :start_date, :primary_contact))
+        .to eq([ [ "PS0002", "Assistant", Date.new(2018, 1, 5), false ], [ "PS0002", "Facilitator", Date.new(2018, 1, 5), false ] ])
+      expect(import.roles).to eq("assistant → Assistant" => 1)
     end
 
-    it "adds no second Facilitator when one with the same dates is already there" do
+    it "adds no second Facilitator beside an Assistant when one with the same dates is already there" do
       create(:affiliation, person:, organization: program, title: "Facilitator", start_date: Date.new(2015, 3, 1), end_date: Date.new(2019, 6, 30))
-      personnel("PS0001", Role: "Liaison")
+      personnel("PS0001", Role: "Assistant")
 
       import
 
-      expect(person.affiliations.pluck(:title)).to contain_exactly("Facilitator", "Liaison")
+      expect(person.affiliations.pluck(:title)).to contain_exactly("Facilitator", "Assistant")
     end
 
     it "reads a blank or unrecognized role as a Leader" do
