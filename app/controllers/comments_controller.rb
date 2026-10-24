@@ -11,10 +11,12 @@ class CommentsController < ApplicationController
 
     base = Comment.all
     if turbo_frame_request?
-      filtered = base.search_by_params(params).includes(:commentable, :created_by, :updated_by).newest_first
+      filtered = base.search_by_params(params)
+      filtered_count = filtered.count
       @total_count = base.count
-      @count_display = count_display(filtered.count, @total_count)
-      @comments = filtered.paginate(page: params[:page], per_page: params[:number_of_items_per_page].presence || 25)
+      @count_display = count_display(filtered_count, @total_count)
+      @comments = filtered.includes(:commentable, created_by: :person, updated_by: :person).newest_first
+        .paginate(page: params[:page], per_page: params[:number_of_items_per_page].presence || 25, total_entries: filtered_count)
       FeedRecordPreloader.new(@comments).call
       render :comments_results
     else
