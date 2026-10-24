@@ -38,6 +38,11 @@ class NotificationDecorator < ApplicationDecorator
   # (the bulk_payment_* kinds), whether the copy to the person or the admin FYI.
   BULK_META = { label: "Bulk", classes: "bg-indigo-100 text-indigo-800" }.freeze
 
+  def dedupe_label
+    subject = email_subject.to_s.squish.truncate(ModelDeduper::SNIPPET_LENGTH, separator: " ").presence || title
+    [ subject, created_at&.strftime("%b %-d, %Y") ].compact.join(" · ")
+  end
+
   def sender_name
     sender&.full_name.presence || PORTAL_SENDER_NAME
   end
