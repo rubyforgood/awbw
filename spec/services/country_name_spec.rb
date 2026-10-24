@@ -44,6 +44,7 @@ RSpec.describe CountryName do
       expect(described_class.resolve(nil, state: "CA - California")).to eq("United States")
       expect(described_class.resolve("", state: "Maryland (MD)")).to eq("United States")
       expect(described_class.resolve("-", state: "VIRGINIA")).to eq("United States")
+      expect(described_class.resolve("unknown", state: "CA")).to eq("United States")
       expect(described_class.resolve(nil, state: "BC")).to eq("Canada")
       expect(described_class.resolve(nil, state: "Bucks")).to eq("United Kingdom")
       expect(described_class.resolve(nil, state: "Ha Noi")).to eq("Vietnam")
@@ -56,7 +57,9 @@ RSpec.describe CountryName do
     end
 
     it "is nil when neither the country nor the state names one" do
-      [ nil, "", "   ", "-", "--" ].each { |blank| expect(described_class.resolve(blank, state: "-")).to be_nil }
+      [ nil, "", "   ", "-", "--", "n/a", "N/A", "None", "UNKNOWN", "not applicable" ].each do |blank|
+        expect(described_class.resolve(blank, state: "-")).to be_nil
+      end
       expect(described_class.resolve(nil, state: "Kenmore")).to be_nil
     end
   end

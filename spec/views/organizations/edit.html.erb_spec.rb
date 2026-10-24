@@ -35,6 +35,12 @@ RSpec.describe "organizations/edit", type: :view do
     end
   end
 
+  it "hints that a blank country is set from the state" do
+    create(:address, addressable: organization)
+    render
+    assert_select "select[name*=?] ~ p", "[country]", text: CountryName::BLANK_HINT
+  end
+
   describe "status select visibility" do
     before(:each) { assign(:organization_statuses, OrganizationStatus.all) }
 
