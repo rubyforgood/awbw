@@ -1,0 +1,9 @@
+name: "Refreshed registration ticket"
+area: registration
+display_status: admin_facing
+released_on: 2026-06-21
+action_path: "/registration/sample"
+pr_number: 1751
+summary: >-
+  The registration ticket got a cleaner look with a thumbnail header, compact
+  details, and status chips.

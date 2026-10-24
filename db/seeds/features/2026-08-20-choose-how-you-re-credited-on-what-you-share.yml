@@ -1,0 +1,24 @@
+name: "Choose how you're credited on what you share"
+area: people
+display_status: admin_facing
+released_on: 2026-08-20
+pr_number: 2093
+summary: >-
+  Your profile decides how your name appears on every story, workshop, variation and
+  resource credited to you — one setting for all of them, instead of a question on each
+  submission.
+description: >-
+  Your profile has two settings that control your name, and both apply to everything you
+  share. The display preference picks the format — full name, first name and last
+  initial, first name only, or last name only — and it applies everywhere at once: the
+  people index, your profile header, and every credit on your content. Change it and all
+  of them update together. "Contribute anonymously" is the second setting, and it's
+  all-or-nothing: either your contributions are credited to you, or they're all credited
+  to "AWBW Facilitator" instead. It hides your name from credits only — you stay listed
+  normally on the people index. It's for people who want to share their work without
+  their name attached to it. Search follows the same rules, so if your credit shows only
+  your first name, searching your last name won't surface your content, and anonymous
+  work isn't findable by your name at all.
+pro_tips:
+  - "Ask an admin to change these for you — profile editing is admin-only for now."
+  - "Anonymous content still appears on your own profile and to admins, so you can find it; it's hidden from everyone else."

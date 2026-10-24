@@ -1,0 +1,15 @@
+name: "App settings page"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-22
+action_path: /admin/settings
+pr_number: 2570
+summary: >-
+  A new App settings page under Admin holds the settings the whole portal shares:
+  which organization the portal invoices as, the return and remittance addresses on
+  invoices and CE certificates, the contact mailboxes, the invoice number prefix, and the standard
+  membership price and renewal windows.
+pro_tips:
+  - "Leave a field blank to keep using the value this deployment is configured with — the grey placeholder shows what that currently is."
+  - "After picking the organization, the page lists what it supplies and links to where its tax ID is edited."
+  - "Data health flags \"App settings not configured\" until the organization, its tax ID and both invoice addresses are chosen."

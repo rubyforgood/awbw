@@ -1,0 +1,30 @@
+name: "FileMaker Rolodex contacts as people"
+area: people
+display_status: admin_facing
+released_on: 2026-10-22
+pr_number: 2630
+summary: >-
+  Contacts from the old FileMaker Rolodex can now be brought into the portal as
+  people, carrying their FileMaker code, profile details, service areas and age
+  group, and their home and mailing addresses and phone numbers. Work addresses
+  come in later, with their organizations.
+description: >-
+  <ul><li>A contact with no email is linked to a portal person of the same name
+  who also has no email.</li><li>A person can carry several FileMaker codes, so
+  a contact who matches someone already linked to another FileMaker record is
+  added to their list.</li><li>FileMaker's old words for who someone serves are
+  translated through the recorded tag aliases, so "Student Services" becomes
+  Education and "Families" tags every age range.</li><li>A contact whose email
+  belongs to someone with a different name becomes a new person — merge them
+  with the person deduper if they turn out to be the same.</li><li>A person's
+  FileMaker code on their page links straight to their row in the
+  archive.</li><li>An imported person carries their service areas, settings,
+  life experiences, age group, facilitator start date, and every home and
+  mailing address and phone the old record held — and their profile dates from when FileMaker first
+  knew them, not from the day they were imported.</li><li>An imported profile credits the staff member who entered it
+  in FileMaker, and the one who last changed it there — or the import user chosen in Settings
+  when FileMaker doesn't name someone we can match.</li></ul>
+pro_tips:
+  - "A contact who already has a portal record is linked to it rather than duplicated — matching takes the same name and the same email."
+  - "A linked person's blank fields are filled in from FileMaker. Where FileMaker says something different, the portal's value is kept and a comment on the person lists what FileMaker had."
+action_path: "/people"

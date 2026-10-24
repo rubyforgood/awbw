@@ -1,0 +1,9 @@
+name: "Edit your profile from the banner at the top"
+area: people
+display_status: user_facing
+released_on: 2026-10-24
+pr_number: 2731
+summary: >-
+  Open "My profile" from the menu under your picture, then click "Edit my data"
+  in the banner at the top. Changes you've asked staff for show there until
+  they're reviewed.
