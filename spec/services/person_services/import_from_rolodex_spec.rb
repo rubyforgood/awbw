@@ -77,7 +77,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
       rolodex("00048", EmailPrimary: "ada@example.com", EMail: "ada@old@example.com")
 
       expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
-      expect(person.reload).to have_attributes(filemaker_code: "00048", email_2: nil)
+      expect(person.reload).to have_attributes(filemaker_code: "00048", email: "ada@example.com", email_2: nil)
       expect(person.comments).to be_empty
     end
 
