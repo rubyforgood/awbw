@@ -5,8 +5,9 @@ module AffiliationServices
   #
   #   1. Personnel (FmPersonnel) — a person staffing a project's art program. A Leader
   #      becomes a Facilitator affiliation marked primary contact, dated from when the row
-  #      was entered to when the project closed; a Liaison or Assistant becomes an undated job affiliation with that
-  #      title (ADR-0003 D1). Each carries the row's PrsnlRecID as its filemaker_code.
+  #      was entered to when the project closed. A Liaison (also a primary contact) or Assistant becomes an affiliation
+  #      with that title over the same dates, plus a Facilitator affiliation beside it unless
+  #      one with those dates already exists. Each carries the row's PrsnlRecID as its filemaker_code.
   #   2. People-to-organizations (FmPeopleToOrganization) — a job at an organization, with
   #      its title, carrying the row's RecordID.
   #   3. The Rolodex card itself (FmRolodex) — the organization its OrgID (or its typed
@@ -33,9 +34,12 @@ module AffiliationServices
     # ended, since over-reporting active programs would skew program status.
     ACTIVE_STATUSES = %w[active].freeze
     # FileMaker calls a facilitator a Leader, which the portal records as a Facilitator who is
-    # the program's primary contact (the pattern prod's January 2026 conversion and #2321 set).
-    # These other roles support the program without facilitating it, so they're jobs there.
-    JOB_ROLES = { "liaison" => "Liaison", "assistant" => "Assistant" }.freeze
+    # a primary contact; prod's Liaisons are primary contacts too. A Liaison or Assistant
+    # title isn't itself facilitation, so it never counts toward program status.
+    JOB_ROLES = { "liaison" => { title: "Liaison", primary_contact: true },
+                  "assistant" => { title: "Assistant", primary_contact: false } }.freeze
+    LEADER = { title: Affiliation::FACILITATOR_TITLE, primary_contact: true }.freeze
+    LEGACY_LEADER_TITLE = "Leader"
     SOURCES = { FmPersonnel => "Personnel", FmPeopleToOrganization => "People-to-organizations", FmRolodex => "Rolodex" }.freeze
 
     attr_reader :results, :differences, :statuses, :roles
@@ -99,17 +103,32 @@ module AffiliationServices
       return record(:skipped, "#{label}: project #{data["ProjectID"].presence || "(none)"} wasn't imported") unless organization
 
       dates = personnel_dates(data, @projects[data["ProjectID"].to_s])
-      title = title_for(data["Role"])
-      attributes = title == Affiliation::FACILITATOR_TITLE ? dates.merge(primary_contact: true) : dates.except(:start_date)
-      people.each { |person| affiliate(person, organization, row, label, title:, attributes:, codes: @personnel_ids) }
+      role = role_for(data["Role"])
+      people.each do |person|
+        affiliate(person, organization, row, label, title: role[:title], attributes: dates.merge(primary_contact: role[:primary_contact]), codes: @personnel_ids)
+        next if role == LEADER || facilitator_for?(person, organization, dates)
+
+        create(person, organization, row, label, title: Affiliation::FACILITATOR_TITLE,
+               attributes: dates.merge(primary_contact: false), code: row.fm_id)
+      end
+    end
+
+    # A Liaison or Assistant also facilitated over the same stretch, as prod's January 2026
+    # conversion recorded them: a Facilitator affiliation beside the role, unless one with the
+    # same dates is already there.
+    def facilitator_for?(person, organization, dates)
+      person.affiliations.where(organization:).any? do |affiliation|
+        same_title?(affiliation.title, Affiliation::FACILITATOR_TITLE) &&
+          affiliation.start_date == dates[:start_date] && affiliation.end_date == dates[:end_date]
+      end
     end
 
     # Nearly every Personnel row is a Leader, so a blank or unrecognized role is one too.
-    def title_for(role)
+    def role_for(role)
       role = role.to_s.squish
-      title = JOB_ROLES.fetch(role.downcase, Affiliation::FACILITATOR_TITLE)
-      @roles["#{role.presence || "(blank)"} → #{title}"] += 1
-      title
+      mapped = JOB_ROLES.fetch(role.downcase, LEADER)
+      @roles["#{role.presence || "(blank)"} → #{mapped[:title]}"] += 1
+      mapped
     end
 
     # Personnel rows carry no dates of their own: the assignment starts when it was entered
@@ -185,8 +204,10 @@ module AffiliationServices
       codes && affiliation.filemaker_codes.any? { |code| codes.include?(code) }
     end
 
+    # Some prod rows still carry the old app's "Leader" title, which is a Facilitator.
     def same_title?(held, title)
-      held.to_s.squish.casecmp?(title.to_s.squish)
+      held = held.to_s.squish
+      held.casecmp?(title.to_s.squish) || (title == Affiliation::FACILITATOR_TITLE && held.casecmp?(LEGACY_LEADER_TITLE))
     end
 
     def link(affiliation, row, label, title:, attributes:, codes:)

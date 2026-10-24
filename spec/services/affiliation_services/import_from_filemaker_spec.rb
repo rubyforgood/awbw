@@ -42,16 +42,35 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       expect(import.statuses).to eq("Dropped → ended" => 1)
     end
 
-    it "reads a Liaison or Assistant as an undated job, and any other role as a Leader" do
+    it "gives a Liaison or Assistant their role plus a Facilitator affiliation over the same dates" do
       personnel("PS0001", Role: "Liaison")
-      personnel("PS0002", Role: "assistant")
-      personnel("PS0003", Role: "Leaders")
+      personnel("PS0002", Role: "assistant", DateEntered: "1/5/2018")
 
       import = described_class.new.call
 
-      expect(person.affiliations.order(:filemaker_code).pluck(:filemaker_code, :title, :start_date, :primary_contact))
-        .to eq([ [ "PS0001", "Liaison", nil, false ], [ "PS0002", "Assistant", nil, false ], [ "PS0003", "Facilitator", Date.new(2015, 3, 1), true ] ])
-      expect(import.roles).to eq("Liaison → Liaison" => 1, "assistant → Assistant" => 1, "Leaders → Facilitator" => 1)
+      expect(person.affiliations.order(:start_date, :title).pluck(:filemaker_code, :title, :start_date, :primary_contact))
+        .to eq([ [ "PS0001", "Facilitator", Date.new(2015, 3, 1), false ], [ "PS0001", "Liaison", Date.new(2015, 3, 1), true ],
+                 [ "PS0002", "Assistant", Date.new(2018, 1, 5), false ], [ "PS0002", "Facilitator", Date.new(2018, 1, 5), false ] ])
+      expect(import.roles).to eq("Liaison → Liaison" => 1, "assistant → Assistant" => 1)
+    end
+
+    it "adds no second Facilitator when one with the same dates is already there" do
+      create(:affiliation, person:, organization: program, title: "Facilitator", start_date: Date.new(2015, 3, 1), end_date: Date.new(2019, 6, 30))
+      personnel("PS0001", Role: "Liaison")
+
+      import
+
+      expect(person.affiliations.pluck(:title)).to contain_exactly("Facilitator", "Liaison")
+    end
+
+    it "reads a blank or unrecognized role as a Leader" do
+      personnel("PS0001", Role: "Leaders")
+      personnel("PS0002", Role: "", DateEntered: "1/5/2018")
+
+      import = described_class.new.call
+
+      expect(person.affiliations.pluck(:title).uniq).to eq([ "Facilitator" ])
+      expect(import.roles).to eq("Leaders → Facilitator" => 1, "(blank) → Facilitator" => 1)
     end
 
     it "links the Facilitator affiliation the person already has there, filling its blank start" do
@@ -61,6 +80,16 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       expect(import.results[:linked].size).to eq(1)
       expect(existing.reload).to have_attributes(filemaker_code: "P0001, PS0001", start_date: Date.new(2015, 3, 1))
       expect(person.affiliations.count).to eq(1)
+    end
+
+    it "links a row the old app titled Leader instead of adding a Facilitator beside it" do
+      existing = create(:affiliation, person:, organization: program, title: "Leader", primary_contact: true)
+      personnel("PS0001")
+
+      import
+
+      expect(person.affiliations.sole).to eq(existing)
+      expect(existing.reload).to have_attributes(title: "Leader", filemaker_code: "PS0001")
     end
 
     it "keeps a second stint on the same project as its own affiliation" do
