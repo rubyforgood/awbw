@@ -2,7 +2,7 @@
 module CountryName
   UNITED_STATES = "United States"
   US_MINOR_OUTLYING_ISLANDS = "United States Minor Outlying Islands"
-  BLANK_HINT = "Blank: set from state"
+  BLANK_HINT = "If blank, we'll use the state"
   # Typed in place of a country to say there isn't one, keyed as AddressNormalizer.words joins them.
   PLACEHOLDERS = [ "n a", "none", "unknown", "not applicable" ].to_set.freeze
 
