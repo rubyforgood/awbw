@@ -47,9 +47,9 @@ since a state is required and regions outside the US are legitimate.
 
 ### Where it runs
 
-- **Imports, inline:** the FileMaker Rolodex import and the LMS registration importer, and
-  the FileMaker organizations import when it's built (ADR-0008). Each reports what it
-  couldn't place.
+- **Imports, inline:** every FileMaker import builds addresses through `FmAddressAttributes`
+  (the Rolodex import now, the organizations and affiliations imports of ADR-0008), and the
+  LMS registration importer translates its answers. Each reports what it couldn't place.
 - **Existing data, once and again:** `AddressServices::TranslateExisting`
   (`data:translate_addresses`) rewrites stored address countries and states, and the
   country/state form answers, filling a locality only where it's Unknown. It's idempotent, so it runs before and after an import. Every changed
