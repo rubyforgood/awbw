@@ -14,6 +14,8 @@
   <% if params[:return_to] == "data_health" %>
     <%= hidden_field_tag :return_to, "data_health" %>
     <%= hidden_field_tag :check, params[:check] if params[:check].present? %>
+  <% elsif params[:return_to] == "dedupe" %>
+    <%= hidden_field_tag :return_to, "dedupe" %>
   <% elsif params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
     <%= hidden_field_tag :return_to, "registration_link" %>
     <%= hidden_field_tag :event_registration_id, params[:event_registration_id] %>
@@ -101,7 +103,7 @@
   </div>
 
   <!-- Sectors + Age ranges (split width; both wrap their chips) -->
-  <div class="flex flex-wrap gap-4 items-stretch">
+  <div class="flex flex-wrap items-stretch gap-4">
     <!-- Sectors -->
     <div class="form-group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
       <h3 class="<%= heading_class %>"><%= allowed_to?(:manage?, Person) ? "Sectors" : "Sectors you work in" %></h3>

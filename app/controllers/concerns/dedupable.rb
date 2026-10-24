@@ -213,6 +213,8 @@ module Dedupable
   #                       unsafe (e.g. both people carry an active pay subscription). Any reason disables
   #                       the preview's merge button and refuses the POST (optional)
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
+  #   record_partial:     Partial rendering a record's whole line on the index (local: record), in place
+  #                       of record_label + record_extras — e.g. to link it or add a hover card (optional)
   #   back_path:          Override the index eyebrow's return path (e.g. when the deduper was
   #                       opened from an event's registrants page, not the model index) (optional)
   #   back_label:         Label for that eyebrow link, without the "← " prefix (optional)
@@ -260,6 +262,7 @@ module Dedupable
       deprecated_columns: Array(config[:deprecated_columns]).map(&:to_s),
       preview_images: config[:preview_images],
       record_extras: config[:record_extras],
+      record_partial: config[:record_partial],
       back_path: config[:back_path],
       back_label: config[:back_label],
       subtitle: config[:subtitle]

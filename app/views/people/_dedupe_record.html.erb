@@ -1,0 +1,14 @@
+<%# A dedupe candidate's line: name and email open the person's edit page in a
+    new tab. Locals: record. %>
+<% edit_path = edit_person_path(record, return_to: "dedupe") %>
+<% link_hover = "hover:underline #{DomainTheme.text_class_for(:people, intensity: 700, hover: true)}" %>
+<span class="text-gray-800">
+  <%= link_to record.full_name.presence || "(no name)", edit_path, target: "_blank", rel: "noopener", class: link_hover %>
+  <% if (email = record.preferred_email.presence) %>
+    <span class="text-sm text-gray-400">·</span>
+    <%= link_to edit_path, target: "_blank", rel: "noopener", class: "text-sm text-gray-400 #{link_hover}" do %><!--email_off--><%= email %><!--email_on--><% end %>
+  <% end %>
+  <span class="text-sm text-gray-400">
+    · ID <%= record.id %><% if record.filemaker_code.present? %> · FileMaker <%= record.filemaker_code %><% end %>
+  </span>
+</span>
