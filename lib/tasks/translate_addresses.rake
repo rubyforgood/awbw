@@ -4,25 +4,46 @@
 # store them. See AddressServices::TranslateExisting.
 #
 # Dry-run by default. Set DRY_RUN=false to write changes (each one logged as an Ahoy event).
+# Every run, dry or not, also saves its report as an ActiveStorage blob — the command to
+# read it back is printed at the end.
 #   bin/rails data:translate_addresses                 # preview, writes nothing
 #   DRY_RUN=false bin/rails data:translate_addresses   # translate + log
 namespace :data do
   desc "Translate stored address countries/states and their form answers to dropdown values. Idempotent. DRY_RUN=false to execute."
   task translate_addresses: :environment do
     dry_run = ENV["DRY_RUN"] != "false"
-    result = AddressServices::TranslateExisting.new(dry_run:).call
+    report = []
+    say = ->(line = "") { puts line; report << line }
+    $stdout.sync = true
 
-    puts "Changes (#{result.changes.values.sum}):"
-    result.changes.sort_by { |label, count| [ -count, label ] }.each { |label, count| puts "  #{count.to_s.rjust(5)}  #{label}" }
-    result.unmatched.each do |field, values|
-      next if values.empty?
+    begin
+      result = AddressServices::TranslateExisting.new(dry_run:).call
 
-      outcome = field == :country ? "left blank, was logged" : "kept as typed"
-      puts "\n#{field.to_s.humanize} values nothing translates (#{outcome} — fix by hand if you know it):"
-      values.sort_by { |value, count| [ -count, value ] }.each { |value, count| puts "  #{count.to_s.rjust(5)}  #{value}" }
+      say.("Changes (#{result.changes.values.sum}):")
+      result.changes.sort_by { |label, count| [ -count, label ] }.each { |label, count| say.("  #{count.to_s.rjust(5)}  #{label}") }
+      result.unmatched.each do |field, values|
+        next if values.empty?
+
+        outcome = field == :country ? "left blank, was logged" : "kept as typed"
+        say.("\n#{field.to_s.humanize} values nothing translates (#{outcome} — fix by hand if you know it):")
+        values.sort_by { |value, count| [ -count, value ] }.each { |value, count| say.("  #{count.to_s.rjust(5)}  #{value}") }
+      end
+      say.("\naddresses changed: #{result.addresses}")
+      say.("answers changed:   #{result.answers}")
+      say.(dry_run ? "\nDRY RUN — nothing written. Set DRY_RUN=false to execute." : "\nDone.")
+    rescue StandardError => e
+      say.("\nStopped by #{e.class}: #{e.message}#{" — nothing was written; rerun to continue." unless dry_run}")
+      raise
+    ensure
+      begin
+        blob = ActiveStorage::Blob.create_and_upload!(
+          io: StringIO.new(report.join("\n")), content_type: "text/plain",
+          filename: "translate-addresses-#{Time.current.strftime("%Y%m%d-%H%M%S")}#{"-dry-run" if dry_run}.txt"
+        )
+        puts "\nReport saved. Read it back with: bin/rails runner 'puts ActiveStorage::Blob.find(#{blob.id}).download'"
+      rescue StandardError => e
+        puts "\nCould not save the report (#{e.class}: #{e.message}) — copy the output above."
+      end
     end
-    puts "\naddresses changed: #{result.addresses}"
-    puts "answers changed:   #{result.answers}"
-    puts(dry_run ? "\nDRY RUN — nothing written. Set DRY_RUN=false to execute." : "\nDone.")
   end
 end
