@@ -33,6 +33,8 @@
   field_notes ||= {}
   delete_logins = local_assigns[:field_logins]&.call(record_to_delete) || {}
   keep_logins = local_assigns[:field_logins]&.call(record_to_keep) || {}
+  field_outcomes = local_assigns[:merge_outcomes]&.dig(:fields) || {}
+  record_outcomes = local_assigns[:merge_outcomes]&.dig(:records) || {}
   deprecated_columns ||= []
   preview_images ||= nil
   read_only_columns = Array(local_assigns[:read_only_columns]).filter_map { |name| model_class.columns_hash[name.to_s] }
@@ -165,7 +167,9 @@
           <span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500">Deprecated</span>
         <% end %>
         <span class="<%= deprecated ? "text-gray-400 italic" : "text-gray-900" %> <%= "font-semibold" if col.name == "name" %>"><%= display_val %></span>
-        <% if merged_in %>
+        <% if field_outcomes.dig(col.name, :delete) %>
+          <%= render "dedupes/merge_outcome", text: field_outcomes.dig(col.name, :delete) %>
+        <% elsif merged_in %>
           <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-800">Kept on merge</span>
         <% elsif is_different && !deprecated %>
           <span class="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800">Will be dropped</span>
@@ -210,6 +214,9 @@
         <% if keep_logins[col.name] %>
           <div class="mt-1"><%= render "users/login_chip", user: keep_logins[col.name] %></div>
         <% end %>
+        <% if field_outcomes.dig(col.name, :keep) %>
+          <div class="mt-1"><%= render "dedupes/merge_outcome", text: field_outcomes.dig(col.name, :keep) %></div>
+        <% end %>
         <% if field_notes[col.name].present? %>
           <p class="mt-1 text-xs text-gray-500"><%= field_notes[col.name] %></p>
         <% end %>
@@ -239,8 +246,8 @@
   <% else %>
     <% labels.each_with_index do |label, index| %>
       <% last = index == labels.size - 1 %>
-      <%= render "dedupes/reassignment_entry", entry: delete_by_label[label], border: border, round: (last ? "rounded-bl-xl" : "") %>
-      <%= render "dedupes/reassignment_entry", entry: keep_by_label[label], border: border, round: (last ? "rounded-br-xl" : "") %>
+      <%= render "dedupes/reassignment_entry", entry: delete_by_label[label], border: border, round: (last ? "rounded-bl-xl" : ""), record_outcomes: record_outcomes %>
+      <%= render "dedupes/reassignment_entry", entry: keep_by_label[label], border: border, round: (last ? "rounded-br-xl" : ""), record_outcomes: record_outcomes %>
     <% end %>
   <% end %>
 </div>

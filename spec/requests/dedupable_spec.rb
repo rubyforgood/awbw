@@ -756,6 +756,27 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(keep.email_2).to eq("chosen@example.com")
       end
 
+      it "flags what changes beside each email and the winning login" do
+        keep.update!(email: "chosen@example.com")
+        delete_rec.user.update_columns(email: "recent.login@example.com", last_sign_in_at: 1.day.ago)
+        delete_rec.update_columns(email: "recent.login@example.com")
+
+        get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+        expect(response.body).to include(
+          "On merge: becomes recent.login@example.com (the login used most recently)",
+          "On merge: becomes chosen@example.com",
+          "On merge: becomes the primary email",
+          "On merge: its email becomes the primary email"
+        )
+      end
+
+      it "flags nothing when the kept person's email already matches the winning login" do
+        get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+        expect(response.body).not_to include("On merge:")
+      end
+
       it "falls back to the login of the only person with affiliations or event registrations" do
         keep.update!(email: "chosen@example.com")
         delete_rec.user.update_columns(email: "active.login@example.com")
@@ -798,6 +819,11 @@ RSpec.describe "Dedupable concern", type: :request do
         )
 
         expect(response.body).to include("takes over the other person&#39;s login", "login@example.com")
+        expect(response.body).to include(
+          "On merge: becomes login@example.com (the login they take over)",
+          "On merge: becomes keeper@example.com",
+          "On merge: becomes the primary email"
+        )
         expect(response.body).not_to include("Merge blocked")
       end
 

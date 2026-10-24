@@ -378,6 +378,7 @@ class PeopleController < ApplicationController
       ],
       union_columns: %w[filemaker_code],
       field_logins: ->(person) { logins_by_email_field(person) },
+      merge_outcomes: ->(keep, delete) { email_merge_outcomes(keep, delete) },
       # Merging two people who each have a login leaves the kept person with both
       # (users.person_id has no unique constraint); both logins still sign in to the
       # one record. Surface it so the admin isn't surprised — it doesn't block.
@@ -459,6 +460,22 @@ class PeopleController < ApplicationController
     end
   end
 
+  # What the login email sync changes on the kept person, flagged beside each email and login.
+  def email_merge_outcomes(keep, delete)
+    login = primary_login(keep, delete)
+    return {} if login.nil? || login.email.casecmp?(keep.email.to_s)
+
+    fields = { "email" => { keep: "becomes #{login.email} (#{primary_login_reason(login, keep, delete)})" } }
+    if keep.email.present?
+      secondary_free = keep.email_2.blank? || keep.email_2.casecmp?(login.email)
+      fields["email_2"] = { keep: secondary_free ? "becomes #{keep.email}" : "stays; #{keep.email} is saved in a comment" }
+    end
+    delete_column = %w[email email_2].find { |column| delete.public_send(column).to_s.casecmp?(login.email) }
+    fields[delete_column] = { **fields[delete_column].to_h, delete: "becomes the primary email" } if delete_column
+
+    { fields: fields, records: { login => "its email becomes the primary email" } }
+  end
+
   def login_merge_note(keep, delete)
     return unless delete.user
 
@@ -474,6 +491,13 @@ class PeopleController < ApplicationController
   # The login whose email the kept person's primary email follows: an adopted login,
   # else the most recently used of both; ties go to the only person with history, else the kept person.
   def primary_login(keep, delete)
+    @primary_logins ||= Hash.new do |memo, (kept, deleted)|
+      memo[[ kept, deleted ]] = find_primary_login(kept, deleted)
+    end
+    @primary_logins[[ keep, delete ]]
+  end
+
+  def find_primary_login(keep, delete)
     return unless delete.user
     return delete.user unless keep.user
 
@@ -484,6 +508,7 @@ class PeopleController < ApplicationController
   end
 
   def primary_login_reason(login, keep, delete)
+    return "the login they take over" unless keep.user
     return "the login used most recently" if login.last_sign_in_at
     return "the login of the person with affiliations or event registrations" if person_with_history(keep, delete)
 
@@ -491,8 +516,11 @@ class PeopleController < ApplicationController
   end
 
   def person_with_history(keep, delete)
-    with_history = [ keep, delete ].select { |person| person.affiliations.exists? || person.event_registrations.exists? }
-    with_history.first if with_history.one?
+    @people_with_history ||= Hash.new do |memo, pair|
+      with_history = pair.select { |person| person.affiliations.exists? || person.event_registrations.exists? }
+      memo[pair] = (with_history.first if with_history.one?)
+    end
+    @people_with_history[[ keep, delete ]]
   end
 
   # Saves the preview's edits first so the sync moves the email the admin picked into

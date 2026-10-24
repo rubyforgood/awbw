@@ -58,6 +58,7 @@ module Dedupable
     @attachment_plan = deduper.attachment_plan(@record_to_keep, @record_to_delete)
     @unhandled_references = deduper.unhandled_references(@record_to_delete)
     @merge_notes = Array(config[:merge_notes]&.call(@record_to_keep, @record_to_delete))
+    @merge_outcomes = config[:merge_outcomes]&.call(@record_to_keep, @record_to_delete) || {}
     @merge_blocks = Array(config[:merge_blocks]&.call(@record_to_keep, @record_to_delete))
     @dedupe = build_dedupe_vars(config)
 
@@ -205,6 +206,9 @@ module Dedupable
   #                       attachments) so the preview shows them side by side for comparison (optional)
   #   merge_notes:        Lambda(keep, delete) returning an array of informational (non-blocking)
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
+  #   merge_outcomes:     Lambda(keep, delete) returning { fields: { column_name => { keep:, delete: } },
+  #                       records: { record => text } } — what the merge changes beyond keeping the keeper's
+  #                       values, flagged beside that field or moving record (optional)
   #   merge_blocks:       Lambda(keep, delete) returning an array of reasons this particular merge is
   #                       unsafe (e.g. both people carry an active pay subscription). Any reason disables
   #                       the preview's merge button and refuses the POST (optional)

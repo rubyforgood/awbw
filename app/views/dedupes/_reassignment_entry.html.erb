@@ -1,10 +1,17 @@
 <%# One aligned cell of the reassignment summary. Locals: entry ({ label:, count:,
-  names: [..], records: [..] } or nil for a side that has none of this association), border, round.
+  names: [..], records: [..] } or nil for a side that has none of this association), border, round,
+  record_outcomes ({ record => what the merge changes through it }, optional).
   A single record shows inline; several expand to a bulleted list of every loaded name.
   Logins show their email and sign-in state instead of a name. %>
 <%
   logins = entry && entry[:records]&.first.is_a?(User)
-  item = ->(index) { logins ? render("users/login_status", user: entry[:records][index], show_email: true) : entry[:names][index] }
+  record_outcomes = local_assigns[:record_outcomes] || {}
+  item = ->(index) {
+    record = entry[:records][index]
+    label = logins ? render("users/login_status", user: record, show_email: true) : entry[:names][index]
+    outcome = record_outcomes[record]
+    outcome ? safe_join([ label, render("dedupes/merge_outcome", text: outcome) ], " ") : label
+  }
 %>
 <div class="border-x border-b <%= border %> <%= round %> bg-white px-5 py-3 text-sm">
   <% if entry.nil? %>
