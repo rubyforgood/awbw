@@ -23,11 +23,11 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
   end
 
   describe "personnel" do
-    it "makes a Facilitator affiliation dated from entry to the project's close" do
+    it "makes a Leader a primary-contact Facilitator dated from entry to the project's close" do
       personnel("PS0001")
 
       expect(import.results[:created].size).to eq(1)
-      expect(person.affiliations.sole).to have_attributes(organization: program, title: "Facilitator", filemaker_code: "PS0001",
+      expect(person.affiliations.sole).to have_attributes(organization: program, title: "Facilitator", filemaker_code: "PS0001", primary_contact: true,
                                                           start_date: Date.new(2015, 3, 1), end_date: Date.new(2019, 6, 30),
                                                           event_registration_id: nil)
     end
@@ -49,8 +49,8 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
 
       import = described_class.new.call
 
-      expect(person.affiliations.order(:filemaker_code).pluck(:filemaker_code, :title, :start_date))
-        .to eq([ [ "PS0001", "Liaison", nil ], [ "PS0002", "Assistant", nil ], [ "PS0003", "Facilitator", Date.new(2015, 3, 1) ] ])
+      expect(person.affiliations.order(:filemaker_code).pluck(:filemaker_code, :title, :start_date, :primary_contact))
+        .to eq([ [ "PS0001", "Liaison", nil, false ], [ "PS0002", "Assistant", nil, false ], [ "PS0003", "Facilitator", Date.new(2015, 3, 1), true ] ])
       expect(import.roles).to eq("Liaison → Liaison" => 1, "assistant → Assistant" => 1, "Leaders → Facilitator" => 1)
     end
 

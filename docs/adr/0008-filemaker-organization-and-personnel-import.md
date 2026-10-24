@@ -71,7 +71,10 @@ Constraints already decided elsewhere:
   `filemaker_code` so each row imports once. `event_registration_id` stays NULL — these are
   historical, not training-minted.
   - **Role:** FileMaker calls a facilitator a **Leader** (8,112 of 8,907 rows). A Leader is a
-    Facilitator affiliation. A **Liaison** (611) or **Assistant** (232) supports the program
+    Facilitator affiliation marked `primary_contact` — the pattern prod's affiliations already
+    follow: the January 2026 migration (`ConvertProjectUserPositionToTitle`, in #735, deleted
+    once applied) turned the old app's position enum (liaison/leader/assistant) into titles,
+    and #2321 folded Leader into Facilitator + primary contact. A **Liaison** (611) or **Assistant** (232) supports the program
     without facilitating it, so each is an undated job affiliation with that title
     (ADR-0003 D1). A blank (80) or stray role reads as a Leader.
   - **Dates:** Personnel rows carry none of their own, so the assignment starts on

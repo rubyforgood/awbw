@@ -4,8 +4,8 @@ module AffiliationServices
   # order:
   #
   #   1. Personnel (FmPersonnel) — a person staffing a project's art program. A Leader
-  #      becomes a Facilitator affiliation, dated from when the row was entered to when the
-  #      project closed; a Liaison or Assistant becomes an undated job affiliation with that
+  #      becomes a Facilitator affiliation marked primary contact, dated from when the row
+  #      was entered to when the project closed; a Liaison or Assistant becomes an undated job affiliation with that
   #      title (ADR-0003 D1). Each carries the row's PrsnlRecID as its filemaker_code.
   #   2. People-to-organizations (FmPeopleToOrganization) — a job at an organization, with
   #      its title, carrying the row's RecordID.
@@ -32,8 +32,9 @@ module AffiliationServices
     # Inactive, Pending, Suspended, a blank, or two values typed over each other — reads as
     # ended, since over-reporting active programs would skew program status.
     ACTIVE_STATUSES = %w[active].freeze
-    # FileMaker calls a facilitator a Leader. These other roles support the program without
-    # facilitating it, so they're jobs at the organization rather than facilitation.
+    # FileMaker calls a facilitator a Leader, which the portal records as a Facilitator who is
+    # the program's primary contact (the pattern prod's January 2026 conversion and #2321 set).
+    # These other roles support the program without facilitating it, so they're jobs there.
     JOB_ROLES = { "liaison" => "Liaison", "assistant" => "Assistant" }.freeze
     SOURCES = { FmPersonnel => "Personnel", FmPeopleToOrganization => "People-to-organizations", FmRolodex => "Rolodex" }.freeze
 
@@ -99,7 +100,7 @@ module AffiliationServices
 
       dates = personnel_dates(data, @projects[data["ProjectID"].to_s])
       title = title_for(data["Role"])
-      attributes = title == Affiliation::FACILITATOR_TITLE ? dates : dates.except(:start_date)
+      attributes = title == Affiliation::FACILITATOR_TITLE ? dates.merge(primary_contact: true) : dates.except(:start_date)
       people.each { |person| affiliate(person, organization, row, label, title:, attributes:, codes: @personnel_ids) }
     end
 
