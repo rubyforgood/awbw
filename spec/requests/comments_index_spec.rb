@@ -45,6 +45,23 @@ RSpec.describe "Comments index", type: :request do
       expect(response.body).to include("comments_results", "Affiliation note")
     end
 
+    it "shows the per-page dropdown in the search boxes" do
+      sign_in admin
+      get comments_path
+
+      expect(response.body).to include("number_of_items_per_page")
+    end
+
+    it "pages the results frame by the chosen number of items per page" do
+      sign_in admin
+      create_list(:comment, 11, commentable: create(:person))
+
+      get comments_path(number_of_items_per_page: 10), headers: frame_headers
+
+      expect(response.body.scan(/id="comment_\d+"/).size).to eq(10)
+      expect(response.body).to include("number_of_items_per_page=10")
+    end
+
     it "filters to comments connected to a person" do
       sign_in admin
       target = create(:person)

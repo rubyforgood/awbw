@@ -14,7 +14,7 @@ class CommentsController < ApplicationController
       filtered = base.search_by_params(params).includes(:commentable, :created_by, :updated_by).newest_first
       @total_count = base.count
       @count_display = count_display(filtered.count, @total_count)
-      @comments = filtered.paginate(page: params[:page], per_page: 25)
+      @comments = filtered.paginate(page: params[:page], per_page: params[:number_of_items_per_page].presence || 25)
       FeedRecordPreloader.new(@comments).call
       render :comments_results
     else

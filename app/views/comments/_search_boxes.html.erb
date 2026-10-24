@@ -1,9 +1,10 @@
 <%# Shared filter/search bar for the comment feeds. Auto-submits into `frame`
     (collection Stimulus) so results swap in place with no page jump.
-    Locals: url, frame, clear_path. Optional: show_person / show_event (global
-    index only). %>
+    Locals: url, frame, clear_path. Optional: show_person / show_event /
+    show_per_page (global index only). %>
 <% show_person = local_assigns.fetch(:show_person, false) %>
 <% show_event = local_assigns.fetch(:show_event, false) %>
+<% show_per_page = local_assigns.fetch(:show_per_page, false) %>
 <% source_options = [ [ "All sources", "" ], [ "Profile", "Person" ], [ "Registrations", "EventRegistration" ], [ "Scholarships", "Scholarship" ], [ "CE registrations", "ContinuingEducationRegistration" ], [ "Subscriptions", "TopicSubscription" ], [ "User account", "User" ], [ "Organizations", "Organization" ], [ "Workshops", "Workshop" ] ] %>
 <%= form_with url: url, method: :get,
               data: { controller: "collection", turbo_frame: frame },
@@ -54,6 +55,16 @@
         <span class="ml-1.5 text-sm text-gray-500 peer-checked:text-orange-600">Flagged</span>
       </label>
     </div>
+
+    <% if show_per_page %>
+      <div class="w-24">
+        <label for="number_of_items_per_page" class="<%= search_label_class %>">Per page</label>
+        <%= select_tag :number_of_items_per_page,
+                       options_for_select([ 10, 25, 50, 100, 250 ], params[:number_of_items_per_page].presence || 25),
+                       class: search_field_class(extra: "bg-white"),
+                       onchange: "this.form.requestSubmit()" %>
+      </div>
+    <% end %>
 
     <div class="pb-1">
       <%= render "shared/search_clear", url: clear_path %>
