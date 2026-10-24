@@ -9,7 +9,8 @@ class PublicFormsController < ApplicationController
 
   def show
     authorize! @form, to: :public_show?
-    @form_fields = ordered_fields
+    @form_fields = public_form_fields.visible
+    @prefill_values = public_form_fields.prefill_values
   end
 
   def create
@@ -21,7 +22,8 @@ class PublicFormsController < ApplicationController
       return
     end
 
-    @form_fields = ordered_fields
+    @form_fields = public_form_fields.visible
+    @prefill_values = {}
     form_params = merge_retained_uploads(params.dig(:public_registration, :form_fields)&.to_unsafe_h || {})
 
     @field_errors = validate_required_fields(form_params)
@@ -32,7 +34,7 @@ class PublicFormsController < ApplicationController
     end
 
     Current.source = "public_form"
-    result = PublicFormSubmission.call(form: @form, form_params: form_params)
+    result = PublicFormSubmission.call(form: @form, form_params: form_params, person: current_user&.person)
     if result.success?
       redirect_to thank_you_public_form_path(@form.slug), notice: "Thank you — your response has been submitted!"
     else
@@ -52,8 +54,8 @@ class PublicFormsController < ApplicationController
     @form = Form.standalone.published.not_event_connected.find_by!(slug: params[:slug])
   end
 
-  def ordered_fields
-    @form.form_fields.reorder(position: :asc)
+  def public_form_fields
+    @public_form_fields ||= PublicFormFields.new(form: @form, person: current_user&.person)
   end
 
   # A file input can't be repopulated, so on re-render after an error fall back to
@@ -74,8 +76,8 @@ class PublicFormsController < ApplicationController
     fields = @form_fields.reject(&:group_header?)
     errors = FormAnswerValidator.call(fields, form_params)
 
-    # A registration-role form mints an event registration, so it must collect
-    # the full identity even when its name/email questions are flagged optional.
+    # A form not set to anonymous must collect the full identity even when its
+    # name/email questions are flagged optional.
     fields.each do |field|
       next if field.required? || !@form.requires_answer?(field)
       errors[field.id] ||= "can't be blank" if form_params[field.id.to_s].blank?
@@ -87,7 +89,7 @@ class PublicFormsController < ApplicationController
     if confirm_field && email_field && errors[confirm_field.id].nil?
       confirm_value = form_params[confirm_field.id.to_s].to_s.strip
       email_value = form_params[email_field.id.to_s].to_s.strip
-      errors[confirm_field.id] = "must match email" if confirm_value.present? && confirm_value != email_value
+      errors[confirm_field.id] = "must match email" if confirm_value.present? && email_value.present? && confirm_value != email_value
     end
 
     errors

@@ -37,11 +37,20 @@ class RegistrantCeForm
   end
 
   # Every required field answered — the read-time "form complete" signal, since
-  # FormSubmission has no completed_at column.
+  # FormSubmission has no completed_at column. An anonymous form has no
+  # submission of the registrant's own, so its FormCompletion stands in.
   def complete?
+    return true if completed_anonymously?
     return false unless submission
 
     answerable_fields.select(&:required).all? { |field| answered?(field) }
+  end
+
+  def completed_anonymously?
+    return @completed_anonymously if defined?(@completed_anonymously)
+
+    @completed_anonymously = form.present? &&
+      FormCompletion.exists?(person: @event_registration.registrant, form:, event: @event_registration.event)
   end
 
   private

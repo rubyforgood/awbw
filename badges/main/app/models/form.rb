@@ -37,14 +37,20 @@ class Form < ApplicationRecord
   SURVEY_ROLES = ROLE_OPTIONS.map(&:last).select { |role| role.include?("survey") }.freeze
   SURVEY_HEADERS = { "recipient_survey" => "Scholarship survey" }.freeze
 
+  # Roles whose submissions are processed against a Person, so they can't be anonymous.
+  IDENTIFIED_ROLES = (AGREEMENT_ROLES + %w[scholarship bulk_payment continuing_education]).freeze
+
   # The questions that identify a public respondent (used to build their Person).
   IDENTITY_IDENTIFIERS = %w[first_name last_name primary_email].freeze
+  # Optional on an anonymous form, however they're flagged.
+  ANONYMOUS_OPTIONAL_IDENTIFIERS = (IDENTITY_IDENTIFIERS + %w[confirm_email]).freeze
 
   belongs_to :owner, polymorphic: true, optional: true
   has_many :form_fields, dependent: :destroy, inverse_of: :form
   has_many :event_forms, dependent: :destroy
   has_many :user_forms
   has_many :form_submissions
+  has_many :form_completions, dependent: :destroy
   has_many :reports, as: :owner
   # has_many through
   has_many :events, through: :event_forms
@@ -69,6 +75,7 @@ class Form < ApplicationRecord
   validates :slug, format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/,
     message: "may only contain lowercase letters, numbers, and hyphens" }, allow_blank: true
   validate :published_form_has_slug
+  validate :anonymous_allowed_for_role
   validate :event_form_not_published
 
   def self.survey(role)
@@ -101,28 +108,38 @@ class Form < ApplicationRecord
     standalone? && !event_connected? && published? && slug.present?
   end
 
-  # An agreement form (registration / new job / reinstatement) processes its
-  # submission against a Person — minting a registration, reconciling
-  # affiliations — so it always requires the full name/email identity and never
-  # accepts anonymous responses, however its identity questions are flagged.
+  # A form not set to anonymous always requires the full name/email identity,
+  # however its identity questions are flagged.
   def requires_identity?
-    role.in?(AGREEMENT_ROLES)
+    !anonymous?
   end
 
-  # Derived, not stored: a public form invites anonymous responses when it asks
-  # for name/email but requires none of them, so a respondent can skip
-  # identifying themselves and still submit (see PublicFormSubmission). A form
-  # with required identity questions forces an identified submission instead.
-  def accepts_anonymous_submissions?
-    return false if requires_identity?
+  def asks_identity?
+    form_fields.any? { |field| field.field_identifier.in?(IDENTITY_IDENTIFIERS) }
+  end
 
-    identity_fields = form_fields.select { |field| field.field_identifier.in?(IDENTITY_IDENTIFIERS) }
-    identity_fields.any? && identity_fields.none?(&:required?)
+  # A form that requires identity but can't collect it rejects every logged-out submission.
+  def missing_identity_questions?
+    requires_identity? && (IDENTITY_IDENTIFIERS - form_fields.map(&:field_identifier)).any?
+  end
+
+  # Whether submitted answers name the respondent: on an anonymous form only all
+  # three of first name, last name, and email credit a person; anything less
+  # (including a form that doesn't ask them) leaves the submission anonymous.
+  # A legal first name stands in for a first name, as PublicFormSubmission builds the person.
+  def identified_by?(form_params)
+    params = form_params.to_h.transform_keys(&:to_s)
+    fields = form_fields.index_by(&:field_identifier)
+    answered = ->(identifier) { fields[identifier].present? && params[fields[identifier].id.to_s].to_s.strip.present? }
+    (answered.("first_name") || answered.("legal_first_name")) && answered.("last_name") && answered.("primary_email")
   end
 
   # Whether a submission must carry an answer for this field: the field's own
   # required flag, plus the identity questions a registration form always needs.
+  # An anonymous form never requires the name and email questions.
   def requires_answer?(field)
+    return false if anonymous? && field.field_identifier.in?(ANONYMOUS_OPTIONAL_IDENTIFIERS)
+
     field.required? || (requires_identity? && field.field_identifier.in?(IDENTITY_IDENTIFIERS))
   end
 
@@ -135,6 +152,12 @@ class Form < ApplicationRecord
     return if slug.nil?
 
     self.slug = slug.parameterize.presence || slug.presence
+  end
+
+  def anonymous_allowed_for_role
+    return unless anonymous? && role.in?(IDENTIFIED_ROLES)
+
+    errors.add(:anonymous, "can't be turned on for a #{Form.survey_header(role).downcase} form, which is processed against a person")
   end
 
   def published_form_has_slug
