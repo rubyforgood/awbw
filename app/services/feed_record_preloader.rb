@@ -8,7 +8,12 @@ class FeedRecordPreloader
     Person => :user,
     EventRegistration => REGISTRATION,
     ContinuingEducationRegistration => { event_registration: REGISTRATION },
-    Scholarship => [ { recipient: :user }, { allocation: :allocatable } ]
+    Scholarship => [ { recipient: :user }, { allocation: :allocatable } ],
+    TopicSubscription => :topic_subscription_type,
+    FormSubmission => %i[form event],
+    Affiliation => %i[person organization],
+    StaffTagging => :staff_tag,
+    User => :person
   }.freeze
 
   def initialize(entries)

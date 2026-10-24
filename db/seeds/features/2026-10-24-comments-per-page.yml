@@ -1,0 +1,9 @@
+name: "Choose how many comments to show per page"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-24
+action_path: "/comments"
+summary: >-
+  The All comments page has a "Per page" dropdown, so you can show 10 to 250 comments at once.
+pro_tips:
+  - "Your choice sticks as you filter and page through results."

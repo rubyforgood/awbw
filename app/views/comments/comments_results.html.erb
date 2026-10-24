@@ -4,5 +4,5 @@
   </div>
   <%= render "comments/feed",
              comments: @comments,
-             pagination_params: params.slice(:source, :query, :author_id, :from, :to, :flagged, :person_id, :event_id).permit! %>
+             pagination_params: params.slice(:source, :query, :author_id, :from, :to, :flagged, :person_id, :event_id, :number_of_items_per_page).permit! %>
 <% end %>
