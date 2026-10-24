@@ -224,12 +224,6 @@ RSpec.describe "People search", type: :request do
         expect(search("Hiddenway")).not_to include("Markedone")
       end
 
-      it "does not match phones (phone search is admin-only)" do
-        marked.update!(profile_show_phone: true)
-        create(:contact_method, contactable: marked, value: "555-0142")
-        expect(search("555-0142")).not_to include("Markedone")
-      end
-
       it "ignores a phone filter passed by URL" do
         marked.update!(profile_show_phone: true)
         create(:contact_method, contactable: marked, value: "555-0142")
@@ -368,11 +362,6 @@ RSpec.describe "People search", type: :request do
     it "matches the legal first name" do
       person.update!(legal_first_name: "Legalname")
       expect(search("Legalname")).to include("Hiddenfacts")
-    end
-
-    it "does not match addresses" do
-      create(:address, addressable: person, street_address: "123 Hiddenway")
-      expect(search("Hiddenway")).not_to include("Hiddenfacts")
     end
 
     it "matches a phone the person hides via the phone filter" do

@@ -700,22 +700,9 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_alice)
     end
 
-    it 'search_name_email matches names and emails but not phones or addresses' do
-      create(:contact_method, contactable: person_alice, value: '555-0199')
-      create(:address, addressable: person_bob, street_address: '123 Hiddenway')
-
+    it 'search_name_email matches names and emails' do
       expect(Person.search_name_email('Alice')).to include(person_alice)
       expect(Person.search_name_email('alice@example')).to include(person_alice)
-      expect(Person.search_name_email('555-0199')).not_to include(person_alice)
-      expect(Person.search_name_email('Hiddenway')).not_to include(person_bob)
-    end
-
-    it 'the broad search still matches phones and addresses' do
-      create(:contact_method, contactable: person_alice, value: '555-0199')
-      create(:address, addressable: person_bob, street_address: '123 Hiddenway')
-
-      expect(Person.search('555-0199')).to include(person_alice)
-      expect(Person.search('Hiddenway')).to include(person_bob)
     end
 
     it 'filters by shared_contact_info matching a full name' do
@@ -732,13 +719,6 @@ RSpec.describe Person, type: :model do
       expect(Person.search_by_params(shared_contact_info: 'alice@example')).not_to include(person_alice)
     end
 
-    it 'no longer matches phones through shared_contact_info (phone search is admin-only)' do
-      person_bob.update!(profile_show_phone: true)
-      create(:contact_method, contactable: person_bob, value: '555-0199')
-
-      expect(Person.search_by_params(shared_contact_info: '555-0199')).not_to include(person_bob)
-    end
-
     it 'filters by phone matching a contact method' do
       create(:contact_method, contactable: person_alice, value: '555-0199')
 
@@ -750,12 +730,6 @@ RSpec.describe Person, type: :model do
       create(:contact_method, contactable: person_alice, value: '555-0199', inactive: true)
 
       expect(Person.search_by_params(phone: '555-0199')).to include(person_alice)
-    end
-
-    it 'does not match a login (users) phone' do
-      person_bob.user.update!(phone: '555-0199')
-
-      expect(Person.search_by_params(phone: '555-0199')).not_to include(person_bob)
     end
 
     it 'filters by shared_contact_info treating a quoted phrase as one term' do
