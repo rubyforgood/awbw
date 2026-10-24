@@ -1,7 +1,8 @@
 # Turns the address values other systems and older free-text forms wrote — FileMaker, the
 # LMS registration sheet, the portal's own answers from before the dropdowns — into what the
-# portal's address dropdowns store (ADR-0009). Translation is by lookup table, and a value
-# nothing answers to is kept as typed and counted in #unmatched, never guessed at.
+# portal's address dropdowns store (ADR-0009). Translation is by lookup table, never guessed:
+# a country nothing answers to is cleared so every stored country is a dropdown one, and
+# counted in #unmatched with the state values it can't read.
 #
 # Built once per run and reused, so an import's report can list everything it couldn't place.
 class AddressTranslation
@@ -50,18 +51,16 @@ class AddressTranslation
     @unmatched = Hash.new { |hash, field| hash[field] = Hash.new(0) }
   end
 
-  # A dropdown country: the one the value names, else the one its state implies, else the
-  # value as typed (reported). nil when it's blank or a placeholder and the state says nothing.
+  # A dropdown country: the one the value names, else the one its state implies, else nil
+  # (reported when there was a value to read).
   def country(value, state:)
     text = value.to_s.strip
     text = "" if placeholder?(text)
     return UNITED_STATES if us_state_code(text) && us_state_code(state)
 
     found = country_named(text) || country_from_state(state)
-    return found if found
-
-    @unmatched[:country][text] += 1 if text.present?
-    text.presence
+    @unmatched[:country][text] += 1 if found.nil? && text.present?
+    found
   end
 
   # A US state's USPS code; any other region as typed. A value that reads as neither, on an

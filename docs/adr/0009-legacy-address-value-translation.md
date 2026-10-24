@@ -24,7 +24,10 @@ list can't be preselected.
 
 One translator, `AddressTranslation`, used by every import and by the cleanup of existing
 data. Like ADR-0007, translation is **by lookup table, and a value nothing answers to is
-reported, never guessed** — it's kept as typed and counted in `#unmatched`.
+reported, never guessed** — it's counted in `#unmatched`. Every stored country ends up a
+dropdown name or blank: a country nothing answers to is cleared (its old value stays in the
+cleanup's Ahoy log, the `fm_*` archive, or the import's report). A state nothing reads is kept,
+since a state is required and regions outside the US are legitimate.
 
 - **Country** → a dropdown name. In order: a placeholder ("-", blank, "n/a", "none",
   "unknown") counts as no country; a US state code typed as the country next to that state
@@ -57,12 +60,13 @@ reported, never guessed** — it's kept as typed and counted in `#unmatched`.
 ### Form answers
 
 Form answers are otherwise stored verbatim. Country and state answers are the one exception:
-they're rewritten so form results and maps count one place once, and each rewrite is logged.
+they're rewritten so form results and maps count one place once (a country answer nothing
+answers to becomes blank), and each rewrite is logged.
 
 ## Consequences
 
 - A new spelling turns up in an import's or the cleanup's unmatched report; adding it is a
-  line in `ALIASES` or `REGIONS`.
+  line in `ALIASES` or `REGIONS`, and a re-run fills the country it had cleared (from the
+  state, or by hand from the logged value).
 - The `fm_*` archive tables keep FileMaker's raw values.
-- What the cleanup can't place is listed in its report for a hand fix, so a form's
-  exact-match preselect can't silently blank one on save.
+- Every stored country preselects in the dropdowns, so saving a form can't silently blank one.

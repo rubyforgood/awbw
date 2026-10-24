@@ -75,7 +75,7 @@ namespace :fm do
       import.unmatched_addresses.each do |field, values|
         next if values.empty?
 
-        say.("\nAddress #{field} values nothing translates (kept as typed):")
+        say.("\nAddress #{field} values nothing translates (#{field == :country ? 'left blank' : 'kept as typed'}):")
         values.sort_by { |value, count| [ -count, value ] }.each { |value, count| say.("  #{count.to_s.rjust(5)}  #{value}") }
       end
 

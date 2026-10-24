@@ -17,7 +17,8 @@ namespace :data do
     result.unmatched.each do |field, values|
       next if values.empty?
 
-      puts "\n#{field.to_s.humanize} values nothing translates (kept as typed — fix by hand):"
+      outcome = field == :country ? "left blank, was logged" : "kept as typed"
+      puts "\n#{field.to_s.humanize} values nothing translates (#{outcome} — fix by hand if you know it):"
       values.sort_by { |value, count| [ -count, value ] }.each { |value, count| puts "  #{count.to_s.rjust(5)}  #{value}" }
     end
     puts "\naddresses changed: #{result.addresses}"

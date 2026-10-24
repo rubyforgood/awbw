@@ -48,9 +48,10 @@ RSpec.describe AddressTranslation do
       expect(translation.country("West Africa", state: "Togo")).to eq("Togo")
     end
 
-    it "keeps a country it can't place as typed and reports it" do
-      expect(translation.country(" Narnia ", state: "Central Region")).to eq("Narnia")
-      expect(translation.unmatched[:country]).to eq("Narnia" => 1)
+    it "clears a country it can't place, so every stored country is a dropdown one, and reports it" do
+      expect(translation.country(" Narnia ", state: "Central Region")).to be_nil
+      expect(translation.country("West Africa", state: "-")).to be_nil
+      expect(translation.unmatched[:country]).to eq("Narnia" => 1, "West Africa" => 1)
     end
 
     it "is nil when neither the country nor the state names one" do

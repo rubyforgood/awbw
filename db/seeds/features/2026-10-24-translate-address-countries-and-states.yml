@@ -9,4 +9,4 @@ summary: >-
   portal — "USA" becomes United States, "California" becomes CA, a province fills in its country.
 pro_tips:
   - "Every change is logged in Activities, so you can see what was rewritten and what it was before."
-  - "Anything it can't place is listed in the cleanup's report for a hand fix."
+  - "A country it can't place is left blank and listed in the cleanup's report; the old value is in Activities."

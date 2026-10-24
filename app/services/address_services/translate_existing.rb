@@ -54,11 +54,11 @@ module AddressServices
       paired = paired_answers.dig(answer.form_submission_id, ANSWER_PAIRS[identifier])
       raw = answer.submitted_answer
       translated = if identifier.end_with?("_country")
-        @translation.country(raw, state: paired)
+        @translation.country(raw, state: paired).to_s
       else
-        @translation.state(raw, country: paired)
+        @translation.state(raw, country: paired).to_s
       end
-      return false if translated.blank? || translated == raw
+      return false if translated == raw.to_s || (translated.blank? && identifier.end_with?("_state"))
 
       apply(answer, { submitted_answer: translated }, title: answer.form_field.name,
             form_submission_id: answer.form_submission_id, field_identifier: identifier)

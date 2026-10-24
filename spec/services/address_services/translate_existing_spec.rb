@@ -50,13 +50,37 @@ RSpec.describe AddressServices::TranslateExisting do
     expect([ stored(dash).first, stored(unknown).first ]).to eq([ nil, nil ])
   end
 
-  it "keeps a country it can't place and reports it" do
+  it "clears a country it can't place, logging what it was and reporting it" do
     narnia = address_with(country: "Narnia", state: "Central Region")
 
     result = described_class.new.call
 
-    expect(stored(narnia).first).to eq("Narnia")
+    expect(stored(narnia).first).to be_nil
     expect(result.unmatched[:country]).to include("Narnia" => 1)
+    expect(Ahoy::Event.find_by!(name: "autochange.address", resource_id: narnia.id).properties["changes"])
+      .to include("country" => { "before" => "Narnia", "after" => nil })
+  end
+
+  it "blanks a country answer it can't place" do
+    submission = create(:form_submission)
+    answer(submission, "mailing_state", "-")
+    country = answer(submission, "mailing_country", "West Africa")
+
+    described_class.new.call
+
+    expect(country.reload.submitted_answer).to eq("")
+  end
+
+  it "leaves every stored country and country answer on the dropdown" do
+    address_with(country: "Narnia", state: "Central Region")
+    address_with(country: "USA", state: "TX")
+    submission = create(:form_submission)
+    answer(submission, "organization_country", "Atlantis")
+
+    described_class.new.call
+
+    expect(Address.where.not(country: [ nil, "" ]).pluck(:country) - GeographyHelper::COUNTRIES).to be_empty
+    expect(FormAnswer.where.not(submitted_answer: [ nil, "" ]).pluck(:submitted_answer) - GeographyHelper::COUNTRIES).to be_empty
   end
 
   it "translates country and state answers using the submission's other answer" do
