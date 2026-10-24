@@ -5,9 +5,10 @@ module AffiliationServices
   #
   #   1. Personnel (FmPersonnel) — a person staffing a project's art program becomes a
   #      Facilitator affiliation, dated from when the row was entered to when the project
-  #      closed, with a comment naming the role FileMaker gave. A Leader or Liaison is a
-  #      primary contact — turned on for a Facilitator row the portal already had — and an
-  #      Assistant isn't. Each carries the row's PrsnlRecID as its filemaker_code.
+  #      closed, with a comment naming the role FileMaker gave. Only a Leader or Liaison is a
+  #      primary contact — turned on for a Facilitator row the portal already had. It links
+  #      an existing Facilitator row only for the same stretch (#same_stint), so separate
+  #      stints stay separate. Each carries the row's PrsnlRecID as its filemaker_code.
   #   2. People-to-organizations (FmPeopleToOrganization) — a job at an organization, with
   #      its title, carrying the row's RecordID.
   #   3. The Rolodex card itself (FmRolodex) — the organization its OrgID (or its typed
@@ -34,8 +35,8 @@ module AffiliationServices
     # ended, since over-reporting active programs would skew program status.
     ACTIVE_STATUSES = %w[active].freeze
     # Every Personnel role is a Facilitator, the shape prod's January 2026 conversion gave the
-    # old app's roles. A Leader or Liaison is also a primary contact; an Assistant isn't.
-    NON_PRIMARY_ROLES = %w[assistant].freeze
+    # old app's roles. Only a role FileMaker names as Leader or Liaison makes a primary contact.
+    PRIMARY_ROLES = %w[leader leaders liaison].freeze
     LEGACY_LEADER_TITLE = "Leader"
     ROLE_COMMENT_TOPIC = "FileMaker import"
     # Stands in where a Personnel row names a project but no person.
@@ -113,7 +114,7 @@ module AffiliationServices
       role = data["Role"].to_s.squish
       attributes = dates.merge(primary_contact: primary_contact?(role))
       people.each do |person|
-        affiliation = affiliate(person, organization, row, label, title: Affiliation::FACILITATOR_TITLE, attributes:, codes: @personnel_ids)
+        affiliation = affiliate(person, organization, row, label, title: Affiliation::FACILITATOR_TITLE, attributes:, codes: @personnel_ids, dated: true)
         note_role(affiliation, row, role) if affiliation && role.present?
       end
     end
@@ -128,7 +129,7 @@ module AffiliationServices
 
       dates = personnel_dates(row.data, @projects[row.data["ProjectID"].to_s])
       affiliation = affiliate(placeholder_person, organization, row, label, title: Affiliation::FACILITATOR_TITLE,
-                              attributes: dates.merge(primary_contact: false), codes: @personnel_ids)
+                              attributes: dates.merge(primary_contact: false), codes: @personnel_ids, dated: true)
       return unless affiliation
 
       affiliation.comments.create!(topic: ROLE_COMMENT_TOPIC,
@@ -151,10 +152,9 @@ module AffiliationServices
                                          "#{" Primary contact turned on." if flipped}")
     end
 
-    # Nearly every Personnel row is a Leader, so a blank or unrecognized role is one too.
     def primary_contact?(role)
-      primary = NON_PRIMARY_ROLES.exclude?(role.downcase)
-      @roles["#{role.presence || "(blank)"} → Facilitator#{", not primary contact" unless primary}"] += 1
+      primary = PRIMARY_ROLES.include?(role.downcase)
+      @roles["#{role.presence || "(blank)"} → Facilitator#{", primary contact" if primary}"] += 1
       primary
     end
 
@@ -218,13 +218,39 @@ module AffiliationServices
     # the row's own table holds — an affiliation already carrying another of them records
     # a different row (another stint on the same project), so it's never the match. A row
     # with no code of its own (the Rolodex card) only fills in what's missing.
-    def affiliate(person, organization, row, label, title:, attributes:, codes:)
+    def affiliate(person, organization, row, label, title:, attributes:, codes:, dated: false)
       existing = person.affiliations.where(organization:).to_a
-      match = existing.find { |affiliation| same_title?(affiliation.title, title) && !records_another_row?(affiliation, codes) }
+      candidates = existing.select { |affiliation| same_title?(affiliation.title, title) && !records_another_row?(affiliation, codes) }
+      match = dated ? same_stint(candidates, attributes) : candidates.first
       match ||= existing.find { |affiliation| affiliation.title.blank? } if title.present? && codes.nil?
       return link(match, row, label, title:, attributes:, codes:) if match
 
       create(person, organization, row, label, title:, attributes:, code: codes && row.fm_id)
+    end
+
+    # A person can facilitate at one organization over several separate stretches, so a
+    # Personnel row links only the affiliation recording the same one: the periods overlap,
+    # reading a blank start as "since whenever" and a blank end as "still going" — except an
+    # ended row with no end date, which reads as the moment it started, so it can't reach a
+    # later stretch. Identical dates win, then the nearest start, then one with dates at all.
+    def same_stint(candidates, dates)
+      period = stint(dates[:start_date], dates[:end_date], dates[:inactive])
+      candidates.select { |affiliation| overlap?(period, stint(affiliation.start_date, affiliation.end_date, affiliation.inactive?)) }
+                .min_by { |affiliation| stint_rank(affiliation, dates) }
+    end
+
+    def stint(start_date, end_date, ended)
+      [ start_date, end_date || (start_date if ended) ]
+    end
+
+    def overlap?((starts, ends), (other_starts, other_ends))
+      (starts.nil? || other_ends.nil? || starts <= other_ends) && (other_starts.nil? || ends.nil? || other_starts <= ends)
+    end
+
+    def stint_rank(affiliation, dates)
+      identical = affiliation.start_date == dates[:start_date] && affiliation.end_date == dates[:end_date]
+      gap = (affiliation.start_date - dates[:start_date]).abs if affiliation.start_date && dates[:start_date]
+      [ identical ? 0 : 1, gap || Float::INFINITY ]
     end
 
     def records_another_row?(affiliation, codes)
