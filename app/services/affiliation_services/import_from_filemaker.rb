@@ -38,6 +38,8 @@ module AffiliationServices
     NON_PRIMARY_ROLES = %w[assistant].freeze
     LEGACY_LEADER_TITLE = "Leader"
     ROLE_COMMENT_TOPIC = "FileMaker import"
+    # Stands in where a Personnel row names a project but no person.
+    PLACEHOLDER_NAME = { first_name: "AWBW", last_name: "Placeholder" }.freeze
     SOURCES = { FmPersonnel => "Personnel", FmPeopleToOrganization => "People-to-organizations", FmRolodex => "Rolodex" }.freeze
 
     attr_reader :results, :differences, :statuses, :roles
@@ -63,6 +65,7 @@ module AffiliationServices
       @projects = FmProject.all.index_by(&:fm_id)
       @personnel_ids = FmPersonnel.pluck(:fm_id).to_set
       @job_ids = FmPeopleToOrganization.pluck(:fm_id).to_set
+      @unstaffed = []
       @read = 0
 
       each_batch(FmPersonnel.all) { |row| import_personnel(row) }
@@ -70,6 +73,7 @@ module AffiliationServices
       addresses = FmRolodex.contact_index(FmAddress)
       phones = FmRolodex.contact_index(FmPhoneNumber)
       each_batch(FmRolodex.all) { |rolodex| import_rolodex(rolodex.preload_contacts(addresses:, phone_numbers: phones)) }
+      in_batch(@unstaffed) { |row, organization, label| import_unstaffed(row, organization, label) }
       self
     end
 
@@ -80,13 +84,17 @@ module AffiliationServices
     # Untouched, so a new affiliation doesn't stamp its person as edited now.
     def each_batch(scope, &import)
       scope.find_in_batches(batch_size: BATCH_SIZE) do |batch|
-        ActiveRecord::Base.transaction(requires_new: true) do
-          ActiveRecord::Base.no_touching do
-            Analytics::LifecycleBuffer.tagging(@run ? { import_run: @run } : {}) { batch.each(&import) }
-          end
-          Analytics::LifecycleBuffer.flush_to(@tracker)
-        end
+        in_batch(batch, &import)
         @progress&.call(@read += batch.size)
+      end
+    end
+
+    def in_batch(rows, &import)
+      ActiveRecord::Base.transaction(requires_new: true) do
+        ActiveRecord::Base.no_touching do
+          Analytics::LifecycleBuffer.tagging(@run ? { import_run: @run } : {}) { rows.each(&import) }
+        end
+        Analytics::LifecycleBuffer.flush_to(@tracker)
       end
     end
 
@@ -97,8 +105,9 @@ module AffiliationServices
 
       people = @people.records(data["PersonID"])
       organization = organization_for(data["ProjectID"])
-      return record(:skipped, "#{label}: person #{data["PersonID"].presence || "(none)"} wasn't imported") if people.empty?
       return record(:skipped, "#{label}: project #{data["ProjectID"].presence || "(none)"} wasn't imported") unless organization
+      return @unstaffed << [ row, organization, label ] if data["PersonID"].blank?
+      return record(:skipped, "#{label}: person #{data["PersonID"]} wasn't imported") if people.empty?
 
       dates = personnel_dates(data, @projects[data["ProjectID"].to_s])
       role = data["Role"].to_s.squish
@@ -107,6 +116,30 @@ module AffiliationServices
         affiliation = affiliate(person, organization, row, label, title: Affiliation::FACILITATOR_TITLE, attributes:, codes: @personnel_ids)
         note_role(affiliation, row, role) if affiliation && role.present?
       end
+    end
+
+    # A Personnel row naming no one still records that the program ran. Read last, once every
+    # other row has had its say, so the placeholder only stands in at an organization nothing
+    # else affiliates anyone with — one placeholder there is enough.
+    def import_unstaffed(row, organization, label)
+      if organization.affiliations.exists?
+        return record(:skipped, "#{label}: names no person, and organization ##{organization.id} already has affiliations")
+      end
+
+      dates = personnel_dates(row.data, @projects[row.data["ProjectID"].to_s])
+      affiliation = affiliate(placeholder_person, organization, row, label, title: Affiliation::FACILITATOR_TITLE,
+                              attributes: dates.merge(primary_contact: false), codes: @personnel_ids)
+      return unless affiliation
+
+      affiliation.comments.create!(topic: ROLE_COMMENT_TOPIC,
+                                   body: "FileMaker Personnel #{row.fm_id} names no person, so #{PLACEHOLDER_NAME.values.join(" ")} " \
+                                         "stands in to keep the program's FileMaker history.")
+    end
+
+    def placeholder_person
+      @placeholder_person ||= Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", *PLACEHOLDER_NAME.values.map(&:downcase))
+                                    .order(:id).first ||
+                              Person.create!(**PLACEHOLDER_NAME, created_by_id: @import_user_id, updated_by_id: @import_user_id)
     end
 
     # Every role FileMaker gave folds into Facilitator, so the affiliation keeps the word —

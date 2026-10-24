@@ -132,6 +132,40 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       expect(person.affiliations.pluck(:filemaker_code)).to contain_exactly("PS0001", "PS0002")
     end
 
+    describe "a row naming a project but no person" do
+      it "puts AWBW Placeholder on an organization nothing else affiliates anyone with" do
+        personnel("PS0001", PersonID: "", Role: "")
+        personnel("PS0002", PersonID: "", Role: "", DateEntered: "1/5/2018")
+
+        import = described_class.new.call
+
+        placeholder = Person.find_by!(first_name: "AWBW", last_name: "Placeholder")
+        affiliation = placeholder.affiliations.sole
+        expect(affiliation).to have_attributes(organization: program, title: "Facilitator", primary_contact: false, filemaker_code: "PS0001")
+        expect(affiliation.comments.sole.body).to include("PS0001", "names no person")
+        expect(import.results[:skipped]).to contain_exactly(a_string_including("PS0002", "already has affiliations"))
+      end
+
+      it "leaves an organization that already has affiliations alone, even from a later row" do
+        personnel("PS0001", PersonID: "")
+        personnel("PS0002")
+
+        import
+
+        expect(Person.where(first_name: "AWBW", last_name: "Placeholder")).to be_empty
+        expect(program.affiliations.sole.person).to eq(person)
+      end
+
+      it "reuses the placeholder person already in the portal" do
+        existing = create(:person, first_name: "AWBW", last_name: "Placeholder", email: nil, user: nil)
+        personnel("PS0001", PersonID: "")
+
+        import
+
+        expect(existing.affiliations.count).to eq(1)
+      end
+    end
+
     it "skips a row whose person or project wasn't imported" do
       personnel("PS0001", PersonID: "99999")
       personnel("PS0002", ProjectID: "P9999")
