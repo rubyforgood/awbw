@@ -49,6 +49,31 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(import.invalid_emails).to be_empty
     end
 
+    it "saves the address of a row flagged 2 as the person's second email" do
+      rolodex("00055", EmailPrimary: "2", EMail: "ada@example.com", EmailType: "Work")
+
+      results
+
+      expect(Person.find_by!(filemaker_code: "00055"))
+        .to have_attributes(email: nil, email_type: nil, email_2: "ada@example.com", email_2_type: "work")
+    end
+
+    it "gives a row flagged 2 a placeholder email when a same-name person has none" do
+      create(:person, first_name: "Ada", last_name: "Lovelace", email: nil, user: nil)
+      rolodex("00056", EmailPrimary: "2", EMail: "ada@example.com")
+
+      expect(results[:created].size).to eq(1)
+      expect(Person.find_by!(filemaker_code: "00056")).to have_attributes(email: PlaceholderEmail.at(1), email_2: "ada@example.com")
+    end
+
+    it "links a person by the address of a row flagged 2, keeping their own email" do
+      person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+      rolodex("00057", EmailPrimary: "2", EMail: "ada@example.com")
+
+      expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
+      expect(person.reload).to have_attributes(filemaker_code: "00057", email: "ada@example.com", email_2: nil)
+    end
+
     it "links a same-name person with no email when the row holds only the flag" do
       person = create(:person, first_name: "Ada", last_name: "Lovelace", email: nil, user: nil)
       rolodex("00054", EmailPrimary: "1")

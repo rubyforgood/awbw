@@ -46,8 +46,11 @@ module PersonServices
     # Answers to "which kind of email is this?" that aren't a kind at all.
     PRECEDENCE_TYPES = %w[preferred primary main].freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
-    # EmailPrimary holds a flag ("1" or "2"), never an address, so only EMail is read for one.
+    # EmailPrimary holds a flag, never an address, so only EMail is read for one. The flag
+    # says whether EMail is the person's primary email ("1") or their secondary ("2").
     EMAIL_FIELDS = %w[EMail].freeze
+    EMAIL_FLAG_FIELD = "EmailPrimary"
+    SECONDARY_EMAIL_FLAG = "2"
     STRING_LIMIT = 255
     BATCH_SIZE = 1_000
 
@@ -123,7 +126,7 @@ module PersonServices
       return record(:skipped, "#{label}: missing first or last name") if first_name.blank? || last_name.blank?
 
       row_emails = emails(data)
-      email, email_2 = row_emails
+      email, email_2 = secondary_email?(data) ? [ nil, row_emails.first ] : row_emails
       match = match_people(rolodex, row_emails, first_name, last_name)
       return link(match, rolodex, label) if match.any?
 
@@ -203,7 +206,12 @@ module PersonServices
     end
 
     def needs_placeholder_email?(person, data)
-      person.email.blank? && invalid_email_values(data).any? && same_name(person.first_name, person.last_name).exists?
+      person.email.blank? && (invalid_email_values(data).any? || person.email_2.present?) &&
+        same_name(person.first_name, person.last_name).exists?
+    end
+
+    def secondary_email?(data)
+      data[EMAIL_FLAG_FIELD].to_s.strip == SECONDARY_EMAIL_FLAG
     end
 
     def profile_attributes(data)
@@ -212,7 +220,7 @@ module PersonServices
         best_time_to_call: clip(data["BestTimeToCall"]),
         racial_ethnic_identity: clip(data["Ethnicity"]),
         date_of_birth: parse_date(data["DateOfBirth"]),
-        email_type: email_type(data["EmailType"]),
+        (secondary_email?(data) ? :email_2_type : :email_type) => email_type(data["EmailType"]),
         member_since: member_since(data)
       }
     end
