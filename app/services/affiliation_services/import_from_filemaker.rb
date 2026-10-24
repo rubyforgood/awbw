@@ -45,6 +45,8 @@ module AffiliationServices
 
     attr_reader :results, :differences, :statuses, :roles
 
+    def unmatched_addresses = @address_attributes.unmatched
+
     def initialize(progress: nil, run: nil)
       @progress = progress
       @run = run

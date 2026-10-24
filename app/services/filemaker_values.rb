@@ -10,9 +10,7 @@ module FilemakerValues
   DATE_FORMATS = %w[%m/%d/%Y %Y-%m-%d %m-%d-%Y %Y/%m/%d].freeze
   # A two-digit year below this is read as 20xx, at or above it as 19xx.
   TWO_DIGIT_YEAR_PIVOT = 10
-  CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "cell" => "personal",
-                    "mobile" => "personal", "work" => "work", "business" => "work",
-                    "professional" => "work", "mailing" => "mailing" }.freeze
+  CONTACT_TYPES = AddressTranslation::CONTACT_TYPES
 
   # Every string copied here lands in a varchar(255) the archive's free text isn't
   # bounded by, and an over-long incidental field would otherwise cost the record —
