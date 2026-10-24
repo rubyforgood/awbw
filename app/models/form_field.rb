@@ -297,6 +297,12 @@ class FormField < ApplicationRecord
     FREE_FORM_TEXT_TYPES.include?(answer_type)
   end
 
+  # The field's required flag, waived where the form waives it (an anonymous
+  # form's name and email questions).
+  def answer_required?
+    required? && form.requires_answer?(self)
+  end
+
   # False for display-only types (informational text, section headers) that
   # never collect an answer; true for every field a respondent fills in.
   def collects_input?

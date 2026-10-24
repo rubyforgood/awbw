@@ -29,7 +29,7 @@ class EventCopyService
   CALLOUT_COLUMNS = %w[builtin_key callout_type title subtitle description icon_class color_class hidden
                        payment_access_gated ce_payment_access_gated attended_gated].freeze
   RICH_TEXT_FIELDS = %w[rhino_header rhino_description].freeze
-  FORM_COLUMNS = %w[name role header sections].freeze
+  FORM_COLUMNS = %w[name role header sections anonymous].freeze
   UNCOPIED_FIELD_COLUMNS = %w[id form_id created_at updated_at created_by_id updated_by_id].freeze
 
   attr_reader :warnings, :form_changes

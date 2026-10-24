@@ -397,7 +397,35 @@ RSpec.describe PublicFormSubmission do
     expect(confirmation.recipient_role).to eq("person")
   end
 
-  context "when identity is left blank (optional name/email questions)" do
+  context "on a form not set to anonymous" do
+    it "rejects every submission when the form doesn't ask name and email" do
+      [ first_name_field, last_name_field, email_field ].each(&:destroy!)
+
+      result = described_class.call(form: form.reload, form_params: { question_field.id.to_s => "I care." })
+
+      expect(result.success?).to be(false)
+      expect(FormSubmission.count).to eq(0)
+    end
+
+    {
+      "a blank name and email" => { first: "", last: "", email: "" },
+      "a missing email" => { email: "" },
+      "a missing first name" => { first: "" }
+    }.each do |label, blanks|
+      it "rejects #{label} rather than recording it anonymously" do
+        result = nil
+        expect { result = described_class.call(form: form, form_params: params_for(**blanks)) }
+          .not_to change(FormSubmission, :count)
+
+        expect(result.success?).to be(false)
+        expect(result.errors).to include(described_class::IDENTITY_REQUIRED_MESSAGE)
+      end
+    end
+  end
+
+  context "when identity is left blank on an anonymous form" do
+    before { form.update!(anonymous: true) }
+
     it "records a person-less submission when identity is blank" do
       result = nil
       expect { result = described_class.call(form: form, form_params: params_for(first: "", last: "", email: "")) }
@@ -422,6 +450,51 @@ RSpec.describe PublicFormSubmission do
       expect { described_class.call(form: form, form_params: params_for(first: "", last: "", email: "")) }
         .to change { Notification.where(kind: "form_submission_confirmation").count }.by(0)
         .and change { Notification.where(kind: "form_submission_confirmation_fyi").count }.by(1)
+    end
+  end
+
+  context "on an anonymous form" do
+    before { form.update!(anonymous: true) }
+
+    it "credits the respondent who gives first name, last name, and email" do
+      result = described_class.call(form: form, form_params: params_for)
+
+      expect(result.form_submission.person.email).to eq("sam@example.com")
+    end
+
+    it "credits an existing person matched on all three" do
+      existing = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
+
+      expect(described_class.call(form: form, form_params: params_for).form_submission.person).to eq(existing)
+    end
+
+    {
+      "only first and last name" => { email: "" },
+      "only an email" => { first: "", last: "" },
+      "an email and last name but no first name" => { first: "" }
+    }.each do |label, blanks|
+      it "records #{label} anonymously, without touching the matching person" do
+        existing = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
+
+        result = nil
+        expect { result = described_class.call(form: form, form_params: params_for(**blanks)) }
+          .not_to change(Person, :count)
+
+        expect(result.form_submission.person).to be_nil
+        expect(existing.form_submissions.count).to eq(0)
+      end
+    end
+
+    it "applies the same rule to logged-out-only name and email questions" do
+      [ first_name_field, last_name_field, email_field ].each { |field| field.update!(visibility: :logged_out_only) }
+
+      expect(described_class.call(form: form, form_params: params_for(email: "")).form_submission.person).to be_nil
+      expect(described_class.call(form: form, form_params: params_for).form_submission.person).to be_present
+    end
+
+    it "records no completion — a public link has no registrant to mark done" do
+      expect { described_class.call(form: form, form_params: params_for(email: "")) }
+        .not_to change(FormCompletion, :count)
     end
   end
 

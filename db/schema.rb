@@ -1147,6 +1147,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_24_093529) do
     t.index ["windows_type_id"], name: "index_form_builders_on_windows_type_id"
   end
 
+  create_table "form_completions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "person_id", null: false
+    t.integer "form_id", null: false
+    t.bigint "event_id", null: false
+    t.date "completed_on", null: false
+    t.index ["event_id"], name: "index_form_completions_on_event_id"
+    t.index ["form_id"], name: "index_form_completions_on_form_id"
+    t.index ["person_id", "form_id", "event_id"], name: "index_form_completions_on_person_id_and_form_id_and_event_id", unique: true
+  end
+
   create_table "form_field_answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "answer_option_id"
     t.datetime "created_at", precision: nil, null: false
@@ -1233,6 +1243,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_24_093529) do
     t.string "slug"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "updated_by_id"
+    t.boolean "anonymous", default: false, null: false
     t.index ["created_by_id"], name: "index_forms_on_created_by_id"
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
     t.index ["slug"], name: "index_forms_on_slug", unique: true
@@ -2775,6 +2786,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_24_093529) do
   add_foreign_key "form_builders", "users", column: "created_by_id"
   add_foreign_key "form_builders", "users", column: "updated_by_id"
   add_foreign_key "form_builders", "windows_types"
+  add_foreign_key "form_completions", "events"
+  add_foreign_key "form_completions", "forms"
+  add_foreign_key "form_completions", "people"
   add_foreign_key "form_field_answer_options", "answer_options"
   add_foreign_key "form_field_answer_options", "form_fields"
   add_foreign_key "form_field_answer_options", "users", column: "created_by_id"
