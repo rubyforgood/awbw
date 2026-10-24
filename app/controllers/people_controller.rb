@@ -52,6 +52,7 @@ class PeopleController < ApplicationController
     track_view(@person)
     @membership = membership_for(@person)
     @membership_autopay = allowed_to?(:own_membership?, @person) && @person.payment_processor.subscribed?
+    @pending_change_requests = own_pending_change_requests unless turbo_frame_request?
 
     if params[:checkout] == "success"
       flash[:notice] = "Thank you for your donation!"
@@ -763,5 +764,11 @@ class PeopleController < ApplicationController
     return unless Membership.enabled? && allowed_to?(:show?, person)
 
     person.memberships.includes(:membership_invoices).order(created_at: :desc).first&.decorate
+  end
+
+  def own_pending_change_requests
+    return [] unless allowed_to?(:edit_own_profile?, @person)
+
+    @person.profile_change_requests.pending.newest_first.includes(affiliation: :organization).decorate.to_a
   end
 end

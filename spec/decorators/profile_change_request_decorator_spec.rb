@@ -1,6 +1,24 @@
 require "rails_helper"
 
 RSpec.describe ProfileChangeRequestDecorator do
+  describe "#pending_summary" do
+    it "names a new email" do
+      request = build_stubbed(:profile_change_request, :secondary_email, requested_value: "new@example.com", proposed_email_type: nil)
+      expect(request.decorate.pending_summary).to eq("New secondary email: new@example.com")
+    end
+
+    it "names an organization change in plain words" do
+      organization = build_stubbed(:organization, name: "Riverside Center")
+      request = build_stubbed(:profile_change_request, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD, organization: organization)
+      expect(request.decorate.pending_summary).to eq("Add organization: Riverside Center")
+    end
+
+    it "falls back to a general label for an organization change it doesn't name" do
+      expect(build_stubbed(:profile_change_request, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_OTHER).decorate.pending_summary)
+        .to start_with("Organization change")
+    end
+  end
+
   describe "#heading" do
     it "titles the free-text request form as a profile data change" do
       expect(build_stubbed(:profile_change_request, :other).decorate.heading).to eq("Request a profile data change")
