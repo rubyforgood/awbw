@@ -3,16 +3,16 @@ current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/rac
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/racc-1.8.1/ext/racc/cparse
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-17e0yc sitelibdir\=./.gem.20261024-2127-17e0yc clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2942-drrwn sitelibdir\=./.gem.20261024-2942-drrwn clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/racc-1.8.1/ext/racc/cparse
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-17e0yc sitelibdir\=./.gem.20261024-2127-17e0yc
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2942-drrwn sitelibdir\=./.gem.20261024-2942-drrwn
 compiling cparse.c
 linking shared-object racc/cparse.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/racc-1.8.1/ext/racc/cparse
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-17e0yc sitelibdir\=./.gem.20261024-2127-17e0yc install
-/usr/bin/install -c -m 0755 cparse.so ./.gem.20261024-2127-17e0yc/racc
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2942-drrwn sitelibdir\=./.gem.20261024-2942-drrwn install
+/usr/bin/install -c -m 0755 cparse.so ./.gem.20261024-2942-drrwn/racc
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/racc-1.8.1/ext/racc/cparse
-make DESTDIR\= sitearchdir\=./.gem.20261024-2127-17e0yc sitelibdir\=./.gem.20261024-2127-17e0yc clean
+make DESTDIR\= sitearchdir\=./.gem.20261024-2942-drrwn sitelibdir\=./.gem.20261024-2942-drrwn clean
