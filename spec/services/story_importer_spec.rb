@@ -443,11 +443,12 @@ RSpec.describe StoryImporter do
       expect(StoryIdea.sole.workshops).to contain_exactly(workshop)
     end
 
-    it "keeps the free-text workshop title (minus the prefix) on the join when there is no match" do
+    it "keeps the free-text workshop title (minus the prefix) on the story and idea joins when there is no match" do
       import([ base_row("workshop" => "External title: Some Unlisted Workshop") ])
 
       expect(Story.sole.workshops).to be_empty
       expect(Story.sole.story_workshops.map(&:external_workshop_title)).to contain_exactly("Some Unlisted Workshop")
+      expect(StoryIdea.sole.story_idea_workshops.map(&:external_workshop_title)).to contain_exactly("Some Unlisted Workshop")
     end
   end
 
@@ -555,6 +556,52 @@ RSpec.describe StoryImporter do
 
       item = Story.sole.sectorable_items.find { |i| i.sector.name == "Incarceration" }
       expect(item.is_primary).to be(true)
+    end
+
+    it "stars a story's only sector and only audience when the row names no primary" do
+      create(:sector, name: "Domestic Violence")
+      adults = create(:category, category_type: age_range, name: "Adults")
+      create(:category, category_type: emotional_theme, name: "Hope")
+      import([ base_row("categories" => "AgeRange: Adults | EmotionalTheme: Hope") ])
+
+      story = Story.sole
+      expect(story.primary_sector.name).to eq("Domestic Violence")
+      expect(story.primary_category).to eq(adults)
+    end
+
+    it "stars nothing when the row has several sectors or audiences and no primary" do
+      create(:sector, name: "Domestic Violence")
+      create(:sector, name: "Incarceration")
+      create(:category, category_type: age_range, name: "Adults")
+      create(:category, category_type: age_range, name: "Teens")
+      import([ base_row("sectors" => "Domestic Violence | Incarceration", "categories" => "AgeRange: Adults | AgeRange: Teens") ])
+
+      story = Story.sole
+      expect(story.primary_sector).to be_nil
+      expect(story.primary_category).to be_nil
+    end
+
+    it "ignores Other when deciding a story has only one sector" do
+      create(:sector, name: "Domestic Violence")
+      create(:sector, name: Sector::OTHER_SECTOR_NAME)
+      import([ base_row("sectors" => "Domestic Violence | Other") ])
+
+      expect(Story.sole.primary_sector.name).to eq("Domestic Violence")
+    end
+
+    it "stars Other when it's a story's only sector" do
+      create(:sector, name: Sector::OTHER_SECTOR_NAME)
+      import([ base_row("sectors" => "Other") ])
+
+      expect(Story.sole.primary_sector.name).to eq(Sector::OTHER_SECTOR_NAME)
+    end
+
+    it "keeps the row's named primary over a sole-tag default" do
+      create(:sector, name: "Domestic Violence")
+      create(:sector, name: "Incarceration")
+      import([ base_row("sectors" => "Domestic Violence", "primary_sector" => "Incarceration") ])
+
+      expect(Story.sole.primary_sector.name).to eq("Incarceration")
     end
 
     it "keeps an unknown primary sector as a comment on the story" do

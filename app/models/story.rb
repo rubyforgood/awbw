@@ -18,9 +18,6 @@ class Story < ApplicationRecord
   belongs_to :author, class_name: "Person", optional: true
   belongs_to :co_author, class_name: "Person", optional: true
   belongs_to :story_idea, optional: true
-  # Kept as a legacy safety copy alongside story_workshops during the multi-step
-  # import; the join is the source of truth for display and editing.
-  belongs_to :workshop, optional: true
   has_many :story_workshops, -> { order(:position, :id) }, inverse_of: :story, dependent: :destroy
   has_many :workshops, through: :story_workshops
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -47,7 +44,6 @@ class Story < ApplicationRecord
   validates :updated_by_id, presence: true
   validates :title, presence: true, uniqueness: true, length: { maximum: 255 }
   validates :rhino_body, presence: true
-  validates :external_workshop_title, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :youtube_url, length: { maximum: 255 }
   normalizes :co_author_credit_preference, with: ->(value) { value.presence }
@@ -109,10 +105,24 @@ class Story < ApplicationRecord
   # Admin hand-picks the Story Share home carousel: lowest number leads, blank = not in it.
   scope :story_share_carousel, -> { where.not(story_share_carousel_position: nil).order(:story_share_carousel_position) }
 
+  scope :with_sector, ->(sectors) {
+    where(id: SectorableItem.where(sectorable_type: "Story", sector_id: sectors).select(:sectorable_id))
+  }
+  scope :with_primary_sector, ->(sectors) {
+    where(id: SectorableItem.where(sectorable_type: "Story", is_primary: true, sector_id: sectors).select(:sectorable_id))
+  }
+  scope :with_primary_category, ->(categories) {
+    where(id: CategorizableItem.where(categorizable_type: "Story", is_primary: true, category_id: categories).select(:categorizable_id))
+  }
+
   # A story credits either author, so both the author chip filter and the person
   # profile listing match on author_id or co_author_id.
   scope :authored_by, ->(person_id) {
     where("stories.author_id = :id OR stories.co_author_id = :id", id: person_id) if person_id.present?
+  }
+
+  scope :co_credited_openly, -> {
+    where(co_author_credit_preference: nil).or(where.not(co_author_credit_preference: ANONYMOUS))
   }
 
   scope :credited_to_person, ->(person) {
@@ -123,6 +133,17 @@ class Story < ApplicationRecord
     else
       none
     end
+  }
+
+  # Published sector and audience (age range, story population) tags whose name contains the query.
+  scope :tag_name_like, ->(query) {
+    sector_ids = Sector.published.sector_name(query).select(:id)
+    audience_ids = Category.audiences.published.category_name(query).select(:id)
+    with_sector(sector_ids).or(where(id: CategorizableItem.where(categorizable_type: "Story", category_id: audience_ids).select(:categorizable_id)))
+  }
+
+  scope :title_matches_first, ->(query) {
+    order(Arel.sql(sanitize_sql_array([ "CASE WHEN stories.title LIKE ? THEN 0 ELSE 1 END", "%#{sanitize_sql_like(query)}%" ])))
   }
 
   def self.search_by_params(params)
@@ -137,16 +158,20 @@ class Story < ApplicationRecord
       stories = self.search(conditions)
     end
 
-    # Keyword search matches the title, the rich-text body, and the credited
-    # author/creator name, OR-ed together via id subqueries so SearchCop's joins
-    # and the `people` joins stay isolated from each other. (A plain LIKE handles
-    # the title because SearchCop's default group pairs it with the boolean
-    # `published` column and won't match a title on its own.)
+    # Keyword search matches the title, the rich-text body, the credited
+    # author/creator name, the spotlighted facilitator's shown name, the
+    # organization name, and sector/audience tag names, OR-ed together via id
+    # subqueries so SearchCop's joins and the `people` joins stay isolated. (A
+    # plain LIKE handles the title because SearchCop's default group pairs it
+    # with the boolean `published` column and won't match a title on its own.)
     if params[:query].present?
       query = params[:query]
       stories = stories.where("stories.title LIKE ?", "%#{query}%")
                        .or(stories.where(id: self.search(query).select("stories.id")))
                        .or(stories.where(id: by_credited_person_name(query).select("stories.id")))
+                       .or(stories.where(id: tag_name_like(query).select("stories.id")))
+                       .or(stories.where(spotlighted_facilitator_id: Person.displayed_name_like(query).select(:id)))
+                       .or(stories.where(organization_id: Organization.name_like(query).select(:id)))
     end
 
     if params[:author_name].present?

@@ -4,7 +4,7 @@
         <!-- Header -->
         <div class="mb-6 flex items-center justify-between">
           <h1 class="text-primary font-display text-2xl font-semibold">
-            <%= Quote.model_name.human.pluralize %> (<%= @quotes_count %>)
+            <%= Quote.model_name.human.pluralize %> (<%= number_with_delimiter(@quotes_count) %>)
           </h1>
           <div class="flex gap-2">
             <%= link_to("New #{Quote.model_name.human.downcase}",

@@ -16,6 +16,8 @@
 <% if allowed_to?(:index?, User) %>
   <%= render "people/multiple_user_accounts_warning", person: @person, return_to: "person_show" %>
 <% end %>
+<% own_profile = allowed_to?(:edit_own_profile?, @person) %>
+<%= render "people/own_profile_banner", person: @person, pending_requests: @pending_change_requests if own_profile %>
 <div class="admin-or-owner bg-brand-cream border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
   <%= render accent_strip_partial %>
   <!-- Person hero -->
@@ -44,7 +46,7 @@
         <% if allowed_to?(:index?, Person) %>
           <%= link_to "People", people_path, class: "admin-only text-sm text-gray-600 hover:text-primary px-2 py-1" %>
         <% end %>
-        <% if allowed_to?(:edit?, @person) %>
+        <% if allowed_to?(:edit?, @person) && !own_profile %>
           <%= link_to edit_person_path(@person),
                         class: "admin-only inline-flex items-center gap-1.5 text-sm font-semibold rounded-full bg-brand-yellow-400 hover:bg-brand-yellow-500 text-primary px-4 py-1.5 shadow-sm transition" do %>
             <i class="fa-solid fa-pen text-xs"></i> Edit
@@ -83,16 +85,16 @@
               (@person.legal_first_name.present? || @person.pronunciation.present? || @person.date_of_birth.present? || @person.user&.time_zone.present?) %>
           <div class="admin-only mt-2 flex flex-wrap items-center justify-center gap-2 md:justify-start">
             <% if @person.legal_first_name.present? && @person.legal_first_name != @person.first_name %>
-              <span class="<%= admin_only_chip_class %> text-sm" title="Legal first name (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Legal first name: <%= @person.legal_first_name %></span>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Other first name (admin only)"><i class="fa-solid fa-signature text-2xs text-blue-700"></i> Other first name: <%= @person.legal_first_name %> <i class="fa-solid fa-lock text-2xs text-blue-700"></i></span>
             <% end %>
             <% if @person.pronunciation.present? %>
-              <span class="<%= admin_only_chip_class %> text-sm" title="Name pronunciation (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Pronunciation: <%= @person.pronunciation %></span>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Name pronunciation (admin only)"><i class="fa-solid fa-volume-high text-2xs text-blue-700"></i> Pronunciation: <%= @person.pronunciation %> <i class="fa-solid fa-lock text-2xs text-blue-700"></i></span>
             <% end %>
             <% if @person.date_of_birth.present? %>
-              <span class="<%= admin_only_chip_class %> text-sm" title="Birthday (admin only)"><i class="fa-solid fa-cake-candles text-2xs text-blue-700"></i> <%= @person.date_of_birth.strftime("%b %-d") %></span>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Birthday (admin only)"><i class="fa-solid fa-cake-candles text-2xs text-blue-700"></i> Birthday: <%= @person.date_of_birth.strftime("%b %-d") %> <i class="fa-solid fa-lock text-2xs text-blue-700"></i></span>
             <% end %>
             <% if @person.user&.time_zone.present? %>
-              <span class="<%= admin_only_chip_class %> text-sm" title="Time zone (admin only)"><i class="fa-solid fa-clock text-2xs text-blue-700"></i> <%= @person.user.time_zone %></span>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Time zone (admin only)"><i class="fa-solid fa-clock text-2xs text-blue-700"></i> Time zone: <%= @person.user.time_zone %> <i class="fa-solid fa-lock text-2xs text-blue-700"></i></span>
             <% end %>
           </div>
         <% end %>

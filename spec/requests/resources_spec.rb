@@ -82,6 +82,38 @@ RSpec.describe "/resources", type: :request do
       end
     end
 
+    context "connected workshops" do
+      let(:resource) { Resource.create!(valid_attributes) }
+      let(:workshop) { create(:workshop, :published, title: "Linked Workshop") }
+
+      def mention(rich_text, record)
+        rich_text.update!(body: "<p>See it</p>")
+        ActionTextMention.create!(action_text_rich_text: rich_text, mentionable: record)
+      end
+
+      it "lists a workshop mentioned in both directions once, outside the mentions lists" do
+        mention(resource.rhino_body, workshop)
+        mention(workshop.rhino_objective, resource)
+
+        get resource_url(resource)
+
+        page = Nokogiri::HTML(response.body)
+        expect(page.css("#connected-workshops a").map(&:text)).to eq([ "Linked Workshop" ])
+        expect(response.body).not_to include("Mentions in this Resource")
+      end
+
+      it "hides unpublished workshops from guests" do
+        resource.update!(publicly_visible: true)
+        mention(resource.rhino_body, create(:workshop, published: false, title: "Draft Workshop"))
+        sign_out user
+
+        get resource_url(resource)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("Draft Workshop")
+      end
+    end
+
     context "search-engine indexing" do
       it "does not send noindex for a normal resource" do
         resource = Resource.create!(valid_attributes)

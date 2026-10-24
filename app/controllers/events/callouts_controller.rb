@@ -82,7 +82,9 @@ module Events
       if @recipient_survey_available
         @recipient_survey_submission = FormSubmission.find_by(person: @event_registration.registrant,
           event: @event, form: @recipient_survey_link.form)
-        @recipient_survey_editing = @recipient_survey_submission.nil? || params[:edit].to_i == @recipient_survey_link.form_id
+        @recipient_survey_completed_anonymously = anonymously_completed_form_ids(@recipient_survey_link.form).any?
+        @recipient_survey_editing = !@recipient_survey_completed_anonymously &&
+          (@recipient_survey_submission.nil? || params[:edit].to_i == @recipient_survey_link.form_id)
       end
     end
 
@@ -359,6 +361,7 @@ module Events
       @callout_forms = @callout.registration_ticket_callout_forms.includes(:form)
       @resource_cards = @callout.decorate.resource_cards(registrant_slug: @event_registration.slug, return_to: "callout_form")
       @submissions = callout_submissions
+      @anonymously_completed_form_ids = anonymously_completed_form_ids(@callout.forms)
       @editing_form_id = params[:edit].to_i if params[:edit].present?
     end
 
@@ -372,14 +375,23 @@ module Events
       end
       return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
 
+      Current.source = "ticket_callout"
       service = EventRegistrationServices::CalloutFormSubmission.call(
         registration: @event_registration, callout: @callout, form: form,
         form_params: callout_form_params
       )
+      if service.already_completed?
+        redirect_to callout_form_landing(@callout, callout_form), notice: "You've already submitted this form."
+        return
+      end
+      if service.incomplete?
+        redirect_to callout_form_landing(@callout, callout_form), alert: "Please answer every required question."
+        return
+      end
       # A profile write-through (anonymity / name questions) is Ahoy-tracked, and
       # staff get a heads-up on the submission. The CE callout runs its own flow, so
       # it opts out of the FYI.
-      track_profile_changes(service.profile_changes)
+      track_profile_changes(service.profile_changes, service.submission)
       NotificationMailer.callout_form_submitted_fyi(service.submission, updated: service.edited?).deliver_later unless @callout.ce_config?
 
       redirect_to callout_form_landing(@callout, callout_form),
@@ -411,6 +423,12 @@ module Events
       forms = @callout.forms.to_a
       FormSubmission.where(person: @event_registration.registrant, event: @event, form: forms)
                     .index_by(&:form_id)
+    end
+
+    # The anonymous forms the registrant has completed — they have no submission of
+    # their own to show back or edit.
+    def anonymously_completed_form_ids(forms)
+      FormCompletion.where(person: @event_registration.registrant, event: @event, form: forms).pluck(:form_id).to_set
     end
 
     # A form on the scholarship callout can't be filled until the recipient has
@@ -484,9 +502,10 @@ module Events
     end
 
     # One Ahoy event per profile field the survey actually changed.
-    def track_profile_changes(changes)
+    def track_profile_changes(changes, submission)
       changes.each do |attribute, (from, to)|
-        ahoy.track("profile.#{attribute}", person_id: @event_registration.registrant_id, from: from, to: to)
+        ahoy.track("profile.#{attribute}", person_id: @event_registration.registrant_id, from: from, to: to,
+                                           form_submission_id: submission.id)
       end
     end
 

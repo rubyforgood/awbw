@@ -68,6 +68,7 @@ class Person < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
   has_many :form_submissions, dependent: :destroy
+  has_many :form_completions, dependent: :destroy
 
   # Asset associations
   has_one_attached :avatar, dependent: :purge do |attachable|
@@ -77,8 +78,12 @@ class Person < ApplicationRecord
       saver: { quality: 80 }
   end
 
-  before_validation :normalize_names_and_emails
+  before_validation :normalize_names
   before_destroy :destroy_memberships, prepend: true
+
+  # Unicode-aware, plus the zero-width characters [[:space:]] skips; pasted addresses carry both.
+  EMAIL_WHITESPACE = /[[:space:]\u200B-\u200D\u2060\uFEFF]/
+  normalizes :email, :email_2, with: ->(email) { email.gsub(EMAIL_WHITESPACE, "").presence }
 
   # Validations
   validates :avatar,
@@ -107,6 +112,14 @@ class Person < ApplicationRecord
 
   def self.normalize_name(name)
     name&.strip&.gsub(DASH_VARIANTS, "-")
+  end
+
+  def self.same_name?(one, other)
+    one.to_s.squish.casecmp?(other.to_s.squish)
+  end
+
+  def legal_first_name_differs?(name)
+    !Person.same_name?(name, first_name)
   end
 
   CONTACT_TYPES = [ "work", "personal" ].freeze
@@ -205,6 +218,29 @@ class Person < ApplicationRecord
     OR (people.profile_show_email AND (people.email LIKE :pattern OR users.email LIKE :pattern))
     OR (people.profile_show_phone AND (users.phone LIKE :pattern OR contact_methods.value LIKE :pattern))
   SQL
+
+  # Spaces and periods are dropped on both sides so an initialled name ("Cathy S.") finds itself.
+  DISPLAYED_NAME_MATCH_SQL = <<~SQL.squish
+    (COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden)
+      AND LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name)
+    OR (COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden)
+      AND LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name)
+    OR (COALESCE(people.display_name_preference, '') IN ('', 'full_name')
+      AND LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name)
+    OR (people.display_name_preference = 'first_name_last_initial'
+      AND LOWER(REPLACE(CONCAT(people.first_name, LEFT(people.last_name, 1)), ' ', '')) LIKE :name)
+  SQL
+
+  # Matches only the name parts #name shows, so search can't surface a hidden last name.
+  scope :displayed_name_like, ->(query) {
+    name = query.to_s.gsub(/[\s.]+/, "").downcase
+    if name.blank?
+      none
+    else
+      where(DISPLAYED_NAME_MATCH_SQL, name: "%#{sanitize_sql_like(name)}%",
+            first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES, last_name_hidden: LAST_NAME_HIDDEN_PREFERENCES)
+    end
+  }
 
   # Same term syntax as SearchCop: a quoted phrase is one term, otherwise split on whitespace.
   SEARCH_TERM_PATTERN = /"([^"]*)"|'([^']*)'|(\S+)/
@@ -547,6 +583,15 @@ class Person < ApplicationRecord
     PlaceholderEmail.match?(email)
   end
 
+  # The lowest numbered placeholder nobody with this name is using yet.
+  def next_free_placeholder_email
+    scope = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
+    scope = scope.where.not(id: id) if persisted?
+    taken = scope.pluck(:email).filter_map { |address| PlaceholderEmail.number_in(address) }
+
+    PlaceholderEmail.at((1..).find { |number| taken.exclude?(number) })
+  end
+
   # The placeholder records "no address on file", so it never stands in for a real one.
   def email_on_file
     email.presence unless placeholder_email?
@@ -639,12 +684,11 @@ class Person < ApplicationRecord
     end
   end
 
-  def normalize_names_and_emails
+  def normalize_names
     self.first_name = Person.normalize_name(first_name)
     self.last_name = Person.normalize_name(last_name)
-    self.legal_first_name = Person.normalize_name(legal_first_name)
-    self.email = email&.strip
-    self.email_2 = email_2&.strip
+    self.legal_first_name = Person.normalize_name(legal_first_name).presence
+    self.legal_first_name = nil unless legal_first_name.nil? || legal_first_name_differs?(legal_first_name)
   end
 
   def destroy_memberships
@@ -685,14 +729,6 @@ class Person < ApplicationRecord
       "they truly have none."
   end
 
-  # The lowest numbered placeholder nobody with this name is using yet.
-  def next_free_placeholder_email
-    scope = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
-    scope = scope.where.not(id: id) if persisted?
-    taken = scope.pluck(:email).filter_map { |address| PlaceholderEmail.number_in(address) }
-
-    PlaceholderEmail.at((1..).find { |number| taken.exclude?(number) })
-  end
   ## Consider adding additional person info to be saved on stripes customer records
   # def stripe_attributes(pay_customer)
   #   {

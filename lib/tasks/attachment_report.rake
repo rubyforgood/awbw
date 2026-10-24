@@ -16,7 +16,7 @@ namespace :attachment_report do
       QuotableItemQuote, Quote, ReportFormFieldAnswer, Report, Resource,
       SectorableItem, Sector, Story, StoryIdea, UserFormFormField, UserForm,
       User, WindowsType, WorkshopAgeRange, WorkshopIdea, WorkshopLog,
-      WorkshopResource, WorkshopSeriesMembership, WorkshopVariation, Workshop
+      WorkshopSeriesMembership, WorkshopVariation, Workshop
     ]
 
     timestamp = Time.now.strftime("%Y%m%d_%H%M%S")

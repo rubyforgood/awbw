@@ -2,7 +2,7 @@
 
 <div style="margin-top: 36px; text-align: left;">
   <p>
-    Hello <strong><%= @user.first_name_or_email %></strong>,
+    Hello <strong><%= @recipient_name %></strong>,
   </p>
 
   <p>
@@ -27,7 +27,7 @@
 <% if @story.published? || @story.publicly_visible? %>
   <p>
     <%= link_to "View story",
-                polymorphic_url(@story),
+                story_share_url(@story),
                 style: "display:inline-block;
                         padding:10px 16px;
                         background:#2563eb;

@@ -18,6 +18,13 @@ module PersonServices
   #   * skipped          — agency, soft-deleted, or nameless rows
   #   * failed           — the Person didn't validate
   #
+  # An email field holding no address the person's email validation accepts ("ada@@x.org",
+  # "ada at x dot org") or an address it rejects is left off — the row imports without it.
+  # When that leaves the person with no email on file, the field's whole value is left as a
+  # comment on the person and listed in #invalid_emails, so it can be fixed by hand. A row
+  # with no usable address left is always a new person, given the next free placeholder
+  # email (1@…, 2@…) when someone already carries the name.
+  #
   # A row whose name + email matches nobody is created, even when someone already shares
   # the name or the email: folding the occasional duplicate with the person deduper beats
   # hand-resolving every collision in a 39,000-row archive.
@@ -39,9 +46,11 @@ module PersonServices
     # Answers to "which kind of email is this?" that aren't a kind at all.
     PRECEDENCE_TYPES = %w[preferred primary main].freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
-    # Both archive fields hold an address (FmRolodex::PORTAL_FIELDS maps each to
-    # people.email), the primary one first, so it becomes the person's own email.
-    EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
+    # EmailPrimary holds a flag, never an address, so only EMail is read for one. The flag
+    # says whether EMail is the person's primary email ("1") or their secondary ("2").
+    EMAIL_FIELDS = %w[EMail].freeze
+    EMAIL_FLAG_FIELD = "EmailPrimary"
+    SECONDARY_EMAIL_FLAG = "2"
     STRING_LIMIT = 255
     BATCH_SIZE = 1_000
 
@@ -54,7 +63,7 @@ module PersonServices
     ADDITIONAL_TAG_FIELDS = %w[OtherServiceArea Settings LifeExperiences].freeze
     PRIMARY_TAG_LABELS = { tag_sectors: "Primary sector", tag_age_groups: "Primary age group" }.freeze
 
-    attr_reader :results, :differences
+    attr_reader :results, :differences, :invalid_emails
 
     def initialize(scope: FmRolodex.all, relink: false, progress: nil, run: nil)
       @scope = scope
@@ -63,6 +72,7 @@ module PersonServices
       @run = run
       @results = OUTCOMES.index_with { [] }
       @differences = []
+      @invalid_emails = []
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
@@ -80,6 +90,10 @@ module PersonServices
         @progress&.call(read += batch.size)
       end
       self
+    end
+
+    def self.invalid_email_heading(fm_id)
+      "FileMaker Rolodex #{fm_id} has an email this profile couldn't take:"
     end
 
     def unmatched_tags
@@ -116,8 +130,8 @@ module PersonServices
       return record(:skipped, "#{label}: missing first or last name") if first_name.blank? || last_name.blank?
 
       row_emails = emails(data)
-      email, email_2 = row_emails
-      match = match_people(row_emails, first_name, last_name)
+      email, email_2 = secondary_email?(data) ? [ nil, row_emails.first ] : row_emails
+      match = match_people(rolodex, row_emails, first_name, last_name)
       return link(match, rolodex, label) if match.any?
 
       create(rolodex, label, first_name:, last_name:, email:, email_2:)
@@ -126,8 +140,10 @@ module PersonServices
     # Everyone the row's name and any of the addresses it holds reaches — the person sees
     # each of them as their email, so a row whose second field carries the one the portal
     # knows still finds them. A row with no address at all can only go by the name, and
-    # then only to someone the portal has no email for either.
-    def match_people(row_emails, first_name, last_name)
+    # then only to someone the portal has no email for either. One whose only addresses are
+    # unusable says nothing about who it is, so it reaches just the person it already made.
+    def match_people(rolodex, row_emails, first_name, last_name)
+      return Person.with_filemaker_code(rolodex.fm_id).to_a if row_emails.empty? && invalid_email_values(rolodex.data).any?
       return same_name_without_email(first_name, last_name) if row_emails.empty?
 
       row_emails.lazy.map { |email| PersonMatcher.new(email:, last_name:, first_names: [ first_name ]).matches.to_a }
@@ -135,8 +151,11 @@ module PersonServices
     end
 
     def same_name_without_email(first_name, last_name)
+      same_name(first_name, last_name).where(email: [ nil, "" ]).to_a
+    end
+
+    def same_name(first_name, last_name)
       Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
-            .where(email: [ nil, "" ]).to_a
     end
 
     # Several matches are one person entered more than once, so each carries the code
@@ -161,6 +180,7 @@ module PersonServices
 
       kept.concat(tag_service_areas(person, rolodex.data))
       note_differences(person, rolodex, label, kept) if kept.any?
+      note_invalid_emails(person, rolodex, label)
       true
     end
 
@@ -173,6 +193,7 @@ module PersonServices
       data = rolodex.data
       person = Person.new(**names, filemaker_code: rolodex.fm_id, **profile_attributes(data),
                           **archive_timestamps(data), **archive_stamps(data))
+      person.email = person.next_free_placeholder_email if needs_placeholder_email?(person, data)
       build_addresses(person, rolodex)
       build_phones(person, rolodex)
 
@@ -182,9 +203,19 @@ module PersonServices
         return record(:failed, "#{label}: #{person.errors.full_messages.to_sentence}") unless person.save
 
         tag_service_areas(person, data)
+        note_invalid_emails(person, rolodex, label)
       end
       @imported_codes << rolodex.fm_id
       record(:created, "#{label} → ##{person.id}")
+    end
+
+    def needs_placeholder_email?(person, data)
+      person.email.blank? && (invalid_email_values(data).any? || person.email_2.present?) &&
+        same_name(person.first_name, person.last_name).exists?
+    end
+
+    def secondary_email?(data)
+      data[EMAIL_FLAG_FIELD].to_s.strip == SECONDARY_EMAIL_FLAG
     end
 
     def profile_attributes(data)
@@ -193,7 +224,7 @@ module PersonServices
         best_time_to_call: clip(data["BestTimeToCall"]),
         racial_ethnic_identity: clip(data["Ethnicity"]),
         date_of_birth: parse_date(data["DateOfBirth"]),
-        email_type: email_type(data["EmailType"]),
+        (secondary_email?(data) ? :email_2_type : :email_type) => email_type(data["EmailType"]),
         member_since: member_since(data)
       }
     end
@@ -230,7 +261,21 @@ module PersonServices
     # The archive words an email field freely ("Attn: someone", a note, two addresses at
     # once), so each is read for the addresses in it; the same one twice counts once.
     def emails(data)
-      EMAIL_FIELDS.flat_map { |field| data[field].to_s.scan(EMAIL_PATTERN) }.uniq(&:downcase)
+      EMAIL_FIELDS.flat_map { |field| data[field].to_s.scan(EMAIL_PATTERN) }.select { |email| valid_email?(email) }.uniq(&:downcase)
+    end
+
+    def invalid_email_values(data)
+      EMAIL_FIELDS.filter_map { |field| data[field].to_s.strip.presence }
+                  .reject { |value| usable_email_value?(value) }.uniq
+    end
+
+    def usable_email_value?(value)
+      addresses = value.scan(EMAIL_PATTERN)
+      addresses.any? && addresses.all? { |email| valid_email?(email) }
+    end
+
+    def valid_email?(email)
+      email.length <= STRING_LIMIT && email.match?(URI::MailTo::EMAIL_REGEXP)
     end
 
     def same?(portal, archive)
@@ -242,6 +287,18 @@ module PersonServices
       Comment.create!(commentable: person,
                       body: "FileMaker Rolodex #{rolodex.fm_id} differs from this profile:\n#{lines.join("\n")}")
       @differences << "#{label} → ##{person.id}: #{lines.join('; ')}"
+    end
+
+    def note_invalid_emails(person, rolodex, label)
+      return if person.email_on_file
+
+      values = invalid_email_values(rolodex.data)
+      return if values.empty?
+
+      quoted = values.map { |value| "“#{value}”" }
+      Comment.create!(commentable: person,
+                      body: "#{self.class.invalid_email_heading(rolodex.fm_id)}\n#{quoted.join("\n")}")
+      @invalid_emails << "#{label} → ##{person.id}: #{quoted.join('; ')}"
     end
 
     # The staff FileMaker recorded as entering and last changing the row (StaffAlias), or

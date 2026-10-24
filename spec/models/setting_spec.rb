@@ -68,6 +68,7 @@ RSpec.describe Setting do
       expect(described_class.invoice_prefix).to eq("INV")
       expect(described_class.annual_membership_cents).to eq(10000)
       expect(described_class.membership_renewal_window_days).to eq(30)
+      expect(described_class.home_featured_stories_limit).to be_nil
     end
 
     it "lets a stored zero win over the default" do
@@ -249,6 +250,10 @@ RSpec.describe Setting do
 
     it "rejects a negative window" do
       expect(described_class.new(membership_renewal_window_days: -1)).not_to be_valid
+    end
+
+    it "rejects a home story limit below one" do
+      expect(described_class.new(home_featured_stories_limit: 0)).not_to be_valid
     end
   end
 

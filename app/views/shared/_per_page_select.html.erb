@@ -1,0 +1,11 @@
+<%# "Per page" select for a filter form wired to the collection controller, which
+    submits it on change. Optional locals: default (the controller's fallback
+    per-page size, which Clear filters resets to), wrapper_class. %>
+<% default = local_assigns.fetch(:default, 25) %>
+<div class="<%= local_assigns.fetch(:wrapper_class, "w-24") %>">
+  <label for="number_of_items_per_page" class="<%= search_label_class %>">Per page</label>
+  <%= select_tag :number_of_items_per_page,
+                 per_page_select_options(default),
+                 class: search_field_class(extra: "bg-white"),
+                 data: { clear_to: default } %>
+</div>

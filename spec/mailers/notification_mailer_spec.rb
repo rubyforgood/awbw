@@ -164,6 +164,19 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#idea_submitted" do
+    let(:co_author) { create(:person, first_name: "Rosa") }
+    let(:story_idea) { create(:story_idea, co_author: co_author, author: create(:person)) }
+    let(:notification) do
+      create(:notification, kind: "idea_submitted", noticeable: story_idea, person: co_author,
+             recipient_role: "person", recipient_email: co_author.preferred_email)
+    end
+
+    it "greets the author it was sent to" do
+      expect(described_class.idea_submitted(notification).body.encoded).to include("Hello <strong>Rosa</strong>")
+    end
+  end
+
   describe "#idea_submitted_fyi" do
     let(:user) { create(:user) }
 
@@ -368,7 +381,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     let(:story_idea) { create(:story_idea, created_by: submitter) }
     let(:story) { create(:story, :published, story_idea: story_idea, title: "A Healing Story") }
     let(:notification) do
-      create(:notification, kind: "story_promoted", noticeable: story,
+      create(:notification, kind: "story_promoted", noticeable: story, person: submitter.person,
              recipient_role: "person", recipient_email: submitter.email)
     end
 
@@ -380,8 +393,8 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(described_class.story_promoted(notification).to).to eq([ submitter.email ])
     end
 
-    it "uses the story-idea subject" do
-      expect(described_class.story_promoted(notification).subject).to eq("AWBW Portal: Your story idea is now a story")
+    it "announces the story is live on Story Share in the subject" do
+      expect(described_class.story_promoted(notification).subject).to eq("AWBW Portal: Your story is live on Story Share")
     end
 
     it "names the story and greets the submitter by first name" do
@@ -391,8 +404,24 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(body).to include("now live on Story Share")
     end
 
-    it "links to the story when it is published" do
-      expect(described_class.story_promoted(notification).body.encoded).to include("View story")
+    it "links to the story on Story Share when it is published" do
+      body = described_class.story_promoted(notification).body.encoded
+      expect(body).to include("View story")
+      expect(body).to include(story_share_url(story))
+      expect(body).not_to include(story_url(story))
+    end
+
+    context "when the story was created directly for an author" do
+      let(:author) { create(:person, first_name: "Rosa") }
+      let(:story) { create(:story, :published, author: author, title: "A Healing Story") }
+      let(:notification) do
+        create(:notification, kind: "story_promoted", noticeable: story, person: author,
+               recipient_role: "person", recipient_email: author.preferred_email)
+      end
+
+      it "greets the author by first name" do
+        expect(described_class.story_promoted(notification).body.encoded).to include("Hello <strong>Rosa</strong>")
+      end
     end
 
     context "when the story is neither published nor publicly visible" do
@@ -401,6 +430,43 @@ RSpec.describe NotificationMailer, type: :mailer do
       it "omits the story link" do
         expect(described_class.story_promoted(notification).body.encoded).not_to include("View story")
       end
+    end
+  end
+
+  describe "#story_shared_with_funder" do
+    let(:author) { create(:person, first_name: "Rosa") }
+    let(:story) { create(:story, :published, :funder_only, author: author, title: "A Healing Story") }
+    let(:notification) do
+      create(:notification, kind: "story_shared_with_funder", noticeable: story, person: author,
+             recipient_role: "person", recipient_email: author.preferred_email)
+    end
+    let(:mail) { described_class.story_shared_with_funder(notification) }
+
+    it "renders without raising" do
+      expect { mail.deliver_now }.not_to raise_error
+    end
+
+    it "sends to the author" do
+      expect(mail.to).to eq([ author.preferred_email ])
+    end
+
+    it "says the story was shared with the funder" do
+      expect(mail.subject).to eq("AWBW Portal: Your story has been shared with the funder")
+    end
+
+    it "names the story, greets the author, and makes no Story Share promise" do
+      body = mail.body.encoded
+      expect(body).to include("A Healing Story")
+      expect(body).to include("Hello <strong>Rosa</strong>")
+      expect(body).to include("shared with the funder")
+      expect(body).not_to include("live on Story Share")
+    end
+
+    it "links to the story's portal page, not Story Share" do
+      body = mail.body.encoded
+      expect(body).to include("View your story")
+      expect(body).to include(story_url(story))
+      expect(body).not_to include(story_share_url(story))
     end
   end
 
@@ -422,8 +488,26 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(described_class.story_promoted_fyi(notification).to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
-    it "names the story in the subject" do
-      expect(described_class.story_promoted_fyi(notification).subject).to include("A Healing Story")
+    it "names the published story in the subject" do
+      expect(described_class.story_promoted_fyi(notification).subject).to eq("#{described_class::FYI_PREFIX} Story published: A Healing Story")
+    end
+
+    it "credits the idea's submitter and links the original idea" do
+      body = described_class.story_promoted_fyi(notification).body.encoded
+      expect(body).to include("Story published")
+      expect(body).to include("Idea submitted by #{submitter.full_name}")
+      expect(body).to include("View original idea")
+    end
+
+    context "when the story was created directly" do
+      let(:story) { create(:story, title: "A Healing Story") }
+
+      it "leaves out the idea details" do
+        body = described_class.story_promoted_fyi(notification).body.encoded
+        expect(body).to include("Story published")
+        expect(body).not_to include("Idea submitted by")
+        expect(body).not_to include("View original idea")
+      end
     end
   end
 
@@ -520,7 +604,8 @@ RSpec.describe NotificationMailer, type: :mailer do
         submission.persist_answer(field, sector.id.to_s)
 
         expect(mail.body.encoded).to include("Domestic violence")
-        expect(mail.body.encoded).not_to match(/>\s*#{sector.id}\s*</)
+        # Scoped to the answer cell: the layout's Outlook <o:PixelsPerInch>96</...> would match an id of 96.
+        expect(mail.html_part.body.decoded).not_to match(%r{>\s*#{sector.id}\s*</td>})
       end
     end
   end

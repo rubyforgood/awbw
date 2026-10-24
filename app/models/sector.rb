@@ -46,6 +46,8 @@ class Sector < ApplicationRecord
   # respondent's single "primary" sector.
   OTHER_SECTOR_NAME = "Other"
 
+  STORY_SHARE_NAV_LIMIT = 6
+
   STORY_DISPLAY_TEXT = "Which sectors does this story fit into?"
   VIDEO_DISPLAY_TEXT = "Which sectors apply?"
 
@@ -78,8 +80,12 @@ class Sector < ApplicationRecord
   scope :excluding_other, -> { where.not(name: OTHER_SECTOR_NAME) }
   # Featured in the Story Share portal, ordered by the admin-set position.
   scope :story_share_featured, -> { where.not(story_share_position: nil).order(:story_share_position) }
+  # The featured sectors the Story Share navbar links to.
+  scope :story_share_nav, -> { story_share_featured.limit(STORY_SHARE_NAV_LIMIT) }
   # Featured sectors that also get a full section on the Story Share home, in nav order.
   scope :story_share_home_sections, -> { story_share_featured.where(story_share_home_section: true) }
+  # "Additional focus areas": the Story Share catch-all for every published sector the nav doesn't link to.
+  scope :story_share_additional_focus_areas, -> { published.where.not(id: story_share_nav.ids) }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
   scope :taggings_presence, ->(value) do
     case value
@@ -117,6 +123,5 @@ class Sector < ApplicationRecord
 
   def expire_sectors_cache
     Rails.cache.delete("published_sectors_with_sectorable_items")
-    Rails.cache.delete("story_share_focus_area_sectors")
   end
 end

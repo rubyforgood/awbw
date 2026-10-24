@@ -90,6 +90,16 @@ RSpec.describe EventCopyService do
       expect(copy.sectorable_items.sole).to have_attributes(sector: sector, is_primary: true)
     end
 
+    it "keeps the source's survey form even when an older form has the same role" do
+      create(:form, role: "day_1_survey")
+      newer = create(:form, role: "day_1_survey")
+      create(:registration_ticket_callout, event: event, form: newer, builtin_key: "feedback_surveys")
+
+      copy = described_class.copy(event, start_on: new_start_on)
+
+      expect(copy.registration_ticket_callouts.find_by(builtin_key: "feedback_surveys").forms).to eq([ newer ])
+    end
+
     it "gives the copy its own image file" do
       create(:primary_asset, :with_file, owner: event)
 
@@ -192,6 +202,20 @@ RSpec.describe EventCopyService do
       expect(fields.second.parent_id).to eq(fields.first.id)
       expect(fields.second.resources).to contain_exactly(worksheet)
       expect(copy.registration_ticket_callouts.custom.flat_map(&:forms)).to eq([ built ])
+    end
+
+    it "keeps a built form anonymous when the source form is" do
+      form = create(:form, name: "CE evaluation", role: "general", anonymous: true)
+      create(:form_field, form: form, name: "How useful was it?", position: 1)
+      create(:registration_ticket_callout, event: event, form: form)
+      blueprint = other_environment_blueprint(event)
+      form.update!(name: "Renamed in this environment")
+
+      copy = described_class.new(blueprint, match_by: :natural).call(start_on: new_start_on)
+
+      built = copy.registration_ticket_callouts.custom.flat_map(&:forms).sole
+      expect(built).not_to eq(form)
+      expect(built).to be_anonymous
     end
 
     it "adds only the missing questions and options to a same-name form, keeping its id and answers" do

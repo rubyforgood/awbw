@@ -153,6 +153,21 @@
     </section>
 
     <section class="rounded-xl border border-gray-200 bg-white p-6">
+      <h2 class="mb-1 text-lg font-semibold text-gray-800">Portal home</h2>
+      <p class="mb-4 text-sm text-gray-600">
+        Each viewer sees their newest featured stories: signed-in users from the
+        <%= pluralize(Story.not_funder_only.featured.count, "story") %> featured for them, visitors from the
+        <%= pluralize(Story.not_funder_only.publicly_featured.count, "story") %> publicly featured.
+        A viewer with fewer than the limit sees all of theirs.
+      </p>
+      <%= f.input :home_featured_stories_limit,
+                  label: "Highlighted stories shown",
+                  placeholder: "All",
+                  input_html: { min: 1 },
+                  hint: "Feature more stories in Story Share without crowding the home page. Leave blank to show every featured story" %>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6">
       <h2 class="mb-4 text-lg font-semibold text-gray-800">Invoices and memberships</h2>
       <%= f.input :invoice_prefix,
                   label: "Invoice number prefix",

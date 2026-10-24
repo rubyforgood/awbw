@@ -10,6 +10,7 @@ class FormsController < ApplicationController
       @sort = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "name"
       @sort_direction = params[:direction] == "desc" ? "desc" : "asc"
       @forms = sorted_forms
+      @survey_default_ids = Form.survey_default_ids
       render :forms_results
     else
       @owned_forms = Form.owned.includes(:owner, :form_fields).order(:owner_type, :id)
@@ -223,7 +224,7 @@ class FormsController < ApplicationController
 
   def form_params
     params.require(:form).permit(
-      :name, :role, :header, :slug, :published,
+      :name, :role, :header, :slug, :published, :anonymous,
       form_fields_attributes: [
         :id, :name, :answer_type, :required, :subtitle, :hint_text,
         :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy,

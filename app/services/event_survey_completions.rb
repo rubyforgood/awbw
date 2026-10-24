@@ -1,6 +1,7 @@
 # The survey roles an event carries — offered to its kind of event and delivered
 # on any of its callouts, or already answered for it — and each registrant's first
-# submission of each one.
+# submission of each one. An anonymous survey counts from the registrant's
+# FormCompletion, which carries a date and no submission.
 class EventSurveyCompletions
   Completion = Data.define(:submission_id, :submitted_at)
 
@@ -43,18 +44,29 @@ class EventSurveyCompletions
   end
 
   def answered_roles
-    event_survey_submissions.distinct.pluck("forms.role")
+    (event_survey_submissions.distinct.pluck("forms.role") + event_survey_form_completions.distinct.pluck("forms.role")).uniq
   end
 
   def completions
-    @completions ||= event_survey_submissions.where(person_id: @person_ids).order(:created_at)
-      .pluck(:id, :person_id, "forms.role", :created_at)
-      .each_with_object({}) do |(id, person_id, role, submitted_at), map|
-        map[[ person_id, role ]] ||= Completion.new(submission_id: id, submitted_at:)
-      end
+    @completions ||= begin
+      map = event_survey_submissions.where(person_id: @person_ids).order(:created_at)
+        .pluck(:id, :person_id, "forms.role", :created_at)
+        .each_with_object({}) do |(id, person_id, role, submitted_at), result|
+          result[[ person_id, role ]] ||= Completion.new(submission_id: id, submitted_at:)
+        end
+      event_survey_form_completions.where(person_id: @person_ids).pluck(:person_id, "forms.role", :completed_on)
+        .each do |person_id, role, completed_on|
+          map[[ person_id, role ]] ||= Completion.new(submission_id: nil, submitted_at: completed_on.in_time_zone)
+        end
+      map
+    end
   end
 
   def event_survey_submissions
     FormSubmission.joins(:form).where(event_id: @event.id, forms: { role: Form::SURVEY_ROLES })
+  end
+
+  def event_survey_form_completions
+    FormCompletion.joins(:form).where(event_id: @event.id, forms: { role: Form::SURVEY_ROLES })
   end
 end

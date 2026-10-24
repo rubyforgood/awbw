@@ -21,6 +21,12 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     expect(submission.form_answers.find_by(form_field: field).submitted_answer).to eq("Great")
   end
 
+  it "attributes the request's changes to the callout submission" do
+    submission = submit({ field.id.to_s => "Great" })
+
+    expect(Current.form_submission_id).to eq(submission.id)
+  end
+
   it "carries the form's own role when it has one" do
     form.update!(role: "registration")
 
@@ -196,5 +202,219 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
       expect(service.submission.form_answers.where(form_field: nil).count).to eq(2)
       expect(service.profile_changes).to be_empty
     end
+  end
+
+  describe "quote fields" do
+    let!(:quote_field) { create(:form_field, form:, name: "Share a quote", field_identifier: "quote") }
+
+    it "saves the answer as an unpublished quote sourced from the submission, created by the registrant" do
+      submission = submit({ quote_field.id.to_s => "This training changed how I teach" })
+
+      quote = submission.quotes.sole
+      expect(quote).to have_attributes(body: "This training changed how I teach", author: nil,
+        created_by: registration.registrant.user)
+      expect(quote).not_to be_published
+    end
+
+    it "doesn't duplicate the quote when the registrant re-submits the same answer" do
+      submit({ quote_field.id.to_s => "This training changed how I teach" })
+
+      expect { submit({ quote_field.id.to_s => "This training changed how I teach" }) }.not_to change(Quote, :count)
+    end
+
+    context "on an anonymous form" do
+      let(:form) { create(:form, anonymous: true) }
+
+      it "still captures the quote, with no creator tying it back to the registrant" do
+        submission = submit({ field.id.to_s => "Great", quote_field.id.to_s => "This training changed how I teach" })
+
+        expect(submission.person).to be_nil
+        expect(submission.quotes.sole).to have_attributes(body: "This training changed how I teach",
+          created_by: nil, author: nil)
+      end
+    end
+  end
+
+  describe "an anonymous form" do
+    let(:form) { create(:form, anonymous: true) }
+    let(:person) { registration.registrant }
+
+    def identity_fields(visibility: :always_ask)
+      {
+        first: create(:form_field, form:, name: "First name", field_identifier: "first_name", visibility:),
+        last: create(:form_field, form:, name: "Last name", field_identifier: "last_name", visibility:),
+        email: create(:form_field, form:, name: "Email", field_identifier: "primary_email", visibility:)
+      }
+    end
+
+    def identity_params(fields, first: "Sam", last: "Rivera", email: "sam@example.com")
+      { fields[:first].id.to_s => first, fields[:last].id.to_s => last, fields[:email].id.to_s => email }
+    end
+
+    context "without name and email questions" do
+      it "records the answers with no person attached" do
+        submission = submit({ field.id.to_s => "Great" })
+
+        expect(submission.person).to be_nil
+        expect(submission).to have_attributes(form:, event:)
+        expect(submission.form_answers.find_by(form_field: field).submitted_answer).to eq("Great")
+      end
+
+      it "records that the registrant completed the form, without pointing at the submission" do
+        expect { submit({ field.id.to_s => "Great" }) }.to change(FormCompletion, :count).by(1)
+
+        completion = FormCompletion.last
+        expect(completion).to have_attributes(person:, form:, event:, completed_on: Date.current)
+        expect(FormCompletion.column_names).not_to include("form_submission_id", "created_at", "updated_at")
+      end
+
+      it "stays anonymous even when the registrant is a known person with a full profile" do
+        person.update!(first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
+
+        expect(submit({ field.id.to_s => "Great" }).person).to be_nil
+      end
+
+      it "refuses a second submission once the registrant has completed the form" do
+        submit({ field.id.to_s => "Great" })
+
+        service = nil
+        expect {
+          service = described_class.call(registration:, callout:, form:, form_params: { field.id.to_s => "Again" })
+        }.not_to change(FormSubmission, :count)
+        expect(service).to be_already_completed
+        expect(service.submission).to be_nil
+      end
+
+      it "saves nothing when a required question is left blank, so the registrant can try again" do
+        field.update!(required: true)
+
+        service = nil
+        expect {
+          service = described_class.call(registration:, callout:, form:, form_params: { field.id.to_s => "" })
+        }.not_to change { [ FormSubmission.count, FormCompletion.count ] }
+        expect(service).to be_incomplete
+      end
+
+      it "does not write the content-sharing answers through to the registrant's profile" do
+        anon_field = create(:form_field, form:, answer_type: :single_select_radio, name: "Anonymity?",
+          field_identifier: "anonymous_contributions")
+
+        service = described_class.call(registration:, callout:, form:,
+          form_params: { anon_field.id.to_s => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[true] })
+
+        expect(person.reload.anonymous_contributions).to be(false)
+        expect(service.profile_changes).to be_empty
+      end
+    end
+
+    context "with name and email questions" do
+      let!(:fields) { identity_fields }
+
+      it "credits the registrant when first name, last name, and email are all answered" do
+        submission = submit(identity_params(fields).merge(field.id.to_s => "Great"))
+
+        expect(submission.person).to eq(person)
+        expect(FormCompletion.count).to eq(0)
+      end
+
+      it "edits a credited submission in place on re-submit" do
+        submit(identity_params(fields).merge(field.id.to_s => "Great"))
+
+        expect {
+          submit(identity_params(fields).merge(field.id.to_s => "Even better"))
+        }.not_to change(FormSubmission, :count)
+      end
+
+      it "detaches a credited submission when an edit drops part of the name or email" do
+        original = submit(identity_params(fields).merge(field.id.to_s => "Great"))
+
+        edited = submit(identity_params(fields, email: "").merge(field.id.to_s => "Changed my mind"))
+
+        expect(edited).to eq(original)
+        expect(edited.reload.person).to be_nil
+        expect(FormCompletion.where(person:, form:, event:)).to exist
+      end
+
+      it "clears the registrant's creator and editor stamps when a credited submission is detached" do
+        user = person.user
+        Current.set(user:) { submit(identity_params(fields).merge(field.id.to_s => "Great")) }
+
+        detached = Current.set(user:) { submit(identity_params(fields, email: "").merge(field.id.to_s => "Changed")) }.reload
+
+        expect(detached).to have_attributes(created_by_id: nil, updated_by_id: nil)
+        expect(detached.form_answers.pluck(:created_by_id, :updated_by_id).flatten).to all(be_nil)
+      end
+
+      it "clears the registrant as creator of a quote captured before the submission was detached" do
+        quote_field = create(:form_field, form:, name: "Share a quote", field_identifier: "quote", required: false)
+        user = person.user
+        answers = { field.id.to_s => "Great", quote_field.id.to_s => "I found my voice" }
+        Current.set(user:) { submit(identity_params(fields).merge(answers)) }
+
+        detached = Current.set(user:) { submit(identity_params(fields, email: "").merge(answers)) }
+
+        expect(detached.quotes.sole).to have_attributes(created_by_id: nil, updated_by_id: nil)
+      end
+
+      it "writes the content-sharing answers through when the submission is credited" do
+        anon_field = create(:form_field, form:, answer_type: :single_select_radio, name: "Anonymity?",
+          field_identifier: "anonymous_contributions")
+
+        submit(identity_params(fields).merge(anon_field.id.to_s => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[true]))
+
+        expect(person.reload.anonymous_contributions).to be(true)
+      end
+
+      {
+        "only first and last name" => { email: "" },
+        "only an email" => { first: "", last: "" },
+        "first name and email but no last name" => { last: "" },
+        "whitespace-only answers" => { first: "  ", last: "  ", email: "  " },
+        "nothing" => { first: "", last: "", email: "" }
+      }.each do |label, blanks|
+        it "stays anonymous when the respondent gives #{label}" do
+          submission = submit(identity_params(fields, **blanks).merge(field.id.to_s => "Great"))
+
+          expect(submission.person).to be_nil
+          expect(FormCompletion.where(person:, form:, event:)).to exist
+        end
+      end
+
+      it "stays anonymous when the identity params are omitted entirely" do
+        expect(submit({ field.id.to_s => "Great" }).person).to be_nil
+      end
+    end
+
+    context "with logged-out-only name and email questions" do
+      let!(:fields) { identity_fields(visibility: :logged_out_only) }
+
+      it "credits the registrant only when all three are answered" do
+        expect(submit(identity_params(fields)).person).to eq(person)
+      end
+
+      it "stays anonymous when they are left out" do
+        expect(submit({ field.id.to_s => "Great" }).person).to be_nil
+      end
+
+      it "stays anonymous on a partial answer" do
+        expect(submit(identity_params(fields, email: "").merge(field.id.to_s => "Great")).person).to be_nil
+      end
+    end
+
+    it "still stamps a scholarship recipient's survey completion" do
+      create(:allocation,
+        source: create(:scholarship, recipient: person, tasks_completed: true, amount_cents: 100),
+        allocatable: registration, amount: 100)
+      scholarship_callout = create(:registration_ticket_callout, event:, builtin_key: "scholarship", form:)
+
+      described_class.call(registration:, callout: scholarship_callout, form:, form_params: { field.id.to_s => "Great" })
+
+      expect(registration.reload.post_survey_completed?).to be(true)
+    end
+  end
+
+  it "always credits the registrant on a form that isn't anonymous, with or without name questions" do
+    expect(submit({ field.id.to_s => "Great" }).person).to eq(registration.registrant)
+    expect(FormCompletion.count).to eq(0)
   end
 end

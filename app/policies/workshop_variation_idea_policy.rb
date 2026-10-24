@@ -6,7 +6,7 @@ class WorkshopVariationIdeaPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || owner?
+    admin? || owner? || credited_author?
   end
 
   def new?

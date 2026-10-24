@@ -26,6 +26,7 @@ module AffiliationServices
     # ended without a dedicated column (ADR-0003 D6b).
     COMMENT_TOPIC = "Reconciliation".freeze
     NOT_ATTENDED = "Didn't attend — no affiliation created".freeze
+    CANCELLED = "Cancelled — no affiliation created".freeze
     # `registered` after the event is a gap in the record, not an outcome:
     # #attendance_recorded? deliberately excludes it. Acting on it would be acting
     # on missing data, so the row is surfaced for an admin to resolve instead.
@@ -204,6 +205,10 @@ module AffiliationServices
       registration_here&.transferred_out?
     end
 
+    def cancelled_here?
+      registration_here&.status == "cancelled"
+    end
+
     # A transfer isn't a failure — they're training somewhere else. The affiliation
     # follows them: it re-dates to the destination event and re-points at that
     # registration, rather than being ended or deleted (ADR-0003 D6d).
@@ -251,11 +256,11 @@ module AffiliationServices
 
     def classify(affiliation)
       if completed_training?
-        return Decision.new(affiliation:, action: :noop, reason: ACTIVE_ATTENDED) if affiliation.active?
+        return Decision.new(affiliation:, action: :noop, reason: ACTIVE_ATTENDED) if open?(affiliation)
         return Decision.new(affiliation:, action: :reactivate) if ended_for_this_training?(affiliation)
 
         Decision.new(affiliation:, action: :noop, reason: LAPSED)
-      elsif !affiliation.active?
+      elsif !open?(affiliation)
         reason = ended_by_reconciliation?(affiliation) ? ALREADY_DEACTIVATED : ALREADY_ENDED
         Decision.new(affiliation:, action: :noop, reason:)
       elsif attendance_unrecorded?
@@ -271,6 +276,12 @@ module AffiliationServices
       end
     end
 
+    # A row minted off an upcoming training starts on its date, so it reads as
+    # upcoming until then — still open, not ended.
+    def open?(affiliation)
+      affiliation.active? || affiliation.upcoming?
+    end
+
     # Only the row this training minted, and only when the person didn't turn up at
     # all. A partial attendance is kept as an auditable record that they were here —
     # it confers no facilitation either way (ADR-0001 D8a), but the row and its
@@ -284,12 +295,18 @@ module AffiliationServices
     end
 
     # Waits for the governing training to end, so a pre-event run never deactivates.
-    # A hand-entered row has no source training, so it waits on this event.
+    # A hand-entered row has no source training, so it waits on this event. A
+    # cancellation settles this event's outcome early, so its rows are ready at once.
     def deactivation_ready?(affiliation)
-      affiliation.event_registration_id ? affiliation.event_registration&.event&.ended? : @event.ended?
+      if affiliation.event_registration_id && !minted_here?(affiliation)
+        return affiliation.event_registration&.event&.ended?
+      end
+
+      @event.ended? || cancelled_here?
     end
 
     def creation_decision
+      return Decision.new(action: :noop, reason: CANCELLED) if cancelled_here? && !completed_training?
       return Decision.new(action: :create) if !@event.ended? || completed_training?
 
       Decision.new(action: :noop, reason: NOT_ATTENDED)

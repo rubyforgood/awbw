@@ -45,7 +45,7 @@
 #   Mission
 #   WebSite
 #   EMail
-#   EmailPrimary
+#   EmailPrimary              which slot EMail is: 1 primary, 2 secondary
 #   EmailType
 #   EmailNotes
 #   BestTimeToCall
@@ -111,7 +111,7 @@ class FmRolodex < ApplicationRecord
     "FirstName" => "people.first_name",
     "LastName" => "people.last_name",
     "Pronouns" => "people.pronouns",
-    "EmailPrimary" => "people.email",
+    "EmailPrimary" => "people.email or people.email_2 (the slot EMail lands in)",
     "EMail" => "people.email",
     "EmailType" => "people.email_type",
     "BestTimeToCall" => "people.best_time_to_call",

@@ -62,6 +62,11 @@ namespace :fm do
         import.differences.each { |difference| say.("  #{difference}") }
       end
 
+      if import.invalid_emails.any?
+        say.("\nImported without an email the portal can't take (#{import.invalid_emails.size}, people left with no email — also a comment on each):")
+        import.invalid_emails.each { |line| say.("  #{line}") }
+      end
+
       if import.unmatched_tags.any?
         say.("\nTerms no sector, age group or recorded translation answers to:")
         import.unmatched_tags.sort_by { |name, count| [ -count, name ] }.each { |name, count| say.("  #{count.to_s.rjust(5)}  #{name}") }

@@ -137,6 +137,20 @@ RSpec.describe PublicFormSubmission do
     expect(FormSubmission.last.person).to eq(existing)
   end
 
+  it "attributes the request's changes to the submission" do
+    result = described_class.call(form: form, form_params: params_for)
+
+    expect(Current.form_submission_id).to eq(result.form_submission.id)
+  end
+
+  it "attributes nothing when the submission fails and rolls back" do
+    allow(Quotes::CaptureFromSubmission).to receive(:call).and_raise(ActiveRecord::RecordInvalid.new(Person.new))
+
+    result = described_class.call(form: form, form_params: params_for)
+
+    expect([ result.success?, Current.form_submission_id ]).to eq([ false, nil ])
+  end
+
   it "reports an already-submitted error when a simultaneous submission created the person first" do
     allow(Person).to receive(:create!).and_raise(
       ActiveRecord::RecordNotUnique, "Duplicate entry for key 'people.#{Person::NAME_AND_EMAIL_INDEX}'"
@@ -209,11 +223,65 @@ RSpec.describe PublicFormSubmission do
       expect(existing.racial_ethnic_identity).to eq("Kept")
     end
 
-    it "treats a nickname as the first name and moves the legal name aside" do
+    it "stores a legacy nickname answer without changing the person's names" do
       person = described_class.call(form: form, form_params: contact_params(nickname_field.id.to_s => "Sammy")).person
 
-      expect(person.first_name).to eq("Sammy")
-      expect(person.legal_first_name).to eq("Sam")
+      expect([ person.first_name, person.legal_first_name ]).to eq([ "Sam", nil ])
+    end
+
+    it "saves a legal first name answer onto the person" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+
+      person = described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "Samantha")).person
+
+      expect(person.first_name).to eq("Sam")
+      expect(person.legal_first_name).to eq("Samantha")
+    end
+
+    it "leaves the legal first name blank when it matches the first name, ignoring case" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+
+      person = described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "sam")).person
+
+      expect(person.first_name).to eq("Sam")
+      expect(person.legal_first_name).to be_nil
+    end
+
+    it "ignores surrounding and repeated whitespace when comparing the two names" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+      existing = create(:person, first_name: "Mary Ann", last_name: "Rivera", email: "sam@example.com")
+      params = contact_params(first_name_field.id.to_s => "Mary Ann", legal_field.id.to_s => "  mary   ann\n")
+
+      described_class.call(form: form, form_params: params)
+
+      expect(existing.reload.legal_first_name).to be_nil
+    end
+
+    it "uses a legal first name as the first name when the form asks only for that, without repeating it" do
+      first_name_field.destroy!
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+
+      person = described_class.call(form: form.reload, form_params: contact_params(legal_field.id.to_s => "Samantha")).person
+
+      expect(person).to have_attributes(first_name: "Samantha", legal_first_name: nil)
+    end
+
+    it "keeps an existing person's legal first name when the answer matches their first name" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+      existing = create(:person, first_name: "Sam", legal_first_name: "Samuel", last_name: "Rivera", email: "sam@example.com")
+
+      described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "Sam"))
+
+      expect(existing.reload.legal_first_name).to eq("Samuel")
+    end
+
+    it "overwrites the legal first name of an existing matched person" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+      existing = create(:person, first_name: "Sam", legal_first_name: "Old", last_name: "Rivera", email: "sam@example.com")
+
+      described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "Samantha"))
+
+      expect(existing.reload.legal_first_name).to eq("Samantha")
     end
   end
 
@@ -329,7 +397,35 @@ RSpec.describe PublicFormSubmission do
     expect(confirmation.recipient_role).to eq("person")
   end
 
-  context "when identity is left blank (optional name/email questions)" do
+  context "on a form not set to anonymous" do
+    it "rejects every submission when the form doesn't ask name and email" do
+      [ first_name_field, last_name_field, email_field ].each(&:destroy!)
+
+      result = described_class.call(form: form.reload, form_params: { question_field.id.to_s => "I care." })
+
+      expect(result.success?).to be(false)
+      expect(FormSubmission.count).to eq(0)
+    end
+
+    {
+      "a blank name and email" => { first: "", last: "", email: "" },
+      "a missing email" => { email: "" },
+      "a missing first name" => { first: "" }
+    }.each do |label, blanks|
+      it "rejects #{label} rather than recording it anonymously" do
+        result = nil
+        expect { result = described_class.call(form: form, form_params: params_for(**blanks)) }
+          .not_to change(FormSubmission, :count)
+
+        expect(result.success?).to be(false)
+        expect(result.errors).to include(described_class::IDENTITY_REQUIRED_MESSAGE)
+      end
+    end
+  end
+
+  context "when identity is left blank on an anonymous form" do
+    before { form.update!(anonymous: true) }
+
     it "records a person-less submission when identity is blank" do
       result = nil
       expect { result = described_class.call(form: form, form_params: params_for(first: "", last: "", email: "")) }
@@ -354,6 +450,51 @@ RSpec.describe PublicFormSubmission do
       expect { described_class.call(form: form, form_params: params_for(first: "", last: "", email: "")) }
         .to change { Notification.where(kind: "form_submission_confirmation").count }.by(0)
         .and change { Notification.where(kind: "form_submission_confirmation_fyi").count }.by(1)
+    end
+  end
+
+  context "on an anonymous form" do
+    before { form.update!(anonymous: true) }
+
+    it "credits the respondent who gives first name, last name, and email" do
+      result = described_class.call(form: form, form_params: params_for)
+
+      expect(result.form_submission.person.email).to eq("sam@example.com")
+    end
+
+    it "credits an existing person matched on all three" do
+      existing = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
+
+      expect(described_class.call(form: form, form_params: params_for).form_submission.person).to eq(existing)
+    end
+
+    {
+      "only first and last name" => { email: "" },
+      "only an email" => { first: "", last: "" },
+      "an email and last name but no first name" => { first: "" }
+    }.each do |label, blanks|
+      it "records #{label} anonymously, without touching the matching person" do
+        existing = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
+
+        result = nil
+        expect { result = described_class.call(form: form, form_params: params_for(**blanks)) }
+          .not_to change(Person, :count)
+
+        expect(result.form_submission.person).to be_nil
+        expect(existing.form_submissions.count).to eq(0)
+      end
+    end
+
+    it "applies the same rule to logged-out-only name and email questions" do
+      [ first_name_field, last_name_field, email_field ].each { |field| field.update!(visibility: :logged_out_only) }
+
+      expect(described_class.call(form: form, form_params: params_for(email: "")).form_submission.person).to be_nil
+      expect(described_class.call(form: form, form_params: params_for).form_submission.person).to be_present
+    end
+
+    it "records no completion — a public link has no registrant to mark done" do
+      expect { described_class.call(form: form, form_params: params_for(email: "")) }
+        .not_to change(FormCompletion, :count)
     end
   end
 

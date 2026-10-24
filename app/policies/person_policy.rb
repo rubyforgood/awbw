@@ -39,6 +39,11 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner? || (profiles_visible_to_users? && record.published?)
   end
 
+  # Admins get a lock on cards for profiles non-admins can't open.
+  def hidden_profile_marker?
+    admin? && !record.published?
+  end
+
   def own_record?
     admin? || owner?
   end

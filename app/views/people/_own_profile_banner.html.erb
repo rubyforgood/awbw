@@ -1,0 +1,37 @@
+<%# locals: (person:, pending_requests:) %>
+<div id="own-profile" class="border-primary/10 mb-4 rounded-2xl border bg-white p-5 shadow-sm sm:p-6">
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div class="space-y-1 text-base text-gray-700">
+      <h2 class="text-primary font-display text-2xl font-semibold">This is your profile</h2>
+      <p>To update your details, click <strong>Edit my data</strong>.</p>
+    </div>
+    <%= link_to edit_person_path(person),
+                  class: "text-primary inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-brand-yellow-400 px-6 py-3 text-lg font-semibold shadow-sm transition hover:bg-brand-yellow-500" do %>
+      <i class="fa-solid fa-pen"></i> Edit my data
+    <% end %>
+  </div>
+  <% if pending_requests.any? %>
+    <div class="border-primary/10 bg-brand-cream mt-4 rounded-xl border p-4 text-gray-800">
+      <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p class="text-primary font-semibold"><i class="fa-solid fa-clock"></i> AWBW staff are reviewing your <%= "update".pluralize(pending_requests.size) %></p>
+        <p class="text-sm text-gray-600">We'll confirm within 2–3 business days.</p>
+      </div>
+      <ul class="divide-primary/10 mt-3 divide-y">
+        <% pending_requests.each do |request| %>
+          <li class="flex flex-col gap-1 py-2 first:pt-0 last:pb-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+            <div class="min-w-0">
+              <p><%= request.pending_summary %></p>
+              <% if request.field == "primary_email" %>
+                <p class="text-sm text-gray-600">Your current email stays active until we confirm the change.</p>
+              <% end %>
+            </div>
+            <div class="flex shrink-0 items-baseline gap-3 text-sm">
+              <span class="text-gray-500">Sent <%= request.requested_on %></span>
+              <%= link_to "View or edit", edit_profile_change_request_path(request), class: "text-primary font-semibold underline" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</div>

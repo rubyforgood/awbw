@@ -34,10 +34,11 @@
           <p><strong>Story by:</strong>
             <%= credited_author_link(@story) %>
           </p>
+          <% if @story.spotlighted_facilitator %>
+            <p><strong>Spotlighted facilitator:</strong> <%= @story.decorate.spotlighted_facilitator_link %></p>
+          <% end %>
           <p><strong>Organization Name:</strong>
-            <%= link_to @story.decorate.organization_name,
-                        organization_path(@story.organization),
-                        class: "hover:underline" %>
+            <%= @story.decorate.organization_link %>
           </p>
           <% if @story.decorate.workshop_links.present? %>
             <p><strong><%= @story.decorate.workshop_reference_count > 1 ? "Workshops" : "Workshop" %>:</strong> <%= @story.decorate.workshop_links %></p>
@@ -50,7 +51,8 @@
           <div id="upload-progress-bar" class="h-full w-0 bg-blue-500 transition-[width] duration-200 ease-out"></div>
         </div>
         <div id="hero-image" class="relative">
-          <%= render "assets/display_assets_carousel", resource: @story %>
+          <%= render "assets/display_assets_carousel", resource: @story,
+                     video_url: youtube_embed_url(@story.youtube_url, js_api: true), video_title: "#{@story.title} video" %>
           <div class="absolute top-8 right-2 z-40">
             <%= render "assets/primary_image_picker", owner: @story %>
           </div>

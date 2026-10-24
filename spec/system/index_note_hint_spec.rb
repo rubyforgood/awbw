@@ -17,6 +17,7 @@ RSpec.describe "Index note hint", type: :system, js: true do
     end
 
     expect(page).to have_css(hint, text: admin.decorate.initials)
+    expect(page).to have_css("[data-field-name='note']", text: "Saved")
     expect(tagging.comments.sole.body).to eq("Called them")
   end
 end

@@ -2,19 +2,20 @@ FactoryBot.define do
   factory :story do
     association :windows_type
     association :organization
-    association :workshop
     association :created_by, factory: :user
     association :updated_by, factory: :user
     sequence(:title) { |n| "Story #{n}" }
     rhino_body { "<p>My Body</p>" }
 
-    after(:create) do |story, _evaluator|
-      if story.story_workshops.empty?
-        story.story_workshops.create!(workshop: story.workshop) if story.workshop
-        if story.external_workshop_title.present?
-          story.story_workshops.create!(external_workshop_title: story.external_workshop_title)
-        end
-      end
+    transient do
+      workshop { association :workshop }
+      external_workshop_title { nil }
+    end
+
+    after(:build) do |story, evaluator|
+      next if story.story_workshops.any?
+      story.story_workshops.build(workshop: evaluator.workshop) if evaluator.workshop
+      story.story_workshops.build(external_workshop_title: evaluator.external_workshop_title) if evaluator.external_workshop_title.present?
     end
 
     trait :featured do

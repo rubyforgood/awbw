@@ -45,6 +45,41 @@ RSpec.describe "Comments index", type: :request do
       expect(response.body).to include("comments_results", "Affiliation note")
     end
 
+    it "shows the per-page dropdown, submitted by the filter form's collection controller" do
+      sign_in admin
+      get comments_path
+
+      select_tag = response.body[/<select[^>]*id="number_of_items_per_page"[^>]*>/]
+      expect(select_tag).to be_present
+      expect(select_tag).not_to include("onchange")
+    end
+
+    it "leaves submitting every filter to the form's collection controller" do
+      sign_in admin
+      get comments_path
+
+      filter_form = response.body[%r{<form[^>]*data-controller="collection".*?</form>}m]
+      expect(filter_form).to be_present
+      expect(filter_form).not_to match(/\b(onchange|oninput)=/)
+    end
+
+    it "keeps a per-page size from the URL selected even when it isn't a preset" do
+      sign_in admin
+      get comments_path(number_of_items_per_page: 12)
+
+      expect(response.body).to match(/<option selected="selected" value="12">12<\/option>/)
+    end
+
+    it "pages the results frame by the chosen number of items per page" do
+      sign_in admin
+      create_list(:comment, 11, commentable: create(:person))
+
+      get comments_path(number_of_items_per_page: 10), headers: frame_headers
+
+      expect(response.body.scan(/id="comment_\d+"/).size).to eq(10)
+      expect(response.body).to include("number_of_items_per_page=10")
+    end
+
     it "filters to comments connected to a person" do
       sign_in admin
       target = create(:person)

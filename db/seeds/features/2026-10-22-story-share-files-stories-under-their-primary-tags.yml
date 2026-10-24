@@ -1,0 +1,14 @@
+name: "Story Share features each story under its starred sector and audience"
+area: stories
+display_status: public_facing
+released_on: 2026-10-22
+pr_number: 2782
+summary: >-
+  On a Story Share sector or audience page, the banner, carousel and highlight
+  cards now feature only stories starred with that sector or audience. Stories
+  tagged with it but not starred still appear in the list below.
+pro_tips:
+  - "To feature a story on a different Story Share page, change which sector or audience carries its star."
+  - "The home page's sector and audience sections also show only starred stories."
+  - "Additional Focus Areas covers every published sector that isn't in the top nav, Other included."
+action_path: "/story_share"

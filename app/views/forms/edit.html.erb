@@ -36,6 +36,18 @@
       <i class="fa-solid fa-inbox <%= DomainTheme.text_class_for(:forms, intensity: 600) %>"></i>
       <%= pluralize(@form.form_submissions.size, "submission") %>
     </span>
+    <% default_survey = @form.default_survey %>
+    <% if default_survey == @form %>
+      <span class="<%= DomainTheme.text_class_for(:forms, intensity: 700) %> inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-sm font-medium shadow-sm">
+        <i class="fa-solid fa-star <%= DomainTheme.text_class_for(:forms, intensity: 600) %>"></i>
+        Default for new events
+      </span>
+    <% elsif default_survey %>
+      <%= link_to edit_form_path(default_survey), class: "inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-sm text-gray-600 shadow-sm hover:bg-white/70" do %>
+        <i class="fa-regular fa-star text-gray-400"></i>
+        New events send <%= default_survey.display_name %>
+      <% end %>
+    <% end %>
   <% end %>
   <div class="<%= DomainTheme.bg_class_for(:forms, intensity: 50) %> border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
     <%= render "forms/page_header", icon: "fa-solid fa-list-check",
@@ -65,6 +77,13 @@
       </div>
     <% end %>
 
+    <% if @form.publicly_fillable? && @form.missing_identity_questions? %>
+      <div role="alert" class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <i class="fa-solid fa-triangle-exclamation mt-0.5 text-amber-500" aria-hidden="true"></i>
+        <span>This form needs first name, last name, and email questions to accept submissions from people who aren't logged in — add them, or turn on Anonymous responses in Form settings.</span>
+      </div>
+    <% end %>
+
     <details class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <summary class="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center gap-2.5 border-b border-transparent <%= DomainTheme.bg_class_for(:forms, intensity: 100) %> px-6 py-3 <%= DomainTheme.bg_class_for(:forms, intensity: 100, hover: true) %> [[open]_&]:<%= DomainTheme.border_class_for(:forms) %>">
@@ -90,6 +109,14 @@
                   class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
             <p class="mt-1 text-xs text-gray-500">A standalone public registration form is the on-demand agreement; new job, reinstatement, and close program carry their own affiliation processing (each submission gets a processing panel).</p>
           </div>
+        </div>
+
+        <div>
+          <label class="flex cursor-pointer items-center gap-2">
+            <%= f.check_box :anonymous, class: "rounded border-gray-300 #{DomainTheme.text_class_for(:forms, intensity: 600)}" %>
+            <span class="text-sm text-gray-800">Anonymous responses</span>
+          </label>
+          <p class="mt-1 text-xs text-gray-500">Responses aren't linked to whoever submits them, even when they're logged in. Name and email questions become optional — only someone who fills in first name, last name, and email is credited. On a ticket callout, staff still see who completed the form, just not which responses are theirs. When off, a public link requires first name, last name, and email.</p>
         </div>
       </div>
     </details>
@@ -121,7 +148,7 @@
             <span class="text-sm text-gray-800">Publish this form at a public link (anyone can fill it out, no account needed)</span>
           </label>
           <p class="text-xs text-gray-500">Publishes the form at the public link below. A form connected to an event can't be published — event forms are filled out through their event.</p>
-          <p class="text-xs text-gray-500">To accept anonymous submissions, make the name and email questions optional (uncheck "Required" on those fields). A respondent who fills them is still identified; one who skips them submits anonymously. Agreement forms (registration, new job, reinstatement) always require name and email, since each submission is processed against a person.</p>
+          <p class="text-xs text-gray-500">To accept anonymous submissions, turn on "Anonymous responses" in Form settings above.</p>
 
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Public link address</label>
@@ -130,7 +157,7 @@
               <%= f.text_field :slug, placeholder: "volunteer-interest",
                     class: "flex-1 border-0 px-3 py-2 text-sm focus:ring-0" %>
             </div>
-            <p class="mt-1 text-xs text-gray-500">Lowercase letters, numbers, and hyphens. Required to publish. Include name and email questions to identify who submitted — unless anonymous submissions are allowed.</p>
+            <p class="mt-1 text-xs text-gray-500">Lowercase letters, numbers, and hyphens. Required to publish. A form must ask first name, last name, and email to publish — unless Anonymous responses is on.</p>
           </div>
 
           <% if @form.publicly_fillable? %>

@@ -23,6 +23,11 @@ class ApplicationPolicy < ActionPolicy::Base
 
   def authenticated? = user.present?
 
+  def credited_author?
+    return false unless user&.person_id
+    [ record.try(:author_id), record.try(:co_author_id) ].compact.include?(user.person_id)
+  end
+
   def owner?
     return false unless user
     if record.respond_to?(:created_by_id)

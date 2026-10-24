@@ -4,7 +4,7 @@
         <!-- Header -->
         <div class="mb-6 flex items-center justify-between">
           <h1 class="text-primary font-display text-2xl font-semibold">
-            Workshop Variation Ideas (<%= @workshop_variation_ideas_count %>)
+            Workshop Variation Ideas (<%= number_with_delimiter(@workshop_variation_ideas_count) %>)
           </h1>
           <div class="flex gap-2">
             <%= link_to "New workshop variation idea",

@@ -19,7 +19,7 @@ class WorkshopIdeaPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || owner?
+    admin? || owner? || credited_author?
   end
 
   # Scoping

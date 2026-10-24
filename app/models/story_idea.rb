@@ -31,9 +31,6 @@ class StoryIdea < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
   belongs_to :organization, optional: true
   belongs_to :windows_type
-  # Kept as a legacy safety copy alongside story_idea_workshops during the
-  # multi-step import; the join is the source of truth for display and editing.
-  belongs_to :workshop, optional: true
   has_many :story_idea_workshops, -> { order(:position, :id) }, inverse_of: :story_idea, dependent: :destroy
   has_many :workshops, through: :story_idea_workshops
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -63,7 +60,6 @@ class StoryIdea < ApplicationRecord
   validates :windows_type_id, presence: true
   validates :permission_given, presence: true
   validates :rhino_body, presence: true
-  validates :external_workshop_title, length: { maximum: 255 }
   validates :youtube_url, length: { maximum: 255 }
   normalizes :co_author_credit_preference, with: ->(value) { value.presence }
   validates :co_author_credit_preference, inclusion: { in: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES }, allow_blank: true
@@ -107,7 +103,6 @@ class StoryIdea < ApplicationRecord
   end
 
   def workshop_title
-    return direct_workshop_title if story_idea_workshops.empty?
     story_idea_workshops.map { |siw| story_idea_workshop_label(siw) }.compact_blank.presence&.join(" / ")
   end
 
@@ -125,15 +120,8 @@ class StoryIdea < ApplicationRecord
 
   private
 
-  def direct_workshop_title
-    [ workshop&.title, external_workshop_title.presence ].compact_blank.presence&.join(" / ")
-  end
-
   def story_idea_workshop_label(story_idea_workshop)
-    workshop_title = story_idea_workshop.workshop&.title
-    external_title = story_idea_workshop.external_workshop_title.presence
-    return "#{external_title} (from the #{workshop_title})" if external_title && workshop_title
-    external_title || workshop_title
+    story_idea_workshop.external_workshop_title.presence || story_idea_workshop.workshop&.title
   end
 
   def co_author_differs_from_author

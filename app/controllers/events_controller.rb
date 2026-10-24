@@ -125,7 +125,7 @@ class EventsController < ApplicationController
     end
 
     per_page = params[:number_of_items_per_page].presence || 25
-    @count_display = people.count
+    @count_display = count_display(people.count)
     @people = people.paginate(page: params[:page], per_page: per_page)
     @roster = AttendeesRoster.new(@people, events: attendee_events, registrations: attendee_registrations)
     render :attendees_results

@@ -72,6 +72,31 @@ RSpec.describe RegistrantCeForm do
       expect(described_class.new(registration)).to be_complete
     end
 
+    context "on an anonymous form" do
+      before { form.update!(anonymous: true) }
+
+      it "is true once the registrant has submitted, though no submission is theirs" do
+        EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:, form:,
+          form_params: { required_field.id.to_s => "Great" })
+
+        ce_form = described_class.new(registration)
+        expect(ce_form.submission).to be_nil
+        expect(ce_form).to be_complete
+        expect(ce_form).to be_completed_anonymously
+      end
+
+      it "is false before they submit" do
+        expect(described_class.new(registration)).not_to be_complete
+        expect(described_class.new(registration)).not_to be_completed_anonymously
+      end
+
+      it "is not satisfied by someone else's completion" do
+        create(:form_completion, form:, event:)
+
+        expect(described_class.new(registration)).not_to be_complete
+      end
+    end
+
     it "still finds the submission after the form's role changes" do
       EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:, form:,
         form_params: { required_field.id.to_s => "Great" })

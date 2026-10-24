@@ -4,7 +4,7 @@
         <!-- Header -->
         <div class="mb-6 flex items-center justify-between">
           <h1 class="text-primary font-display text-2xl font-semibold">
-            <%= StoryIdea.model_name.human.pluralize %> (<%= @story_ideas_count %>)
+            <%= StoryIdea.model_name.human.pluralize %> (<%= number_with_delimiter(@story_ideas_count) %>)
           </h1>
           <div class="flex gap-2">
             <%= link_to("New #{ StoryIdea.model_name.human.downcase }",
@@ -52,8 +52,8 @@
                   </span>
                 </td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.windows_type&.short_name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.workshop_title %></td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.organization&.name %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.workshop_links %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= story_idea.organization_link %></td>
                 <td class="px-4 py-2 text-center text-sm text-gray-500">
                   <%= story_idea.updated_at.strftime("%b %d, %Y") %>
                 </td>

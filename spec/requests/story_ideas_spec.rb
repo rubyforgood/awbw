@@ -17,7 +17,7 @@ RSpec.describe "/story_ideas", type: :request do
       author_credit_preference: "full_name",
       permission_given: true,
       windows_type_id: windows_type.id,
-      workshop_id: workshop.id,
+      story_idea_workshops_attributes: [ { workshop_id: workshop.id } ],
       organization_id: organization.id,
       created_by_id: regular_user.id,
       updated_by_id: regular_user.id
@@ -40,6 +40,19 @@ RSpec.describe "/story_ideas", type: :request do
       it "renders successfully" do
         get story_ideas_url
         expect(response).to be_successful
+      end
+
+      it "links each idea's workshop and organization, showing the idea's own workshop title" do
+        org = create(:organization, name: "Index Org")
+        story_idea = create(:story_idea, organization: org, workshop: nil)
+        story_idea.story_idea_workshops.create!(workshop:, external_workshop_title: "Teen variant")
+
+        get story_ideas_url
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link("Teen variant", href: workshop_path(workshop))
+        expect(page).to have_link("Index Org", href: organization_path(org))
+        expect(response.body).not_to include("(from the")
       end
 
       it "filters story ideas by organization_id" do
@@ -71,6 +84,20 @@ RSpec.describe "/story_ideas", type: :request do
         page = Capybara.string(response.body)
         expect(page).to have_link(org.name, href: organization_path(org))
         expect(page).to have_link(creator.name, href: person_path(creator_person))
+      end
+
+      it "shows a workshop reference's own title, linked to the workshop" do
+        story_idea = create(:story_idea, workshop: nil)
+        story_idea.story_idea_workshops.create!(workshop:, external_workshop_title: "Teen variant")
+        story_idea.story_idea_workshops.create!(external_workshop_title: "Homegrown session")
+
+        get story_idea_url(story_idea)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link("Teen variant", href: workshop_path(workshop))
+        expect(page).to have_text("Homegrown session")
+        expect(page).to have_no_link("Homegrown session")
+        expect(response.body).not_to include("(from the")
       end
 
       it "stars the primary sector and category" do
@@ -186,6 +213,7 @@ RSpec.describe "/story_ideas", type: :request do
 
     describe "POST /create" do
       it "creates StoryIdea with admin and submitter notifications" do
+        admin.update!(person: create(:person))
         story_idea_count_before = StoryIdea.count
         notification_count_before = Notification.count
 
@@ -222,6 +250,15 @@ RSpec.describe "/story_ideas", type: :request do
         story_idea = create(:story_idea)
         get story_idea_url(story_idea)
         expect(response).to redirect_to(root_path)
+      end
+
+      it "shows an idea that credits them as co-author" do
+        co_author = create(:user, :with_person)
+        sign_in co_author
+        story_idea = create(:story_idea, author: create(:person), co_author: co_author.person)
+
+        get story_idea_url(story_idea)
+        expect(response).to have_http_status(:ok)
       end
     end
 
@@ -293,7 +330,23 @@ RSpec.describe "/story_ideas", type: :request do
         expect(StoryIdea.last).not_to be_funder_only
       end
 
+      it "confirms to the idea's authors and an admin" do
+        submitter = create(:user, :with_person)
+        co_author = create(:person, email: "co-author@example.com")
+        sign_in submitter
+
+        post story_ideas_url, params: { story_idea: valid_attributes.merge(co_author_id: co_author.id) }
+
+        expect(Notification.where(noticeable: StoryIdea.last).pluck(:kind, :recipient_email, :person_id)).to contain_exactly(
+          [ "idea_submitted", submitter.person.preferred_email, submitter.person.id ],
+          [ "idea_submitted", "co-author@example.com", co_author.id ],
+          [ "idea_submitted_fyi", Setting.programs_email, nil ]
+        )
+      end
+
       it "creates admin and submitter notifications and enqueues mailer jobs" do
+        submitter = create(:user, :with_person)
+        sign_in submitter
         clear_enqueued_jobs
 
         expect {
@@ -309,7 +362,7 @@ RSpec.describe "/story_ideas", type: :request do
 
         submitter_notification = notifications.find_by(kind: "idea_submitted")
         expect(submitter_notification.recipient_role).to eq("person")
-        expect(submitter_notification.recipient_email).to eq(regular_user.email)
+        expect(submitter_notification.recipient_email).to eq(submitter.email)
 
         expect(enqueued_jobs.map { |j| j[:job] })
           .to include(NotificationMailerJob)
@@ -425,6 +478,18 @@ RSpec.describe "/story_ideas", type: :request do
         expect(page).to have_text(org.name)
         expect(page).not_to have_link(org.name)
         expect(page).to have_link(regular_user.name, href: person_path(person))
+      end
+
+      it "shows a workshop the owner can't open as plain text, under the idea's own title" do
+        draft_workshop = create(:workshop, :unpublished)
+        story_idea = create(:story_idea, created_by: regular_user, workshop: nil)
+        story_idea.story_idea_workshops.create!(workshop: draft_workshop, external_workshop_title: "Teen variant")
+
+        get story_idea_url(story_idea)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text("Teen variant")
+        expect(page).to have_no_link("Teen variant")
       end
 
       it "renders the creator as plain text when they have no person record" do

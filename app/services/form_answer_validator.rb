@@ -45,7 +45,7 @@ class FormAnswerValidator
   end
 
   def error_for(field, value)
-    return "can't be blank" if field.required && blank_answer?(value)
+    return "can't be blank" if field.answer_required? && blank_answer?(value)
     return if value.blank?
 
     # A file upload arrives as a signed blob id (or an uploaded file), not text —

@@ -28,10 +28,6 @@ class ResourceDecorator < ApplicationDecorator
     h.truncate(rhino_body.to_plain_text, length: 200)
   end
 
-  def breadcrumbs
-    "#{type_link} >> #{title}".html_safe
-  end
-
   def display_date
     created_at.strftime("%B %Y")
   end

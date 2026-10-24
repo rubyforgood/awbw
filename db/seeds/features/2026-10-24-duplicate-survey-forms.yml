@@ -1,0 +1,15 @@
+name: "Duplicate survey forms to draft a new version"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-24
+pr_number: 2772
+action_path: "/forms"
+summary: >-
+  Duplicating a Day 1, Day 2, post-event, or recipients survey now works, and
+  the copy keeps its survey role so its answers count in the same registrants
+  column.
+pro_tips:
+  - "New events still send the original survey; a copy only goes out when you pick it on an event's Feedback surveys card."
+  - "The forms list and form editor mark each survey's default with a \"Default for new events\" label; a copy's editor links to the default."
+  - "To make a copy the default for new events, change the original form's role to General."
+  - "Each callout card in the event editor lists its linked forms, so you can check the surveys without opening the card."
