@@ -53,7 +53,8 @@ Constraints already decided elsewhere:
   - **A name match only reaches an org carrying no code from the same table.** One already
     holding another project's code is a namesake; the new org is named `"Name (P1234)"`,
     since org names are unique.
-  - Every FileMaker organization comes over, whether or not a project or person points at it.
+  - Every FileMaker organization comes over, whether or not a project or person points at it
+    (decided 2026-10-24).
 - **Agencies:** a Rolodex card flagged `isAgency__c` is the agency's own card. Its website,
   mission and addresses fill the org its `OrgID` names (or the one its `Organization` name
   matches, created when nothing does); its email too, unless the card names a contact
@@ -120,5 +121,3 @@ the real run.
   survivor's org, so its personnel land there. One the portal already keeps as its own org
   is reported for a hand merge rather than merged automatically.
 - **Unmatched people:** skipped and reported.
-- **Every FileMaker organization, or only the ones something points at?** The draft brings all
-  of them.
