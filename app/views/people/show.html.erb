@@ -16,6 +16,8 @@
 <% if allowed_to?(:index?, User) %>
   <%= render "people/multiple_user_accounts_warning", person: @person, return_to: "person_show" %>
 <% end %>
+<% own_profile = allowed_to?(:edit_own_profile?, @person) %>
+<%= render "people/own_profile_banner", person: @person, pending_requests: @pending_change_requests if own_profile %>
 <div class="admin-or-owner bg-brand-cream border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
   <%= render accent_strip_partial %>
   <!-- Person hero -->
@@ -44,7 +46,7 @@
         <% if allowed_to?(:index?, Person) %>
           <%= link_to "People", people_path, class: "admin-only text-sm text-gray-600 hover:text-primary px-2 py-1" %>
         <% end %>
-        <% if allowed_to?(:edit?, @person) %>
+        <% if allowed_to?(:edit?, @person) && !own_profile %>
           <%= link_to edit_person_path(@person),
                         class: "admin-only inline-flex items-center gap-1.5 text-sm font-semibold rounded-full bg-brand-yellow-400 hover:bg-brand-yellow-500 text-primary px-4 py-1.5 shadow-sm transition" do %>
             <i class="fa-solid fa-pen text-xs"></i> Edit
@@ -161,7 +163,10 @@
         <!-- Organization affiliations -->
         <% if @person.profile_show_affiliations? %>
           <div id="affiliations" class="scroll-mt-4 md:col-span-3">
-            <h2 class="mb-3 font-display text-2xl text-gray-900">Affiliations</h2>
+            <div class="mb-3 flex flex-wrap items-center gap-2">
+              <h2 class="font-display text-2xl text-gray-900">Affiliations</h2>
+              <%= render "people/profile_section_action", person: @person, anchor: "affiliations" %>
+            </div>
             <%= turbo_frame_tag "person_affiliations_section", src: person_path(@person, section: "affiliations"), loading: :lazy do %>
               <p class="text-gray-500 italic">Loading affiliations...</p>
             <% end %>
@@ -177,13 +182,19 @@
             <div class="flex items-start gap-4">
               <% if show_sectors %>
                 <div class="min-w-0 flex-1">
-                  <h2 class="mb-3 font-display text-2xl text-gray-900">Sectors</h2>
+                  <div class="mb-3 flex flex-wrap items-center gap-2">
+                    <h2 class="font-display text-2xl text-gray-900">Sectors</h2>
+                    <%= render "people/profile_section_action", person: @person, anchor: "sectors" %>
+                  </div>
                   <%= render "people/profile_pieces/sectors", person: @person %>
                 </div>
               <% end %>
               <% if show_age %>
                 <div class="w-32 flex-shrink-0">
-                  <h2 class="mb-3 font-display text-2xl text-gray-900">Age ranges</h2>
+                  <div class="mb-3 flex flex-wrap items-center gap-2">
+                    <h2 class="font-display text-2xl text-gray-900">Age ranges</h2>
+                    <%= render "people/profile_section_action", person: @person, anchor: "age-ranges" %>
+                  </div>
                   <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups, compact: true %>
                 </div>
               <% end %>
@@ -199,8 +210,16 @@
     <!-- Bio -->
     <% if @person.bio.present? && @person.profile_show_bio? %>
       <div class="rounded-2xl border-2 p-5 sm:p-6 <%= DomainTheme.bg_class_for(:person_bio, intensity: 50) %> <%= DomainTheme.border_class_for(:person_bio) %>">
-        <h2 class="mb-3 font-display text-2xl text-gray-900">Bio</h2>
+        <div class="mb-3 flex flex-wrap items-center gap-2">
+          <h2 class="font-display text-2xl text-gray-900">Bio</h2>
+          <%= render "people/profile_section_action", person: @person, anchor: "bio" %>
+        </div>
         <%= render "people/profile_pieces/bio", person: @person %>
+      </div>
+    <% elsif @person.bio.blank? && @person.profile_show_bio? && own_profile %>
+      <div class="rounded-2xl border-2 border-dashed p-5 sm:p-6 <%= DomainTheme.border_class_for(:person_bio) %>">
+        <h2 class="mb-2 font-display text-2xl text-gray-900">Bio</h2>
+        <%= render "people/profile_pieces/bio_prompt", person: @person %>
       </div>
     <% end %>
     <!-- AUTHORED SECTION -->

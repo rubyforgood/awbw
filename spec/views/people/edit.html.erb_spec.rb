@@ -10,6 +10,7 @@ RSpec.describe "people/edit", type: :view do
     assign(:person, person)
     allow(view).to receive(:current_user).and_return(admin)
     allow(view).to receive(:allowed_to?).and_return(true)
+    allow(view).to receive(:allowed_to?).with(:edit_own_profile?, anything).and_return(false)
     render
   end
 

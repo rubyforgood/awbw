@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, Dedupable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments send_form_link ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments send_form_link visibility ]
 
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
@@ -52,6 +52,7 @@ class PeopleController < ApplicationController
     track_view(@person)
     @membership = membership_for(@person)
     @membership_autopay = allowed_to?(:own_membership?, @person) && @person.payment_processor.subscribed?
+    @pending_change_requests = own_pending_change_requests unless turbo_frame_request?
 
     if params[:checkout] == "success"
       flash[:notice] = "Thank you for your donation!"
@@ -235,6 +236,10 @@ class PeopleController < ApplicationController
     set_form_variables
   end
 
+  def visibility
+    authorize! @person
+  end
+
   def create
     @person = Person.new(person_params.except(:user_attributes))
     authorize! @person
@@ -293,7 +298,7 @@ class PeopleController < ApplicationController
       redirect_to person_update_return_path, notice: "Person was successfully updated."
     else
       set_form_variables
-      render :edit, status: :unprocessable_content
+      render(params[:return_to] == "visibility" ? :visibility : :edit, status: :unprocessable_content)
     end
   end
 
@@ -696,5 +701,11 @@ class PeopleController < ApplicationController
     return unless Membership.enabled? && allowed_to?(:show?, person)
 
     person.memberships.includes(:membership_invoices).order(created_at: :desc).first&.decorate
+  end
+
+  def own_pending_change_requests
+    return [] unless allowed_to?(:edit_own_profile?, @person)
+
+    @person.profile_change_requests.pending.newest_first.includes(affiliation: :organization).decorate.to_a
   end
 end
