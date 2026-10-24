@@ -90,6 +90,16 @@ RSpec.describe EventCopyService do
       expect(copy.sectorable_items.sole).to have_attributes(sector: sector, is_primary: true)
     end
 
+    it "keeps the source's survey form even when an older form has the same role" do
+      create(:form, role: "day_1_survey")
+      newer = create(:form, role: "day_1_survey")
+      create(:registration_ticket_callout, event: event, form: newer, builtin_key: "feedback_surveys")
+
+      copy = described_class.copy(event, start_on: new_start_on)
+
+      expect(copy.registration_ticket_callouts.find_by(builtin_key: "feedback_surveys").forms).to eq([ newer ])
+    end
+
     it "gives the copy its own image file" do
       create(:primary_asset, :with_file, owner: event)
 
