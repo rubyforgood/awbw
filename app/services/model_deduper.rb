@@ -75,9 +75,12 @@ class ModelDeduper
     end.sort_by { |entry| entry[:label] }
   end
 
-  # A best-effort human name for an associated record: its own name/title, else a
-  # named parent (e.g. an affiliation's person), else its id.
+  # A best-effort human name for an associated record: its decorator's #dedupe_label,
+  # else its own name/title, else a named parent (e.g. an affiliation's person), else its id.
   def record_display(record)
+    labeled = record.decorate.try(:dedupe_label) if record.decorator_class?
+    return labeled if labeled.present?
+
     own = display_string(record)
     return own if own
 

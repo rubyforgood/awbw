@@ -59,7 +59,7 @@ This codebase (Rails 8.1)
 |---|---|---|
 | `app/controllers/` | Rails controllers (admin/, events/, home/) | ~93 files |
 | `app/views/` | ERB templates | ~824 files |
-| `app/decorators/` | Draper decorators for view logic | ~50 files |
+| `app/decorators/` | Draper decorators for view logic | ~60 files |
 | `app/policies/` | ActionPolicy authorization rules | ~63 files |
 | `app/presenters/` | Presentation objects | 8 files |
 | `app/helpers/` | View helpers | ~50 files |
@@ -371,6 +371,7 @@ All inherit from `ApplicationDecorator` which provides:
 - `delegate_all` for transparent delegation
 - `display_image` — selects primary/gallery/downloadable asset intelligently
 - `link_target` — polymorphic path generation
+- `DEDUPE_SNIPPET_LENGTH` — truncation for `#dedupe_label`, the optional per-record label `ModelDeduper#reassignment_preview` lists for moving records (Affiliation, ContactMethod, Comment, Notification define one)
 
 Shared decorator modules (`app/decorators/concerns/`): `Linkable` (external vs in-app link target), `EventChippable`, `StoryReferenceLinks` (story + story idea workshop/organization links — each linked only when the viewer passes the target's `show?`, a reference's own workshop title shown as the link text).
 

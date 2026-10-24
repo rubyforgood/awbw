@@ -553,6 +553,28 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Date of birth")
         expect(response.body).not_to include("Profile show age ranges")
       end
+
+      def left_row_for(label)
+        Nokogiri::HTML(response.body).at_xpath("//div[contains(@class, 'mb-1') and normalize-space(text())='#{label}']/..")
+      end
+
+      it "flags a differing value as dropped" do
+        delete_rec.update!(pronouns: "they/them")
+        keep.update!(pronouns: "she/her")
+
+        get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+        expect(left_row_for("Pronouns").text).to include("Will be dropped")
+      end
+
+      it "doesn't flag a blank or whitespace value as dropped" do
+        delete_rec.update_columns(pronouns: "   ")
+        keep.update!(pronouns: "she/her")
+
+        get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+        expect(left_row_for("Pronouns").text).not_to include("Will be dropped")
+      end
     end
 
     describe "POST dedupe_perform" do
