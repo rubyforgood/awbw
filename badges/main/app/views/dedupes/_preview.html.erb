@@ -156,26 +156,31 @@
           end
         union_column = union_columns.include?(col.name)
         merged_in = union_column && delete_val.to_s.split(",").map(&:strip).reject(&:blank?).difference(keep_val.to_s.split(",").map(&:strip)).any?
-        is_different = !union_column && delete_val != keep_val
+        is_different = !union_column && delete_val.to_s.strip.present? && delete_val != keep_val
         deprecated = deprecated_columns.include?(col.name)
       %>
 
       <!-- Left: read-only -->
-      <div class="border-x border-b <%= border %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %>">
-        <span class="w-full text-gray-400 sm:w-auto"><%= label %></span>
-        <% if deprecated %>
-          <span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500">Deprecated</span>
-        <% end %>
-        <span class="<%= deprecated ? "text-gray-400 italic" : "text-gray-900" %> <%= "font-semibold" if col.name == "name" %>"><%= display_val %></span>
-        <% if field_outcomes.dig(col.name, :delete) %>
-          <%= render "dedupes/merge_outcome", text: field_outcomes.dig(col.name, :delete) %>
-        <% elsif merged_in %>
-          <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-800">Kept on merge</span>
-        <% elsif is_different && !deprecated %>
-          <span class="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800">Will be dropped</span>
-        <% end %>
+      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %>">
+        <div class="mb-1 flex items-center gap-2 text-gray-400">
+          <%= label %>
+          <% if deprecated %>
+            <span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500">Deprecated</span>
+          <% end %>
+        </div>
+        <%# Transparent border + py-1 match the input box on the right so the value lines up with it %>
+        <div class="flex flex-wrap items-center gap-2 border border-transparent py-1">
+          <span class="<%= deprecated ? "text-gray-400 italic" : "text-gray-900" %> <%= "font-semibold" if col.name == "name" %>"><%= display_val %></span>
+          <% if field_outcomes.dig(col.name, :delete) %>
+            <%= render "dedupes/merge_outcome", text: field_outcomes.dig(col.name, :delete) %>
+          <% elsif merged_in %>
+            <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-800">Kept on merge</span>
+          <% elsif is_different && !deprecated %>
+            <span class="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800">Will be dropped</span>
+          <% end %>
+        </div>
         <% if delete_logins[col.name] %>
-          <%= render "users/login_chip", user: delete_logins[col.name] %>
+          <div class="mt-1"><%= render "users/login_chip", user: delete_logins[col.name] %></div>
         <% end %>
       </div>
 

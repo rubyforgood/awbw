@@ -23,6 +23,10 @@ class CommentDecorator < ApplicationDecorator
     h.record_theme(commentable)
   end
 
+  def dedupe_label
+    body.to_s.squish.truncate(ModelDeduper::SNIPPET_LENGTH, separator: " ")
+  end
+
   def author_name
     (updated_by || created_by)&.full_name || "System"
   end

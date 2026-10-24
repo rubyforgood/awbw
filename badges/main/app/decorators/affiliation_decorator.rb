@@ -9,6 +9,10 @@ class AffiliationDecorator < ApplicationDecorator
     shown.strip == Affiliation::FACILITATOR_TITLE ? "AWBW #{Affiliation::FACILITATOR_TITLE}" : shown
   end
 
+  def dedupe_label
+    [ organization&.name, display_title, period_label ].compact.join(" · ")
+  end
+
   def status_badge
     classes, icon = case status_on
     when "Active" then [ "bg-green-50 text-green-800 border-green-300", "fa-solid fa-circle-check" ]
