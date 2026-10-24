@@ -197,6 +197,10 @@ or symbol. So write `authorize! @setting` in `show` (not `authorize! @setting, t
 (e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or
 `authorize! :workshop, to: :summary?`).
 
+Authorization checks always go through a policy rule. Controllers, views, helpers, and decorators
+call `authorize!` / `allowed_to?` and never compare `current_user` themselves (ownership, admin,
+self) — add a rule to the policy instead (e.g. `PersonPolicy#own_profile?`).
+
 ### Controller Concerns
 
 - `AhoyTracking` — Event tracking integration
