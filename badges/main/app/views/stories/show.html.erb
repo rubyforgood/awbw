@@ -51,7 +51,8 @@
           <div id="upload-progress-bar" class="h-full w-0 bg-blue-500 transition-[width] duration-200 ease-out"></div>
         </div>
         <div id="hero-image" class="relative">
-          <%= render "assets/display_assets_carousel", resource: @story %>
+          <%= render "assets/display_assets_carousel", resource: @story,
+                     video_url: youtube_embed_url(@story.youtube_url, js_api: true), video_title: "#{@story.title} video" %>
           <div class="absolute top-8 right-2 z-40">
             <%= render "assets/primary_image_picker", owner: @story %>
           </div>

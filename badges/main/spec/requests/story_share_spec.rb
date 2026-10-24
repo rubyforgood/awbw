@@ -757,6 +757,91 @@ RSpec.describe "/story_share", type: :request do
   end
 
   # ==========================================================
+  # VIDEO STORIES IN CAROUSELS
+  # ==========================================================
+  describe "video stories in carousels" do
+    let(:video_url) { "https://www.youtube.com/watch?v=abc123" }
+    let(:player) { "iframe[src^='https://www.youtube.com/embed/abc123?'][src*='mute=1'][aria-hidden='true']" }
+
+    def carousel_slide(story)
+      Capybara.string(response.body).find(".swiper-slide", text: story.title)
+    end
+
+    it "plays a story's video muted in place of its image on the home carousel" do
+      video_story = create(:story, :published, :publicly_visible, title: "Video story", youtube_url: video_url, story_share_carousel_position: 1)
+      photo_story = create(:story, :published, :publicly_visible, title: "Photo story", story_share_carousel_position: 2)
+
+      get story_shares_path
+
+      expect(carousel_slide(video_story)).to have_css(player)
+      expect(carousel_slide(video_story)).to have_css("a[href='#{story_share_path(video_story)}'] #{player}")
+      expect(carousel_slide(photo_story)).to have_no_css("iframe")
+    end
+
+    it "plays a story's video in place of its play badge on the browse carousel" do
+      teens = create(:category, :published, name: "Teens", category_type: create(:category_type, name: "AgeRange"))
+      create(:story, :published, :publicly_visible, title: "Video story", youtube_url: video_url)
+        .categorizable_items.create!(category: teens, is_primary: true)
+      create(:story, :published, :publicly_visible, title: "Photo story", created_at: 1.day.ago)
+        .categorizable_items.create!(category: teens, is_primary: true)
+
+      get story_shares_path(category_names_all: "Teens")
+
+      slide = carousel_slide(Story.find_by(title: "Video story"))
+      expect(slide).to have_css(player)
+      expect(slide).to have_no_css(".fa-play")
+    end
+
+    it "keeps the play badge, not a player, on browse cards" do
+      sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
+      card_story = create(:story, :published, :publicly_visible, title: "Video card story", youtube_url: video_url, created_at: 2.days.ago)
+      lead = create(:story, :published, :publicly_visible, title: "Newer lead story")
+      [ card_story, lead ].each { |s| s.sectorable_items.create!(sector: sector, is_primary: true) }
+
+      get story_shares_path(sector_names_all: "Homelessness")
+
+      card = Capybara.string(response.body).find("article", text: "Video card story")
+      expect(card).to have_css(".fa-play")
+      expect(card).to have_no_css("iframe")
+    end
+
+    it "falls back to the image when the YouTube link has no video id" do
+      story = create(:story, :published, :publicly_visible, title: "Channel link story",
+                     youtube_url: "https://www.youtube.com/@awbworg", story_share_carousel_position: 1)
+
+      get story_shares_path
+
+      expect(carousel_slide(story)).to have_no_css("iframe")
+    end
+
+    it "leads the story page carousel with the video, then the story's images" do
+      story = create(:story, :published, :publicly_visible, youtube_url: video_url)
+      [ :primary_asset, :gallery_asset ].each do |factory|
+        create(factory, owner: story).file.attach(io: StringIO.new("image"), filename: "art.png", content_type: "image/png")
+      end
+
+      get story_share_path(story)
+
+      page = Capybara.string(response.body)
+      slides = page.all(".swiper-slide")
+      expect(slides.size).to eq(3)
+      expect(slides.first).to have_css("iframe[src='https://www.youtube.com/embed/abc123?enablejsapi=1'][data-carousel-target='video']")
+      expect(slides.drop(1)).to all(have_css("img"))
+      expect(page).to have_css("iframe", count: 1)
+    end
+
+    it "shows a video-only story as a single slide without arrows" do
+      story = create(:story, :published, :publicly_visible, youtube_url: video_url)
+
+      get story_share_path(story)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css(".swiper-slide iframe[src='https://www.youtube.com/embed/abc123?enablejsapi=1']")
+      expect(page).to have_no_css(".swiper-button-next-custom")
+    end
+  end
+
+  # ==========================================================
   # "What others are reading" — most-read by Ahoy view count
   # ==========================================================
   describe "\"What others are reading\" section" do
