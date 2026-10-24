@@ -19,11 +19,11 @@ module PersonServices
   #   * failed           — the Person didn't validate
   #
   # An email field holding no address the person's email validation accepts ("ada@@x.org",
-  # "ada at x dot org") or an address it rejects is left off — the row imports without it —
-  # and the field's whole value is left as a comment on the person and listed in
-  # #invalid_emails, so it can be fixed by hand. A row with no usable address left is always
-  # a new person, given the next free placeholder email (1@…, 2@…) when someone already
-  # carries the name.
+  # "ada at x dot org") or an address it rejects is left off — the row imports without it.
+  # When that leaves the person with no email on file, the field's whole value is left as a
+  # comment on the person and listed in #invalid_emails, so it can be fixed by hand. A row
+  # with no usable address left is always a new person, given the next free placeholder
+  # email (1@…, 2@…) when someone already carries the name.
   #
   # A row whose name + email matches nobody is created, even when someone already shares
   # the name or the email: folding the occasional duplicate with the person deduper beats
@@ -279,6 +279,8 @@ module PersonServices
     end
 
     def note_invalid_emails(person, rolodex, label)
+      return if person.email_on_file
+
       values = invalid_email_values(rolodex.data)
       return if values.empty?
 

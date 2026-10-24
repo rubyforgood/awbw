@@ -52,32 +52,33 @@ RSpec.describe PersonServices::ImportFromRolodex do
     end
 
     it "notes a value with no address in it at all" do
-      rolodex("00051", EmailPrimary: "ada at example dot com", EMail: "ada@example.com")
+      rolodex("00051", EmailPrimary: "ada at example dot com")
 
       results
 
       person = Person.find_by!(filemaker_code: "00051")
-      expect(person).to have_attributes(email: "ada@example.com", email_2: nil)
+      expect(person).to have_attributes(email: nil, email_2: nil)
       expect(person.comments.sole.body).to include("ada at example dot com")
     end
 
-    it "keeps the row's usable address as the person's email" do
+    it "keeps the row's usable address as the person's email without a comment" do
       rolodex("00047", EmailPrimary: "ada@example.com.", EMail: "ada@work.example.com")
 
-      results
+      import = described_class.new.call
 
       person = Person.find_by!(filemaker_code: "00047")
       expect(person).to have_attributes(email: "ada@work.example.com", email_2: nil)
-      expect(person.comments.sole.body).to include("ada@example.com.")
+      expect(person.comments).to be_empty
+      expect(import.invalid_emails).to be_empty
     end
 
-    it "notes it on a linked person without filling their second email" do
+    it "leaves a linked person's second email unfilled and uncommented" do
       person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
       rolodex("00048", EmailPrimary: "ada@example.com", EMail: "ada@old@example.com")
 
       expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
       expect(person.reload).to have_attributes(filemaker_code: "00048", email_2: nil)
-      expect(person.comments.sole.body).to include("ada@old@example.com")
+      expect(person.comments).to be_empty
     end
 
     it "creates a new person with a placeholder email rather than linking a same-name one" do

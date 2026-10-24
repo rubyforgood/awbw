@@ -63,7 +63,7 @@ namespace :fm do
       end
 
       if import.invalid_emails.any?
-        say.("\nImported without an email the portal can't take (#{import.invalid_emails.size}, also left as a comment on each person):")
+        say.("\nImported without an email the portal can't take (#{import.invalid_emails.size}, people left with no email — also a comment on each):")
         import.invalid_emails.each { |line| say.("  #{line}") }
       end
 
