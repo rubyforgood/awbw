@@ -1,5 +1,4 @@
-<%# locals: (person:) %>
-<% pending_requests = person.profile_change_requests.pending.newest_first.includes(affiliation: :organization).decorate %>
+<%# locals: (person:, pending_requests:) %>
 <div id="own-profile" class="border-primary/10 mb-4 rounded-2xl border bg-white p-5 shadow-sm sm:p-6">
   <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div class="space-y-1 text-base text-gray-700">
