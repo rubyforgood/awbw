@@ -16,15 +16,15 @@
       <ul class="mt-2 space-y-2">
         <% pending_requests.each do |request| %>
           <li>
-            <%= request.requester_summary %> · submitted <%= request.requested_on %>
+            <%= request.requester_summary %>
             <%= link_to "View or edit", edit_profile_change_request_path(request), class: "ms-2 font-semibold underline" %>
+            <p class="text-sm text-gray-600">Submitted <%= request.requested_on %> · we'll confirm within 2–3 business days</p>
             <% if request.field == "primary_email" %>
               <p class="text-sm text-gray-600">Your current email stays active until we confirm the change.</p>
             <% end %>
           </li>
         <% end %>
       </ul>
-      <p class="mt-2 text-sm text-gray-600">We'll confirm within 2–3 business days.</p>
     </div>
   <% end %>
 </div>
