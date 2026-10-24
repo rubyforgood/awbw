@@ -6,14 +6,21 @@ module CountryName
   # Typed in place of a country to say there isn't one, keyed as AddressNormalizer.words joins them.
   PLACEHOLDERS = [ "n a", "none", "unknown", "not applicable" ].to_set.freeze
 
-  # Spellings found in AWBW's data (form answers + FileMaker) that the countries gem doesn't read.
-  ALIASES = {
-    "unites states" => UNITED_STATES, "untied states" => UNITED_STATES,
-    "los angeles" => UNITED_STATES, "la county" => UNITED_STATES,
-    "us minor outlying islands" => UNITED_STATES, US_MINOR_OUTLYING_ISLANDS.downcase => UNITED_STATES,
-    "korea" => "South Korea", "republic of ireland" => "Ireland", "mexcio" => "Mexico",
-    "scotland" => "United Kingdom", "republic of armenia" => "Armenia"
+  # Everyday names for countries whose ISO name reads formally, keyed by ISO code.
+  PLAIN_NAMES = {
+    "RU" => "Russia", "SY" => "Syria", "LA" => "Laos", "BN" => "Brunei", "VA" => "Vatican City",
+    "FM" => "Micronesia", "PS" => "Palestine", "CD" => "Democratic Republic of the Congo",
+    "CG" => "Republic of the Congo", "VG" => "British Virgin Islands", "VI" => "U.S. Virgin Islands",
+    "BQ" => "Caribbean Netherlands", "CC" => "Cocos Islands", "FK" => "Falkland Islands",
+    "MF" => "Saint Martin", "SX" => "Sint Maarten", "SH" => "Saint Helena"
   }.freeze
+
+  # Spellings found in AWBW's data (form answers + FileMaker) that the countries gem doesn't read, by ISO code.
+  ALIASES = {
+    "unites states" => "US", "untied states" => "US", "los angeles" => "US", "la county" => "US",
+    "us minor outlying islands" => "US", US_MINOR_OUTLYING_ISLANDS.downcase => "US",
+    "korea" => "KR", "republic of ireland" => "IE", "mexcio" => "MX", "scotland" => "GB", "republic of armenia" => "AM"
+  }.merge(PLAIN_NAMES.to_h { |code, name| [ name.downcase, code ] }).freeze
 
   # Provinces and regions written in an address's state field, keyed as AddressNormalizer.words joins them.
   REGIONS = {
@@ -41,20 +48,42 @@ module CountryName
   # Dropdown choices: the United States first, then every other country A–Z.
   def options
     @options ||= [ UNITED_STATES ] +
-      (ISO3166::Country.all.map(&:common_name) - [ UNITED_STATES, US_MINOR_OUTLYING_ISLANDS ]).sort
+      (ISO3166::Country.all.map { |country| name_for(country) } - [ UNITED_STATES, US_MINOR_OUTLYING_ISLANDS ]).sort
   end
 
-  # The common name for a typed country or ISO code, or nil when it isn't recognized.
-  def canonical(value)
+  # The stored country to preselect: its plain name, or the value as stored when unrecognized.
+  def selected(current)
+    canonical(current) || current.to_s.strip.presence
+  end
+
+  # The options plus an unrecognized stored value, so opening and saving a form keeps it.
+  def options_for(current)
+    value = selected(current)
+    value.nil? || options.include?(value) ? options : options + [ value ]
+  end
+
+  # The gem's country for a typed name, plain name, alias, or ISO code.
+  def find(value)
     text = value.to_s.strip
     return if text.blank?
-    return ALIASES[text.downcase] if ALIASES.key?(text.downcase)
-    return UNITED_STATES if AddressNormalizer::US_COUNTRY_NAMES.include?(text.downcase.delete("^a-z"))
 
-    country = ISO3166::Country.find_country_by_alpha2(text) ||
+    code = ALIASES[text.downcase]
+    code ||= "US" if AddressNormalizer::US_COUNTRY_NAMES.include?(text.downcase.delete("^a-z"))
+    return ISO3166::Country.new(code) if code
+
+    ISO3166::Country.find_country_by_alpha2(text) ||
       ISO3166::Country.find_country_by_alpha3(text) ||
       ISO3166::Country.find_country_by_any_name(text)
-    country&.common_name
+  end
+
+  # The plain name for a typed country or ISO code, or nil when it isn't recognized.
+  def canonical(value)
+    country = find(value)
+    name_for(country) if country
+  end
+
+  def name_for(country)
+    PLAIN_NAMES[country.alpha2] || country.common_name
   end
 
   # An address's country: the typed one when recognized, else the one its state implies,
@@ -76,7 +105,10 @@ module CountryName
     key = AddressNormalizer.words(state).join(" ")
     return if key.blank?
 
-    REGIONS[key] || ISO3166::Country.find_country_by_any_name(state.to_s.strip)&.common_name
+    return REGIONS[key] if REGIONS.key?(key)
+
+    country = ISO3166::Country.find_country_by_any_name(state.to_s.strip)
+    name_for(country) if country
   end
 
   def placeholder?(text)

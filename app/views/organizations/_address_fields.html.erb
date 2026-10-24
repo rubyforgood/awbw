@@ -135,7 +135,8 @@
     <%= f.input :country,
                 label: "Country",
                 as: :select,
-                collection: CountryName.options,
+                collection: CountryName.options_for(f.object.country),
+                selected: CountryName.selected(f.object.country),
                 include_blank: "Select a country",
                 hint: CountryName::BLANK_HINT,
                 input_html: {

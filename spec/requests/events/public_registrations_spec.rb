@@ -323,6 +323,16 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include('<option value="United States"')
     end
 
+    it "keeps a submitted country selected when the form re-renders" do
+      country = create(:form_field, form: form, field_identifier: "mailing_country", name: "Country", required: false)
+
+      post event_public_registration_path(event),
+           params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: { essay_field.id.to_s => "too few", country.id.to_s => "Canada" } } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to match(/<option value="Canada"\s+selected>/)
+    end
+
     it "renders a structured details panel from known event data when enabled" do
       pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
       start_date = 2.weeks.from_now.in_time_zone(pacific).change(hour: 9)
