@@ -6,6 +6,6 @@ summary: >-
   The Communications list has a new Status filter — Delivered, Pending,
   Failed, Resent, or Archived — so you can quickly find messages that didn't
   go out, or ones that have already been resent.
-action_path: "/communications"
+action_path: "/notifications"
 pro_tips:
   - "A resent email stays under the Pending filter on purpose — it still hasn't been delivered, so it keeps showing up as pending; the Resent tag just records that a resend was sent."
