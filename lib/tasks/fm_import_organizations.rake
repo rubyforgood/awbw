@@ -75,7 +75,9 @@ namespace :fm do
         tallies = {
           "Organization types read as Other, kept as its description" => import.try(:unmatched_types),
           "Personnel Status values and how they were read" => import.try(:statuses),
-          "Personnel roles" => import.try(:roles)
+          "Personnel roles" => import.try(:roles),
+          "Address countries nothing translates (left blank)" => import.try(:unmatched_addresses)&.fetch(:country, nil),
+          "Address states nothing translates (kept as typed)" => import.try(:unmatched_addresses)&.fetch(:state, nil)
         }
         tallies.each do |heading, counts|
           next if counts.blank?

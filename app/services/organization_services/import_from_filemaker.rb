@@ -47,6 +47,8 @@ module OrganizationServices
 
     attr_reader :results, :differences, :unmatched_types
 
+    def unmatched_addresses = @address_attributes.unmatched
+
     def initialize(progress: nil, run: nil)
       @progress = progress
       @run = run
@@ -374,9 +376,8 @@ module OrganizationServices
       return if state.blank?
 
       primary = organization.addresses.none?(&:primary?)
-      locality = geography[:locality] || AddressLocality.for(city:, state:, county: geography[:county])
-      organization.addresses.build(street_address: "", zip_code: "", city:, state:, address_type: "work",
-                                   **geography, locality:, primary:)
+      place = @address_attributes.place(city:, state:, county: geography[:county])
+      organization.addresses.build(place.merge(geography.compact, address_type: "work", primary:))
     end
 
     def project_geography(data)
