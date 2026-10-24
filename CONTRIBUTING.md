@@ -235,10 +235,9 @@ Try to keep your PRs limited to one particular issue, and don't make changes tha
 - `display_status` sets who the announcement is for, not who the feature is for.
   - Admins see every entry — it's their full changelog.
   - `user_facing` (logged-in users) and `public_facing` (everyone) are release announcements.
-- Pick one:
-  - **Small tweak, fix, or restyle** → one entry, `admin_facing`.
-  - **Big feature, same text works for everyone** → one entry, `user_facing` or `public_facing`.
-  - **Big feature, users need different wording** → an `admin_facing` entry plus a second file with a different `name`, written for users.
+- **Every change** → one entry, `admin_facing`.
+- **Big feature** → also add a second file, `user_facing` or `public_facing`.
+  - A different `name`, the same `released_on`, written for users.
 
 ### In-flight pull requests
 

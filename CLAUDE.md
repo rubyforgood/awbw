@@ -385,12 +385,9 @@ what changed.
   Admins see every entry, so the whole table is their full changelog; `user_facing`
   (logged-in users) and `public_facing` (everyone — logged-in users see both) entries
   are release announcements, reserved for **big features**.
-  - **Small tweak, fix, or restyle** → one `admin_facing` entry.
-  - **Big feature, text works for everyone** → one entry, set to `user_facing` /
-    `public_facing`. No twin — it's already in the admin changelog.
-  - **Big feature, users need different wording** → keep the `admin_facing` entry and
-    add a twin: its own file, a different `name`, the same `released_on`, written for
-    users. Admins see both, so only twin when the wording genuinely differs.
+  - **Every change** → one `admin_facing` entry.
+  - **Big feature** → also add a `user_facing` / `public_facing` twin: its own file, a
+    different `name`, the same `released_on`, written for users. Admins see both.
 - **Sentence case, plain language** — this page is read by facilitators, not devs.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy` gates
   this in its relation scope, not just in the UI).

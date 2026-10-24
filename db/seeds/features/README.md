@@ -25,10 +25,9 @@ One file per feature keeps parallel PRs from conflicting.
 
 - Admins see every entry — it's their full changelog.
 - `user_facing` (logged-in users) and `public_facing` (everyone) are release announcements.
-- **Small tweak, fix, or restyle** → one entry, `admin_facing`.
-- **Big feature, same text works for everyone** → one entry, `user_facing` or `public_facing`.
-- **Big feature, users need different wording** → an `admin_facing` entry plus a second
-  file with a different `name` and the same `released_on`, written for users.
+- **Every change** → one entry, `admin_facing`.
+- **Big feature** → also add a second file, `user_facing` or `public_facing`, with a
+  different `name` and the same `released_on`, written for users.
 
 ```yaml
 name: "Filter registrants by registration date"
