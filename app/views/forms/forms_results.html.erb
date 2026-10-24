@@ -20,7 +20,17 @@
                           class: "font-medium text-gray-900 #{DomainTheme.text_class_for(:forms, intensity: 700, hover: true)} hover:underline",
                           data: { turbo_frame: "_top" } %>
             </td>
-            <td class="px-4 py-2 text-sm text-gray-600"><%= form_role_label(form) %></td>
+            <td class="px-4 py-2 text-sm text-gray-600">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <%= form_role_label(form) %>
+                <% if @survey_default_ids.include?(form.id) %>
+                  <span class="inline-flex items-center gap-1.5 rounded-md <%= DomainTheme.bg_class_for(:forms) %> px-2 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:forms, intensity: 700) %>"
+                        title="New events' callouts send this form for its survey">
+                    <i class="fa-solid fa-star"></i>Default for new events
+                  </span>
+                <% end %>
+              </div>
+            </td>
             <%# A public link and an event form are mutually exclusive — an
                 event-connected form is never offered publicly — so at most one
                 chip applies. %>

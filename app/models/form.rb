@@ -75,6 +75,10 @@ class Form < ApplicationRecord
     standalone.where(role:).order(:id).first
   end
 
+  def self.survey_default_ids
+    standalone.where(role: SURVEY_ROLES).group(:role).minimum(:id).values
+  end
+
   def self.survey_header(role)
     SURVEY_HEADERS.fetch(role) { ROLE_OPTIONS.rassoc(role)&.first || role.to_s.humanize }
   end

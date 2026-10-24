@@ -44,6 +44,15 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include(workshop_logs_path)
       end
 
+      it "labels only the oldest form for each survey role as the default for new events" do
+        default = create(:form, :standalone, name: "Day 1 Survey", role: "day_1_survey")
+        copy = create(:form, :standalone, name: "DUPLICATE of Day 1 Survey", role: "day_1_survey")
+        get forms_path, headers: frame_headers
+        doc = Nokogiri::HTML(response.body)
+        expect(doc.css("#form_#{default.id}").text).to include("Default for new events")
+        expect(doc.css("#form_#{copy.id}").text).not_to include("Default for new events")
+      end
+
       it "shows the public link for a published form" do
         create(:form, :standalone, name: "Volunteer", slug: "volunteer", published: true)
         get forms_path, headers: frame_headers

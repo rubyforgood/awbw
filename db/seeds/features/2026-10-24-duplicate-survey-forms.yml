@@ -10,4 +10,5 @@ summary: >-
   column.
 pro_tips:
   - "New events still send the original survey; a copy only goes out when you pick it on an event's Feedback surveys card."
+  - "The forms list marks each survey's default with a \"Default for new events\" label."
   - "To make a copy the default for new events, change the original form's role to General."

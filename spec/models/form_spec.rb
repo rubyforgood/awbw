@@ -75,6 +75,18 @@ RSpec.describe Form do
     end
   end
 
+  describe ".survey_default_ids" do
+    it "lists the oldest standalone form for each survey role" do
+      day_1 = create(:form, role: "day_1_survey")
+      create(:form, role: "day_1_survey")
+      post_event = create(:form, role: "post_event_survey")
+      create(:form, role: "registration")
+      create(:form, role: "day_2_survey", owner: create(:event))
+
+      expect(Form.survey_default_ids).to contain_exactly(day_1.id, post_event.id)
+    end
+  end
+
   describe ".survey_header" do
     it "uses the role's dropdown label" do
       expect(Form.survey_header("post_event_survey")).to eq("Post-event survey")
