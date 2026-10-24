@@ -1,0 +1,9 @@
+name: "Ask staff to fix your email, organization, or roles"
+area: people
+display_status: user_facing
+released_on: 2026-09-18
+pr_number: 2543
+summary: >-
+  Some profile details, like your primary email, organization, and roles, can
+  only be changed by AWBW staff. Click "Request a change" beside one to tell us
+  what's wrong, and staff take it from there.
