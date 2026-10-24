@@ -174,7 +174,7 @@ class PublicFormSubmission
   end
 
   def field_value(identifier)
-    field = @form.form_fields.identified_as(identifier).first
+    field = @form.form_fields.find_by(field_identifier: identifier)
     return nil unless field
 
     @form_params[field.id.to_s]

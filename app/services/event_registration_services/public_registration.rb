@@ -160,7 +160,7 @@ module EventRegistrationServices
     end
 
     def field_value(key)
-      field = @registration_form.form_fields.identified_as(key).first
+      field = @registration_form.form_fields.find_by(field_identifier: key)
       return nil unless field
       @form_params[field.id.to_s]
     end
@@ -294,7 +294,7 @@ module EventRegistrationServices
     end
 
     def ce_field_value(key)
-      field = @continuing_education_form.form_fields.identified_as(key).first
+      field = @continuing_education_form.form_fields.find_by(field_identifier: key)
       return nil unless field
 
       @continuing_education_params[field.id.to_s]

@@ -17,18 +17,6 @@ RSpec.describe PublicFormSubmission do
     }
   end
 
-  context "when the email question was saved with the email field ID" do
-    let!(:email_field) do
-      create(:form_field, form: form, name: "Email").tap { |field| field.update_column(:field_identifier, "email") }
-    end
-
-    it "identifies the submitter" do
-      result = described_class.call(form: form, form_params: params_for)
-
-      expect(result.person).to have_attributes(first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
-    end
-  end
-
   describe "on-demand training registration" do
     let(:form) { create(:form, slug: "collab-on-demand", published: true, role: "registration") }
     let!(:training) do

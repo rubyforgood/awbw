@@ -21,9 +21,6 @@ class FormField < ApplicationRecord
   # "required" flag is meaningless for them (nothing to fill in).
   NON_INPUT_ANSWER_TYPES = %w[no_user_input group_header].freeze
 
-  # Alternate field IDs an admin may type, read and saved as the canonical one.
-  FIELD_IDENTIFIER_ALIASES = { "email" => "primary_email" }.freeze
-
   # Multi-select "additional sectors" field identifier.
   ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors].freeze
 
@@ -219,24 +216,6 @@ class FormField < ApplicationRecord
     reject_if: ->(attrs) { attrs[:resource_id].blank? }
 
   scope :published, -> { where(status: "active") }
-  scope :identified_as, ->(identifier) { where(field_identifier: [ identifier, *field_identifier_aliases_for(identifier) ]) }
-
-  def self.canonical_field_identifier(identifier)
-    FIELD_IDENTIFIER_ALIASES.fetch(identifier, identifier)
-  end
-
-  def self.field_identifier_aliases_for(identifier)
-    FIELD_IDENTIFIER_ALIASES.filter_map { |alias_identifier, canonical| alias_identifier if canonical == identifier }
-  end
-
-  # Rows saved under an alias keep it until the next save, so reads canonicalize too.
-  def field_identifier
-    FormField.canonical_field_identifier(super)
-  end
-
-  def field_identifier=(identifier)
-    super(FormField.canonical_field_identifier(identifier))
-  end
 
   # Methods
   SELECTABLE_ANSWER_TYPES = %w[single_select_radio single_select_dropdown multi_select_checkbox].freeze
