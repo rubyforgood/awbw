@@ -370,12 +370,15 @@ what changed.
   `description`, `external_url`, `action_path` (in-app "Check out this feature"
   link), and `pr_number` (GitHub PR link).
 - **`display_status` is who the announcement is for, not who the feature is for.**
-  `admin_facing` entries are the full changelog — every change gets one, even when the
-  feature serves facilitators or the public. `user_facing` / `public_facing` entries
-  are release announcements: add a **second** entry (its own file, a different `name`,
-  the same `released_on`) written for site users **only for a big feature** —
-  `user_facing` for logged-in users, `public_facing` for everyone (logged-in users see
-  both). Small tweaks, fixes, and restyles get the admin entry only.
+  Admins see every entry, so the whole table is their full changelog; `user_facing`
+  (logged-in users) and `public_facing` (everyone — logged-in users see both) entries
+  are release announcements, reserved for **big features**.
+  - **Small tweak, fix, or restyle** → one `admin_facing` entry.
+  - **Big feature, text works for everyone** → one entry, set to `user_facing` /
+    `public_facing`. No twin — it's already in the admin changelog.
+  - **Big feature, users need different wording** → keep the `admin_facing` entry and
+    add a twin: its own file, a different `name`, the same `released_on`, written for
+    users. Admins see both, so only twin when the wording genuinely differs.
 - **Sentence case, plain language** — read by facilitators, not devs.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy`).
 

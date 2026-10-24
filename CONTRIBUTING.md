@@ -232,11 +232,13 @@ Try to keep your PRs limited to one particular issue, and don't make changes tha
 - Shipping a user-facing feature or improvement? Add a file to `db/seeds/features/`.
   - One file per entry: `YYYY-MM-DD-short-slug.yml`.
   - Fields and an example are in [the folder's README](db/seeds/features/README.md).
-- Use `display_status: admin_facing` — the admin entries are the full changelog.
-  - It sets who the announcement is for, not who the feature is for.
-- Big feature? Also add a release announcement for site users.
-  - A second file with a different `name`, written for them.
-  - Use `user_facing` for logged-in users, `public_facing` for everyone.
+- `display_status` sets who the announcement is for, not who the feature is for.
+  - Admins see every entry — it's their full changelog.
+  - `user_facing` (logged-in users) and `public_facing` (everyone) are release announcements.
+- Pick one:
+  - **Small tweak, fix, or restyle** → one entry, `admin_facing`.
+  - **Big feature, same text works for everyone** → one entry, `user_facing` or `public_facing`.
+  - **Big feature, users need different wording** → an `admin_facing` entry plus a second file with a different `name`, written for users.
 
 ### In-flight pull requests
 
