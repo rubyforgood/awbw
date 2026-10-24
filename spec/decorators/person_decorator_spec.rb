@@ -174,29 +174,6 @@ RSpec.describe PersonDecorator do
     end
   end
 
-  describe "#affiliations_newest_first" do
-    let(:person) { create(:person) }
-
-    it "lists active affiliations first, then the rest by newest start" do
-      ended = create(:affiliation, person: person, start_date: 1.year.ago, end_date: 1.month.ago)
-      older_active = create(:affiliation, person: person, start_date: 3.years.ago)
-      newer_active = create(:affiliation, person: person, start_date: 2.years.ago)
-
-      expect(person.reload.decorate.affiliations_newest_first).to eq([ newer_active, older_active, ended ])
-    end
-  end
-
-  describe "#event_registrations_newest_first" do
-    let(:person) { create(:person) }
-
-    it "lists registrations by newest event start" do
-      older = create(:event_registration, registrant: person, event: create(:event, start_date: 2.years.ago, end_date: 2.years.ago))
-      newer = create(:event_registration, registrant: person, event: create(:event, start_date: 1.month.ago, end_date: 1.month.ago))
-
-      expect(person.reload.decorate.event_registrations_newest_first).to eq([ newer, older ])
-    end
-  end
-
   describe "#facilitator_status_label" do
     let(:person) { create(:person) }
 

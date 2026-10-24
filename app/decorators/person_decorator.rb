@@ -175,15 +175,6 @@ class PersonDecorator < ApplicationDecorator
     "Inactive"
   end
 
-  # Active rows first, then newest start — sorted in memory so a preloaded list stays query-free.
-  def affiliations_newest_first
-    affiliations.sort_by { |affiliation| [ affiliation.active? ? 0 : 1, -(affiliation.start_date&.jd || 0) ] }
-  end
-
-  def event_registrations_newest_first
-    event_registrations.sort_by { |registration| -(registration.event&.start_date&.to_i || 0) }
-  end
-
   def facilitator_since_range
     date_range_display(facilitator_since_date, facilitation_end_date, ended_title: "No active facilitator affiliations")
   end
