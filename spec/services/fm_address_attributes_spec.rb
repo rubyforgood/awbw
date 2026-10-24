@@ -37,6 +37,16 @@ RSpec.describe FmAddressAttributes do
     expect(builder.call(row.merge("AddrsState" => nil))).to be_nil
   end
 
+  describe "#place" do
+    it "builds a street-less address for a city and state, translated" do
+      expect(builder.place(city: "Toronto", state: "Ontario")).to eq(
+        street_address: "", zip_code: "", city: "Toronto", state: "Ontario", country: "Canada",
+        county: nil, address_type: nil, locality: Address::OUTSIDE_USA
+      )
+      expect(builder.place(city: "Fresno", state: "California", county: "Fresno")).to include(state: "CA", country: "United States")
+    end
+  end
+
   it "reports the values it can't translate" do
     builder.call(row.merge("AddrsCountry" => "Narnia", "AddrsState" => "ZZ"))
 

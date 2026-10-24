@@ -28,6 +28,13 @@ class FmAddressAttributes
     ).then { |attributes| address_type ? attributes.merge(address_type:) : attributes }
   end
 
+  # An address holding just a city and state — where the archive records a place (a
+  # project's city) with no street — translated the same way.
+  def place(city:, state:, county: nil)
+    @translation.address(street_address: "", zip_code: "", city: clip(city), state: clip(state), country: nil,
+                         county: clip(county), address_type: nil)
+  end
+
   private
 
   # The house number has its own field, sometimes already repeated at the front of
