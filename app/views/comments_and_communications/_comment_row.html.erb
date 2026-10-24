@@ -6,14 +6,7 @@
     place. Locals: entry (a Comment). Optional: person and record_targets (the
     person feed's records the comment can be moved to). %>
 <% person = local_assigns[:person] %>
-<% chip_class = "inline-flex shrink-0 items-center gap-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900" %>
-<% record = entry.commentable %>
-<% source_chip = if record.present?
-     icon = content_tag(:i, "", class: "fa-solid fa-comment text-gray-500", "aria-hidden": "true", title: "Comment")
-     inner = safe_join([ icon, commentable_label(record) ], " ")
-     path = record_edit_path(record)
-     path ? link_to(inner, path, target: "_blank", rel: "noopener", class: "#{chip_class} hover:underline") : content_tag(:span, inner, class: chip_class)
-   end %>
+<% source_chip = feed_source_chip(entry.commentable, icon: content_tag(:i, "", class: "fa-solid fa-comment text-gray-500", "aria-hidden": "true", title: "Comment")) %>
 <% edit_button = content_tag(:button, safe_join([ content_tag(:i, "", class: "fa-solid fa-pen text-2xs"), " Edit" ]),
                               type: "button",
                               class: "ml-auto shrink-0 text-xs #{eyebrow_link_class}",

@@ -3,10 +3,14 @@ class CommentDecorator < ApplicationDecorator
   delegate_all
 
   # Human-readable label for the record this comment was left on, used as the
-  # source chip on the aggregated person-comments feed. Shared with the composer's
-  # target picker via CommentsHelper so the two never drift.
+  # source chip on the aggregated comment feeds. Shared with the combined feed's
+  # chips via CommentsHelper so the two never drift.
   def source_label
-    h.commentable_label(commentable)
+    h.record_chip_label(commentable)
+  end
+
+  def source_title
+    h.record_chip_title(commentable)
   end
 
   # Where the source chip links to — the record's edit page, shared with the

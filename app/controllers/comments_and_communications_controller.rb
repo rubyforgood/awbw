@@ -26,6 +26,7 @@ class CommentsAndCommunicationsController < ApplicationController
         shown = @entries.total_entries
         @count_display = count_display(shown, @total_count)
       end
+      FeedRecordPreloader.new(@groups ? @groups.flat_map(&:entries) : @entries).call
       render :comments_and_communications_results
     else
       feed = PersonCommentAndCommunicationAggregator.new(@person)
