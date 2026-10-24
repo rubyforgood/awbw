@@ -1853,7 +1853,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701", "organization_country" => "USA" }.each do |identifier, value|
+          { "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701", "organization_country" => "United States" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1863,7 +1863,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           address = organization.addresses.find_by(city: "Austin")
           expect(address).to be_present
-          expect(address.country).to eq("USA")
+          expect(address.country).to eq("United States")
           expect(regular_user.person.affiliations.where(organization: organization).map(&:organization_address))
             .to all(eq(address))
         end
@@ -2061,7 +2061,7 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "does not claim the work address was saved when the submission changed nothing on it" do
-          create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78701", country: "USA")
+          create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78701", country: "United States")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
@@ -2077,7 +2077,7 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "reports only the address fields it actually filled" do
-          create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "", country: "USA")
+          create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "", country: "United States")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)

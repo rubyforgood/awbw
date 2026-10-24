@@ -78,6 +78,26 @@ RSpec.describe Address, type: :model do
       expect(address).to be_valid
     end
 
+    it "stores every spelling of a country as its one common name" do
+      expect(build(:address, country: "USA", state: "TX").tap(&:valid?).country).to eq("United States")
+      expect(build(:address, country: "CAN", state: "ON").tap(&:valid?).country).to eq("Canada")
+    end
+
+    it "fills a missing country from the state" do
+      expect(build(:address, country: nil, state: "CA").tap(&:valid?).country).to eq("United States")
+      expect(build(:address, country: "-", state: "BC").tap(&:valid?).country).to eq("Canada")
+    end
+
+    it "keeps an unrecognized country as typed" do
+      expect(build(:address, country: " Narnia ", state: "Central Region").tap(&:valid?).country).to eq("Narnia")
+    end
+
+    it "stores a placeholder country as nil when the state doesn't name one" do
+      [ "", "   ", "-", "--", "n/a", "none", "Unknown" ].each do |placeholder|
+        expect(build(:address, country: placeholder, state: "-").tap(&:valid?).country).to be_nil
+      end
+    end
+
     it "allows county to be nil" do
       address.county = nil
       expect(address).to be_valid

@@ -2,18 +2,24 @@ import { Controller } from "@hotwired/stimulus"
 import Chart from "chart.js/auto"
 import { rampTo } from "../lib/color_ramp"
 
-// A few world-atlas country names differ from the common names our address data
-// stores; map atlas name → our key so those countries still fill. Unmatched
-// countries fall back to 0 (the legend table still lists their exact counts).
+// World-atlas country names that differ from the plain names CountryName stores; map
+// atlas name → our key so those countries still fill. Unmatched countries fall back to
+// 0 (the legend table still lists their exact counts).
 const aliasByAtlasName = {
   "united states of america": "united states",
-  "united republic of tanzania": "tanzania",
-  "republic of korea": "south korea",
-  "dem. rep. korea": "north korea",
-  "russian federation": "russia",
-  "czechia": "czech republic",
   "bosnia and herz.": "bosnia and herzegovina",
-  "dominican rep.": "dominican republic"
+  "central african rep.": "central african republic",
+  "congo": "republic of the congo",
+  "dem. rep. congo": "democratic republic of the congo",
+  "dominican rep.": "dominican republic",
+  "eq. guinea": "equatorial guinea",
+  "falkland is.": "falkland islands",
+  "fr. s. antarctic lands": "french southern territories",
+  "macedonia": "north macedonia",
+  "s. sudan": "south sudan",
+  "solomon is.": "solomon islands",
+  "turkey": "türkiye",
+  "w. sahara": "western sahara"
 }
 
 // Connects to data-controller="world-map-chart"
