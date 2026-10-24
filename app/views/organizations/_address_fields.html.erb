@@ -134,6 +134,11 @@
 
     <%= f.input :country,
                 label: "Country",
+                as: :select,
+                collection: GeographyHelper::COUNTRIES,
+                selected: f.object.country,
+                include_blank: "Select a country",
+                hint: "Not listed? Pick the closest one or leave this blank.",
                 input_html: {
                   class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 } %>

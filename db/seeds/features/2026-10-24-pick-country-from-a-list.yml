@@ -1,0 +1,12 @@
+name: "Pick a country from a list on forms and addresses"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-24
+pr_number: 2805
+summary: >-
+  Country questions on registration and other forms, and the country on person and
+  organization addresses, are now a dropdown instead of a text box — so everyone in
+  the US counts as one "United States" on event dashboards and the map.
+pro_tips:
+  - "The United States is at the top; every other country follows A–Z, using everyday names like Russia and Syria."
+  - "If a country isn't listed, pick the closest one or leave it blank."
