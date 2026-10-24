@@ -80,13 +80,17 @@
               <% end %>
               <ul class="divide-y divide-gray-100">
                 <% group.records.each do |record| %>
-                  <li class="flex items-center justify-between gap-3 py-1.5">
-                    <span class="text-gray-800">
-                      <%= @dedupe[:record_label].call(record).presence || "(no name)" %>
-                      <span class="text-sm text-gray-400">
-                        · ID <%= record.id %><% if @dedupe[:record_extras] && (extra = @dedupe[:record_extras].call(record)).present? %> · <%= extra %><% end %>
+                  <li id="dedupe-record-<%= record.id %>" class="flex scroll-mt-24 items-center justify-between gap-3 py-1.5">
+                    <% if @dedupe[:record_partial] %>
+                      <%= render @dedupe[:record_partial], record: record %>
+                    <% else %>
+                      <span class="text-gray-800">
+                        <%= @dedupe[:record_label].call(record).presence || "(no name)" %>
+                        <span class="text-sm text-gray-400">
+                          · ID <%= record.id %><% if @dedupe[:record_extras] && (extra = @dedupe[:record_extras].call(record)).present? %> · <%= extra %><% end %>
+                        </span>
                       </span>
-                    </span>
+                    <% end %>
                     <% if record == keep_record %>
                       <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-700">Suggested keeper</span>
                     <% else %>

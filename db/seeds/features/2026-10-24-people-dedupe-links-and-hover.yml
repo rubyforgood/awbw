@@ -1,0 +1,11 @@
+name: "Dedupe people shows each person's affiliations and registrations on hover"
+area: people
+display_status: admin_facing
+released_on: 2026-10-24
+action_path: "/people/dedupe_index"
+summary: >-
+  On Dedupe people, each candidate's name and email open their edit page in a new tab, and hovering
+  shows their affiliations and event registrations, so you can tell two records apart without opening them.
+pro_tips:
+  - "The edit page's back link and save both return you to that person's row on the deduper."
+  - "Names show in full here, whatever the person's display-name preference."

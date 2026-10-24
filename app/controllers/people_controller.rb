@@ -368,7 +368,12 @@ class PeopleController < ApplicationController
     {
       model_class: Person,
       domain: :people,
-      candidate_finder: -> { PersonServices::DuplicateFinder.new.groups },
+      candidate_finder: -> {
+        PersonServices::DuplicateFinder.new.groups.tap do |groups|
+          ActiveRecord::Associations::Preloader.new(records: groups.flat_map(&:records),
+            associations: [ { affiliations: :organization }, { event_registrations: :event } ]).call
+        end
+      },
       # Carry the deleted person's avatar onto the keeper when the keeper has none;
       # otherwise it's purged with the deleted person (has_one_attached dependent: :purge).
       movable_attachments: %w[avatar],
@@ -433,9 +438,7 @@ class PeopleController < ApplicationController
           primary_signatures: @keeper_primary_contact_signatures).call
         sync_adopted_login_email(keep)
       },
-      record_extras: ->(person) {
-        [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
-      }
+      record_partial: "people/dedupe_record"
     }
   end
 
@@ -654,6 +657,8 @@ class PeopleController < ApplicationController
   def person_update_return_path
     if params[:return_to] == "data_health"
       helpers.data_health_return_path(params[:check])
+    elsif params[:return_to] == "dedupe"
+      dedupe_index_people_path(anchor: "dedupe-record-#{@person.id}")
     elsif params[:return_to] == "registration_link" && params[:event_registration_id].present?
       link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence)
     else

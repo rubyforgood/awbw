@@ -1,0 +1,46 @@
+<%# Admin hover card on a dedupe candidate: every affiliation and event
+    registration, so two records can be told apart without opening either.
+    Shown by a `group/person` ancestor. Locals: person. %>
+<% person = person.decorate %>
+<% limit = 6 %>
+<% affiliations = person.affiliations_newest_first %>
+<% registrations = person.event_registrations_newest_first %>
+<% pill_cell = "mt-2 flex self-start *:w-full *:justify-center" %>
+<% heading = "col-span-2 text-xs font-semibold tracking-wide text-gray-500 uppercase" %>
+<% empty = "col-span-2 mt-1 text-gray-500" %>
+<% more = "col-span-2 mt-2 text-xs text-gray-500" %>
+<span class="absolute top-full left-0 z-20 mt-1 hidden w-96 grid-cols-[auto_1fr] gap-x-2 rounded-md border border-gray-200 bg-white p-3 text-left font-sans text-sm font-normal text-gray-700 shadow-lg group-focus-within/person:grid group-hover/person:grid">
+  <span class="<%= heading %>">Affiliations</span>
+  <% if affiliations.any? %>
+    <% affiliations.first(limit).each do |affiliation| %>
+      <% affiliation = affiliation.decorate %>
+      <span class="<%= pill_cell %>"><%= affiliation.status_badge %></span>
+      <span class="mt-1.5 min-w-0">
+        <span class="block font-medium text-gray-900"><%= affiliation.organization.name %></span>
+        <span class="block text-xs text-gray-500"><%= affiliation.display_title %> · <%= affiliation.period_label %></span>
+      </span>
+    <% end %>
+    <% if affiliations.size > limit %>
+      <span class="<%= more %>">+ <%= affiliations.size - limit %> more</span>
+    <% end %>
+  <% else %>
+    <span class="<%= empty %>">None</span>
+  <% end %>
+  <span class="<%= heading %> mt-3">Event registrations</span>
+  <% if registrations.any? %>
+    <% registrations.first(limit).each do |registration| %>
+      <% registration = registration.decorate %>
+      <% event = registration.event.decorate %>
+      <span class="<%= pill_cell %>"><%= render "shared/badge", label: registration.attendance_status_label, icon: "fa-solid #{registration.attendance_status_icon}", classes: registration.attendance_status_classes %></span>
+      <span class="mt-1.5 min-w-0">
+        <span class="block font-medium text-gray-900"><%= event.title %></span>
+        <% if event.start_date %><span class="block text-xs text-gray-500"><%= event.short_date_range %></span><% end %>
+      </span>
+    <% end %>
+    <% if registrations.size > limit %>
+      <span class="<%= more %>">+ <%= registrations.size - limit %> more</span>
+    <% end %>
+  <% else %>
+    <span class="<%= empty %>">None</span>
+  <% end %>
+</span>

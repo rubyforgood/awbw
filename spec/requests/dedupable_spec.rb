@@ -534,6 +534,32 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Same name")
       end
+
+      it "links each candidate's name and email to their edit page, with a hover card of affiliations and registrations" do
+        org = create(:organization, name: "Harbor House")
+        event = create(:event, title: "Spring training")
+        jane = create(:person, first_name: "Jane", last_name: "Doe", email: "jane@example.com", user: nil)
+        create(:person, first_name: "Jane", last_name: "Doe", email: "jane@work.com", user: nil)
+        create(:affiliation, person: jane, organization: org, start_date: 1.year.ago)
+        create(:event_registration, registrant: jane, event: event)
+
+        get dedupe_index_people_path
+
+        edit_link = %(href="#{edit_person_path(jane, return_to: "dedupe")}")
+        expect(response.body.scan(edit_link).size).to eq(2)
+        expect(response.body).to include("Harbor House", "Spring training", "Event registrations")
+      end
+
+      it "returns from the person edit page to their row on the deduper" do
+        person = create(:person, user: nil)
+        row = dedupe_index_people_path(anchor: "dedupe-record-#{person.id}")
+
+        get edit_person_path(person, return_to: "dedupe")
+        expect(response.body).to include(%(href="#{row}"), "Dedupe people")
+
+        patch person_path(person), params: { person: { first_name: "Updated" }, return_to: "dedupe" }
+        expect(response).to redirect_to(row)
+      end
     end
 
     describe "GET dedupe_preview" do
