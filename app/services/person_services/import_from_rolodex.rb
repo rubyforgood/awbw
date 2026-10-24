@@ -19,11 +19,11 @@ module PersonServices
   #   * failed           — the Person didn't validate
   #
   # An email field holding no address the person's email validation accepts ("ada@@x.org",
-  # "ada at x dot org") or an address it rejects is left off — the row imports without it —
-  # and the field's whole value is left as a comment on the person and listed in
-  # #invalid_emails, so it can be fixed by hand. A row with no usable address left is always
-  # a new person, given the next free placeholder email (1@…, 2@…) when someone already
-  # carries the name.
+  # "ada at x dot org") or an address it rejects is left off — the row imports without it.
+  # When that leaves the person with no email on file, the field's whole value is left as a
+  # comment on the person and listed in #invalid_emails, so it can be fixed by hand. A row
+  # with no usable address left is always a new person, given the next free placeholder
+  # email (1@…, 2@…) when someone already carries the name.
   #
   # A row whose name + email matches nobody is created, even when someone already shares
   # the name or the email: folding the occasional duplicate with the person deduper beats
@@ -46,9 +46,11 @@ module PersonServices
     # Answers to "which kind of email is this?" that aren't a kind at all.
     PRECEDENCE_TYPES = %w[preferred primary main].freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
-    # Both archive fields hold an address (FmRolodex::PORTAL_FIELDS maps each to
-    # people.email), the primary one first, so it becomes the person's own email.
-    EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
+    # EmailPrimary holds a flag, never an address, so only EMail is read for one. The flag
+    # says whether EMail is the person's primary email ("1") or their secondary ("2").
+    EMAIL_FIELDS = %w[EMail].freeze
+    EMAIL_FLAG_FIELD = "EmailPrimary"
+    SECONDARY_EMAIL_FLAG = "2"
     STRING_LIMIT = 255
     BATCH_SIZE = 1_000
 
@@ -90,6 +92,10 @@ module PersonServices
       self
     end
 
+    def self.invalid_email_heading(fm_id)
+      "FileMaker Rolodex #{fm_id} has an email this profile couldn't take:"
+    end
+
     def unmatched_tags
       @translation.unmatched
     end
@@ -124,7 +130,7 @@ module PersonServices
       return record(:skipped, "#{label}: missing first or last name") if first_name.blank? || last_name.blank?
 
       row_emails = emails(data)
-      email, email_2 = row_emails
+      email, email_2 = secondary_email?(data) ? [ nil, row_emails.first ] : row_emails
       match = match_people(rolodex, row_emails, first_name, last_name)
       return link(match, rolodex, label) if match.any?
 
@@ -204,7 +210,12 @@ module PersonServices
     end
 
     def needs_placeholder_email?(person, data)
-      person.email.blank? && invalid_email_values(data).any? && same_name(person.first_name, person.last_name).exists?
+      person.email.blank? && (invalid_email_values(data).any? || person.email_2.present?) &&
+        same_name(person.first_name, person.last_name).exists?
+    end
+
+    def secondary_email?(data)
+      data[EMAIL_FLAG_FIELD].to_s.strip == SECONDARY_EMAIL_FLAG
     end
 
     def profile_attributes(data)
@@ -213,7 +224,7 @@ module PersonServices
         best_time_to_call: clip(data["BestTimeToCall"]),
         racial_ethnic_identity: clip(data["Ethnicity"]),
         date_of_birth: parse_date(data["DateOfBirth"]),
-        email_type: email_type(data["EmailType"]),
+        (secondary_email?(data) ? :email_2_type : :email_type) => email_type(data["EmailType"]),
         member_since: member_since(data)
       }
     end
@@ -279,12 +290,14 @@ module PersonServices
     end
 
     def note_invalid_emails(person, rolodex, label)
+      return if person.email_on_file
+
       values = invalid_email_values(rolodex.data)
       return if values.empty?
 
       quoted = values.map { |value| "“#{value}”" }
       Comment.create!(commentable: person,
-                      body: "FileMaker Rolodex #{rolodex.fm_id} has an email this profile couldn't take:\n#{quoted.join("\n")}")
+                      body: "#{self.class.invalid_email_heading(rolodex.fm_id)}\n#{quoted.join("\n")}")
       @invalid_emails << "#{label} → ##{person.id}: #{quoted.join('; ')}"
     end
 
