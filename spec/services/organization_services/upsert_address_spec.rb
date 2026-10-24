@@ -150,7 +150,8 @@ RSpec.describe OrganizationServices::UpsertAddress do
   end
 
   it "fills only blank fields on the matching address when overwrite is false" do
-    existing = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "", country: "", primary: true)
+    existing = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "", primary: true)
+    existing.update_columns(country: nil)
 
     result = described_class.call(
       organization: organization,

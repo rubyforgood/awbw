@@ -29,9 +29,8 @@ class Address < ApplicationRecord
   # the link rather than block deletion when an org address is removed.
   has_many :affiliations, foreign_key: :organization_address_id, dependent: :nullify, inverse_of: :organization_address
 
-  normalizes :country, with: ->(country) { CountryName.canonical(country) || country.strip.presence if country.match?(/[[:alpha:]]/) }
-
   before_validation :type_as_unknown
+  before_validation :resolve_country
 
   validates :locality, presence: true
   validates :city, presence: true, length: { maximum: 255 }
@@ -76,6 +75,10 @@ class Address < ApplicationRecord
   end
 
   private
+
+  def resolve_country
+    self.country = CountryName.resolve(country, state:)
+  end
 
   # Every address carries a type, so one saved without an answer says so. Rows written
   # before this keep their blank until something saves them.
