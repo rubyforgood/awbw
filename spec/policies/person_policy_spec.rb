@@ -7,7 +7,7 @@ RSpec.describe PersonPolicy, type: :policy do
 
   let(:searchable_person) { build_stubbed(:person, profile_is_searchable: true, user: build_stubbed(:user)) }
   let(:non_searchable_person) { build_stubbed(:person, profile_is_searchable: false, user: build_stubbed(:user)) }
-  let(:owned_person) { build_stubbed(:person, user: owner_user) }
+  let(:owned_person) { build_stubbed(:person, user: owner_user).tap { |person| owner_user.person_id = person.id } }
 
   def policy_for(record: nil, user:)
     described_class.new(record, user: user)
@@ -142,6 +142,12 @@ RSpec.describe PersonPolicy, type: :policy do
   describe "#own_profile?" do
     context "with owner" do
       subject { policy_for(record: owned_person, user: owner_user) }
+
+      it { is_expected.to be_allowed_to(:own_profile?) }
+    end
+
+    context "with an older login of the same person" do
+      subject { policy_for(record: owned_person, user: build_stubbed(:user, person_id: owned_person.id)) }
 
       it { is_expected.to be_allowed_to(:own_profile?) }
     end

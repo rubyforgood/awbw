@@ -244,8 +244,7 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def owner?
-    return false unless authenticated?
-    record.user == user
+    authenticated? && user.person_id.present? && user.person_id == record.id
   end
 
   def has_associated_data?
