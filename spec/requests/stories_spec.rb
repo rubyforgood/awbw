@@ -128,6 +128,15 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include("No stories found")
       end
 
+      it "finds stories by organization name in the keyword search" do
+        other_org = create(:organization, name: "Riverbend Shelter")
+        Story.create!(base_attributes.merge(title: "Shelter mural story", organization_id: other_org.id, published: true))
+
+        get stories_url(query: "riverbend"), headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).to include("Shelter mural story")
+        expect(response.body).not_to include(published_story.title)
+      end
+
       it "finds stories by sector, age range, and story population tag names in the keyword search" do
         sector_story = Story.create!(base_attributes.merge(title: "Sector tagged story", published: true))
         sector_story.sectorable_items.create!(sector: create(:sector, :published, name: "Military/Veterans"))

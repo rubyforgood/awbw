@@ -90,6 +90,7 @@ class Organization < ApplicationRecord
   # An org is active because someone is affiliated there, not because the legacy
   # status column says so (ADR-0001 D3, ADR-0003 D4).
   scope :active, -> { where(id: Affiliation.active.select(:organization_id)) }
+  scope :name_like, ->(name) { where("organizations.name LIKE ?", "%#{sanitize_sql_like(name)}%") }
   scope :with_active_facilitators, -> { where(id: Affiliation.active.facilitators.select(:organization_id)) }
   scope :address, ->(address) do
     return all if address.blank?
