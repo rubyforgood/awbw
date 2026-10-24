@@ -16,9 +16,6 @@
 #   bin/rails fm:import_people                 # preview, writes nothing
 #   DRY_RUN=false bin/rails fm:import_people   # create + link people
 #   FM_IDS=00024,00031 DRY_RUN=false bin/rails fm:import_people   # just these rows, again
-# fm:cleanup_email_flag repairs people a run wrote while it read EmailPrimary as an address
-# (see PersonServices::CleanupRolodexEmailFlag):
-#   DRY_RUN=false bin/rails fm:cleanup_email_flag
 namespace :fm do
   desc "Create people from FileMaker Rolodex archive rows (link existing by name + email). Idempotent. DRY_RUN=false to execute, FM_IDS to re-run named rows."
   task import_people: :environment do
@@ -121,28 +118,5 @@ namespace :fm do
     puts
     undo.results.each { |outcome, lines| puts "#{outcome.to_s.humanize.ljust(9)} #{lines.size}" }
     puts(dry_run ? "\nDRY RUN — rolled back, nothing undone. Set DRY_RUN=false to execute." : "\nDone.")
-  end
-
-  desc "Repair people fm:import_people wrote while it read the Rolodex EmailPrimary flag as an address. Dry-run by default; DRY_RUN=false to execute."
-  task cleanup_email_flag: :environment do
-    dry_run = ENV["DRY_RUN"] != "false"
-    Current.source = "fm_cleanup_email_flag"
-    cleanup = nil
-
-    ActiveRecord::Base.transaction do
-      cleanup = PersonServices::CleanupRolodexEmailFlag.new.call
-      raise ActiveRecord::Rollback if dry_run
-    end
-
-    %i[possible_duplicates kept].each do |outcome|
-      next if cleanup.results[outcome].empty?
-
-      puts "\n#{outcome.to_s.humanize} (#{cleanup.results[outcome].size}):"
-      cleanup.results[outcome].each { |line| puts "  #{line}" }
-    end
-
-    puts
-    cleanup.results.each { |outcome, lines| puts "#{outcome.to_s.humanize.ljust(21)} #{lines.size}" }
-    puts(dry_run ? "\nDRY RUN — rolled back, nothing written. Set DRY_RUN=false to execute." : "\nDone.")
   end
 end
