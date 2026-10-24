@@ -238,6 +238,7 @@ Try to keep your PRs limited to one particular issue, and don't make changes tha
   - `user_facing` (logged-in users) and `public_facing` (everyone) are release announcements.
 - **Every change** → one entry, `admin_facing`.
 - **Big feature** → also add a second file, `user_facing` or `public_facing`.
+  - Name the file `YYYY-MM-DD-user-slug.yml` or `YYYY-MM-DD-public-slug.yml`.
   - A different `name`, the same `released_on`, written for users.
 
 ### In-flight pull requests

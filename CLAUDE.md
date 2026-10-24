@@ -386,8 +386,9 @@ what changed.
   (logged-in users) and `public_facing` (everyone — logged-in users see both) entries
   are release announcements, reserved for **big features**.
   - **Every change** → one `admin_facing` entry.
-  - **Big feature** → also add a `user_facing` / `public_facing` twin: its own file, a
-    different `name`, the same `released_on`, written for users. Admins see both.
+  - **Big feature** → also add a `user_facing` / `public_facing` twin: its own file
+    named `YYYY-MM-DD-user-slug.yml` / `YYYY-MM-DD-public-slug.yml`, a different `name`,
+    the same `released_on`, written for users. Admins see both.
 - **Sentence case, plain language** — this page is read by facilitators, not devs.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy` gates
   this in its relation scope, not just in the UI).

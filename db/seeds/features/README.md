@@ -28,6 +28,7 @@ One file per feature keeps parallel PRs from conflicting.
 - **Every change** → one entry, `admin_facing`.
 - **Big feature** → also add a second file, `user_facing` or `public_facing`, with a
   different `name` and the same `released_on`, written for users.
+  - Put the audience after the date: `YYYY-MM-DD-user-slug.yml` or `YYYY-MM-DD-public-slug.yml`.
 
 ```yaml
 name: "Filter registrants by registration date"
