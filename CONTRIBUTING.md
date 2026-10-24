@@ -227,8 +227,9 @@ Only commit the schema.rb only if you have committed anything that would change 
 
 Try to keep your PRs limited to one particular issue, and don't make changes that are out of scope for that issue. If you notice something that needs attention but is out of scope, please [create a new issue](https://github.com/rubyforgood/awbw/issues/new).
 
-### Add a features seed
+### Add a features seed (optional)
 
+- **Optional** — appreciated, but maintainers can add it if you skip it.
 - Shipping a user-facing feature or improvement? Add a file to `db/seeds/features/`.
   - One file per entry: `YYYY-MM-DD-short-slug.yml`.
   - Fields and an example are in [the folder's README](db/seeds/features/README.md).
