@@ -84,9 +84,9 @@
         </span>
       <% end %>
 
-      <% if (sent_form_names = f.object.decorate.sent_form_names).any? %>
-        <span class="truncate text-xs text-gray-500" title="<%= sent_form_names.join(", ") %>">
-          <i class="fa-solid fa-clipboard-list mr-1 text-gray-400" aria-hidden="true"></i>Sends: <%= sent_form_names.join(", ") %>
+      <% if (linked_form_names = f.object.decorate.linked_form_names).any? %>
+        <span class="truncate text-xs text-gray-500" title="<%= linked_form_names.join(", ") %>">
+          <i class="fa-solid fa-clipboard-list mr-1 text-gray-400" aria-hidden="true"></i>Forms: <%= linked_form_names.join(", ") %>
         </span>
       <% end %>
     </div>

@@ -9,7 +9,7 @@ class RegistrationTicketCalloutDecorator < ApplicationDecorator
     BuiltinCalloutCards.config_gap_action(event, builtin_key)
   end
 
-  def sent_form_names
+  def linked_form_names
     registration_ticket_callout_forms.reject(&:marked_for_destruction?)
       .sort_by { |link| link.position.to_i }
       .filter_map { |link| link.form&.display_name }
