@@ -70,17 +70,19 @@ Constraints already decided elsewhere:
   between the person (by Rolodex code) and the project's org, carrying `PrsnlRecID` as its
   `filemaker_code` so each row imports once. `event_registration_id` stays NULL — these are
   historical, not training-minted.
-  - **Role:** FileMaker calls a facilitator a **Leader** (8,112 of 8,907 rows). A Leader is a
-    Facilitator affiliation marked `primary_contact` — the pattern prod's affiliations already
-    follow: the January 2026 migration (`ConvertProjectUserPositionToTitle`, in #735, deleted
-    once applied) turned the old app's position enum (liaison/leader/assistant) into titles,
-    and #2321 folded Leader into Facilitator + primary contact. Prod, profiled 2026-10-24: 1,829
-    Facilitators are primary contacts (402 aren't), and all 53 Liaisons are; no Assistant rows
-    exist, so an Assistant has no precedent and isn't one. 111 rows are still titled "Leader",
-    which the exact-match Facilitator scope doesn't count. A **Liaison** (611) or **Assistant** (232) gets an affiliation with
-    that title over the same dates (a Liaison is also a primary contact) — the title itself
-    never counts as facilitation — plus a Facilitator affiliation over those dates unless the
-    person already has one, as prod's January 2026 conversion did. A blank (80) or stray role reads as a Leader.
+  - **Role:** matches how prod already records the old app's roles. The January 2026
+    migration (`ConvertProjectUserPositionToTitle`, in #735, deleted once applied) turned that
+    app's position enum (liaison/leader/assistant) into titles, and #2321 folded Leader into
+    Facilitator + primary contact. Prod, profiled 2026-10-24: 1,829 Facilitators are primary
+    contacts (402 aren't), all 53 Liaisons are, and 111 rows are still titled "Leader" (which
+    the exact-match Facilitator scope doesn't count, and which the import matches as a
+    Facilitator rather than duplicating).
+    - **Leader** (8,112 of 8,907 rows) and **Liaison** (611) → a Facilitator affiliation marked
+      `primary_contact`, with a "FileMaker import" comment recording the role FileMaker gave.
+    - **Assistant** (232) → an Assistant affiliation over the same dates — the title itself
+      never counts as facilitation — plus a Facilitator affiliation over those dates unless the
+      person already has one, as the January 2026 conversion did.
+    - A blank (80) or stray role reads as a Leader.
   - **Dates:** Personnel rows carry none of their own, so the assignment starts on
     `DateEntered` and ends on the project's `CloseDate` (else `EndDate`). Only `Status`
     "Active" (1,774) stays open; Inactive (7,220), Pending, Suspended, blank, and values
