@@ -1,10 +1,36 @@
 require "rails_helper"
 
 RSpec.describe CommentDecorator do
+  describe "#source_title" do
+    it "gives a profile comment the person's full name and email" do
+      person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+      comment = create(:comment, commentable: person)
+      expect(comment.decorate.source_title).to eq("#{person.full_name} (ada@example.com)")
+    end
+
+    it "is just the full name when the person has no email" do
+      person = create(:person, first_name: "Ada", last_name: "Lovelace", email: nil, user: nil)
+      comment = create(:comment, commentable: person)
+      expect(comment.decorate.source_title).to eq(person.full_name)
+    end
+
+    it "names the registrant with their email on a registration comment" do
+      registrant = create(:person, email: "reg@example.com")
+      comment = create(:comment, commentable: create(:event_registration, registrant: registrant))
+      expect(comment.decorate.source_title).to eq("#{registrant.full_name} (reg@example.com)")
+    end
+
+    it "is nil for a comment with no person behind it" do
+      comment = create(:comment, commentable: create(:user))
+      expect(comment.decorate.source_title).to be_nil
+    end
+  end
+
   describe "#source_label" do
-    it "labels a profile comment" do
-      comment = create(:comment, commentable: create(:person))
-      expect(comment.decorate.source_label).to eq("Profile")
+    it "labels a profile comment with the person's name" do
+      person = create(:person, first_name: "Ada", last_name: "Lovelace")
+      comment = create(:comment, commentable: person)
+      expect(comment.decorate.source_label).to eq(person.full_name)
     end
 
     it "labels a user-account comment" do
@@ -12,16 +38,17 @@ RSpec.describe CommentDecorator do
       expect(comment.decorate.source_label).to eq("User account")
     end
 
-    it "labels a registration comment with the event title" do
+    it "labels a registration comment with the registrant and the event title" do
       registration = create(:event_registration)
       comment = create(:comment, commentable: registration)
-      expect(comment.decorate.source_label).to include("Registration ·", registration.event.title)
+      expect(comment.decorate.source_label).to start_with("#{registration.registrant.full_name} · Registration ·")
+      expect(comment.decorate.source_label).to include(registration.event.title)
     end
 
     it "labels an unallocated scholarship comment with its id" do
       scholarship = create(:scholarship)
       comment = create(:comment, commentable: scholarship)
-      expect(comment.decorate.source_label).to eq("Scholarship ##{scholarship.id}")
+      expect(comment.decorate.source_label).to eq("#{scholarship.recipient.full_name} · Scholarship ##{scholarship.id}")
     end
 
     it "labels an allocated scholarship comment with its event" do
@@ -32,10 +59,11 @@ RSpec.describe CommentDecorator do
       expect(Comment.find(comment.id).decorate.source_label).to include("Scholarship ·", registration.event.title)
     end
 
-    it "labels a CE registration comment with the event title" do
+    it "labels a CE registration comment with the registrant and the event title" do
       ce = create(:continuing_education_registration)
       comment = create(:comment, commentable: ce)
-      expect(comment.decorate.source_label).to include("CE ·", ce.event_registration.event.title)
+      expect(comment.decorate.source_label).to start_with("#{ce.event_registration.registrant.full_name} · CE ·")
+      expect(comment.decorate.source_label).to include(ce.event_registration.event.title)
     end
 
     it "labels a topic subscription comment with its topic" do
