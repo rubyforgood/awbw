@@ -195,16 +195,15 @@ class FormResponseAggregator
     text.to_i if text.match?(/\A-?\d+\z/)
   end
 
-  # A choropleth tally of a geographic field: counts per submitted state as-is, or
-  # per country under one spelling (the map matches state/country names itself; the
-  # legend lists the exact counts). State answers split like any other select; a
-  # country answer stays whole since some country names contain commas.
+  # A choropleth tally of a geographic field: counts per submitted place value,
+  # left as-is (the map matches state/country names itself; the legend lists the
+  # exact counts). Multi-value answers split like any other select.
   def build_map_report(question, answers, chart)
     tally = Hash.new(0)
     answered = 0
 
     answers.each do |answer|
-      values = chart == :world_map ? Array(CountryName.label(answer.submitted_answer)) : split_values(answer.submitted_answer)
+      values = split_values(answer.submitted_answer)
       next if values.empty?
 
       answered += 1

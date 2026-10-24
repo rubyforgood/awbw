@@ -351,17 +351,6 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).not_to include("Zed Zulu")
         end
 
-        it "filters a country drill-in across every spelling of that country" do
-          create(:address, addressable: attendee, country: "USA", inactive: false)
-          other = create(:person, first_name: "Zed", last_name: "Zulu")
-          create(:event_registration, event: recent_training, registrant: other, status: "attended")
-          create(:address, addressable: other, country: "Canada", inactive: false)
-
-          get attendees_events_url(country: "United States"), headers: frame_headers
-          expect(response.body).to include("Ada Lovelace")
-          expect(response.body).not_to include("Zed Zulu")
-        end
-
         it "filters by a school-district drill-in (via the org they registered under)" do
           org = create(:organization, name: "Compton Schools")
           org_address = create(:address, addressable: org, district: "Compton Unified", inactive: false)

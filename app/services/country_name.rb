@@ -20,9 +20,4 @@ module CountryName
       ISO3166::Country.find_country_by_any_name(text)
     country&.common_name
   end
-
-  # The common name when recognized, otherwise the value as typed.
-  def label(value)
-    canonical(value) || value.to_s.strip.presence
-  end
 end

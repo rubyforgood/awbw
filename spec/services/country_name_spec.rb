@@ -21,12 +21,6 @@ RSpec.describe CountryName do
     end
   end
 
-  describe ".label" do
-    it "keeps an unrecognized value as typed" do
-      expect(described_class.label(" Narnia ")).to eq("Narnia")
-    end
-  end
-
   describe ".options" do
     it "lists the United States first, then every other country alphabetically" do
       expect(described_class.options.first).to eq("United States")
