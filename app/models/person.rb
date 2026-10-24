@@ -208,6 +208,12 @@ class Person < ApplicationRecord
     options :all, type: :text, default: true, default_operator: :or
   end
 
+  search_scope :search_name_email do
+    attributes :first_name, :legal_first_name, :last_name, :email, :email_2
+    attributes all: [ :first_name, :legal_first_name, :last_name, :email, :email_2 ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
   FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
   LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
 
@@ -215,7 +221,6 @@ class Person < ApplicationRecord
     (people.first_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden))
     OR (people.last_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden))
     OR (people.profile_show_email AND (people.email LIKE :pattern OR users.email LIKE :pattern))
-    OR (people.profile_show_phone AND (users.phone LIKE :pattern OR contact_methods.value LIKE :pattern))
   SQL
 
   # Spaces and periods are dropped on both sides so an initialled name ("Cathy S.") finds itself.
@@ -248,7 +253,7 @@ class Person < ApplicationRecord
   def self.shared_contact_search(query)
     terms = query.scan(SEARCH_TERM_PATTERN).map { |groups| groups.compact.first }.compact_blank
     terms.reduce(all) do |relation, term|
-      matches = unscoped.left_joins(:user, :active_phones).where(
+      matches = unscoped.left_joins(:user).where(
         SHARED_CONTACT_MATCH_SQL,
         pattern: "%#{sanitize_sql_like(term)}%",
         first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES,
@@ -291,6 +296,11 @@ class Person < ApplicationRecord
     tag_ids = Array(ids).reject(&:blank?)
     return all if tag_ids.empty?
     joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
+  scope :with_phone, ->(value) {
+    like = "%#{sanitize_sql_like(value.to_s.strip)}%"
+    where(id: ContactMethod.where(contactable_type: polymorphic_name)
+                           .where("value LIKE ?", like)
+                           .select(:contactable_id)) }
   scope :story_authors, -> { joins(:stories_as_author).distinct }
   scope :blog_contributors, -> { where(blog_contributor: true) }
   scope :placeholder_email, -> { where("email REGEXP ?", PlaceholderEmail.sql_pattern) }
@@ -428,6 +438,7 @@ class Person < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
+    results = results.with_phone(params[:phone]) if params[:phone].present?
     results = results.shared_contact_search(params[:shared_contact_info]) if params[:shared_contact_info].present?
     results = results.by_role(params[:role]) if params[:role].present?
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?

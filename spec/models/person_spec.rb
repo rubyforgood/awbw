@@ -700,6 +700,11 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_alice)
     end
 
+    it 'search_name_email matches names and emails' do
+      expect(Person.search_name_email('Alice')).to include(person_alice)
+      expect(Person.search_name_email('alice@example')).to include(person_alice)
+    end
+
     it 'filters by shared_contact_info matching a full name' do
       results = Person.search_by_params(shared_contact_info: 'Alice Smith')
       expect(results).to include(person_alice)
@@ -714,20 +719,17 @@ RSpec.describe Person, type: :model do
       expect(Person.search_by_params(shared_contact_info: 'alice@example')).not_to include(person_alice)
     end
 
-    it 'filters by shared_contact_info matching a shared login phone' do
-      person_bob.update!(profile_show_phone: true)
-      person_bob.user.update!(phone: '555-0199')
+    it 'filters by phone matching a contact method' do
+      create(:contact_method, contactable: person_alice, value: '555-0199')
 
-      expect(Person.search_by_params(shared_contact_info: '555-0199')).to include(person_bob)
+      expect(Person.search_by_params(phone: '555-0199')).to include(person_alice)
+      expect(Person.search_by_params(phone: '555-0199')).not_to include(person_bob)
     end
 
-    it 'filters by shared_contact_info matching terms across a name and a shared phone' do
-      person_alice.update!(profile_show_phone: true)
-      person_alice.user.update!(phone: '555-0199')
+    it 'filters by phone matching an inactive contact method' do
+      create(:contact_method, contactable: person_alice, value: '555-0199', inactive: true)
 
-      results = Person.search_by_params(shared_contact_info: 'Alice 555-0199')
-      expect(results).to include(person_alice)
-      expect(results).not_to include(person_bob)
+      expect(Person.search_by_params(phone: '555-0199')).to include(person_alice)
     end
 
     it 'filters by shared_contact_info treating a quoted phrase as one term' do

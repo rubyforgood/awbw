@@ -26,12 +26,16 @@ class PeopleController < ApplicationController
         affiliations: :organization,
         event_registrations: :event,
         categorizable_items: { category: :category_type }
-      ).references(:user))
+      ))
       filters = authorized_scope(params, as: :index).to_unsafe_h
+      contact_info = filters.delete(:contact_info)
       filtered = base_scope.search_by_params(filters)
-                           .order(:first_name, :last_name)
-      @count_display = count_display(filtered.count)
-      @people = filtered.paginate(page: params[:page], per_page: per_page)
+      filtered = filtered.search_name_email(contact_info)
+      filtered = filtered.order(:first_name, :last_name)
+
+      total = filtered.count
+      @count_display = count_display(total)
+      @people = filtered.paginate(page: params[:page], per_page: per_page, total_entries: total)
 
       render :people_results
     else
@@ -41,7 +45,10 @@ class PeopleController < ApplicationController
 
   def email_addresses
     authorize! Person, to: :manage?
-    people = authorized_scope(Person.includes(:user)).search_by_params(params.to_unsafe_h)
+    filters = params.to_unsafe_h
+    contact_info = filters.delete(:contact_info)
+    people = Person.includes(:user).search_by_params(filters)
+    people = people.search_name_email(contact_info)
     @email_addresses = people.filter_map { |person| person.preferred_email.presence }.uniq.sort
   end
 
