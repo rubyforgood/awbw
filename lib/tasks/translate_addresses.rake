@@ -3,7 +3,8 @@
 # Rewrite stored address countries/states and country/state form answers as the dropdowns
 # store them. See AddressServices::TranslateExisting.
 #
-# Dry-run by default. Set DRY_RUN=false to write changes (each one logged as an Ahoy event).
+# Dry-run by default. Set DRY_RUN=false to write changes (each one logged as an Ahoy event
+# credited to Setting.import_user, which a real run requires).
 # Every run, dry or not, also saves its report as an ActiveStorage blob — the command to
 # read it back is printed at the end.
 #   bin/rails data:translate_addresses                 # preview, writes nothing
@@ -12,12 +13,16 @@ namespace :data do
   desc "Translate stored address countries/states and their form answers to dropdown values. Idempotent. DRY_RUN=false to execute."
   task translate_addresses: :environment do
     dry_run = ENV["DRY_RUN"] != "false"
+    import_user = Setting.import_user
+    if !dry_run && import_user.nil?
+      abort "No import user chosen — pick one in admin Settings (Imports); every change this run logs is credited to them."
+    end
     report = []
     say = ->(line = "") { puts line; report << line }
     $stdout.sync = true
 
     begin
-      result = AddressServices::TranslateExisting.new(dry_run:).call
+      result = AddressServices::TranslateExisting.new(dry_run:, user: import_user).call
 
       say.("Changes (#{result.changes.values.sum}):")
       result.changes.sort_by { |label, count| [ -count, label ] }.each { |label, count| say.("  #{count.to_s.rjust(5)}  #{label}") }

@@ -40,14 +40,25 @@ RSpec.describe "data:translate_addresses" do
     expect(report_text).to include("Address country: \"USA\" → \"United States\"", "Narnia")
   end
 
-  it "writes with DRY_RUN=false and saves that run's report too" do
+  it "writes with DRY_RUN=false, credits each change to the import user, and saves that run's report" do
+    import_user = create(:user)
+    Setting.create!(import_user:)
     usa = address_with(country: "USA", state: "TX")
     ENV["DRY_RUN"] = "false"
 
     run_task
 
     expect(usa.reload.country).to eq("United States")
+    expect(Ahoy::Event.where(name: "autochange.address", resource_id: usa.id).pluck(:user_id)).to eq([ import_user.id ])
     expect(saved_report.filename.to_s).not_to include("dry-run")
     expect(report_text).to include("Done.")
+  end
+
+  it "won't write without an import user to credit" do
+    usa = address_with(country: "USA", state: "TX")
+    ENV["DRY_RUN"] = "false"
+
+    expect { run_task }.to raise_error(SystemExit)
+    expect(usa.reload.country).to eq("USA")
   end
 end
