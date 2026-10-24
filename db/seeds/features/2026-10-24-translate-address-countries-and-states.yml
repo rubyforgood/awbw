@@ -1,0 +1,12 @@
+name: "Address countries and states stored the way the dropdowns do"
+area: people
+display_status: admin_facing
+released_on: 2026-10-24
+pr_number: 2829
+summary: >-
+  Imports from FileMaker and the registration spreadsheet now store countries and states the
+  way the dropdowns do, and a one-time cleanup does the same for the ones already in the
+  portal — "USA" becomes United States, "California" becomes CA, a province fills in its country.
+pro_tips:
+  - "Every change is logged in Activities, so you can see what was rewritten and what it was before."
+  - "Anything it can't place is listed in the cleanup's report for a hand fix."

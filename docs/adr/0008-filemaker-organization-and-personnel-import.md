@@ -59,6 +59,8 @@ Constraints already decided elsewhere:
   no locality to carry, which is why the Rolodex pass works it out with `AddressLocality`.
   Those project rows also carry real County → Locality pairs, so they are where to read
   AWBW's Northern/Central/Southern line from instead of inventing it.
+- **State, country and address type go through `AddressTranslation#address`** (ADR-0009),
+  as the Rolodex pass does, so organization addresses store what the dropdowns offer.
 - **Conflicts:** same rule as people — fill blanks, keep the portal value where the archive
   disagrees, and report each difference as a comment plus in the task output.
 - **Out of scope:** event registrations (`fm_participants`, 68,497 rows), payments, funding,

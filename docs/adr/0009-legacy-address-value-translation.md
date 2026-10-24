@@ -1,0 +1,68 @@
+# ADR-0009 — Translating legacy address values into what the dropdowns store
+
+- **Status:** Accepted
+- **Date:** 2026-10-24
+
+## Context
+
+The portal's address country is now a dropdown (`GeographyHelper::COUNTRIES` — the
+`countries` gem's names, with plain names for the formal ones), and its state field stores a
+USPS code. Everything written before, and everything other systems send, is free text:
+
+| Source | Fields |
+|---|---|
+| FileMaker (`fm_addresses`) | `AddrsCountry`, `AddrsState`, `AddrsType` |
+| LMS registration spreadsheet (ongoing) | country, state, address type, phone type columns |
+| Portal addresses and form answers from before the dropdowns | `addresses.country`/`state`, `mailing_*`/`organization_*` answers |
+
+The same place arrives many ways — "US", "USA", "United States of America", "Untied States",
+"California", "Ca.", "CA - California", a province typed in the state field with no country —
+so one country shows up as several on dashboards, and a stored value the dropdown doesn't
+list can't be preselected.
+
+## Decision
+
+One translator, `AddressTranslation`, used by every import and by the cleanup of existing
+data. Like ADR-0007, translation is **by lookup table, and a value nothing answers to is
+reported, never guessed** — it's kept as typed and counted in `#unmatched`.
+
+- **Country** → a dropdown name. In order: a placeholder ("-", blank, "n/a", "none",
+  "unknown") counts as no country; a US state code typed as the country next to that state
+  is the US ("CA" beside state CA is not Canada); a spelling our data uses that the gem
+  doesn't read (`ALIASES` — e.g. "Untied States", "Mexcio", "Korea" → South Korea, a US city
+  or county typed as the country → US); the gem's own names and ISO codes, shown with the
+  dropdown's plain names. When the country says nothing, **the state can**: a US state means
+  the US, a known province or region (`REGIONS` — ON, VIC, Bucks, Ha Noi…) means its country,
+  and a country typed as the state ("England", "Togo") means that country.
+- **State** → the USPS code when the value reads as a US state, including a full name
+  anywhere in it ("Maryland (MD)"); any other region is kept as typed. A value that reads as
+  neither, on a US or country-less address, is reported.
+- **Address type** → the archive's and forms' words ("Home", "cell", "Business") as the
+  types we store, via one `CONTACT_TYPES` table (the Rolodex import reads phone and email
+  types from it too).
+- **Locality** → `AddressLocality` on the translated state and country.
+
+### Where it runs
+
+- **Imports, inline:** the FileMaker Rolodex import and the LMS registration importer, and
+  the FileMaker organizations import when it's built (ADR-0008). Each reports what it
+  couldn't place.
+- **Existing data, once and again:** `AddressServices::TranslateExisting`
+  (`data:translate_addresses`) rewrites stored address countries and states, and the
+  country/state form answers, filling a locality only where it's Unknown. It's idempotent, so it runs before and after an import. Every changed
+  record is an `autochange.*` Ahoy event with its before and after.
+- **Not on save.** The dropdowns own new data; nothing rewrites an address when someone
+  saves a form.
+
+### Form answers
+
+Form answers are otherwise stored verbatim. Country and state answers are the one exception:
+they're rewritten so form results and maps count one place once, and each rewrite is logged.
+
+## Consequences
+
+- A new spelling turns up in an import's or the cleanup's unmatched report; adding it is a
+  line in `ALIASES` or `REGIONS`.
+- The `fm_*` archive tables keep FileMaker's raw values.
+- What the cleanup can't place is listed in its report for a hand fix, so a form's
+  exact-match preselect can't silently blank one on save.
