@@ -74,9 +74,13 @@ Constraints already decided elsewhere:
     Facilitator affiliation marked `primary_contact` — the pattern prod's affiliations already
     follow: the January 2026 migration (`ConvertProjectUserPositionToTitle`, in #735, deleted
     once applied) turned the old app's position enum (liaison/leader/assistant) into titles,
-    and #2321 folded Leader into Facilitator + primary contact. A **Liaison** (611) or **Assistant** (232) supports the program
-    without facilitating it, so each is an undated job affiliation with that title
-    (ADR-0003 D1). A blank (80) or stray role reads as a Leader.
+    and #2321 folded Leader into Facilitator + primary contact. Prod, profiled 2026-10-24: 1,829
+    Facilitators are primary contacts (402 aren't), and all 53 Liaisons are; no Assistant rows
+    exist, so an Assistant has no precedent and isn't one. 111 rows are still titled "Leader",
+    which the exact-match Facilitator scope doesn't count. A **Liaison** (611) or **Assistant** (232) gets an affiliation with
+    that title over the same dates (a Liaison is also a primary contact) — the title itself
+    never counts as facilitation — plus a Facilitator affiliation over those dates unless the
+    person already has one, as prod's January 2026 conversion did. A blank (80) or stray role reads as a Leader.
   - **Dates:** Personnel rows carry none of their own, so the assignment starts on
     `DateEntered` and ends on the project's `CloseDate` (else `EndDate`). Only `Status`
     "Active" (1,774) stays open; Inactive (7,220), Pending, Suspended, blank, and values
@@ -126,8 +130,8 @@ the real run.
 - **Which `Status` values mean active** — only "Active", from the production values profiled
   2026-10-24 (see Personnel above). A closed project's `CloseDate` (else `EndDate`) ends every
   affiliation under it. `AgreementStatus` isn't read: 8,376 of 8,907 rows leave it blank.
-- **Is an Assistant a facilitator?** Read as a job for now, so assistants don't count toward
-  program status.
+- **Is an Assistant a facilitator?** The Assistant title isn't; the Facilitator affiliation
+  minted beside it is, matching January 2026 (decided 2026-10-24).
 - **Merged projects** (`MergerWithID`): folded — the merged-away project's code joins the
   survivor's org, so its personnel land there. One the portal already keeps as its own org
   is reported for a hand merge rather than merged automatically.
