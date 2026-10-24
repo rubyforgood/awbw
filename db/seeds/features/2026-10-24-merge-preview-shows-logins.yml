@@ -10,4 +10,5 @@ summary: >-
 pro_tips:
   - "When both people have a login, the kept person's primary email becomes the email of the login used most recently."
   - "If neither login has been used, it becomes the email of the login whose person has affiliations or event registrations."
+  - "When nothing tells the two logins apart, the kept person's login wins."
   - "Hover the lock or envelope icon to see why a login can't sign in or when it was invited."

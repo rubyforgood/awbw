@@ -466,21 +466,28 @@ class PeopleController < ApplicationController
     return "#{keep.full_name} takes over the other person's login, so its email (#{login.email}) becomes their primary email. The email chosen here moves to their secondary email." unless keep.user
 
     both = "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently."
-    return both unless login
+    return both if login.email.casecmp?(keep.email.to_s)
 
-    reason = login.last_sign_in_at ? "the login used most recently" : "the login of the person with affiliations or event registrations"
-    "#{both} Their primary email becomes #{login.email}, #{reason}. The email chosen here moves to their secondary email."
+    "#{both} Their primary email becomes #{login.email}, #{primary_login_reason(login, keep, delete)}. The email chosen here moves to their secondary email."
   end
 
   # The login whose email the kept person's primary email follows: an adopted login,
-  # else the most recently used of both, else the only one whose person has history.
+  # else the most recently used of both; ties go to the only person with history, else the kept person.
   def primary_login(keep, delete)
     return unless delete.user
     return delete.user unless keep.user
 
-    logins = User.where(person_id: [ keep.id, delete.id ]).to_a
-    logins.select(&:last_sign_in_at).max_by(&:last_sign_in_at) ||
-      logins.find { |login| login.person_id == person_with_history(keep, delete)&.id }
+    favored_person_id = person_with_history(keep, delete)&.id || keep.id
+    User.where(person_id: [ keep.id, delete.id ]).max_by do |login|
+      [ login.last_sign_in_at.to_i, login.person_id == favored_person_id ? 1 : 0 ]
+    end
+  end
+
+  def primary_login_reason(login, keep, delete)
+    return "the login used most recently" if login.last_sign_in_at
+    return "the login of the person with affiliations or event registrations" if person_with_history(keep, delete)
+
+    "the kept person's login"
   end
 
   def person_with_history(keep, delete)
