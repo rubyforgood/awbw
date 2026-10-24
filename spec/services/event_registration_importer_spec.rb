@@ -526,6 +526,18 @@ RSpec.describe EventRegistrationImporter do
         expect(person.pronouns).to eq("they/them")
       end
 
+      it "saves an address the sheet gives no ZIP for" do
+        import_rows(%w[FirstName LastName EMail Street City State], [ "Pat", "Example", "pat@example.org", "2 Oak Ave", "Springfield", "IL" ])
+
+        expect(Person.find_by(email: "pat@example.org").addresses.sole).to have_attributes(street_address: "2 Oak Ave", zip_code: "")
+      end
+
+      it "saves an address the sheet gives no street for" do
+        import_rows(%w[FirstName LastName EMail City State Zip], [ "Pat", "Example", "pat@example.org", "Springfield", "IL", "62701" ])
+
+        expect(Person.find_by(email: "pat@example.org").addresses.sole).to have_attributes(street_address: "", zip_code: "62701")
+      end
+
       it "names a new person by the sheet's nickname and keeps the first name as their legal first name" do
         import_rows(%w[FirstName Nickname LastName EMail], [ "Robert", "Bob", "Example", "bob@example.org" ])
         person = Person.find_by(email: "bob@example.org")
