@@ -72,6 +72,13 @@ namespace :fm do
         import.unmatched_tags.sort_by { |name, count| [ -count, name ] }.each { |name, count| say.("  #{count.to_s.rjust(5)}  #{name}") }
       end
 
+      import.unmatched_addresses.each do |field, values|
+        next if values.empty?
+
+        say.("\nAddress #{field} values nothing translates (kept as typed):")
+        values.sort_by { |value, count| [ -count, value ] }.each { |value, count| say.("  #{count.to_s.rjust(5)}  #{value}") }
+      end
+
       if import.unmatched_staff.any?
         say.("\nStaff names no portal user answers to (record them with data:load_staff_aliases):")
         import.unmatched_staff.sort_by { |name, count| [ -count, name ] }.each { |name, count| say.("  #{count.to_s.rjust(5)}  #{name}") }

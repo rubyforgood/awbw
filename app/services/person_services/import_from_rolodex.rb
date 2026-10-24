@@ -40,9 +40,7 @@ module PersonServices
     DATE_FORMATS = %w[%m/%d/%Y %Y-%m-%d %m-%d-%Y %Y/%m/%d].freeze
     # A two-digit year below this is read as 20xx, at or above it as 19xx.
     TWO_DIGIT_YEAR_PIVOT = 10
-    CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "cell" => "personal",
-                      "mobile" => "personal", "work" => "work", "business" => "work",
-                      "professional" => "work", "mailing" => "mailing" }.freeze
+    CONTACT_TYPES = AddressTranslation::CONTACT_TYPES
     # Answers to "which kind of email is this?" that aren't a kind at all.
     PRECEDENCE_TYPES = %w[preferred primary main].freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
@@ -76,6 +74,7 @@ module PersonServices
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
+      @address_translation = AddressTranslation.new
       @staff = StaffTranslation.new
       @import_user_id = Setting.import_user&.id
     end
@@ -102,6 +101,10 @@ module PersonServices
 
     def unmatched_staff
       @staff.unmatched
+    end
+
+    def unmatched_addresses
+      @address_translation.unmatched
     end
 
     private
@@ -433,20 +436,17 @@ module PersonServices
       state = clip(fields["AddrsState"].to_s.strip)
       return if street.blank? || city.blank? || state.blank?
 
-      country = clip(fields["AddrsCountry"])
-      county = county(fields)
-      {
+      # FileMaker records a locality only on a project, so a person's own address has
+      # none to carry over and the translated parts have to say.
+      @address_translation.address(
         street_address: clip(street),
         city:,
         state:,
         zip_code: zip_code(fields),
-        country:,
-        county:,
-        address_type: contact_type(fields["AddrsType"], allowed: Address::CONTACT_TYPES),
-        # FileMaker records a locality only on a project, so a person's own address has
-        # none to carry over and the parts have to say.
-        locality: AddressLocality.for(city:, state:, country:, county:)
-      }
+        country: clip(fields["AddrsCountry"]),
+        county: county(fields),
+        address_type: fields["AddrsType"]
+      )
     end
 
     # The address's own postal code, or the one it points at in the archive's ZIP table

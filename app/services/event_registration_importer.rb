@@ -192,6 +192,7 @@ class EventRegistrationImporter
       skipped: [], rows: []
     )
     @organization_matcher = OrganizationServices::NameMatcher.new
+    @address_translation = AddressTranslation.new
     @organization_cache = {}
     @form_field_cache = {}
     @seen_row_keys = {}
@@ -526,7 +527,19 @@ class EventRegistrationImporter
     answers["additional_sectors"] = sector_ids(values[:additional_sectors], preview, scope: Sector.published).map(&:to_s).presence
     answers["primary_age_group"] = age_group_ids(values[:primary_age_group], preview).first&.to_s
     answers["additional_age_groups"] = age_group_ids(values[:additional_age_groups], preview).map(&:to_s).presence
+    translate_address_answers(answers, "mailing")
+    translate_address_answers(answers, "organization")
     answers.compact
+  end
+
+  # The sheet's free-text state and country, as the registration form's dropdowns store them.
+  def translate_address_answers(answers, prefix)
+    state = answers["#{prefix}_state"]
+    country = answers["#{prefix}_country"]
+    return if state.blank? && country.blank?
+
+    answers["#{prefix}_state"] = @address_translation.state(state, country:)
+    answers["#{prefix}_country"] = @address_translation.country(country, state:)
   end
 
   def organization_type(raw)
@@ -534,7 +547,7 @@ class EventRegistrationImporter
   end
 
   def contact_type(raw)
-    CONTACT_TYPES.find { |type| type.casecmp?(raw.to_s) }
+    CONTACT_TYPES.find { |type| type.casecmp?(@address_translation.address_type(raw).to_s) }
   end
 
   def sector_ids(raw, preview, scope:)

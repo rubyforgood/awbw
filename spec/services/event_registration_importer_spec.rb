@@ -538,6 +538,20 @@ RSpec.describe EventRegistrationImporter do
         expect(Person.find_by(email: "pat@example.org").addresses.sole).to have_attributes(street_address: "", zip_code: "62701")
       end
 
+      it "stores the sheet's state, country, and address type as the dropdowns do" do
+        import_rows(%w[FirstName LastName EMail Street City State Zip Country AddressType],
+                    [ "Pat", "Example", "pat@example.org", "2 Oak Ave", "Fresno", "California", "93701", "USA", "Home" ])
+
+        expect(Person.find_by(email: "pat@example.org").addresses.sole)
+          .to have_attributes(state: "CA", country: "United States", address_type: "personal")
+      end
+
+      it "reads a missing country from the sheet's state" do
+        import_rows(%w[FirstName LastName EMail Street City State Zip], [ "Pat", "Example", "pat@example.org", "1 King St", "Toronto", "ON", "M5H" ])
+
+        expect(Person.find_by(email: "pat@example.org").addresses.sole).to have_attributes(state: "ON", country: "Canada")
+      end
+
       it "names a new person by the sheet's nickname and keeps the first name as their legal first name" do
         import_rows(%w[FirstName Nickname LastName EMail], [ "Robert", "Bob", "Example", "bob@example.org" ])
         person = Person.find_by(email: "bob@example.org")
