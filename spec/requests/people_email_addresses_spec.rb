@@ -35,6 +35,16 @@ RSpec.describe "People email addresses", type: :request do
       expect(response.body).to include("No email addresses found.")
     end
 
+    it "does not match a phone (same narrow search as the people index)" do
+      person = create(:person, first_name: "Carol", last_name: "Phoner",
+                              email: "carol@example.com", user: nil)
+      create(:contact_method, contactable: person, value: "555-0142")
+
+      get email_addresses_people_path(contact_info: "555-0142")
+
+      expect(response.body).not_to include("carol@example.com")
+    end
+
     it "is admin-only" do
       sign_out admin
       sign_in create(:user)

@@ -28,9 +28,10 @@ class PeopleController < ApplicationController
         categorizable_items: { category: :category_type }
       ))
       filters = authorized_scope(params, as: :index).to_unsafe_h
+      contact_info = filters.delete(:contact_info)
       filtered = base_scope.search_by_params(filters)
-                           .order(:first_name, :last_name)
-      filtered = filtered.distinct if filters[:contact_info].present?
+      filtered = filtered.search_name_email(contact_info) if contact_info.present?
+      filtered = filtered.order(:first_name, :last_name)
 
       total = filtered.count
       @count_display = count_display(total)
@@ -44,7 +45,10 @@ class PeopleController < ApplicationController
 
   def email_addresses
     authorize! Person, to: :manage?
-    people = authorized_scope(Person.includes(:user)).search_by_params(params.to_unsafe_h)
+    filters = params.to_unsafe_h
+    contact_info = filters.delete(:contact_info)
+    people = Person.includes(:user).search_by_params(filters)
+    people = people.search_name_email(contact_info) if contact_info.present?
     @email_addresses = people.filter_map { |person| person.preferred_email.presence }.uniq.sort
   end
 
