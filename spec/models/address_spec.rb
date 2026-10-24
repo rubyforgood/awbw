@@ -87,6 +87,10 @@ RSpec.describe Address, type: :model do
       expect(build(:address, country: " Narnia ").country).to eq("Narnia")
     end
 
+    it "stores a country with no letters as nil" do
+      [ "", "   ", "-", "--" ].each { |placeholder| expect(build(:address, country: placeholder).country).to be_nil }
+    end
+
     it "allows county to be nil" do
       address.county = nil
       expect(address).to be_valid
