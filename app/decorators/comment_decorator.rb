@@ -3,9 +3,12 @@ class CommentDecorator < ApplicationDecorator
   delegate_all
 
   # Human-readable label for the record this comment was left on, used as the
-  # source chip on the aggregated person-comments feed. Shared with the composer's
-  # target picker via CommentsHelper so the two never drift.
+  # source chip on the aggregated comment feeds. Profile comments name the person
+  # so rows on the global feed say whose profile; every other record shares the
+  # composer picker's label via CommentsHelper.
   def source_label
+    return commentable.full_name if commentable.is_a?(Person)
+
     h.commentable_label(commentable)
   end
 

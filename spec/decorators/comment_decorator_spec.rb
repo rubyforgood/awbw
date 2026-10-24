@@ -2,9 +2,10 @@ require "rails_helper"
 
 RSpec.describe CommentDecorator do
   describe "#source_label" do
-    it "labels a profile comment" do
-      comment = create(:comment, commentable: create(:person))
-      expect(comment.decorate.source_label).to eq("Profile")
+    it "labels a profile comment with the person's name" do
+      person = create(:person, first_name: "Ada", last_name: "Lovelace")
+      comment = create(:comment, commentable: person)
+      expect(comment.decorate.source_label).to eq(person.full_name)
     end
 
     it "labels a user-account comment" do
