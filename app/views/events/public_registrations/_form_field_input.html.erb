@@ -50,14 +50,13 @@
         <% end %>
       </select>
     <% elsif field.field_identifier&.end_with?("_country") %>
-      <% selected_country = CountryName.label(value) %>
       <select name="<%= field_name %>"
               id="<%= field_id %>"
               class="<%= input_classes %>"
               <%= "required" if required %>>
         <option value="">Select a country</option>
-        <% country_select_options(value).each do |country| %>
-          <option value="<%= country %>" <%= "selected" if selected_country == country %>><%= country %></option>
+        <% CountryName.options.each do |country| %>
+          <option value="<%= country %>" <%= "selected" if value == country %>><%= country %></option>
         <% end %>
       </select>
     <% else %>

@@ -185,7 +185,7 @@ class AttendeesBreakdowns
   end
 
   def country_registrant_ids_by_country
-    @country_registrant_ids_by_country ||= person_ids_by(address_rows.reject { |_, _, country| country.blank? }) { |row| CountryName.label(row[2]) }
+    @country_registrant_ids_by_country ||= person_ids_by(address_rows.reject { |_, _, country| country.blank? }) { |row| row[2] }
   end
 
   def school_district_registrant_ids_by_district

@@ -870,12 +870,24 @@ class EventDashboard
   end
 
   def countries
-    @countries ||= country_registrant_ids_by_country.keys.sort
+    @countries ||= Address
+      .active
+      .where(addressable_type: "Person", addressable_id: registrant_ids)
+      .where.not(country: [ nil, "" ])
+      .distinct
+      .pluck(:country)
+      .sort
   end
 
   # Distinct registrant count per country.
   def country_counts
-    @country_counts ||= country_registrant_ids_by_country.transform_values(&:size)
+    @country_counts ||= Address
+      .active
+      .where(addressable_type: "Person", addressable_id: registrant_ids)
+      .where.not(country: [ nil, "" ])
+      .group(:country)
+      .distinct
+      .count(:addressable_id)
   end
 
   # Registrant ids that have at least one active address with a country on file.
@@ -913,7 +925,7 @@ class EventDashboard
       .where.not(country: [ nil, "" ])
       .distinct
       .pluck(:country, :addressable_id)
-      .group_by { |country, _| CountryName.label(country) }
+      .group_by(&:first)
       .transform_values { |rows| rows.map(&:last).uniq }
   end
 

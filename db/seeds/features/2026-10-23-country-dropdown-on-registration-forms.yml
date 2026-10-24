@@ -1,4 +1,4 @@
-name: "Pick your country from a list on registration forms"
+name: "Pick your country from a list on forms and addresses"
 area: registration
 display_status: user_facing
 released_on: 2026-10-23
@@ -9,4 +9,4 @@ summary: >-
   "United States."
 pro_tips:
   - "The United States sits at the top of the list; every other country follows A–Z."
-  - "Country charts on event dashboards, the attendees page, and form results now count US, USA, and United States as one country — including answers typed before the dropdown."
+  - "Admin address forms for people and organizations use the same list, so every country is saved one way."
