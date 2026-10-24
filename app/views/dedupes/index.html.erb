@@ -131,25 +131,25 @@
           <ul class="border-primary/10 divide-y divide-gray-100 rounded-2xl border bg-white px-4">
             <% @marked.each do |marked| %>
               <li class="flex items-center justify-between gap-3 py-2">
-                <div>
-                  <p class="text-gray-800">
-                    <% marked.records.each_with_index do |record, index| %>
-                      <% if index.positive? %><span class="px-1 text-gray-400">and</span><% end %>
-                      <%= @dedupe[:record_label].call(record).presence || "(no name)" %>
-                      <span class="text-sm text-gray-400">· ID <%= record.id %></span>
-                    <% end %>
-                  </p>
-                  <p class="text-xs text-gray-500">
+                <p class="text-gray-800">
+                  <% marked.records.each_with_index do |record, index| %>
+                    <% if index.positive? %><span class="px-1 text-gray-400">and</span><% end %>
+                    <%= @dedupe[:record_label].call(record).presence || "(no name)" %>
+                    <span class="text-sm text-gray-400">· ID <%= record.id %></span>
+                  <% end %>
+                </p>
+                <div class="flex shrink-0 items-center gap-3">
+                  <span class="text-right text-xs text-gray-500">
                     Marked<% if marked.pair.created_by %> by <%= marked.pair.created_by.full_name %><% end %>
                     on <%= marked.pair.created_at.strftime("%b %-d, %Y") %>
-                  </p>
+                  </span>
+                  <%= button_to "Undo",
+                                url_for(action: :dedupe_restore),
+                                method: :delete,
+                                params: { pair_id: marked.pair.id },
+                                title: "Suggest these as possible duplicates again",
+                                class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap") %>
                 </div>
-                <%= button_to "Undo",
-                              url_for(action: :dedupe_restore),
-                              method: :delete,
-                              params: { pair_id: marked.pair.id },
-                              title: "Suggest these as possible duplicates again",
-                              class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap") %>
               </li>
             <% end %>
           </ul>
