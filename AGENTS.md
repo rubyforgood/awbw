@@ -4,11 +4,11 @@ Architecture reference for AI agents. For coding rules and conventions, see `CLA
 
 ## Project Overview
 
-AWBW Portal is a Rails 8.1 application (Ruby 4.0.1) for A Window Between Worlds — a platform where workshop leaders manage workshops, resources, community news, stories, and events.
+AWBW Portal is a Rails 8.1 application (Ruby 4.0.9) for A Window Between Worlds — a platform where workshop leaders manage workshops, resources, community news, stories, and events.
 
 ## Tech Stack
 
-- **Backend:** Rails 8.1, Ruby 4.0.1, MySQL (via Trilogy adapter)
+- **Backend:** Rails 8.1, Ruby 4.0.9, MySQL (via Trilogy adapter)
 - **Frontend:** Vite, Tailwind CSS v4, Stimulus, Turbo Rails
 - **Auth:** Devise with JWT token support
 - **Authorization:** ActionPolicy (app/policies/)
