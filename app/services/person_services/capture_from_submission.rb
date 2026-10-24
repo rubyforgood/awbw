@@ -101,10 +101,8 @@ module PersonServices
       if existing
         if @overwrite
           existing.update!(
-            street_address: field_value("mailing_street"),
-            zip_code: field_value("mailing_zip"),
-            primary: true,
-            inactive: false
+            { street_address: field_value("mailing_street").presence, zip_code: field_value("mailing_zip").presence }
+              .compact.merge(primary: true, inactive: false)
           )
         else
           apply_value(existing, :street_address, field_value("mailing_street"))
@@ -119,10 +117,11 @@ module PersonServices
       @person.addresses.where(primary: true).update_all(primary: false, inactive: true) if @overwrite
 
       @person.addresses.create!(
-        street_address: field_value("mailing_street"),
+        # street/ZIP are NOT NULL with no default, so a skipped answer lands as "".
+        street_address: field_value("mailing_street").to_s,
         city: new_city,
         state: new_state,
-        zip_code: field_value("mailing_zip"),
+        zip_code: field_value("mailing_zip").to_s,
         country: new_country,
         locality: AddressLocality.for(city: new_city, state: new_state, country: new_country),
         address_type: field_value("mailing_address_type")&.downcase || "unknown",
