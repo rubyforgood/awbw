@@ -119,9 +119,11 @@ puts "Creating Stories…"
 # publicly visible, the first five are publicly featured, sectors/audiences are
 # tagged (with ≥3 public stories in each featured sector), a few spotlight a
 # facilitator (for person profiles), and most get a primary image (last two
-# exercise the fallback).
+# exercise the fallback). Each story stars its first sector and audience as primary,
+# so the audience pages' carousels have highlights. The first story (id 1 on a fresh
+# DB) carries a video plus gallery images to exercise the story page carousel.
 story_seeds = [
-  { title: "Healing Through Art: A Survivor's Journey", sectors: [ "Domestic Violence" ], audiences: [ "Adults" ] },
+  { title: "Healing Through Art: A Survivor's Journey", sectors: [ "Domestic Violence" ], audiences: [ "Adults" ], youtube: true, gallery: true },
   { title: "Finding Strength in Creativity", sectors: [ "Domestic Violence", "Self-Care/Personal Growth" ], audiences: [ "Adults", "Families" ] },
   { title: "A Workshop Moment That Changed Everything", sectors: [ "Racial/Social Justice" ], audiences: [ "Teens" ] },
   { title: "From Silence to Expression", sectors: [ "Domestic Violence" ], audiences: [ "Adults" ] },
@@ -172,17 +174,26 @@ story_seeds.each_with_index do |seed, i|
     youtube_url: seed[:youtube] ? demo_video_url : story.youtube_url
   )
 
-  seed[:sectors].each do |name|
+  seed[:sectors].each_with_index do |name, position|
     sector = Sector.find_by(name: name) or next
-    story.sectorable_items.find_or_create_by!(sector: sector)
+    story.sectorable_items.find_or_initialize_by(sector: sector).update!(is_primary: position.zero?)
   end
-  seed[:audiences].each do |name|
+  seed[:audiences].each_with_index do |name, position|
     category = Category.where("LOWER(name) = LOWER(?)", name).first or next
-    story.categorizable_items.find_or_create_by!(category: category)
+    story.categorizable_items.find_or_initialize_by(category: category).update!(is_primary: position.zero?)
   end
 
   next if i >= story_images.length # last two stay image-less on purpose
   attach_primary_image.call(story, story_images[i])
+  next unless seed[:gallery] && story.gallery_assets.none?
+
+  story_images.excluding(story_images[i]).first(2).each do |filename|
+    image_path = Rails.root.join("app/assets/images", filename)
+    next unless File.exist?(image_path)
+    asset = story.assets.build(type: "GalleryAsset")
+    asset.file.attach(io: File.open(image_path), filename: filename, content_type: "image/jpeg")
+    asset.save!
+  end
 end
 
 # Bulk stories so the Story Share portal, admin index, pagination, and the sector/
