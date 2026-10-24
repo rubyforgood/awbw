@@ -29,7 +29,7 @@ class Address < ApplicationRecord
   # the link rather than block deletion when an org address is removed.
   has_many :affiliations, foreign_key: :organization_address_id, dependent: :nullify, inverse_of: :organization_address
 
-  normalizes :country, with: ->(country) { CountryName.canonical(country) || country.strip.presence }
+  normalizes :country, with: ->(country) { CountryName.canonical(country) || country.strip.presence if country.match?(/[[:alpha:]]/) }
 
   before_validation :type_as_unknown
 
