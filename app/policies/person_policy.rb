@@ -48,6 +48,10 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def own_profile?
+    owner?
+  end
+
   def workshop_logs?
     admin? || owner?
   end
