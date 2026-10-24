@@ -85,6 +85,11 @@ Constraints already decided elsewhere:
       overwrites rather than fills — and the comment says so.
     - **Assistant** (232) isn't a primary contact, and leaves a matched row's flag alone.
     - A blank (80) or stray role reads as a Leader.
+  - **A row naming a project but no person** (29 of the blank-role rows) still records that
+    the program ran. Once every other row is read, an organization nothing else affiliates
+    anyone with gets one Facilitator affiliation for the placeholder person **AWBW
+    Placeholder** (found by name, created when missing — distinct from the existing AWBW
+    Staff), with a comment saying so.
   - **Dates:** Personnel rows carry none of their own, so the assignment starts on
     `DateEntered` and ends on the project's `CloseDate` (else `EndDate`). Only `Status`
     "Active" (1,774) stays open; Inactive (7,220), Pending, Suspended, blank, and values
@@ -139,4 +144,5 @@ the real run.
 - **Merged projects** (`MergerWithID`): folded — the merged-away project's code joins the
   survivor's org, so its personnel land there. One the portal already keeps as its own org
   is reported for a hand merge rather than merged automatically.
-- **Unmatched people:** skipped and reported.
+- **Unmatched people:** skipped and reported. A row naming no person at all gets AWBW
+  Placeholder instead, when its organization has no other affiliations (decided 2026-10-24).
