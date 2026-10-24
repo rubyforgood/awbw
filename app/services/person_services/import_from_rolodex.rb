@@ -92,6 +92,10 @@ module PersonServices
       self
     end
 
+    def self.invalid_email_heading(fm_id)
+      "FileMaker Rolodex #{fm_id} has an email this profile couldn't take:"
+    end
+
     def unmatched_tags
       @translation.unmatched
     end
@@ -293,7 +297,7 @@ module PersonServices
 
       quoted = values.map { |value| "“#{value}”" }
       Comment.create!(commentable: person,
-                      body: "FileMaker Rolodex #{rolodex.fm_id} has an email this profile couldn't take:\n#{quoted.join("\n")}")
+                      body: "#{self.class.invalid_email_heading(rolodex.fm_id)}\n#{quoted.join("\n")}")
       @invalid_emails << "#{label} → ##{person.id}: #{quoted.join('; ')}"
     end
 
