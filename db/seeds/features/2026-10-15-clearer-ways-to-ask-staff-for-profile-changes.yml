@@ -1,6 +1,6 @@
 name: "Clearer ways to ask staff for profile changes"
 area: people
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-10-15
 summary: >-
   On your profile edit page, each email and each organization you work with

@@ -1,0 +1,10 @@
+name: "Keep profile details to yourself"
+area: people
+display_status: user_facing
+released_on: 2026-10-14
+pr_number: 2672
+action_path: "/people"
+summary: >-
+  Turn off any detail in your profile's sharing settings and other people won't
+  see it. You can still find it in the "Hidden from profile" section on your
+  own profile.

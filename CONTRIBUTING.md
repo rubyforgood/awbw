@@ -227,6 +227,20 @@ Only commit the schema.rb only if you have committed anything that would change 
 
 Try to keep your PRs limited to one particular issue, and don't make changes that are out of scope for that issue. If you notice something that needs attention but is out of scope, please [create a new issue](https://github.com/rubyforgood/awbw/issues/new).
 
+### Add a features seed (optional)
+
+- **Optional** — appreciated, but maintainers can add it if you skip it.
+- Shipping a user-facing feature or improvement? Add a file to `db/seeds/features/`.
+  - One file per entry: `YYYY-MM-DD-short-slug.yml`.
+  - Fields and an example are in [the folder's README](db/seeds/features/README.md).
+- `display_status` sets who the announcement is for, not who the feature is for.
+  - Admins see every entry — it's their full changelog.
+  - `user_facing` (logged-in users) and `public_facing` (everyone) are release announcements.
+- **Every change** → one entry, `admin_facing`.
+- **Big feature** → also add a second file, `user_facing` or `public_facing`.
+  - Name the file `YYYY-MM-DD-user-slug.yml` or `YYYY-MM-DD-public-slug.yml`.
+  - A different `name`, the same `released_on`, written for users.
+
 ### In-flight pull requests
 
 If you are so inclined, you can open a draft PR as you continue to work on it. Sometimes we want to get a PR up there and going so that other people can review it or provide feedback, but maybe it's incomplete. This is OK, but if you do it, please tag your PR with `in-progress` label so that we know not to review / merge it.

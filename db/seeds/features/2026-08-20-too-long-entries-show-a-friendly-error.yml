@@ -1,0 +1,8 @@
+name: "Too-long entries show a friendly error"
+area: content
+display_status: admin_facing
+released_on: 2026-08-20
+pr_number: 2266
+summary: >-
+  Typing more than a field holds now shows a clear error next to the field and keeps
+  what you typed, instead of an error page.

@@ -381,6 +381,17 @@ what changed.
   `description` (longer HTML/text), `external_url`, `action_path` (in-app path for
   the detail page's "Check out this feature" link), and `pr_number` (adds a
   GitHub PR link).
+- **`display_status` is who the announcement is for, not who the feature is for.**
+  Admins see every entry, so the whole table is their full changelog; `user_facing`
+  (logged-in users) and `public_facing` (everyone — logged-in users see both) entries
+  are release announcements, reserved for **big features**.
+  - **Every change** → one `admin_facing` entry.
+  - **Big feature** → also add a `user_facing` / `public_facing` twin: its own file
+    named `YYYY-MM-DD-user-slug.yml` / `YYYY-MM-DD-public-slug.yml`, a different `name`,
+    the same `released_on`, written for users. Admins see both.
+- **`released_on` is the PR's merge date** (Pacific). When you touch the seeds and see an
+  entry off from its PR's merge date by more than a day or two, update it and its filename
+  prefix. Sync matches records by `name`, so re-dating never creates duplicates.
 - **Sentence case, plain language** — this page is read by facilitators, not devs.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy` gates
   this in its relation scope, not just in the UI).

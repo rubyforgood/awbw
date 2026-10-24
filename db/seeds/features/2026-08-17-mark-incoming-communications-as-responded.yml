@@ -1,0 +1,9 @@
+name: "Mark incoming communications as responded"
+area: communications
+display_status: admin_facing
+released_on: 2026-08-17
+pr_number: 2243
+summary: >-
+  When you log an incoming communication, an "Already responded" checkbox lets you
+  record that it's handled, and the communications list shows which ones still need
+  a reply.

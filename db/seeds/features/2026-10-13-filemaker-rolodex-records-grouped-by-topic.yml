@@ -1,0 +1,19 @@
+name: "FileMaker rolodex records grouped by topic"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-13
+pr_number: 2665
+action_path: "/fm_archives?table=rolodexes"
+summary: >-
+  A FileMaker rolodex record now shows its fields in labeled sections —
+  identity and email, phones and addresses, organization with job and
+  facilitator affiliations, sector and age group, and more — with the most
+  useful details first.
+description: >-
+  <ul><li>A struck-through ID points at a FileMaker record the archive doesn't
+  have — hover it to confirm.</li><li>Blank fields are left out of the cards.
+  The blue section at the bottom still lists every field, grayed out when blank,
+  plus every table that links to the person.</li></ul>
+pro_tips:
+  - "FileMaker's calculated and summary fields sit at the bottom under Other fields."
+  - "The Phones & addresses section lists every phone number and address on file for the person, with the primary ones first and tagged."

@@ -1,0 +1,8 @@
+name: "FileMaker archive shows funding and reporting records"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-12
+pr_number: 2659
+summary: >-
+  In the FileMaker archive, Rolodex records now list their Funding records, and
+  Funding records list their Reporting obligations.

@@ -1,0 +1,8 @@
+name: "Browse the workshop library"
+area: content
+display_status: user_facing
+released_on: 2025-09-13
+action_path: "/workshops"
+summary: >-
+  Find AWBW workshops to lead, and filter by sector and category to match the
+  group you work with.

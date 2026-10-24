@@ -1,6 +1,6 @@
 name: "Clearer status chips on the affiliation editor"
 area: people
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-08-30
 pr_number: 2438
 summary: >-

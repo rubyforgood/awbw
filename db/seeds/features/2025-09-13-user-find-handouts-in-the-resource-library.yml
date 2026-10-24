@@ -1,0 +1,8 @@
+name: "Find handouts and toolkits in the resource library"
+area: content
+display_status: user_facing
+released_on: 2025-09-13
+action_path: "/resources"
+summary: >-
+  Search the resource library for handouts, toolkits, and templates to use in
+  your workshops.

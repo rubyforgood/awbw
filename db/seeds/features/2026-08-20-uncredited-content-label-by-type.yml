@@ -1,0 +1,9 @@
+name: "Uncredited content reads \"AWBW Staff\" or \"AWBW Facilitator\" by type"
+area: content
+display_status: admin_facing
+released_on: 2026-08-20
+pr_number: 2268
+summary: >-
+  Content with no named author, or an anonymous one, is credited to "AWBW Staff" on
+  news, workshops, and resources, and to "AWBW Facilitator" on stories, variations,
+  and ideas.

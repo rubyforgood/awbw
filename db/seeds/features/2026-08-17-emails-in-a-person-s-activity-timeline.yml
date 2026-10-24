@@ -1,0 +1,8 @@
+name: "A person's emails show in their activity timeline"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-17
+pr_number: 2234
+summary: >-
+  A person's Activities page now mixes the emails they were sent into the same
+  timeline as their other activity, newest first, instead of a separate panel.

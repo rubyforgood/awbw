@@ -1,0 +1,9 @@
+name: "See and clear the organization filter on the people list"
+area: people
+display_status: admin_facing
+released_on: 2026-08-17
+pr_number: 2238
+action_path: "/people"
+summary: >-
+  Opening the people list from an organization now shows a removable "Filtered to"
+  chip, and the filter stays on when you search.

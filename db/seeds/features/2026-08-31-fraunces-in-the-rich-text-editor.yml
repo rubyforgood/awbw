@@ -1,0 +1,8 @@
+name: "Fraunces font in the rich text editor"
+area: content
+display_status: admin_facing
+released_on: 2026-08-31
+pr_number: 2446
+summary: >-
+  The rich text editor's font menu now includes Fraunces, the awbw.org headline
+  serif.

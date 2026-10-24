@@ -1,0 +1,10 @@
+name: "Workshop log and report templates listed as owned forms"
+area: content
+display_status: admin_facing
+released_on: 2026-08-30
+pr_number: 2431
+action_path: "/forms"
+summary: >-
+  The forms list shows workshop log and monthly report templates in their own "Owned
+  forms" section, each linking to where its answers live. New forms default to the
+  "general" role.
