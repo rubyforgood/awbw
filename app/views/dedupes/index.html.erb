@@ -117,5 +117,45 @@
       </div>
     <% end %>
 
+    <% if @marked_count.positive? %>
+      <div id="not-duplicates" class="scroll-mt-24">
+        <div class="mb-3 flex items-center justify-between gap-4">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Marked as not duplicates (<%= number_with_delimiter(@marked_count) %>)
+          </h2>
+          <%= link_to @show_marked ? "Hide" : "Show",
+                      @marked_toggle_path,
+                      class: "text-sm #{DomainTheme.text_class_for(@dedupe[:domain], intensity: 700)} hover:underline" %>
+        </div>
+        <% if @show_marked %>
+          <ul class="border-primary/10 divide-y divide-gray-100 rounded-2xl border bg-white px-4">
+            <% @marked.each do |marked| %>
+              <li class="flex items-center justify-between gap-3 py-2">
+                <div>
+                  <p class="text-gray-800">
+                    <% marked.records.each_with_index do |record, index| %>
+                      <% if index.positive? %><span class="px-1 text-gray-400">and</span><% end %>
+                      <%= @dedupe[:record_label].call(record).presence || "(no name)" %>
+                      <span class="text-sm text-gray-400">· ID <%= record.id %></span>
+                    <% end %>
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    Marked<% if marked.pair.created_by %> by <%= marked.pair.created_by.full_name %><% end %>
+                    on <%= marked.pair.created_at.strftime("%b %-d, %Y") %>
+                  </p>
+                </div>
+                <%= button_to "Undo",
+                              url_for(action: :dedupe_restore),
+                              method: :delete,
+                              params: { pair_id: marked.pair.id },
+                              title: "Suggest these as possible duplicates again",
+                              class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap") %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </div>
+    <% end %>
+
   </div>
 </div>

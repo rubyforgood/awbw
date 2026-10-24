@@ -28,6 +28,15 @@ RSpec.describe NotDuplicatePair do
     end
   end
 
+  describe ".marked" do
+    it "lists each pair with its records, skipping pairs whose record is gone" do
+      described_class.mark!([ first, second ])
+      described_class.create!(record_type: "Category", first_record_id: third.id, second_record_id: third.id + 1_000)
+
+      expect(described_class.marked(Category).map(&:records)).to eq([ [ first, second ] ])
+    end
+  end
+
   describe ".transfer!" do
     it "carries the merged-away record's pairs over to the keeper" do
       described_class.mark!([ second, third ])

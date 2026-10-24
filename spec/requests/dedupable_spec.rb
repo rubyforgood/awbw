@@ -286,6 +286,59 @@ RSpec.describe "Dedupable concern", type: :request do
         end
       end
     end
+
+    describe "marked as not duplicates" do
+      let!(:first) { create(:category, name: "Same Name", category_type: category_type) }
+      let!(:second) { create(:category, category_type: category_type).tap { |category| category.update_column(:name, "same name") } }
+      let!(:pair) { NotDuplicatePair.mark!([ first, second ]) && NotDuplicatePair.last }
+
+      context "as an admin" do
+        before { sign_in admin }
+
+        it "counts marked pairs and lists them only when shown" do
+          get dedupe_index_categories_path
+          expect(response.body).to include("Marked as not duplicates (1)")
+          expect(response.body).not_to include("Undo")
+
+          get dedupe_index_categories_path(show_marked: "1")
+          expect(response.body).to include("Undo", "ID #{first.id}", "ID #{second.id}")
+        end
+
+        it "undoes a mark so the pair is suggested again" do
+          index_url = "http://www.example.com#{dedupe_index_categories_path(show_marked: "1")}"
+
+          expect {
+            delete dedupe_restore_categories_path, params: { pair_id: pair.id }, headers: { "HTTP_REFERER" => index_url }
+          }.to change(NotDuplicatePair, :count).by(-1)
+
+          expect(response).to redirect_to("#{index_url}#not-duplicates")
+          follow_redirect!
+          expect(response.body).to include("Possible duplicate groups (1)")
+          expect(response.body).not_to include("Marked as not duplicates")
+        end
+
+        it "won't undo another model's mark" do
+          sector_pair = NotDuplicatePair.create!(record_type: "Sector", first_record_id: 1, second_record_id: 2)
+
+          delete dedupe_restore_categories_path, params: { pair_id: sector_pair.id }
+
+          expect(response).to have_http_status(:not_found)
+          expect(NotDuplicatePair.exists?(sector_pair.id)).to be(true)
+        end
+      end
+
+      context "as a regular user" do
+        before { sign_in regular_user }
+
+        it "denies undo" do
+          expect {
+            delete dedupe_restore_categories_path, params: { pair_id: pair.id }
+          }.not_to change(NotDuplicatePair, :count)
+
+          expect(response).to redirect_to(root_path)
+        end
+      end
+    end
   end
 
   # ============================================================
@@ -1239,6 +1292,14 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).not_to include("Zed Zed")
         expect(response.body).to include(registrants_event_path(event))
         expect(response.body).to include("Showing possible duplicate registrations for")
+      end
+
+      it "keeps the event scope on the marked-as-not-duplicates toggle" do
+        NotDuplicatePair.create!(record_type: "EventRegistration", first_record_id: 1, second_record_id: 2)
+
+        get dedupe_index_event_registrations_path(event_id: event.id)
+
+        expect(response.body).to include(CGI.escapeHTML(dedupe_index_event_registrations_path(event_id: event.id, show_marked: "1", anchor: "not-duplicates")))
       end
     end
 

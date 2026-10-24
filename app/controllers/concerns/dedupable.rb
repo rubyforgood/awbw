@@ -23,6 +23,11 @@ module Dedupable
     mc = config[:model_class]
 
     @possible_duplicate_groups = dedupe_candidate_groups(config)
+    @show_marked = params[:show_marked].present?
+    @marked_count = NotDuplicatePair.for_model(mc).count
+    @marked = NotDuplicatePair.marked(mc) if @show_marked
+    toggled = { event_id: params[:event_id].presence, show_marked: ("1" unless @show_marked) }.compact
+    @marked_toggle_path = url_for(action: :dedupe_index, **toggled, anchor: "not-duplicates")
     @dedupe = build_dedupe_vars(config)
 
     render "dedupes/index"
@@ -160,6 +165,13 @@ module Dedupable
     NotDuplicatePair.mark!(records)
     redirect_back_or_to url_for(action: :dedupe_index),
       notice: "Marked #{records.size} #{label} as not duplicates. They won't be suggested together again."
+  end
+
+  def dedupe_restore
+    authorize! :dedupe, to: :dedupe?
+    NotDuplicatePair.for_model(dedupe_config[:model_class]).find(params[:pair_id]).destroy!
+    back = url_from(request.referer) || url_for(action: :dedupe_index, show_marked: "1")
+    redirect_to "#{back}#not-duplicates", notice: "Unmarked. They can be suggested as duplicates again."
   end
 
   private

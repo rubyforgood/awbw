@@ -31,6 +31,7 @@ Rails.application.routes.draw do
       get :dedupe_preview
       post :dedupe_perform
       post :dedupe_dismiss
+      delete :dedupe_restore
       patch :dedupe_update_keep
     end
     member do
@@ -106,6 +107,7 @@ Rails.application.routes.draw do
       get :dedupe_preview
       post :dedupe_perform
       post :dedupe_dismiss
+      delete :dedupe_restore
       patch :dedupe_update_keep
     end
   end
@@ -155,6 +157,7 @@ Rails.application.routes.draw do
       get :dedupe_preview
       post :dedupe_perform
       post :dedupe_dismiss
+      delete :dedupe_restore
       patch :dedupe_update_keep
     end
     member do
@@ -309,6 +312,7 @@ Rails.application.routes.draw do
       get :dedupe_preview
       post :dedupe_perform
       post :dedupe_dismiss
+      delete :dedupe_restore
       patch :dedupe_update_keep
     end
     member do
@@ -361,6 +365,7 @@ Rails.application.routes.draw do
       get :dedupe_preview
       post :dedupe_perform
       post :dedupe_dismiss
+      delete :dedupe_restore
       patch :dedupe_update_keep
     end
     member do
@@ -414,6 +419,7 @@ Rails.application.routes.draw do
       get :dedupe_preview
       post :dedupe_perform
       post :dedupe_dismiss
+      delete :dedupe_restore
       patch :dedupe_update_keep
     end
   end
@@ -445,6 +451,7 @@ Rails.application.routes.draw do
       get :dedupe_preview
       post :dedupe_perform
       post :dedupe_dismiss
+      delete :dedupe_restore
       patch :dedupe_update_keep
     end
     resources :comments, only: [ :create, :update ]

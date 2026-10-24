@@ -10,5 +10,6 @@ summary: >-
   suggested together.
 pro_tips:
   - "Works on every dedupe page: people, organizations, workshops, event registrations, logins, categories, and sectors."
+  - "Marked a pair by mistake? Click Show next to \"Marked as not duplicates\" at the bottom of the page and Undo it."
   - "The Data health duplicate counts leave out groups you've marked."
   - "If a new record later matches one of them, the group can come back so you can review the newcomer."

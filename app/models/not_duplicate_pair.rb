@@ -1,6 +1,8 @@
 # Two records an admin reviewed on a dedupe page and confirmed are different, so
 # the possible-duplicates list stops pairing them. Ids are stored lowest first.
 class NotDuplicatePair < ApplicationRecord
+  Marked = Data.define(:pair, :records)
+
   belongs_to :created_by, class_name: "User", optional: true
 
   validates :record_type, :first_record_id, :second_record_id, presence: true
@@ -34,6 +36,16 @@ class NotDuplicatePair < ApplicationRecord
     find_or_create_by!(record_type: record_type, first_record_id: first_id, second_record_id: second_id)
   end
   private_class_method :pair!
+
+  def self.marked(model_class)
+    pairs = for_model(model_class).includes(:created_by).order(created_at: :desc).to_a
+    ids = pairs.flat_map { |pair| [ pair.first_record_id, pair.second_record_id ] }
+    by_id = model_class.where(id: ids).index_by(&:id)
+    pairs.filter_map do |pair|
+      records = by_id.values_at(pair.first_record_id, pair.second_record_id)
+      Marked.new(pair: pair, records: records) if records.all?
+    end
+  end
 
   def self.id_pairs_for(model_class)
     for_model(model_class).pluck(:first_record_id, :second_record_id).to_set
