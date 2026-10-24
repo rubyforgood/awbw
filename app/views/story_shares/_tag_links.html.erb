@@ -5,6 +5,6 @@
     <%= link_to sector.name, story_shares_path(sector_names_all: sector.name), class: "#{StorySharesHelper::SECTOR_TAG_CHIP} px-3 py-1" %>
   <% end %>
   <% audiences.each do |category| %>
-    <%= link_to category.display_name, story_shares_path(category_names_all: category.name), class: "#{StorySharesHelper::AUDIENCE_TAG_CHIP} px-3 py-1" %>
+    <%= link_to category.display_name, story_shares_path(category_names_all: category.name), class: "#{audience_tag_chip_class(category)} px-3 py-1" %>
   <% end %>
 </div>
