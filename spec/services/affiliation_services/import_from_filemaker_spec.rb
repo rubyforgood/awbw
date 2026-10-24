@@ -10,7 +10,7 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
   before { FmProject.create!(fm_id: "P0001", data: { "OrgID" => "ORG00001", "CloseDate" => "6/30/2019" }) }
 
   def personnel(fm_id, **data)
-    FmPersonnel.create!(fm_id:, data: { "PersonID" => "00006", "ProjectID" => "P0001", "Role" => "Facilitator",
+    FmPersonnel.create!(fm_id:, data: { "PersonID" => "00006", "ProjectID" => "P0001", "Role" => "Leader",
                                         "Status" => "Active", "DateEntered" => "3/1/2015" }.merge(data.stringify_keys))
   end
 
@@ -42,13 +42,16 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       expect(import.statuses).to eq("Dropped → ended" => 1)
     end
 
-    it "also records a more specific facilitating role as a job title" do
-      personnel("PS0001", Role: "Lead Facilitator")
+    it "reads a Liaison or Assistant as an undated job, and any other role as a Leader" do
+      personnel("PS0001", Role: "Liaison")
+      personnel("PS0002", Role: "assistant")
+      personnel("PS0003", Role: "Leaders")
 
-      import
+      import = described_class.new.call
 
-      expect(person.affiliations.order(:title).pluck(:title, :start_date, :filemaker_code))
-        .to eq([ [ "Facilitator", Date.new(2015, 3, 1), "PS0001" ], [ "Lead Facilitator", nil, "PS0001" ] ])
+      expect(person.affiliations.order(:filemaker_code).pluck(:filemaker_code, :title, :start_date))
+        .to eq([ [ "PS0001", "Liaison", nil ], [ "PS0002", "Assistant", nil ], [ "PS0003", "Facilitator", Date.new(2015, 3, 1) ] ])
+      expect(import.roles).to eq("Liaison → Liaison" => 1, "assistant → Assistant" => 1, "Leaders → Facilitator" => 1)
     end
 
     it "links the Facilitator affiliation the person already has there, filling its blank start" do
@@ -124,7 +127,8 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
   end
 
   it "changes nothing when it runs again" do
-    personnel("PS0001", Role: "Lead Facilitator")
+    personnel("PS0001")
+    personnel("PS0002", Role: "Liaison")
     FmPeopleToOrganization.create!(fm_id: "12", data: { "PersonID" => "00006", "OrgID" => "ORG00001", "Title" => "Board Chair" })
     FmAddress.create!(fm_id: "40", data: { "RolodexID" => "00006", "AddrsLine1" => "1 Main St", "AddrsCity" => "Pasadena", "AddrsState" => "CA" })
     rolodex(OrgID: "ORG00001", Title: "Counselor", WorksiteAddrsID: "40")

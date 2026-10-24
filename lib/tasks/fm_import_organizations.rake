@@ -73,7 +73,7 @@ namespace :fm do
         end
 
         tallies = {
-          "Organization types no portal type answers to (left blank)" => import.try(:unmatched_types),
+          "Organization types read as Other, kept as its description" => import.try(:unmatched_types),
           "Personnel Status values and how they were read" => import.try(:statuses),
           "Personnel roles" => import.try(:roles)
         }

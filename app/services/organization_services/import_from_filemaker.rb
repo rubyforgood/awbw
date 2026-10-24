@@ -31,12 +31,17 @@ module OrganizationServices
 
     OUTCOMES = %i[created linked already_imported skipped failed].freeze
     BATCH_SIZE = 500
-    # FileMaker's OrgType / AgencyType words, matched loosely onto Organization::ORGANIZATION_TYPES.
+    # FileMaker's OrgType / AgencyType words onto Organization::ORGANIZATION_TYPES, first
+    # match winning — so a value naming two types ("501c3/Nonprofit Government Agency"), as
+    # FileMaker's multi-select stored them, takes the first. Any other word ("School",
+    # "Grassroots") is Other, with the word kept as its description.
     ORGANIZATION_TYPE_PATTERNS = {
-      /non.?profit|501|charit/i => "501c3/nonprofit",
-      /for.?profit|business|corporat|compan/i => "For-profit",
-      /\b(gov|government|county|city|state|federal|public|municipal)\b/i => "Government agency"
+      /501|non.?profit/i => "501c3/nonprofit",
+      /for.?profit|\bLLC\b/i => "For-profit",
+      /govt|government/i => "Government agency",
+      /\Aother\z/i => Organization::ORGANIZATION_TYPE_OTHER
     }.freeze
+    TYPE_FIELDS = %i[organization_type organization_type_other].freeze
     COMMENT_SOURCES = { FmOrganization => "FileMaker organization", FmProject => "FileMaker project",
                         FmRolodex => "FileMaker Rolodex agency" }.freeze
 
@@ -121,7 +126,9 @@ module OrganizationServices
       end
 
       organization = umbrella || program || Organization.new(name: unique_name(clip(fm_organization.data["OrgName"].to_s.squish), project.fm_id))
-      attributes = organization_attributes(fm_organization.data).merge(project_attributes(project.data)) { |_key, mine, theirs| mine.presence || theirs }
+      organization_side = organization_attributes(fm_organization.data)
+      attributes = organization_side.merge(project_attributes(project.data)) { |_key, mine, theirs| mine.presence || theirs }
+      attributes.merge!(organization_side.slice(*TYPE_FIELDS)) if organization_side[:organization_type]
       save(organization, fm_organization, "#{label} + #{project.fm_id}", attributes, also: project)
     end
 
@@ -273,7 +280,7 @@ module OrganizationServices
         website_url: clip(data["Website"]),
         description: data["Description"].to_s.strip.presence,
         mission_vision_values: clip(data["Mission"]),
-        organization_type: organization_type(data["OrgType"]),
+        **organization_type(data["OrgType"]),
         **archive_timestamps(data["CreationDate"], data["ModificationDateTime"])
       }
     end
@@ -281,7 +288,7 @@ module OrganizationServices
     def project_attributes(data)
       {
         description: data["Description"].to_s.strip.presence,
-        organization_type: organization_type(data["AgencyType"]),
+        **organization_type(data["AgencyType"]),
         **archive_timestamps(data["DateEntered"], data["DateTimeModified"])
       }
     end
@@ -295,11 +302,13 @@ module OrganizationServices
 
     def organization_type(value)
       value = value.to_s.squish
-      return if value.blank?
+      return {} if value.blank?
 
-      ORGANIZATION_TYPE_PATTERNS.find { |pattern, _type| value.match?(pattern) }&.last.tap do |type|
-        @unmatched_types[value] += 1 unless type
-      end
+      type = ORGANIZATION_TYPE_PATTERNS.find { |pattern, _type| value.match?(pattern) }&.last
+      return { organization_type: type } if type
+
+      @unmatched_types[value] += 1
+      { organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: clip(value) }
     end
 
     # Staff edited both systems, so neither side is newer by rule: a blank takes the
@@ -310,6 +319,8 @@ module OrganizationServices
       timestamps.each { |attribute, value| organization[attribute] = value if organization.new_record? && value }
       fields.filter_map do |attribute, value|
         next if value.blank?
+        # The description only belongs to an Other type, which the type just settled.
+        next if attribute == :organization_type_other && organization.organization_type != Organization::ORGANIZATION_TYPE_OTHER
 
         if organization[attribute].blank?
           organization[attribute] = value
