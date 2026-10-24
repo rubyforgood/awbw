@@ -1,4 +1,5 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
+<% turbo_refreshes_with method: :morph, scroll: :preserve %>
 <div class="<%= DomainTheme.bg_class_for(:workshop_logs) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="rounded-xl bg-white p-6">
     <%= render "index" %>

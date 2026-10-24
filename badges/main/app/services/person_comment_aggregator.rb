@@ -19,7 +19,7 @@ class PersonCommentAggregator
   def comments
     scopes = commentable_ids_by_type.map { |type, ids| Comment.where(commentable_type: type, commentable_id: ids) }
     scopes.reduce { |combined, scope| combined.or(scope) }
-      .includes(:commentable, :created_by, :updated_by)
+      .includes(:commentable, created_by: :person, updated_by: :person)
       .newest_first
   end
 
