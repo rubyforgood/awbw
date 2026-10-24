@@ -56,22 +56,12 @@
       </label>
     </div>
 
-    <% if show_per_page %>
-      <div class="w-24">
-        <label for="number_of_items_per_page" class="<%= search_label_class %>">Per page</label>
-        <%= select_tag :number_of_items_per_page,
-                       options_for_select([ 10, 25, 50, 100, 250 ], params[:number_of_items_per_page].presence || 25),
-                       class: search_field_class(extra: "bg-white"),
-                       onchange: "this.form.requestSubmit()" %>
-      </div>
-    <% end %>
-
     <div class="pb-1">
       <%= render "shared/search_clear", url: clear_path %>
     </div>
   </div>
 
-  <% if show_person || show_event %>
+  <% if show_person || show_event || show_per_page %>
     <div class="flex flex-wrap items-end gap-4">
       <% if show_person %>
         <div class="min-w-[200px]">
@@ -92,6 +82,16 @@
                          include_blank: true, prompt: "Search for an event",
                          class: search_field_class(extra: "bg-white"),
                          data: { controller: "remote-select", remote_select_model_value: "event" } %>
+        </div>
+      <% end %>
+
+      <% if show_per_page %>
+        <div class="ml-auto w-24">
+          <label for="number_of_items_per_page" class="<%= search_label_class %>">Per page</label>
+          <%= select_tag :number_of_items_per_page,
+                         options_for_select([ 10, 25, 50, 100, 250 ], params[:number_of_items_per_page].presence || 25),
+                         class: search_field_class(extra: "bg-white"),
+                         onchange: "this.form.requestSubmit()" %>
         </div>
       <% end %>
     </div>
