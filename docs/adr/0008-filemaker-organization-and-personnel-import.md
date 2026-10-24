@@ -80,11 +80,17 @@ Constraints already decided elsewhere:
     - Every role becomes a **Facilitator** affiliation, with a "FileMaker import" comment
       recording the role FileMaker gave. No prod row is titled Assistant, so the old app's
       assistants likely became the 402 Facilitators who aren't primary contacts.
-    - **Leader** (8,112 of 8,907 rows) and **Liaison** (611) are `primary_contact`. Matching
-      an existing Facilitator row turns its primary contact on — the one value the import
-      overwrites rather than fills — and the comment says so.
-    - **Assistant** (232) isn't a primary contact, and leaves a matched row's flag alone.
-    - A blank (80) or stray role reads as a Leader.
+    - Only a role FileMaker names **Leader** (8,112 of 8,907 rows) or **Liaison** (611) is
+      `primary_contact`. Matching an existing Facilitator row turns its primary contact on —
+      the one value the import overwrites rather than fills — and the comment says so.
+    - **Assistant** (232), a blank role (80) or a stray word isn't a primary contact, and
+      leaves a matched row's flag alone.
+  - **One row, one stretch.** A person can facilitate at one org over several separate
+    stretches (2020–2022, 2024–Oct 2025, Feb 2026–now), so a Personnel row links an existing
+    Facilitator row only when their periods overlap. A blank start reads as "since whenever"
+    and a blank end as "still going", except an ended row with no end date, which reads as
+    the moment it started so it can't reach a later stretch. Identical dates win, then the
+    nearest start, then a row with no dates at all. No overlap creates a new row.
   - **A row naming a project but no person** (29 of the blank-role rows) still records that
     the program ran. Once every other row is read, an organization nothing else affiliates
     anyone with gets one Facilitator affiliation for the placeholder person **AWBW

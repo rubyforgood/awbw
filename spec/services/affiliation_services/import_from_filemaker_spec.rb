@@ -50,7 +50,7 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       affiliation = person.affiliations.sole
       expect(affiliation).to have_attributes(title: "Facilitator", primary_contact: true, start_date: Date.new(2015, 3, 1))
       expect(affiliation.comments.sole).to have_attributes(topic: "FileMaker import", body: a_string_including("Liaison", "PS0001"))
-      expect(import.roles).to eq("Liaison → Facilitator" => 1)
+      expect(import.roles).to eq("Liaison → Facilitator, primary contact" => 1)
       expect(affiliation.comments.sole.body).not_to include("Primary contact turned on")
     end
 
@@ -71,7 +71,7 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       affiliation = person.affiliations.sole
       expect(affiliation).to have_attributes(title: "Facilitator", primary_contact: false, start_date: Date.new(2015, 3, 1))
       expect(affiliation.comments.sole.body).to include("assistant", "PS0002")
-      expect(import.roles).to eq("assistant → Facilitator, not primary contact" => 1)
+      expect(import.roles).to eq("assistant → Facilitator" => 1)
     end
 
     it "turns on primary contact for a Leader's existing Facilitator row, and says so" do
@@ -94,14 +94,68 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       expect(existing.comments.sole.body).not_to include("Primary contact turned on")
     end
 
-    it "reads a blank or unrecognized role as a Leader" do
+    it "makes a primary contact only where FileMaker's role says Leader or Liaison" do
       personnel("PS0001", Role: "Leaders")
       personnel("PS0002", Role: "", DateEntered: "1/5/2018")
+      personnel("PS0003", Role: "Something else", DateEntered: "1/5/2017")
 
       import = described_class.new.call
 
-      expect(person.affiliations.pluck(:title).uniq).to eq([ "Facilitator" ])
-      expect(import.roles).to eq("Leaders → Facilitator" => 1, "(blank) → Facilitator" => 1)
+      expect(person.affiliations.order(:filemaker_code).pluck(:filemaker_code, :title, :primary_contact))
+        .to eq([ [ "PS0001", "Facilitator", true ], [ "PS0002", "Facilitator", false ], [ "PS0003", "Facilitator", false ] ])
+      expect(import.roles).to eq("Leaders → Facilitator, primary contact" => 1, "(blank) → Facilitator" => 1,
+                                 "Something else → Facilitator" => 1)
+    end
+
+    describe "matching an existing Facilitator row by its stretch" do
+      before { FmProject.find_by!(fm_id: "P0001").update!(data: { "OrgID" => "ORG00001" }) }
+
+      def stint(starts, ends = nil)
+        create(:affiliation, person:, organization: program, title: "Facilitator", start_date: starts, end_date: ends)
+      end
+
+      it "links the stretch the row falls in and leaves the others alone" do
+        stint(Date.new(2020, 1, 1), Date.new(2022, 12, 31))
+        middle = stint(Date.new(2024, 1, 1), Date.new(2025, 10, 31))
+        stint(Date.new(2026, 2, 1))
+        personnel("PS0001", DateEntered: "3/1/2024")
+
+        import
+
+        expect(middle.reload.filemaker_code).to eq("PS0001")
+        expect(person.affiliations.where.not(id: middle.id).pluck(:filemaker_code)).to all(be_nil)
+        expect(person.affiliations.count).to eq(3)
+      end
+
+      it "adds a new stretch when none overlaps" do
+        stint(Date.new(2020, 1, 1), Date.new(2022, 12, 31))
+        personnel("PS0001", DateEntered: "3/1/2024")
+
+        import
+
+        expect(person.affiliations.order(:start_date).pluck(:start_date, :filemaker_code))
+          .to eq([ [ Date.new(2020, 1, 1), nil ], [ Date.new(2024, 3, 1), "PS0001" ] ])
+      end
+
+      it "reads an ended row with no end date as the moment it started" do
+        stint(Date.new(2014, 1, 1), Date.new(2016, 12, 31))
+        later = stint(Date.new(2024, 1, 1))
+        personnel("PS0001", DateEntered: "3/1/2015", Status: "Inactive")
+
+        import
+
+        expect(later.reload.filemaker_code).to be_nil
+        expect(person.affiliations.find_by(start_date: Date.new(2014, 1, 1)).filemaker_code).to eq("PS0001")
+      end
+
+      it "links a row with no dates at all when nothing better fits" do
+        undated = stint(nil)
+        personnel("PS0001", DateEntered: "3/1/2024")
+
+        import
+
+        expect(undated.reload).to have_attributes(filemaker_code: "PS0001", start_date: Date.new(2024, 3, 1))
+      end
     end
 
     it "links the Facilitator affiliation the person already has there, filling its blank start" do
