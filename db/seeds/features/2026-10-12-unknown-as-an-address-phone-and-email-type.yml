@@ -1,6 +1,6 @@
 name: "Unknown as an address, phone, and email type"
 area: people
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-10-12
 pr_number: 2630
 summary: >-

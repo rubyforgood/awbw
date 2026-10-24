@@ -1,6 +1,6 @@
 name: "Story Share search now also finds stories by topic and audience"
 area: stories
-display_status: public_facing
+display_status: admin_facing
 released_on: 2026-10-22
 pr_number: 2786
 action_path: /story_share?query=teens

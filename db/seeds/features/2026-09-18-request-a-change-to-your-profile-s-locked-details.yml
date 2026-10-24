@@ -1,6 +1,6 @@
 name: "Request a change to your profile's locked details"
 area: people
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-09-18
 summary: >-
   On your own profile, the details only AWBW staff can edit — your primary

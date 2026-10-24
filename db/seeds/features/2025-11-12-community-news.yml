@@ -1,6 +1,6 @@
 name: "Community news"
 area: stories
-display_status: public_facing
+display_status: admin_facing
 released_on: 2025-11-12
 action_path: "/community_news"
 summary: >-

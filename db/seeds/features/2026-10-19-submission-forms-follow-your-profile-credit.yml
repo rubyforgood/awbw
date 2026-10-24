@@ -1,6 +1,6 @@
 name: "Story and variation forms follow your profile's credit setting"
 area: people
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-10-19
 pr_number: 2759
 action_path: "/story_share/new"

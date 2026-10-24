@@ -22,8 +22,12 @@ When you ship a user-facing feature **or** improvement, add a new file:
 One file per feature keeps parallel PRs from conflicting.
 
 `display_status` is who the **announcement** is for, not who the feature is for.
-Default to `admin_facing`. To also share it with site users, add a second file
-with its own `name`, marked `user_facing` and written for them.
+Default to `admin_facing`. Most changes need only that.
+
+To also tell site users, add a second file:
+
+- A different `name`, the same `released_on`, written for that audience.
+- `user_facing` for logged-in users; `public_facing` for everyone (logged-in users see both).
 
 ```yaml
 name: "Filter registrants by registration date"

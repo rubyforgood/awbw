@@ -1,6 +1,6 @@
 name: "Emails greet you by first name"
 area: communications
-display_status: user_facing
+display_status: admin_facing
 summary: >-
   Portal emails now open with just your first name ("Hello Jane,") instead of
   your full name, so confirmations, reminders, and other messages read a little

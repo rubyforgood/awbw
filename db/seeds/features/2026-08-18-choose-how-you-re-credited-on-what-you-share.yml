@@ -1,6 +1,6 @@
 name: "Choose how you're credited on what you share"
 area: people
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-08-18
 pr_number: 2093
 summary: >-

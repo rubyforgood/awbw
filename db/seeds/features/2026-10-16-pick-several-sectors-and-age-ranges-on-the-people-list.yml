@@ -1,6 +1,6 @@
 name: "Pick several sectors and age ranges on the people list"
 area: people
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-10-16
 action_path: "/people"
 pr_number: 2704

@@ -8,6 +8,11 @@ Closes [link an issue or remove this line]
 ### How did you approach the change?
 <!-- What did you do and why? -->
 
+### Features seed
+<!-- User-facing feature or improvement? Add db/seeds/features/YYYY-MM-DD-slug.yml (see its README). -->
+<!-- Default display_status: admin_facing. To tell site users too, add a 2nd entry (new name) marked user_facing or public_facing. -->
+- [ ] Added a features seed, or not needed
+
 ### UI Testing Checklist
 <!-- This will be automatically generated based on your changes. -->
 <!-- Complete the auto-generated checklist below before marking as ready for review. -->

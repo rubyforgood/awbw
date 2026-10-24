@@ -1,6 +1,6 @@
 name: "Public Story Share portal"
 area: stories
-display_status: public_facing
+display_status: admin_facing
 released_on: 2026-08-09
 action_path: "/story_share"
 pr_number: 2148
