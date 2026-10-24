@@ -217,7 +217,7 @@ RSpec.describe "PublicForms", type: :request do
         .to change(FormSubmission, :count).by(1)
         .and change(Person, :count).by(0)
 
-      expect(FormSubmission.last.person).to eq(person)
+      expect(FormSubmission.last).to have_attributes(person: person, created_by: user)
     end
 
     it "prefills the identity questions it still shows from their account" do
@@ -234,9 +234,10 @@ RSpec.describe "PublicForms", type: :request do
       expect(FormSubmission.last.person).to eq(person)
     end
 
-    context "on a form that accepts anonymous responses" do
+    context "on an anonymous form" do
       before do
-        [ first_name_field, last_name_field, email_field ].each { |field| field.update!(required: false, visibility: :logged_out_only) }
+        form.update!(anonymous: true)
+        [ first_name_field, last_name_field, email_field ].each { |field| field.update!(visibility: :logged_out_only) }
       end
 
       it "shows the identity questions prefilled and explains clearing them keeps it anonymous" do
