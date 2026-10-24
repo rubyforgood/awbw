@@ -33,7 +33,7 @@ class Form < ApplicationRecord
     [ "Post-training recipients survey", "recipient_survey" ]
   ].freeze
 
-  # Each survey role marks the one form the built-in callouts deliver for it.
+  # Survey roles label the forms the built-in callouts deliver (see .survey).
   SURVEY_ROLES = ROLE_OPTIONS.map(&:last).select { |role| role.include?("survey") }.freeze
   SURVEY_HEADERS = { "recipient_survey" => "Scholarship survey" }.freeze
 
@@ -64,15 +64,15 @@ class Form < ApplicationRecord
   before_validation :normalize_slug
 
   validates :name, length: { maximum: NAME_MAX_LENGTH }
-  validates :role, uniqueness: { message: "is already used by another form" }, if: :survey_role?
   validates :slug, uniqueness: true, allow_nil: true
   validates :slug, format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/,
     message: "may only contain lowercase letters, numbers, and hyphens" }, allow_blank: true
   validate :published_form_has_slug
   validate :event_form_not_published
 
+  # The oldest form keeps the default, so a fresh copy never changes what new events deliver.
   def self.survey(role)
-    standalone.find_by(role:)
+    standalone.where(role:).order(:id).first
   end
 
   def self.survey_header(role)

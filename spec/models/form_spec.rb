@@ -40,12 +40,9 @@ RSpec.describe Form do
   end
 
   describe "survey roles" do
-    it "allows only one form per survey role" do
+    it "allows many forms per survey role" do
       create(:form, role: "day_1_survey")
-      duplicate = build(:form, role: "day_1_survey")
-
-      expect(duplicate).not_to be_valid
-      expect(duplicate.errors[:role]).to include("is already used by another form")
+      expect(build(:form, role: "day_1_survey")).to be_valid
     end
 
     it "allows many general forms" do
@@ -55,6 +52,26 @@ RSpec.describe Form do
 
     it "treats every role option naming a survey as a survey role, in dropdown order" do
       expect(Form::SURVEY_ROLES).to eq(%w[day_1_survey day_2_survey post_event_survey recipient_survey])
+    end
+  end
+
+  describe ".survey" do
+    it "returns the oldest standalone form with the role" do
+      oldest = create(:form, role: "day_1_survey")
+      create(:form, role: "day_1_survey")
+
+      expect(Form.survey("day_1_survey")).to eq(oldest)
+    end
+
+    it "skips event-owned forms" do
+      create(:form, role: "day_1_survey", owner: create(:event))
+      standalone = create(:form, role: "day_1_survey")
+
+      expect(Form.survey("day_1_survey")).to eq(standalone)
+    end
+
+    it "returns nil when no form has the role" do
+      expect(Form.survey("day_2_survey")).to be_nil
     end
   end
 
