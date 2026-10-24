@@ -1,7 +1,7 @@
 name: "File upload questions accept documents, up to 25 MB"
 area: registration
 display_status: admin_facing
-released_on: 2026-08-17
+released_on: 2026-08-16
 pr_number: 2217
 summary: >-
   File upload questions on registration forms now accept PDFs, Word documents, and
