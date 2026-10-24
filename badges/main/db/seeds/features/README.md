@@ -17,9 +17,20 @@ leaves its record in place; renaming a feature's `name` here creates a new recor
 
 ## Adding a feature
 
+Optional for contributors: maintainers can add it if you skip it.
+
 When you ship a user-facing feature **or** improvement, add a new file:
 `YYYY-MM-DD-short-slug.yml`, named with the ship date and a slug of the name.
 One file per feature keeps parallel PRs from conflicting.
+
+`display_status` is who the **announcement** is for, not who the feature is for.
+
+- Admins see every entry — it's their full changelog.
+- `user_facing` (logged-in users) and `public_facing` (everyone) are release announcements.
+- **Every change** → one entry, `admin_facing`.
+- **Big feature** → also add a second file, `user_facing` or `public_facing`, with a
+  different `name` and the same `released_on`, written for users.
+  - Put the audience after the date: `YYYY-MM-DD-user-slug.yml` or `YYYY-MM-DD-public-slug.yml`.
 
 ```yaml
 name: "Filter registrants by registration date"
@@ -38,7 +49,7 @@ pro_tips:
 |---|---|
 | `name` | Short, sentence-case, unique. The sync matches records by it. |
 | `area` | One of `Feature::AREA_KEYS` (events, registration, scholarships, payments, people, content, stories, communications, reporting). |
-| `display_status` | `public_facing`, `user_facing`, or `admin_facing` (super-admins only). |
+| `display_status` | Announcement audience: `admin_facing` (default; super-admins only), `user_facing`, or `public_facing`. |
 | `summary` | One or two plain-language sentences. |
 | `released_on` | Ship date (`YYYY-MM-DD`). |
 | `action_path` | Optional in-app path for "Check out this feature". Use `/registration/sample` for ticket/callout features. |

@@ -1,6 +1,6 @@
 name: "See a story's sector and audience tags in the stories list"
 area: stories
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-10-23
 action_path: "/stories"
 pr_number: 2799

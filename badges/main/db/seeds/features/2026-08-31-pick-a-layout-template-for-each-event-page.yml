@@ -1,6 +1,6 @@
 name: "Pick a layout template for each event page"
 area: events
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-08-31
 summary: >-
   Each event can now choose a display template for its public page — from the

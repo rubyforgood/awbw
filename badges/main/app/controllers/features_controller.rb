@@ -27,7 +27,7 @@ class FeaturesController < ApplicationController
   end
 
   def new
-    @feature = Feature.new(display_status: "user_facing", released_on: Date.current)
+    @feature = Feature.new(display_status: Feature::ADMIN_ONLY_STATUS, released_on: Date.current)
     authorize! @feature
   end
 

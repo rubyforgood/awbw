@@ -8,6 +8,11 @@ Closes [link an issue or remove this line]
 ### How did you approach the change?
 <!-- What did you do and why? -->
 
+### Features seed (optional)
+<!-- Optional: maintainers can add it if you skip it. User-facing feature or improvement? Add db/seeds/features/YYYY-MM-DD-slug.yml (see its README). -->
+<!-- Every change: an admin_facing entry. Big feature: also a 2nd entry (new name) marked user_facing or public_facing, written for users. -->
+- [ ] Added a features seed (optional)
+
 ### UI Testing Checklist
 <!-- This will be automatically generated based on your changes. -->
 <!-- Complete the auto-generated checklist below before marking as ready for review. -->

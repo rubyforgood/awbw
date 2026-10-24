@@ -1,6 +1,6 @@
 name: "Ask to change your work address"
 area: people
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-10-17
 summary: >-
   Each role on your profile now shows its work address right under the title.

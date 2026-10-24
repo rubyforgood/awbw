@@ -1,0 +1,13 @@
+name: "Story videos play in the Story Share carousels"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-24
+action_path: "/story_share"
+pr_number: 2789
+summary: >-
+  A story with a YouTube link now plays its video, muted and looping, in place of
+  its photo in the Story Share home and browse carousels. On the story itself, the
+  video leads the carousel at the top, followed by the story's images.
+pro_tips:
+  - "Clicking a carousel video opens the full story, where it plays with sound."
+  - "Paste a regular video link (youtube.com/watch?v=… or youtu.be/…); a channel link shows the photo instead."

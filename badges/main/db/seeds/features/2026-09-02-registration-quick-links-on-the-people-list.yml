@@ -1,0 +1,9 @@
+name: "Registration quick links on the people list"
+area: people
+display_status: admin_facing
+released_on: 2026-09-02
+pr_number: 2491
+action_path: "/people"
+summary: >-
+  The people list's Actions column has buttons for each person's current and
+  upcoming registrations, plus their latest facilitator training.

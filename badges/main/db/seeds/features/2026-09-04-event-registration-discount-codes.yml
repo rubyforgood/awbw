@@ -1,0 +1,9 @@
+name: "Discount codes for event registration"
+area: registration
+display_status: admin_facing
+released_on: 2026-09-04
+pr_number: 2528
+summary: >-
+  Give an event a discount code and amount, then share the registration link the
+  event form shows. People who register through it get the discount applied to their
+  balance.

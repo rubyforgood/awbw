@@ -1,0 +1,54 @@
+name: "Ideal image sizes for Story Share"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-14
+pr_number: 2654
+action_path: "/story_share"
+summary: >-
+  A guide to the shape each Story Share spot uses, and the image size that
+  looks best everywhere: a landscape 3:2 photo, ideally 2400 × 1600 pixels.
+pro_tips:
+  - "Upload 3:2 landscape photos, ideally 2400 × 1600 pixels and at least 1800 × 1200. Anything bigger is fine."
+  - "Keep the main subject near the center. Banners trim the top and bottom, and the tall tiles trim the sides."
+description: |
+  <p>Every spot uses a story's primary image, except the story page carousel,
+  which shows the primary image followed by the gallery images. A story with no
+  primary image uses its first gallery image.</p>
+  <table>
+    <thead>
+      <tr><th>Spot</th><th>Shape</th><th>What shows from a 3:2 photo</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Home page featured carousel</td>
+        <td>2:1 (4:3 on phones)</td>
+        <td>A band through the middle: a little of the top and bottom is trimmed</td>
+      </tr>
+      <tr>
+        <td>Browse carousel and a topic's lead image</td>
+        <td>2:1 (4:3 on phones)</td>
+        <td>A band through the middle: a little of the top and bottom is trimmed</td>
+      </tr>
+      <tr>
+        <td>Story cards (browse grid and list), home page topic cards, related stories</td>
+        <td>3:2</td>
+        <td>The whole photo</td>
+      </tr>
+      <tr>
+        <td>Story page image carousel</td>
+        <td>3:2</td>
+        <td>The whole photo</td>
+      </tr>
+      <tr>
+        <td>"What others are reading" tiles</td>
+        <td>3:4 (tall)</td>
+        <td>The middle half: the sides are trimmed, so tall artwork fits best here</td>
+      </tr>
+      <tr>
+        <td>Home page header background</td>
+        <td>Fills the header</td>
+        <td>The first carousel story's image, behind a dark wash: any landscape photo works</td>
+      </tr>
+    </tbody>
+  </table>
+  <ul><li>Tall photos and artwork show in full on a blurred background in every spot except the home page header.</li></ul>
