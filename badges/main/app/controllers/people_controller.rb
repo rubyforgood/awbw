@@ -436,9 +436,7 @@ class PeopleController < ApplicationController
           primary_signatures: @keeper_primary_contact_signatures).call
         sync_primary_login_email(keep)
       },
-      record_extras: ->(person) {
-        [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
-      }
+      record_partial: "people/dedupe_record"
     }
   end
 
@@ -721,6 +719,8 @@ class PeopleController < ApplicationController
   def person_update_return_path
     if params[:return_to] == "data_health"
       helpers.data_health_return_path(params[:check])
+    elsif params[:return_to] == "dedupe"
+      dedupe_index_people_path(anchor: "dedupe-record-#{@person.id}")
     elsif params[:return_to] == "registration_link" && params[:event_registration_id].present?
       link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence)
     else
