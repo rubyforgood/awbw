@@ -401,6 +401,13 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 **Visibility** — toggle the `hidden` class via `classList.toggle("hidden", condition)` instead of setting `style.display`. Use `class="hidden"` in HTML for initial hidden state, not `style="display:none"`.
 
+## Database (MySQL via Trilogy)
+
+- **The database is MySQL 8, connected through the Trilogy adapter** — not Postgres. Write raw SQL (`Arel.sql`, `where("…")`, Blazer queries, console snippets) in **MySQL dialect**: backtick-quote identifiers if needed, `CHAR_LENGTH`/`IFNULL`/`GROUP_CONCAT`/`REGEXP`, no `ILIKE`, no `::type` casts, no `RETURNING`, no `DISTINCT ON`.
+- **Don't use MySQL reserved words as aliases** (e.g. `AS rows`, `AS rank`) — use `total`, `row_count`, etc.
+- **SQL for the user to run on prod goes into Blazer (`/blazer`), which runs one statement per query.** Trilogy rejects multi-statement strings (`1064 … near 'SELECT …'`), so give each query in its **own code block, one statement, no trailing semicolon**, and keep it read-only (`SELECT` only). Data changes go in a Ruby console script with a `DRY_RUN` switch, not SQL.
+- Errors surface as `Trilogy::ProtocolError` / `Trilogy::QueryError` wrapped in `ActiveRecord::StatementInvalid`; MySQL error numbers (e.g. `1048` not-null, `1062` duplicate, `3730` FK drop) identify the cause.
+
 ## Migrations
 
 - Name migration files using the **actual current UTC timestamp down to the second** — generate it (`date -u +%Y%m%d%H%M%S`), don't hand-write the number. The minutes and seconds (`…HHMMSS`) must be real, not zero-padded.
