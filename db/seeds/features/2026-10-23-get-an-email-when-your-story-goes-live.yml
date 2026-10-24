@@ -1,8 +1,0 @@
-name: "Get an email when your story goes live"
-area: stories
-display_status: user_facing
-released_on: 2026-10-23
-pr_number: 2780
-summary: >-
-  When a story you wrote or co-wrote is published, you get an email with a link
-  to it on Story Share, ready to share with friends and colleagues.

@@ -10,7 +10,7 @@ Closes [link an issue or remove this line]
 
 ### Features seed
 <!-- User-facing feature or improvement? Add db/seeds/features/YYYY-MM-DD-slug.yml (see its README). -->
-<!-- Default display_status: admin_facing. To tell site users too, add a 2nd entry (new name) marked user_facing or public_facing. -->
+<!-- Use display_status: admin_facing (full changelog). Big feature only: add a 2nd entry (new name) marked user_facing or public_facing. -->
 - [ ] Added a features seed, or not needed
 
 ### UI Testing Checklist

@@ -1,8 +1,0 @@
-name: "Add events to your calendar"
-area: events
-display_status: public_facing
-released_on: 2025-11-19
-action_path: "/events"
-summary: >-
-  Each event page has add-to-calendar links, plus the location or Zoom details
-  you'll need.

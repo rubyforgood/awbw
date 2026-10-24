@@ -1,7 +1,0 @@
-name: "Forms skip what we already know about you"
-area: content
-display_status: user_facing
-released_on: 2026-10-18
-summary: >-
-  When you're logged in, forms skip questions your profile already answers and
-  save your response to your account, so you type less.

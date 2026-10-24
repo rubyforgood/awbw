@@ -370,11 +370,12 @@ what changed.
   `description`, `external_url`, `action_path` (in-app "Check out this feature"
   link), and `pr_number` (GitHub PR link).
 - **`display_status` is who the announcement is for, not who the feature is for.**
-  Default every new entry to `admin_facing` — even when the feature itself serves
-  facilitators or the public. Only when we want to share it with site users, add a
-  **second** entry (its own file, a different `name`, the same `released_on`) written
-  for them — `user_facing` for logged-in users, `public_facing` for everyone (logged-in
-  users see both). Most changes need only the admin entry.
+  `admin_facing` entries are the full changelog — every change gets one, even when the
+  feature serves facilitators or the public. `user_facing` / `public_facing` entries
+  are release announcements: add a **second** entry (its own file, a different `name`,
+  the same `released_on`) written for site users **only for a big feature** —
+  `user_facing` for logged-in users, `public_facing` for everyone (logged-in users see
+  both). Small tweaks, fixes, and restyles get the admin entry only.
 - **Sentence case, plain language** — read by facilitators, not devs.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy`).
 
