@@ -10,6 +10,15 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     ProfileChangeRequest::AFFILIATION_CHANGE_ADD => { label: "Add an organization", icon: "fa-solid fa-plus" }
   }.freeze
   CLOSE_PROGRAM_CHOICE = { label: "Close my AWBW program here", icon: "fa-solid fa-door-closed" }.freeze
+  PENDING_AFFILIATION_LABELS = {
+    ProfileChangeRequest::AFFILIATION_CHANGE_TITLE => "New title or role",
+    ProfileChangeRequest::AFFILIATION_CHANGE_DATES => "New start or end date",
+    ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION => "Fix organization name",
+    ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE => "Leave organization",
+    ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS => "New work address",
+    ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS => "Add work address",
+    ProfileChangeRequest::AFFILIATION_CHANGE_ADD => "Add organization"
+  }.freeze
 
   # Leaving a Facilitator role closes the program there, so it reads that way.
   def self.affiliation_change_choices(affiliation)
@@ -55,6 +64,25 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
       [ field_label, requested_value.presence || details&.truncate(60) ]
     end
     parts.compact_blank.join(": ")
+  end
+
+  # The requester's own pending request in plain words, e.g.
+  # "Leave organization: Riverside Center" or "New primary email: new@example.com".
+  def pending_summary
+    label, value = if field == "affiliation"
+      [ pending_affiliation_label, (affiliation&.organization || organization)&.name || proposed_organization_name ]
+    elsif email?
+      [ "New #{field_label.downcase}", PersonDecorator.email_with_type(requested_value, proposed_email_type) ]
+    else
+      [ field_label, requested_value.presence || details&.truncate(60) ]
+    end
+    [ label, value ].compact_blank.join(": ")
+  end
+
+  def pending_affiliation_label
+    return "Close AWBW program" if closing_program?
+
+    PENDING_AFFILIATION_LABELS.fetch(requested_value, "Organization change")
   end
 
   def current_display
