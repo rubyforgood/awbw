@@ -45,11 +45,20 @@ RSpec.describe "Comments index", type: :request do
       expect(response.body).to include("comments_results", "Affiliation note")
     end
 
-    it "shows the per-page dropdown in the search boxes" do
+    it "shows the per-page dropdown, submitted by the filter form's collection controller" do
       sign_in admin
       get comments_path
 
-      expect(response.body).to include("number_of_items_per_page")
+      select_tag = response.body[/<select[^>]*id="number_of_items_per_page"[^>]*>/]
+      expect(select_tag).to be_present
+      expect(select_tag).not_to include("onchange")
+    end
+
+    it "keeps a per-page size from the URL selected even when it isn't a preset" do
+      sign_in admin
+      get comments_path(number_of_items_per_page: 12)
+
+      expect(response.body).to match(/<option selected="selected" value="12">12<\/option>/)
     end
 
     it "pages the results frame by the chosen number of items per page" do

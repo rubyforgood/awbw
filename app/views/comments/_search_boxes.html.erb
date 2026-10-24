@@ -86,13 +86,7 @@
       <% end %>
 
       <% if show_per_page %>
-        <div class="ml-auto w-24">
-          <label for="number_of_items_per_page" class="<%= search_label_class %>">Per page</label>
-          <%= select_tag :number_of_items_per_page,
-                         options_for_select([ 10, 25, 50, 100, 250 ], params[:number_of_items_per_page].presence || 25),
-                         class: search_field_class(extra: "bg-white"),
-                         onchange: "this.form.requestSubmit()" %>
-        </div>
+        <%= render "shared/per_page_select", wrapper_class: "ml-auto w-24" %>
       <% end %>
     </div>
   <% end %>

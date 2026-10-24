@@ -325,6 +325,13 @@ follow this). Match the existing pattern:
   in-card forms answering with turbo streams — omit it. When a results frame's
   cards contain several such links, prefer `turbo_frame_tag :x_results,
   target: "_top"` so no link can be forgotten.
+- **Per-page dropdown: render `shared/_per_page_select` inside the filter form.**
+  The form's `collection` controller submits it on change — no `onchange` or
+  `<script>`. The param is always `number_of_items_per_page` (read it as
+  `params[:number_of_items_per_page].presence || <default>`, no clamping, so any
+  size works from the URL); presets live in `PaginationHelper::PER_PAGE_OPTIONS`.
+  Pass the controller's fallback as `default:` so Clear filters resets to it, and
+  carry the param through the results view's `pagination_params`.
 
 ## Features & tips page (`/features`)
 

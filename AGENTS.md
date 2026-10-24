@@ -576,7 +576,7 @@ RuboCop linting on PRs and pushes to main.
 | Search | SearchCop (multi-field, rich text joins) |
 | Decorators | Draper (with ActionPolicy integration via initializer) |
 | Forms | SimpleForm + Cocoon (nested forms) |
-| Pagination | WillPaginate with TailwindPaginationRenderer |
+| Pagination | WillPaginate with TailwindPaginationRenderer; per-page dropdown via `shared/_per_page_select` (`number_of_items_per_page`) |
 | Rich text | ActionText + Rhino editor (TipTap-based) |
 | File uploads | ActiveStorage (DigitalOcean Spaces) + legacy Paperclip |
 | Feature flags | FeatureFlipper |
