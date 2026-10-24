@@ -26,6 +26,20 @@ RSpec.describe RegistrationTicketCalloutDecorator, type: :decorator do
     end
   end
 
+  describe "#sent_form_names" do
+    it "names the linked forms in display order" do
+      callout = create(:registration_ticket_callout)
+      callout.registration_ticket_callout_forms.create!(form: create(:form, name: "Day 1 Survey"))
+      callout.registration_ticket_callout_forms.create!(form: create(:form, name: "Post-Event Survey"))
+
+      expect(callout.reload.decorate.sent_form_names).to eq([ "Day 1 Survey", "Post-Event Survey" ])
+    end
+
+    it "is empty for a callout with no forms" do
+      expect(create(:registration_ticket_callout).decorate.sent_form_names).to eq([])
+    end
+  end
+
   describe "#config_suppression_hint" do
     def builtin_callout(builtin_key, event:, hidden: true)
       create(:registration_ticket_callout, event:, builtin_key:, hidden:,

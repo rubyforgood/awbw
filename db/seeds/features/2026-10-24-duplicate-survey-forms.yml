@@ -12,3 +12,4 @@ pro_tips:
   - "New events still send the original survey; a copy only goes out when you pick it on an event's Feedback surveys card."
   - "The forms list and form editor mark each survey's default with a \"Default for new events\" label; a copy's editor links to the default."
   - "To make a copy the default for new events, change the original form's role to General."
+  - "Each callout card in the event editor lists the forms it sends, so you can check the surveys without opening the card."
