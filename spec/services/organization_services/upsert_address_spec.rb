@@ -10,7 +10,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       city: "Austin",
       state: "TX",
       zip_code: "78701",
-      country: "United States"
+      country: "USA"
     )
 
     expect(result).to have_attributes(created: true)
@@ -20,7 +20,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       city: "Austin",
       state: "TX",
       zip_code: "78701",
-      country: "United States",
+      country: "USA",
       address_type: "work",
       primary: true
     )
@@ -150,8 +150,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
   end
 
   it "fills only blank fields on the matching address when overwrite is false" do
-    existing = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "", primary: true)
-    existing.update_columns(country: nil)
+    existing = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "", country: "", primary: true)
 
     result = described_class.call(
       organization: organization,
@@ -207,14 +206,14 @@ RSpec.describe OrganizationServices::UpsertAddress do
       street_address: "1 Main St",
       city: "Austin",
       state: "TX",
-      country: "United States",
+      country: "USA",
       overwrite: false
     )
 
     expect(result).to have_attributes(address: existing, created: false)
     expect(organization.addresses.count).to eq(1)
     # State already on file is kept (never flipped); the blank country is filled.
-    expect(existing.reload).to have_attributes(state: "Texas", country: "United States", street_address: "1 Main St")
+    expect(existing.reload).to have_attributes(state: "Texas", country: "USA", street_address: "1 Main St")
   end
 
   it "updates the same street/ZIP address instead of duplicating when the city is respelled, keeping the saved city" do
@@ -226,13 +225,13 @@ RSpec.describe OrganizationServices::UpsertAddress do
       city: "St. Louis",
       state: "MO",
       zip_code: "63101",
-      country: "United States",
+      country: "USA",
       overwrite: false
     )
 
     expect(result).to have_attributes(address: existing, created: false)
     expect(organization.addresses.count).to eq(1)
-    expect(existing.reload).to have_attributes(city: "Saint Louis", country: "United States")
+    expect(existing.reload).to have_attributes(city: "Saint Louis", country: "USA")
   end
 
   it "fills a blank city on the matched address rather than leaving it empty" do

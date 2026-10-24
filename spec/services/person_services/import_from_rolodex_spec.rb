@@ -383,23 +383,6 @@ RSpec.describe PersonServices::ImportFromRolodex do
       .to eq([ "LA County", "Outside CA", "Outside USA" ])
   end
 
-  it "stores each address's country under one spelling, reading it from the state when the archive has none" do
-    FmAddress.create!(fm_id: "A15", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "Austin", "AddrsState" => "TX", "AddrsCountry" => "USA" })
-    FmAddress.create!(fm_id: "A16", data: { "AddrsLine1" => "2 Main St", "AddrsCity" => "Fresno", "AddrsState" => "CA - California" })
-    FmAddress.create!(fm_id: "A17", data: { "AddrsLine1" => "3 Queen St", "AddrsCity" => "Victoria", "AddrsState" => "BC" })
-    FmAddress.create!(fm_id: "A18", data: { "AddrsLine1" => "4 Reforma", "AddrsCity" => "Mexico City", "AddrsState" => "CDMX", "AddrsCountry" => "Mexcio" })
-    rolodex("00050", EMail: "ada@example.com", PrimaryAddrsID: "A15")
-    rolodex("00051", FirstName: "Grace", EMail: "grace@example.com", PrimaryAddrsID: "A16")
-    rolodex("00052", FirstName: "Hedy", EMail: "hedy@example.com", PrimaryAddrsID: "A17")
-    rolodex("00053", FirstName: "Mary", EMail: "mary@example.com", PrimaryAddrsID: "A18")
-
-    results
-
-    expect(%w[00050 00051 00052 00053].map { |code| Person.find_by!(filemaker_code: code).addresses.sole.country })
-      .to eq([ "United States", "United States", "Canada", "Mexico" ])
-    expect(FmAddress.find_by!(fm_id: "A15").data["AddrsCountry"]).to eq("USA")
-  end
-
   it "prefixes the street number when the first line doesn't already carry it" do
     FmAddress.create!(fm_id: "A2", data: { "StreetNo" => "1234", "AddrsLine1" => "Main St",
                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })

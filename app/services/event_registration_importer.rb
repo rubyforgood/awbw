@@ -526,8 +526,6 @@ class EventRegistrationImporter
     answers["additional_sectors"] = sector_ids(values[:additional_sectors], preview, scope: Sector.published).map(&:to_s).presence
     answers["primary_age_group"] = age_group_ids(values[:primary_age_group], preview).first&.to_s
     answers["additional_age_groups"] = age_group_ids(values[:additional_age_groups], preview).map(&:to_s).presence
-    answers["mailing_country"] = CountryName.resolve(values[:mailing_country], state: values[:mailing_state]) if values[:mailing_country]
-    answers["organization_country"] = CountryName.resolve(values[:organization_country], state: values[:organization_state]) if values[:organization_country]
     answers.compact
   end
 

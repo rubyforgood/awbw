@@ -50,13 +50,13 @@
         <% end %>
       </select>
     <% elsif field.field_identifier&.end_with?("_country") %>
-      <% selected_country = CountryName.selected(value) %>
+      <% selected_country = value.to_s.strip %>
       <select name="<%= field_name %>"
               id="<%= field_id %>"
               class="<%= input_classes %>"
               <%= "required" if required %>>
         <option value="">Select a country</option>
-        <% CountryName.options_for(value).each do |country| %>
+        <% GeographyHelper::COUNTRIES.each do |country| %>
           <option value="<%= country %>" <%= "selected" if country == selected_country %>><%= country %></option>
         <% end %>
       </select>

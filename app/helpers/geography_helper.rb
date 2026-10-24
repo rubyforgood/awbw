@@ -65,4 +65,22 @@ module GeographyHelper
 
     us_states + [ [ current, current ] ]
   end
+
+  # The countries gem's formal names that read poorly in a dropdown, keyed by ISO
+  # code. Everything else keeps the gem's common name; the few that still differ
+  # from the world-atlas names are aliased in world_map_chart_controller.js.
+  PLAIN_COUNTRY_NAMES = {
+    "RU" => "Russia", "SY" => "Syria", "LA" => "Laos", "BN" => "Brunei", "VA" => "Vatican City",
+    "FM" => "Micronesia", "PS" => "Palestine", "CD" => "Democratic Republic of the Congo",
+    "CG" => "Republic of the Congo", "VG" => "British Virgin Islands", "VI" => "U.S. Virgin Islands",
+    "BQ" => "Caribbean Netherlands", "CC" => "Cocos Islands", "FK" => "Falkland Islands",
+    "MF" => "Saint Martin", "SX" => "Sint Maarten", "SH" => "Saint Helena"
+  }.freeze
+
+  # Country dropdown options: the United States first, then every other country A–Z.
+  # The US minor outlying islands are left out — nobody picks them for an address.
+  COUNTRIES = ([ "United States" ] + (
+    ISO3166::Country.all.map { |country| PLAIN_COUNTRY_NAMES[country.alpha2] || country.common_name } -
+    [ "United States", "United States Minor Outlying Islands" ]
+  ).sort).freeze
 end

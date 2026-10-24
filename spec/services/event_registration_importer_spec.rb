@@ -526,12 +526,6 @@ RSpec.describe EventRegistrationImporter do
         expect(person.pronouns).to eq("they/them")
       end
 
-      it "records the sheet's country under its one common name" do
-        import_rows(%w[FirstName LastName EMail Street City State Zip Country], [ "Pat", "Example", "pat@example.org", "2 Oak Ave", "Springfield", "IL", "62701", "USA" ])
-
-        expect(Person.find_by(email: "pat@example.org").addresses.sole.country).to eq("United States")
-      end
-
       it "names a new person by the sheet's nickname and keeps the first name as their legal first name" do
         import_rows(%w[FirstName Nickname LastName EMail], [ "Robert", "Bob", "Example", "bob@example.org" ])
         person = Person.find_by(email: "bob@example.org")
