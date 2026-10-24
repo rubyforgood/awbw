@@ -26,12 +26,15 @@ class PeopleController < ApplicationController
         affiliations: :organization,
         event_registrations: :event,
         categorizable_items: { category: :category_type }
-      ).references(:user))
+      ))
       filters = authorized_scope(params, as: :index).to_unsafe_h
       filtered = base_scope.search_by_params(filters)
                            .order(:first_name, :last_name)
-      @count_display = count_display(filtered.count)
-      @people = filtered.paginate(page: params[:page], per_page: per_page)
+      filtered = filtered.distinct if filters[:contact_info].present?
+
+      total = filtered.count
+      @count_display = count_display(total)
+      @people = filtered.paginate(page: params[:page], per_page: per_page, total_entries: total)
 
       render :people_results
     else
