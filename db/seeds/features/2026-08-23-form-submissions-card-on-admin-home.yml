@@ -1,0 +1,8 @@
+name: "Form submissions card on the admin home"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-23
+pr_number: 2361
+action_path: "/admin"
+summary: >-
+  The admin home's Form submissions card now opens the form submissions list.

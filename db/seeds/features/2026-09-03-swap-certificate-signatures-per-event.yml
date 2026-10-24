@@ -1,0 +1,9 @@
+name: "Swap training certificate signatures per event"
+area: events
+display_status: admin_facing
+released_on: 2026-09-03
+pr_number: 2524
+summary: >-
+  A training's certificate takes its signatures from the resource linked on the
+  certificate callout, so an admin can swap them for one event. Without one, it uses
+  the "Training certificate signatures" resource.

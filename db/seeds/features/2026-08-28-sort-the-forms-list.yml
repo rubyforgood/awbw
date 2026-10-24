@@ -1,0 +1,9 @@
+name: "Sort the forms list and see each form's role"
+area: content
+display_status: admin_facing
+released_on: 2026-08-28
+pr_number: 2400
+action_path: "/forms"
+summary: >-
+  The forms list shows each form's role, sorts by clicking a column header, and
+  keeps Results, View, Edit, and Copy in a ⋮ menu on each row.

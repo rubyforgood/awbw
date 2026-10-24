@@ -1,0 +1,10 @@
+name: "Filter payments by a created date range"
+area: payments
+display_status: admin_facing
+released_on: 2026-08-17
+pr_number: 2219
+action_path: "/payments"
+summary: >-
+  The payments list swaps its time-period dropdown for "Created from" and "Created
+  to" dates, so you can pull any window, like a single month. "Amount remaining" is
+  now "Has unallocated."

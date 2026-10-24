@@ -1,0 +1,8 @@
+name: "Registration form shows the discounted price"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-01
+pr_number: 2582
+summary: >-
+  When someone opens a registration link with a valid discount code, the form shows
+  the event's cost after the discount.

@@ -1,0 +1,9 @@
+name: "Organizations no longer need a status"
+area: people
+display_status: admin_facing
+released_on: 2026-10-14
+pr_number: 2685
+action_path: "/organizations"
+summary: >-
+  An organization saves without a status, which unblocks merging duplicate
+  organizations that never had one. Status menus offer a "(none)" choice.
