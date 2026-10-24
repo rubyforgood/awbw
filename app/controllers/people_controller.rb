@@ -139,6 +139,7 @@ class PeopleController < ApplicationController
       @total_count = base.count
       @count_display = count_display(filtered.count, @total_count)
       @comments = filtered.paginate(page: params[:page], per_page: 20)
+      FeedRecordPreloader.new(@comments).call
       render :person_comments_results
     else
       @total_count = base.count
