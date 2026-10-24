@@ -45,7 +45,7 @@
 #   Mission
 #   WebSite
 #   EMail
-#   EmailPrimary              flag (e.g. 1), not an address
+#   EmailPrimary              flag, 1 or 2 — never an address
 #   EmailType
 #   EmailNotes
 #   BestTimeToCall

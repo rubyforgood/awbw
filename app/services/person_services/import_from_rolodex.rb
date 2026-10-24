@@ -46,7 +46,7 @@ module PersonServices
     # Answers to "which kind of email is this?" that aren't a kind at all.
     PRECEDENCE_TYPES = %w[preferred primary main].freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
-    # EmailPrimary is a flag ("1"), not an address, so only EMail is read for one.
+    # EmailPrimary holds a flag ("1" or "2"), never an address, so only EMail is read for one.
     EMAIL_FIELDS = %w[EMail].freeze
     STRING_LIMIT = 255
     BATCH_SIZE = 1_000
