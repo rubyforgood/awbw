@@ -317,6 +317,21 @@ RSpec.describe "Forms", type: :request do
   describe "GET /forms/:id/edit" do
     before { sign_in admin }
 
+    it "marks the default survey form as the one new events send" do
+      form = create(:form, :standalone, name: "Day 1 Survey", role: "day_1_survey")
+      get edit_form_path(form)
+      expect(response.body).to include("Default for new events")
+    end
+
+    it "links a non-default survey form to the default new events send" do
+      original = create(:form, :standalone, name: "Day 1 Survey", role: "day_1_survey")
+      copy = create(:form, :standalone, name: "DUPLICATE of Day 1 Survey", role: "day_1_survey")
+      get edit_form_path(copy)
+      link = Nokogiri::HTML(response.body).css("a").find { |a| a.text.squish == "New events send Day 1 Survey" }
+      expect(link&.[]("href")).to eq(edit_form_path(original))
+      expect(response.body).not_to include("Default for new events")
+    end
+
     it "shows form field editor" do
       form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
       get edit_form_path(form)

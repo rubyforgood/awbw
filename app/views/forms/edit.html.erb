@@ -36,6 +36,18 @@
       <i class="fa-solid fa-inbox <%= DomainTheme.text_class_for(:forms, intensity: 600) %>"></i>
       <%= pluralize(@form.form_submissions.size, "submission") %>
     </span>
+    <% default_survey = @form.default_survey %>
+    <% if default_survey == @form %>
+      <span class="<%= DomainTheme.text_class_for(:forms, intensity: 700) %> inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-sm font-medium shadow-sm">
+        <i class="fa-solid fa-star <%= DomainTheme.text_class_for(:forms, intensity: 600) %>"></i>
+        Default for new events
+      </span>
+    <% elsif default_survey %>
+      <%= link_to edit_form_path(default_survey), class: "inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-sm text-gray-600 shadow-sm hover:bg-white/70" do %>
+        <i class="fa-regular fa-star text-gray-400"></i>
+        New events send <%= default_survey.display_name %>
+      <% end %>
+    <% end %>
   <% end %>
   <div class="<%= DomainTheme.bg_class_for(:forms, intensity: 50) %> border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
     <%= render "forms/page_header", icon: "fa-solid fa-list-check",

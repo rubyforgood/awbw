@@ -87,6 +87,21 @@ RSpec.describe Form do
     end
   end
 
+  describe "#default_survey" do
+    it "is the oldest standalone form sharing the survey role" do
+      original = create(:form, role: "day_1_survey")
+      copy = create(:form, role: "day_1_survey")
+
+      expect(copy.default_survey).to eq(original)
+      expect(original.default_survey).to eq(original)
+    end
+
+    it "is nil for a non-survey role or an event-owned form" do
+      expect(create(:form, role: "registration").default_survey).to be_nil
+      expect(create(:form, role: "day_1_survey", owner: create(:event)).default_survey).to be_nil
+    end
+  end
+
   describe ".survey_header" do
     it "uses the role's dropdown label" do
       expect(Form.survey_header("post_event_survey")).to eq("Post-event survey")

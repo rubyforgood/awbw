@@ -87,6 +87,10 @@ class Form < ApplicationRecord
     role.in?(SURVEY_ROLES)
   end
 
+  def default_survey
+    Form.survey(role) if survey_role? && standalone?
+  end
+
   def display_name
     name.presence || (owner ? "#{owner.try(:name)} Form" : "New Form")
   end
