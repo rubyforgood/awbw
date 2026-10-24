@@ -548,7 +548,7 @@ class PeopleController < ApplicationController
   # The profile's own person, or an admin — the audience allowed to see private/
   # reconciled-away content that's hidden from other profile viewers.
   def viewing_own_or_admin?
-    allowed_to?(:manage?, Person) || current_user&.person_id == @person.id
+    allowed_to?(:own_record?, @person)
   end
 
   def set_person

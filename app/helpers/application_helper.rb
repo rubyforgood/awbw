@@ -739,7 +739,7 @@ module ApplicationHelper
   def default_organization_for_form(object)
     return object.organization if object.organization.present?
 
-    if current_user.super_user?
+    if allowed_to?(:manage?, object)
       Setting.app_organization
     elsif current_user.person&.affiliations&.count == 1
       current_user.person.primary_organization

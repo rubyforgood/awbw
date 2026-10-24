@@ -21,6 +21,10 @@ class StoryIdeaPolicy < ApplicationPolicy
     admin?# || owner?
   end
 
+  def organization_optional?
+    admin?
+  end
+
   def destroy?
     record.persisted? && admin?
   end

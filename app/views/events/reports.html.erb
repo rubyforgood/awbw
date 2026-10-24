@@ -7,7 +7,7 @@
     <div class="mb-6">
       <% if @filter_event %>
         <%= link_to "← #{@filter_event.title}", dashboard_event_path(@filter_event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-      <% elsif params[:return_to] == "events" || !current_user&.super_user? %>
+      <% elsif params[:return_to] == "events" || !allowed_to?(:index?, :home, with: Admin::HomePolicy) %>
         <%# Event owners reach the unfiltered hub too, and can't follow the admin
             home link — send them back to the events index instead. %>
         <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>

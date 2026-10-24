@@ -118,7 +118,7 @@ class StoryIdeasController < ApplicationController
   end
 
   def organization_required?
-    !current_user&.super_user?
+    !allowed_to?(:organization_optional?, StoryIdea)
   end
 
   def story_idea_params

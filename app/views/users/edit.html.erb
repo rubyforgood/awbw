@@ -91,7 +91,7 @@
                               method: :post,
                               form_class: "inline",
                               class: button_classes(:secondary_outline) %>
-                <% if current_user == @user %>
+                <% if allowed_to?(:self?, @user) %>
                   <%= link_to "Change password",
                               change_password_path,
                               class: button_classes(:secondary_outline) %>

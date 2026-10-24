@@ -19,6 +19,7 @@ class UserPolicy < ApplicationPolicy
   def search? = admin?
   def change_password? = authenticated?
   def update_password? = authenticated?
+  def self? = user == record
 
   relation_scope do |relation|
     next relation if admin?
@@ -35,10 +36,6 @@ class UserPolicy < ApplicationPolicy
   end
 
   private
-
-  def self?
-    user == record
-  end
 
   def has_ahoy_records?
     Ahoy::Visit.where(user_id: record.id).exists? ||
