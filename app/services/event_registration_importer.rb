@@ -132,7 +132,7 @@ class EventRegistrationImporter
     :payments_recorded, :payments_amount_cents,
     :scholarships_recorded, :scholarships_amount_cents,
     :discounts_recorded, :discounts_amount_cents,
-    :ce_enrollments, :unrecognized_headers,
+    :ce_enrollments, :unrecognized_headers, :untranslated_addresses,
     :skipped, :rows,
     keyword_init: true
   ) do
@@ -188,7 +188,7 @@ class EventRegistrationImporter
       payments_recorded: 0, payments_amount_cents: 0,
       scholarships_recorded: 0, scholarships_amount_cents: 0,
       discounts_recorded: 0, discounts_amount_cents: 0,
-      ce_enrollments: 0, unrecognized_headers: [],
+      ce_enrollments: 0, unrecognized_headers: [], untranslated_addresses: {},
       skipped: [], rows: []
     )
     @organization_matcher = OrganizationServices::NameMatcher.new
@@ -208,6 +208,8 @@ class EventRegistrationImporter
       @payment_batches.each_value { |members| apply_payment_batch(members) }
       raise ActiveRecord::Rollback if @dry_run
     end
+    unmatched = @address_translation.unmatched
+    @result.untranslated_addresses = %i[country state].select { |field| unmatched[field].any? }.index_with { |field| unmatched[field].to_h }
     @result
   end
 

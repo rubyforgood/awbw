@@ -546,6 +546,14 @@ RSpec.describe EventRegistrationImporter do
           .to have_attributes(state: "CA", country: "United States", address_type: "personal")
       end
 
+      it "leaves a country it can't place blank and reports it with any unreadable state" do
+        result = import_rows(%w[FirstName LastName EMail Street City State Zip Country],
+                             [ "Pat", "Example", "pat@example.org", "1 Main St", "Kenmore", "Kenmore", "98028", "Narnia" ])
+
+        expect(Person.find_by(email: "pat@example.org").addresses.sole.country).to be_nil
+        expect(result.untranslated_addresses).to eq(country: { "Narnia" => 1 }, state: { "Kenmore" => 1 })
+      end
+
       it "reads a missing country from the sheet's state" do
         import_rows(%w[FirstName LastName EMail Street City State Zip], [ "Pat", "Example", "pat@example.org", "1 King St", "Toronto", "ON", "M5H" ])
 
