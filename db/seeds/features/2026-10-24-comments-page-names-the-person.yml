@@ -1,8 +1,10 @@
-name: "Comments page names the person on profile comments"
+name: "Comment and communication chips name the person on profile entries"
 area: communications
 display_status: admin_facing
 released_on: 2026-10-24
-action_path: "/comments"
+action_path: "/comments_and_communications"
 summary: >-
-  On the Comments page, a comment left on someone's profile shows that person's name
-  instead of just "Profile" — hover it for their full name and email.
+  On the Comments page and the Comments & communications feed, an entry attached to someone's
+  profile shows that person's name instead of just "Profile". Hover it for their full name and email.
+pro_tips:
+  - "The \"Log it against\" picker still says \"Profile\", since you've already picked the person there."

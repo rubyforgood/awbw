@@ -3,19 +3,14 @@ class CommentDecorator < ApplicationDecorator
   delegate_all
 
   # Human-readable label for the record this comment was left on, used as the
-  # source chip on the aggregated comment feeds. Profile comments name the person
-  # so rows on the global feed say whose profile; every other record shares the
-  # composer picker's label via CommentsHelper.
+  # source chip on the aggregated comment feeds. Shared with the combined feed's
+  # chips via CommentsHelper so the two never drift.
   def source_label
-    return commentable.full_name if commentable.is_a?(Person)
-
-    h.commentable_label(commentable)
+    h.record_chip_label(commentable)
   end
 
   def source_title
-    return unless commentable.is_a?(Person)
-
-    [ commentable.full_name, commentable.preferred_email.presence&.then { "(#{it})" } ].compact.join(" ")
+    h.record_chip_title(commentable)
   end
 
   # Where the source chip links to — the record's edit page, shared with the

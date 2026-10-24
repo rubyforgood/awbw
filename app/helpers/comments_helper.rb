@@ -30,7 +30,8 @@ module CommentsHelper
 
   # Human-readable label for a record a comment or communication hangs off, used
   # for both the aggregated composer's target picker and each feed row's chip so
-  # the two never drift. For event-bound records we spell out the event and its
+  # the two never drift (chips name the person on a profile entry — see
+  # record_chip_label). For event-bound records we spell out the event and its
   # date so a scholarship/registration reads as a concrete thing rather than an
   # opaque id.
   def commentable_label(record)
@@ -54,6 +55,32 @@ module CommentsHelper
     when Grant then "Grant · #{record.name}"
     else record.class.name.underscore.humanize
     end
+  end
+
+  # A feed row's chip names the person on a profile entry, where the picker's
+  # "Profile" wouldn't say whose profile it is.
+  def record_chip_label(record)
+    record.is_a?(Person) ? record.full_name : commentable_label(record)
+  end
+
+  def record_chip_title(record)
+    return unless record.is_a?(Person)
+
+    [ record.full_name, record.preferred_email.presence&.then { "(#{it})" } ].compact.join(" ")
+  end
+
+  # The attached-record chip leading a combined-feed row, linked to the record's
+  # edit page in a new tab when it has one.
+  def feed_source_chip(record, icon:)
+    return if record.blank?
+
+    chip_class = "inline-flex shrink-0 items-center gap-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900"
+    inner = safe_join([ icon, record_chip_label(record) ], " ")
+    title = record_chip_title(record)
+    path = record_edit_path(record)
+    return content_tag(:span, inner, class: chip_class, title: title) unless path
+
+    link_to(inner, path, target: "_blank", rel: "noopener", class: "#{chip_class} hover:underline", title: title)
   end
 
   # Where a feed row's chip links to — the attached record's edit page, so a click

@@ -346,6 +346,20 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Hello other")
     end
 
+    it "names the person on profile comment and communication chips, with their email on hover" do
+      create(:comment, commentable: person, body: "Profile note", created_by: admin)
+      create(:notification, noticeable: person, recipient_email: "primary@example.com",
+                            email_subject: "Profile call", kind: "manual_log",
+                            channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      chips = Nokogiri::HTML(response.body).css("a[href='#{edit_person_path(person)}']")
+      expect(chips.size).to eq(2)
+      expect(chips.map { |chip| chip.text.strip }).to all(eq(person.full_name))
+      expect(chips.map { |chip| chip["title"] }).to all(eq("#{person.full_name} (primary@example.com)"))
+    end
+
     it "loads a picked person's composers into the frame with their filing targets" do
       registration = create(:event_registration, registrant: person)
 

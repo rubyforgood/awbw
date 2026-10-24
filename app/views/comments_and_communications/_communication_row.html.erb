@@ -7,13 +7,7 @@
     Notification). Optional: person (scopes the date link's feed, and rides along
     on the save so the re-rendered row stays scoped to them). %>
 <% person = local_assigns[:person] %>
-<% chip_class = "inline-flex shrink-0 items-center gap-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900" %>
-<% record = entry.noticeable %>
-<% source_chip = if record.present?
-     inner = safe_join([ entry.decorate.channel_icon, commentable_label(record) ], " ")
-     path = record_edit_path(record)
-     path ? link_to(inner, path, target: "_blank", rel: "noopener", class: "#{chip_class} hover:underline") : content_tag(:span, inner, class: chip_class)
-   end %>
+<% source_chip = feed_source_chip(entry.noticeable, icon: entry.decorate.channel_icon) %>
 <% edit_button = content_tag(:button, safe_join([ content_tag(:i, "", class: "fa-solid fa-pen text-2xs"), " Edit" ]),
                               type: "button",
                               class: "shrink-0 text-xs #{eyebrow_link_class}",
