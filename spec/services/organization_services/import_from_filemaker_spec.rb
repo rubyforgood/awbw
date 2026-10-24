@@ -36,6 +36,46 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
                                                            la_service_planning_area: 3, la_supervisorial_district: 5)
   end
 
+  describe "organization type" do
+    {
+      "501c3/Nonprofit" => [ "501c3/nonprofit", nil ],
+      "Non-Profit Organization" => [ "501c3/nonprofit", nil ],
+      "501c3/Nonprofit Government Agency" => [ "501c3/nonprofit", nil ],
+      "For-Profit" => [ "For-profit", nil ],
+      "LLC" => [ "For-profit", nil ],
+      "County Government Agency" => [ "Government agency", nil ],
+      "Govt agency" => [ "Government agency", nil ],
+      "Other" => [ "Other", nil ],
+      "School" => [ "Other", "School" ]
+    }.each do |fm_type, (type, other)|
+      it "reads #{fm_type.inspect} as #{type}#{" (#{other})" if other}" do
+        fm_organization("ORG00001", OrgType: fm_type)
+
+        import
+
+        expect(Organization.sole).to have_attributes(organization_type: type, organization_type_other: other)
+      end
+    end
+
+    it "takes the organization's type over its single project's" do
+      fm_organization("ORG00001", OrgType: "Government Agency")
+      project("P0001", "ORG00001", AgencyType: "School")
+
+      import
+
+      expect(Organization.sole).to have_attributes(organization_type: "Government agency", organization_type_other: nil)
+    end
+
+    it "leaves the description off when the portal's type isn't Other" do
+      existing = create(:organization, filemaker_code: "ORG00001", organization_type: "For-profit")
+      fm_organization("ORG00001", OrgType: "School")
+
+      import
+
+      expect(existing.reload).to have_attributes(organization_type: "For-profit", organization_type_other: nil)
+    end
+  end
+
   it "nests each of an organization's several projects under it" do
     fm_organization("ORG00002", OrgName: "Valley Services")
     project("P0002", "ORG00002", ProjectName: "Valley Adult Program", City: "Fresno", State: "CA", Locality: "Central CA")
