@@ -127,7 +127,7 @@ RSpec.describe AddressServices::TranslateExisting do
     usa = address_with(country: "USA", state: "TX")
 
     result = nil
-    expect { result = described_class.new(dry_run: true).call }.not_to change(Ahoy::Event, :count)
+    expect { result = described_class.new(dry_run: true).call }.not_to change { [ Ahoy::Event.count, Ahoy::Visit.count ] }
 
     expect(stored(usa).first).to eq("USA")
     expect(result.changes).to include("Address country: \"USA\" → \"United States\"" => 1)

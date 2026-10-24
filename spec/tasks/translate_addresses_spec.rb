@@ -31,7 +31,8 @@ RSpec.describe "data:translate_addresses" do
     usa = address_with(country: "USA", state: "TX")
     address_with(country: "Narnia", state: "Central Region")
 
-    output = run_task
+    output = nil
+    expect { output = run_task }.not_to change { [ Ahoy::Event.count, Ahoy::Visit.count ] }
 
     expect(usa.reload.country).to eq("USA")
     expect(output).to include("DRY RUN", "Narnia", "Report saved")
