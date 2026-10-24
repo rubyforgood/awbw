@@ -46,9 +46,8 @@ module PersonServices
     # Answers to "which kind of email is this?" that aren't a kind at all.
     PRECEDENCE_TYPES = %w[preferred primary main].freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
-    # Both archive fields hold an address (FmRolodex::PORTAL_FIELDS maps each to
-    # people.email), the primary one first, so it becomes the person's own email.
-    EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
+    # EmailPrimary is a flag ("1"), not an address, so only EMail is read for one.
+    EMAIL_FIELDS = %w[EMail].freeze
     STRING_LIMIT = 255
     BATCH_SIZE = 1_000
 

@@ -158,7 +158,7 @@ RSpec.describe "FM archives", type: :request do
       expect(reference).to match(%r{<span class="[^"]*bg-orange-100[^"]*" title="Imports to people.created_at">DateEntered</span>})
       expect(reference).to match(%r{title="Imports to people.created_by_id">EnteredBy\*</span>})
       expect(reference).to include("* Needs a FileMaker staff → portal user lookup")
-      expect(reference).to match(%r{title="Imports to people.email">EmailPrimary</span>})
+      expect(reference).to match(%r{<span class="[^"]*bg-white[^"]*">EmailPrimary</span>})
       expect(reference).to match(%r{title="Imports to people.email">EMail</span>})
     end
 

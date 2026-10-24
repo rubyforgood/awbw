@@ -45,7 +45,7 @@
 #   Mission
 #   WebSite
 #   EMail
-#   EmailPrimary
+#   EmailPrimary              flag (e.g. 1), not an address
 #   EmailType
 #   EmailNotes
 #   BestTimeToCall
@@ -111,7 +111,6 @@ class FmRolodex < ApplicationRecord
     "FirstName" => "people.first_name",
     "LastName" => "people.last_name",
     "Pronouns" => "people.pronouns",
-    "EmailPrimary" => "people.email",
     "EMail" => "people.email",
     "EmailType" => "people.email_type",
     "BestTimeToCall" => "people.best_time_to_call",

@@ -37,6 +37,28 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.find_by!(filemaker_code: "00007")).to have_attributes(email: "ada@example.com", email_2: "ada@work.example.com")
   end
 
+  describe "the EmailPrimary flag" do
+    it "doesn't read the flag as an email" do
+      rolodex("00053", EmailPrimary: "1", EMail: "ada@example.com")
+
+      import = described_class.new.call
+
+      person = Person.find_by!(filemaker_code: "00053")
+      expect(person).to have_attributes(email: "ada@example.com", email_2: nil)
+      expect(person.comments).to be_empty
+      expect(import.invalid_emails).to be_empty
+    end
+
+    it "links a same-name person with no email when the row holds only the flag" do
+      person = create(:person, first_name: "Ada", last_name: "Lovelace", email: nil, user: nil)
+      rolodex("00054", EmailPrimary: "1")
+
+      expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
+      expect(person.reload.filemaker_code).to eq("00054")
+      expect(person.comments).to be_empty
+    end
+  end
+
   describe "an email the portal can't take" do
     it "creates the person without it and leaves the archive's value as a comment" do
       rolodex("00046", EMail: "Attn: ada@@example.com")
@@ -52,7 +74,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
     end
 
     it "notes a value with no address in it at all" do
-      rolodex("00051", EmailPrimary: "ada at example dot com")
+      rolodex("00051", EMail: "ada at example dot com")
 
       results
 
@@ -62,7 +84,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
     end
 
     it "keeps the row's usable address as the person's email without a comment" do
-      rolodex("00047", EmailPrimary: "ada@example.com.", EMail: "ada@work.example.com")
+      rolodex("00047", EMail: "ada@example.com.; ada@work.example.com")
 
       import = described_class.new.call
 
@@ -74,7 +96,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
 
     it "leaves a linked person's second email unfilled and uncommented" do
       person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
-      rolodex("00048", EmailPrimary: "ada@example.com", EMail: "ada@old@example.com")
+      rolodex("00048", EMail: "ada@example.com; ada@old@example.com")
 
       expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
       expect(person.reload).to have_attributes(filemaker_code: "00048", email: "ada@example.com", email_2: nil)
@@ -653,30 +675,17 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(person.reload.filemaker_code).to eq("00040")
   end
 
-  it "takes the primary email field as the person's email, the other field's as their second" do
-    rolodex("00041", EmailPrimary: "ada@example.com", EMail: "ada@work.example.com")
-    rolodex("00042", FirstName: "Grace", EmailPrimary: "grace@example.com", EMail: "grace@example.com")
-    rolodex("00043", FirstName: "Hedy", EMail: "hedy@example.com")
+  it "counts the same address twice in the field once" do
+    rolodex("00042", FirstName: "Grace", EMail: "grace@example.com; Grace@example.com")
 
     results
 
-    expect(Person.find_by!(filemaker_code: "00041"))
-      .to have_attributes(email: "ada@example.com", email_2: "ada@work.example.com")
     expect(Person.find_by!(filemaker_code: "00042")).to have_attributes(email: "grace@example.com", email_2: nil)
-    expect(Person.find_by!(filemaker_code: "00043")).to have_attributes(email: "hedy@example.com", email_2: nil)
   end
 
-  it "links a person the archive knows only by its primary email field" do
+  it "links a person only the field's second address reaches" do
     person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
-    rolodex("00044", EmailPrimary: "ada@example.com")
-
-    expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
-    expect(person.reload.filemaker_code).to eq("00044")
-  end
-
-  it "links a person only the row's other email field reaches" do
-    person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
-    rolodex("00045", EmailPrimary: "ada@old.example.com", EMail: "ada@example.com")
+    rolodex("00045", EMail: "ada@old.example.com; ada@example.com")
 
     expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
     expect(person.reload).to have_attributes(filemaker_code: "00045", email_2: "ada@old.example.com")
