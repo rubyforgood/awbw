@@ -164,8 +164,8 @@ RSpec.describe "Comments and communications", type: :request do
       doc = Nokogiri::HTML(response.body)
       chip = doc.at_css("a[href='#{edit_event_registration_path(registration)}']")
       expect(chip).to be_present
-      # The record's own label, not a bare "##{registration.id}" fallback.
-      expect(chip.text.strip).to start_with("Registration ·")
+      # The registrant, then the record's own label — not a bare "##{registration.id}" fallback.
+      expect(chip.text.strip).to start_with("#{person.full_name} · Registration ·")
       # The subject still reaches the communication itself.
       expect(doc.at_css("a[href='#{notification_path(notification)}']")&.text.to_s).to include("About the registration")
     end
@@ -358,6 +358,26 @@ RSpec.describe "Comments and communications", type: :request do
       expect(chips.size).to eq(2)
       expect(chips.map { |chip| chip.text.strip }).to all(eq(person.full_name))
       expect(chips.map { |chip| chip["title"] }).to all(eq("#{person.full_name} (primary@example.com)"))
+    end
+
+    it "names whose registration, scholarship, or CE registration each chip is about" do
+      registration = create(:event_registration, registrant: person)
+      scholarship = create(:scholarship, recipient: create(:person))
+      ce = create(:continuing_education_registration)
+      [ registration, scholarship, ce ].each { |record| create(:comment, commentable: record, created_by: admin) }
+
+      get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      doc = Nokogiri::HTML(response.body)
+      {
+        edit_event_registration_path(registration) => person,
+        edit_scholarship_path(scholarship) => scholarship.recipient,
+        edit_continuing_education_registration_path(ce) => ce.event_registration.registrant
+      }.each do |path, owner|
+        chip = doc.at_css("a[href='#{path}']")
+        expect(chip.text.strip).to start_with("#{owner.full_name} ·")
+        expect(chip["title"]).to start_with(owner.full_name)
+      end
     end
 
     it "loads a picked person's composers into the frame with their filing targets" do

@@ -57,16 +57,30 @@ module CommentsHelper
     end
   end
 
-  # A feed row's chip names the person on a profile entry, where the picker's
-  # "Profile" wouldn't say whose profile it is.
+  # A feed row's chip leads with whose record it is, which the picker leaves out
+  # because the person is already chosen there.
   def record_chip_label(record)
-    record.is_a?(Person) ? record.full_name : commentable_label(record)
+    person = record_chip_person(record)
+    return commentable_label(record) unless person
+    return person.full_name if record.is_a?(Person)
+
+    "#{person.full_name} · #{commentable_label(record)}"
   end
 
   def record_chip_title(record)
-    return unless record.is_a?(Person)
+    person = record_chip_person(record)
+    return unless person
 
-    [ record.full_name, record.preferred_email.presence&.then { "(#{it})" } ].compact.join(" ")
+    [ person.full_name, person.preferred_email.presence&.then { "(#{it})" } ].compact.join(" ")
+  end
+
+  def record_chip_person(record)
+    case record
+    when Person then record
+    when EventRegistration then record.registrant
+    when Scholarship then record.recipient
+    when ContinuingEducationRegistration then record.event_registration&.registrant
+    end
   end
 
   # The attached-record chip leading a combined-feed row, linked to the record's
