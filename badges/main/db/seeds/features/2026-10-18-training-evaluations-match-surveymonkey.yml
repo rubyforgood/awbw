@@ -8,4 +8,4 @@ summary: >-
   compare with past trainings.
 pro_tips:
   - "Edit the questions anytime from the form editor; the card keeps sending the same Day 1 and Day 2 forms."
-  - "Each survey role belongs to one form, so the card always knows which form to send."
+  - "New events send the oldest form with each survey role; an event keeps whichever form its card already points at."

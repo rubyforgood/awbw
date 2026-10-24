@@ -9,6 +9,12 @@ class RegistrationTicketCalloutDecorator < ApplicationDecorator
     BuiltinCalloutCards.config_gap_action(event, builtin_key)
   end
 
+  def linked_form_names
+    registration_ticket_callout_forms.reject(&:marked_for_destruction?)
+      .sort_by { |link| link.position.to_i }
+      .filter_map { |link| link.form&.display_name }
+  end
+
   # This callout's linked resources as cards, in display order, each reading its
   # subtitle from the materialized join row and linking to the resource's own
   # page. Shared by every surface that lists a callout's resources (the handouts
