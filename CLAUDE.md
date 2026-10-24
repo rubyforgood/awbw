@@ -381,6 +381,10 @@ what changed.
   `description` (longer HTML/text), `external_url`, `action_path` (in-app path for
   the detail page's "Check out this feature" link), and `pr_number` (adds a
   GitHub PR link).
+- **`display_status` is who the announcement is for, not who the feature is for.**
+  Default every new entry to `admin_facing` — even when the feature itself serves
+  facilitators or the public. Only when we want to share it with site users, add a
+  **second** entry (its own file and `name`) marked `user_facing`, written for them.
 - **Sentence case, plain language** — this page is read by facilitators, not devs.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy` gates
   this in its relation scope, not just in the UI).

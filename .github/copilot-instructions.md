@@ -369,6 +369,10 @@ what changed.
   sentences), `released_on` (ship date), plus optional `pro_tips` (list),
   `description`, `external_url`, `action_path` (in-app "Check out this feature"
   link), and `pr_number` (GitHub PR link).
+- **`display_status` is who the announcement is for, not who the feature is for.**
+  Default every new entry to `admin_facing` — even when the feature itself serves
+  facilitators or the public. Only when we want to share it with site users, add a
+  **second** entry (its own file and `name`) marked `user_facing`, written for them.
 - **Sentence case, plain language** — read by facilitators, not devs.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy`).
 

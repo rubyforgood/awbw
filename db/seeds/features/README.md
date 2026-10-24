@@ -21,6 +21,10 @@ When you ship a user-facing feature **or** improvement, add a new file:
 `YYYY-MM-DD-short-slug.yml`, named with the ship date and a slug of the name.
 One file per feature keeps parallel PRs from conflicting.
 
+`display_status` is who the **announcement** is for, not who the feature is for.
+Default to `admin_facing`. To also share it with site users, add a second file
+with its own `name`, marked `user_facing` and written for them.
+
 ```yaml
 name: "Filter registrants by registration date"
 area: registration
@@ -38,7 +42,7 @@ pro_tips:
 |---|---|
 | `name` | Short, sentence-case, unique. The sync matches records by it. |
 | `area` | One of `Feature::AREA_KEYS` (events, registration, scholarships, payments, people, content, stories, communications, reporting). |
-| `display_status` | `public_facing`, `user_facing`, or `admin_facing` (super-admins only). |
+| `display_status` | Announcement audience: `admin_facing` (default; super-admins only), `user_facing`, or `public_facing`. |
 | `summary` | One or two plain-language sentences. |
 | `released_on` | Ship date (`YYYY-MM-DD`). |
 | `action_path` | Optional in-app path for "Check out this feature". Use `/registration/sample` for ticket/callout features. |
