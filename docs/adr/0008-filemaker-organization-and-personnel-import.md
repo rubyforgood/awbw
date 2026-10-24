@@ -77,11 +77,13 @@ Constraints already decided elsewhere:
     contacts (402 aren't), all 53 Liaisons are, and 111 rows are still titled "Leader" (which
     the exact-match Facilitator scope doesn't count, and which the import matches as a
     Facilitator rather than duplicating).
-    - **Leader** (8,112 of 8,907 rows) and **Liaison** (611) → a Facilitator affiliation marked
-      `primary_contact`, with a "FileMaker import" comment recording the role FileMaker gave.
-    - **Assistant** (232) → an Assistant affiliation over the same dates — the title itself
-      never counts as facilitation — plus a Facilitator affiliation over those dates unless the
-      person already has one, as the January 2026 conversion did.
+    - Every role becomes a **Facilitator** affiliation, with a "FileMaker import" comment
+      recording the role FileMaker gave. No prod row is titled Assistant, so the old app's
+      assistants likely became the 402 Facilitators who aren't primary contacts.
+    - **Leader** (8,112 of 8,907 rows) and **Liaison** (611) are `primary_contact`. Matching
+      an existing Facilitator row turns its primary contact on — the one value the import
+      overwrites rather than fills — and the comment says so.
+    - **Assistant** (232) isn't a primary contact, and leaves a matched row's flag alone.
     - A blank (80) or stray role reads as a Leader.
   - **Dates:** Personnel rows carry none of their own, so the assignment starts on
     `DateEntered` and ends on the project's `CloseDate` (else `EndDate`). Only `Status`
@@ -129,8 +131,8 @@ the real run.
 - **Which `Status` values mean active** — only "Active", from the production values profiled
   2026-10-24 (see Personnel above). A closed project's `CloseDate` (else `EndDate`) ends every
   affiliation under it. `AgreementStatus` isn't read: 8,376 of 8,907 rows leave it blank.
-- **Is an Assistant a facilitator?** The Assistant title isn't; the Facilitator affiliation
-  minted beside it is, matching January 2026 (decided 2026-10-24).
+- **Is an Assistant a facilitator?** Yes — a Facilitator who isn't a primary contact
+  (decided 2026-10-24).
 - **Merged projects** (`MergerWithID`): folded — the merged-away project's code joins the
   survivor's org, so its personnel land there. One the portal already keeps as its own org
   is reported for a hand merge rather than merged automatically.

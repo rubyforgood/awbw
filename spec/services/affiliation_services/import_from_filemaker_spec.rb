@@ -51,6 +51,7 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       expect(affiliation).to have_attributes(title: "Facilitator", primary_contact: true, start_date: Date.new(2015, 3, 1))
       expect(affiliation.comments.sole).to have_attributes(topic: "FileMaker import", body: a_string_including("Liaison", "PS0001"))
       expect(import.roles).to eq("Liaison → Facilitator" => 1)
+      expect(affiliation.comments.sole.body).not_to include("Primary contact turned on")
     end
 
     it "notes a Leader's role too, but not a blank one" do
@@ -62,23 +63,35 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       expect(Comment.where(commentable: person.affiliations).pluck(:body)).to contain_exactly(a_string_including("Leader", "PS0001"))
     end
 
-    it "gives an Assistant their role plus a Facilitator affiliation over the same dates" do
-      personnel("PS0002", Role: "assistant", DateEntered: "1/5/2018")
+    it "makes an Assistant a Facilitator who isn't a primary contact, noting the role" do
+      personnel("PS0002", Role: "assistant")
 
       import = described_class.new.call
 
-      expect(person.affiliations.order(:title).pluck(:filemaker_code, :title, :start_date, :primary_contact))
-        .to eq([ [ "PS0002", "Assistant", Date.new(2018, 1, 5), false ], [ "PS0002", "Facilitator", Date.new(2018, 1, 5), false ] ])
-      expect(import.roles).to eq("assistant → Assistant" => 1)
+      affiliation = person.affiliations.sole
+      expect(affiliation).to have_attributes(title: "Facilitator", primary_contact: false, start_date: Date.new(2015, 3, 1))
+      expect(affiliation.comments.sole.body).to include("assistant", "PS0002")
+      expect(import.roles).to eq("assistant → Facilitator, not primary contact" => 1)
     end
 
-    it "adds no second Facilitator beside an Assistant when one with the same dates is already there" do
-      create(:affiliation, person:, organization: program, title: "Facilitator", start_date: Date.new(2015, 3, 1), end_date: Date.new(2019, 6, 30))
+    it "turns on primary contact for a Leader's existing Facilitator row, and says so" do
+      existing = create(:affiliation, person:, organization: program, title: "Facilitator", primary_contact: false)
+      personnel("PS0001")
+
+      import
+
+      expect(existing.reload).to have_attributes(primary_contact: true, filemaker_code: "PS0001")
+      expect(existing.comments.sole.body).to include("Leader", "Primary contact turned on")
+    end
+
+    it "leaves an Assistant's existing Facilitator row's primary contact as it is" do
+      existing = create(:affiliation, person:, organization: program, title: "Facilitator", primary_contact: true)
       personnel("PS0001", Role: "Assistant")
 
       import
 
-      expect(person.affiliations.pluck(:title)).to contain_exactly("Facilitator", "Assistant")
+      expect(existing.reload.primary_contact).to be(true)
+      expect(existing.comments.sole.body).not_to include("Primary contact turned on")
     end
 
     it "reads a blank or unrecognized role as a Leader" do
