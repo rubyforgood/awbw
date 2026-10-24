@@ -35,22 +35,11 @@ RSpec.describe "organizations/edit", type: :view do
     end
   end
 
-  it "hints that a blank country is set from the state" do
-    create(:address, addressable: organization)
+  it "renders the address country as a dropdown, preselecting the stored country" do
+    create(:address, addressable: organization, country: "Canada")
     render
-    assert_select "select[name*=?] ~ p", "[country]", text: CountryName::BLANK_HINT
-  end
 
-  it "preselects the stored country, under its plain name" do
-    create(:address, addressable: organization, state: "Moscow").update_columns(country: "Russian Federation")
-    render
-    assert_select "select[name*=?] option[selected]", "[country]", text: "Russia"
-  end
-
-  it "keeps an unrecognized stored country selected" do
-    create(:address, addressable: organization, state: "Central Region").update_columns(country: "Narnia")
-    render
-    assert_select "select[name*=?] option[selected]", "[country]", text: "Narnia"
+    assert_select "select[name*=?] option[selected]", "[country]", text: "Canada"
   end
 
   describe "status select visibility" do

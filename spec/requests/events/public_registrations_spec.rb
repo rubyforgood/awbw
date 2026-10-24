@@ -314,7 +314,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("add or update them later")
     end
 
-    it "renders the country fields as a country dropdown" do
+    it "renders the country question as a country dropdown" do
       create(:form_field, form: form, field_identifier: "mailing_country", name: "Country", required: false)
 
       get new_event_public_registration_path(event)

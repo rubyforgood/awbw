@@ -108,14 +108,14 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("organization_city") => "Austin",
         field_id("organization_state") => "TX",
         field_id("organization_zip") => "78701",
-        field_id("organization_country") => "United States"
+        field_id("organization_country") => "USA"
       )
       described_class.call(event: event, registration_form: form, form_params: params)
       person = Person.find_by(email: "sam@example.com")
 
       address = organization.addresses.find_by(city: "Austin")
       expect(address).to be_present
-      expect(address.country).to eq("United States")
+      expect(address.country).to eq("USA")
       linked = person.affiliations.where(organization: organization)
       expect(linked.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
       expect(linked.map(&:organization_address)).to all(eq(address))
@@ -390,13 +390,13 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("mailing_city") => "Oakland",
         field_id("mailing_state") => "CA",
         field_id("mailing_zip") => "94601",
-        field_id("mailing_country") => "United States"
+        field_id("mailing_country") => "USA"
       )
 
       described_class.call(event: event, registration_form: form, form_params: params)
       person = Person.find_by!(email: "ada@example.com")
 
-      expect(person.addresses.find_by(primary: true).country).to eq("United States")
+      expect(person.addresses.find_by(primary: true).country).to eq("USA")
     end
 
     it "updates a returning registrant's address when the city and state are spelled differently" do
@@ -433,13 +433,13 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
           field_id("organization_city") => "Reno",
           field_id("organization_state") => "NV",
           field_id("organization_zip") => "89501",
-          field_id("organization_country") => "United States"
+          field_id("organization_country") => "USA"
         )
         organization.reload
 
         expect(organization.organization_type).to eq("501c3/nonprofit")
         expect(organization.website_url).to include("helpinghands.org")
-        expect(organization.addresses.find_by(primary: true).country).to eq("United States")
+        expect(organization.addresses.find_by(primary: true).country).to eq("USA")
       end
 
       # find_organization only ever finds, so a registrant always changes an org
