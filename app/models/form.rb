@@ -118,7 +118,7 @@ class Form < ApplicationRecord
     form_fields.any? { |field| field.field_identifier.in?(IDENTITY_IDENTIFIERS) }
   end
 
-  # A form that requires identity but can't collect it rejects every public submission.
+  # A form that requires identity but can't collect it rejects every logged-out submission.
   def missing_identity_questions?
     requires_identity? && (IDENTITY_IDENTIFIERS - form_fields.map(&:field_identifier)).any?
   end

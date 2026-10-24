@@ -315,6 +315,12 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("Preferred first name")
     end
 
+    it "warns that a published form without identity questions turns away logged-out visitors" do
+      form = create(:form, :standalone, slug: "no-identity", published: true)
+      get edit_form_path(form)
+      expect(response.body).to include("to accept submissions from people who aren't logged in")
+    end
+
     it "offers the survey roles" do
       form = create(:form, :standalone, role: "general")
       get edit_form_path(form)

@@ -20,7 +20,11 @@
       <% if @form.anonymous? %>
         <p class="mb-6 flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
           <i class="fa-solid fa-user-secret mt-0.5 text-gray-400"></i>
-          <span>You can submit this form anonymously — name and email are optional.</span>
+          <% if @prefill_values.any? %>
+            <span>We filled in your name and email from your account. To submit this form anonymously, clear your name and email.</span>
+          <% else %>
+            <span>You can submit this form anonymously — name and email are optional.</span>
+          <% end %>
         </p>
       <% end %>
 
@@ -39,7 +43,7 @@
             <% if field.group_header? %>
               <%= render "events/public_registrations/group_header", field: field %>
             <% else %>
-              <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
+              <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) || @prefill_values[field.id] %>
               <div class="<%= field.grid_span_class %>">
                 <%= render "events/public_registrations/form_field", field: field, value: submitted_value, required: @form.requires_answer?(field) %>
               </div>

@@ -305,7 +305,7 @@ module Events
       person = current_user&.person
       if person
         # Always hide logged_out_only fields for logged-in users with known data
-        known_identifiers = person_known_identifiers(person)
+        known_identifiers = PersonServices::KnownFieldIdentifiers.call(person)
         if known_identifiers.any?
           known_ids = @registration_form.form_fields
                            .where(visibility: :logged_out_only, field_identifier: known_identifiers)
@@ -384,33 +384,6 @@ module Events
       end
 
       scope.reorder(position: :asc)
-    end
-
-    def person_known_identifiers(person)
-      keys = []
-      keys << "first_name" if person.first_name.present?
-      keys << "last_name" if person.last_name.present?
-      keys << "primary_email" << "confirm_email" if person.email.present?
-      keys << "primary_email_type" if person.known_email_type?
-      keys << "legal_first_name" if person.legal_first_name.present?
-      keys << "pronouns" if person.pronouns.present?
-      keys << "secondary_email" if person.email_2.present?
-      keys << "secondary_email_type" if person.known_email_2_type?
-
-      if person.addresses.exists?
-        address = person.addresses.find_by(primary: true) || person.addresses.first
-        keys << "mailing_street" if address.street_address.present?
-        keys << "mailing_address_type" if address.known_type?
-        keys << "mailing_city" if address.city.present?
-        keys << "mailing_state" if address.state.present?
-        keys << "mailing_zip" if address.zip_code.present?
-      end
-
-      if person.contact_methods.where(kind: :phone).exists?
-        keys << "phone" << "phone_type"
-      end
-
-      keys
     end
 
     def ensure_registerable

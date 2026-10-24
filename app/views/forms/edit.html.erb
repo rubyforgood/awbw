@@ -68,7 +68,7 @@
     <% if @form.publicly_fillable? && @form.missing_identity_questions? %>
       <div role="alert" class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
         <i class="fa-solid fa-triangle-exclamation mt-0.5 text-amber-500" aria-hidden="true"></i>
-        <span>This form needs first name, last name, and email questions to accept public submissions — add them, or turn on Anonymous responses in Form settings.</span>
+        <span>This form needs first name, last name, and email questions to accept submissions from people who aren't logged in — add them, or turn on Anonymous responses in Form settings.</span>
       </div>
     <% end %>
 
