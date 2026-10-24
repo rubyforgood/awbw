@@ -93,6 +93,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(existing.reload.filemaker_code).to be_nil
       expect(Person.where(filemaker_code: %w[00049 00050]).order(:filemaker_code).pluck(:email))
         .to eq([ PlaceholderEmail.at(1), PlaceholderEmail.at(2) ])
+      expect(Person.find_by!(filemaker_code: "00050").comments.sole.body).to include("ada at example dot com")
     end
 
     it "relinks the person it created when the row is named again" do
