@@ -109,6 +109,20 @@ RSpec.describe ProfessionalLicense, type: :model do
     end
   end
 
+  describe "issuing country" do
+    it "is the US for a US state with no country named" do
+      expect(create(:professional_license, issuing_state: "CA", issuing_country: "").issuing_country).to eq("United States")
+    end
+
+    it "keeps a country that was named" do
+      expect(create(:professional_license, issuing_state: "CA", issuing_country: "Mexico").issuing_country).to eq("Mexico")
+    end
+
+    it "stays blank for a state outside the USA" do
+      expect(create(:professional_license, issuing_state: "Ontario", issuing_country: nil).issuing_country).to be_nil
+    end
+  end
+
   describe "#issuing_state_outside_usa=" do
     it "wins over the dropdown whichever is assigned first" do
       typed_first = described_class.new(issuing_state_outside_usa: "Ontario", issuing_state: "CA")

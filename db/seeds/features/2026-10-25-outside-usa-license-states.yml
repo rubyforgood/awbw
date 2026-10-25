@@ -10,3 +10,6 @@ pro_tips:
   - "Covers licenses on the person form, the CE page on the registration ticket, the admin license and CE registration pages, address and work-address forms, and state questions on public and registration forms."
   - "A typed state wins over the dropdown. Clear the box to go back to a US state."
   - "A license's state and country show together, e.g. \"Ontario, Canada\"."
+  - "A form question whose smart field ends in _country is asked inside the matching _state question's Outside USA? box — see Smart field settings."
+  - "Left blank beside a US state, a country — on a license or a form answer — is saved as United States."
+  - "The registration form's CE section asks which country issued the license."
