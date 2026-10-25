@@ -156,6 +156,36 @@ RSpec.describe Form do
         expect(form.errors[:anonymous]).to be_present
       end
     end
+
+    describe "on the CE hours callout" do
+      let(:form) { create(:form, anonymous: true) }
+
+      before do
+        create(:form_field, form:, name: "How was it?")
+        create(:registration_ticket_callout, builtin_key: "ce_hours", form:)
+      end
+
+      it "can't be turned off" do
+        form.anonymous = false
+
+        expect(form).not_to be_valid
+        expect(form.errors[:anonymous]).to include("must stay on for a CE hours evaluation")
+      end
+
+      it "can't gain a name or email question" do
+        form.assign_attributes(form_fields_attributes: [ { name: "Email", field_identifier: "primary_email" } ])
+
+        expect(form).not_to be_valid
+        expect(form.errors[:base]).to include("A CE hours evaluation can't ask for a name or email")
+      end
+
+      it "can drop a name or email question it already asks" do
+        email = form.form_fields.create!(name: "Email", field_identifier: "primary_email", answer_type: :free_form_input_one_line)
+        form.reload.assign_attributes(form_fields_attributes: [ { id: email.id, _destroy: "1" } ])
+
+        expect(form).to be_valid
+      end
+    end
   end
 
   describe "#requires_identity?" do

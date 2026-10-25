@@ -10,7 +10,7 @@ RSpec.describe "Events::Callouts CE form", type: :request do
       end_date: Time.zone.local(2026, 7, 23, 16, 0))
   end
   let(:registration) { create(:event_registration, event:) }
-  let(:form) { create(:form, name: "CE Evaluation") }
+  let(:form) { create(:form, name: "CE Evaluation", anonymous: true) }
   let!(:field) { create(:form_field, form:, name: "How was the training?", required: true) }
   let(:callout) { create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE hours", form:) }
 
@@ -60,11 +60,8 @@ RSpec.describe "Events::Callouts CE form", type: :request do
     end
   end
 
-  describe "an anonymous CE form" do
-    before do
-      form.update!(anonymous: true)
-      travel_to Time.zone.local(2026, 7, 24, 10, 0)
-    end
+  describe "submitting the CE form" do
+    before { travel_to Time.zone.local(2026, 7, 24, 10, 0) }
 
     def submit_form
       post registration_callout_form_submit_path(registration.slug, callout, form),

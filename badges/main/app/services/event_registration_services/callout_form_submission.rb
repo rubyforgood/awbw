@@ -3,9 +3,10 @@ module EventRegistrationServices
   # One submission per (registrant, form, event) so re-submitting edits in place.
   #
   # An anonymous form (Form#anonymous?) credits the registrant only when the answers
-  # give first name, last name, and email (Form#identified_by?). Otherwise the
-  # answers are stored with no person and a FormCompletion records only that the
-  # registrant finished the form; it then can't be re-submitted or edited.
+  # give first name, last name, and email (Form#identified_by?), and a form on the
+  # CE hours callout never does (RegistrationTicketCallout#anonymous_responses?).
+  # Otherwise the answers are stored with no person and a FormCompletion records
+  # only that the registrant finished the form; it then can't be re-submitted or edited.
   #
   # A survey-role form additionally writes the anonymity / name-display answers through
   # to the Person (PersonServices::SyncSharingPreferences, the same write-through the
@@ -44,7 +45,7 @@ module EventRegistrationServices
 
     def call
       person = @registration.registrant
-      return record_anonymously(person) if @form.anonymous? && !@form.identified_by?(@form_params)
+      return record_anonymously(person) if anonymous?
 
       ActiveRecord::Base.transaction do
         @submission = FormSubmission.create_with(role: @form.role).find_or_create_by!(
@@ -66,6 +67,13 @@ module EventRegistrationServices
     end
 
     private
+
+    # A CE hours evaluation never credits the registrant, whatever the form's settings or answers.
+    def anonymous?
+      return true if @callout.anonymous_responses?
+
+      @form.anonymous? && !@form.identified_by?(@form_params)
+    end
 
     # A credited submission edited down to a partial identity is detached from the
     # registrant rather than duplicated, so their earlier answers — and the activity
