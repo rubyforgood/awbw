@@ -41,6 +41,15 @@
     </div>
   <% end %>
 
+  <% if @result.untranslated_addresses.any? %>
+    <div class="mb-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+      <p class="font-medium">Address values the dropdowns don't offer</p>
+      <% @result.untranslated_addresses.each do |field, values| %>
+        <p><%= field == :country ? "Country (left blank)" : "State (kept as typed)" %>: <%= values.map { |value, count| "“#{value}”#{" (#{pluralize(count, 'row')})" if count > 1}" }.to_sentence %></p>
+      <% end %>
+    </div>
+  <% end %>
+
   <ul class="mb-6 list-disc space-y-1 pl-5 text-sm text-gray-600">
     <li>
       Matched organizations are linked to each registration<%= " and add a facilitator affiliation" if @event.facilitator_training %>.

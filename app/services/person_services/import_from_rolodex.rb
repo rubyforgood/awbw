@@ -40,9 +40,7 @@ module PersonServices
     DATE_FORMATS = %w[%m/%d/%Y %Y-%m-%d %m-%d-%Y %Y/%m/%d].freeze
     # A two-digit year below this is read as 20xx, at or above it as 19xx.
     TWO_DIGIT_YEAR_PIVOT = 10
-    CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "cell" => "personal",
-                      "mobile" => "personal", "work" => "work", "business" => "work",
-                      "professional" => "work", "mailing" => "mailing" }.freeze
+    CONTACT_TYPES = AddressTranslation::CONTACT_TYPES
     # Answers to "which kind of email is this?" that aren't a kind at all.
     PRECEDENCE_TYPES = %w[preferred primary main].freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
@@ -76,6 +74,7 @@ module PersonServices
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
+      @address_attributes = FmAddressAttributes.new
       @staff = StaffTranslation.new
       @import_user_id = Setting.import_user&.id
     end
@@ -102,6 +101,10 @@ module PersonServices
 
     def unmatched_staff
       @staff.unmatched
+    end
+
+    def unmatched_addresses
+      @address_attributes.unmatched
     end
 
     private
@@ -396,7 +399,7 @@ module PersonServices
     def build_addresses(person, rolodex)
       held = person.addresses.map { |address| address_key(address.street_address, address.city) }
       attributes = rolodex.addresses.reject { |address| work_address?(rolodex, address) }
-                          .filter_map { |address| address_attributes(address.data) }
+                          .filter_map { |address| @address_attributes.call(address.data) }
                           .reject { |attrs| held.include?(address_key(attrs[:street_address], attrs[:city])) }
       build_primary_first(person.addresses, attributes)
     end
@@ -427,49 +430,6 @@ module PersonServices
       value.to_s.gsub(/\D/, "")
     end
 
-    def address_attributes(fields)
-      street = [ street_line(fields), fields["AddrsLine2"] ].filter_map { |line| line.to_s.strip.presence }.join(", ")
-      city = clip(fields["AddrsCity"].to_s.strip)
-      state = clip(fields["AddrsState"].to_s.strip)
-      return if street.blank? || city.blank? || state.blank?
-
-      country = clip(fields["AddrsCountry"])
-      county = county(fields)
-      {
-        street_address: clip(street),
-        city:,
-        state:,
-        zip_code: zip_code(fields),
-        country:,
-        county:,
-        address_type: contact_type(fields["AddrsType"], allowed: Address::CONTACT_TYPES),
-        # FileMaker records a locality only on a project, so a person's own address has
-        # none to carry over and the parts have to say.
-        locality: AddressLocality.for(city:, state:, country:, county:)
-      }
-    end
-
-    # The address's own postal code, or the one it points at in the archive's ZIP table
-    # when it carries none itself — the field it mirrors, and where the county is read.
-    def zip_code(fields)
-      [ fields["AddrsPostalCode"], fields["PostalCodeLookup"] ]
-        .filter_map { |value| value.to_s.strip.presence }.first.to_s.truncate(STRING_LIMIT)
-    end
-
-    def county(fields)
-      zip_counties[zip_lookup(fields)[/\A\d{5}/]]
-    end
-
-    def zip_lookup(fields)
-      (fields["PostalCodeLookup"].presence || fields["AddrsPostalCode"]).to_s.strip
-    end
-
-    # One query for the archive's ~80,000 zip codes beats one per address across a full import.
-    def zip_counties
-      @zip_counties ||= FmPostalCode.pluck(:fm_id, Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(data, '$.County'))"))
-                                    .to_h { |zip, county| [ zip, clip(county) ] }
-    end
-
     def phone_attributes(fields)
       number = clip(fields["PhoneNumber"])
       return if number.blank?
@@ -482,16 +442,6 @@ module PersonServices
     # place is left blank, which both models then record as unknown.
     def contact_type(value, allowed:)
       CONTACT_TYPES[value.to_s.strip.downcase].presence_in(allowed)
-    end
-
-    # The house number has its own field, sometimes already repeated at the front of
-    # the first line.
-    def street_line(fields)
-      number = fields["StreetNo"].to_s.strip
-      line = fields["AddrsLine1"].to_s.strip
-      return line if number.blank? || line[/\A\S+/] == number
-
-      "#{number} #{line}".strip
     end
 
     # Every string copied here lands in a varchar(255) the archive's free text isn't
