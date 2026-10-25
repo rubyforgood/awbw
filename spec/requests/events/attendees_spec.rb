@@ -659,12 +659,12 @@ RSpec.describe "Events attendees", type: :request do
           org = create(:organization)
           create(:address, addressable: org, city: "Austin", state: "TX", county: "Travis",
                  zip_code: "78701", locality: Address::OUTSIDE_CA, inactive: false)
-          attendee_registration.event_registration_organizations.create!(organization: org)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
           other = create(:person, first_name: "Katherine", last_name: "Johnson")
           other_registration = create(:event_registration, event: recent_training, registrant: other, status: "attended")
           other_org = create(:organization)
           create(:address, addressable: other_org, city: "Portland", state: "OR", county: "Multnomah", inactive: false)
-          other_registration.event_registration_organizations.create!(organization: other_org)
+          create(:affiliation, person: other, organization: other_org)
 
           get attendees_events_url(work_location: "city: austin"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
@@ -680,7 +680,7 @@ RSpec.describe "Events attendees", type: :request do
         it "lets the State dropdown win over the same field typed in the box" do
           org = create(:organization)
           create(:address, addressable: org, city: "Austin", state: "TX", inactive: false)
-          attendee_registration.event_registration_organizations.create!(organization: org)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
 
           get attendees_events_url(work_location: "state: OR city: austin", state: "TX"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
@@ -689,7 +689,7 @@ RSpec.describe "Events attendees", type: :request do
         it "matches nobody when the State dropdown contradicts the county's own state" do
           org = create(:organization)
           create(:address, addressable: org, city: "Portland", state: "OR", county: "Multnomah", inactive: false)
-          attendee_registration.event_registration_organizations.create!(organization: org)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
 
           get attendees_events_url(state: "OR", county: "WA::King"), headers: frame_headers
           expect(response).to have_http_status(:ok)
