@@ -3,7 +3,6 @@ module Admin
     include AdminCardsHelper
 
     REVIEW_BADGE = "Review".freeze
-    NEW_BADGE = "New".freeze
     DATA_HEALTH_BADGE_TITLE = "Data checks only. Possible duplicates and author credit are listed separately on the Data health page.".freeze
 
     def index
