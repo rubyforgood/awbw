@@ -187,7 +187,9 @@
                   hint: "How long past a term's start an unpaid membership invoice still reads as current" %>
     </section>
 
-    <%= f.button :submit, "Save settings", class: button_classes(:primary) %>
+    <div class="action-buttons flex justify-center gap-3">
+      <%= f.button :submit, "Save settings", class: button_classes(:primary) %>
+    </div>
   <% end %>
 
   <% if (revision = DeployedRevision.current) %>
