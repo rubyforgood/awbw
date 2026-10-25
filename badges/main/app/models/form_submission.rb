@@ -131,22 +131,30 @@ class FormSubmission < ApplicationRecord
   # OrganizationServices::LinkSubmittedOrganization reads them. Shared by the
   # admin linking editor and the auto-processing a public submission runs.
   def org_entry
-    answers = answers_by_identifier
+    self.class.org_entry_from(answers_by_identifier).merge(submission: self)
+  end
+
+  ORG_ENTRY_FIELDS = {
+    org_name: FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER,
+    position: FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER,
+    website: "organization_website",
+    organization_type: "organization_type"
+  }.freeze
+  ORG_ADDRESS_FIELDS = {
+    street_address: "organization_street",
+    city: "organization_city",
+    state: "organization_state",
+    zip_code: "organization_zip",
+    country: "organization_country"
+  }.freeze
+  ORG_ENTRY_FIELD_IDENTIFIERS = (ORG_ENTRY_FIELDS.values + ORG_ADDRESS_FIELDS.values).freeze
+
+  # The same org entry from a bare field_identifier => answer hash, for callers
+  # holding answers that aren't saved on a submission (the spreadsheet importer,
+  # a public form mid-submit).
+  def self.org_entry_from(answers)
     read = ->(identifier) { answers[identifier].presence }
-    {
-      submission: self,
-      org_name: read.call(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER),
-      position: read.call(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER),
-      website: read.call("organization_website"),
-      organization_type: read.call("organization_type"),
-      address: {
-        street_address: read.call("organization_street"),
-        city: read.call("organization_city"),
-        state: read.call("organization_state"),
-        zip_code: read.call("organization_zip"),
-        country: read.call("organization_country")
-      }
-    }
+    ORG_ENTRY_FIELDS.transform_values(&read).merge(address: ORG_ADDRESS_FIELDS.transform_values(&read))
   end
 
   # The registration-org row a submission is pinned to — the link public
