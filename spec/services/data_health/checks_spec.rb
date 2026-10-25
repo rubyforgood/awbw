@@ -124,17 +124,14 @@ RSpec.describe DataHealth::MisalignedAffiliationProvenance do
 end
 
 RSpec.describe DataHealth::LegacyLeaderAffiliations do
-  let(:person) { create(:person) }
-  let(:organization) { create(:organization) }
-
-  it "finds affiliations still titled Leader, and folds them into Facilitator" do
-    leader = create(:affiliation, person:, organization:, title: "Leader")
-    create(:affiliation, person:, organization:, title: "Facilitator")
+  it "finds affiliations still titled Leader and sends them to the review page" do
+    leader = create(:affiliation, title: "Leader")
+    create(:affiliation, title: "Facilitator")
     check = described_class.new
 
     expect(check.scope).to contain_exactly(leader)
-    expect(check.repair!).to eq(1)
-    expect(described_class.new).not_to be_any
+    expect(check).not_to be_repairable
+    expect(check.review_path).to eq("/admin/leader_affiliations")
   end
 end
 

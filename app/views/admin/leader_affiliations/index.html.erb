@@ -1,0 +1,79 @@
+<% content_for(:page_title, "Leader affiliations") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% choice_labels = { "merge" => [ "Merge into Facilitator", :blue ], "rename" => [ "Rename to Facilitator", :blue ],
+                     "end" => [ "Rename and end", :red ], "delete" => [ "Delete", :red ], "keep" => [ "Leave as is", :gray ] } %>
+<% color_class = {
+     red: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300",
+     blue: "has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700 has-[:checked]:border-blue-300",
+     gray: "has-[:checked]:bg-gray-100 has-[:checked]:text-gray-800 has-[:checked]:border-gray-400"
+   } %>
+<% button_base = "inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
+<div class="mx-auto max-w-5xl rounded-xl border border-gray-200 bg-white p-4 shadow sm:p-6">
+  <div class="mb-6">
+    <%= link_to "← Data health", data_health_return_path(DataHealth::LegacyLeaderAffiliations.key), class: "text-sm #{eyebrow_link_class}" %>
+  </div>
+
+  <h1 class="mb-2 text-2xl font-semibold text-gray-900">Leader affiliations</h1>
+  <div class="mb-6 space-y-2 text-sm text-gray-600">
+    <p>
+      The old app's <strong>Leader</strong> was a Facilitator who is a primary contact, but a row titled Leader counts
+      toward no program status. Pick what happens to each one — the suggested choice is preselected, and nothing changes
+      until you confirm on the next page.
+    </p>
+    <ul class="list-disc space-y-1 pl-5">
+      <li><strong>Merge into Facilitator</strong> — the Facilitator row beside it turns primary contact on and takes its FileMaker codes and anything attached to it; the Leader row is deleted.</li>
+      <li><strong>Rename to Facilitator</strong> — the row becomes a Facilitator, primary contact on.</li>
+      <li><strong>Rename and end</strong> — the same, then ended today, so it stays on the record without counting as active.</li>
+      <li><strong>Delete</strong> — the Leader row and its FileMaker codes are removed.</li>
+    </ul>
+    <p>Every change except Delete leaves a comment on the affiliation saying it was a Leader.</p>
+  </div>
+
+  <% if @rows.empty? %>
+    <div class="rounded-lg border border-gray-200 p-6 text-center text-gray-500">No affiliations are titled Leader.</div>
+  <% else %>
+    <%= form_with url: admin_leader_affiliations_path, method: :post, data: { turbo: false } do %>
+      <div class="divide-y divide-gray-100 rounded-lg border border-gray-200">
+        <% @rows.each do |row| %>
+          <% leader = row.leader %>
+          <% chosen = @pre_outcome[row.key] || row.suggestion %>
+          <div class="space-y-2 px-4 py-3">
+            <div class="text-sm">
+              <div>
+                <%= link_to leader.person.name, edit_person_path(leader.person, anchor: dom_id(leader)), target: "_blank", rel: "noopener",
+                      class: "font-medium text-gray-900 hover:text-blue-700 hover:underline" %>
+                <span class="text-gray-500">— <%= leader.organization.name %></span>
+              </div>
+              <div class="text-xs text-gray-500">
+                Leader · <%= leader.decorate.period_label.presence || "No dates" %><%= " · primary contact" if leader.primary_contact? %>
+                <% if leader.filemaker_code.present? %> · FileMaker <%= leader.filemaker_code %><% end %>
+              </div>
+              <div class="text-xs <%= row.twin && !row.same_dates ? "text-amber-700" : "text-gray-500" %>">
+                <% if row.twin %>
+                  Facilitator #<%= row.twin.id %> · <%= row.twin.decorate.period_label.presence || "No dates" %><%= " · primary contact" if row.twin.primary_contact? %>
+                  <%= row.same_dates ? "· same dates" : "· overlaps with different dates — check which dates are right" %>
+                <% else %>
+                  No Facilitator row covers this stretch.
+                <% end %>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <% row.choices.each do |value| %>
+                <% label, color = choice_labels[value] %>
+                <label class="<%= button_base %> <%= color_class[color] %>">
+                  <%= radio_button_tag "outcome[#{row.key}]", value, chosen == value, id: "outcome_#{row.key}_#{value}", class: "h-4 w-4 border-gray-300" %>
+                  <%= label %>
+                </label>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="mt-6 flex items-center justify-end gap-3">
+        <%= link_to "Cancel", data_health_return_path(DataHealth::LegacyLeaderAffiliations.key), class: "text-sm #{eyebrow_link_class}" %>
+        <%= submit_tag "Preview changes", class: button_classes(:primary) %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
