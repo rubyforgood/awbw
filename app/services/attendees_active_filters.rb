@@ -15,12 +15,12 @@ class AttendeesActiveFilters
   # honours but this list omits narrows the page silently AND is dropped by the
   # filter form's hidden fields on the next change, since both read this list.
   CHIP_PARAMS = %w[
-    registrant_ids organization_id org_city age_group life_experience
+    registrant_ids organization_id org_city org_state age_group life_experience
     country school_district payment_status funder
   ].freeze
   # The roster has no filter form at all, so every drill-in it accepts needs a
-  # chip — including the two the index leaves out because it has controls for them.
-  ROSTER_CHIP_PARAMS = %w[ registrant_ids sector state ].freeze
+  # chip — including sector, which the index leaves out because it has a control for it.
+  ROSTER_CHIP_PARAMS = %w[ registrant_ids sector ].freeze
 
   def initialize(params, chip_params: CHIP_PARAMS)
     @params = params
@@ -45,12 +45,12 @@ class AttendeesActiveFilters
     case param
     when "registrant_ids" then "#{value.to_s.split("-").size} selected people"
     when "sector" then record_label("Sector", Sector, value)
-    when "state" then "State: #{value}"
     when "organization_id" then record_label("Organization", Organization, value)
     when "org_city" then "Org city: #{value}"
+    when "org_state" then "Org state: #{value}"
     when "age_group" then record_label("Age group", Category, value)
     when "life_experience" then record_label("Life experience", Category, value)
-    when "country" then "Country: #{value}"
+    when "country" then "Org country: #{value}"
     when "school_district" then "School district: #{value}"
     when "payment_status" then option_label("Payment", EventRegistration::PAYMENT_STATUS_FILTER_OPTIONS, value)
     when "funder" then option_label("Funding", EventRegistration::FUNDER_FILTER_OPTIONS, value)

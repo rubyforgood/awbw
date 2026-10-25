@@ -124,9 +124,9 @@
   <%= render "shared/filter_text", param: :city, label: "City",
         placeholder: "City name", field_class: field_class %>
 
-  <% if @dashboard&.states&.any? %>
+  <% if @dashboard&.registrant_address_states&.any? %>
     <%= render "shared/filter_select", param: :state, label: "State",
-          options: @dashboard.states, selected: params[:state], blank: "All states", field_class: field_class, wrapper_class: "w-full md:w-32" %>
+          options: @dashboard.registrant_address_states, selected: params[:state], blank: "All states", field_class: field_class, wrapper_class: "w-full md:w-32" %>
   <% end %>
 
   <% if @dashboard&.counties&.any? %>

@@ -438,37 +438,42 @@ RSpec.describe EventDashboard do
       end
     end
 
-    describe "states" do
-      it "returns unique states from active registrants' active addresses" do
+    describe "work locations" do
+      before do
+        reg1.event_registration_organizations.create!(organization: org_a)
+        reg2.event_registration_organizations.create!(organization: org_c)
+        cancelled_reg = event.event_registrations.find_by(registrant: cancelled_person)
+        cancelled_reg.event_registration_organizations.create!(organization: org_excluded)
+        create(:address, addressable: org_a, city: "Oakland", state: "OR", country: "United States")
+        chosen = create(:address, addressable: org_a, city: "Fresno", state: "CA", country: "United States")
+        person1.affiliations.find_by(organization: org_a).update!(organization_address: chosen, event_registration: reg1)
+        create(:address, addressable: org_c, city: "Albany", state: "NY", country: "Mexico")
+        create(:address, addressable: org_excluded, city: "Miami", state: "FL", country: "Canada")
+      end
+
+      it "reads states from the affiliation's chosen org address, else the org's oldest" do
         expect(dashboard.states).to eq(%w[CA NY])
-      end
-
-      it "counts distinct registrants per state" do
         expect(dashboard.state_counts).to eq("CA" => 1, "NY" => 1)
+        expect(dashboard.state_registrant_ids_by_state).to eq("CA" => [ person1.id ], "NY" => [ person2.id ])
       end
 
-      it "returns the registrant ids that have a state on file" do
-        expect(dashboard.state_registrant_ids).to contain_exactly(person1.id, person2.id)
+      it "reads countries from the same work addresses, excluding cancelled registrations" do
+        expect(dashboard.country_counts).to eq("United States" => 1, "Mexico" => 1)
+        expect(dashboard.country_registrant_ids).to contain_exactly(person1.id, person2.id)
+      end
+
+      it "groups registrants by work city" do
+        expect(dashboard.registrant_city_breakdown.rows.map(&:city)).to contain_exactly("Fresno, CA", "Albany, NY")
+      end
+
+      it "offers the State filter the registrants' own address states" do
+        expect(dashboard.registrant_address_states).to eq(%w[CA NY])
       end
     end
 
     describe "counties" do
       it "returns unique [ state, county ] pairs from active registrants' active addresses" do
         expect(dashboard.counties).to eq([ [ "CA", "Los Angeles" ], [ "NY", "Kings" ] ])
-      end
-    end
-
-    describe "countries" do
-      it "returns the registrant ids that have a country on file, excluding inactive and cancelled" do
-        expect(dashboard.country_registrant_ids).to contain_exactly(person1.id, person2.id)
-      end
-
-      it "counts only active registrants' active addresses" do
-        expect(dashboard.country_counts.values.sum).to eq(2)
-      end
-
-      it "maps each country to its registrant ids" do
-        expect(dashboard.country_registrant_ids_by_country.values.flatten).to contain_exactly(person1.id, person2.id)
       end
     end
 

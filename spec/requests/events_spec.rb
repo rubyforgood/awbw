@@ -3371,8 +3371,9 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Hospice care")
         end
 
-        it "shows a countries breakdown from registrant addresses" do
-          create(:address, addressable: person, state: "CA", country: "Canada", inactive: false)
+        it "shows a countries breakdown from the org a registrant registered under" do
+          create(:address, addressable: organization, state: "ON", country: "Canada", inactive: false)
+          registration.event_registration_organizations.create!(organization: organization)
 
           get roster_event_path(owned_event), headers: charts_headers
 
@@ -3391,7 +3392,8 @@ RSpec.describe "Events", type: :request do
         end
 
         it "renders the states breakdown as a US choropleth map fed by per-state counts" do
-          create(:address, addressable: person, state: "CA", inactive: false)
+          create(:address, addressable: organization, state: "CA", inactive: false)
+          registration.event_registration_organizations.create!(organization: organization)
 
           get roster_event_path(owned_event), headers: charts_headers
 

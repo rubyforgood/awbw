@@ -239,7 +239,7 @@ module EventsHelper
   REPORT_SUBNAV_PARAMS = %i[
     event_id event_type search funder_sgid time_period view registrant_ids
     attendance_status payment_status funder scholarship
-    sector contact_info affiliation_status organization_id org_city state county
+    sector contact_info affiliation_status organization_id org_city org_state state county
     age_group life_experience country school_district program_status
   ].freeze
 

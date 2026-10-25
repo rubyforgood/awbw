@@ -130,7 +130,7 @@ RSpec.describe "Events attendees", type: :request do
         get attendees_events_url(country: "Canada", state: "OR")
         # The chip labels the applied filter and its ✕ links back to the index
         # with only that param dropped (the other filters are preserved).
-        expect(response.body).to include("Country: Canada")
+        expect(response.body).to include("Org country: Canada")
         expect(Capybara.string(response.body))
           .to have_link(href: attendees_events_path(state: "OR"))
       end
@@ -341,12 +341,20 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).to include("Online Search")
         end
 
-        it "filters by a breakdown drill-in (country)" do
-          create(:address, addressable: attendee, country: "Canada", inactive: false)
+        it "filters by a work country or org state drill-in (via the org they registered under)" do
+          org = create(:organization, name: "Toronto Org")
+          create(:address, addressable: org, state: "ON", country: "Canada", inactive: false)
+          attendee_registration.event_registration_organizations.create!(organization: org)
           other = create(:person, first_name: "Zed", last_name: "Zulu")
+          create(:address, addressable: other, state: "OR", country: "Canada", inactive: false)
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
 
           get attendees_events_url(country: "Canada"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Zed Zulu")
+
+          org.addresses.first.update!(state: "WA", country: "United States")
+          get attendees_events_url(org_state: "WA"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Zed Zulu")
         end
@@ -656,7 +664,7 @@ RSpec.describe "Events attendees", type: :request do
             .at_css("turbo-stream[action='replace'][target='attendees_chips'] template")
           expect(template).to be_present
 
-          remove_link = "a[aria-label='Remove Country: Canada filter']"
+          remove_link = "a[aria-label='Remove Org country: Canada filter']"
           expect(Capybara.string(template.inner_html)).to have_selector(
             "#{remove_link}[href='#{attendees_events_path(ce_status: "issued")}']", visible: :all
           )

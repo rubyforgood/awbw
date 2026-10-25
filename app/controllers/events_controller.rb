@@ -714,18 +714,16 @@ class EventsController < ApplicationController
   end
 
   # Person ids behind the clicked breakdown row. Most dimensions arrive as an
-  # explicit id list (EventDashboard already has the maps); sector and state have
-  # no per-value id map, so they arrive as named filters and resolve here — bounded
-  # to `registrant_ids` (this event's roster), since the result is only ever
+  # explicit id list (EventDashboard already has the maps); sector has no per-value
+  # id map, so it arrives as a named filter and resolves here — bounded to
+  # `registrant_ids` (this event's roster), since the result is only ever
   # intersected with it and the unbounded lookup would load every person in the app
-  # tagged with that sector or living in that state.
+  # tagged with that sector.
   def roster_drill_in_ids(registrant_ids)
     if params[:registrant_ids].present?
       params[:registrant_ids].to_s.split("-").map(&:to_i).to_set
     elsif params[:sector].present?
       person_sector_ids(params[:sector]).where(sectorable_id: registrant_ids).pluck(:sectorable_id).to_set
-    elsif params[:state].present?
-      person_address_ids(state: params[:state]).where(addressable_id: registrant_ids).pluck(:addressable_id).to_set
     end
   end
 
@@ -855,11 +853,12 @@ class EventsController < ApplicationController
     # Breakdown drill-in filters (set when a chart row is clicked).
     scope = scope.where(id: person_category_ids(params[:age_group])) if params[:age_group].present?
     scope = scope.where(id: person_category_ids(params[:life_experience])) if params[:life_experience].present?
-    scope = scope.where(id: person_country_ids(params[:country])) if params[:country].present?
+    scope = scope.where(id: attendee_work_addresses.registrant_ids_by_country.fetch(params[:country], [])) if params[:country].present?
+    scope = scope.where(id: attendee_work_addresses.registrant_ids_by_state.fetch(params[:org_state], [])) if params[:org_state].present?
     scope = scope.where(id: person_school_district_ids(params[:school_district])) if params[:school_district].present?
     scope = scope.where(id: person_program_status_ids(params[:program_status])) if params[:program_status].present?
     scope = scope.where(id: person_linked_organization_ids(params[:organization_id])) if params[:organization_id].present?
-    scope = scope.where(id: person_linked_org_city_ids(params[:org_city])) if params[:org_city].present?
+    scope = scope.where(id: attendee_work_addresses.registrant_ids_by_city_label.fetch(params[:org_city], [])) if params[:org_city].present?
     if params[:scholarship].present?
       # Scoped to one event, every status (including "no") is unambiguous at the
       # registration level, so reuse the shared scope. Cross-event, "No scholarship"
@@ -950,10 +949,6 @@ class EventsController < ApplicationController
     CategorizableItem.where(categorizable_type: "Person", category_id: category_id).select(:categorizable_id)
   end
 
-  def person_country_ids(country)
-    Address.active.where(addressable_type: "Person", country: country).select(:addressable_id)
-  end
-
   # People whose event-registration-linked affiliation points at an organization
   # address in the given school district (Affiliation#organization_address →
   # Address#district), scoped to the in-scope registrations — matching the
@@ -974,26 +969,10 @@ class EventsController < ApplicationController
       .select(Arel.sql("event_registrations.registrant_id"))
   end
 
-  # People whose linked training org sits in the given "City, State" (matched on
-  # each org's first active address, mirroring the cities breakdown's labeling).
-  def person_linked_org_city_ids(city_label)
-    org_ids = org_ids_by_city_label[city_label] || []
-    return Person.none if org_ids.empty?
-    person_linked_organization_ids(org_ids)
-  end
-
-  def org_ids_by_city_label
-    @org_ids_by_city_label ||= Address.active
-      .where(addressable_type: "Organization",
-             addressable_id: EventRegistrationOrganization.where(event_registration_id: attendee_registrations.select(:id)).select(:organization_id))
-      .order(:id)
-      .pluck(:addressable_id, :city, :state)
-      .each_with_object({}) do |(org_id, city, state), first_label|
-        next if first_label.key?(org_id)
-        first_label[org_id] = [ city, state ].compact_blank.join(", ").presence
-      end
-      .group_by { |_org_id, label| label }
-      .transform_values { |pairs| pairs.map(&:first) }
+  # Where each in-scope registration's registrant works, behind the country, org
+  # state, and org city drill-ins — the same source as the breakdowns they come from.
+  def attendee_work_addresses
+    @attendee_work_addresses ||= RegistrationWorkAddresses.new(attendee_registrations.pluck(:id))
   end
 
   # Anchored the same way the index's own column is: this list spans events, so
