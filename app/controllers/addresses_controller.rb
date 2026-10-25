@@ -35,7 +35,7 @@ class AddressesController < ApplicationController
   end
 
   def dedupe_perform_all
-    authorize! :dedupe, to: :dedupe?
+    authorize! Address, to: :dedupe?
     MergeDuplicateAddressesJob.perform_later
 
     track_event("dedupe.address_all", {})
