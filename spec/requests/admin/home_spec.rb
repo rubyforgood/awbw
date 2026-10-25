@@ -82,72 +82,62 @@ RSpec.describe "Admin home", type: :request do
     expect(response.body).to include(%(href="#{organization_statuses_path}"))
   end
 
-  it "loads the action counts in lazy frames" do
+  it "loads every action count in one frame request so the badges hold a single server thread" do
     get "/admin"
 
-    expect(response.body).to include(
-      %(src="#{admin_home_data_health_count_path}"),
-      %(src="#{admin_home_author_credit_count_path}"),
-      %(src="#{admin_home_unsynced_features_count_path}")
-    )
+    expect(response.body.scan(/<turbo-frame[^>]* src=/).size).to eq(1)
+    expect(response.body).to include(%(src="#{admin_home_badge_counts_path}"))
+    expect(response.body).to include(%(id="data_health_count"), %(id="author_credit_count"), %(id="unsynced_features_count"))
   end
 
-  describe "count badges" do
-    it "renders the Data health total inside its frame" do
-      allow(DataHealth).to receive(:checks).and_return([ instance_double(DataHealth::Check, count: 2), instance_double(DataHealth::Check, count: 3) ])
-
-      get admin_home_data_health_count_path, headers: { "Turbo-Frame" => "data_health_count" }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include(%(id="data_health_count"))
-      expect(response.body).to match(%r{<span[^>]*>5</span>})
-      expect(response.body).to include("Data checks only")
+  describe "badge counts" do
+    def get_badge_counts
+      get admin_home_badge_counts_path, headers: { "Turbo-Frame" => "badge_counts" }
     end
 
-    it "renders the Author credit total inside its frame" do
+    def badge_stream(target)
+      response.body[%r{<turbo-stream action="update" target="#{target}">.*?</turbo-stream>}m]
+    end
+
+    before do
+      allow(DataHealth).to receive(:checks).and_return([ instance_double(DataHealth::Check, count: 2), instance_double(DataHealth::Check, count: 3) ])
       entries = [ 1, 4 ].map { |count| DataHealth::Worklists::Entry.new("Label", count, "record", "/") }
       allow_any_instance_of(DataHealth::Worklists).to receive(:author_credit).and_return(entries)
-
-      get admin_home_author_credit_count_path, headers: { "Turbo-Frame" => "author_credit_count" }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include(%(id="author_credit_count"))
-      expect(response.body).to match(%r{<span[^>]*>5</span>})
+      allow_any_instance_of(FeatureCatalog).to receive(:missing_count).and_return(3)
     end
 
-    it "renders how many seeded features aren't synced yet" do
-      allow_any_instance_of(FeatureCatalog).to receive(:missing_count).and_return(3)
-
-      get admin_home_unsynced_features_count_path, headers: { "Turbo-Frame" => "unsynced_features_count" }
+    it "updates each badge from inside the frame" do
+      get_badge_counts
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include(%(id="unsynced_features_count"))
-      expect(response.body).to match(%r{<span[^>]*>3</span>})
+      expect(response.body).to include(%(id="badge_counts"))
+      expect(badge_stream("data_health_count")).to match(%r{<span[^>]*>5</span>}).and include("Data checks only")
+      expect(badge_stream("author_credit_count")).to match(%r{<span[^>]*>5</span>})
+      expect(badge_stream("unsynced_features_count")).to match(%r{<span[^>]*>3</span>})
     end
 
     it "renders no badge when nothing is waiting" do
       allow(DataHealth).to receive(:checks).and_return([ instance_double(DataHealth::Check, count: 0) ])
 
-      get admin_home_data_health_count_path, headers: { "Turbo-Frame" => "data_health_count" }
+      get_badge_counts
 
-      expect(response.body).to include(%(id="data_health_count"))
-      expect(response.body).not_to include("rounded-full")
+      expect(badge_stream("data_health_count")).not_to include("rounded-full")
     end
 
-    it "renders an empty frame when a count fails" do
+    it "leaves only the failing badge empty when a count fails" do
       allow(DataHealth).to receive(:checks).and_raise(StandardError, "boom")
 
-      get admin_home_data_health_count_path, headers: { "Turbo-Frame" => "data_health_count" }
+      get_badge_counts
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include(%(id="data_health_count"))
-      expect(response.body).not_to include("rounded-full")
+      expect(badge_stream("data_health_count")).not_to include("rounded-full")
+      expect(badge_stream("author_credit_count")).to match(%r{<span[^>]*>5</span>})
     end
 
     it "denies a non-admin" do
       sign_in create(:user)
 
-      get admin_home_data_health_count_path, headers: { "Turbo-Frame" => "data_health_count" }
+      get_badge_counts
 
       expect(response).not_to have_http_status(:ok)
     end

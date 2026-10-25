@@ -56,9 +56,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get "/",                         to: "home#index" # admin home page
-    get "home/data_health_count",    to: "home#data_health_count", as: "home_data_health_count"
-    get "home/author_credit_count",  to: "home#author_credit_count", as: "home_author_credit_count"
-    get "home/unsynced_features_count", to: "home#unsynced_features_count", as: "home_unsynced_features_count"
+    get "home/badge_counts",         to: "home#badge_counts", as: "home_badge_counts"
     get "activities/events",         to: "ahoy_activities#index", as: "activities_events"
     get "activities/events/:id",    to: "ahoy_activities#show", as: "activities_event"
     get "activities/visits",         to: "ahoy_activities#visits", as: "activities_visits"
