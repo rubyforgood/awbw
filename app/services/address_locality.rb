@@ -13,10 +13,10 @@ module AddressLocality
   LOS_ANGELES = "los angeles"
   ORANGE = "orange"
 
-  # Mailing cities that are neighborhoods inside the City of Los Angeles.
-  LA_CITY_NEIGHBORHOODS = [
-    "canoga park", "north hollywood", "pacific palisades", "pacoima", "san pedro", "sherman oaks",
-    "sylmar", "van nuys", "venice", "winnetka"
+  # Mailing cities inside the City of Los Angeles: Los Angeles itself and its neighborhoods.
+  LA_CITY_MAILING_CITIES = [
+    LOS_ANGELES, "canoga park", "north hollywood", "pacific palisades", "pacoima", "san pedro",
+    "sherman oaks", "sylmar", "van nuys", "venice", "winnetka"
   ].to_set.freeze
 
   # AWBW's Northern/Central/Southern line: the region most FileMaker projects in each county name,
@@ -59,8 +59,7 @@ module AddressLocality
   # a Los Angeles mailing city settles the city whether or not the county came through.
   def in_california(city, county)
     county = AddressNormalizer.county(county)
-    city = AddressNormalizer.city(city)
-    return Address::LA_CITY if city == LOS_ANGELES || LA_CITY_NEIGHBORHOODS.include?(city)
+    return Address::LA_CITY if LA_CITY_MAILING_CITIES.include?(AddressNormalizer.city(city))
     return Address::LA_COUNTY if county == LOS_ANGELES
     return Address::ORANGE_COUNTY if county == ORANGE
 
