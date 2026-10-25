@@ -16,15 +16,12 @@ module FilemakerValues
   # P2524 are retired too but a portal org already carries each, so they still import.
   RETIRED_RECORDS = {
     "ORG00837" => "Catalyst DO NOT USE",
-    "ORG01126" => "Community Counseling Center DO NOT USE",
     "ORG02183" => "House of Ruth Do Not Use",
-    "ORG02287" => "InnerCHANGE Do Not Use",
     "ORG02393" => "Jewish Family Service (JFS) Do Not Use",
     "ORG02988" => "Marjaree Mason Center Do Not Use",
     "ORG03581" => "Pacific Clinics DO NOT USE",
     "ORG03681" => "Peace Over Violence Do Not Use",
     "ORG04794" => "The Joe Torre Safe at Home Foundation DO NOT USE",
-    "ORG05066" => "Turning Point Do Not Use",
     "ORG06025" => "YWCA of Greater Los Angeles Do Not Use",
     "ORG06047" => "Union Rescue Mission Do Not Use",
     "ORG06175" => "Monarch Services Do Not Use",
@@ -63,6 +60,13 @@ module FilemakerValues
     "P2497" => "DELETE",
     "P2605" => "DELETE",
     "P2762" => "DO NOT USE Children's Hospital Los Angeles"
+  }.freeze
+  # Retired in FileMaker, but no namesake there shares a city with it, so it comes in as its
+  # own organization under its name and city.
+  RETIRED_RENAMED = {
+    "ORG01126" => "Community Counseling Center (Apple Valley, CA)",
+    "ORG02287" => "InnerCHANGE (Los Angeles, CA)",
+    "ORG05066" => "Turning Point (Woodstock, IL)"
   }.freeze
   # The retired organizations that duplicated another, by the code of the one they duplicated.
   # Each folds into it — code, blanks, addresses, phones, projects — so what names it lands there.

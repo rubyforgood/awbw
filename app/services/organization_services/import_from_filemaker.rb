@@ -109,7 +109,7 @@ module OrganizationServices
 
     def import_organization(fm_organization, projects)
       data = fm_organization.data
-      name = clip(data["OrgName"].to_s.squish)
+      name = organization_name(fm_organization)
       label = "#{fm_organization.fm_id} #{name}".squish
       if name.blank? || retired_record?(fm_organization.fm_id)
         return @duplicates << [ fm_organization, projects ] if duplicate_of(fm_organization.fm_id)
@@ -137,7 +137,7 @@ module OrganizationServices
         return import_projects(umbrella, [ project ])
       end
 
-      organization = umbrella || program || Organization.new(name: unique_name(clip(fm_organization.data["OrgName"].to_s.squish), project.fm_id))
+      organization = umbrella || program || Organization.new(name: unique_name(organization_name(fm_organization), project.fm_id))
       organization_side = organization_attributes(fm_organization.data)
       attributes = organization_side.merge(project_attributes(project.data)) { |_key, mine, theirs| mine.presence || theirs }
       attributes.merge!(organization_side.slice(*TYPE_FIELDS)) if organization_side[:organization_type]
@@ -296,6 +296,10 @@ module OrganizationServices
     # holds is told apart by its code.
     def unique_name(name, code)
       Organization.exists?(name:) ? clip("#{name} (#{code})") : name
+    end
+
+    def organization_name(fm_organization)
+      RETIRED_RENAMED[fm_organization.fm_id] || clip(fm_organization.data["OrgName"].to_s.squish)
     end
 
     def project_name(project)

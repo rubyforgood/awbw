@@ -218,6 +218,28 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
       end
     end
 
+    describe "a retired organization whose namesake is elsewhere" do
+      before { stub_const("FilemakerValues::RETIRED_RENAMED", { "ORG00008" => "Harbor House (Ojai)" }) }
+
+      it "comes in as its own organization under its new name" do
+        create(:organization, name: "Harbor House")
+        fm_organization("ORG00008", OrgName: "Harbor House Do Not Use", Website: "harbor.example.org")
+
+        import
+
+        expect(Organization.find_by!(filemaker_code: "ORG00008")).to have_attributes(name: "Harbor House (Ojai)", website_url: "harbor.example.org")
+      end
+
+      it "names the one organization it makes with its single project by the new name too" do
+        fm_organization("ORG00008", OrgName: "Harbor House Do Not Use")
+        project("P0008", "ORG00008", ProjectName: "Harbor Teen Program")
+
+        import
+
+        expect(Organization.sole).to have_attributes(name: "Harbor House (Ojai)", filemaker_code: "ORG00008, P0008")
+      end
+    end
+
     it "leaves out a retired organization, bringing its projects in unnested" do
       fm_organization("ORG00007", OrgName: "Harbor House Do Not Use")
       project("P0007", "ORG00007", ProjectName: "Harbor Teen Program")

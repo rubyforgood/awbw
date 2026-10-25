@@ -11,4 +11,8 @@ RSpec.describe FilemakerValues do
       end
     end
   end
+
+  it "renames only organizations it doesn't also leave out" do
+    expect(FilemakerValues::RETIRED_RENAMED.keys & FilemakerValues::RETIRED_RECORDS.keys).to be_empty
+  end
 end
