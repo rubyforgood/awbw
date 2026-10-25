@@ -144,6 +144,15 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
       end
     end
 
+    it "leaves the country blank for a state no US state answers to, placing it Outside USA" do
+      address_answers = { street_address: "1 King St", city: "Toronto", state: "ON", zip_code: "M5H", country: "" }
+
+      result = described_class.call(person: person, organization: organization,
+                                    entry: entry.merge(address: address_answers), scenario: "on_demand")
+
+      expect(result.address).to have_attributes(country: nil, locality: Address::OUTSIDE_USA)
+    end
+
     it "keeps a submitted country" do
       address_answers = { street_address: "1 King St", city: "Toronto", state: "ON", zip_code: "M5H", country: "Canada" }
 

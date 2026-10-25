@@ -88,8 +88,7 @@ module OrganizationServices
 
     def upsert_address
       OrganizationServices::UpsertAddress.call(
-        organization: @organization, overwrite: false,
-        **submitted_address, country: submitted_address[:country].presence || Address::DEFAULT_COUNTRY
+        organization: @organization, overwrite: false, **submitted_address
       )
     end
 

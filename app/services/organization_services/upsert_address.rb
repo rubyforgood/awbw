@@ -115,19 +115,18 @@ module OrganizationServices
       updates[:street_address] = @street_address if @street_address.present? && (@overwrite || existing.street_address.blank?)
       updates[:zip_code] = @zip_code if @zip_code.present? && (@overwrite || existing.zip_code.blank?)
       updates[:country] = @country if @country.present? && (@overwrite || existing.country.blank?)
-      updates[:county] = county if county && existing.county.blank?
-      locality = filled_locality(existing, updates)
-      updates[:locality] = locality if locality
-      updates
+      updates.merge(filled_defaults(existing, updates))
     end
 
-    # Only a blank or Unknown locality is filled, and only with one the address's parts settle.
-    def filled_locality(existing, updates)
-      return if existing.locality.present? && existing.locality != Address::UNKNOWN_LOCALITY
-
-      parts = existing.attributes.symbolize_keys.slice(:city, :state, :country, :county).merge(updates.slice(:city, :state, :country, :county))
-      locality = AddressLocality.for(**parts)
-      locality unless locality == Address::UNKNOWN_LOCALITY
+    # A blank country or county, and a blank or Unknown locality, take what AddressDefaults
+    # works out from the address as updated.
+    def filled_defaults(existing, updates)
+      parts = existing.attributes.symbolize_keys.slice(:city, :state, :zip_code, :country, :county)
+                     .merge(updates.slice(:city, :state, :zip_code, :country))
+      AddressDefaults.for(**parts).select do |field, value|
+        value.present? && value != Address::UNKNOWN_LOCALITY &&
+          (existing[field].blank? || existing[field] == Address::UNKNOWN_LOCALITY)
+      end
     end
 
     # An Address needs a city and a state to validate, so a submission missing
@@ -146,18 +145,10 @@ module OrganizationServices
         city: @city,
         state: @state,
         zip_code: @zip_code.to_s,
-        country: @country,
-        county: county,
-        locality: AddressLocality.for(city: @city, state: @state, country: @country, county: county),
+        **AddressDefaults.for(city: @city, state: @state, zip_code: @zip_code, country: @country),
         address_type: "work",
         primary: make_primary
       )
-    end
-
-    def county
-      return @county if defined?(@county)
-
-      @county = FmPostalCode.county_for(@zip_code, state: @state)
     end
 
     def nothing_saved

@@ -42,8 +42,12 @@ RSpec.describe AddressLocality do
     expect(locality(city: "Markleeville", state: "CA", county: "Alpine")).to eq("Unknown")
   end
 
-  it "leaves a state no US state answers to unknown, since a typo and a foreign region read alike" do
-    expect(locality(city: "Toronto", state: "ON")).to eq("Unknown")
+  it "reads a state no US state answers to, with no country, as Outside USA" do
+    expect(locality(city: "Toronto", state: "ON")).to eq("Outside USA")
+  end
+
+  it "leaves a US address whose state no US state answers to unknown" do
+    expect(locality(city: "Nowhere", state: "Narnia", country: "United States")).to eq("Unknown")
     expect(locality(city: "Nowhere", state: "")).to eq("Unknown")
   end
 
