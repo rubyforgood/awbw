@@ -1,6 +1,17 @@
 require "rails_helper"
 
 RSpec.describe OrganizationDecorator do
+  describe "#address_phones" do
+    it "numbers each phone by its address's position, skipping addresses without one" do
+      organization = create(:organization)
+      create(:address, addressable: organization, phone: "123-123-1234")
+      create(:address, addressable: organization, phone: nil)
+      create(:address, addressable: organization, phone: "123-332-1234")
+
+      expect(organization.reload.decorate.address_phones).to eq([ [ 1, "123-123-1234" ], [ 3, "123-332-1234" ] ])
+    end
+  end
+
   describe "#active_affiliations_by_facilitator" do
     let(:organization) { create(:organization) }
     let(:facilitator) { create(:person, first_name: "Zoe") }

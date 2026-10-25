@@ -55,28 +55,29 @@
     <h3 class="<%= heading_class %>">Details</h3>
     <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-4">
       <% organization_type_option = f.object.decorate.organization_type_option %>
-      <%= f.input :organization_type,
-                  label: "Organization type",
-                  as: :select,
-                  required: true,
-                  collection: Organization::ORGANIZATION_TYPES,
-                  selected: organization_type_option,
-                  input_html: {
-                    value: organization_type_option,
-                    class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  } %>
-      <%= f.input :organization_type_other,
-                  label: "Other organization type",
-                  hint: "Please specify if 'Other'",
-                  input_html: {
-                    class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                  } %>
-      <%= f.input :email,
-                  label: "General inbox",
-                  as: :email,
-                  input_html: {
-                    class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  } %>
+      <div class="mb-4">
+        <%= f.input :organization_type,
+                    label: "Organization type",
+                    as: :select,
+                    required: true,
+                    collection: Organization::ORGANIZATION_TYPES,
+                    selected: organization_type_option,
+                    wrapper_html: { class: "mb-0" },
+                    input_html: {
+                      value: organization_type_option,
+                      class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    } %>
+        <%= render layout: "shared/outside_usa",
+                   locals: { summary: "Other type?",
+                             open: organization_type_option == Organization::ORGANIZATION_TYPE_OTHER || f.object.organization_type_other.present? } do %>
+          <%= f.input :organization_type_other,
+                      label: "Other organization type",
+                      wrapper_html: { class: "mb-0" },
+                      input_html: {
+                        class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      } %>
+        <% end %>
+      </div>
       <% if f.object.website_url.present? && (URI.parse(f.object.website_url) rescue nil).nil? %>
         <% website_warning = "<span class='text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 text-sm'>Invalid</span>" %>
       <% end %>
@@ -89,6 +90,27 @@
                     class: "w-full rounded-md #{"bg-red-200" if website_warning.present? } border-gray-300
                     shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
+      <%= f.input :email,
+                  label: "General inbox",
+                  as: :email,
+                  input_html: {
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  } %>
+      <div class="mb-4">
+        <div class="mb-1 block font-medium text-gray-700">Phones</div>
+        <% phones = f.object.decorate.address_phones %>
+        <% numbered = f.object.addresses.size > 1 %>
+        <% if phones.any? %>
+          <ol class="text-sm text-gray-900">
+            <% phones.each do |number, phone| %>
+              <li><% if numbered %><span class="text-gray-500"><%= number %>.</span> <% end %><%= phone %></li>
+            <% end %>
+          </ol>
+        <% else %>
+          <p class="text-sm text-gray-500 italic">None yet.</p>
+        <% end %>
+        <p class="mt-1 text-sm text-gray-500">Saved per <%= link_to (numbered ? "address number" : "address"), "#addresses", class: "underline" %></p>
+      </div>
     </div>
   </div>
 
@@ -150,8 +172,8 @@
   <% if allowed_to?(:manage?, Organization) %>
     <div class="admin-only grid grid-cols-1 items-start gap-x-6 rounded-lg border border-gray-200 bg-blue-100 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
       <%= f.input :filemaker_code,
-                  label: "FileMaker project or organization ID",
-                  hint: filemaker_code_hint(f.object),
+                  label: "FileMaker code",
+                  hint: filemaker_code_hint(f.object, kind: "Project or organization ID"),
                   input_html: { class: "w-full" } %>
       <%= f.input :tax_id,
                   label: "Tax ID (EIN)",

@@ -265,6 +265,26 @@ RSpec.describe "/organizations", type: :request do
   end
 
   describe "GET /edit" do
+    it "lists address phones in the details, numbered by address when there are several" do
+      organization = create(:organization)
+      create(:address, addressable: organization, phone: "123-123-1234")
+      create(:address, addressable: organization, phone: "123-332-1234")
+
+      get edit_organization_url(organization)
+
+      phones = Capybara.string(response.body).find("ol", text: "123-123-1234")
+      expect(phones).to have_css("li", text: "1. 123-123-1234")
+      expect(phones).to have_css("li", text: "2. 123-332-1234")
+    end
+
+    it "opens the other-type box when the org is typed Other" do
+      organization = create(:organization, organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: "Equine therapy")
+
+      get edit_organization_url(organization)
+
+      expect(Capybara.string(response.body)).to have_css("details[open] summary", text: "Other type?")
+    end
+
     it "renders a successful response" do
       organization = Organization.create!(valid_attributes)
       get edit_organization_url(organization)
