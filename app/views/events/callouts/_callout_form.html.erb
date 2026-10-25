@@ -80,11 +80,14 @@
       <% end %>
       <%= form_with url: registration_callout_form_submit_path(@event_registration.slug, callout, form), method: :post do %>
         <div class="space-y-2">
-          <% form.form_fields.order(:position).each do |field| %>
+          <% asked = form.form_fields.order(:position).to_a %>
+          <% asked.each do |field| %>
+            <%# Asked inside its _state question's "Outside USA?" box. %>
+            <% next if field.paired_with_state?(among: asked) %>
             <% if field.group_header? %>
               <h2 class="border-b border-gray-100 pt-2 pb-1 text-sm font-semibold tracking-wide text-gray-400 uppercase"><%= field.name %></h2>
             <% else %>
-              <%= render "events/public_registrations/form_field", field: field, param_scope: "callout_form", required: field.answer_required?, submission: submission,
+              <%= render "events/public_registrations/form_field", field: field, asked: asked, param_scope: "callout_form", required: field.answer_required?, submission: submission,
                     value: field.per_resource? ? submission&.per_resource_values(field) : submission&.form_answers&.find_by(form_field: field)&.submitted_answer %>
             <% end %>
           <% end %>

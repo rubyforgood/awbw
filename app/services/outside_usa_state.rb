@@ -17,13 +17,15 @@ module OutsideUsaState
   end
 
   # A paired country question sits in the state's closed "Outside USA?" box, so
-  # someone who picked a US state leaves it blank; record the US for them.
+  # someone who picked a US state leaves it blank; record the US for them. Pairs
+  # within the submitted questions, which are the ones the form asked.
   def self.with_us_countries(answers)
-    FormField.where(id: answers.keys).where("field_identifier LIKE ?", "%\\#{FormField::STATE_SUFFIX}").find_each do |state_field|
+    asked = FormField.where(id: answers.keys).to_a
+    asked.each do |state_field|
       next unless answers[state_field.id.to_s].in?(Address::US_STATE_ABBREVIATIONS)
 
-      country_key = state_field.paired_country_field&.id&.to_s
-      answers[country_key] = Address::DEFAULT_COUNTRY if country_key && answers.key?(country_key) && answers[country_key].blank?
+      country_key = state_field.paired_country_field(among: asked)&.id&.to_s
+      answers[country_key] = Address::DEFAULT_COUNTRY if country_key && answers[country_key].blank?
     end
     answers
   end

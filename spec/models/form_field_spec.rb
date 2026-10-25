@@ -183,22 +183,22 @@ RSpec.describe FormField do
     let(:form) { create(:form) }
     let!(:state) { create(:form_field, form: form, field_identifier: "practice_state") }
     let!(:country) { create(:form_field, form: form, field_identifier: "practice_country") }
+    let(:asked) { [ state, country ] }
 
-    it "pairs a _country question with the same form's matching _state question" do
-      expect(state.paired_country_field).to eq(country)
-      expect(country).to be_paired_with_state
+    it "pairs a _country question with the matching _state question being asked" do
+      expect(state.paired_country_field(among: asked)).to eq(country)
+      expect(country.paired_with_state?(among: asked)).to be(true)
     end
 
     it "leaves a _country question unpaired without a matching _state question" do
       lone = create(:form_field, form: form, field_identifier: "organization_country")
 
-      expect(lone).not_to be_paired_with_state
+      expect(lone.paired_with_state?(among: asked + [ lone ])).to be(false)
     end
 
-    it "ignores an inactive country question" do
-      country.update!(status: :inactive)
-
-      expect(state.paired_country_field).to be_nil
+    it "leaves a _country question unpaired when the state question isn't being asked" do
+      expect(country.paired_with_state?(among: [ country ])).to be(false)
+      expect(state.paired_country_field(among: [ state ])).to be_nil
     end
   end
 

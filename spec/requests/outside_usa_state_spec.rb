@@ -140,6 +140,20 @@ RSpec.describe "Outside USA? state boxes", type: :request do
 
         expect(FormAnswer.find_by(form_field: country_field).submitted_answer).to eq("Canada")
       end
+
+      it "asks the country on its own when the state question is hidden for a logged-in respondent" do
+        [ state_field, country_field ].each { |field| field.update!(visibility: :logged_out_only) }
+        person = create(:person)
+        create(:address, addressable: person, state: "CA", country: "United States")
+        sign_in create(:user, person: person)
+
+        get public_form_path(form.slug)
+
+        expect(page_html.at_css("select[name='public_registration[form_fields][#{state_field.id}]']")).to be_nil
+        country = page_html.at_css("select[name='public_registration[form_fields][#{country_field.id}]']")
+        expect(country).to be_present
+        expect(country.ancestors("details")).to be_empty
+      end
     end
 
     it "keeps a typed state in its box when the form comes back with errors" do
