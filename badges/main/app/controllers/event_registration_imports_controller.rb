@@ -116,6 +116,15 @@ class EventRegistrationImportsController < ApplicationController
       "#{", #{result.payments_recorded} payments (#{helpers.dollars_from_cents(result.payments_amount_cents)})" if result.payments_recorded.positive?}" \
       "#{", #{result.discounts_recorded} discounts (#{helpers.dollars_from_cents(result.discounts_amount_cents)})" if result.discounts_recorded.positive?}" \
       "#{", #{result.ce_enrollments} CE enrollments" if result.ce_enrollments.positive?}" \
-      "#{", #{result.skipped.size} rows skipped" if result.skipped.any?}."
+      "#{", #{result.skipped.size} rows skipped" if result.skipped.any?}" \
+      "#{untranslated_notice(result.untranslated_addresses)}."
+  end
+
+  def untranslated_notice(untranslated)
+    return if untranslated.empty?
+
+    outcomes = untranslated.keys.map { |field| field == :country ? "country left blank" : "state kept" }
+    ", #{helpers.pluralize(untranslated.values.sum { |values| values.values.sum }, 'address value')} " \
+      "the dropdowns don't offer (#{outcomes.join(', ')})"
   end
 end

@@ -383,6 +383,33 @@ RSpec.describe PersonServices::ImportFromRolodex do
       .to eq([ "LA County", "Outside CA", "Outside USA" ])
   end
 
+  it "translates each address's state and country, reading the country from the state when the archive has none" do
+    FmAddress.create!(fm_id: "A15", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "Austin", "AddrsState" => "Texas", "AddrsCountry" => "USA" })
+    FmAddress.create!(fm_id: "A16", data: { "AddrsLine1" => "2 Main St", "AddrsCity" => "Fresno", "AddrsState" => "CA - California" })
+    FmAddress.create!(fm_id: "A17", data: { "AddrsLine1" => "3 Queen St", "AddrsCity" => "Victoria", "AddrsState" => "BC" })
+    FmAddress.create!(fm_id: "A18", data: { "AddrsLine1" => "4 Reforma", "AddrsCity" => "Mexico City", "AddrsState" => "CDMX", "AddrsCountry" => "Mexcio" })
+    rolodex("00050", EMail: "ada@example.com", PrimaryAddrsID: "A15")
+    rolodex("00051", FirstName: "Grace", EMail: "grace@example.com", PrimaryAddrsID: "A16")
+    rolodex("00052", FirstName: "Hedy", EMail: "hedy@example.com", PrimaryAddrsID: "A17")
+    rolodex("00053", FirstName: "Mary", EMail: "mary@example.com", PrimaryAddrsID: "A18")
+
+    results
+
+    addresses = %w[00050 00051 00052 00053].map { |code| Person.find_by!(filemaker_code: code).addresses.sole }
+    expect(addresses.map { [ _1.state, _1.country ] })
+      .to eq([ [ "TX", "United States" ], [ "CA", "United States" ], [ "BC", "Canada" ], [ "CDMX", "Mexico" ] ])
+    expect(FmAddress.find_by!(fm_id: "A15").data).to include("AddrsState" => "Texas", "AddrsCountry" => "USA")
+  end
+
+  it "reports address values it can't translate" do
+    FmAddress.create!(fm_id: "A19", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "Nowhere", "AddrsState" => "ZZ", "AddrsCountry" => "Narnia" })
+    rolodex("00054", EMail: "ada@example.com", PrimaryAddrsID: "A19")
+
+    import = described_class.new.call
+
+    expect(import.unmatched_addresses[:country]).to eq("Narnia" => 1)
+  end
+
   it "prefixes the street number when the first line doesn't already carry it" do
     FmAddress.create!(fm_id: "A2", data: { "StreetNo" => "1234", "AddrsLine1" => "Main St",
                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
