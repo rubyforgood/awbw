@@ -208,6 +208,14 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(license.person).to eq(person)
     end
 
+    it "saves a typed state and country over a US state picked first" do
+      patch professional_license_path(license), params: {
+        professional_license: { issuing_state: "NY", issuing_state_outside_usa: "Ontario", issuing_country: "Canada" }
+      }
+
+      expect(license.reload).to have_attributes(issuing_state: "Ontario", issuing_country: "Canada")
+    end
+
     it "does not let the registrant be reassigned on update" do
       other = create(:person)
 

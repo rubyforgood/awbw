@@ -63,6 +63,17 @@ RSpec.describe "State field on address forms", type: :request do
       expect(address.reload.state).to eq("Ontario")
     end
 
+    it "saves a typed state over a US state picked first" do
+      address = create(:address, addressable: person, state: "CA", country: "United States")
+
+      patch person_path(person), params: { person: { addresses_attributes: { "0" => {
+        id: address.id, city: address.city, street_address: address.street_address, zip_code: address.zip_code,
+        state: "NV", state_outside_usa: "Ontario"
+      } } } }
+
+      expect(address.reload.state).to eq("Ontario")
+    end
+
     it "ignores admin=true" do
       create(:address, addressable: person, state: "CA", country: "United States")
 

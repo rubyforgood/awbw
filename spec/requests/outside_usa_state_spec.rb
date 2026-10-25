@@ -50,6 +50,36 @@ RSpec.describe "Outside USA? state boxes", type: :request do
       expect(license.reload).to have_attributes(issuing_state: "Ontario", issuing_country: "Canada")
     end
 
+    it "saves a typed state and country over a US state picked first" do
+      license = create(:professional_license, person: person, issuing_state: "CA")
+
+      patch person_path(person), params: { person: { professional_licenses_attributes: { "0" => {
+        id: license.id, issuing_state: "CA", issuing_state_outside_usa: "Ontario", issuing_country: "Canada"
+      } } } }
+
+      expect(license.reload).to have_attributes(issuing_state: "Ontario", issuing_country: "Canada")
+    end
+
+    it "leaves the country blank for a typed state with no country picked" do
+      license = create(:professional_license, person: person, issuing_state: "CA")
+
+      patch person_path(person), params: { person: { professional_licenses_attributes: { "0" => {
+        id: license.id, issuing_state: "CA", issuing_state_outside_usa: "Ontario", issuing_country: ""
+      } } } }
+
+      expect(license.reload).to have_attributes(issuing_state: "Ontario", issuing_country: be_blank)
+    end
+
+    it "records the US for a US state with no country picked" do
+      license = create(:professional_license, person: person, issuing_state: "Ontario", issuing_country: "Canada")
+
+      patch person_path(person), params: { person: { professional_licenses_attributes: { "0" => {
+        id: license.id, issuing_state: "NY", issuing_state_outside_usa: "", issuing_country: ""
+      } } } }
+
+      expect(license.reload).to have_attributes(issuing_state: "NY", issuing_country: "United States")
+    end
+
     it "adds a license that only has a typed state" do
       expect {
         patch person_path(person), params: { person: { professional_licenses_attributes: { "0" => {
@@ -77,6 +107,20 @@ RSpec.describe "Outside USA? state boxes", type: :request do
         license_issuing_state: "", license_issuing_state_outside_usa: "Quebec", license_issuing_country: "Canada" }
 
       expect(license.reload).to have_attributes(issuing_state: "Quebec", issuing_country: "Canada")
+    end
+
+    it "saves a typed state over a US state picked first" do
+      post registration_ce_license_path(registration.slug), params: { license_number: "LIC-1", license_kind: "LCSW",
+        license_issuing_state: "CA", license_issuing_state_outside_usa: "Quebec", license_issuing_country: "" }
+
+      expect(license.reload).to have_attributes(issuing_state: "Quebec", issuing_country: be_blank)
+    end
+
+    it "records the US for a US state with no country picked" do
+      post registration_ce_license_path(registration.slug), params: { license_number: "LIC-1", license_kind: "LCSW",
+        license_issuing_state: "CA", license_issuing_state_outside_usa: "", license_issuing_country: "" }
+
+      expect(license.reload).to have_attributes(issuing_state: "CA", issuing_country: "United States")
     end
   end
 
@@ -120,6 +164,16 @@ RSpec.describe "Outside USA? state boxes", type: :request do
       expect(FormAnswer.find_by(form_field: state_field).submitted_answer).to eq("Ontario")
     end
 
+    it "records a typed state over a US state picked first" do
+      post public_form_path(form.slug), params: { public_registration: {
+        Honeypot::FIELD_NAME => "",
+        form_fields: { state_field.id.to_s => "CA" },
+        form_fields_outside_usa: { state_field.id.to_s => "Ontario" }
+      } }
+
+      expect(FormAnswer.find_by(form_field: state_field).submitted_answer).to eq("Ontario")
+    end
+
     context "with a matching country question" do
       let!(:country_field) { create(:form_field, form: form, name: "Country", field_identifier: "mailing_country") }
 
@@ -139,6 +193,29 @@ RSpec.describe "Outside USA? state boxes", type: :request do
         } }
 
         expect(FormAnswer.find_by(form_field: country_field).submitted_answer).to eq("Canada")
+      end
+
+      it "leaves an optional country blank for a typed state over a US state picked first" do
+        country_field.update!(required: false)
+
+        post public_form_path(form.slug), params: { public_registration: {
+          Honeypot::FIELD_NAME => "",
+          form_fields: { state_field.id.to_s => "CA", country_field.id.to_s => "" },
+          form_fields_outside_usa: { state_field.id.to_s => "Ontario" }
+        } }
+
+        expect(FormAnswer.find_by(form_field: state_field).submitted_answer).to eq("Ontario")
+        expect(FormAnswer.find_by(form_field: country_field)&.submitted_answer).to be_blank
+      end
+
+      it "records the US for a US state with no country picked" do
+        post public_form_path(form.slug), params: { public_registration: {
+          Honeypot::FIELD_NAME => "",
+          form_fields: { state_field.id.to_s => "CA", country_field.id.to_s => "" },
+          form_fields_outside_usa: { state_field.id.to_s => "" }
+        } }
+
+        expect(FormAnswer.find_by(form_field: country_field).submitted_answer).to eq("United States")
       end
 
       it "asks the country on its own when the state question is hidden for a logged-in respondent" do

@@ -246,6 +246,10 @@ RSpec.describe ProfileChangeRequest, type: :model do
     it "takes the place of the dropdown's state" do
       expect(described_class.new(proposed_state: "", proposed_state_outside_usa: "Ontario").proposed_state).to eq("Ontario")
     end
+
+    it "wins over a US state picked first" do
+      expect(described_class.new(proposed_state: "NV", proposed_state_outside_usa: "Ontario").proposed_state).to eq("Ontario")
+    end
   end
 
   describe "#auto_appliable?" do
