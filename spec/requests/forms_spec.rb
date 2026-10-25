@@ -51,6 +51,20 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).not_to include("New Job Form")
       end
 
+      it "filters the results frame by form name" do
+        create(:form, :standalone, name: "Scholarship Form")
+        create(:form, :standalone, name: "New Job Form")
+        get forms_path(name: "scholar"), headers: frame_headers
+        expect(response.body).to include("Scholarship Form")
+        expect(response.body).not_to include("New Job Form")
+      end
+
+      it "keeps the name search on the sort links" do
+        get forms_path(name: "scholar"), headers: frame_headers
+        hrefs = Nokogiri::HTML(response.body).css("thead a").map { |link| link["href"] }
+        expect(hrefs).to all(include("name=scholar"))
+      end
+
       it "ignores an unknown role filter" do
         create(:form, :standalone, name: "New Job Form", role: "new_job")
         get forms_path(role: "bogus"), headers: frame_headers
@@ -63,11 +77,12 @@ RSpec.describe "Forms", type: :request do
         expect(hrefs).to all(include("role=scholarship"))
       end
 
-      it "renders the role filter next to the new form button" do
-        get forms_path(role: "scholarship")
-        select = Nokogiri::HTML(response.body).at_css("form[data-turbo-frame='forms_results'] select[name='role']")
-        expect(select).to be_present
-        expect(select.at_css("option[selected]")["value"]).to eq("scholarship")
+      it "renders the name search and role filter next to the new form button" do
+        get forms_path(name: "scholar", role: "scholarship")
+        filters = Nokogiri::HTML(response.body).at_css("form[data-turbo-frame='forms_results']")
+        expect(filters.at_css("input[name='name']")["value"]).to eq("scholar")
+        expect(filters.at_css("select[name='role'] option[selected]")["value"]).to eq("scholarship")
+        expect(filters.at_css("select[name='role'] option[value='']").text).to eq("All form roles")
       end
 
       it "lists owner-attached forms in an owned-forms section with an answers link" do

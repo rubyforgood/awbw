@@ -12,6 +12,7 @@ class FormsController < ApplicationController
       @role = params[:role].presence_in(Form::ROLE_OPTIONS.map(&:last))
       @forms = sorted_forms
       @forms = @forms.with_role(@role) if @role
+      @forms = @forms.where("forms.name LIKE ?", "%#{Form.sanitize_sql_like(params[:name])}%") if params[:name].present?
       @survey_default_ids = Form.survey_default_ids
       render :forms_results
     else
