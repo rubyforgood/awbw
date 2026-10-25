@@ -19,21 +19,23 @@ RSpec.describe "Address dedupe", type: :request do
   end
 
   context "as an admin" do
-    before { sign_in create(:user, :admin) }
+    let(:admin) { create(:user, :admin) }
+
+    before { sign_in admin }
 
     it "lists owners with duplicate addresses" do
       get dedupe_index_addresses_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Duplicate Org", person.full_name, "Merge 1 duplicate", "Merge 2 duplicates")
+      expect(response.body).to include("Duplicate Org", person.full_name, "Merge 1 duplicate", "Merge 2 duplicates", "Merge all (3)")
       expect(response.body.scan(">Keep<").size).to eq(2)
-      expect(response.body.scan(">Merge<").size).to eq(3)
+      expect(response.body.scan("Preview merge").size).to eq(3)
     end
 
     it "merges one owner's duplicates" do
       contact_method = create(:contact_method, contactable: org, address: org_addresses.last)
 
-      post dedupe_perform_addresses_path, params: { addressable_sgid: sgid(org) }
+      post dedupe_perform_owner_addresses_path, params: { addressable_sgid: sgid(org) }
 
       expect(response).to redirect_to(dedupe_index_addresses_path)
       expect(flash[:notice]).to include("1 duplicate address")
@@ -43,15 +45,23 @@ RSpec.describe "Address dedupe", type: :request do
     end
 
     it "merges nothing without a record" do
-      post dedupe_perform_addresses_path
+      post dedupe_perform_owner_addresses_path
 
       expect(flash[:alert]).to include("Error merging addresses")
       expect(org.addresses.count).to eq(2)
       expect(person.addresses.count).to eq(3)
     end
 
+    it "queues a background merge of every record, run as the admin" do
+      expect { post dedupe_perform_all_addresses_path }.to have_enqueued_job(MergeDuplicateAddressesJob).with(admin)
+
+      expect(response).to redirect_to(dedupe_index_addresses_path)
+      expect(flash[:notice]).to include("in the background")
+      expect(org.addresses.count).to eq(2)
+    end
+
     it "rejects a signed id minted for another purpose" do
-      post dedupe_perform_addresses_path, params: { addressable_sgid: org.to_sgid.to_s }
+      post dedupe_perform_owner_addresses_path, params: { addressable_sgid: org.to_sgid.to_s }
 
       expect(flash[:alert]).to include("Error merging addresses")
       expect(org.addresses.count).to eq(2)
@@ -65,9 +75,11 @@ RSpec.describe "Address dedupe", type: :request do
       get dedupe_index_addresses_path
       expect(response).to redirect_to(root_path)
 
-      post dedupe_perform_addresses_path
+      post dedupe_perform_owner_addresses_path
       expect(response).to redirect_to(root_path)
       expect(org.addresses.count).to eq(2)
+
+      expect { post dedupe_perform_all_addresses_path }.not_to have_enqueued_job(MergeDuplicateAddressesJob)
     end
   end
 

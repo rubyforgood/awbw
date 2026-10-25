@@ -12,6 +12,14 @@
           from the others, and moves their contact methods, invoices, and affiliations onto it.
         </p>
       </div>
+      <% if @groups.any? %>
+        <%= button_to dedupe_perform_all_addresses_path,
+                      class: button_classes(:primary, extra: "whitespace-nowrap"),
+                      form_class: "shrink-0",
+                      form: { data: { turbo_confirm: "Merge duplicate addresses on all #{pluralize(@groups.size, "record")}? This runs in the background." } } do %>
+          <i class="fa-solid fa-broom"></i> Merge all (<%= @groups.sum(&:merged_count) %>)
+        <% end %>
+      <% end %>
     </div>
 
     <% if @groups.any? %>
@@ -27,13 +35,14 @@
                 <span class="font-normal text-gray-400">· <%= group.addressable.model_name.human %></span>
               </h3>
               <%= button_to "Merge #{pluralize(group.merged_count, "duplicate")}",
-                            dedupe_perform_addresses_path,
+                            dedupe_perform_owner_addresses_path,
                             params: { addressable_sgid: group.addressable.to_sgid(for: AddressesController::DEDUPE_PURPOSE).to_s },
                             class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap"),
                             form_class: "shrink-0" %>
             </div>
             <div class="space-y-2">
               <% group.duplicate_sets.each do |addresses| %>
+                <% survivor = addresses.first %>
                 <ul class="divide-y divide-gray-100 rounded-lg border border-gray-100 px-3">
                   <% addresses.each_with_index do |address, index| %>
                     <li class="flex items-center justify-between gap-3 py-1.5">
@@ -49,7 +58,10 @@
                       <% if index.zero? %>
                         <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-700">Keep</span>
                       <% else %>
-                        <span class="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-gray-600">Merge</span>
+                        <%= link_to dedupe_preview_addresses_path(address_to_delete_id: address.id, address_to_keep_id: survivor.id, anchor_id: anchor),
+                                    class: "rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-gray-600 hover:bg-gray-100 hover:text-gray-800" do %>
+                          Preview merge <i class="fa-solid fa-arrow-right"></i>
+                        <% end %>
                       <% end %>
                     </li>
                   <% end %>

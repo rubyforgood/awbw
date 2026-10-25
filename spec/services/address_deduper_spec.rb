@@ -111,6 +111,15 @@ RSpec.describe AddressDeduper do
     expect(method.reload.address_id).to eq(keep.id)
   end
 
+  it "keeps the invoice-address flag when the copy carrying it merges away" do
+    keep = address
+    address(invoice_address: true)
+
+    described_class.new(person).call
+
+    expect(keep.reload.invoice_address).to be true
+  end
+
   it "keeps a single primary matching the given signature and demotes the rest" do
     keep = address(primary: true)
     other = address(street_address: "2 Other St", primary: true)

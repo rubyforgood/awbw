@@ -13,6 +13,7 @@
     union_columns:       Column names whose values are combined into the keeper (not replaced)
     form_builder:        The parent form builder (f)
     belongs_to_options:  Hash of { column_name => collection } for select fields
+    record_path:         Optional callable linking a record's header (defaults to its edit page)
 %>
 
 <%
@@ -39,6 +40,7 @@
   preview_images ||= nil
   read_only_columns = Array(local_assigns[:read_only_columns]).filter_map { |name| model_class.columns_hash[name.to_s] }
   record_label ||= :name.to_proc
+  record_path = local_assigns[:record_path] || ->(record) { edit_polymorphic_path(record) }
   read_only_display = ->(col, value) {
     if col.type == :boolean
       value ? "Yes" : "No"
@@ -62,7 +64,7 @@
   <div class="border <%= border %> rounded-t-xl <%= header_bg %> flex items-center gap-2 px-5 py-3">
     <i class="fa-solid fa-trash-can text-red-400"></i>
     <span class="font-semibold text-gray-900"><%= model_label %> to delete:</span>
-    <%= link_to edit_polymorphic_path(record_to_delete), target: "_blank", rel: "noopener",
+    <%= link_to record_path.call(record_to_delete), target: "_blank", rel: "noopener",
                 class: "group inline-flex items-center gap-1.5 font-semibold text-gray-900 hover:underline" do %>
       <strong><%= record_label.call(record_to_delete) %></strong>
       <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-gray-600"></i>
@@ -71,7 +73,7 @@
   <div class="border <%= border %> rounded-t-xl <%= header_bg %> flex items-center gap-2 px-5 py-3">
     <i class="fa-solid fa-circle-check text-emerald-500"></i>
     <span class="font-semibold text-gray-900"><%= model_label %> to keep:</span>
-    <%= link_to edit_polymorphic_path(record_to_keep), target: "_blank", rel: "noopener",
+    <%= link_to record_path.call(record_to_keep), target: "_blank", rel: "noopener",
                 class: "group inline-flex items-center gap-1.5 font-semibold text-gray-900 hover:underline" do %>
       <strong><%= record_label.call(record_to_keep) %></strong>
       <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-gray-600"></i>
