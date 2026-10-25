@@ -25,6 +25,15 @@ RSpec.describe "FM archives", type: :request do
       end
     end
 
+    it "links back to the not-imported list it was opened from, on the same kind and page" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
+
+      get fm_archive_path("00006", table: "rolodexes", return_to: "filemaker_not_imported", kind: "people", page: 3)
+
+      expect(response.body).to include("Back to not imported")
+      expect(response.body).to include(CGI.escapeHTML(admin_data_health_filemaker_not_imported_path(kind: "people", page: 3)))
+    end
+
     it "shows a rolodex record's fields under group headings, most important first" do
       FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "Comments" => "Met at training", "LastName" => "Archer" })
 

@@ -5,6 +5,9 @@
 <div class="mx-auto max-w-4xl">
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class}" %>
+    <%= link_to admin_data_health_filemaker_not_imported_path, class: "text-sm font-medium text-blue-700 hover:underline" do %>
+      <i class="fa-solid fa-box-archive mr-1"></i>FileMaker records not imported
+    <% end %>
   </div>
 
   <h1 class="mb-2 text-2xl font-semibold text-gray-900">Data health</h1>

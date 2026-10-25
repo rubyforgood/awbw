@@ -1,0 +1,23 @@
+<% content_for(:page_title, "FileMaker records not imported") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-4xl">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to "← Data health", admin_data_health_path, class: "text-sm #{eyebrow_link_class}" %>
+  </div>
+
+  <h1 class="mb-2 text-2xl font-semibold text-gray-900">FileMaker records not imported</h1>
+  <p class="mb-6 text-sm text-gray-600">
+    Rows in the FileMaker archive whose code no portal record carries. Each opens in the
+    <%= link_to "FileMaker archive", fm_archives_path, class: "text-indigo-600 hover:underline" %>,
+    where it can be matched to a portal record by hand.
+  </p>
+
+  <%= turbo_frame_tag :filemaker_not_imported_results,
+                      src: admin_data_health_filemaker_not_imported_path(kind: @kind.key, page: params[:page]),
+                      data: { turbo: "temporary" } do %>
+    <div class="animate-pulse rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-400 shadow-sm">
+      Comparing the FileMaker archive with portal records…
+    </div>
+  <% end %>
+</div>

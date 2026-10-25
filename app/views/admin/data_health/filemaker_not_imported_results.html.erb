@@ -1,0 +1,43 @@
+<%= turbo_frame_tag :filemaker_not_imported_results, data: { turbo_action: "advance" } do %>
+  <nav class="mb-4 flex flex-wrap gap-2" aria-label="FileMaker record kinds">
+    <% @not_imported.kinds.each do |kind| %>
+      <% count = @not_imported.count(kind) %>
+      <%= link_to admin_data_health_filemaker_not_imported_path(kind: kind.key),
+                  class: class_names("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium",
+                                     "border-blue-300 bg-white text-blue-800 shadow-sm": kind == @kind,
+                                     "border-gray-200 bg-gray-50 text-gray-600 hover:bg-white": kind != @kind),
+                  aria: { current: (kind == @kind ? "page" : nil) } do %>
+        <%= kind.label %>
+        <span class="<%= count.positive? ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-500" %> rounded-full px-2 py-0.5 text-xs"><%= number_with_delimiter(count) %></span>
+      <% end %>
+    <% end %>
+  </nav>
+
+  <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div class="border-b border-gray-200 bg-gray-50 px-4 py-3">
+      <h2 class="text-base font-semibold text-gray-900"><%= @kind.label %></h2>
+      <p class="mt-1 text-xs text-gray-500"><%= @kind.explanation %></p>
+    </div>
+
+    <% if @records.any? %>
+      <ul class="divide-y divide-gray-100 text-sm">
+        <% @records.each do |record| %>
+          <li class="flex items-center justify-between gap-3 px-4 py-2">
+            <%= link_to record.name,
+                        fm_archive_path(record.fm_id, table: record.class.table_name.delete_prefix("fm_"),
+                                                      return_to: "filemaker_not_imported", kind: @kind.key, page: @records.current_page),
+                        class: "text-blue-700 hover:underline", data: { turbo_frame: "_top" } %>
+            <span class="font-mono text-xs text-gray-500"><%= record.fm_id %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="px-4 py-6 text-center text-sm text-green-700">
+        <i class="fa-solid fa-circle-check mr-1"></i>
+        Every row came over.
+      </p>
+    <% end %>
+  </section>
+
+  <div class="pagination mt-6 flex justify-center"><%= tailwind_paginate @records %></div>
+<% end %>
