@@ -280,4 +280,40 @@ RSpec.describe OrganizationServices::UpsertAddress do
 
     expect(existing.reload.locality).to eq("Central CA")
   end
+
+  context "with the submitted ZIP in the archive's ZIP table" do
+    before { FmPostalCode.create!(fm_id: "93701", data: { "City" => "Fresno", "State" => "CA", "County" => "Fresno" }) }
+
+    it "reads a new address's county from the ZIP and its locality from the county" do
+      result = described_class.call(organization: organization, street_address: "1 Main St", city: "Fresno", state: "CA", zip_code: "93701-1234")
+
+      expect(result.address).to have_attributes(county: "Fresno", locality: "Central CA")
+    end
+
+    it "fills a blank county and Unknown locality on the matching address" do
+      existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Fresno", state: "CA",
+                                  zip_code: "93701", country: nil, county: nil, locality: Address::UNKNOWN_LOCALITY)
+
+      result = described_class.call(organization: organization, street_address: "1 Main St", city: "Fresno", state: "CA",
+                                    zip_code: "93701", overwrite: false)
+
+      expect(existing.reload).to have_attributes(county: "Fresno", locality: "Central CA")
+      expect(result.changes.map(&:label)).to include("County", "Locality")
+    end
+
+    it "keeps a county already on the matching address" do
+      existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Fresno", state: "CA",
+                                  zip_code: "93701", county: "Madera")
+
+      described_class.call(organization: organization, street_address: "1 Main St", city: "Fresno", state: "CA", zip_code: "93701")
+
+      expect(existing.reload.county).to eq("Madera")
+    end
+
+    it "skips the ZIP's county when the ZIP belongs to another state" do
+      result = described_class.call(organization: organization, street_address: "1 Main St", city: "Reno", state: "NV", zip_code: "93701")
+
+      expect(result.address.county).to be_nil
+    end
+  end
 end

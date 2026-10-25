@@ -93,8 +93,14 @@ RSpec.describe AddressDecorator do
       expect(build(:address, locality: nil, state: "NY", country: "United States").decorate.default_locality).to eq("Outside CA")
     end
 
-    it "leaves a blank locality blank in California outside LA and Orange counties" do
+    it "fills a blank locality with the California county's region" do
       address = build(:address, locality: nil, state: "CA", country: "United States", city: "Fresno", county: "Fresno")
+
+      expect(address.decorate.default_locality).to eq("Central CA")
+    end
+
+    it "leaves a blank locality blank in a California county with no region" do
+      address = build(:address, locality: nil, state: "CA", country: "United States", city: "Markleeville", county: "Alpine")
 
       expect(address.decorate.default_locality).to be_nil
     end

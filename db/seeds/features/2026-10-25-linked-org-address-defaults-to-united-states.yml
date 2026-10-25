@@ -9,4 +9,5 @@ summary: >-
   the United States.
 pro_tips:
   - "A blank country on the organization's matching saved address is filled in too; a country already saved is never changed."
-  - "A blank or Unknown locality on that saved address is filled when the address settles it (Outside USA, Outside CA, LA City, LA County, Orange County); a locality someone chose is kept."
+  - "The organization address's county is read from its ZIP, and a blank or Unknown locality is filled from the address — including Northern, Central, or Southern CA by county. A locality or county someone chose is kept."
+  - "Adding a new address by hand also starts its locality on the California region its county is in."

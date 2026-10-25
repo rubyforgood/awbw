@@ -30,6 +30,7 @@ module OrganizationServices
       "state" => "State",
       "zip_code" => "ZIP",
       "country" => "Country",
+      "county" => "County",
       "locality" => "Locality"
     }.freeze
 
@@ -114,6 +115,7 @@ module OrganizationServices
       updates[:street_address] = @street_address if @street_address.present? && (@overwrite || existing.street_address.blank?)
       updates[:zip_code] = @zip_code if @zip_code.present? && (@overwrite || existing.zip_code.blank?)
       updates[:country] = @country if @country.present? && (@overwrite || existing.country.blank?)
+      updates[:county] = county if county && existing.county.blank?
       locality = filled_locality(existing, updates)
       updates[:locality] = locality if locality
       updates
@@ -123,7 +125,7 @@ module OrganizationServices
     def filled_locality(existing, updates)
       return if existing.locality.present? && existing.locality != Address::UNKNOWN_LOCALITY
 
-      parts = existing.attributes.symbolize_keys.slice(:city, :state, :country, :county).merge(updates.slice(:city, :state, :country))
+      parts = existing.attributes.symbolize_keys.slice(:city, :state, :country, :county).merge(updates.slice(:city, :state, :country, :county))
       locality = AddressLocality.for(**parts)
       locality unless locality == Address::UNKNOWN_LOCALITY
     end
@@ -145,10 +147,17 @@ module OrganizationServices
         state: @state,
         zip_code: @zip_code.to_s,
         country: @country,
-        locality: AddressLocality.for(city: @city, state: @state, country: @country),
+        county: county,
+        locality: AddressLocality.for(city: @city, state: @state, country: @country, county: county),
         address_type: "work",
         primary: make_primary
       )
+    end
+
+    def county
+      return @county if defined?(@county)
+
+      @county = FmPostalCode.county_for(@zip_code, state: @state)
     end
 
     def nothing_saved
