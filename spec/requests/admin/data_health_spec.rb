@@ -182,6 +182,21 @@ RSpec.describe "Admin::DataHealth", type: :request do
       expect(frame.text).to include("11–12 of 12")
     end
 
+    it "lists Leader rows with their Facilitator twin, each opening the person's edit page" do
+      person = create(:person)
+      twin = create(:affiliation, person:, organization:, title: "Facilitator")
+      leader = create(:affiliation, person:, organization:, title: "Leader", filemaker_code: "P0001")
+
+      get admin_data_health_rows_path(check: "legacy_leader_affiliations"),
+          headers: { "Turbo-Frame" => "data_health_rows_legacy_leader_affiliations" }
+
+      expect(response).to have_http_status(:ok)
+      frame = Nokogiri::HTML(response.body).at_css("turbo-frame#data_health_rows_legacy_leader_affiliations")
+      expect(frame.text).to include("Facilitator ##{twin.id}", "same dates", "FileMaker P0001")
+      expect(frame.to_html).to include(CGI.escapeHTML(edit_person_path(person, return_to: "data_health", check: "legacy_leader_affiliations",
+                                                                       anchor: "affiliation_#{leader.id}")))
+    end
+
     it "is a 404 for an unknown check" do
       get admin_data_health_rows_path(check: "no_such_check")
 

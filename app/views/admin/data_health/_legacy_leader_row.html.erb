@@ -1,0 +1,24 @@
+<%# Locals: record (an Affiliation titled Leader). The person opens their edit page at the
+    affiliation; the line below says which Facilitator row, if any, records the same stretch. %>
+<% check = DataHealth::LegacyLeaderAffiliations.new %>
+<% twin = check.twin_for(record) %>
+<% back = { return_to: "data_health", check: check.key } %>
+<div>
+  <% if record.person %>
+    <%= link_to person_name(record.person), edit_person_path(record.person, **back, anchor: dom_id(record)), target: "_blank", rel: "noopener",
+          class: "font-medium text-gray-800 hover:text-blue-700 hover:underline" %>
+  <% end %>
+  <span class="text-gray-500">— <%= record.organization&.name %></span>
+</div>
+<div class="text-xs text-gray-500">
+  Leader · <%= record.decorate.period_label.presence || "No dates" %><%= " · primary contact" if record.primary_contact? %>
+  <% if record.filemaker_code.present? %> · FileMaker <%= record.filemaker_code %><% end %>
+</div>
+<div class="text-xs <%= twin && !check.same_dates?(twin, record) ? "text-amber-700" : "text-gray-500" %>">
+  <% if twin %>
+    Facilitator #<%= twin.id %> · <%= twin.decorate.period_label.presence || "No dates" %><%= " · primary contact" if twin.primary_contact? %>
+    · <%= check.same_dates?(twin, record) ? "same dates" : "overlaps with different dates" %>
+  <% else %>
+    No Facilitator row covers this stretch.
+  <% end %>
+</div>

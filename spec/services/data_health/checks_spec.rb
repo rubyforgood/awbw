@@ -124,14 +124,36 @@ RSpec.describe DataHealth::MisalignedAffiliationProvenance do
 end
 
 RSpec.describe DataHealth::LegacyLeaderAffiliations do
-  it "finds affiliations still titled Leader and sends them to the review page" do
-    leader = create(:affiliation, title: "Leader")
-    create(:affiliation, title: "Facilitator")
-    check = described_class.new
+  let(:person) { create(:person) }
+  let(:organization) { create(:organization) }
 
-    expect(check.scope).to contain_exactly(leader)
-    expect(check).not_to be_repairable
-    expect(check.review_path).to eq("/admin/leader_affiliations")
+  def affiliation(title, **attributes) = create(:affiliation, person:, organization:, title:, **attributes)
+
+  it "lists affiliations still titled Leader, and reports only" do
+    leader = affiliation("Leader")
+    affiliation("Facilitator", start_date: Date.new(2019, 1, 1))
+
+    expect(described_class.new.scope).to contain_exactly(leader)
+    expect(described_class.new).not_to be_repairable
+  end
+
+  describe "#twin_for" do
+    it "finds the Facilitator row with the same dates first" do
+      affiliation("Facilitator", start_date: Date.new(2015, 1, 1))
+      same = affiliation("Facilitator", start_date: Date.new(2019, 1, 1))
+      leader = affiliation("Leader", start_date: Date.new(2019, 1, 1))
+
+      expect(described_class.new.twin_for(leader)).to eq(same)
+    end
+
+    it "falls back to one overlapping with different dates, and is nil when none covers the stretch" do
+      overlapping = affiliation("Facilitator", start_date: Date.new(2018, 1, 1), end_date: Date.new(2022, 12, 31))
+      leader = affiliation("Leader", start_date: Date.new(2019, 4, 1), end_date: Date.new(2025, 7, 1))
+      later = affiliation("Leader", start_date: Date.new(2024, 1, 1), end_date: Date.new(2025, 1, 1))
+
+      expect(described_class.new.twin_for(leader)).to eq(overlapping)
+      expect(described_class.new.twin_for(later)).to be_nil
+    end
   end
 end
 

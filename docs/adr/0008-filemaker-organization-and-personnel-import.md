@@ -77,10 +77,9 @@ Constraints already decided elsewhere:
     contacts (402 aren't), all 53 Liaisons are, and 111 rows are still titled "Leader" (which
     the exact-match Facilitator scope doesn't count, and which the import matches as a
     Facilitator rather than duplicating). Of those, 109 sit beside an undated, primary
-    Facilitator twin the January conversion made, and 2 have none. The admin Leader
-    affiliations page (linked from the Data health check "Affiliations still titled Leader")
-    settles them row by row: merge into the twin, rename, rename and end, delete, or keep,
-    previewed before anything changes (`AffiliationServices::FoldLegacyLeaders`).
+    Facilitator twin the January conversion made, and 2 have none. The Data health check
+    "Affiliations still titled Leader" lists each with its twin and links to the person's edit
+    page, where an admin settles it by hand; nothing changes them automatically.
     - Every role becomes a **Facilitator** affiliation, with a "FileMaker import" comment
       recording the role FileMaker gave. No prod row is titled Assistant, so the old app's
       assistants likely became the 402 Facilitators who aren't primary contacts.
