@@ -14,10 +14,14 @@
           <% end %>
         </div>
         <% if allowed_to?(:manage?, Person) %>
-          <%= link_to "Edit work address", "#affiliations", class: "text-sm #{eyebrow_link_class} underline" %>
+          <%= link_to edit_organization_path(affiliation.organization, highlight_address: address.id, return_to: "person_edit",
+                                                                       person_id: person.id, anchor: "address-#{address.id}"),
+                      class: "text-sm #{eyebrow_link_class}" do %>
+            Edit on organization <i class="fa-solid fa-arrow-right text-xs"></i>
+          <% end %>
         <% else %>
           <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id),
-                      target: "_blank", rel: "noopener", class: "text-sm #{eyebrow_link_class} underline" do %>
+                      target: "_blank", rel: "noopener", class: button_classes(:secondary_outline, size: :sm) do %>
             Request a change <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
           <% end %>
         <% end %>

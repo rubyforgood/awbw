@@ -16,7 +16,7 @@
                 required: true,
                 wrapper_html: { class: "w-full md:w-auto md:flex-1 md:basis-64" },
                 input_html: {
-                  autofocus: true,
+                  autofocus: params[:highlight_address].blank?,
                   rows: 1,
                   class: "w-full rounded-md border-gray-300 shadow-sm
                     focus:border-blue-500 focus:ring focus:ring-blue-200"

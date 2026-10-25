@@ -14,13 +14,15 @@ RSpec.describe "Work addresses and address phones on the person edit form", type
   context "as an admin" do
     before { sign_in create(:user, :admin) }
 
-    it "shows the linked work address read-only, pointing at the affiliation's address picker" do
+    it "shows the linked work address read-only, linking to it on the organization" do
       get edit_person_path(person)
 
       expect(addresses_section).to have_text("9 Oak Ave")
       expect(addresses_section).to have_text("at Sunrise Center")
       expect(addresses_section).to have_text("555-010-0000")
-      expect(addresses_section).to have_link("Edit work address", href: "#affiliations")
+      expect(addresses_section).to have_link("Edit on organization",
+                                             href: edit_organization_path(organization, highlight_address: work_address.id, return_to: "person_edit",
+                                                                                        person_id: person.id, anchor: "address-#{work_address.id}"))
       expect(addresses_section).not_to have_field(with: "9 Oak Ave")
     end
 
@@ -46,7 +48,7 @@ RSpec.describe "Work addresses and address phones on the person edit form", type
 
       expect(addresses_section).to have_text("9 Oak Ave")
       expect(addresses_section).to have_css("a[href*='field=affiliation']", text: "Request a change")
-      expect(addresses_section).not_to have_link("Edit work address")
+      expect(addresses_section).not_to have_link("Edit on organization")
     end
   end
 end

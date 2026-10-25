@@ -6,6 +6,12 @@
         <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
       <% end %>
     </div>
+  <% elsif params[:return_to] == "person_edit" && params[:person_id].present? %>
+    <div class="mb-2">
+      <%= link_to edit_person_path(params[:person_id], anchor: "addresses"), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Edit person
+      <% end %>
+    </div>
   <% end %>
 <% end %>
 <% actions = capture do %>

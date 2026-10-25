@@ -1,7 +1,10 @@
 <%# Persisted addresses start collapsed to a single-line header; new/blank ones
     stay expanded so their fields are ready to fill in. Native <details>/<summary>
     toggles the editable fields on click — no JavaScript needed. %>
-<details class="nested-fields group mb-3 overflow-hidden rounded-lg border border-yellow-200 bg-white"<%= " open".html_safe unless f.object.persisted? %>>
+<% highlighted = f.object.persisted? && params[:highlight_address].to_s == f.object.id.to_s %>
+<%= tag.details id: ("address-#{f.object.id}" if f.object.persisted?), open: !f.object.persisted? || highlighted,
+                class: [ "nested-fields group mb-3 scroll-mt-48 overflow-hidden rounded-lg border border-yellow-200 bg-white",
+                         { "ring-2 ring-inset ring-yellow-500": highlighted } ] do %>
   <summary class="flex cursor-pointer list-none items-center justify-between gap-2 bg-yellow-50 p-3 [&::-webkit-details-marker]:hidden">
     <div class="flex items-center gap-2 text-lg font-semibold text-gray-800">
       <% numbered = f.object.addressable&.addresses&.size.to_i > 1 %>
@@ -163,4 +166,4 @@
                                    f,
                                    class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
   </div>
-</details>
+<% end %>

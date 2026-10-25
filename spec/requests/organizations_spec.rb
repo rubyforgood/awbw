@@ -277,6 +277,20 @@ RSpec.describe "/organizations", type: :request do
       expect(phones).to have_css("li", text: "2. 123-332-1234")
     end
 
+    it "opens and rings the address a person's work-address link points at, with a way back" do
+      organization = create(:organization)
+      address = create(:address, addressable: organization)
+      other = create(:address, addressable: organization)
+      person = create(:person)
+
+      get edit_organization_url(organization, highlight_address: address.id, return_to: "person_edit", person_id: person.id)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css("details#address-#{address.id}[open].ring-yellow-500")
+      expect(page).not_to have_css("details#address-#{other.id}[open]")
+      expect(page).to have_link("Edit person", href: edit_person_path(person, anchor: "addresses"))
+    end
+
     it "shows each address's phone on its collapsed header" do
       organization = create(:organization)
       create(:address, addressable: organization, phone: "123-123-1234")
