@@ -1,4 +1,4 @@
-# Resolves a state submitted through shared/_outside_usa: the "Outside USA?" box's
+# Resolves a state submitted through shared/_outside_usa: the "Not on list?" box's
 # typed value when filled, otherwise the US-state dropdown's pick.
 module OutsideUsaState
   SUFFIX = "_outside_usa"
@@ -16,7 +16,7 @@ module OutsideUsaState
     with_us_countries(answers.deep_merge(filled(typed)))
   end
 
-  # A paired country question sits in the state's closed "Outside USA?" box, so
+  # A paired country question sits in the state's closed "Not on list?" box, so
   # someone who picked a US state leaves it blank; record the US for them. Pairs
   # within the submitted questions, which are the ones the form asked.
   def self.with_us_countries(answers)

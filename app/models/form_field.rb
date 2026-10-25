@@ -283,7 +283,7 @@ class FormField < ApplicationRecord
   end
 
   # A `<prefix>_country` question is asked inside its `<prefix>_state` question's
-  # "Outside USA?" box rather than on its own. Both read `among` — the questions
+  # "Not on list?" box rather than on its own. Both read `among` — the questions
   # being asked here — so a country whose state partner this page isn't asking
   # (hidden as already answered, or as logged-out-only) is still asked on its own.
   def paired_country_field(among:)

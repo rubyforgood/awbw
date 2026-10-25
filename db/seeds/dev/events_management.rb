@@ -489,7 +489,7 @@ end
 
 # A post-event survey delivered on the flagship's "Feedback surveys" callout, open
 # now so a callout form can be filled in from any flagship ticket. Its state question
-# exercises the "Outside USA?" box, with the country inside it. The built-in callout
+# exercises the "Not on list?" box, with the country inside it. The built-in callout
 # links its survey forms only when created, so link this one here; an existing survey
 # gets the two location questions and loses its drip date. Idempotent.
 post_event_survey = Form.survey("post_event_survey")

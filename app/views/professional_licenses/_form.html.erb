@@ -45,7 +45,7 @@
     </div>
 
     <div>
-      <label for="professional_license_issuing_state" class="<%= label_class %>">Issuing state</label>
+      <label for="professional_license_issuing_state" class="<%= label_class %>">Issuing state / territory</label>
       <% license = professional_license.decorate %>
       <%= f.input_field :issuing_state, as: :select, collection: us_states, include_blank: true, class: field_class,
                         selected: (license.issuing_state unless outside_usa_state?(license.issuing_state)) %>

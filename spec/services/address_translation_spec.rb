@@ -13,6 +13,12 @@ RSpec.describe AddressTranslation do
       end
     end
 
+    it "reads a US territory named as the country as the US" do
+      [ "Puerto Rico", "PR", "Guam", "U.S. Virgin Islands", "American Samoa", "Northern Mariana Islands" ].each do |typed|
+        expect(translation.country(typed, state: "XX")).to eq(us)
+      end
+    end
+
     it "uses the dropdown's plain names" do
       expect(translation.country("Russian Federation", state: "XX")).to eq("Russia")
       expect(translation.country("RU", state: "XX")).to eq("Russia")

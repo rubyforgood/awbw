@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // type / number / state / country / expiry fields from that license (carried on each
 // option's data attributes) so the fields describe the selected license. Choosing
 // "Create new license" clears them for a fresh entry. A state the US list can't show
-// goes in the "Outside USA?" box, opened along with any country on file.
+// goes in the "Not on list?" box, opened along with any country on file.
 export default class extends Controller {
   static targets = ["select", "kind", "number", "state", "typedState", "country", "outsideUsa", "expires"]
 

@@ -46,10 +46,10 @@
                 class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_license_issuing_state">Issuing state <span class="font-normal text-xs text-gray-400">(optional)</span></label>
+          <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_license_issuing_state">Issuing state / territory <span class="font-normal text-xs text-gray-400">(optional)</span></label>
           <%= f.select :license_issuing_state,
                 us_states,
-                { selected: (license&.issuing_state unless outside_usa_state?(license&.issuing_state)), include_blank: "Select a state" },
+                { selected: (license&.issuing_state unless outside_usa_state?(license&.issuing_state)), include_blank: "Select a state or territory" },
                 id: "continuing_education_registration_license_issuing_state",
                 data: { "ce-license-picker-target": "state" },
                 class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>

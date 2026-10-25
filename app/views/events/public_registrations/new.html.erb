@@ -120,7 +120,7 @@
 
         <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
           <% @form_fields.each do |field| %>
-            <%# Asked inside its _state question's "Outside USA?" box. %>
+            <%# Asked inside its _state question's "Not on list?" box. %>
             <% next if field.paired_with_state?(among: @form_fields) %>
             <% if field.group_header? %>
               <%= render "events/public_registrations/group_header", field: field %>
@@ -145,7 +145,7 @@
             <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
               <% scholarship_fields = @scholarship_form.form_fields.reorder(position: :asc).to_a %>
               <% scholarship_fields.each do |field| %>
-                <%# Asked inside its _state question's "Outside USA?" box. %>
+                <%# Asked inside its _state question's "Not on list?" box. %>
                 <% next if field.paired_with_state?(among: scholarship_fields) %>
                 <% if field.group_header? %>
                   <%# Skip a section header that just repeats the form name shown as the title above %>
@@ -187,7 +187,7 @@
             <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
               <% ce_fields = @continuing_education_form.form_fields.reorder(position: :asc).to_a %>
               <% ce_fields.each do |field| %>
-                <%# Asked inside its _state question's "Outside USA?" box. %>
+                <%# Asked inside its _state question's "Not on list?" box. %>
                 <% next if field.paired_with_state?(among: ce_fields) %>
                 <% if field.group_header? %>
                   <% next if field.name.to_s.strip.casecmp?(@continuing_education_form.display_name.to_s.strip) %>

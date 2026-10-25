@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "Outside USA? state boxes", type: :request do
+RSpec.describe "Not on list? state boxes", type: :request do
   def page_html
     Nokogiri::HTML(response.body)
   end
@@ -28,6 +28,15 @@ RSpec.describe "Outside USA? state boxes", type: :request do
 
       expect(page_html.at_css("input[name$='[issuing_state_outside_usa]']").ancestors("details").first["open"]).to be_nil
       expect(page_html.at_css("select[name$='[issuing_state]'] option[selected]")["value"]).to eq("CA")
+    end
+
+    it "picks a territory in the dropdown, keeping the box closed" do
+      create(:professional_license, person: person, issuing_state: "PR")
+
+      get edit_person_path(person)
+
+      expect(page_html.at_css("select[name$='[issuing_state]'] option[selected]")["value"]).to eq("PR")
+      expect(page_html.at_css("input[name$='[issuing_state_outside_usa]']").ancestors("details").first["open"]).to be_nil
     end
 
     it "opens the box on a license from another country" do
@@ -177,7 +186,7 @@ RSpec.describe "Outside USA? state boxes", type: :request do
     context "with a matching country question" do
       let!(:country_field) { create(:form_field, form: form, name: "Country", field_identifier: "mailing_country") }
 
-      it "asks the country inside the state's Outside USA? box only" do
+      it "asks the country inside the state's Not on list? box only" do
         get public_form_path(form.slug)
 
         countries = page_html.css("select[name='public_registration[form_fields][#{country_field.id}]']")

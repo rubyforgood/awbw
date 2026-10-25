@@ -130,7 +130,7 @@ class AddressTranslation
   end
 
   def name_for(country)
-    return UNITED_STATES if ALIASES[country.common_name.downcase] == "US"
+    return UNITED_STATES if ALIASES[country.common_name.downcase] == "US" || country.alpha2.in?(GeographyHelper::US_TERRITORY_CODES)
 
     GeographyHelper::PLAIN_COUNTRY_NAMES[country.alpha2] || country.common_name
   end

@@ -193,7 +193,7 @@
               </div>
 
               <div>
-                <label class="block text-xs font-medium tracking-wide text-gray-400 uppercase" for="license_issuing_state">Issuing state <span class="font-normal text-gray-400 normal-case">(optional)</span></label>
+                <label class="block text-xs font-medium tracking-wide text-gray-400 uppercase" for="license_issuing_state">Issuing state / territory <span class="font-normal text-gray-400 normal-case">(optional)</span></label>
 
                 <%#
                   US states dropdown, matching the public registration form's state field.
@@ -206,7 +206,7 @@
                   id="license_issuing_state"
                   class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm <%= us_state?(license_issuing_state) ? "text-gray-900" : "text-gray-400" %> shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none"
                 >
-                  <option value="">Select a state</option>
+                  <option value="">Select a state or territory</option>
 
                   <% us_states.each do |name, abbr| %>
                     <option value="<%= abbr %>" <%= "selected" if license_issuing_state == abbr %>><%= name %> (<%= abbr %>)</option>

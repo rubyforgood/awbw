@@ -40,7 +40,7 @@
 
         <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
           <% @form_fields.each do |field| %>
-            <%# Asked inside its _state question's "Outside USA?" box. %>
+            <%# Asked inside its _state question's "Not on list?" box. %>
             <% next if field.paired_with_state?(among: @form_fields) %>
             <% if field.group_header? %>
               <%= render "events/public_registrations/group_header", field: field %>

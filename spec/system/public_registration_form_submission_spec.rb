@@ -142,7 +142,7 @@ RSpec.describe "Public form submissions", type: :system do
       expect(page).not_to have_selector("##{pr_dom_id(reg_field('mailing_city'))}")
 
       # The mailing state is on file, so its paired country question — which would
-      # otherwise sit inside that state's "Outside USA?" box — is asked on its own.
+      # otherwise sit inside that state's "Not on list?" box — is asked on its own.
       expect(page).not_to have_selector("##{pr_dom_id(reg_field('mailing_state'))}")
       select_pr reg_field("mailing_country"), "Canada"
 

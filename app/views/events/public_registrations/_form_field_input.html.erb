@@ -3,7 +3,7 @@
     `asked` is every question on the page, which decides state/country pairing. %>
 <% param_scope = local_assigns.fetch(:param_scope, "public_registration") %>
 <% return if field.group_header? %>
-<%# Asked inside its _state question's "Outside USA?" box instead. %>
+<%# Asked inside its _state question's "Not on list?" box instead. %>
 <% return if field.paired_with_state?(among: asked) %>
 <%# Callers can force a field required (e.g. identity on a registration form); defaults to the field's own setting. %>
 <% required = local_assigns.fetch(:required, field.required) %>
@@ -48,7 +48,7 @@
       <select name="<%= field_name %>"
               id="<%= field_id %>"
               class="<%= input_classes %>">
-        <option value="">Select a state</option>
+        <option value="">Select a state or territory</option>
         <% us_states.each do |name, abbr| %>
           <option value="<%= abbr %>" <%= "selected" if state == abbr %>><%= name %> (<%= abbr %>)</option>
         <% end %>

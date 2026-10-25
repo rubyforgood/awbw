@@ -9,7 +9,7 @@
 <% else %>
   <div class="mb-4">
     <%= f.input :state,
-                label: "State",
+                label: "State / territory",
                 as: :select,
                 collection: state_select_options(address.default_state),
                 include_blank: true,

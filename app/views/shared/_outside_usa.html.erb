@@ -2,6 +2,6 @@
 <%# Reveals the inputs a state outside the USA needs, with no JS. Pass open: when the
     saved value is one the US-state dropdown can't show. %>
 <%= tag.details open: open, class: "mt-1", data: data do %>
-  <summary class="w-fit cursor-pointer text-xs text-gray-500 hover:text-gray-700">Outside USA?</summary>
+  <summary class="w-fit cursor-pointer text-xs text-gray-500 hover:text-gray-700">Not on list?</summary>
   <div class="mt-1 space-y-2"><%= yield %></div>
 <% end %>

@@ -148,6 +148,10 @@ RSpec.describe ProfessionalLicense, type: :model do
       expect(create(:professional_license, issuing_state: "CA", issuing_country: "Canada").issuing_country).to eq("United States")
     end
 
+    it "is the US for a territory" do
+      expect(create(:professional_license, issuing_state: "PR", issuing_country: "").issuing_country).to eq("United States")
+    end
+
     it "keeps the country named beside a state outside the USA" do
       expect(create(:professional_license, issuing_state: "Ontario", issuing_country: "Canada").issuing_country).to eq("Canada")
     end

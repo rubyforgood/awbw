@@ -3,6 +3,7 @@ module GeographyHelper
     [
       [ "Alabama", "AL" ],
       [ "Alaska", "AK" ],
+      [ "American Samoa", "AS" ],
       [ "Arizona", "AZ" ],
       [ "Arkansas", "AR" ],
       [ "California", "CA" ],
@@ -12,6 +13,7 @@ module GeographyHelper
       [ "District of Columbia", "DC" ],
       [ "Florida", "FL" ],
       [ "Georgia", "GA" ],
+      [ "Guam", "GU" ],
       [ "Hawaii", "HI" ],
       [ "Idaho", "ID" ],
       [ "Illinois", "IL" ],
@@ -36,15 +38,18 @@ module GeographyHelper
       [ "New York", "NY" ],
       [ "North Carolina", "NC" ],
       [ "North Dakota", "ND" ],
+      [ "Northern Mariana Islands", "MP" ],
       [ "Ohio", "OH" ],
       [ "Oklahoma", "OK" ],
       [ "Oregon", "OR" ],
       [ "Pennsylvania", "PA" ],
+      [ "Puerto Rico", "PR" ],
       [ "Rhode Island", "RI" ],
       [ "South Carolina", "SC" ],
       [ "South Dakota", "SD" ],
       [ "Tennessee", "TN" ],
       [ "Texas", "TX" ],
+      [ "U.S. Virgin Islands", "VI" ],
       [ "Utah", "UT" ],
       [ "Vermont", "VT" ],
       [ "Virginia", "VA" ],
@@ -59,7 +64,7 @@ module GeographyHelper
     us_states.any? { |_name, abbr| abbr == abbreviation }
   end
 
-  # A saved state the US-state dropdown can't show, which belongs in the "Outside USA?" box.
+  # A saved state the US-state dropdown can't show, which belongs in the "Not on list?" box.
   def outside_usa_state?(state)
     state.present? && !us_state?(state)
   end
@@ -88,8 +93,11 @@ module GeographyHelper
 
   # Country dropdown options: the United States first, then every other country A–Z.
   # The US minor outlying islands are left out — nobody picks them for an address.
+  # Picked from the state / territory dropdown, so never offered as a country.
+  US_TERRITORY_CODES = %w[AS GU MP PR UM VI].freeze
+
   COUNTRIES = ([ Address::DEFAULT_COUNTRY ] + (
-    ISO3166::Country.all.map { |country| PLAIN_COUNTRY_NAMES[country.alpha2] || country.common_name } -
-    [ Address::DEFAULT_COUNTRY, "United States Minor Outlying Islands" ]
+    ISO3166::Country.all.reject { |country| country.alpha2.in?(US_TERRITORY_CODES) }
+      .map { |country| PLAIN_COUNTRY_NAMES[country.alpha2] || country.common_name } - [ Address::DEFAULT_COUNTRY ]
   ).sort).freeze
 end

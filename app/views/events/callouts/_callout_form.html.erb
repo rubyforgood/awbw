@@ -82,7 +82,7 @@
         <div class="space-y-2">
           <% asked = form.form_fields.order(:position).to_a %>
           <% asked.each do |field| %>
-            <%# Asked inside its _state question's "Outside USA?" box. %>
+            <%# Asked inside its _state question's "Not on list?" box. %>
             <% next if field.paired_with_state?(among: asked) %>
             <% if field.group_header? %>
               <h2 class="border-b border-gray-100 pt-2 pb-1 text-sm font-semibold tracking-wide text-gray-400 uppercase"><%= field.name %></h2>
