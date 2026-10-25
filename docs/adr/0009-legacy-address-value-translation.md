@@ -22,11 +22,10 @@ list can't be preselected.
 
 ## Decision
 
-One translator, `AddressTranslation`, used by every import and by the cleanup of existing
-data. Like ADR-0007, translation is **by lookup table, and a value nothing answers to is
+One translator, `AddressTranslation`, used by every import. Like ADR-0007, translation is **by lookup table, and a value nothing answers to is
 reported, never guessed** — it's counted in `#unmatched`. Every stored country ends up a
 dropdown name or blank: a country nothing answers to is cleared (its old value stays in the
-cleanup's Ahoy log, the `fm_*` archive, or the import's report). A state nothing reads is kept,
+`fm_*` archive or the import's report). A state nothing reads is kept,
 since a state is required and regions outside the US are legitimate.
 
 - **Country** → a dropdown name. In order: a placeholder ("-", blank, "n/a", "none",
@@ -50,23 +49,17 @@ since a state is required and regions outside the US are legitimate.
 - **Imports, inline:** every FileMaker import builds addresses through `FmAddressAttributes`
   (the Rolodex import now, the organizations and affiliations imports of ADR-0008), and the
   LMS registration importer translates its answers. Each reports what it couldn't place.
-- **Existing data, once and again:** `AddressServices::TranslateExisting`
-  (`data:translate_addresses`) rewrites stored address countries and states, filling a
-  locality only where it's Unknown. It's idempotent, so it runs before and after an import.
-  Every changed address is an `autochange.address` Ahoy event with its before and after.
-- **Where answers become addresses:** `OrganizationServices::UpsertAddress` (organization
-  capture and link-organization) and `PersonServices::CaptureFromSubmission` (the mailing
-  address) translate the country and state they're handed, so re-reading an old answer can't
-  add a spelling the dropdowns don't offer. A submission with no country leaves the stored
-  one alone.
+- **Existing data:** cleaned once by hand (below). No task rewrites stored addresses.
+- **Where answers become addresses:** answers are stored on the address as submitted. Every
+  form's state and country fields are dropdowns, and the older answers that could still
+  become an address were fixed in the cleanup.
 - **Not on save.** The dropdowns own new data; nothing rewrites an address when someone
   saves a form.
 
 ### Form answers
 
-Form answers are otherwise stored verbatim, as a record of what the person submitted, and
-`data:translate_addresses` never rewrites them. They're translated where they become
-addresses instead (above). The one exception is the hand cleanup below.
+Form answers are stored verbatim, as a record of what the person submitted; nothing rewrites
+them. The one exception is the hand cleanup below.
 
 ### Prod data cleanup, 2026-10-24 to 2026-10-25
 
@@ -83,8 +76,7 @@ All other answers stay as typed.
 
 ## Consequences
 
-- A new spelling turns up in an import's or the cleanup's unmatched report; adding it is a
-  line in `ALIASES` or `REGIONS`, and a re-run fills the country it had cleared (from the
-  state, or by hand from the logged value).
+- A new spelling turns up in an import's unmatched report; adding it is a line in `ALIASES`
+  or `REGIONS`.
 - The `fm_*` archive tables keep FileMaker's raw values.
 - Every stored country preselects in the dropdowns, so saving a form can't silently blank one.
