@@ -277,6 +277,15 @@ RSpec.describe "/organizations", type: :request do
       expect(phones).to have_css("li", text: "2. 123-332-1234")
     end
 
+    it "shows each address's phone on its collapsed header" do
+      organization = create(:organization)
+      create(:address, addressable: organization, phone: "123-123-1234")
+
+      get edit_organization_url(organization)
+
+      expect(Capybara.string(response.body)).to have_css("#addresses summary", text: "123-123-1234")
+    end
+
     it "opens the other-type box when the org is typed Other" do
       organization = create(:organization, organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: "Equine therapy")
 
