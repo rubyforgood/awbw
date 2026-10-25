@@ -251,7 +251,7 @@ module AffiliationServices
     # Some prod rows still carry the old app's "Leader" title, which is a Facilitator.
     def same_title?(held, title)
       held = held.to_s.squish
-      held.casecmp?(title.to_s.squish) || (title == Affiliation::FACILITATOR_TITLE && held.casecmp?(FoldLegacyLeaders::LEGACY_TITLE))
+      held.casecmp?(title.to_s.squish) || (title == Affiliation::FACILITATOR_TITLE && held.casecmp?(DataHealth::LegacyLeaderAffiliations::LEGACY_TITLE))
     end
 
     def link(affiliation, row, label, title:, attributes:, codes:)
