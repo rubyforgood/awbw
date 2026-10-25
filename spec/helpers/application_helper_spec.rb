@@ -155,7 +155,10 @@ RSpec.describe ApplicationHelper, type: :helper do
     let(:me) { create(:user) }
     let(:other) { create(:user) }
 
-    before { allow(helper).to receive(:current_user).and_return(me) }
+    before do
+      allow(helper).to receive(:current_user).and_return(me)
+      allow(helper).to receive(:allowed_to?) { |rule, target| UserPolicy.new(target, user: me).apply(rule) }
+    end
 
     it "uses second person when the form is about the current user" do
       expect(helper.timezone_visibility_hint(me)).to eq("You will see times and dates in this timezone.")

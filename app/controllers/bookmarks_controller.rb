@@ -26,7 +26,7 @@ class BookmarksController < ApplicationController
     user = User.find_by(id: params[:user_id]) if params[:user_id].present?
     user ||= current_user
     @user_name = user.full_name if user
-    @viewing_self = user == current_user
+    @viewing_self = allowed_to?(:self?, user)
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
