@@ -2,9 +2,8 @@ class Address < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
-  # AWBW's own geography, inherited from FileMaker's project Locality field. The five
-  # named here are the ones AddressLocality can work out from an address; the
-  # Northern/Central/Southern line through California is a person's call.
+  # AWBW's own geography, inherited from FileMaker's project Locality field. The California
+  # regions are mapped by county in AddressLocality::CALIFORNIA_REGIONS.
   LA_CITY = "LA City"
   LA_COUNTY = "LA County"
   ORANGE_COUNTY = "Orange County"

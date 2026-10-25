@@ -25,6 +25,17 @@ class FmPostalCode < ApplicationRecord
 
   FM_LINKS = {}.freeze
 
+  # The county a US ZIP (or ZIP+4) lies in, unless the ZIP belongs to a different state.
+  def self.county_for(zip_code, state:)
+    zip = zip_code.to_s.strip[/\A\d{5}/]
+    return unless zip
+
+    data = find_by(fm_id: zip)&.data || {}
+    return if data["State"].present? && AddressNormalizer.state(data["State"]) != AddressNormalizer.state(state)
+
+    data["County"].to_s.squish.presence
+  end
+
   def name
     fm_words([ fm_value("City"), fm_value("State") ].compact.join(", "), fm_id)
   end

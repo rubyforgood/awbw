@@ -1,0 +1,15 @@
+name: "Addresses fill in their country, county, and locality"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2851
+summary: >-
+  Addresses saved from a form — linking an organization, a registrant's own
+  mailing address, or an approved work-address request — fill in a blank
+  country, county, and locality from the rest of the address.
+pro_tips:
+  - "A US state means the United States; a state that isn't a US state, with no country, is placed Outside USA."
+  - "The county comes from the ZIP, and a California county sets Northern, Central, or Southern CA."
+  - "Los Angeles and its neighborhoods, like Van Nuys and San Pedro, are LA City; the rest of Los Angeles County is LA County."
+  - "A country, county, or locality someone already chose is never changed."
+  - "Adding a new address by hand also starts its locality on the California region its county is in."

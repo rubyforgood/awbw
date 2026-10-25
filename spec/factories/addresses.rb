@@ -8,7 +8,7 @@ FactoryBot.define do
     zip_code { Faker::Address.zip_code }
 
     country { Faker::Address.country }
-    locality { Address::LOCALITIES.sample }
+    locality { (Address::LOCALITIES - [ Address::UNKNOWN_LOCALITY ]).sample }
     county { Faker::Address.community }
     la_city_council_district { Faker::Number.between(from: 1, to: 15) }
     la_supervisorial_district { Faker::Number.between(from: 1, to: 5) }
