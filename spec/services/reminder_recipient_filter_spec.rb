@@ -95,13 +95,36 @@ RSpec.describe ReminderRecipientFilter do
       expect(matched({ email: "amy@--aisha@" }, [ amy, aisha, sam ])).to eq([ amy.id, aisha.id ].to_set)
     end
 
-    it "filters by registrant city, skipping inactive addresses like the roster does" do
-      here = registration
-      create(:address, addressable: here.registrant, city: "Santa Monica")
-      moved_away = registration(first_name: "Sam")
-      create(:address, addressable: moved_away.registrant, city: "Santa Monica", inactive: true)
-      expect(matched({ city: "santa" }, [ here, moved_away ])).to eq([ here.id ].to_set)
-      expect(EventRegistration.registrant_city("santa")).not_to include(moved_away)
+    it "filters by work city, else the registrant's own, like the roster does" do
+      works_there = registration
+      organization = create(:organization)
+      create(:address, addressable: organization, city: "Santa Monica")
+      create(:affiliation, person: works_there.registrant, organization:)
+      works_elsewhere = registration(first_name: "Sam")
+      elsewhere = create(:organization)
+      create(:address, addressable: elsewhere, city: "Portland")
+      create(:affiliation, person: works_elsewhere.registrant, organization: elsewhere)
+      create(:address, addressable: works_elsewhere.registrant, city: "Santa Monica")
+      lives_there = registration(first_name: "Lia")
+      create(:address, addressable: lives_there.registrant, city: "Santa Monica")
+
+      expect(matched({ city: "santa" }, [ works_there, works_elsewhere, lives_there ])).to eq([ works_there.id, lives_there.id ].to_set)
+      expect(EventRegistration.located_in(city: "santa")).to contain_exactly(works_there, lives_there)
+    end
+
+    # The City search and the State dropdown have to describe the same address, like
+    # the roster — otherwise someone working in two states matches a city from one
+    # and the state from the other.
+    it "tests the city search and the state dropdown against the same address" do
+      two_states = registration
+      [ [ "Portland", "OR" ], [ "Seattle", "WA" ] ].each do |city, state|
+        organization = create(:organization)
+        create(:address, addressable: organization, city:, state:)
+        create(:affiliation, person: two_states.registrant, organization:)
+      end
+
+      expect(matched({ city: "seattle", state: "WA" }, [ two_states ])).to eq([ two_states.id ].to_set)
+      expect(matched({ city: "seattle", state: "OR" }, [ two_states ])).to be_empty
     end
 
     it "filters by registration comment text" do

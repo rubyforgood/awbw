@@ -244,12 +244,10 @@ class EventsController < ApplicationController
     scope = scope.comment_text(params[:comment]) if params[:comment].present?
     scope = scope.funder_name(params[:funder_name]) if params[:funder_name].present?
     scope = scope.submission_status(params[:submission_status], @event) if params[:submission_status].present?
-    scope = scope.registrant_city(params[:city]) if params[:city].present?
+    scope = scope.located_in(on: @event.start_date, state: params[:state], county: params[:county], city: params[:city])
     scope = scope.organization_linking_status(params[:org_status], @event) if params[:org_status].present?
     scope = scope.account_status(params[:account_status]) if params[:account_status].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
-    scope = scope.registrant_state(params[:state]) if params[:state].present?
-    scope = scope.registrant_county(params[:county]) if params[:county].present?
     scope = scope.registrant_sector(params[:sector]) if params[:sector].present?
     scope = scope.registered_between(params[:registered_from], params[:registered_to])
 
@@ -714,18 +712,16 @@ class EventsController < ApplicationController
   end
 
   # Person ids behind the clicked breakdown row. Most dimensions arrive as an
-  # explicit id list (EventDashboard already has the maps); sector and state have
-  # no per-value id map, so they arrive as named filters and resolve here — bounded
-  # to `registrant_ids` (this event's roster), since the result is only ever
+  # explicit id list (EventDashboard already has the maps); sector has no per-value
+  # id map, so it arrives as a named filter and resolves here — bounded to
+  # `registrant_ids` (this event's roster), since the result is only ever
   # intersected with it and the unbounded lookup would load every person in the app
-  # tagged with that sector or living in that state.
+  # tagged with that sector.
   def roster_drill_in_ids(registrant_ids)
     if params[:registrant_ids].present?
       params[:registrant_ids].to_s.split("-").map(&:to_i).to_set
     elsif params[:sector].present?
       person_sector_ids(params[:sector]).where(sectorable_id: registrant_ids).pluck(:sectorable_id).to_set
-    elsif params[:state].present?
-      person_address_ids(state: params[:state]).where(addressable_id: registrant_ids).pluck(:addressable_id).to_set
     end
   end
 
@@ -855,11 +851,10 @@ class EventsController < ApplicationController
     # Breakdown drill-in filters (set when a chart row is clicked).
     scope = scope.where(id: person_category_ids(params[:age_group])) if params[:age_group].present?
     scope = scope.where(id: person_category_ids(params[:life_experience])) if params[:life_experience].present?
-    scope = scope.where(id: person_country_ids(params[:country])) if params[:country].present?
     scope = scope.where(id: person_school_district_ids(params[:school_district])) if params[:school_district].present?
     scope = scope.where(id: person_program_status_ids(params[:program_status])) if params[:program_status].present?
     scope = scope.where(id: person_linked_organization_ids(params[:organization_id])) if params[:organization_id].present?
-    scope = scope.where(id: person_linked_org_city_ids(params[:org_city])) if params[:org_city].present?
+    scope = scope.where(id: attendee_locations.registrant_ids_by_city_label.fetch(params[:org_city], [])) if params[:org_city].present?
     if params[:scholarship].present?
       # Scoped to one event, every status (including "no") is unambiguous at the
       # registration level, so reuse the shared scope. Cross-event, "No scholarship"
@@ -871,19 +866,18 @@ class EventsController < ApplicationController
         scope.where(id: scholarship_status_person_ids(params[:scholarship]))
       end
     end
-    # Address filters read the person's own address data directly (no registration
-    # required) — city is a free-text match, state/county exact. City and state ask
-    # one subquery so they describe the same address, matching the roster's shared
-    # join; two subqueries would let someone with homes in two states through on a
-    # city from one and a state from the other.
-    if params[:state].present? || params[:city].present?
-      scope = scope.where(id: person_address_ids(state: params[:state], city: params[:city]))
-    end
-    if params[:county].present?
-      # County options carry their state ("STATE::County") so same-named counties
-      # across states don't collide.
-      county_state, county_name = params[:county].split("::", 2)
-      scope = scope.where(id: person_address_ids(state: county_state, county: county_name))
+    # Where people are (PersonLocations) — on the filtered event's date, else today. The
+    # City box, the State and County dropdowns and the countries drill-in resolve in
+    # one pass, so they all describe the same address: someone working in two states
+    # can't match a city from one and the county from the other. A State that
+    # contradicts the county's own state matches nobody.
+    location_filters = PersonLocations.filters_from(
+      state: params[:state], county: params[:county], city: params[:city], country: params[:country]
+    )
+    if location_filters.nil?
+      scope = scope.none
+    elsif location_filters.any?
+      scope = scope.where(id: attendee_locations.matching(**location_filters).map(&:registrant_id))
     end
 
     # Shared registration-level filters, applied cross-event with "any registration
@@ -950,10 +944,6 @@ class EventsController < ApplicationController
     CategorizableItem.where(categorizable_type: "Person", category_id: category_id).select(:categorizable_id)
   end
 
-  def person_country_ids(country)
-    Address.active.where(addressable_type: "Person", country: country).select(:addressable_id)
-  end
-
   # People whose event-registration-linked affiliation points at an organization
   # address in the given school district (Affiliation#organization_address →
   # Address#district), scoped to the in-scope registrations — matching the
@@ -974,26 +964,10 @@ class EventsController < ApplicationController
       .select(Arel.sql("event_registrations.registrant_id"))
   end
 
-  # People whose linked training org sits in the given "City, State" (matched on
-  # each org's first active address, mirroring the cities breakdown's labeling).
-  def person_linked_org_city_ids(city_label)
-    org_ids = org_ids_by_city_label[city_label] || []
-    return Person.none if org_ids.empty?
-    person_linked_organization_ids(org_ids)
-  end
-
-  def org_ids_by_city_label
-    @org_ids_by_city_label ||= Address.active
-      .where(addressable_type: "Organization",
-             addressable_id: EventRegistrationOrganization.where(event_registration_id: attendee_registrations.select(:id)).select(:organization_id))
-      .order(:id)
-      .pluck(:addressable_id, :city, :state)
-      .each_with_object({}) do |(org_id, city, state), first_label|
-        next if first_label.key?(org_id)
-        first_label[org_id] = [ city, state ].compact_blank.join(", ").presence
-      end
-      .group_by { |_org_id, label| label }
-      .transform_values { |pairs| pairs.map(&:first) }
+  # Where each in-scope registrant is, behind the location filters and drill-ins —
+  # the same source as the breakdowns they come from.
+  def attendee_locations
+    @attendee_locations ||= PersonLocations.new(attendee_registrations.select(:registrant_id), on: @filter_event&.start_date)
   end
 
   # Anchored the same way the index's own column is: this list spans events, so
@@ -1031,21 +1005,6 @@ class EventsController < ApplicationController
     Affiliation.with_status(status).select(:person_id)
   end
 
-  # Person ids behind active person addresses, narrowed by any of state, county or
-  # city. City is a free-text LIKE (matching the roster's registrant_city filter),
-  # state/county are exact. Street isn't a filter anywhere yet, but the column
-  # exists — add a `street:` clause here the same way if one is ever needed.
-  def person_address_ids(state: nil, county: nil, city: nil)
-    scope = Address.active.where(addressable_type: "Person")
-    scope = scope.where(state: state) if state.present?
-    scope = scope.where(county: county) if county.present?
-    if city.present?
-      like = "%#{Address.sanitize_sql_like(city.downcase.strip)}%"
-      scope = scope.where("LOWER(addresses.city) LIKE ?", like)
-    end
-    scope.select(:addressable_id)
-  end
-
   # Option lists for the attendees index filter selects, built once per full page
   # load from the viewer's WHOLE reportable population — deliberately un-narrowed by
   # the active filters, so filtering never removes the option that would undo it.
@@ -1054,9 +1013,9 @@ class EventsController < ApplicationController
     @attendee_years = @attendee_event_options.filter_map { |event| event.start_date&.year }.uniq.sort.reverse
     person_ids = Person.where(id: EventRegistration.where(event_id: reportable_events.select(:id)).select(:registrant_id))
     @attendee_sectors = Sector.where(id: SectorableItem.where(sectorable_type: "Person", sectorable_id: person_ids).select(:sector_id)).order(:name)
-    addresses = Address.active.where(addressable_type: "Person", addressable_id: person_ids)
-    @attendee_states = addresses.where.not(state: [ nil, "" ]).distinct.pluck(:state).sort
-    @attendee_counties = addresses.where.not(county: [ nil, "" ]).where.not(state: [ nil, "" ]).distinct.pluck(:state, :county).sort
+    locations = PersonLocations.new(EventRegistration.where(event_id: reportable_events.select(:id)).select(:registrant_id))
+    @attendee_states = locations.candidate_values(:state)
+    @attendee_counties = locations.candidate_values(:state, :county)
     @attendee_topic_types = TopicSubscriptionType.active.ordered
   end
 

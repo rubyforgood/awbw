@@ -167,6 +167,46 @@ RSpec.describe Address, type: :model do
     end
   end
 
+  describe ".ranked_for_owner" do
+    let(:person) { create(:person) }
+
+    def address_typed(type, inactive: false, city: type.to_s)
+      create(:address, addressable: person, address_type: type, inactive: inactive, city: city)
+    end
+
+    it "prefers the active work address" do
+      address_typed("personal")
+      work = address_typed("work")
+
+      expect(person.addresses.ranked_for_owner.first).to eq(work)
+    end
+
+    it "falls back to the most recently edited active personal address" do
+      older = address_typed("personal", city: "Boise")
+      newer = address_typed("personal", city: "Nampa")
+      older.update!(zip_code: "83701")
+      newer.update!(zip_code: "83651")
+
+      expect(person.addresses.ranked_for_owner.first).to eq(newer)
+    end
+
+    it "takes an untyped active address over any retired one" do
+      address_typed("work", inactive: true)
+      unknown = address_typed(Address::UNKNOWN_CONTACT_TYPE)
+
+      expect(person.addresses.ranked_for_owner.first).to eq(unknown)
+    end
+
+    # A retired work address is the stalest thing we hold — people change jobs,
+    # and home outlasts the job — so it sorts behind a retired personal one.
+    it "prefers a retired personal address to a retired work address" do
+      address_typed("work", inactive: true)
+      personal = address_typed("personal", inactive: true)
+
+      expect(person.addresses.ranked_for_owner.first).to eq(personal)
+    end
+  end
+
   describe ".unfilled_attributes?" do
     it "is true for a block carrying only the pre-filled country, state, and locality" do
       attrs = { "country" => "Canada", "state" => "AB", "locality" => "Outside USA",

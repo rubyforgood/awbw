@@ -143,7 +143,7 @@ RSpec.describe EventParticipationReport do
       registration = create(:event_registration, event: event, registrant: person, status: "attended")
       create(:event_registration_organization, event_registration: registration, organization: organization)
       create(:sectorable_item, sectorable: person, sector: create(:sector))
-      create(:address, addressable: person, state: "CA", country: "US")
+      create(:address, addressable: person, city: "Fresno", state: "CA", country: "US")
       create(:address, addressable: organization, city: "Los Angeles")
     end
 
@@ -155,8 +155,16 @@ RSpec.describe EventParticipationReport do
       expect(reach.countries).to eq(1)
     end
 
-    it "counts distinct cities from the linked organizations' addresses" do
-      expect(report.demographics.cities).to eq(1)
+    it "counts states, countries, and cities where registrants work, else live" do
+      worker = create(:person)
+      create(:event_registration, event: event, registrant: worker, status: "attended")
+      create(:affiliation, person: worker, organization: organization)
+      organization.addresses.first.update!(state: "NV", country: "Canada")
+
+      reach = report.demographics
+      expect(reach.states).to eq(2)
+      expect(reach.countries).to eq(2)
+      expect(reach.cities).to eq(2)
     end
   end
 

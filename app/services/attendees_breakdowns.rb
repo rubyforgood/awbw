@@ -3,8 +3,8 @@
 # whole filtered attendee population (not one page). Method names/return shapes
 # match EventDashboard so the shared _registrant_breakdowns partial reads either.
 #
-# Sourced from each person's profile (sectors, age groups, categories, addresses)
-# and from the orgs/scholarships/CE tied to their attended-training registrations.
+# Sourced from each person's profile (sectors, age groups, categories) and from the
+# orgs, locations, scholarships, and CE tied to their attended-training registrations.
 class AttendeesBreakdowns
   # events: the events whose registrations may be counted (for the attendees index,
   # the viewer's reportable events narrowed by the active filters), so the
@@ -140,13 +140,12 @@ class AttendeesBreakdowns
 
   # --- Cities ----------------------------------------------------------------
 
-  # Attendees grouped by the city of the organization linked on their attended-
-  # training registrations, with scholarship recipients per city — the shared
+  # Attendees grouped by their location's city on their attended-training
+  # registrations, with scholarship recipients per city — the shared
   # "Registrants by city" breakdown, aggregated across all trainings.
   def registrant_city_breakdown
     @registrant_city_breakdown ||= RegistrantCityBreakdown.new(
-      org_registrant_pairs: org_registrant_pairs,
-      city_by_org: city_by_organization,
+      city_registrant_pairs: locations.rows.map { |row| [ row.city_label, row.registrant_id ] },
       scholarship_recipient_ids: scholarship_recipient_ids
     )
   end
@@ -181,11 +180,11 @@ class AttendeesBreakdowns
   end
 
   def state_registrant_ids_by_state
-    @state_registrant_ids_by_state ||= person_ids_by(address_rows.select { |_, state, _| Address::US_STATE_ABBREVIATIONS.include?(state.to_s.upcase) }) { |row| row[1] }
+    locations.registrant_ids_by_state
   end
 
   def country_registrant_ids_by_country
-    @country_registrant_ids_by_country ||= person_ids_by(address_rows.reject { |_, _, country| country.blank? }) { |row| row[2] }
+    locations.registrant_ids_by(:country)
   end
 
   def school_district_registrant_ids_by_district
@@ -241,10 +240,12 @@ class AttendeesBreakdowns
     @person_ids ||= @people.except(:includes, :eager_load, :preload, :order).ids
   end
 
+  def scoped_registrations
+    @scoped_registrations ||= @registrations.where(registrant_id: person_ids, event_id: @events.select(:id))
+  end
+
   def registration_ids
-    @registration_ids ||= @registrations
-      .where(registrant_id: person_ids, event_id: @events.select(:id))
-      .pluck(:id)
+    @registration_ids ||= scoped_registrations.pluck(:id)
   end
 
   def sector_rows
@@ -290,19 +291,13 @@ class AttendeesBreakdowns
       .pluck(:categorizable_id, :category_id)
   end
 
-  # [ [ person_id, state, country ], ... ] — one load behind the state and country
-  # counts and their id maps.
-  def address_rows
-    @address_rows ||= active_addresses.pluck(:addressable_id, :state, :country)
-  end
-
   # { key => distinct person ids }, grouping [ person_id, ... ] rows by the block.
   def person_ids_by(rows)
     rows.group_by { |row| yield(row) }.transform_values { |grouped| grouped.map(&:first).uniq }
   end
 
-  def active_addresses
-    Address.active.where(addressable_type: "Person", addressable_id: person_ids)
+  def locations
+    @locations ||= PersonLocations.new(scoped_registrations.select(:registrant_id), on: @as_of)
   end
 
   def org_registrant_pairs
@@ -345,22 +340,6 @@ class AttendeesBreakdowns
     @program_status_by_organization ||= organizations.to_h do |organization|
       [ organization.id, organization.facilitator_status_on(@as_of) ]
     end
-  end
-
-  # "City, State" per linked organization, from its first active address (mirrors
-  # EventDashboard#city_by_organization). Orgs with no active address are absent,
-  # so their registrants fall into the breakdown's Unknown bucket.
-  def city_by_organization
-    org_ids = org_registrant_pairs.map(&:first).uniq
-    Address.active
-      .where(addressable_type: "Organization", addressable_id: org_ids)
-      .order(:id)
-      .pluck(:addressable_id, :city, :state)
-      .each_with_object({}) do |(org_id, city, state), map|
-        next if map.key?(org_id)
-        label = [ city, state ].compact_blank.join(", ").presence
-        map[org_id] = label if label
-      end
   end
 
   def scholarship_recipient_ids

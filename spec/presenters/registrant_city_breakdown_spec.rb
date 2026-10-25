@@ -4,8 +4,7 @@ RSpec.describe RegistrantCityBreakdown do
   describe "#rows" do
     it "counts distinct registrants and scholarship recipients per city, most first" do
       breakdown = described_class.new(
-        org_registrant_pairs: [ [ 1, 10 ], [ 1, 11 ], [ 2, 12 ] ],
-        city_by_org: { 1 => "Los Angeles, CA", 2 => "Richmond, CA" },
+        city_registrant_pairs: [ [ "Los Angeles, CA", 10 ], [ "Los Angeles, CA", 11 ], [ "Richmond, CA", 12 ] ],
         scholarship_recipient_ids: [ 10 ]
       )
 
@@ -16,8 +15,7 @@ RSpec.describe RegistrantCityBreakdown do
 
     it "exposes per-city registrant and scholarship-recipient ids for drill-in links" do
       breakdown = described_class.new(
-        org_registrant_pairs: [ [ 1, 10 ], [ 1, 11 ], [ 2, 12 ] ],
-        city_by_org: { 1 => "Los Angeles, CA", 2 => "Richmond, CA" },
+        city_registrant_pairs: [ [ "Los Angeles, CA", 10 ], [ "Los Angeles, CA", 11 ], [ "Richmond, CA", 12 ] ],
         scholarship_recipient_ids: [ 10, 12 ]
       )
 
@@ -26,20 +24,18 @@ RSpec.describe RegistrantCityBreakdown do
       expect(la.scholarship_recipient_ids).to contain_exactly(10)
     end
 
-    it "counts a registrant once per city even when linked to that org twice" do
+    it "counts a registrant once per city even when listed there twice" do
       breakdown = described_class.new(
-        org_registrant_pairs: [ [ 1, 10 ], [ 1, 10 ] ],
-        city_by_org: { 1 => "Barstow, CA" },
+        city_registrant_pairs: [ [ "Barstow, CA", 10 ], [ "Barstow, CA", 10 ] ],
         scholarship_recipient_ids: []
       )
 
       expect(breakdown.rows.map(&:registrant_count)).to eq([ 1 ])
     end
 
-    it "buckets linked orgs with no city under Unknown, sorted last" do
+    it "buckets a nil city under Unknown, sorted last" do
       breakdown = described_class.new(
-        org_registrant_pairs: [ [ 1, 10 ], [ 1, 11 ], [ 2, 12 ] ],
-        city_by_org: { 1 => "Perris, CA" },
+        city_registrant_pairs: [ [ "Perris, CA", 10 ], [ "Perris, CA", 11 ], [ nil, 12 ] ],
         scholarship_recipient_ids: []
       )
 
@@ -51,13 +47,12 @@ RSpec.describe RegistrantCityBreakdown do
 
   it "reports city_count and any?" do
     breakdown = described_class.new(
-      org_registrant_pairs: [ [ 1, 10 ], [ 2, 11 ] ],
-      city_by_org: { 1 => "Pomona, CA", 2 => "Tustin, CA" },
+      city_registrant_pairs: [ [ "Pomona, CA", 10 ], [ "Tustin, CA", 11 ] ],
       scholarship_recipient_ids: []
     )
 
     expect(breakdown.city_count).to eq(2)
     expect(breakdown).to be_any
-    expect(described_class.new(org_registrant_pairs: [], city_by_org: {}, scholarship_recipient_ids: [])).not_to be_any
+    expect(described_class.new(city_registrant_pairs: [], scholarship_recipient_ids: [])).not_to be_any
   end
 end

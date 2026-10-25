@@ -1779,18 +1779,42 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Any status")
       end
 
-      it "narrows the roster by city" do
+      it "narrows the roster by work city" do
         here = create(:person, first_name: "Cityful", last_name: "Local")
-        create(:address, addressable: here, city: "Santa Monica")
         there = create(:person, first_name: "Faraway", last_name: "Person")
-        create(:address, addressable: there, city: "Portland")
+        create(:address, addressable: there, city: "Santa Monica")
+        here_org = create(:organization)
+        create(:address, addressable: here_org, city: "Santa Monica")
         create(:event_registration, event: event, registrant: here)
+        create(:affiliation, person: here, organization: here_org)
+        there_org = create(:organization)
+        create(:address, addressable: there_org, city: "Portland")
         create(:event_registration, event: event, registrant: there)
+        create(:affiliation, person: there, organization: there_org)
 
         get registrants_event_path(event, city: "santa")
 
         expect(response.body).to include("Cityful")
         expect(response.body).not_to include("Faraway")
+      end
+
+      # The City and State controls sit in the same filter form, so they have to
+      # describe one address — otherwise a registrant working in two states matches
+      # a city from one and the state from the other.
+      it "matches the roster's city and state filters against the same work address" do
+        person = create(:person, first_name: "Bistate", last_name: "Worker")
+        registration = create(:event_registration, event: event, registrant: person)
+        [ %w[Portland OR], %w[Seattle WA] ].each do |city, state|
+          organization = create(:organization)
+          create(:address, addressable: organization, city: city, state: state)
+          create(:affiliation, person: registration.registrant, organization: organization)
+        end
+
+        get registrants_event_path(event, city: "Seattle", state: "WA")
+        expect(response.body).to include("Bistate")
+
+        get registrants_event_path(event, city: "Seattle", state: "OR")
+        expect(response.body).not_to include("Bistate")
       end
 
       it "does not crash on the new funder / comment-text / submission filters" do
@@ -2577,9 +2601,11 @@ RSpec.describe "Events", type: :request do
     let!(:ca_kings_reg) { create(:event_registration, event: event, registrant: ca_kings_person) }
 
     before do
-      create(:address, addressable: ca_person, state: "CA", county: "Los Angeles")
-      create(:address, addressable: ny_person, state: "NY", county: "Kings")
-      create(:address, addressable: ca_kings_person, state: "CA", county: "Kings")
+      { ca_reg => [ "CA", "Los Angeles" ], ny_reg => [ "NY", "Kings" ], ca_kings_reg => [ "CA", "Kings" ] }.each do |registration, (state, county)|
+        organization = create(:organization)
+        create(:address, addressable: organization, state:, county:)
+        create(:affiliation, person: registration.registrant, organization:)
+      end
       sign_in admin
     end
 
@@ -3371,8 +3397,9 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Hospice care")
         end
 
-        it "shows a countries breakdown from registrant addresses" do
-          create(:address, addressable: person, state: "CA", country: "Canada", inactive: false)
+        it "shows a countries breakdown from the org a registrant registered under" do
+          create(:address, addressable: organization, state: "ON", country: "Canada", inactive: false)
+          registration.event_registration_organizations.create!(organization: organization)
 
           get roster_event_path(owned_event), headers: charts_headers
 
@@ -3391,7 +3418,8 @@ RSpec.describe "Events", type: :request do
         end
 
         it "renders the states breakdown as a US choropleth map fed by per-state counts" do
-          create(:address, addressable: person, state: "CA", inactive: false)
+          create(:address, addressable: organization, state: "CA", inactive: false)
+          registration.event_registration_organizations.create!(organization: organization)
 
           get roster_event_path(owned_event), headers: charts_headers
 
@@ -3429,10 +3457,10 @@ RSpec.describe "Events", type: :request do
           expect(response.body).not_to include("Only scholarship orgs")
         end
 
-        it "groups registrants by the city of the org linked on their registration" do
+        it "groups registrants by the city they work in" do
           city_org = create(:organization, name: "City Org")
           create(:address, addressable: city_org, city: "Los Angeles", state: "CA", inactive: false)
-          create(:event_registration_organization, event_registration: registration, organization: city_org)
+          create(:affiliation, person: person, organization: city_org)
           scholarship = create(:scholarship, recipient: person, amount_cents: 500)
           create(:allocation, source: scholarship, allocatable: registration, amount: 500)
 
@@ -3650,11 +3678,10 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Billed to original event")
       end
 
-      it "shows a recipient city breakdown, grouped by the registration-linked org, in the lazy charts frame" do
+      it "shows a recipient city breakdown, grouped by where they work, in the lazy charts frame" do
         org = create(:organization, name: "Reach Org")
         create(:address, addressable: org, city: "Richmond", state: "CA", inactive: false)
-        registration = EventRegistration.find_by!(registrant: applicant, event: event)
-        create(:event_registration_organization, event_registration: registration, organization: org)
+        create(:affiliation, person: applicant, organization: org)
 
         get recipients_event_path(event), headers: { "Turbo-Frame" => "recipients_charts" }
 

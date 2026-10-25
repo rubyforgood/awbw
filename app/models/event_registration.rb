@@ -220,27 +220,15 @@ class EventRegistration < ApplicationRecord
     end
     scope
   }
-  scope :registrant_state, ->(state) {
-    joins(registrant: :addresses)
-      .where(addresses: { inactive: false, state: state })
-      .distinct
-  }
-  # Accepts "STATE|County" (from the manage filter) to scope to a county within
-  # a specific state, or a bare county name for backward compatibility.
-  scope :registrant_county, ->(value) {
-    state, county = value.to_s.include?("|") ? value.split("|", 2) : [ nil, value.to_s ]
-    next none if county.blank?
-    conditions = { inactive: false, county: county }
-    conditions[:state] = state if state.present?
-    joins(registrant: :addresses).where(addresses: conditions).distinct
-  }
-  scope :registrant_city, ->(term) {
-    return all if term.blank?
-    like = "%#{sanitize_sql_like(term.downcase.strip)}%"
-    joins(registrant: :addresses)
-      .where("LOWER(addresses.city) LIKE ?", like)
-      .where(addresses: { inactive: false })
-      .distinct
+  # Where the registrant is on `on` (the event's start date) — work, else home
+  # (PersonLocations). Takes any of its LOCATION_FIELDS, and they arrive together
+  # in one call so they test the same location row: a registrant working in two
+  # states would otherwise match a city from one and the state from the other.
+  scope :located_in, ->(on: nil, **filters) {
+    resolved = PersonLocations.filters_from(**filters)
+    next none if resolved.nil?
+    next all if resolved.empty?
+    where(registrant_id: PersonLocations.new(all.select(:registrant_id), on:).matching(**resolved).map(&:registrant_id))
   }
   scope :registrant_sector, ->(sector_id) {
     joins(registrant: :sectorable_items)
