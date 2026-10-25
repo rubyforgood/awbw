@@ -208,6 +208,27 @@ class Person < ApplicationRecord
     options :all, type: :text, default: true, default_operator: :or
   end
 
+  search_scope :search_name_email do
+    attributes :first_name, :legal_first_name, :last_name, :email, :email_2
+    attributes all: [ :first_name, :legal_first_name, :last_name, :email, :email_2 ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
+  search_scope :search_contact do
+    scope { left_joins(:contact_methods, :addresses) }
+    attributes phone:   "contact_methods.value"
+    attributes street:  "addresses.street_address"
+    attributes city:    "addresses.city"
+    attributes state:   "addresses.state"
+    attributes zip:     "addresses.zip_code"
+    attributes county:  "addresses.county"
+    attributes country: "addresses.country"
+    attributes all: [ "contact_methods.value",
+                      "addresses.street_address", "addresses.city", "addresses.state",
+                      "addresses.zip_code", "addresses.county", "addresses.country" ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
   FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
   LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
 
@@ -215,7 +236,6 @@ class Person < ApplicationRecord
     (people.first_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden))
     OR (people.last_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden))
     OR (people.profile_show_email AND (people.email LIKE :pattern OR users.email LIKE :pattern))
-    OR (people.profile_show_phone AND (users.phone LIKE :pattern OR contact_methods.value LIKE :pattern))
   SQL
 
   # Spaces and periods are dropped on both sides so an initialled name ("Cathy S.") finds itself.
@@ -248,7 +268,7 @@ class Person < ApplicationRecord
   def self.shared_contact_search(query)
     terms = query.scan(SEARCH_TERM_PATTERN).map { |groups| groups.compact.first }.compact_blank
     terms.reduce(all) do |relation, term|
-      matches = unscoped.left_joins(:user, :active_phones).where(
+      matches = unscoped.left_joins(:user).where(
         SHARED_CONTACT_MATCH_SQL,
         pattern: "%#{sanitize_sql_like(term)}%",
         first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES,
