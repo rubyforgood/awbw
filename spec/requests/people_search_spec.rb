@@ -379,46 +379,6 @@ RSpec.describe "People search", type: :request do
       expect(search_contact_details("Hiddenway")).to include("Hiddenfacts")
     end
 
-    # `type:` rides on the same joined address as the other prefixes, so it is how
-    # you search a personal city alone rather than any address's city.
-    it "narrows the contact search to one kind of address with type:" do
-      create(:address, addressable: person, city: "Hiddencity", address_type: "personal")
-      create(:address, addressable: person, city: "Workcity", address_type: "work")
-
-      expect(search_contact_details("type: personal city: Hiddencity")).to include("Hiddenfacts")
-      expect(search_contact_details("type: work city: Hiddencity")).not_to include("Hiddenfacts")
-      expect(search_contact_details("type: work city: Workcity")).to include("Hiddenfacts")
-    end
-
-    # The two rules meet here: words AND inside an alternative, alternatives OR
-    # across. Each side is parenthesised on the way into SearchCop to get that —
-    # unparenthesised, the `or` binds to the last word alone and "amy jones--mary
-    # davis" quietly becomes "amy AND (jones OR mary) AND davis", which matches
-    # nobody.
-    it "ANDs the words inside each -- alternative and ORs the alternatives" do
-      amy = create(:person, first_name: "Amyname", last_name: "Jonesname")
-      mary = create(:person, first_name: "Maryname", last_name: "Davisname")
-      mixed = create(:person, first_name: "Amyname", last_name: "Davisname")
-
-      body = search("amyname jonesname--maryname davisname")
-
-      expect(body).to include(amy.first_name, mary.first_name)
-      expect(body).to include("Jonesname", "Davisname")
-      expect(body).not_to include(mixed.name)
-    end
-
-    # Every search box in the app takes "--" for "either"; the prefixed boxes get
-    # it by rewriting it into SearchCop's own `or`.
-    it "takes -- alternatives in both boxes" do
-      other = create(:person, first_name: "Otherfacts")
-      create(:address, addressable: other, city: "Othercity")
-      create(:address, addressable: person, city: "Hiddencity")
-
-      expect(search("Hiddenfacts--Otherfacts")).to include("Hiddenfacts", "Otherfacts")
-      body = search_contact_details("city: Hiddencity--city: Othercity")
-      expect(body).to include("Hiddenfacts", "Otherfacts")
-    end
-
     %w[first_name_last_initial first_name_only].each do |preference|
       it "matches the last name when the display preference is #{preference}" do
         person.update!(last_name: "Hiddensurname", display_name_preference: preference)

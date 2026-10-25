@@ -27,9 +27,10 @@
 <% chips = render "events/attendees_chips" %>
 
 <% primary = capture do %>
+  <%# Person.search_name_email — the people index's own scope, borrowed whole so
+      the same words find the same people on both pages. %>
   <%= render "shared/filter_text", param: :name_email, label: "Name or email",
-        field_class: field_class, submit: true, tooltip: ContactSearchable::SEARCH_SYNTAX_HINT,
-        wrapper_class: "w-full md:flex-1 md:min-w-[14rem]" %>
+        field_class: field_class, submit: true, wrapper_class: "w-full md:flex-1 md:min-w-[14rem]" %>
 
   <%# Attendance and event type default to "attended" / "trainings" — the population
       this page has always shown — so the neutral "All …" is the first option rather
@@ -103,10 +104,10 @@
           selected: Array(params[:topic_subscription]).map(&:to_i), placeholder: "Any topic" %>
   <% end %>
 
-  <%# The same prefixed box as the people index (ContactSearchable), admin-only
-      there and here. It reads the person's OWN contact record, while the City /
-      State / County filters below read where they work on these registrations —
-      so the two answer different questions and the labels say which. %>
+  <%# The people index's Contact info box generalised (ContactSearchable) — more
+      prefixes, live addresses only, and the shared grammar — admin-only here as
+      it is there. It reads the person's OWN contact record, while the box below
+      reads where they work on these registrations, so the labels say which. %>
   <% if allowed_to?(:manage?, Person) %>
     <%= render "shared/filter_text", param: :contact_info, label: "Their own contact info", submit: true,
           placeholder: "city: austin", field_class: field_class,

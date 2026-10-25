@@ -1,15 +1,14 @@
-name: "Prefixed contact search on the attendees page"
+name: "Attendees page: search by contact info and by where they work"
 area: reporting
 display_status: admin_facing
 released_on: 2026-10-25
 pr_number: 2857
 summary: >-
-  The attendees page now has the same admin-only "Contact info" box as the people
-  index, where you can type a prefix to search one part of someone's address —
-  "city: austin", "county: travis", "zip: 78701". Its main search box is now name
-  or email, matching the people index.
+  The attendees page's search box is now Name or email, matching the people
+  index, with two new boxes beside it: a super-admin "Their own contact info"
+  box, and a "Where they work" box that replaces the old City field.
 pro_tips:
-  - "Prefixes: phone:, street:, city:, state:, zip:, county:, country:, locality:, district:. Type several and each narrows the list further."
-  - "With no prefix, the term is searched across all of those fields at once."
-  - "This box reads the person's OWN address, while the City, State and County filters next to it read where they work on these registrations — so the two can disagree, on purpose."
-  - "Both boxes are super-admin only; nobody else sees them."
+  - "Their own contact info reads the person's own address. Where they work reads the organization address on their registrations. The two can disagree, on purpose."
+  - "Where they work takes city:, county:, state:, country:, locality:, zip:, district: and the LA district prefixes — so locality and school district are filterable here for the first time."
+  - "The State and County dropdowns still win over the same field typed into the box."
+  - "Both new boxes are super-admin only."

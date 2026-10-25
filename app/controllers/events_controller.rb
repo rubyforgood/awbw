@@ -846,9 +846,9 @@ class EventsController < ApplicationController
     # Dash-joined person ids, e.g. from the reports-hub participation totals.
     scope = scope.where(id: params[:registrant_ids].to_s.split("-")) if params[:registrant_ids].present?
     scope = scope.search_name_email(params[:name_email]) if params[:name_email].present?
-    # The prefixed contact search the people index uses (ContactSearchable), over
-    # the person's own live addresses and phones.
-    scope = scope.search_contact(params[:contact_info]) if params[:contact_info].present?
+    # ContactSearchable's prefixed search over the person's own live addresses and
+    # phones — the people index's box generalised, not the box itself.
+    scope = scope.search_location(params[:contact_info]) if params[:contact_info].present?
     scope = scope.where(id: person_sector_ids(params[:sector])) if params[:sector].present?
     scope = scope.where(id: person_affiliation_status_ids(params[:affiliation_status])) if params[:affiliation_status].present?
     # Breakdown drill-in filters (set when a chart row is clicked).

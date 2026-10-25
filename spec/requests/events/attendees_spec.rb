@@ -612,6 +612,47 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).not_to include("Ada Lovelace")
         end
 
+        # `type:` rides on the same joined address as the other prefixes, which is
+        # how you search a personal city alone rather than any address's city.
+        it "narrows the contact search to one kind of address with type:" do
+          create(:address, addressable: attendee, city: "Homecity", address_type: "personal", inactive: false)
+          create(:address, addressable: attendee, city: "Deskcity", address_type: "work", inactive: false)
+
+          get attendees_events_url(contact_info: "type: personal city: Homecity"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+
+          get attendees_events_url(contact_info: "type: work city: Homecity"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
+        # Retired addresses place someone on the map (Address::STANDING) but should
+        # not be how you find them — the sticky note with their old address would
+        # otherwise be the one thing that works.
+        it "does not match a retired address" do
+          create(:address, addressable: attendee, city: "Oldcity", inactive: true)
+
+          get attendees_events_url(contact_info: "city: Oldcity"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
+        # Words AND inside an alternative, alternatives OR across. Each side is
+        # parenthesised on the way into SearchCop to get that — unparenthesised the
+        # `or` binds to the last word alone and the query matches nobody. (Oregon is
+        # spelled `state: OR` here for the same reason: a bare `or` is the operator.)
+        it "ANDs the words inside each -- alternative and ORs the alternatives" do
+          create(:address, addressable: attendee, city: "Austin", state: "TX", inactive: false)
+          other = create(:person, first_name: "Katherine", last_name: "Johnson")
+          create(:address, addressable: other, city: "Seattle", state: "WA", inactive: false)
+          create(:event_registration, event: recent_training, registrant: other, status: "attended")
+          neither = create(:person, first_name: "Grace", last_name: "Hopper")
+          create(:address, addressable: neither, city: "Austin", state: "WA", inactive: false)
+          create(:event_registration, event: recent_training, registrant: neither, status: "attended")
+
+          get attendees_events_url(contact_info: "austin tx--seattle wa"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace", "Katherine Johnson")
+          expect(response.body).not_to include("Grace Hopper")
+        end
+
         # One box, prefixed like the contact box above it, so every part still has
         # to describe the same work address.
         it "filters by the prefixed Where they work box" do

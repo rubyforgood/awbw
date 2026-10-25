@@ -1,19 +1,17 @@
-name: "One search syntax across every filter box"
+name: "Prefixed search on the attendees and organizations pages"
 area: reporting
 display_status: admin_facing
 released_on: 2026-10-25
 pr_number: 2857
 summary: >-
-  Every search box now works the same way: several words all have to match, "--"
-  means either, and quotes make a phrase. The Contact info boxes on people and
-  attendees, and the Address box on organizations, take prefixes like "city:" and
-  "county:".
+  The people index's Contact info box now has siblings: the attendees page gets
+  one of its own, and the organizations Address box takes the same prefixes. The
+  roster keyword search and the bulk email picker now read "--" as "either", the
+  way tag filters already do.
 pro_tips:
-  - "Several words narrow: amy jones finds the one person, not everyone called Amy plus everyone called Jones."
-  - "amy--aisha finds both. That works in every box, including the roster keyword search and the bulk email picker."
-  - "The two rules combine: amy jones--mary davis finds Amy Jones and Mary Davis, and nobody called Amy Davis."
-  - "Word order does not matter: jones amy finds Amy Jones."
   - "Prefixes: phone:, street:, city:, state:, zip:, county:, country:, locality:, district:, la_council:, la_supervisorial:, la_spa:, and type: for work or personal."
   - "type: personal city: austin asks for one address that is BOTH personal and in Austin — that is how to search a personal city on its own."
-  - "Contact info searches someone's own live addresses. Where they work searches the organization address on their registrations. The two can disagree, on purpose."
-  - "Hover the little i beside any search box to see what it takes."
+  - "In these boxes several words all have to match, in any order, and amy--aisha finds either. The two combine: amy jones--mary davis finds Amy Jones and Mary Davis, not Amy Davis."
+  - "Write Oregon as state: OR. A bare or means either."
+  - "These boxes search live addresses only. A retired address still places someone on the charts, but is not how you look them up."
+  - "The people index search is unchanged — it works exactly as it did."

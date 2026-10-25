@@ -33,6 +33,7 @@ class PeopleController < ApplicationController
       filtered = base_scope.search_by_params(filters)
       filtered = filtered.search_name_email(name_email)
       filtered = filtered.search_contact(contact_info)
+      filtered = filtered.distinct if contact_info.present?
       filtered = filtered.order(:first_name, :last_name)
 
       total = filtered.count
@@ -53,6 +54,7 @@ class PeopleController < ApplicationController
     people = Person.includes(:user).search_by_params(filters)
     people = people.search_name_email(name_email)
     people = people.search_contact(contact_info)
+    people = people.distinct if contact_info.present?
     @email_addresses = people.filter_map { |person| person.preferred_email.presence }.uniq.sort
   end
 

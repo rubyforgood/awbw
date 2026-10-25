@@ -48,10 +48,14 @@ module ContactSearchable
   # The one help hint, shared by every search box so none of them can describe a
   # syntax the others don't take.
   SEARCH_SYNTAX_HINT = "Several words all have to match. Use -- for either (amy--aisha), quotes for a phrase.".freeze
+  # `or` is SearchCop's own operator, so Oregon has to be asked for by prefix
+  # (`state: OR`) rather than typed bare — worth saying in the box that takes
+  # prefixes, not in the general hint.
   CONTACT_SEARCH_HINT = [
     "Prefixes: #{CONTACT_SEARCH_FIELDS.keys.map { |prefix| "#{prefix}:" }.join(', ')}.",
     "Several narrow to one address (type: personal city: austin).",
-    SEARCH_SYNTAX_HINT
+    SEARCH_SYNTAX_HINT,
+    "Write Oregon as state: OR — a bare or means \"either\"."
   ].join(" ").freeze
 
   # The alternatives someone typed. A lone hyphenated value ("Smith-Jones") is one
@@ -73,10 +77,11 @@ module ContactSearchable
   end
 
   class_methods do
-    # Defines `search_contact` over the CONTACT_SEARCH_FIELDS that live on the
-    # associations named here, so a model without one (an organization has
-    # addresses but no contact methods) offers the prefixes it can answer.
-    def searches_contact(*associations)
+    # Defines a prefixed search scope over the CONTACT_SEARCH_FIELDS that live on
+    # the associations named here, so a model without one (an organization has
+    # addresses but no contact methods) offers the prefixes it can answer. `as:`
+    # names the scope, for a model that already has a search of its own to keep.
+    def searches_contact(*associations, as: :search_contact)
       tables = associations.map { |association| reflect_on_association(association).table_name }
       fields = CONTACT_SEARCH_FIELDS.filter_map do |prefix, columns|
         reachable = Array(columns).select { |column| tables.include?(column.split(".").first) }
@@ -84,7 +89,7 @@ module ContactSearchable
       end.to_h
       searched = fields.except(*SCOPING_PREFIXES).values.flatten
 
-      search_scope :contact_matches do
+      search_scope :"#{as}_matches" do
         scope { left_joins(*associations) }
         fields.each { |prefix, columns| attributes prefix => columns }
         attributes all: searched
@@ -96,9 +101,10 @@ module ContactSearchable
       # Distinct here rather than at each call site: the joins mean an owner with
       # two matching addresses would otherwise arrive twice, and a caller that
       # forgets only finds out when a duplicate row reaches a page.
-      scope :search_contact, ->(query) {
+      matcher = :"#{as}_matches"
+      scope as, ->(query) {
         expanded = ContactSearchable.expand_alternatives(query)
-        expanded.blank? ? all : contact_matches(expanded).distinct
+        expanded.blank? ? all : public_send(matcher, expanded).distinct
       }
     end
   end

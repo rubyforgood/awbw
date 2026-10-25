@@ -211,18 +211,32 @@ class Person < ApplicationRecord
     options :all, type: :text, default: true, default_operator: :or
   end
 
-  search_scope :name_email_matches do
+  search_scope :search_name_email do
     attributes :first_name, :legal_first_name, :last_name, :email, :email_2
     attributes all: [ :first_name, :legal_first_name, :last_name, :email, :email_2 ]
-    # "amy jones" means the one person, not everyone called either. See
-    # ContactSearchable for the shared grammar.
-    options :all, type: :text, default: true, default_operator: :and
+    options :all, type: :text, default: true, default_operator: :or
   end
-  # Takes the app's `--` for "either", the same as the Contact info box beside it.
-  scope :search_name_email, ->(query) { name_email_matches(ContactSearchable.expand_alternatives(query)) }
 
+  search_scope :search_contact do
+    scope { left_joins(:contact_methods, :addresses) }
+    attributes phone:   "contact_methods.value"
+    attributes street:  "addresses.street_address"
+    attributes city:    "addresses.city"
+    attributes state:   "addresses.state"
+    attributes zip:     "addresses.zip_code"
+    attributes county:  "addresses.county"
+    attributes country: "addresses.country"
+    attributes all: [ "contact_methods.value",
+                      "addresses.street_address", "addresses.city", "addresses.state",
+                      "addresses.zip_code", "addresses.county", "addresses.country" ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
+  # Alongside `search_contact` above, not in place of it: the people index keeps
+  # the box it has. This one answers the attendees page, over live addresses and
+  # with the wider prefix set.
   include ContactSearchable
-  searches_contact :contact_methods, :active_addresses
+  searches_contact :contact_methods, :active_addresses, as: :search_location
 
   FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
   LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
