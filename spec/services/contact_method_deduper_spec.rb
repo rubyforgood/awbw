@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe PersonServices::ReconcileContactMethods do
+RSpec.describe ContactMethodDeduper do
   let(:person) { create(:person) }
 
   def contact_method(value: "555-1000", kind: "phone", **overrides)

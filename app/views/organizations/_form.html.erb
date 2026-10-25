@@ -260,6 +260,25 @@
     </div>
   </div>
 
+  <div id="phones" class="form-group mb-8 scroll-mt-20 space-y-4">
+    <div class="mb-2 font-semibold text-gray-700">
+      Phones
+    </div>
+
+    <div class="mb-4 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm">
+      <%= f.simple_fields_for :contact_methods do |sfi| %>
+        <%= render "contact_methods/contact_method_fields", f: sfi %>
+      <% end %>
+
+      <%= link_to_add_association "➕ Add phone",
+                                  f,
+                                  :contact_methods,
+                                  partial: "contact_methods/contact_method_fields",
+                                  data: { association_insertion_node: "this" },
+                                  class: button_classes(:secondary_outline) %>
+    </div>
+  </div>
+
   <div id="affiliations" class="form-group mb-8 scroll-mt-20 space-y-4">
     <div class="mb-2 font-semibold text-gray-700">
       Affiliations

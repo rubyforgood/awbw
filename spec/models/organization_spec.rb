@@ -13,6 +13,26 @@ RSpec.describe Organization do
     it { should have_many(:users).through(:people) }
     it { should have_many(:reports) }
     it { should have_many(:workshop_logs) }
+    it { should have_many(:contact_methods).dependent(:destroy) }
+  end
+
+  describe "#phone_number" do
+    let(:organization) { create(:organization) }
+
+    it "prefers the primary active phone" do
+      organization.contact_methods.create!(kind: "phone", value: "555-0001")
+      organization.contact_methods.create!(kind: "phone", value: "555-0002", primary: true)
+      organization.contact_methods.create!(kind: "phone", value: "555-0003", primary: true, inactive: true)
+
+      expect(organization.reload.phone_number).to eq("555-0002")
+    end
+
+    it "falls back to a phone an active address holds" do
+      create(:address, addressable: organization, phone: "555-0004", inactive: true)
+      create(:address, addressable: organization, phone: "555-0005")
+
+      expect(organization.reload.phone_number).to eq("555-0005")
+    end
   end
 
   describe 'validations' do

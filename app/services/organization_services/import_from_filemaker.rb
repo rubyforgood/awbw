@@ -19,8 +19,9 @@ module OrganizationServices
   #
   # Fields fill blanks only. Where the portal already holds a different value it keeps its
   # own, noted in #differences and as a comment on the organization. Also carried:
-  #   * the organization's addresses (fm_addresses by OrgID), its phone onto its main
-  #     address, and its email (fm_email_addresses)
+  #   * the organization's addresses (fm_addresses by OrgID), its phones (fm_phone_numbers),
+  #     and its email (fm_email_addresses) — each address and phone carrying its row's ID as
+  #     its own filemaker_code
   #   * each project's City/State with its Locality, District, SPA and supervisorial
   #     district, onto the program's address in that city
   #   * a merged-away project's code, onto the program it merged into
@@ -162,9 +163,9 @@ module OrganizationServices
       organization.filemaker_code = Organization.join_filemaker_codes(organization.filemaker_code, rows.map(&:fm_id))
       kept = fill(organization, attributes)
       stamp(organization, row.data)
-      add_addresses(organization, @addresses.fetch(row.fm_id, []).map(&:data))
+      add_addresses(organization, @addresses.fetch(row.fm_id, []))
       rows.select { |source| source.is_a?(FmProject) }.each { |project| place_project(organization, project.data) }
-      kept += add_phones(organization, @phones.fetch(row.fm_id, []).map(&:data))
+      add_phones(organization, @phones.fetch(row.fm_id, []))
       fill_email(organization, @emails.fetch(row.fm_id, []).map { |email| email.data["EmailAddress"] })
       return failed(organization, label) unless organization.save
 
@@ -224,8 +225,8 @@ module OrganizationServices
       organization ||= Organization.new(name:)
       kept = fill(organization, website_url: clip(data["WebSite"]), mission_vision_values: clip(data["Mission"]))
       stamp(organization, data)
-      add_addresses(organization, rolodex.addresses.map(&:data))
-      kept += add_phones(organization, rolodex.phone_numbers.map(&:data))
+      add_addresses(organization, rolodex.addresses)
+      add_phones(organization, rolodex.phone_numbers)
       fill_email(organization, [ data["EMail"] ]) unless names_a_person?(data)
       outcome = agency_outcome(organization)
       return failed(organization, label) unless organization.save
@@ -341,15 +342,18 @@ module OrganizationServices
       organization.updated_by_id ||= @staff.user_id_for(data["ModifiedBy"]) || @import_user_id
     end
 
-    # An organization gathers addresses from every source, so it keeps the ones it has and
-    # takes the archive's others; the first becomes its primary when it has none.
-    def add_addresses(organization, rows)
-      rows.each do |fields|
-        attributes = @address_attributes.call(fields, address_type: "work")
-        next if attributes.nil? || held_address(organization, attributes)
+    # An organization gathers addresses from every source, so one it already has takes the
+    # archive row's code and the others are added; the first becomes its primary when it has none.
+    def add_addresses(organization, fm_addresses)
+      fm_addresses.each do |fm_address|
+        attributes = @address_attributes.call(fm_address.data, address_type: "work")
+        next if attributes.nil?
+
+        held = held_address(organization, attributes)
+        next held.filemaker_code = Address.join_filemaker_codes(held.filemaker_code, fm_address.fm_id) if held
 
         primary = organization.addresses.none? { |address| address.primary? && !address.marked_for_destruction? }
-        organization.addresses.build(attributes.merge(primary:))
+        organization.addresses.build(attributes.merge(primary:, filemaker_code: fm_address.fm_id))
       end
     end
 
@@ -403,22 +407,21 @@ module OrganizationServices
       value.to_s[/\d+/]&.to_i
     end
 
-    # The portal keeps an organization's phone on its addresses, so each number the archive
-    # has that no address holds yet goes onto one without a phone, the primary first. One
-    # with nowhere left to go is returned as a difference to note.
-    def add_phones(organization, rows)
-      held = organization.addresses.filter_map { |address| phone_key(address.phone) }
-      numbers = rows.sort_by { |fields| flag?(fields["Primacy"]) ? 0 : 1 }
-                    .filter_map { |fields| clip(fields["PhoneNumber"].to_s.strip) }
-                    .uniq { |number| phone_key(number) }.reject { |number| held.include?(phone_key(number)) }
-      numbers.filter_map do |number|
-        address = organization.addresses.sort_by { |held_address| held_address.primary? ? 0 : 1 }.find { |held_address| held_address.phone.blank? }
-        if address
-          address.phone = number
-          next
-        end
+    # Each number lands on a phone record carrying its archive row's code — the one the
+    # organization already holds for that number, else a new one, the archive's primary first.
+    def add_phones(organization, fm_phones)
+      fm_phones.sort_by { |phone| flag?(phone.data["Primacy"]) ? 0 : 1 }.each do |phone|
+        number = clip(phone.data["PhoneNumber"].to_s.strip)
+        next if number.blank?
 
-        [ "Phone", organization.addresses.filter_map(&:phone).to_sentence.presence || "no address to hold it", number ]
+        held = organization.contact_methods.find { |method| phone_key(method.value) == phone_key(number) }
+        next held.filemaker_code = ContactMethod.join_filemaker_codes(held.filemaker_code, phone.fm_id) if held
+
+        organization.contact_methods.build(
+          kind: "phone", value: number, filemaker_code: phone.fm_id,
+          contact_type: contact_type(phone.data["PhoneType"], allowed: ContactMethod::CONTACT_TYPES),
+          primary: organization.contact_methods.none?(&:primary?)
+        )
       end
     end
 

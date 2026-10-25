@@ -31,9 +31,23 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
                                             website_url: "harbor.example.org", mission_vision_values: "Shelter for all",
                                             organization_type: "501c3/nonprofit", email: "info@harbor.example.org")
     expect(organization.addresses.sole).to have_attributes(street_address: "1 Main St", city: "Pasadena", zip_code: "91101",
-                                                           address_type: "work", primary: true, phone: "555-0100",
+                                                           address_type: "work", primary: true, filemaker_code: "1",
                                                            locality: "LA County", district: "Foothills",
                                                            la_service_planning_area: 3, la_supervisorial_district: 5)
+    expect(organization.contact_methods.sole).to have_attributes(kind: "phone", value: "555-0100", primary: true, filemaker_code: "2")
+  end
+
+  it "adds the archive row's code to an address the organization already has" do
+    existing = create(:organization, filemaker_code: "ORG00001")
+    address = create(:address, addressable: existing, street_address: "1 Main St", city: "Pasadena", state: "CA")
+    fm_organization("ORG00001")
+    FmAddress.create!(fm_id: "1", data: { "OrgID" => "ORG00001", "AddrsLine1" => "1 Main Street", "AddrsCity" => "Pasadena",
+                                          "AddrsState" => "CA" })
+
+    import
+
+    expect(existing.addresses.sole).to eq(address)
+    expect(address.reload.filemaker_code).to eq("1")
   end
 
   describe "organization type" do
@@ -77,34 +91,33 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
   end
 
   describe "phones" do
-    def address(fm_id, street)
-      FmAddress.create!(fm_id:, data: { "OrgID" => "ORG00001", "AddrsLine1" => street, "AddrsCity" => "Pasadena", "AddrsState" => "CA" })
+    def phone(fm_id, number, **data)
+      FmPhoneNumber.create!(fm_id:, data: { "OrgID" => "ORG00001", "PhoneNumber" => number }.merge(data.stringify_keys))
     end
 
-    it "puts each number on an address with no phone yet, the primary first" do
+    it "brings each number in as a phone carrying its code, the primary first" do
       fm_organization("ORG00001")
-      address("1", "1 Main St")
-      address("2", "2 Main St")
-      FmPhoneNumber.create!(fm_id: "10", data: { "OrgID" => "ORG00001", "PhoneNumber" => "555-0101", "Primacy" => "1" })
-      FmPhoneNumber.create!(fm_id: "11", data: { "OrgID" => "ORG00001", "PhoneNumber" => "555-0102" })
+      phone("11", "555-0102")
+      phone("10", "555-0101", Primacy: "1", PhoneType: "Work")
 
       import
 
-      expect(Organization.sole.addresses.order(:id).pluck(:street_address, :phone))
-        .to eq([ [ "1 Main St", "555-0101" ], [ "2 Main St", "555-0102" ] ])
+      expect(Organization.sole.contact_methods.order(:id).pluck(:value, :contact_type, :primary, :filemaker_code))
+        .to eq([ [ "555-0101", "work", true, "10" ], [ "555-0102", "unknown", false, "11" ] ])
     end
 
-    it "notes a number no address is free to hold, keeping the ones on file" do
+    it "adds the code to a phone the organization already has, keeping its primary" do
       existing = create(:organization, filemaker_code: "ORG00001")
-      create(:address, addressable: existing, street_address: "1 Main St", city: "Pasadena", state: "CA", phone: "555-0100")
+      held = existing.contact_methods.create!(kind: "phone", value: "(555) 0100", primary: true)
       fm_organization("ORG00001")
-      FmPhoneNumber.create!(fm_id: "10", data: { "OrgID" => "ORG00001", "PhoneNumber" => "555-0199" })
+      phone("10", "555-0100")
+      phone("11", "555-0199", Primacy: "1")
 
-      import = described_class.new.call
+      import
 
-      expect(existing.addresses.sole.phone).to eq("555-0100")
-      expect(existing.comments.sole.body).to include("Phone", "555-0100", "555-0199")
-      expect(import.differences.sole).to include("555-0199")
+      expect(existing.contact_methods.order(:id).pluck(:value, :primary, :filemaker_code))
+        .to eq([ [ "(555) 0100", true, "10" ], [ "555-0199", false, "11" ] ])
+      expect(held.reload.filemaker_code).to eq("10")
     end
   end
 

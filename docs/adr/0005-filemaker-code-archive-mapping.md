@@ -30,7 +30,7 @@ drive the archive pages' links.
 | `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | `filemaker_code_hint` on workshop form |
 | `resources.filemaker_code` | none | `RecordID` of the source quotation, e.g. `Q10215` | resource form (editable, no archive link) |
 | `addresses.filemaker_code` | `fm_addresses` | `AddrsID`, e.g. `1234` | `fm_archives#show` links back to the address's person or org |
-| `contact_methods.filemaker_code` | `fm_phone_numbers` | `PhoneID`, e.g. `5678` | `fm_archives#show` links back to the phone's person |
+| `contact_methods.filemaker_code` | `fm_phone_numbers` | `PhoneID`, e.g. `5678` | `fm_archives#show` links back to the phone's person or org |
 
 - **Organization → Project, or → Organization.** An app `Organization` is usually one
   art program site, which is a FileMaker *Project*. FileMaker's own Organization row is

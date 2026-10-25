@@ -16,6 +16,7 @@ class Organization < ApplicationRecord
   has_many :children, class_name: "Organization", foreign_key: :parent_id, inverse_of: :parent, dependent: :nullify
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :active_addresses, -> { active }, as: :addressable, class_name: "Address", inverse_of: :addressable
+  has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
   has_many :invoices, as: :invoicee, dependent: :restrict_with_error
@@ -25,6 +26,12 @@ class Organization < ApplicationRecord
   has_many :people, through: :affiliations
   has_many :users, through: :people
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # Its primary active phone, else any active one, else a phone an active address holds.
+  def phone_number
+    phones = contact_methods.select { |method| method.phone? && !method.inactive? }
+    (phones.find(&:primary?) || phones.first)&.value || addresses.reject(&:inactive?).filter_map(&:phone).first
+  end
 
   # An organization is its own correspondent — there is no person behind it.
   def communications_email
@@ -77,6 +84,7 @@ class Organization < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
                                 reject_if: proc { |attrs| Address.unfilled_attributes?(attrs) }
+  accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
