@@ -276,7 +276,8 @@ RSpec.describe "Profile change requests", type: :request do
         post approve_profile_change_request_path(request)
       }.to change { affiliation.organization.addresses.count }.by(1)
 
-      expect(affiliation.reload.organization_address).to have_attributes(street_address: "12 Elm St", city: "Reno", address_type: "work")
+      expect(affiliation.reload.organization_address).to have_attributes(street_address: "12 Elm St", city: "Reno", address_type: "work",
+                                                                          country: "United States", locality: "Outside CA")
       expect(request.reload).to be_resolved
     end
 

@@ -29,7 +29,9 @@ module OrganizationServices
       "city" => "City",
       "state" => "State",
       "zip_code" => "ZIP",
-      "country" => "Country"
+      "country" => "Country",
+      "county" => "County",
+      "locality" => "Locality"
     }.freeze
 
     def self.call(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil, overwrite: true)
@@ -113,7 +115,18 @@ module OrganizationServices
       updates[:street_address] = @street_address if @street_address.present? && (@overwrite || existing.street_address.blank?)
       updates[:zip_code] = @zip_code if @zip_code.present? && (@overwrite || existing.zip_code.blank?)
       updates[:country] = @country if @country.present? && (@overwrite || existing.country.blank?)
-      updates
+      updates.merge(filled_defaults(existing, updates))
+    end
+
+    # A blank country or county, and a blank or Unknown locality, take what AddressDefaults
+    # works out from the address as updated.
+    def filled_defaults(existing, updates)
+      parts = existing.attributes.symbolize_keys.slice(:city, :state, :zip_code, :country, :county)
+                     .merge(updates.slice(:city, :state, :zip_code, :country))
+      AddressDefaults.for(**parts).select do |field, value|
+        value.present? && value != Address::UNKNOWN_LOCALITY &&
+          (existing[field].blank? || existing[field] == Address::UNKNOWN_LOCALITY)
+      end
     end
 
     # An Address needs a city and a state to validate, so a submission missing
@@ -132,8 +145,7 @@ module OrganizationServices
         city: @city,
         state: @state,
         zip_code: @zip_code.to_s,
-        country: @country,
-        locality: AddressLocality.for(city: @city, state: @state, country: @country),
+        **AddressDefaults.for(city: @city, state: @state, zip_code: @zip_code, country: @country),
         address_type: "work",
         primary: make_primary
       )

@@ -122,8 +122,7 @@ module PersonServices
         city: new_city,
         state: new_state,
         zip_code: field_value("mailing_zip").to_s,
-        country: new_country,
-        locality: AddressLocality.for(city: new_city, state: new_state, country: new_country),
+        **AddressDefaults.for(city: new_city, state: new_state, zip_code: field_value("mailing_zip"), country: new_country),
         address_type: field_value("mailing_address_type")&.downcase || "unknown",
         primary: make_primary
       )

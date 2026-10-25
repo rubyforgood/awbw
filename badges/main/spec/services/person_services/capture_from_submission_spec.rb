@@ -26,5 +26,13 @@ RSpec.describe PersonServices::CaptureFromSubmission do
 
       expect(address.reload).to have_attributes(street_address: "2 New St", zip_code: "62702")
     end
+
+    it "fills a new address's country, county and locality from its state and ZIP" do
+      FmPostalCode.create!(fm_id: "93701", data: { "City" => "Fresno", "State" => "CA", "County" => "Fresno" })
+
+      described_class.call(person:, answers: { "mailing_city" => "Fresno", "mailing_state" => "CA", "mailing_zip" => "93701" })
+
+      expect(person.addresses.sole).to have_attributes(country: "United States", county: "Fresno", locality: "Central CA")
+    end
   end
 end
