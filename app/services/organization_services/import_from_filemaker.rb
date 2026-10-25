@@ -299,7 +299,10 @@ module OrganizationServices
     end
 
     def organization_name(fm_organization)
-      RETIRED_RENAMED[fm_organization.fm_id] || clip(fm_organization.data["OrgName"].to_s.squish)
+      name = clip(fm_organization.data["OrgName"].to_s.squish)
+      return name unless RETIRED_RENAMED.include?(fm_organization.fm_id)
+
+      clip("#{name.gsub(RETIRED_MARKER, "").squish} (#{fm_organization.fm_id})")
     end
 
     def project_name(project)

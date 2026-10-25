@@ -260,7 +260,7 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       end
 
       it "creates no organization for a card naming a retired one" do
-        stub_const("FilemakerValues::RETIRED_RECORDS", { "ORG00007" => "Foothill Family Services Do Not Use" })
+        stub_const("FilemakerValues::RETIRED_RECORDS", %w[ORG00007])
         rolodex(OrgID: "ORG00007", Organization: "Foothill Family Services Do Not Use")
         personnel("PS0001", ProjectID: "")
 
