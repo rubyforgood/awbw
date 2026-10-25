@@ -1786,7 +1786,9 @@ RSpec.describe "Events", type: :request do
         here_org = create(:organization)
         create(:address, addressable: here_org, city: "Santa Monica")
         create(:event_registration, event: event, registrant: here).event_registration_organizations.create!(organization: here_org)
-        create(:event_registration, event: event, registrant: there)
+        there_org = create(:organization)
+        create(:address, addressable: there_org, city: "Portland")
+        create(:event_registration, event: event, registrant: there).event_registration_organizations.create!(organization: there_org)
 
         get registrants_event_path(event, city: "santa")
 

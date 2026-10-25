@@ -618,6 +618,13 @@ RSpec.describe EventRegistration, type: :model do
       expect(EventRegistration.work_city("santa")).to contain_exactly(santa_monica)
     end
 
+    it "falls back to the registrant's own address when no org is linked" do
+      unlinked = create(:event_registration)
+      create(:address, addressable: unlinked.registrant, city: "Santa Barbara", state: "CA")
+
+      expect(EventRegistration.work_city("santa")).to contain_exactly(santa_monica, unlinked)
+    end
+
     it "matches the work state" do
       expect(EventRegistration.work_state("OR")).to contain_exactly(portland)
     end

@@ -1,9 +1,11 @@
 # Where registrants work, per registration: each organization linked on the
 # registration, at the address picked on the registration's affiliation with it
-# (Affiliation#organization_address), else that org's oldest active address. The
-# source for the registrant charts' and filters' cities, counties, states, and
-# countries. A linked org with no active address still yields a row, with no
-# location, so the cities breakdown can count it as Unknown.
+# (Affiliation#organization_address), else that org's oldest active address. A
+# registration with no work address falls back to the registrant's own primary
+# (else oldest) active address. The source for the registrant charts' and
+# filters' cities, counties, states, and countries. A linked org with no address
+# and no own address to fall back on yields a row with no location, so the
+# cities breakdown can count it as Unknown.
 class RegistrationWorkAddresses
   Row = Struct.new(:registration_id, :organization_id, :registrant_id, :city, :county, :state, :country, keyword_init: true) do
     def city_label
@@ -16,11 +18,12 @@ class RegistrationWorkAddresses
   end
 
   def rows
-    @rows ||= links.map do |registration_id, organization_id, registrant_id|
-      address = chosen_addresses[chosen_address_ids[[ registration_id, organization_id ]]] ||
-        oldest_address_by_organization[organization_id]
-      Row.new(registration_id:, organization_id:, registrant_id:,
-              city: address&.city, county: address&.county, state: address&.state, country: address&.country)
+    @rows ||= registrations.flat_map do |registration_id, registrant_id|
+      work = organization_ids_by_registration.fetch(registration_id, []).map do |organization_id|
+        [ organization_id, chosen_addresses[chosen_address_ids[[ registration_id, organization_id ]]] || oldest_address_by_organization[organization_id] ]
+      end
+      work = [ [ nil, own_address_by_person[registrant_id] ] ] if work.none?(&:last) && own_address_by_person[registrant_id]
+      work.map { |organization_id, address| row(registration_id, organization_id, registrant_id, address) }
     end
   end
 
@@ -63,11 +66,21 @@ class RegistrationWorkAddresses
     rows.group_by(&key).transform_values { |grouped| grouped.map(&:registrant_id).uniq }
   end
 
-  def links
-    @links ||= EventRegistrationOrganization
-      .joins(:event_registration)
+  def row(registration_id, organization_id, registrant_id, address)
+    Row.new(registration_id:, organization_id:, registrant_id:,
+            city: address&.city, county: address&.county, state: address&.state, country: address&.country)
+  end
+
+  def registrations
+    @registrations ||= EventRegistration.where(id: @registration_ids).pluck(:id, :registrant_id)
+  end
+
+  def organization_ids_by_registration
+    @organization_ids_by_registration ||= EventRegistrationOrganization
       .where(event_registration_id: @registration_ids)
-      .pluck(:event_registration_id, :organization_id, Arel.sql("event_registrations.registrant_id"))
+      .pluck(:event_registration_id, :organization_id)
+      .group_by(&:first)
+      .transform_values { |pairs| pairs.map(&:last) }
   end
 
   def chosen_address_ids
@@ -84,8 +97,16 @@ class RegistrationWorkAddresses
 
   def oldest_address_by_organization
     @oldest_address_by_organization ||= Address.active
-      .where(addressable_type: "Organization", addressable_id: links.map(&:second).uniq)
+      .where(addressable_type: "Organization", addressable_id: organization_ids_by_registration.values.flatten.uniq)
       .order(:id)
+      .select(:id, :addressable_id, :city, :county, :state, :country)
+      .each_with_object({}) { |address, map| map[address.addressable_id] ||= address }
+  end
+
+  def own_address_by_person
+    @own_address_by_person ||= Address.active
+      .where(addressable_type: "Person", addressable_id: registrations.map(&:last).uniq)
+      .order(primary: :desc, id: :asc)
       .select(:id, :addressable_id, :city, :county, :state, :country)
       .each_with_object({}) { |address, map| map[address.addressable_id] ||= address }
   end

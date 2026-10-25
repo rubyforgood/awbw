@@ -10,4 +10,4 @@ summary: >-
   registered under.
 pro_tips:
   - "If the registrant picked one of the organization's addresses, that one counts. Otherwise the organization's first address on file counts."
-  - "A registrant with no organization linked on their registration has no work location, so the location filters leave them out."
+  - "A registrant with no organization address on their registration counts where they live instead."

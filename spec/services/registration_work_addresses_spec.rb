@@ -26,10 +26,34 @@ RSpec.describe RegistrationWorkAddresses do
     expect(work_addresses.rows.map(&:city_label)).to eq([ "Reno, NV" ])
   end
 
-  it "skips the registrant's own address" do
+  it "prefers the work address over the registrant's own" do
+    create(:address, addressable: organization, city: "Reno", state: "NV")
     create(:address, addressable: person, city: "Boise", state: "ID")
 
+    expect(work_addresses.rows.map(&:city_label)).to eq([ "Reno, NV" ])
+  end
+
+  it "falls back to the registrant's primary address when the linked org has none" do
+    create(:address, addressable: person, city: "Boise", state: "ID")
+    create(:address, addressable: person, city: "Nampa", state: "ID", primary: true)
+
+    expect(work_addresses.rows.map(&:city_label)).to eq([ "Nampa, ID" ])
+  end
+
+  it "falls back to the registrant's own address when no org is linked" do
+    unlinked = create(:event_registration, event: event)
+    create(:address, addressable: unlinked.registrant, city: "Boise", state: "ID")
+
+    rows = described_class.new([ unlinked.id ]).rows
+    expect(rows.map { |row| [ row.city_label, row.organization_id ] }).to eq([ [ "Boise, ID", nil ] ])
+  end
+
+  it "leaves a located-nowhere linked registration as an Unknown row" do
     expect(work_addresses.rows.map(&:city_label)).to eq([ nil ])
+  end
+
+  it "has no row for an unlinked registrant with no address" do
+    expect(described_class.new([ create(:event_registration, event: event).id ]).rows).to be_empty
   end
 
   it "groups registrant ids by US state, country, and city" do

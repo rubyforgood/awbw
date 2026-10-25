@@ -346,7 +346,7 @@ RSpec.describe "Events attendees", type: :request do
           create(:address, addressable: org, state: "ON", country: "Canada", inactive: false)
           attendee_registration.event_registration_organizations.create!(organization: org)
           other = create(:person, first_name: "Zed", last_name: "Zulu")
-          create(:address, addressable: other, state: "OR", country: "Canada", inactive: false)
+          create(:address, addressable: other, state: "OR", country: "Mexico", inactive: false)
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
 
           get attendees_events_url(country: "Canada"), headers: frame_headers
@@ -553,8 +553,11 @@ RSpec.describe "Events attendees", type: :request do
           create(:address, addressable: org, city: "Portland", state: "OR", inactive: false)
           attendee_registration.event_registration_organizations.create!(organization: org)
           other = create(:person, first_name: "Cara", last_name: "Coast")
-          create(:event_registration, event: recent_training, registrant: other, status: "attended")
+          other_registration = create(:event_registration, event: recent_training, registrant: other, status: "attended")
           create(:address, addressable: other, city: "Portland", state: "OR", inactive: false)
+          other_org = create(:organization)
+          create(:address, addressable: other_org, city: "Seattle", state: "WA", inactive: false)
+          other_registration.event_registration_organizations.create!(organization: other_org)
 
           get attendees_events_url(city: "portland"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
