@@ -50,10 +50,10 @@ RSpec.describe "Events::BulkReminders", type: :request do
   it "filters recipients by the shared city search, on where they work" do
     organization = create(:organization)
     create(:address, addressable: organization, city: "Santa Monica")
-    jane.event_registration_organizations.create!(organization:)
+    create(:affiliation, person: jane.registrant, organization:)
     elsewhere = create(:organization)
     create(:address, addressable: elsewhere, city: "Portland")
-    sam.event_registration_organizations.create!(organization: elsewhere)
+    create(:affiliation, person: sam.registrant, organization: elsewhere)
     create(:address, addressable: sam.registrant, city: "Santa Monica")
 
     get preview_reminder_event_path(event, city: "santa"),

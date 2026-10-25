@@ -220,16 +220,15 @@ class EventRegistration < ApplicationRecord
     end
     scope
   }
-  # Where the registrant is on the registration — work, else home
-  # (RegistrationLocations). Takes any of its LOCATION_FIELDS, and they arrive
-  # together in one call so they test the same location row: a registrant working
-  # in two states would otherwise match a city from one and the state from the
-  # other.
-  scope :located_in, ->(**filters) {
-    resolved = RegistrationLocations.filters_from(**filters)
+  # Where the registrant is on `on` (the event's start date) — work, else home
+  # (PersonLocations). Takes any of its LOCATION_FIELDS, and they arrive together
+  # in one call so they test the same location row: a registrant working in two
+  # states would otherwise match a city from one and the state from the other.
+  scope :located_in, ->(on: nil, **filters) {
+    resolved = PersonLocations.filters_from(**filters)
     next none if resolved.nil?
     next all if resolved.empty?
-    where(id: RegistrationLocations.new(all).matching(**resolved).map(&:registration_id))
+    where(registrant_id: PersonLocations.new(all.select(:registrant_id), on:).matching(**resolved).map(&:registrant_id))
   }
   scope :registrant_sector, ->(sector_id) {
     joins(registrant: :sectorable_items)

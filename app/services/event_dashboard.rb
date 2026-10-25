@@ -850,7 +850,7 @@ class EventDashboard
       .sort_by { |label, count| [ -count, label ] }
   end
 
-  # The US states registrants are in — work, else home (RegistrationLocations).
+  # The US states registrants are in on the event date — work, else home (PersonLocations).
   def states
     @states ||= state_registrant_ids_by_state.keys.sort
   end
@@ -867,7 +867,7 @@ class EventDashboard
     locations.registrant_ids_by_state
   end
 
-  # The countries registrants are in (RegistrationLocations).
+  # The countries registrants are in (PersonLocations).
   def countries
     @countries ||= country_registrant_ids_by_country.keys.sort
   end
@@ -948,7 +948,7 @@ class EventDashboard
   private
 
   def locations
-    @locations ||= RegistrationLocations.new(active_registrations)
+    @locations ||= PersonLocations.new(active_registrations.select(:registrant_id), on: reference_date)
   end
 
   # [ [ district, registrant_id ], ... ] from the affiliations linked to this event's

@@ -4,11 +4,12 @@ display_status: admin_facing
 released_on: 2026-10-25
 pr_number: 2844
 summary: >-
-  The cities, states, and countries charts, and the City, State, and County
-  filters on the roster, the attendees page, and the bulk email picker, now
-  use where each registrant works: the address of the organization they
-  registered under.
+  The cities, states, and countries charts, the City, State, and County
+  filters on the roster, the attendees page, and the bulk email picker, and
+  the participation report's reach figures now use where each person works:
+  the addresses of the organizations they're affiliated with.
 pro_tips:
-  - "If the registrant picked one of the organization's addresses, that one counts. Otherwise the organization's first address on file counts."
-  - "A registrant with no organization address on their registration counts where their own address puts them: their active work address, else their most recently edited active personal one, else a retired personal, else a retired work. A retired address still counts — better to place someone than to leave them off the map."
-  - "City, State, County and Country always describe the same address, so someone registered under organizations in two states won't show up for a city in one and a state in the other."
+  - "On an event's pages, it's the affiliations active on the event's start date, so a past event doesn't change when someone changes jobs. Across events and on the reports, it's today's active affiliations."
+  - "Every active affiliation counts. If one has a work address picked, that one is used; otherwise the organization's first address on file."
+  - "Someone with no affiliation address counts where their own address puts them: their active work address, else their most recently edited active personal one, else a retired personal, else a retired work."
+  - "City, State, County and Country always describe the same address, so someone working in two states won't show up for a city in one and a state in the other."

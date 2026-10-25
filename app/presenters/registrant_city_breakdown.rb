@@ -1,10 +1,10 @@
-# Groups an event's registrants by their location's city (RegistrationLocations),
+# Groups an event's registrants by their location's city (PersonLocations),
 # counting distinct registrants and scholarship recipients per city. Powers the shared "Registrants by city" breakdown on the event
 # background dashboard and the scholarship-recipients page. Pure/in-memory so
 # EventDashboard feeds it already-plucked data (see [[event_dashboard]]).
 #
-# A registrant linked to orgs in two cities counts under each; the "Unknown"
-# bucket (a linked org with no address on file) always sorts last.
+# A registrant working in two cities counts under each; the "Unknown"
+# bucket (an address with no city) always sorts last.
 class RegistrantCityBreakdown
   UNKNOWN_LABEL = "Unknown".freeze
 

@@ -341,10 +341,10 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).to include("Online Search")
         end
 
-        it "filters by work country and state (via the org they registered under)" do
+        it "filters by work country and state (via their active affiliations)" do
           org = create(:organization, name: "Toronto Org")
           create(:address, addressable: org, state: "ON", country: "Canada", inactive: false)
-          attendee_registration.event_registration_organizations.create!(organization: org)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
           other = create(:person, first_name: "Zed", last_name: "Zulu")
           create(:address, addressable: other, state: "OR", country: "Mexico", inactive: false)
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
@@ -381,13 +381,13 @@ RSpec.describe "Events attendees", type: :request do
         it "renders the cities breakdown and filters by an org-city drill-in" do
           org = create(:organization, name: "Wellness Org")
           create(:address, addressable: org, city: "Austin", state: "TX", inactive: false)
-          attendee_registration.event_registration_organizations.create!(organization: org)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
 
           other = create(:person, first_name: "Zed", last_name: "Zulu")
           other_registration = create(:event_registration, event: recent_training, registrant: other, status: "attended")
           other_org = create(:organization, name: "Other Org")
           create(:address, addressable: other_org, city: "Reno", state: "NV", inactive: false)
-          other_registration.event_registration_organizations.create!(organization: other_org)
+          create(:affiliation, person: other_registration.registrant, organization: other_org)
 
           # An org with no address falls into the non-clickable "Unknown" bucket —
           # this used to raise a UrlGenerationError (nil event) on the index.
@@ -411,7 +411,7 @@ RSpec.describe "Events attendees", type: :request do
           # that raised a nil-event UrlGenerationError).
           org = create(:organization, name: "Wellness Org")
           create(:address, addressable: org, city: "Austin", state: "TX", inactive: false)
-          attendee_registration.event_registration_organizations.create!(organization: org)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
           award = create(:scholarship, recipient: attendee, amount_cents: 1_000, grant: create(:grant))
           create(:allocation, source: award, allocatable: attendee_registration, amount: 1_000)
 
@@ -551,13 +551,13 @@ RSpec.describe "Events attendees", type: :request do
         it "filters by work city, not the person's own address" do
           org = create(:organization)
           create(:address, addressable: org, city: "Portland", state: "OR", inactive: false)
-          attendee_registration.event_registration_organizations.create!(organization: org)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
           other = create(:person, first_name: "Cara", last_name: "Coast")
           other_registration = create(:event_registration, event: recent_training, registrant: other, status: "attended")
           create(:address, addressable: other, city: "Portland", state: "OR", inactive: false)
           other_org = create(:organization)
           create(:address, addressable: other_org, city: "Seattle", state: "WA", inactive: false)
-          other_registration.event_registration_organizations.create!(organization: other_org)
+          create(:affiliation, person: other_registration.registrant, organization: other_org)
 
           get attendees_events_url(city: "portland"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
@@ -571,7 +571,7 @@ RSpec.describe "Events attendees", type: :request do
           [ [ "Portland", "OR", "Multnomah", "United States" ], [ "Vancouver", "BC", "Greater Vancouver", "Canada" ] ].each do |city, state, county, country|
             org = create(:organization)
             create(:address, addressable: org, city:, state:, county:, country:, inactive: false)
-            attendee_registration.event_registration_organizations.create!(organization: org)
+            create(:affiliation, person: attendee_registration.registrant, organization: org)
           end
 
           get attendees_events_url(city: "Vancouver", state: "BC"), headers: frame_headers

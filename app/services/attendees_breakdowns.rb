@@ -297,7 +297,7 @@ class AttendeesBreakdowns
   end
 
   def locations
-    @locations ||= RegistrationLocations.new(scoped_registrations)
+    @locations ||= PersonLocations.new(scoped_registrations.select(:registrant_id), on: @as_of)
   end
 
   def org_registrant_pairs

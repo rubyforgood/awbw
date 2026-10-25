@@ -1785,10 +1785,12 @@ RSpec.describe "Events", type: :request do
         create(:address, addressable: there, city: "Santa Monica")
         here_org = create(:organization)
         create(:address, addressable: here_org, city: "Santa Monica")
-        create(:event_registration, event: event, registrant: here).event_registration_organizations.create!(organization: here_org)
+        create(:event_registration, event: event, registrant: here)
+        create(:affiliation, person: here, organization: here_org)
         there_org = create(:organization)
         create(:address, addressable: there_org, city: "Portland")
-        create(:event_registration, event: event, registrant: there).event_registration_organizations.create!(organization: there_org)
+        create(:event_registration, event: event, registrant: there)
+        create(:affiliation, person: there, organization: there_org)
 
         get registrants_event_path(event, city: "santa")
 
@@ -1805,7 +1807,7 @@ RSpec.describe "Events", type: :request do
         [ %w[Portland OR], %w[Seattle WA] ].each do |city, state|
           organization = create(:organization)
           create(:address, addressable: organization, city: city, state: state)
-          registration.event_registration_organizations.create!(organization: organization)
+          create(:affiliation, person: registration.registrant, organization: organization)
         end
 
         get registrants_event_path(event, city: "Seattle", state: "WA")
@@ -2602,7 +2604,7 @@ RSpec.describe "Events", type: :request do
       { ca_reg => [ "CA", "Los Angeles" ], ny_reg => [ "NY", "Kings" ], ca_kings_reg => [ "CA", "Kings" ] }.each do |registration, (state, county)|
         organization = create(:organization)
         create(:address, addressable: organization, state:, county:)
-        registration.event_registration_organizations.create!(organization:)
+        create(:affiliation, person: registration.registrant, organization:)
       end
       sign_in admin
     end
@@ -3455,10 +3457,10 @@ RSpec.describe "Events", type: :request do
           expect(response.body).not_to include("Only scholarship orgs")
         end
 
-        it "groups registrants by the city of the org linked on their registration" do
+        it "groups registrants by the city they work in" do
           city_org = create(:organization, name: "City Org")
           create(:address, addressable: city_org, city: "Los Angeles", state: "CA", inactive: false)
-          create(:event_registration_organization, event_registration: registration, organization: city_org)
+          create(:affiliation, person: person, organization: city_org)
           scholarship = create(:scholarship, recipient: person, amount_cents: 500)
           create(:allocation, source: scholarship, allocatable: registration, amount: 500)
 
@@ -3676,11 +3678,10 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Billed to original event")
       end
 
-      it "shows a recipient city breakdown, grouped by the registration-linked org, in the lazy charts frame" do
+      it "shows a recipient city breakdown, grouped by where they work, in the lazy charts frame" do
         org = create(:organization, name: "Reach Org")
         create(:address, addressable: org, city: "Richmond", state: "CA", inactive: false)
-        registration = EventRegistration.find_by!(registrant: applicant, event: event)
-        create(:event_registration_organization, event_registration: registration, organization: org)
+        create(:affiliation, person: applicant, organization: org)
 
         get recipients_event_path(event), headers: { "Turbo-Frame" => "recipients_charts" }
 

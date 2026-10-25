@@ -99,7 +99,7 @@ class ReminderRecipientFilter
 
   def located_in_ids(city)
     EventRegistration.where(id: all_registration_ids.to_a)
-      .located_in(state: @params[:state], county: @params[:county], city: city)
+      .located_in(on: @event&.start_date, state: @params[:state], county: @params[:county], city: city)
       .pluck(:id)
       .to_set
   end

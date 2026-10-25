@@ -99,11 +99,11 @@ RSpec.describe ReminderRecipientFilter do
       works_there = registration
       organization = create(:organization)
       create(:address, addressable: organization, city: "Santa Monica")
-      works_there.event_registration_organizations.create!(organization:)
+      create(:affiliation, person: works_there.registrant, organization:)
       works_elsewhere = registration(first_name: "Sam")
       elsewhere = create(:organization)
       create(:address, addressable: elsewhere, city: "Portland")
-      works_elsewhere.event_registration_organizations.create!(organization: elsewhere)
+      create(:affiliation, person: works_elsewhere.registrant, organization: elsewhere)
       create(:address, addressable: works_elsewhere.registrant, city: "Santa Monica")
       lives_there = registration(first_name: "Lia")
       create(:address, addressable: lives_there.registrant, city: "Santa Monica")
@@ -120,7 +120,7 @@ RSpec.describe ReminderRecipientFilter do
       [ [ "Portland", "OR" ], [ "Seattle", "WA" ] ].each do |city, state|
         organization = create(:organization)
         create(:address, addressable: organization, city:, state:)
-        two_states.event_registration_organizations.create!(organization:)
+        create(:affiliation, person: two_states.registrant, organization:)
       end
 
       expect(matched({ city: "seattle", state: "WA" }, [ two_states ])).to eq([ two_states.id ].to_set)

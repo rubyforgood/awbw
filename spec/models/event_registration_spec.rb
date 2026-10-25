@@ -605,7 +605,7 @@ RSpec.describe EventRegistration, type: :model do
       registration = create(:event_registration)
       organization = create(:organization)
       create(:address, addressable: organization, city:, state:, county:)
-      registration.event_registration_organizations.create!(organization:)
+      create(:affiliation, person: registration.registrant, organization:)
       registration
     end
 
@@ -618,7 +618,7 @@ RSpec.describe EventRegistration, type: :model do
       expect(EventRegistration.located_in(city: "santa")).to contain_exactly(santa_monica)
     end
 
-    it "falls back to the registrant's own address when no org is linked" do
+    it "falls back to the registrant's own address with no active affiliation" do
       unlinked = create(:event_registration)
       create(:address, addressable: unlinked.registrant, city: "Santa Barbara", state: "CA")
 
@@ -645,7 +645,7 @@ RSpec.describe EventRegistration, type: :model do
       [ [ "Portland", "OR", "Multnomah" ], [ "Seattle", "WA", "King" ] ].each do |city, state, county|
         organization = create(:organization)
         create(:address, addressable: organization, city:, state:, county:)
-        two_states.event_registration_organizations.create!(organization:)
+        create(:affiliation, person: two_states.registrant, organization:)
       end
 
       expect(EventRegistration.located_in(city: "Seattle", state: "WA")).to contain_exactly(two_states)
