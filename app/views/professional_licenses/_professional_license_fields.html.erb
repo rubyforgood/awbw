@@ -33,7 +33,7 @@
         <%= render layout: "shared/outside_usa", locals: { open: license.outside_usa? } do %>
           <%= f.input :issuing_state_outside_usa,
                       wrapper: false,
-                      label: "State / province",
+                      label: "Province / State",
                       input_html: { value: (license.issuing_state if outside_usa_state?(license.issuing_state)),
                                     class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
           <%= f.input :issuing_country,

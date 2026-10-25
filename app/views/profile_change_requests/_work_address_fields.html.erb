@@ -21,7 +21,7 @@
                   selected: (f.object.proposed_state unless outside_usa_state?(f.object.proposed_state)),
                   include_blank: true, wrapper_html: { class: "mb-0" }, input_html: { class: "w-full", autocomplete: "address-level1" } %>
       <%= render layout: "shared/outside_usa", locals: { open: outside_usa_state?(f.object.proposed_state) } do %>
-        <%= f.input :proposed_state_outside_usa, label: "State / province", required: false, wrapper_html: { class: "mb-0" },
+        <%= f.input :proposed_state_outside_usa, label: "Province / State", required: false, wrapper_html: { class: "mb-0" },
                     input_html: { value: (f.object.proposed_state if outside_usa_state?(f.object.proposed_state)), class: "w-full" } %>
       <% end %>
     </div>
