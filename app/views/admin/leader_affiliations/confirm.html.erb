@@ -1,0 +1,52 @@
+<% content_for(:page_title, "Confirm Leader affiliation changes") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% sections = {
+     "merge" => [ "Merge into Facilitator", "bg-blue-50 text-blue-800 border-blue-200", "The Facilitator row turns primary contact on and takes the Leader row's FileMaker codes and anything attached to it. The Leader row is deleted." ],
+     "rename" => [ "Rename to Facilitator", "bg-blue-50 text-blue-800 border-blue-200", "The row becomes a Facilitator, primary contact on." ],
+     "end" => [ "Rename and end", "bg-red-50 text-red-800 border-red-200", "The row becomes a Facilitator, primary contact on, ended today (or on its own end date)." ],
+     "delete" => [ "Delete", "bg-red-100 text-red-900 border-red-300", "The Leader row and its FileMaker codes are permanently deleted." ]
+   } %>
+<div class="mx-auto max-w-3xl rounded-xl border border-gray-200 bg-white p-4 shadow sm:p-6">
+  <div class="mb-6">
+    <%= link_to "← Go back to edit", admin_leader_affiliations_path(outcome: @outcome), class: "text-sm #{eyebrow_link_class}" %>
+  </div>
+
+  <h1 class="mb-2 text-2xl font-semibold text-gray-900">Confirm Leader affiliation changes</h1>
+  <p class="mb-6 text-sm text-gray-600">
+    Performing will make the <strong><%= @changes.size %></strong> <%= "change".pluralize(@changes.size) %> below. Nothing else is affected.
+  </p>
+
+  <div class="space-y-5">
+    <% sections.each do |action, (label, header_class, description)| %>
+      <% action_changes = @changes.select { |change| change.action == action } %>
+      <% next if action_changes.empty? %>
+      <section class="overflow-hidden rounded-lg border border-gray-200">
+        <div class="border-b px-4 py-2 <%= header_class %>">
+          <span class="text-sm font-semibold"><%= label %> (<%= action_changes.size %>)</span>
+          <p class="text-xs font-normal opacity-90"><%= description %></p>
+        </div>
+        <ul class="divide-y divide-gray-100 bg-white">
+          <% action_changes.each do |change| %>
+            <% leader = change.row.leader %>
+            <li class="px-4 py-2 text-sm">
+              <span class="font-medium text-gray-900"><%= leader.person.name %></span>
+              <span class="text-gray-500">— <%= leader.organization.name %></span>
+              <span class="text-gray-400">· <%= leader.decorate.period_label.presence || "No dates" %></span>
+              <% if action == "merge" %>
+                <span class="text-gray-400">→ Facilitator #<%= change.row.twin.id %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  </div>
+
+  <div class="mt-6 flex items-center justify-between gap-3">
+    <%= link_to "← Go back to edit", admin_leader_affiliations_path(outcome: @outcome), class: "text-sm #{eyebrow_link_class}" %>
+    <%= form_with url: admin_perform_leader_affiliations_path, method: :post do %>
+      <% @outcome.each do |key, value| %><%= hidden_field_tag "outcome[#{key}]", value %><% end %>
+      <%= submit_tag "Perform changes", class: button_classes(:primary) %>
+    <% end %>
+  </div>
+</div>
