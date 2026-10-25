@@ -1,7 +1,7 @@
 name: "FileMaker organizations, programs, and affiliations"
 area: people
 display_status: admin_facing
-released_on: 2026-10-22
+released_on: 2026-10-25
 pr_number: 2788
 summary: >-
   Organizations and art programs from the old FileMaker system can now be
@@ -12,11 +12,16 @@ description: >-
   One running several gets each program nested under it.</li><li>Each program
   carries FileMaker's locality and districts onto its address.</li><li>FileMaker's
   facilitator assignments become Facilitator affiliations, dated from when they
-  were entered to when the program closed.</li><li>Job titles from FileMaker
-  become job affiliations.</li><li>Work addresses land on the organization, and
-  the person's affiliation there points at them.</li><li>Agency contact cards
-  fill in their organization's website and address, and the contact person they
-  name now comes in as a person.</li></ul>
+  were entered to when the program closed. Leaders and liaisons are marked as
+  primary contacts, and a comment on each records the role FileMaker gave.</li><li>A
+  person with a separate stretch of time at the same organization keeps a separate
+  affiliation for it.</li><li>An assignment whose program wasn't in FileMaker lands at
+  the organization on the person's contact card.</li><li>A program FileMaker lists
+  with nobody assigned keeps its history through the placeholder person AWBW
+  Placeholder.</li><li>Job titles from FileMaker become job affiliations.</li><li>Work
+  addresses land on the organization, and the person's affiliation there points at
+  them.</li><li>Agency contact cards become organizations, and the contact person
+  they name now comes in as a person.</li></ul>
 pro_tips:
   - "An organization or affiliation already in the portal is linked rather than duplicated, and only its blank fields are filled in."
   - "Where FileMaker says something different, the portal's value is kept and a comment on the record lists what FileMaker had."

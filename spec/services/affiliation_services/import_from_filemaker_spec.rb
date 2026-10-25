@@ -230,6 +230,44 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       end
     end
 
+    describe "a row whose project wasn't imported" do
+      it "lands at the organization the person's Rolodex card names" do
+        rolodex(OrgID: "ORG00001")
+        personnel("PS0001", ProjectID: "")
+
+        import
+
+        expect(person.affiliations.sole).to have_attributes(organization: umbrella, title: "Facilitator", filemaker_code: "PS0001")
+      end
+
+      it "creates the organization the card only names, and reports it" do
+        rolodex(Organization: "Foothill Family Services")
+        personnel("PS0001", ProjectID: "")
+
+        import = described_class.new.call
+
+        created = Organization.find_by!(name: "Foothill Family Services")
+        expect(person.affiliations.sole.organization).to eq(created)
+        expect(import.results[:created]).to include(a_string_including("organization ##{created.id}", "Rolodex card"))
+      end
+
+      it "gives an agency's own card AWBW Placeholder at the agency" do
+        FmRolodex.create!(fm_id: "00777", data: { "isAgency__c" => "1", "OrgID" => "ORG00001" })
+        personnel("PS0001", PersonID: "00777", ProjectID: "")
+
+        import
+
+        expect(umbrella.affiliations.sole.person).to have_attributes(first_name: "AWBW", last_name: "Placeholder")
+      end
+
+      it "is skipped, saying why, when the card names no organization either" do
+        rolodex
+        personnel("PS0001", ProjectID: "")
+
+        expect(import.results[:skipped].sole).to include("PS0001", "no project", "Rolodex card names no organization")
+      end
+    end
+
     it "skips a row whose person or project wasn't imported" do
       personnel("PS0001", PersonID: "99999")
       personnel("PS0002", ProjectID: "P9999")
