@@ -6,6 +6,15 @@
   <%= render "forms/index_subnav", current: :forms %>
 <% end %>
 <% actions = capture do %>
+  <%= form_with url: forms_path, method: :get,
+        data: { controller: "collection", turbo_frame: "forms_results", turbo_action: "advance" } do %>
+    <% if params[:name].present? %><%= hidden_field_tag :name, params[:name] %><% end %>
+    <%= label_tag :role, "Form role", class: "sr-only" %>
+    <%= select_tag :role,
+                   options_for_select(Form::ROLE_OPTIONS, params[:role]),
+                   include_blank: "All form roles",
+                   class: "rounded-lg border border-gray-300 py-2 pr-8 pl-3 text-sm text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+  <% end %>
   <% if allowed_to?(:new?, Form) %>
     <div class="admin-only bg-blue-100">
       <%= link_to "New form",

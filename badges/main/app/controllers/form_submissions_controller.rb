@@ -160,20 +160,22 @@ class FormSubmissionsController < ApplicationController
   # Fill the org's blank profile/address fields from the submission, create the
   # affiliations, record the explicit submission -> org link, and build the flash
   # notice — via the linking core shared with the event registration editor.
-  # The scenario (derived from the form's role) drives the affiliation
-  # handling: agreement scenarios confer the standing Facilitator affiliation
-  # dated to the submission, and a new job ends the person's other orgs' rows.
+  # The scenario (from the form's role, or an event registration's event)
+  # drives the affiliation handling: agreement scenarios confer the standing
+  # Facilitator affiliation dated to the submission, a facilitator training
+  # confers it dated to the training, and a new job ends the person's other
+  # orgs' rows.
   def link_and_report(organization, verb:, record_fills: true)
     Current.form_submission_id = @form_submission.id
     return close_program_and_report(organization, verb:) if @form_submission.linking_scenario == "close_program"
 
-    registration = @form_submission.on_demand_registration
+    registration = @form_submission.event_registration_for_link
     result = OrganizationServices::LinkSubmittedOrganization.call(
       person: @form_submission.person,
       organization: organization,
       entry: submission_org_entry,
-      scenario: @form_submission.linking_scenario,
-      training_date: @form_submission.created_at.to_date,
+      scenario: @form_submission.link_scenario,
+      training_date: @form_submission.link_training_date,
       event_registration: registration
     )
 

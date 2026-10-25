@@ -6,12 +6,12 @@ class FormSubmissionDecorator < ApplicationDecorator
   def link_organization_effects
     return [] if linking_scenario == "close_program"
 
-    registration = on_demand_registration
+    registration = event_registration_for_link
     position = org_entry[:position]
     [
       ("Links it to their #{registration.event.title} registration" if registration),
       ("Adds a “#{position}” job affiliation there" if position),
-      ("Adds a Facilitator affiliation there" if OrganizationServices::LinkSubmittedOrganization::FACILITATOR_CONFERRING_SCENARIOS.include?(linking_scenario)),
+      ("Adds a Facilitator affiliation there" if OrganizationServices::LinkSubmittedOrganization::FACILITATOR_CONFERRING_SCENARIOS.include?(link_scenario)),
       ("Ends their affiliations at other organizations" if linking_scenario == "new_job")
     ].compact
   end

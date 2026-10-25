@@ -126,6 +126,14 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#linking_scenario" do
+    it "maps on-demand and scheduled facilitator trainings, and every other event" do
+      expect(build(:event, facilitator_training: true, on_demand: true).linking_scenario).to eq("on_demand")
+      expect(build(:event, facilitator_training: true, on_demand: false).linking_scenario).to eq("facilitator_training")
+      expect(build(:event, facilitator_training: false).linking_scenario).to eq("non_facilitator_training")
+    end
+  end
+
   describe "#multi_day?" do
     let(:pacific) { Time.find_zone(Event::PROGRAM_ZONE) }
 
