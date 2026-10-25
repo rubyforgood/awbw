@@ -125,9 +125,10 @@ class UsersController < ApplicationController
     @user.skip_confirmation_notification!
 
     if @user.save
+      # Session identity check, so it stays out of policies: re-signing in keeps you logged in after editing your own login.
       bypass_sign_in(@user) if @user == current_user
 
-      if current_user.super_user? && @user.saved_change_to_unconfirmed_email? && @user.unconfirmed_email.present?
+      if @user.saved_change_to_unconfirmed_email? && @user.unconfirmed_email.present?
         redirect_to confirm_email_change_user_path(@user)
         return
       end
@@ -346,6 +347,7 @@ class UsersController < ApplicationController
       },
       merge_blocks: ->(keep, delete) {
         blocks = []
+        # Session identity check, so it stays out of policies: merging away the signed-in login would end this session.
         blocks << "You're signed in as #{delete.email}. Swap to keep it — you can't merge away your own login." if delete == current_user
         if keep.person && delete.person && keep.person_id != delete.person_id
           blocks << "These logins belong to different people (#{keep.person.full_name} and #{delete.person.full_name}). Merge the people first, then their logins."
