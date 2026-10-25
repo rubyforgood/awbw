@@ -25,6 +25,9 @@ module DataHealth
 
     def any? = count.positive?
 
+    # Stops at the first wrong row, for callers that only need to know whether there is one.
+    def flagged? = scope.exists?
+
     def page(number)
       ordered_scope.paginate(page: number, per_page: PER_PAGE, total_entries: count)
     end
