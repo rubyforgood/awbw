@@ -26,6 +26,8 @@ module OrganizationServices
   #   * each project's City/State with its Locality, District, SPA and supervisorial
   #     district, onto the program's address in that city
   #   * a merged-away project's code, onto the program it merged into
+  #   * a retired duplicate organization (RETIRED_DUPLICATE_OF) — its code, blanks, addresses,
+  #     phones, email and projects — onto the organization it duplicated
   #   * an agency's own Rolodex card: its website, mission and addresses (and its email,
   #     when the card names no contact person whose email it would be)
   class ImportFromFilemaker
@@ -78,12 +80,14 @@ module OrganizationServices
       retired.each { |project| record(:skipped, "#{project.fm_id} #{project_name(project)}: retired in FileMaker") }
       merged, live = projects.partition { |project| merged_into(project) }
       by_organization = live.group_by { |project| project.data["OrgID"].to_s }
+      @duplicates = []
       read = 0
       FmOrganization.find_in_batches(batch_size: BATCH_SIZE) do |batch|
         import_batch(batch) { |organization| import_organization(organization, by_organization.delete(organization.fm_id) || []) }
         @progress&.call(read += batch.size)
       end
       import_batch(by_organization.values.flatten) { |project| import_projects(nil, [ project ]) }
+      import_batch(@duplicates) { |fm_organization, projects| fold_duplicate(fm_organization, projects) }
       import_batch(merged) { |project| fold_merged(project) }
       import_batch(agency_cards) { |rolodex| import_agency(rolodex) }
       self
@@ -108,6 +112,8 @@ module OrganizationServices
       name = clip(data["OrgName"].to_s.squish)
       label = "#{fm_organization.fm_id} #{name}".squish
       if name.blank? || retired_record?(fm_organization.fm_id)
+        return @duplicates << [ fm_organization, projects ] if duplicate_of(fm_organization.fm_id)
+
         record(:skipped, "#{label}: #{name.blank? ? "no name" : "retired in FileMaker"}")
         return import_projects(nil, projects)
       end
@@ -182,6 +188,20 @@ module OrganizationServices
       return :created if organization.new_record?
 
       rows.all? { |row| organization.filemaker_codes.include?(row.fm_id) } ? :already_imported : :linked
+    end
+
+    # Read once every organization is in, so the one it duplicated is found by code.
+    def fold_duplicate(fm_organization, projects)
+      original_code = duplicate_of(fm_organization.fm_id)
+      label = "#{fm_organization.fm_id} #{fm_organization.data["OrgName"].to_s.squish} (duplicate of #{original_code})"
+      original = coded(original_code)
+      unless original
+        record(:skipped, "#{label}: #{original_code} wasn't imported")
+        return import_projects(nil, projects)
+      end
+      return unless save(original, fm_organization, label, organization_attributes(fm_organization.data))
+
+      import_projects(original, projects)
     end
 
     # FileMaker kept a merged-away project's row, pointing at the one it merged into, so its

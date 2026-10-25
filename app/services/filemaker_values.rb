@@ -64,6 +64,37 @@ module FilemakerValues
     "P2605" => "DELETE",
     "P2762" => "DO NOT USE Children's Hospital Los Angeles"
   }.freeze
+  # The retired organizations that duplicated another, by the code of the one they duplicated.
+  # Each folds into it — code, blanks, addresses, phones, projects — so what names it lands there.
+  RETIRED_DUPLICATE_OF = {
+    "ORG00837" => "ORG06521",
+    "ORG01126" => "ORG06489",
+    "ORG02183" => "ORG02184",
+    "ORG02287" => "ORG02288",
+    "ORG02393" => "ORG02395",
+    "ORG02988" => "ORG02990",
+    "ORG03581" => "ORG03588",
+    "ORG03681" => "ORG03682",
+    "ORG04794" => "ORG04795",
+    "ORG05066" => "ORG06370",
+    "ORG06025" => "ORG05702",
+    "ORG06047" => "ORG05138",
+    "ORG06175" => "ORG03150",
+    "ORG06183" => "ORG01658",
+    "ORG06184" => "ORG06049",
+    "ORG06188" => "ORG05988",
+    "ORG06189" => "ORG05580",
+    "ORG06190" => "ORG04132",
+    "ORG06197" => "ORG03185",
+    "ORG06208" => "ORG01257",
+    "ORG06223" => "ORG00636",
+    "ORG06226" => "ORG02709",
+    "ORG06230" => "ORG03243",
+    "ORG06316" => "ORG01571",
+    "ORG06322" => "ORG05340",
+    "ORG06767" => "ORG06339",
+    "ORG06981" => "ORG02607"
+  }.freeze
 
   # Every string copied here lands in a varchar(255) the archive's free text isn't
   # bounded by, and an over-long incidental field would otherwise cost the record —
@@ -84,6 +115,10 @@ module FilemakerValues
 
   def retired_record?(code)
     RETIRED_RECORDS.key?(code.to_s.strip)
+  end
+
+  def duplicate_of(code)
+    RETIRED_DUPLICATE_OF[code.to_s.strip]
   end
 
   def flag?(value)

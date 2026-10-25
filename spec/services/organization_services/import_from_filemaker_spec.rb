@@ -177,6 +177,47 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
                                                        "P0003" => "Harbor House Program" })
     end
 
+    describe "a retired duplicate of another organization" do
+      before { stub_const("FilemakerValues::RETIRED_DUPLICATE_OF", { "ORG00007" => "ORG00001" }) }
+
+      it "folds into the organization it duplicated: its code, data, and projects" do
+        fm_organization("ORG00001")
+        fm_organization("ORG00007", OrgName: "Harbor House Do Not Use", Website: "harbor.example.org", Mission: "Shelter for all")
+        project("P0007", "ORG00007", ProjectName: "Harbor Teen Program")
+        FmAddress.create!(fm_id: "1", data: { "OrgID" => "ORG00007", "AddrsLine1" => "1 Main St", "AddrsCity" => "Pasadena", "AddrsState" => "CA" })
+        FmPhoneNumber.create!(fm_id: "2", data: { "OrgID" => "ORG00007", "PhoneNumber" => "555-0100" })
+
+        results = import.results
+
+        original = Organization.find_by!(name: "Harbor House")
+        expect(results[:linked]).to include(a_string_including("ORG00007", "##{original.id}", "duplicate of ORG00001"))
+        expect(original).to have_attributes(filemaker_code: "ORG00001, ORG00007", website_url: "harbor.example.org",
+                                            mission_vision_values: "Shelter for all")
+        expect(original.addresses.sole).to have_attributes(street_address: "1 Main St", filemaker_code: "1")
+        expect(original.contact_methods.sole).to have_attributes(value: "555-0100", filemaker_code: "2")
+        expect(original.children.sole).to have_attributes(name: "Harbor Teen Program", filemaker_code: "P0007")
+        expect(Organization.where("name LIKE ?", "%Do Not Use%")).to be_empty
+      end
+
+      it "lands an agency card naming the duplicate on the original" do
+        fm_organization("ORG00001")
+        fm_organization("ORG00007", OrgName: "Harbor House Do Not Use")
+        FmRolodex.create!(fm_id: "00091", data: { "isAgency__c" => "1", "OrgID" => "ORG00007", "WebSite" => "harbor.example.org" })
+
+        import
+
+        expect(Organization.sole).to have_attributes(name: "Harbor House", website_url: "harbor.example.org")
+      end
+
+      it "is skipped, its projects unnested, when the original wasn't imported" do
+        fm_organization("ORG00007", OrgName: "Harbor House Do Not Use")
+        project("P0007", "ORG00007", ProjectName: "Harbor Teen Program")
+
+        expect(import.results[:skipped].sole).to include("ORG00007", "ORG00001", "wasn't imported")
+        expect(Organization.sole).to have_attributes(name: "Harbor Teen Program", parent_id: nil)
+      end
+    end
+
     it "leaves out a retired organization, bringing its projects in unnested" do
       fm_organization("ORG00007", OrgName: "Harbor House Do Not Use")
       project("P0007", "ORG00007", ProjectName: "Harbor Teen Program")

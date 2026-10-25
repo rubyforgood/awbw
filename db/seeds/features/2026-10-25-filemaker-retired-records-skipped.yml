@@ -7,7 +7,8 @@ summary: >-
   The FileMaker import no longer brings over organizations and programs staff
   had retired by renaming them "DELETE", "Do Not Use", or "created in error".
 pro_tips:
+  - "A \"Do Not Use\" copy of another organization folds into that organization, bringing its addresses, phones, programs and the people tied to it."
   - "One the portal already has keeps its link, so the people and programs tied to it still land there."
-  - "Programs under a retired organization still come in, on their own rather than nested under it."
+  - "Programs under any other retired organization still come in, on their own rather than nested under it."
   - "Each one left out is listed in the import report."
 action_path: "/organizations"
