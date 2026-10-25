@@ -23,10 +23,10 @@ class BookmarksController < ApplicationController
 
   def personal
     authorize!
-    user = User.find_by(id: params[:user_id]) if params[:user_id].present?
+    user = User.find_by(id: params[:user_id]) if params[:user_id].present? && allowed_to?(:index?, Bookmark)
+    @viewing_self = user.nil?
     user ||= current_user
     @user_name = user.full_name if user
-    @viewing_self = allowed_to?(:self?, user)
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25

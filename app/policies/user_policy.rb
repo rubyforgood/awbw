@@ -2,7 +2,7 @@ class UserPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
   def index? = admin?
-  def show? = admin? # later: show? || self?
+  def show? = admin? # later: show? || own_account?
   def new? = admin?
   def create? = admin?
   def edit? = admin?
@@ -19,7 +19,7 @@ class UserPolicy < ApplicationPolicy
   def search? = admin?
   def change_password? = authenticated?
   def update_password? = authenticated?
-  def self? = user == record
+  def own_account? = user == record
 
   relation_scope do |relation|
     next relation if admin?

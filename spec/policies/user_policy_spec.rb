@@ -7,17 +7,17 @@ RSpec.describe UserPolicy, type: :policy do
     described_class.new(record, user: user)
   end
 
-  describe "#self?" do
+  describe "#own_account?" do
     it "allows the user viewing their own account" do
-      expect(policy_for(record: user, user: user)).to be_allowed_to(:self?)
+      expect(policy_for(record: user, user: user)).to be_allowed_to(:own_account?)
     end
 
     it "denies an admin viewing someone else's account" do
-      expect(policy_for(record: user, user: build_stubbed(:user, :admin))).not_to be_allowed_to(:self?)
+      expect(policy_for(record: user, user: build_stubbed(:user, :admin))).not_to be_allowed_to(:own_account?)
     end
 
     it "denies a guest" do
-      expect(policy_for(record: user, user: nil)).not_to be_allowed_to(:self?)
+      expect(policy_for(record: user, user: nil)).not_to be_allowed_to(:own_account?)
     end
   end
 end

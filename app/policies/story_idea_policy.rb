@@ -21,7 +21,7 @@ class StoryIdeaPolicy < ApplicationPolicy
     admin?# || owner?
   end
 
-  def organization_optional?
+  def omit_organization?
     admin?
   end
 

@@ -8,13 +8,13 @@ RSpec.describe StoryIdeaPolicy, type: :policy do
     described_class.new(record, user: user)
   end
 
-  describe "#organization_optional?" do
+  describe "#omit_organization?" do
     it "allows an admin" do
-      expect(policy_for(record: StoryIdea, user: build_stubbed(:user, :admin))).to be_allowed_to(:organization_optional?)
+      expect(policy_for(record: StoryIdea, user: build_stubbed(:user, :admin))).to be_allowed_to(:omit_organization?)
     end
 
     it "denies a non-admin" do
-      expect(policy_for(record: StoryIdea, user: build_stubbed(:user))).not_to be_allowed_to(:organization_optional?)
+      expect(policy_for(record: StoryIdea, user: build_stubbed(:user))).not_to be_allowed_to(:omit_organization?)
     end
   end
 
