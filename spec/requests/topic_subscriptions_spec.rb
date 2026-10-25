@@ -27,6 +27,19 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include("Subscriptions")
     end
 
+    it "leaves the status counts to the results frame" do
+      create(:topic_subscription, topic_subscription_type: trainings)
+      counts = []
+      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+        counts << payload[:sql] if payload[:sql].match?(/SELECT COUNT\(.*FROM `topic_subscriptions`/)
+      end
+      get topic_subscriptions_path
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+
+      expect(response).to have_http_status(:success)
+      expect(counts).to be_empty
+    end
+
     it "lists subscriptions and shows the person's facilitator-training registrations" do
       person = create(:person, first_name: "Dana", last_name: "Rivers")
       training = create(:event, title: "TAC263 Spring Training", start_date: Time.zone.local(2024, 5, 3, 9), facilitator_training: true)

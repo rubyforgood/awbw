@@ -4,6 +4,8 @@ class TopicSubscriptionsController < ApplicationController
 
   def index
     authorize! TopicSubscription
+    return unless turbo_frame_request?
+
     # The active/unsubscribed segmented toggle owns the status axis (default
     # active), so exclude status from the shared filter and apply it here.
     base = TopicSubscription
@@ -24,7 +26,7 @@ class TopicSubscriptionsController < ApplicationController
 
     @topic_subscriptions = ordered.paginate(page: params[:page], per_page: 25)
     @mark_column_label = mark_column_label
-    render :topic_subscriptions_results if turbo_frame_request?
+    render :topic_subscriptions_results
   end
 
   # This list gets pasted into a mail client, so it narrows the index's filter
