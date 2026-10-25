@@ -67,6 +67,7 @@ class Form < ApplicationRecord
   scope :owned, -> { standalone.invert_where }
   scope :published, -> { where(published: true) }
   scope :not_event_connected, -> { where.missing(:event_forms) }
+  scope :with_role, ->(role) { where(role: role == "general" ? [ "general", nil, "" ] : role) }
   # The publicly fillable agreement forms — the ones the person-page panel
   # offers to send a link for.
   scope :agreement_forms, -> { standalone.published.not_event_connected.where(role: AGREEMENT_ROLES).where.not(slug: nil) }

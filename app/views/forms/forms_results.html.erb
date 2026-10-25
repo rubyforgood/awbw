@@ -1,5 +1,5 @@
 <%= turbo_frame_tag :forms_results do %>
-  <% sort_link = sort_header_link(frame: "forms_results", path: ->(p) { forms_path(p) }) %>
+  <% sort_link = sort_header_link(frame: "forms_results", path: ->(p) { forms_path(p) }, base: { role: @role }.compact) %>
   <div class="border-primary/10 rounded-2xl border bg-white shadow-sm">
     <table class="w-full border-separate border-spacing-0 [&_tbody_td]:border-t [&_tbody_td]:border-gray-200">
       <thead>

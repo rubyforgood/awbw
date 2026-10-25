@@ -35,6 +35,41 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("New Job")
       end
 
+      it "filters the results frame by form role" do
+        create(:form, :standalone, name: "Scholarship Form", role: "scholarship")
+        create(:form, :standalone, name: "New Job Form", role: "new_job")
+        get forms_path(role: "scholarship"), headers: frame_headers
+        expect(response.body).to include("Scholarship Form")
+        expect(response.body).not_to include("New Job Form")
+      end
+
+      it "counts role-less forms as general when filtering by general" do
+        create(:form, :standalone, name: "Roleless Form", role: nil)
+        create(:form, :standalone, name: "New Job Form", role: "new_job")
+        get forms_path(role: "general"), headers: frame_headers
+        expect(response.body).to include("Roleless Form")
+        expect(response.body).not_to include("New Job Form")
+      end
+
+      it "ignores an unknown role filter" do
+        create(:form, :standalone, name: "New Job Form", role: "new_job")
+        get forms_path(role: "bogus"), headers: frame_headers
+        expect(response.body).to include("New Job Form")
+      end
+
+      it "keeps the role filter on the sort links" do
+        get forms_path(role: "scholarship"), headers: frame_headers
+        hrefs = Nokogiri::HTML(response.body).css("thead a").map { |link| link["href"] }
+        expect(hrefs).to all(include("role=scholarship"))
+      end
+
+      it "renders the role filter next to the new form button" do
+        get forms_path(role: "scholarship")
+        select = Nokogiri::HTML(response.body).at_css("form[data-turbo-frame='forms_results'] select[name='role']")
+        expect(select).to be_present
+        expect(select.at_css("option[selected]")["value"]).to eq("scholarship")
+      end
+
       it "lists owner-attached forms in an owned-forms section with an answers link" do
         builder = create(:form_builder, name: "Adult Workshop Log")
         create(:form, owner: builder, name: "Adult Workshop Log")

@@ -9,7 +9,9 @@ class FormsController < ApplicationController
     if turbo_frame_request?
       @sort = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "name"
       @sort_direction = params[:direction] == "desc" ? "desc" : "asc"
+      @role = params[:role].presence_in(Form::ROLE_OPTIONS.map(&:last))
       @forms = sorted_forms
+      @forms = @forms.with_role(@role) if @role
       @survey_default_ids = Form.survey_default_ids
       render :forms_results
     else

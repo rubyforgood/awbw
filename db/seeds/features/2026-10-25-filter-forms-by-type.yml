@@ -1,0 +1,11 @@
+name: "Filter the forms list by form type"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-25
+action_path: /forms
+summary: >-
+  The forms list has a form type picker next to the New form button, so you can
+  show just registration, scholarship, survey, or any other kind of form.
+pro_tips:
+  - "General includes older forms that were never given a type."
+  - "The filter stays in the page's web address, so a refresh or a shared link keeps it."
