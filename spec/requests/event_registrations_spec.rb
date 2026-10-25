@@ -1863,7 +1863,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           address = organization.addresses.find_by(city: "Austin")
           expect(address).to be_present
-          expect(address.country).to eq("USA")
+          expect(address.country).to eq("United States")
           expect(regular_user.person.affiliations.where(organization: organization).map(&:organization_address))
             .to all(eq(address))
         end

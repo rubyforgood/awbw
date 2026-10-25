@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Rewrite stored address countries/states and country/state form answers as the dropdowns
-# store them. See AddressServices::TranslateExisting.
+# Rewrite stored address countries/states as the dropdowns store them (form answers stay as
+# typed). See AddressServices::TranslateExisting.
 #
 # Dry-run by default. Set DRY_RUN=false to write changes (each one logged as an Ahoy event
 # credited to Setting.import_user, which a real run requires).
@@ -11,7 +11,7 @@
 #   VERBOSE=true bin/rails data:translate_addresses    # also print every change as CSV rows
 #   DRY_RUN=false bin/rails data:translate_addresses   # translate + log
 namespace :data do
-  desc "Translate stored address countries/states and their form answers to dropdown values. Idempotent. DRY_RUN=false to execute."
+  desc "Translate stored address countries/states to dropdown values (form answers stay as typed). Idempotent. DRY_RUN=false to execute."
   task translate_addresses: :environment do
     dry_run = ENV["DRY_RUN"] != "false"
     verbose = ENV["VERBOSE"] == "true"
@@ -41,7 +41,6 @@ namespace :data do
       note.(CSV.generate_line(AddressServices::TranslateExisting::ROW_HEADERS, row_sep: ""))
       result.rows.each { |row| note.(CSV.generate_line(row.to_h.values, row_sep: "")) }
       say.("\naddresses changed: #{result.addresses}")
-      say.("answers changed:   #{result.answers}")
       say.(dry_run ? "\nDRY RUN — nothing written. Set DRY_RUN=false to execute." : "\nDone.")
     rescue StandardError => e
       say.("\nStopped by #{e.class}: #{e.message}#{" — nothing was written; rerun to continue." unless dry_run}")

@@ -20,10 +20,25 @@ RSpec.describe OrganizationServices::UpsertAddress do
       city: "Austin",
       state: "TX",
       zip_code: "78701",
-      country: "USA",
+      country: "United States",
       address_type: "work",
       primary: true
     )
+  end
+
+  it "stores the submitted state and country as the dropdowns do, so an old answer can't add a stray spelling" do
+    result = described_class.call(organization:, street_address: "1 Main St", city: "Austin", state: "Texas", zip_code: "78701", country: "USA")
+
+    expect(result.address).to have_attributes(state: "TX", country: "United States")
+  end
+
+  it "leaves the country alone when the submission gives none" do
+    existing = create(:address, addressable: organization, street_address: "1 King St", city: "Toronto", state: "ON", zip_code: "M5H", country: "Canada")
+
+    result = described_class.call(organization:, street_address: "1 King St", city: "Toronto", state: "ON", zip_code: "M5H")
+
+    expect(existing.reload.country).to eq("Canada")
+    expect(result.changes).to be_empty
   end
 
   # Browsers don't trim text inputs, and a padded value stored verbatim would read
@@ -213,7 +228,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(result).to have_attributes(address: existing, created: false)
     expect(organization.addresses.count).to eq(1)
     # State already on file is kept (never flipped); the blank country is filled.
-    expect(existing.reload).to have_attributes(state: "Texas", country: "USA", street_address: "1 Main St")
+    expect(existing.reload).to have_attributes(state: "Texas", country: "United States", street_address: "1 Main St")
   end
 
   it "updates the same street/ZIP address instead of duplicating when the city is respelled, keeping the saved city" do
@@ -231,7 +246,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
 
     expect(result).to have_attributes(address: existing, created: false)
     expect(organization.addresses.count).to eq(1)
-    expect(existing.reload).to have_attributes(city: "Saint Louis", country: "USA")
+    expect(existing.reload).to have_attributes(city: "Saint Louis", country: "United States")
   end
 
   it "fills a blank city on the matched address rather than leaving it empty" do

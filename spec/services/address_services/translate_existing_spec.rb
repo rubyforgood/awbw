@@ -61,85 +61,50 @@ RSpec.describe AddressServices::TranslateExisting do
       .to include("country" => { "before" => "Narnia", "after" => nil })
   end
 
-  it "blanks a country answer it can't place" do
+  it "leaves form answers exactly as people typed them" do
     submission = create(:form_submission)
-    answer(submission, "mailing_state", "-")
-    country = answer(submission, "mailing_country", "West Africa")
+    typed = { "mailing_state" => "California", "mailing_country" => "USA",
+              "organization_country" => "Untied States", "organization_state" => "Texas" }
+    answers = typed.to_h { |identifier, value| [ identifier, answer(submission, identifier, value) ] }
 
-    described_class.new.call
+    expect { described_class.new.call }.not_to change(Ahoy::Event.where(name: "autochange.form_answer"), :count)
 
-    expect(country.reload.submitted_answer).to eq("")
+    expect(answers.transform_values { _1.reload.submitted_answer }).to eq(typed)
   end
 
-  it "leaves every stored country and country answer on the dropdown" do
+  it "leaves every stored address country on the dropdown" do
     address_with(country: "Narnia", state: "Central Region")
     address_with(country: "USA", state: "TX")
-    submission = create(:form_submission)
-    answer(submission, "organization_country", "Atlantis")
 
     described_class.new.call
 
     expect(Address.where.not(country: [ nil, "" ]).pluck(:country) - GeographyHelper::COUNTRIES).to be_empty
-    expect(FormAnswer.where.not(submitted_answer: [ nil, "" ]).pluck(:submitted_answer) - GeographyHelper::COUNTRIES).to be_empty
   end
 
-  it "translates country and state answers using the submission's other answer" do
-    submission = create(:form_submission)
-    answer(submission, "mailing_state", "California")
-    country = answer(submission, "mailing_country", "")
-    org_country = answer(submission, "organization_country", "Untied States")
-    org_state = answer(submission, "organization_state", "Texas")
-
-    described_class.new.call
-
-    expect(country.reload.submitted_answer).to eq(us)
-    expect(org_country.reload.submitted_answer).to eq(us)
-    expect(org_state.reload.submitted_answer).to eq("TX")
-    expect(FormAnswer.joins(:form_field).find_by(form_fields: { field_identifier: "mailing_state" }).submitted_answer).to eq("CA")
-  end
-
-  it "leaves a blank answer blank when its section was skipped" do
-    submission = create(:form_submission)
-    org_country = answer(submission, "organization_country", "")
-
-    described_class.new.call
-
-    expect(org_country.reload.submitted_answer).to eq("")
-  end
-
-  it "logs each changed record as one autochange event, all in one visit" do
+  it "logs each changed address as one autochange event, all in one visit" do
     usa = address_with(country: "USA", state: "TX", locality: Address::OUTSIDE_CA)
-    submission = create(:form_submission)
-    answer(submission, "mailing_state", "TX")
-    country = answer(submission, "mailing_country", "USA")
+    texas = address_with(country: nil, state: "Texas", locality: Address::OUTSIDE_CA)
 
     expect { described_class.new.call }.to change(Ahoy::Event, :count).by(2)
 
     address_event = Ahoy::Event.find_by!(name: "autochange.address", resource_id: usa.id)
     expect(address_event.properties).to include("changes" => { "country" => { "before" => "USA", "after" => us } },
                                                 "reason" => "address_translation")
-    answer_event = Ahoy::Event.find_by!(name: "autochange.form_answer", resource_id: country.id)
-    expect(answer_event.properties["changes"]).to eq("submitted_answer" => { "before" => "USA", "after" => us })
-    expect(Ahoy::Event.where(name: %w[autochange.address autochange.form_answer]).distinct.count(:visit_id)).to eq(1)
+    expect(Ahoy::Event.where(name: "autochange.address", resource_id: [ usa.id, texas.id ]).distinct.count(:visit_id)).to eq(1)
   end
 
-  it "lists every change with its owner and before/after, on a dry run too" do
+  it "lists every address change with its owner and before/after, on a dry run too" do
     usa = address_with(country: "USA", state: "Texas", locality: Address::OUTSIDE_CA)
     org_address = create(:address, addressable: create(:organization)).tap { |address| address.update_columns(country: "Usa", state: "TX", locality: Address::OUTSIDE_CA) }
-    submission = create(:form_submission, person: create(:person))
-    answer(submission, "mailing_state", "TX")
-    country = answer(submission, "mailing_country", "US")
 
     rows = described_class.new(dry_run: true).call.rows
 
-    expect(rows).to include(
-      have_attributes(record_type: "Address", record_id: usa.id, person_id: usa.addressable_id, organization_id: nil,
-                      form_submission_id: nil, field: :country, before: "USA", after: "United States"),
-      have_attributes(record_type: "Address", record_id: usa.id, field: :state, before: "Texas", after: "TX"),
-      have_attributes(record_type: "Address", record_id: org_address.id, person_id: nil, organization_id: org_address.addressable_id,
-                      field: :country, before: "Usa", after: "United States"),
-      have_attributes(record_type: "Form answer", record_id: country.id, person_id: submission.person_id,
-                      form_submission_id: submission.id, field: :submitted_answer, before: "US", after: "United States")
+    expect(rows).to contain_exactly(
+      have_attributes(address_id: usa.id, person_id: usa.addressable_id, organization_id: nil,
+                      field: :country, before: "USA", after: "United States"),
+      have_attributes(address_id: usa.id, field: :state, before: "Texas", after: "TX"),
+      have_attributes(address_id: org_address.id, person_id: nil, organization_id: org_address.addressable_id,
+                      field: :country, before: "Usa", after: "United States")
     )
   end
 

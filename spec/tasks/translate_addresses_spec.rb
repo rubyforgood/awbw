@@ -42,11 +42,11 @@ RSpec.describe "data:translate_addresses" do
 
   it "saves every change as CSV rows, printing them only with VERBOSE=true" do
     usa = address_with(country: "USA", state: "TX")
-    row = "Address,#{usa.id},#{usa.addressable_id},,,country,USA,United States"
+    row = "#{usa.id},#{usa.addressable_id},,country,USA,United States"
 
     output = run_task
 
-    expect(report_text).to include("record_type,record_id,person_id,organization_id,form_submission_id,field,before,after", row)
+    expect(report_text).to include("address_id,person_id,organization_id,field,before,after", row)
     expect(output).not_to include(row)
 
     Rake::Task["data:translate_addresses"].reenable

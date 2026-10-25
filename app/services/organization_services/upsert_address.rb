@@ -39,10 +39,11 @@ module OrganizationServices
     def initialize(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil, overwrite: true)
       @organization = organization
       @city = city&.strip
-      @state = state&.strip.presence
+      translation = AddressTranslation.new
+      @state = translation.state(state, country:)
       @street_address = street_address&.strip
       @zip_code = zip_code&.strip
-      @country = country&.strip.presence
+      @country = translation.country(country, state:) if country.present?
       @overwrite = overwrite
     end
 

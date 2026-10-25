@@ -13,7 +13,7 @@ USPS code. Everything written before, and everything other systems send, is free
 |---|---|
 | FileMaker (`fm_addresses`) | `AddrsCountry`, `AddrsState`, `AddrsType` |
 | LMS registration spreadsheet (ongoing) | country, state, address type, phone type columns |
-| Portal addresses and form answers from before the dropdowns | `addresses.country`/`state`, `mailing_*`/`organization_*` answers |
+| Portal addresses and form answers from before the dropdowns | `addresses.country`/`state`; `mailing_*`/`organization_*` answers (read when an old submission is linked or captured) |
 
 The same place arrives many ways — "US", "USA", "United States of America", "Untied States",
 "California", "Ca.", "CA - California", a province typed in the state field with no country —
@@ -51,17 +51,23 @@ since a state is required and regions outside the US are legitimate.
   (the Rolodex import now, the organizations and affiliations imports of ADR-0008), and the
   LMS registration importer translates its answers. Each reports what it couldn't place.
 - **Existing data, once and again:** `AddressServices::TranslateExisting`
-  (`data:translate_addresses`) rewrites stored address countries and states, and the
-  country/state form answers, filling a locality only where it's Unknown. It's idempotent, so it runs before and after an import. Every changed
-  record is an `autochange.*` Ahoy event with its before and after.
+  (`data:translate_addresses`) rewrites stored address countries and states, filling a
+  locality only where it's Unknown. It's idempotent, so it runs before and after an import.
+  Every changed address is an `autochange.address` Ahoy event with its before and after.
+- **Where answers become addresses:** `OrganizationServices::UpsertAddress` (organization
+  capture and link-organization) and `PersonServices::CaptureFromSubmission` (the mailing
+  address) translate the country and state they're handed, so re-reading an old answer can't
+  add a spelling the dropdowns don't offer. A submission with no country leaves the stored
+  one alone.
 - **Not on save.** The dropdowns own new data; nothing rewrites an address when someone
   saves a form.
 
 ### Form answers
 
-Form answers are otherwise stored verbatim. Country and state answers are the one exception:
-they're rewritten so form results and maps count one place once (a country answer nothing
-answers to becomes blank), and each rewrite is logged.
+Form answers stay verbatim, as a record of what the person submitted — the cleanup never
+rewrites them. They're translated where they become addresses instead (above), and the
+dashboards and maps that count countries read addresses. The form-results page for an older
+form still shows each answer as typed.
 
 ## Consequences
 

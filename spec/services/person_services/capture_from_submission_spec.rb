@@ -10,6 +10,20 @@ RSpec.describe PersonServices::CaptureFromSubmission do
       expect(person.addresses.sole).to have_attributes(city: "Springfield", street_address: "", zip_code: "")
     end
 
+    it "stores the answered state and country as the dropdowns do" do
+      described_class.call(person:, answers: { "mailing_city" => "Fresno", "mailing_state" => "California", "mailing_country" => "USA" })
+
+      expect(person.addresses.sole).to have_attributes(state: "CA", country: "United States")
+    end
+
+    it "translates a country it fills on an address already on file" do
+      address = create(:address, addressable: person, city: "Toronto", state: "ON", country: nil)
+
+      described_class.call(person:, answers: { "mailing_city" => "Toronto", "mailing_state" => "ON", "mailing_country" => "can" }, overwrite: false)
+
+      expect(address.reload.country).to eq("Canada")
+    end
+
     it "keeps a saved ZIP and street when an overwriting submission skips them" do
       address = create(:address, addressable: person, city: "Springfield", state: "IL", street_address: "1 Old Rd", zip_code: "62701")
 

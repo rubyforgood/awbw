@@ -115,7 +115,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       address = organization.addresses.find_by(city: "Austin")
       expect(address).to be_present
-      expect(address.country).to eq("USA")
+      expect(address.country).to eq("United States")
       linked = person.affiliations.where(organization: organization)
       expect(linked.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
       expect(linked.map(&:organization_address)).to all(eq(address))
@@ -396,7 +396,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       described_class.call(event: event, registration_form: form, form_params: params)
       person = Person.find_by!(email: "ada@example.com")
 
-      expect(person.addresses.find_by(primary: true).country).to eq("USA")
+      expect(person.addresses.find_by(primary: true).country).to eq("United States")
     end
 
     it "updates a returning registrant's address when the city and state are spelled differently" do
@@ -439,7 +439,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
         expect(organization.organization_type).to eq("501c3/nonprofit")
         expect(organization.website_url).to include("helpinghands.org")
-        expect(organization.addresses.find_by(primary: true).country).to eq("USA")
+        expect(organization.addresses.find_by(primary: true).country).to eq("United States")
       end
 
       # find_organization only ever finds, so a registrant always changes an org
