@@ -79,8 +79,8 @@ module GeographyHelper
 
   # Country dropdown options: the United States first, then every other country A–Z.
   # The US minor outlying islands are left out — nobody picks them for an address.
-  COUNTRIES = ([ "United States" ] + (
+  COUNTRIES = ([ Address::DEFAULT_COUNTRY ] + (
     ISO3166::Country.all.map { |country| PLAIN_COUNTRY_NAMES[country.alpha2] || country.common_name } -
-    [ "United States", "United States Minor Outlying Islands" ]
+    [ Address::DEFAULT_COUNTRY, "United States Minor Outlying Islands" ]
   ).sort).freeze
 end
