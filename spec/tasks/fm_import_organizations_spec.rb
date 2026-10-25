@@ -57,6 +57,22 @@ RSpec.describe "fm:import_organizations" do
       expect(person.affiliations.sole).to have_attributes(organization:, title: "Facilitator", filemaker_code: "PS0001")
     end
 
+    it "turns an agency card into an organization with its work address, and points the person named on it there" do
+      contact = create(:person, filemaker_code: "00300")
+      FmAddress.create!(fm_id: "9", data: { "RolodexID" => "00300", "AddrsLine1" => "9 Elm St", "AddrsCity" => "Ojai",
+                                            "AddrsState" => "CA", "AddrsType" => "Home" })
+      FmRolodex.create!(fm_id: "00300", data: { "isAgency__c" => "1", "Organization" => "Elm Street Clinic", "Title" => "Director",
+                                                "FirstName" => "Ada", "LastName" => "Lovelace" })
+
+      run_task(dry_run: false)
+
+      clinic = Organization.find_by!(name: "Elm Street Clinic")
+      address = clinic.addresses.sole
+      expect(address).to have_attributes(street_address: "9 Elm St", address_type: "work")
+      expect(contact.affiliations.sole).to have_attributes(organization: clinic, title: "Director", organization_address: address)
+      expect(contact.addresses).to be_empty
+    end
+
     it "names the run so fm:undo_import can reverse it" do
       run = run_task(dry_run: false)[/ RUN=(fm-import-organizations-\d+)/, 1]
 

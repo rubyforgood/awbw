@@ -92,10 +92,9 @@ Constraints already decided elsewhere:
       leaves a matched row's flag alone.
   - **One row, one stretch.** A person can facilitate at one org over several separate
     stretches (2020–2022, 2024–Oct 2025, Feb 2026–now), so a Personnel row links an existing
-    Facilitator row only when their periods overlap. A blank start reads as "since whenever"
-    and a blank end as "still going", except an ended row with no end date, which reads as
-    the moment it started so it can't reach a later stretch. Identical dates win, then the
-    nearest start, then a row with no dates at all. No overlap creates a new row.
+    Facilitator row only when their dates agree — each the same or blank on one side, and
+    still start-before-end once the blanks fill. Any other dates are a separate stretch and
+    come in as a new affiliation (decided 2026-10-25), leaving the portal's untouched.
   - **A row naming a project but no person** (29 of the blank-role rows) still records that
     the program ran. Once every other row is read, an organization nothing else affiliates
     anyone with gets one Facilitator affiliation for the placeholder person **AWBW
@@ -131,8 +130,11 @@ Constraints already decided elsewhere:
 - **Addresses are built by `FmAddressAttributes`** (ADR-0009), as the Rolodex pass does, so
   state, country, type and locality are stored as the dropdowns offer; a project's city/state
   goes through `AddressTranslation` the same way.
-- **Conflicts:** same rule as people — fill blanks, keep the portal value where the archive
-  disagrees, and report each difference as a comment plus in the task output.
+- **Conflicts:** a field on a record — an organization's website, mission, type — fills blanks
+  and keeps the portal value where the archive disagrees, reported as a comment plus in the
+  task output. A record itself comes in new instead: an affiliation whose dates differ, an
+  address the organization doesn't hold, and a phone number no address holds — placed on an
+  address without one, and noted only when none is free (decided 2026-10-25).
 - **Out of scope:** event registrations (`fm_participants`, 68,497 rows), payments, funding,
   notes and activities — each its own pass.
 

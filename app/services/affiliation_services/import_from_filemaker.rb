@@ -7,8 +7,8 @@ module AffiliationServices
   #      Facilitator affiliation, dated from when the row was entered to when the project
   #      closed, with a comment naming the role FileMaker gave. Only a Leader or Liaison is a
   #      primary contact — turned on for a Facilitator row the portal already had. It links
-  #      an existing Facilitator row only for the same stretch (#same_stint), so separate
-  #      stints stay separate. Each carries the row's PrsnlRecID as its filemaker_code. A row
+  #      an existing Facilitator row only when their dates agree (#same_dates); other dates
+  #      are a separate stretch and become their own affiliation. Each carries the row's PrsnlRecID as its filemaker_code. A row
   #      whose project wasn't imported lands at the organization on the person's Rolodex card
   #      (created from its name when nothing matches); one naming no person — or only an
   #      agency's own card — gets AWBW Placeholder where nothing else affiliates anyone.
@@ -23,8 +23,7 @@ module AffiliationServices
   # code the earlier pass gave them. A row whose person or organization wasn't imported is
   # skipped and reported. An existing affiliation of the same person, organization and
   # title is linked rather than duplicated: it takes the row's code and fills its blank
-  # dates, keeping its own where FileMaker disagrees (noted in #differences and as a
-  # comment on the affiliation).
+  # dates.
   #
   # None of these is minted from a training, so event_registration_id stays NULL: the
   # reconcile page treats them as hand-entered rows.
@@ -43,9 +42,8 @@ module AffiliationServices
     ROLE_COMMENT_TOPIC = "FileMaker import"
     # Stands in where a Personnel row names a project but no person.
     PLACEHOLDER_NAME = { first_name: "AWBW", last_name: "Placeholder" }.freeze
-    SOURCES = { FmPersonnel => "Personnel", FmPeopleToOrganization => "People-to-organizations", FmRolodex => "Rolodex" }.freeze
 
-    attr_reader :results, :differences, :statuses, :roles
+    attr_reader :results, :statuses, :roles
 
     def unmatched_addresses = @address_attributes.unmatched
 
@@ -53,7 +51,6 @@ module AffiliationServices
       @progress = progress
       @run = run
       @results = OUTCOMES.index_with { [] }
-      @differences = []
       @statuses = Hash.new(0)
       @roles = Hash.new(0)
       @staff = StaffTranslation.new
@@ -260,26 +257,35 @@ module AffiliationServices
     def affiliate(person, organization, row, label, title:, attributes:, codes:, dated: false)
       existing = person.affiliations.where(organization:).to_a
       candidates = existing.select { |affiliation| same_title?(affiliation.title, title) && !records_another_row?(affiliation, codes) }
-      match = dated ? same_stint(candidates, attributes) : candidates.first
+      match = dated ? same_dates(candidates, attributes) : candidates.first
       match ||= existing.find { |affiliation| affiliation.title.blank? } if title.present? && codes.nil?
       return link(match, row, label, title:, attributes:, codes:) if match
 
       create(person, organization, row, label, title:, attributes:, code: codes && row.fm_id)
     end
 
-    # A person can facilitate at one organization over several separate stretches, so a
-    # Personnel row links only the affiliation recording the same one (AffiliationStint).
-    # Identical dates win, then the nearest start, then one with dates at all.
-    def same_stint(candidates, dates)
-      stint = AffiliationStint.for(start_date: dates[:start_date], end_date: dates[:end_date], ended: dates[:inactive])
-      candidates.select { |affiliation| AffiliationStint.of(affiliation).overlap?(stint) }
-                .min_by { |affiliation| stint_rank(affiliation, dates) }
+    # A Personnel row links only an affiliation whose dates agree with it — each the same, or
+    # blank on one side — and that still reads start-before-end once the blanks fill. Any other
+    # dates are a separate stretch, so the row becomes its own affiliation. Identical dates win,
+    # then the one sharing the most.
+    def same_dates(candidates, dates)
+      candidates.select { |affiliation| dates_agree?(affiliation, dates) }
+                .min_by { |affiliation| [ identical_dates?(affiliation, dates) ? 0 : 1, -shared_dates(affiliation, dates) ] }
     end
 
-    def stint_rank(affiliation, dates)
-      identical = affiliation.start_date == dates[:start_date] && affiliation.end_date == dates[:end_date]
-      gap = (affiliation.start_date - dates[:start_date]).abs if affiliation.start_date && dates[:start_date]
-      [ identical ? 0 : 1, gap || Float::INFINITY ]
+    def dates_agree?(affiliation, dates)
+      starts = affiliation.start_date || dates[:start_date]
+      ends = affiliation.end_date || dates[:end_date]
+      %i[start_date end_date].all? { |attribute| affiliation[attribute].nil? || dates[attribute].nil? || affiliation[attribute] == dates[attribute] } &&
+        (starts.nil? || ends.nil? || starts <= ends)
+    end
+
+    def identical_dates?(affiliation, dates)
+      affiliation.start_date == dates[:start_date] && affiliation.end_date == dates[:end_date]
+    end
+
+    def shared_dates(affiliation, dates)
+      %i[start_date end_date].count { |attribute| affiliation[attribute] && affiliation[attribute] == dates[attribute] }
     end
 
     def records_another_row?(affiliation, codes)
@@ -298,12 +304,11 @@ module AffiliationServices
       affiliation.filemaker_code = Affiliation.join_filemaker_codes(affiliation.filemaker_code, row.fm_id) if codes
       affiliation.title = title if affiliation.title.blank?
       affiliation.primary_contact = true if attributes[:primary_contact]
-      kept = fill_dates(affiliation, attributes)
+      fill_dates(affiliation, attributes)
       affiliation.updated_by_id ||= updated_by(row.data)
       return failed(affiliation, label) unless affiliation.save
 
       @affiliations.add(row.fm_id, affiliation.id) if codes
-      note_differences(affiliation, row, label, kept) if kept.any?
       record(:linked, "#{label} → affiliation ##{affiliation.id}")
       affiliation
     end
@@ -311,21 +316,11 @@ module AffiliationServices
     # A blank date takes the archive's. The archive's status only ends an affiliation the
     # portal still holds open with no dates of its own to say otherwise.
     def fill_dates(affiliation, attributes)
-      kept = attributes.slice(:start_date, :end_date).filter_map do |attribute, value|
-        next if value.nil? || affiliation[attribute] == value
+      attributes.slice(:start_date, :end_date).each { |attribute, value| affiliation[attribute] ||= value }
+      return unless attributes[:inactive] && !affiliation.inactive? && affiliation.end_date.nil?
 
-        if affiliation[attribute].nil?
-          affiliation[attribute] = value
-          next
-        end
-
-        [ Affiliation.human_attribute_name(attribute), affiliation[attribute], value ]
-      end
-      if attributes[:inactive] && !affiliation.inactive? && affiliation.end_date.nil?
-        affiliation.inactive = true
-        affiliation.inactive_supplied = true
-      end
-      kept
+      affiliation.inactive = true
+      affiliation.inactive_supplied = true
     end
 
     def create(person, organization, row, label, title:, attributes:, code:)
@@ -403,13 +398,6 @@ module AffiliationServices
 
       ids = @organizations.ids(code)
       Organization.find_by(id: ids.first) if ids.any?
-    end
-
-    def note_differences(affiliation, row, label, kept)
-      lines = kept.map { |field, portal, archive| "#{field}: kept “#{portal}”, FileMaker has “#{archive}”" }
-      Comment.create!(commentable: affiliation,
-                      body: "FileMaker #{SOURCES[row.class]} #{row.fm_id} differs from this affiliation:\n#{lines.join("\n")}")
-      @differences << "#{label} → affiliation ##{affiliation.id}: #{lines.join('; ')}"
     end
 
     def failed(record, label)

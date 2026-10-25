@@ -107,48 +107,46 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
                                  "Something else → Facilitator" => 1)
     end
 
-    describe "matching an existing Facilitator row by its stretch" do
+    describe "matching an existing Facilitator row by its dates" do
       before { FmProject.find_by!(fm_id: "P0001").update!(data: { "OrgID" => "ORG00001" }) }
 
       def stint(starts, ends = nil)
         create(:affiliation, person:, organization: program, title: "Facilitator", start_date: starts, end_date: ends)
       end
 
-      it "links the stretch the row falls in and leaves the others alone" do
+      it "links the row whose dates agree, filling the one it leaves blank" do
         stint(Date.new(2020, 1, 1), Date.new(2022, 12, 31))
-        middle = stint(Date.new(2024, 1, 1), Date.new(2025, 10, 31))
-        stint(Date.new(2026, 2, 1))
+        same = stint(Date.new(2024, 3, 1))
         personnel("PS0001", DateEntered: "3/1/2024")
 
         import
 
-        expect(middle.reload.filemaker_code).to eq("PS0001")
-        expect(person.affiliations.where.not(id: middle.id).pluck(:filemaker_code)).to all(be_nil)
-        expect(person.affiliations.count).to eq(3)
+        expect(same.reload.filemaker_code).to eq("PS0001")
+        expect(person.affiliations.count).to eq(2)
       end
 
-      it "adds a new stretch when none overlaps" do
-        stint(Date.new(2020, 1, 1), Date.new(2022, 12, 31))
+      it "imports a row whose dates differ as its own affiliation, leaving the portal's alone" do
+        existing = stint(Date.new(2024, 1, 1), Date.new(2025, 10, 31))
         personnel("PS0001", DateEntered: "3/1/2024")
 
         import
 
-        expect(person.affiliations.order(:start_date).pluck(:start_date, :filemaker_code))
-          .to eq([ [ Date.new(2020, 1, 1), nil ], [ Date.new(2024, 3, 1), "PS0001" ] ])
+        expect(existing.reload).to have_attributes(filemaker_code: nil, start_date: Date.new(2024, 1, 1))
+        expect(person.affiliations.find_by(filemaker_code: "PS0001")).to have_attributes(start_date: Date.new(2024, 3, 1))
+        expect(Comment.where(commentable: existing)).to be_empty
       end
 
-      it "reads an ended row with no end date as the moment it started" do
-        stint(Date.new(2014, 1, 1), Date.new(2016, 12, 31))
-        later = stint(Date.new(2024, 1, 1))
-        personnel("PS0001", DateEntered: "3/1/2015", Status: "Inactive")
+      it "doesn't link a row whose blank start would put its end before the archive's start" do
+        ended = stint(nil, Date.new(2012, 12, 31))
+        personnel("PS0001", DateEntered: "3/1/2015")
 
         import
 
-        expect(later.reload.filemaker_code).to be_nil
-        expect(person.affiliations.find_by(start_date: Date.new(2014, 1, 1)).filemaker_code).to eq("PS0001")
+        expect(ended.reload.filemaker_code).to be_nil
+        expect(person.affiliations.count).to eq(2)
       end
 
-      it "links a row with no dates at all when nothing better fits" do
+      it "links a row with no dates at all, taking the archive's" do
         undated = stint(nil)
         personnel("PS0001", DateEntered: "3/1/2024")
 

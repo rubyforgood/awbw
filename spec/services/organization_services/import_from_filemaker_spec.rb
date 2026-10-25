@@ -76,6 +76,38 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     end
   end
 
+  describe "phones" do
+    def address(fm_id, street)
+      FmAddress.create!(fm_id:, data: { "OrgID" => "ORG00001", "AddrsLine1" => street, "AddrsCity" => "Pasadena", "AddrsState" => "CA" })
+    end
+
+    it "puts each number on an address with no phone yet, the primary first" do
+      fm_organization("ORG00001")
+      address("1", "1 Main St")
+      address("2", "2 Main St")
+      FmPhoneNumber.create!(fm_id: "10", data: { "OrgID" => "ORG00001", "PhoneNumber" => "555-0101", "Primacy" => "1" })
+      FmPhoneNumber.create!(fm_id: "11", data: { "OrgID" => "ORG00001", "PhoneNumber" => "555-0102" })
+
+      import
+
+      expect(Organization.sole.addresses.order(:id).pluck(:street_address, :phone))
+        .to eq([ [ "1 Main St", "555-0101" ], [ "2 Main St", "555-0102" ] ])
+    end
+
+    it "notes a number no address is free to hold, keeping the ones on file" do
+      existing = create(:organization, filemaker_code: "ORG00001")
+      create(:address, addressable: existing, street_address: "1 Main St", city: "Pasadena", state: "CA", phone: "555-0100")
+      fm_organization("ORG00001")
+      FmPhoneNumber.create!(fm_id: "10", data: { "OrgID" => "ORG00001", "PhoneNumber" => "555-0199" })
+
+      import = described_class.new.call
+
+      expect(existing.addresses.sole.phone).to eq("555-0100")
+      expect(existing.comments.sole.body).to include("Phone", "555-0100", "555-0199")
+      expect(import.differences.sole).to include("555-0199")
+    end
+  end
+
   it "nests each of an organization's several projects under it" do
     fm_organization("ORG00002", OrgName: "Valley Services")
     project("P0002", "ORG00002", ProjectName: "Valley Adult Program", City: "Fresno", State: "CA", Locality: "Central CA")
