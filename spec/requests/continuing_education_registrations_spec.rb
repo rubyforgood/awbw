@@ -80,6 +80,21 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(response.body).to include("CE timesheets")
     end
 
+    # The shell's Event dropdown legitimately queries the table for its options,
+    # so match the totals and the row fetch rather than every CE query.
+    it "runs no totals or row fetch on the index shell" do
+      ce_registration
+      queries = []
+      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+        queries << payload[:sql] if payload[:sql]&.match?(/SUM\(|SELECT `continuing_education_registrations`\.\*/)
+      end
+      get continuing_education_registrations_path
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+
+      expect(response).to have_http_status(:ok)
+      expect(queries).to be_empty
+    end
+
     it "renders the results turbo frame with only the matching event's registrations" do
       ce_registration
       other = create(:continuing_education_registration)

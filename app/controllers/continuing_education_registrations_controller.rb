@@ -4,6 +4,8 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def index
     authorize!
+    return unless turbo_frame_request?
+
     base = ContinuingEducationRegistration.search_by_params(params)
     # Totals over the whole (unpaginated) filtered set so the header stays true
     # across pages.
@@ -12,7 +14,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
     @ce_registrations = base.includes(:allocations, professional_license: [], event_registration: [ :registrant, :event ])
       .order(created_at: :desc)
       .paginate(page: params[:page], per_page: 25)
-    render :continuing_education_registrations_results if turbo_frame_request?
+    render :continuing_education_registrations_results
   end
 
   def show
