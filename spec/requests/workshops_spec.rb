@@ -345,4 +345,145 @@ RSpec.describe "/workshops", type: :request do
       end
     end
   end
+
+  describe "organization handling" do
+    let(:admin) { create(:user, :admin) }
+    let(:windows_type) { create(:windows_type) }
+    let(:organization) { create(:organization, name: "Hope Harbor") }
+
+    before { sign_in admin }
+
+    describe "GET /new" do
+      it "offers all organizations in the dropdown with a blank prompt when multiple exist" do
+        first_org = create(:organization, name: "First Community")
+        second_org = create(:organization, name: "Second Community")
+
+        get new_workshop_url
+
+        page = Capybara.string(response.body)
+        option_values = page.all("select[name='workshop[organization_id]'] option").map(&:value)
+        expect(option_values).to include(first_org.id.to_s, second_org.id.to_s)
+        expect(option_values).to include("")
+      end
+
+      it "prefills organization_id in select dropdown when multiple organizations exist" do
+        create(:organization, name: "Another Org")
+        idea = create(:workshop_idea, organization: organization, windows_type: windows_type)
+
+        get new_workshop_url(workshop_idea_id: idea.id)
+
+        expect(response).to have_http_status(:ok)
+        page = Capybara.string(response.body)
+        expect(page).to have_select("workshop[organization_id]", selected: organization.type_name)
+      end
+
+      it "uses a hidden field for organization_id when only one organization exists" do
+        idea = create(:workshop_idea, organization: organization, windows_type: windows_type)
+
+        get new_workshop_url(workshop_idea_id: idea.id)
+
+        expect(response).to have_http_status(:ok)
+        page = Capybara.string(response.body)
+        expect(page).to have_field("workshop[organization_id]", type: :hidden, with: organization.id.to_s)
+      end
+    end
+
+    describe "POST /create" do
+      it "creates a workshop with an organization" do
+        expect {
+          post workshops_url, params: {
+            workshop: {
+              title: "Org Workshop",
+              windows_type_id: windows_type.id,
+              organization_id: organization.id,
+              category_ids: [ "" ]
+            }
+          }
+        }.to change(Workshop, :count).by(1)
+
+        expect(Workshop.last.organization).to eq(organization)
+      end
+
+      it "creates a workshop without an organization" do
+        expect {
+          post workshops_url, params: {
+            workshop: {
+              title: "No Org Workshop",
+              windows_type_id: windows_type.id,
+              organization_id: "",
+              category_ids: [ "" ]
+            }
+          }
+        }.to change(Workshop, :count).by(1)
+
+        expect(Workshop.last.organization).to be_nil
+      end
+    end
+
+    describe "PATCH /update" do
+      it "updates the workshop's organization" do
+        workshop = create(:workshop, organization: nil)
+
+        patch workshop_url(workshop), params: {
+          workshop: {
+            title: workshop.title,
+            organization_id: organization.id,
+            category_ids: [ "" ]
+          }
+        }
+
+        expect(workshop.reload.organization).to eq(organization)
+      end
+
+      it "allows clearing the organization" do
+        workshop = create(:workshop, organization: organization)
+
+        patch workshop_url(workshop), params: {
+          workshop: {
+            title: workshop.title,
+            organization_id: "",
+            category_ids: [ "" ]
+          }
+        }
+
+        expect(workshop.reload.organization).to be_nil
+      end
+    end
+
+    describe "GET /show" do
+      it "displays the organization name when present" do
+        workshop = create(:workshop, organization: organization, published: true)
+
+        get workshop_url(workshop)
+
+        expect(response.body).to include(organization.name)
+      end
+
+      it "does not error when organization is nil" do
+        workshop = create(:workshop, organization: nil, published: true)
+
+        get workshop_url(workshop)
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    describe "GET /index" do
+      it "displays the organization name in results row when present" do
+        workshop = create(:workshop, organization: organization, published: true)
+
+        get workshops_url, headers: { "Turbo-Frame" => "workshops_results" }
+
+        expect(response.body).to include(organization.name)
+      end
+
+      it "does not error when organization is nil" do
+        create(:workshop, organization: nil, published: true)
+
+        get workshops_url, headers: { "Turbo-Frame" => "workshops_results" }
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+  end
 end

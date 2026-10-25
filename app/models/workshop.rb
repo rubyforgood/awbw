@@ -32,6 +32,7 @@ class Workshop < ApplicationRecord
   belongs_to :updated_by, class_name: "User", optional: true
   belongs_to :author, class_name: "Person", optional: true
   belongs_to :workshop_idea, optional: true
+  belongs_to :organization, optional: true
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy

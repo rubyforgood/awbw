@@ -227,12 +227,28 @@
           <% if @organization.profile_show_workshops? %>
             <div>
               <h3 class="mb-3 font-display text-xl text-gray-900">Workshops authored</h3>
-              <% if @organization.workshops.any? %>
-                <% @organization.workshops.each do |workshop| %>
-                  <%= link_to workshop.name, workshop_path(workshop), class: button_classes(:secondary_outline) %>
-                <% end %>
+              <% workshops = @organization.affiliated_workshops %>
+              <% if workshops.any? %>
+                <div class="flex flex-wrap gap-2">
+                  <% workshops.each do |workshop| %>
+                    <%= link_to workshop.name, workshop_path(workshop), class: button_classes(:secondary_outline) %>
+                  <% end %>
+                </div>
               <% else %>
                 <p class="text-gray-500 italic">No workshops authored yet.</p>
+              <% end %>
+            </div>
+            <div>
+              <h3 class="mb-3 font-display text-xl text-gray-900">Workshop ideas</h3>
+              <% workshop_ideas = @organization.affiliated_workshop_ideas %>
+              <% if workshop_ideas.any? %>
+                <div class="flex flex-wrap gap-2">
+                  <% workshop_ideas.each do |idea| %>
+                    <%= link_to (idea.respond_to?(:name) ? idea.name : idea.title), workshop_idea_path(idea), class: button_classes(:secondary_outline) %>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-gray-500 italic">No workshop ideas yet.</p>
               <% end %>
             </div>
           <% end %>
