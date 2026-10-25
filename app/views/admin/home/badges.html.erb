@@ -1,6 +1,6 @@
 <%= turbo_frame_tag :badges do %>
-  <%= turbo_stream.update "data_health_badge", partial: "badge", locals: { text: (Admin::HomeController::RESOLVE_BADGE if @data_health_flagged), title: Admin::HomeController::DATA_HEALTH_BADGE_TITLE } %>
-  <%= turbo_stream.update "author_credit_badge", partial: "badge", locals: { text: (Admin::HomeController::RESOLVE_BADGE if @author_credit_flagged) } %>
+  <%= turbo_stream.update "data_health_badge", partial: "badge", locals: { text: (Admin::HomeController::REVIEW_BADGE if @data_health_flagged), title: Admin::HomeController::DATA_HEALTH_BADGE_TITLE } %>
+  <%= turbo_stream.update "author_credit_badge", partial: "badge", locals: { text: (Admin::HomeController::REVIEW_BADGE if @author_credit_flagged) } %>
   <% if @unsynced_features_count %>
     <%= turbo_stream.update "unsynced_features_badge", partial: "count_badge", locals: { count: @unsynced_features_count } %>
   <% end %>

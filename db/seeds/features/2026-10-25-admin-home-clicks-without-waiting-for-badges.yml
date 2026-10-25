@@ -6,5 +6,5 @@ pr_number: 2847
 summary: >-
   The badges on the admin home's action buttons now load together in the
   background, so clicking through to another page no longer waits for them.
-  Data health and Author credit divergences show "Resolve" when something needs
+  Data health and Author credit divergences show "Review" when something needs
   attention; open the page for the full count.

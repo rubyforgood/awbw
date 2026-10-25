@@ -2,7 +2,7 @@ module Admin
   class HomeController < ApplicationController
     include AdminCardsHelper
 
-    RESOLVE_BADGE = "Resolve".freeze
+    REVIEW_BADGE = "Review".freeze
     DATA_HEALTH_BADGE_TITLE = "Data checks only. Possible duplicates and author credit are listed separately on the Data health page.".freeze
 
     def index
