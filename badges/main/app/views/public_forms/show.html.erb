@@ -40,12 +40,14 @@
 
         <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
           <% @form_fields.each do |field| %>
+            <%# Asked inside its _state question's "Not on list?" box. %>
+            <% next if field.paired_with_state?(among: @form_fields) %>
             <% if field.group_header? %>
               <%= render "events/public_registrations/group_header", field: field %>
             <% else %>
               <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) || @prefill_values[field.id] %>
               <div class="<%= field.grid_span_class %>">
-                <%= render "events/public_registrations/form_field", field: field, value: submitted_value, required: @form.requires_answer?(field) %>
+                <%= render "events/public_registrations/form_field", field: field, asked: @form_fields, value: submitted_value, required: @form.requires_answer?(field) %>
               </div>
             <% end %>
           <% end %>

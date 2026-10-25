@@ -167,6 +167,7 @@ class SmartFormFields
         [ "ce_license_number", "License number", "Finds or creates the registrant's professional license. Left blank, a placeholder license is created so the CE registration still has something to hang on." ],
         [ "ce_license_kind", "License type", "Sets the license type, e.g. LCSW." ],
         [ "ce_license_issuing_state", "License issuing state", "Sets the state that issued the license." ],
+        [ "ce_license_issuing_country", "License issuing country", "Sets the country that issued the license. Asked inside the issuing state's \"Not on list?\" box." ],
         [ "ce_license_expires_on", "License expiry", "Sets the license expiry date." ]
       ]
     },
@@ -191,6 +192,13 @@ class SmartFormFields
     scholarship_eligibility scholarship_contribution impact_description
     implementation_plan additional_comments
     event_rating most_valuable improvement_suggestions
+  ].freeze
+
+  # Endings that change how a question is asked, whatever comes before them.
+  ENDINGS = [
+    [ "…_state", "Asked as a US state / territory dropdown with a \"Not on list?\" box for typing any other province or state." ],
+    [ "…_country", "Asked as a country dropdown. When the form also asks the matching …_state question " \
+                   "(mailing_state with mailing_country, say), it moves inside that question's \"Not on list?\" box." ]
   ].freeze
 
   # Per-identifier note rendered under an answer-only chip, for values surfaced in

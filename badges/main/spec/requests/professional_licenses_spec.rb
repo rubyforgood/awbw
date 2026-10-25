@@ -40,6 +40,28 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response.body).not_to include("LIC-999")
     end
 
+    it "filters by location" do
+      create(:professional_license, number: "LIC-777", issuing_state: "Ontario", issuing_country: "Canada")
+
+      get professional_licenses_path(location: "Canada"),
+        headers: { "Turbo-Frame" => "professional_licenses_results" }
+
+      expect(response.body).to include("LIC-777")
+      expect(response.body).not_to include("LIC-555")
+    end
+
+    it "combines location with the registrant filter" do
+      holder = create(:person, first_name: "Zephyrina", last_name: "Aldercott")
+      create(:professional_license, person: holder, number: "LIC-778", issuing_state: "Ontario", issuing_country: "Canada")
+      create(:professional_license, number: "LIC-779", issuing_state: "Ontario", issuing_country: "Canada")
+
+      get professional_licenses_path(location: "Canada", person_query: "Zephyrina"),
+        headers: { "Turbo-Frame" => "professional_licenses_results" }
+
+      expect(response.body).to include("LIC-778")
+      expect(response.body).not_to include("LIC-779")
+    end
+
     it "filters by registrant name" do
       holder = create(:person, first_name: "Zephyrina", last_name: "Aldercott")
       create(:professional_license, person: holder, number: "LIC-444")
@@ -184,6 +206,14 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(license.kind).to eq("LCSW")
       expect(license.issuing_state).to eq("NY")
       expect(license.person).to eq(person)
+    end
+
+    it "saves a typed state and country over a US state picked first" do
+      patch professional_license_path(license), params: {
+        professional_license: { issuing_state: "NY", issuing_state_outside_usa: "Ontario", issuing_country: "Canada" }
+      }
+
+      expect(license.reload).to have_attributes(issuing_state: "Ontario", issuing_country: "Canada")
     end
 
     it "does not let the registrant be reassigned on update" do

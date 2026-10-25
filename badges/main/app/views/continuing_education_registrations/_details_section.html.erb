@@ -19,7 +19,7 @@
         <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_professional_license_id">License</label>
         <%= f.select :professional_license_id,
               options_for_select(
-                licenses.map { |l| [ l.name, l.id, { "data-kind" => l.kind, "data-number" => l.number, "data-state" => l.issuing_state, "data-expires" => l.expires_on&.iso8601 } ] } +
+                licenses.map { |l| [ l.name, l.id, { "data-kind" => l.kind, "data-number" => l.number, "data-state" => l.issuing_state, "data-country" => l.issuing_country, "data-outside-usa" => l.decorate.outside_usa?, "data-expires" => l.expires_on&.iso8601 } ] } +
                   [ [ "Create new license", "new" ] ],
                 license&.id
               ),
@@ -46,13 +46,24 @@
                 class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_license_issuing_state">Issuing state <span class="font-normal text-xs text-gray-400">(optional)</span></label>
+          <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_license_issuing_state">Issuing state / territory <span class="font-normal text-xs text-gray-400">(optional)</span></label>
           <%= f.select :license_issuing_state,
                 us_states,
-                { selected: license&.issuing_state, include_blank: "Select a state" },
+                { selected: (license&.issuing_state unless outside_usa_state?(license&.issuing_state)), include_blank: "Select a state or territory" },
                 id: "continuing_education_registration_license_issuing_state",
                 data: { "ce-license-picker-target": "state" },
                 class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+          <%= render layout: "shared/outside_usa", locals: { open: license&.decorate&.outside_usa?, data: { "ce-license-picker-target": "outsideUsa" } } do %>
+            <%= f.text_field :license_issuing_state_outside_usa, id: "continuing_education_registration_license_issuing_state_outside_usa",
+                  value: (license&.issuing_state if outside_usa_state?(license&.issuing_state)),
+                  placeholder: "Province / State", aria: { label: "Province or state" }, data: { "ce-license-picker-target": "typedState" },
+                  class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+            <%= f.select :license_issuing_country, GeographyHelper::COUNTRIES,
+                  { selected: license&.issuing_country, include_blank: "Select a country" },
+                  id: "continuing_education_registration_license_issuing_country", aria: { label: "Country" },
+                  data: { "ce-license-picker-target": "country" },
+                  class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+          <% end %>
         </div>
         <div>
           <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_license_expires_on">Expires <span class="font-normal text-xs text-gray-400">(optional)</span></label>

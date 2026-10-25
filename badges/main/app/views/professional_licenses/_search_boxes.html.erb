@@ -15,6 +15,11 @@
             field_class: field_class, label_class: label_class, wrapper_class: "min-w-[200px] flex-1",
             input_options: { autocomplete: "off" } %>
 
+      <%= render "shared/filter_text", param: :location, label: "Location", placeholder: "City, state, province, or country",
+            field_class: field_class, label_class: label_class, wrapper_class: "min-w-[200px] flex-1",
+            tooltip: "Where the license was issued, or the city or state of the holder's address",
+            input_options: { autocomplete: "off" } %>
+
       <div class="min-w-[150px]">
         <label for="kind" class="<%= label_class %>">Type</label>
         <%= select_tag "kind",

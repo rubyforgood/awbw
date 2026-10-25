@@ -104,6 +104,7 @@ license_kind_field = ae_field!(form, "License type", :free_form_input_one_line, 
   field_identifier: "ce_license_kind", hint_text: "e.g. LMFT, LCSW, LPCC, MA Ed.")
 ae_field!(form, "License number", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_number")
 ae_field!(form, "State license was issued", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_issuing_state")
+ae_field!(form, "Country license was issued", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_issuing_country")
 ae_field!(form, "License expiration date", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_expires_on", input_type: :date)
 
 # ── Your work ────────────────────────────────────────────────────────────────

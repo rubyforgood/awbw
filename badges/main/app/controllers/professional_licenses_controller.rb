@@ -49,12 +49,12 @@ class ProfessionalLicensesController < ApplicationController
   private
 
   def professional_license_params
-    params.require(:professional_license).permit(:person_id, :number, :kind, :issuing_state, :expires_on)
+    params.require(:professional_license).permit(:person_id, :number, :kind, :issuing_state, :issuing_state_outside_usa, :issuing_country, :expires_on)
   end
 
   # The registrant is fixed once a license exists — edits change the license
   # fields only, never who it belongs to.
   def license_edit_params
-    params.require(:professional_license).permit(:number, :kind, :issuing_state, :expires_on)
+    params.require(:professional_license).permit(:number, :kind, :issuing_state, :issuing_state_outside_usa, :issuing_country, :expires_on)
   end
 end

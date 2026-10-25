@@ -36,7 +36,7 @@ module Events
       @scholarship_form = @event.scholarship_form if @scholarship
       @continuing_education_form = @event.continuing_education_form
 
-      all_params = merge_retained_uploads(params.dig(:public_registration, :form_fields)&.to_unsafe_h || {})
+      all_params = merge_retained_uploads(OutsideUsaState.form_field_answers(params, :public_registration))
       registration_params, scholarship_params, continuing_education_params = split_form_params(all_params)
 
       @field_errors = validate_required_fields(registration_params)
