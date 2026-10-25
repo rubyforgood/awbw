@@ -250,6 +250,18 @@ RSpec.describe Affiliation, type: :model do
       expect(org.reload.organization_status).to eq(inactive_status)
     end
 
+    it 'stamps the organization with who triggered the status change and when' do
+      editor = create(:user)
+      org = create(:organization, organization_status: active_status)
+      org.update_columns(updated_at: 1.day.ago)
+      affiliation = create(:affiliation, organization: org, inactive: false, end_date: nil)
+
+      Current.set(user: editor) { affiliation.update!(inactive: true) }
+
+      expect(org.reload.updated_by).to eq(editor)
+      expect(org.updated_at).to be_within(1.minute).of(Time.current)
+    end
+
     it 'sets an Inactive organization back to Active when it regains an active affiliation' do
       org = create(:organization, organization_status: inactive_status)
 

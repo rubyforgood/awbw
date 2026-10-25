@@ -73,4 +73,32 @@ RSpec.describe UserStampable, type: :model do
       expect(banner.updated_by).to eq(creator)
     end
   end
+
+  describe "#update_columns_stamped" do
+    let(:banner) { with_current(creator) { Banner.create!(content: "Hi", show: true) } }
+
+    it "writes the columns with updated_at and updated_by from Current.user, skipping validations" do
+      banner.update_columns(updated_at: 1.day.ago)
+
+      with_current(editor) { banner.update_columns_stamped(content: "") }
+
+      expect(banner.reload).to have_attributes(content: "", updated_by: editor)
+      expect(banner.updated_at).to be_within(1.minute).of(Time.current)
+    end
+
+    it "credits the user it's given" do
+      banner.update_columns_stamped(show: false, user: editor)
+
+      expect(banner.reload.updated_by).to eq(editor)
+    end
+
+    it "still bumps updated_at with no one to credit, leaving updated_by alone" do
+      banner.update_columns(updated_at: 1.day.ago)
+
+      banner.update_columns_stamped(show: false)
+
+      expect(banner.reload.updated_by).to eq(creator)
+      expect(banner.updated_at).to be_within(1.minute).of(Time.current)
+    end
+  end
 end

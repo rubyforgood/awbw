@@ -11,6 +11,14 @@ module UserStampable
     before_validation :stamp_user_columns
   end
 
+  # update_columns with the stamps a save would give it, for a direct write whose change is
+  # logged to Ahoy by hand: updated_at always, updated_by when there's someone to credit.
+  def update_columns_stamped(user: Current.user, **columns)
+    columns[:updated_at] = Time.current if has_attribute?(:updated_at)
+    columns[:updated_by_id] = user.id if user && has_attribute?(:updated_by_id)
+    update_columns(columns)
+  end
+
   private
 
   def stamp_user_columns

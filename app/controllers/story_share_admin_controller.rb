@@ -50,7 +50,7 @@ class StoryShareAdminController < ApplicationController
     end
 
     max = featured_peers(record).maximum(:story_share_position) || 0
-    record.update_columns(story_share_position: max + 1)
+    record.update_columns_stamped(story_share_position: max + 1)
     expire_menu_caches
     track_menu_change("create.story_share_menu", record, position: record.story_share_position)
     redirect_to story_share_admin_path, notice: "Added to the Story Share menu."
@@ -59,7 +59,7 @@ class StoryShareAdminController < ApplicationController
   def remove
     authorize! :story_share_admin, to: :remove?
     record = @klass.find(params[:id])
-    record.update_columns(story_share_position: nil)
+    record.update_columns_stamped(story_share_position: nil)
     renumber(featured_peers(record).to_a)
     track_menu_change("destroy.story_share_menu", record)
     redirect_to story_share_admin_path, notice: "Removed from the Story Share menu."
@@ -71,7 +71,7 @@ class StoryShareAdminController < ApplicationController
     authorize! :story_share_admin, to: :reorder?
     record = @klass.find(params[:id])
     new_value = params.key?(:on_home) ? ActiveModel::Type::Boolean.new.cast(params[:on_home]) : !record.story_share_home_section
-    record.update_columns(story_share_home_section: new_value)
+    record.update_columns_stamped(story_share_home_section: new_value)
     track_menu_change("update.story_share_home_section", record,
                       changes: { story_share_home_section: record.story_share_home_section })
     redirect_to story_share_admin_path,
@@ -107,7 +107,9 @@ class StoryShareAdminController < ApplicationController
   # separate :position column), so we expire the portal nav caches ourselves.
   def renumber(records)
     @klass.transaction do
-      records.each_with_index { |record, index| record.update_columns(story_share_position: index + 1) }
+      records.each_with_index do |record, index|
+        record.update_columns_stamped(story_share_position: index + 1) unless record.story_share_position == index + 1
+      end
     end
     expire_menu_caches
   end

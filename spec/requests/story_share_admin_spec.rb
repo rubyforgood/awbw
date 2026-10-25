@@ -59,6 +59,12 @@ RSpec.describe "StoryShareAdmin", type: :request do
       expect(response).to redirect_to(story_share_admin_path)
     end
 
+    it "stamps the sector with the admin who added it" do
+      sector = create(:sector, :published, name: "Homelessness")
+      post story_share_admin_add_path(type: "sector"), params: { id: sector.id }
+      expect(sector.reload.updated_by).to eq(admin)
+    end
+
     it "appends after existing featured items" do
       create(:sector, :published, story_share_position: 1)
       later = create(:sector, :published)
@@ -121,6 +127,17 @@ RSpec.describe "StoryShareAdmin", type: :request do
       expect(c.reload.story_share_position).to eq(1)
       expect(a.reload.story_share_position).to eq(2)
       expect(b.reload.story_share_position).to eq(3)
+    end
+
+    it "stamps the moved item, and only items whose position changed, with the admin" do
+      other = create(:user)
+      a = create(:sector, :published, story_share_position: 1, updated_by: other)
+      b = create(:sector, :published, story_share_position: 2, updated_by: other)
+      c = create(:sector, :published, story_share_position: 3, updated_by: other)
+
+      put story_share_admin_reorder_path(type: "sector", id: b.id), params: { position: 1 }
+
+      expect([ a, b, c ].map { _1.reload.updated_by }).to eq([ admin, admin, other ])
     end
 
     it "reorders a category within its own group, leaving the other group alone" do

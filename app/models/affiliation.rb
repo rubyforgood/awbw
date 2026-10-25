@@ -275,7 +275,7 @@ class Affiliation < ApplicationRecord
     return unless inactive_status
     return if organization.organization_status_id == inactive_status.id
 
-    organization.update_column(:organization_status_id, inactive_status.id)
+    organization.update_columns_stamped(organization_status_id: inactive_status.id)
 
     Ahoy::Tracker.new(user: Current.user).track(
       "autochange.organization",
@@ -295,7 +295,7 @@ class Affiliation < ApplicationRecord
     return unless inactive_status && active_status
     return unless organization.organization_status_id == inactive_status.id
 
-    organization.update_column(:organization_status_id, active_status.id)
+    organization.update_columns_stamped(organization_status_id: active_status.id)
 
     Ahoy::Tracker.new(user: Current.user).track(
       "autochange.organization",

@@ -123,6 +123,21 @@ RSpec.describe AddressServices::TranslateExisting do
     expect(Ahoy::Event.where(name: %w[autochange.address autochange.form_answer]).distinct.count(:visit_id)).to eq(1)
   end
 
+  it "stamps each changed record with who made the change and when" do
+    user = create(:user)
+    usa = address_with(country: "USA", state: "TX", locality: Address::OUTSIDE_CA)
+    usa.update_columns(updated_at: 1.day.ago)
+    submission = create(:form_submission)
+    answer(submission, "mailing_state", "TX")
+    country = answer(submission, "mailing_country", "USA")
+
+    described_class.new(user:).call
+
+    expect(usa.reload.updated_by).to eq(user)
+    expect(usa.updated_at).to be_within(1.minute).of(Time.current)
+    expect(country.reload.updated_by).to eq(user)
+  end
+
   it "writes and logs nothing on a dry run, but reports what it would change" do
     usa = address_with(country: "USA", state: "TX")
 
