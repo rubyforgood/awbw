@@ -851,7 +851,6 @@ class EventsController < ApplicationController
     # Breakdown drill-in filters (set when a chart row is clicked).
     scope = scope.where(id: person_category_ids(params[:age_group])) if params[:age_group].present?
     scope = scope.where(id: person_category_ids(params[:life_experience])) if params[:life_experience].present?
-    scope = scope.where(id: attendee_locations.registrant_ids_by_country.fetch(params[:country], [])) if params[:country].present?
     scope = scope.where(id: person_school_district_ids(params[:school_district])) if params[:school_district].present?
     scope = scope.where(id: person_program_status_ids(params[:program_status])) if params[:program_status].present?
     scope = scope.where(id: person_linked_organization_ids(params[:organization_id])) if params[:organization_id].present?
@@ -867,17 +866,18 @@ class EventsController < ApplicationController
         scope.where(id: scholarship_status_person_ids(params[:scholarship]))
       end
     end
-    # Address filters match where people are (RegistrationLocations) on their in-scope
-    # registrations. City and state test one address, so someone in two states can't match on a
-    # city from one and the state from the other.
-    if params[:state].present? || params[:city].present?
-      scope = scope.where(id: attendee_locations.matching(state: params[:state], city: params[:city]).map(&:registrant_id))
-    end
-    if params[:county].present?
-      # County options carry their state ("STATE::County") so same-named counties
-      # across states don't collide.
-      county_state, county_name = params[:county].split("::", 2)
-      scope = scope.where(id: attendee_locations.matching(state: county_state, county: county_name).map(&:registrant_id))
+    # Where people are (RegistrationLocations) on their in-scope registrations. The
+    # City box, the State and County dropdowns and the countries drill-in resolve in
+    # one pass, so they all describe the same address: someone working in two states
+    # can't match a city from one and the county from the other. A State that
+    # contradicts the county's own state matches nobody.
+    location_filters = RegistrationLocations.filters_from(
+      state: params[:state], county: params[:county], city: params[:city], country: params[:country]
+    )
+    if location_filters.nil?
+      scope = scope.none
+    elsif location_filters.any?
+      scope = scope.where(id: attendee_locations.matching(**location_filters).map(&:registrant_id))
     end
 
     # Shared registration-level filters, applied cross-event with "any registration
@@ -1014,8 +1014,8 @@ class EventsController < ApplicationController
     person_ids = Person.where(id: EventRegistration.where(event_id: reportable_events.select(:id)).select(:registrant_id))
     @attendee_sectors = Sector.where(id: SectorableItem.where(sectorable_type: "Person", sectorable_id: person_ids).select(:sector_id)).order(:name)
     locations = RegistrationLocations.new(EventRegistration.where(event_id: reportable_events.select(:id)))
-    @attendee_states = locations.rows.filter_map(&:state).compact_blank.uniq.sort
-    @attendee_counties = locations.counties
+    @attendee_states = locations.candidate_values(:state)
+    @attendee_counties = locations.candidate_values(:state, :county)
     @attendee_topic_types = TopicSubscriptionType.active.ordered
   end
 

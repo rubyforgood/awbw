@@ -897,7 +897,7 @@ class EventDashboard
   end
 
   def country_registrant_ids_by_country
-    locations.registrant_ids_by_country
+    locations.registrant_ids_by(:country)
   end
 
   # Registrant ids per school district, for the breakdown's per-row drill-in. A

@@ -184,7 +184,7 @@ class AttendeesBreakdowns
   end
 
   def country_registrant_ids_by_country
-    locations.registrant_ids_by_country
+    locations.registrant_ids_by(:country)
   end
 
   def school_district_registrant_ids_by_district

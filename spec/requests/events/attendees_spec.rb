@@ -564,19 +564,36 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).not_to include("Cara Coast")
         end
 
-        # City and state have to describe one address — otherwise someone working in
-        # two states matches a city from one and a state from the other.
-        it "matches city and state against the same work address" do
-          [ %w[Portland OR], %w[Seattle WA] ].each do |city, state|
+        # Every location filter has to describe one address — otherwise someone
+        # working in two places matches a city from one and the state, county or
+        # country from the other.
+        it "matches city, state, county and country against the same work address" do
+          [ [ "Portland", "OR", "Multnomah", "United States" ], [ "Vancouver", "BC", "Greater Vancouver", "Canada" ] ].each do |city, state, county, country|
             org = create(:organization)
-            create(:address, addressable: org, city:, state:, inactive: false)
+            create(:address, addressable: org, city:, state:, county:, country:, inactive: false)
             attendee_registration.event_registration_organizations.create!(organization: org)
           end
 
-          get attendees_events_url(city: "Seattle", state: "WA"), headers: frame_headers
+          get attendees_events_url(city: "Vancouver", state: "BC"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
 
-          get attendees_events_url(city: "Seattle", state: "OR"), headers: frame_headers
+          get attendees_events_url(city: "Vancouver", state: "OR"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+
+          get attendees_events_url(city: "Vancouver", county: "OR::Multnomah"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+
+          get attendees_events_url(city: "Vancouver", country: "United States"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
+        it "matches nobody when the State dropdown contradicts the county's own state" do
+          org = create(:organization)
+          create(:address, addressable: org, city: "Portland", state: "OR", county: "Multnomah", inactive: false)
+          attendee_registration.event_registration_organizations.create!(organization: org)
+
+          get attendees_events_url(state: "OR", county: "WA::King"), headers: frame_headers
+          expect(response).to have_http_status(:ok)
           expect(response.body).not_to include("Ada Lovelace")
         end
 

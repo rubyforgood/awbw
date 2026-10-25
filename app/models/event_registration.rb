@@ -221,20 +221,15 @@ class EventRegistration < ApplicationRecord
     scope
   }
   # Where the registrant is on the registration — work, else home
-  # (RegistrationLocations). City, state and county arrive together in one call so
-  # they test the same location row: a registrant working in two states would
-  # otherwise match a city from one and the state from the other. County accepts
-  # "STATE|County" (from the roster filter) to scope to a county within a specific
-  # state, or a bare county name for backward compatibility; a county state that
-  # contradicts the State filter can match nothing.
-  scope :located_in, ->(state: nil, county: nil, city: nil) {
-    county_state, county_name = county.to_s.include?("|") ? county.split("|", 2) : [ nil, county.to_s ]
-    next none if county.present? && county_name.blank?
-    states = [ state, county_state ].compact_blank.uniq
-    next none if states.many?
-    next all if states.empty? && county_name.blank? && city.blank?
-    matches = RegistrationLocations.new(all).matching(state: states.first, county: county_name.presence, city: city.presence)
-    where(id: matches.map(&:registration_id))
+  # (RegistrationLocations). Takes any of its LOCATION_FIELDS, and they arrive
+  # together in one call so they test the same location row: a registrant working
+  # in two states would otherwise match a city from one and the state from the
+  # other.
+  scope :located_in, ->(**filters) {
+    resolved = RegistrationLocations.filters_from(**filters)
+    next none if resolved.nil?
+    next all if resolved.empty?
+    where(id: RegistrationLocations.new(all).matching(**resolved).map(&:registration_id))
   }
   scope :registrant_sector, ->(sector_id) {
     joins(registrant: :sectorable_items)

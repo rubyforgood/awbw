@@ -11,4 +11,4 @@ summary: >-
 pro_tips:
   - "If the registrant picked one of the organization's addresses, that one counts. Otherwise the organization's first address on file counts."
   - "A registrant with no organization address on their registration counts where they live instead."
-  - "City, State and County always describe the same address, so someone registered under organizations in two states won't show up for a city in one and a state in the other."
+  - "City, State, County and Country always describe the same address, so someone registered under organizations in two states won't show up for a city in one and a state in the other."
