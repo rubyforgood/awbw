@@ -1,0 +1,7 @@
+<%= turbo_frame_tag :action_buttons, target: "_top" do %>
+  <%= render "action_buttons",
+             pending_change_requests_count: @pending_change_requests_count,
+             data_health_flagged: @data_health_flagged,
+             author_credit_flagged: @author_credit_flagged,
+             features_unsynced: @features_unsynced %>
+<% end %>

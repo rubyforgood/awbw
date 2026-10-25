@@ -82,21 +82,24 @@ RSpec.describe "Admin home", type: :request do
     expect(response.body).to include(%(href="#{organization_statuses_path}"))
   end
 
-  it "loads every action badge in one frame request so the badges hold a single server thread" do
+  it "renders the action buttons right away and fills their badges from one frame request" do
+    create(:profile_change_request)
+
     get "/admin"
 
     expect(response.body.scan(/<turbo-frame[^>]* src=/).size).to eq(1)
-    expect(response.body).to include(%(src="#{admin_home_badges_path}"))
-    expect(response.body).to include(%(id="data_health_badge"), %(id="author_credit_badge"), %(id="unsynced_features_badge"))
+    expect(response.body).to include(%(src="#{admin_home_action_buttons_path}"))
+    expect(response.body).to include(%(href="#{admin_data_health_path}"), %(href="#{author_credit_divergences_path}"))
+    expect(response.body[%r{<turbo-frame id="action_buttons".*?</turbo-frame>}m]).not_to include("rounded-full")
   end
 
-  describe "badges" do
-    def get_badges
-      get admin_home_badges_path, headers: { "Turbo-Frame" => "badges" }
+  describe "action buttons frame" do
+    def get_action_buttons
+      get admin_home_action_buttons_path, headers: { "Turbo-Frame" => "action_buttons" }
     end
 
-    def badge_stream(target)
-      response.body[%r{<turbo-stream action="update" target="#{target}">.*?</turbo-stream>}m]
+    def button(label)
+      response.body[%r{<(?:a|button)[^>]*>(?:(?!</(?:a|button)>).)*#{label}.*?</(?:a|button)>}m]
     end
 
     before do
@@ -105,14 +108,18 @@ RSpec.describe "Admin home", type: :request do
       allow_any_instance_of(FeatureCatalog).to receive(:recent_missing?).and_return(true)
     end
 
-    it "shows Review on Data health, Author credit, and Sync features" do
-      get_badges
+    it "shows Review on Data health, Author credit, and Sync features, and the pending change request count" do
+      create_list(:profile_change_request, 2)
+
+      get_action_buttons
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include(%(id="badges"))
-      expect(badge_stream("data_health_badge")).to match(%r{<span[^>]*>Review</span>}).and include("Data checks only")
-      expect(badge_stream("author_credit_badge")).to match(%r{<span[^>]*>Review</span>})
-      expect(badge_stream("unsynced_features_badge")).to match(%r{<span[^>]*>Review</span>})
+      expect(response.body).to include(%(id="action_buttons"), %(target="_top"))
+      expect(response.body).not_to include("<turbo-stream")
+      expect(button("Changes requested")).to match(%r{<span[^>]*>2</span>})
+      expect(button("Data health")).to match(%r{<span[^>]*>Review</span>}).and include("Data checks only")
+      expect(button("Author credit divergences")).to match(%r{<span[^>]*>Review</span>})
+      expect(button("Sync features")).to match(%r{<span[^>]*>Review</span>})
     end
 
     it "renders no badge when nothing is waiting" do
@@ -120,27 +127,26 @@ RSpec.describe "Admin home", type: :request do
       allow_any_instance_of(AuthorCreditDivergenceQuery).to receive(:any?).and_return(false)
       allow_any_instance_of(FeatureCatalog).to receive(:recent_missing?).and_return(false)
 
-      get_badges
+      get_action_buttons
 
-      expect(badge_stream("data_health_badge")).not_to include("rounded-full")
-      expect(badge_stream("author_credit_badge")).not_to include("rounded-full")
-      expect(badge_stream("unsynced_features_badge")).not_to include("rounded-full")
+      expect(response.body).to include("Data health", "Author credit divergences", "Sync features")
+      expect(response.body).not_to include("rounded-full")
     end
 
-    it "leaves only the failing badge empty when a check fails" do
+    it "keeps the buttons and leaves only the failing badge empty when a check fails" do
       allow(DataHealth).to receive(:checks).and_raise(StandardError, "boom")
 
-      get_badges
+      get_action_buttons
 
       expect(response).to have_http_status(:ok)
-      expect(badge_stream("data_health_badge")).not_to include("rounded-full")
-      expect(badge_stream("author_credit_badge")).to match(%r{<span[^>]*>Review</span>})
+      expect(button("Data health")).not_to include("rounded-full")
+      expect(button("Author credit divergences")).to match(%r{<span[^>]*>Review</span>})
     end
 
     it "denies a non-admin" do
       sign_in create(:user)
 
-      get_badges
+      get_action_buttons
 
       expect(response).not_to have_http_status(:ok)
     end
