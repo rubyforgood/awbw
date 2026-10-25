@@ -1,0 +1,91 @@
+# After a person or organization merge, the generic merge moves both records' contact
+# methods onto the keeper wholesale (contact_methods have no unique index), leaving
+# identical duplicates and possibly two primary phones of the same kind. Merge contact
+# methods that share the same kind + value into one, then settle a single primary per
+# kind: the keeper's own pre-merge primary, or the deleted record's when the keeper had
+# none. Runs in the people and organizations dedupers' after_merge.
+class ContactMethodDeduper
+  IDENTITY_COLUMNS = %w[kind value contact_type].freeze
+
+  # Outside the identity, so a merge never drops the address link only one copy had.
+  # FileMaker codes are unioned.
+  CARRIED_COLUMNS = %w[address_id].freeze
+
+  def self.signature(contact_method)
+    return unless contact_method
+
+    IDENTITY_COLUMNS.map do |column|
+      value = contact_method.public_send(column).to_s.strip.downcase
+      # A row written before an untyped number said so holds a blank, so unknown and
+      # blank have to read alike or an otherwise identical pair won't fold.
+      value == ContactMethod::UNKNOWN_CONTACT_TYPE && column == "contact_type" ? "" : value
+    end
+  end
+
+  # One preserved-primary signature per kind, read before the merge while the two
+  # records' contact methods can still be told apart: the keeper's own primary of
+  # that kind, else the deleted record's.
+  def self.primary_signatures(keep, delete)
+    methods = keep.contact_methods.to_a + delete.contact_methods.to_a
+    methods.map(&:kind).uniq.filter_map do |kind|
+      primary = methods.find { |method| method.kind == kind && method.primary? && method.contactable == keep } ||
+        methods.find { |method| method.kind == kind && method.primary? }
+      signature(primary)
+    end
+  end
+
+  def initialize(contactable, primary_signatures: [])
+    @contactable = contactable
+    @primary_signatures = primary_signatures
+  end
+
+  def call
+    survivors = {}
+    merge_candidates.each do |contact_method|
+      signature = self.class.signature(contact_method)
+      if (survivor = survivors[signature])
+        merge(contact_method, into: survivor)
+      else
+        survivors[signature] = contact_method
+      end
+    end
+
+    settle_primary(survivors.values)
+  end
+
+  private
+
+  # Active before inactive, then the primary, then oldest — so a merge keeps the
+  # copy still in use. `#phone_number` reads only active phones, so letting an
+  # inactive duplicate win would leave the record looking phoneless.
+  def merge_candidates
+    @contactable.contact_methods.reload.sort_by do |contact_method|
+      [ contact_method.inactive? ? 1 : 0, contact_method.primary? ? 0 : 1, contact_method.id ]
+    end
+  end
+
+  def merge(loser, into:)
+    carry_over(loser, into)
+    deduper.merge(into, loser)
+  end
+
+  def carry_over(loser, survivor)
+    filled = CARRIED_COLUMNS.select do |column|
+      survivor.public_send(column).blank? && loser.public_send(column).present?
+    end
+    survivor.assign_attributes(filled.index_with { |column| loser.public_send(column) })
+    survivor.filemaker_code = ContactMethod.join_filemaker_codes(survivor.filemaker_code, loser.filemaker_code)
+    survivor.save! if survivor.changed?
+  end
+
+  def settle_primary(contact_methods)
+    contact_methods.each do |contact_method|
+      primary = @primary_signatures.include?(self.class.signature(contact_method))
+      contact_method.update!(primary: primary) if contact_method.primary? != primary
+    end
+  end
+
+  def deduper
+    @deduper ||= ModelDeduper.new(model_class: ContactMethod, logger: Rails.logger, dry_run: false)
+  end
+end

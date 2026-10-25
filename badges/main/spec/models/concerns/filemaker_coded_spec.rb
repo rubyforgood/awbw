@@ -65,7 +65,7 @@ RSpec.describe FilemakerCoded do
     it "names the archive tables each coded model points into" do
       expect(Person.filemaker_archives).to eq([ FmRolodex ])
       expect(Organization.filemaker_archives).to eq([ FmProject, FmOrganization ])
-      expect(Affiliation.filemaker_archives).to eq([ FmProject, FmPersonnel ])
+      expect(Affiliation.filemaker_archives).to eq([ FmProject, FmPersonnel, FmPeopleToOrganization ])
     end
   end
 end

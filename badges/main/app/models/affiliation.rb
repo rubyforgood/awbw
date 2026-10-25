@@ -1,7 +1,7 @@
 class Affiliation < ApplicationRecord
   include Communicable
   include FilemakerCoded
-  filemaker_archived_in FmProject, FmPersonnel
+  filemaker_archived_in FmProject, FmPersonnel, FmPeopleToOrganization
 
   # Standing title given to the "facilitator affiliation" we create on registration
   # and org linking. Matches the `facilitators` scope / `facilitator?` predicate

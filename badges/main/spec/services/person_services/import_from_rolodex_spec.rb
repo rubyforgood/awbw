@@ -436,10 +436,22 @@ RSpec.describe PersonServices::ImportFromRolodex do
     results
 
     person = Person.find_by!(filemaker_code: "00060")
-    expect(person.addresses.order(:id).pluck(:street_address, :primary))
-      .to eq([ [ "1 Main St", true ], [ "2 Second St", false ] ])
-    expect(person.contact_methods.order(:id).pluck(:value, :primary))
-      .to eq([ [ "555-0100", true ], [ "555-0200", false ] ])
+    expect(person.addresses.order(:id).pluck(:street_address, :primary, :filemaker_code))
+      .to eq([ [ "1 Main St", true, "A21" ], [ "2 Second St", false, "A20" ] ])
+    expect(person.contact_methods.order(:id).pluck(:value, :primary, :filemaker_code))
+      .to eq([ [ "555-0100", true, "P21" ], [ "555-0200", false, "P20" ] ])
+  end
+
+  it "folds two archive rows for one address into one address carrying both codes" do
+    FmAddress.create!(fm_id: "A22", data: { "RolodexID" => "00061", "AddrsLine1" => "1 Main St",
+                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    FmAddress.create!(fm_id: "A23", data: { "RolodexID" => "00061", "AddrsLine1" => "1 Main Street",
+                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    rolodex("00061", EMail: "ada@example.com")
+
+    results
+
+    expect(Person.find_by!(filemaker_code: "00061").addresses.sole.filemaker_code).to eq("A22, A23")
   end
 
   it "reads the address and phone tables once, not once per row" do
@@ -706,6 +718,22 @@ RSpec.describe PersonServices::ImportFromRolodex do
         .to eq([ [ "1 Main St", true ], [ "2 Second St", false ] ])
       expect(person.contact_methods.pluck(:value, :primary)).to eq([ [ "555-0100", true ] ])
     end
+
+    it "adds the archive's codes to the address and phone the person already holds" do
+      address = create(:address, addressable: person, street_address: "1 Main St", city: "Los Angeles", state: "CA")
+      phone = person.contact_methods.create!(kind: "phone", value: "(555) 0100")
+      FmAddress.create!(fm_id: "A72", data: { "RolodexID" => "00074", "AddrsLine1" => "1 Main Street",
+                                              "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+      FmPhoneNumber.create!(fm_id: "P72", data: { "RolodexID" => "00074", "PhoneNumber" => "555-0100" })
+      rolodex("00074", EMail: "ada@example.com")
+
+      described_class.new.call
+
+      expect(person.addresses.sole).to eq(address)
+      expect(address.reload.filemaker_code).to eq("A72")
+      expect(person.contact_methods.sole).to eq(phone)
+      expect(phone.reload.filemaker_code).to eq("P72")
+    end
   end
 
   it "links an existing person with the same name and email instead of creating one" do
@@ -843,13 +871,21 @@ RSpec.describe PersonServices::ImportFromRolodex do
     end
   end
 
-  it "skips agencies, deleted rows, and nameless rows" do
-    rolodex("00013", isAgency__c: "1")
+  it "skips deleted rows, nameless rows, and agency cards naming no contact person" do
+    rolodex("00013", isAgency__c: "1", FirstName: "", LastName: "", Organization: "Harbor House")
     rolodex("00014", Delete: "Yes")
     rolodex("00015", FirstName: "", LastName: "")
 
-    expect(results[:skipped].size).to eq(3)
+    expect(results[:skipped]).to contain_exactly(a_string_including("00013", "agency"), a_string_including("00014"), a_string_including("00015"))
     expect(Person.where(filemaker_code: %w[00013 00014 00015])).to be_empty
+  end
+
+  it "creates the contact person an agency card names, leaving the agency's addresses to its organization" do
+    FmAddress.create!(fm_id: "A1", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "Pasadena", "AddrsState" => "CA", "AddrsType" => "Home" })
+    rolodex("00012", isAgency__c: "1", Organization: "Harbor House", EMail: "ada@harbor.example.org", PrimaryAddrsID: "A1")
+
+    expect(results[:created].size).to eq(1)
+    expect(Person.find_by!(filemaker_code: "00012").addresses).to be_empty
   end
 
   it "treats a false-y flag as unset" do

@@ -123,6 +123,51 @@ RSpec.describe DataHealth::MisalignedAffiliationProvenance do
   end
 end
 
+RSpec.describe DataHealth::LegacyRoleAffiliations do
+  let(:person) { create(:person) }
+  let(:organization) { create(:organization) }
+
+  def affiliation(title, **attributes) = create(:affiliation, person:, organization:, title:, **attributes)
+
+  it "lists affiliations titled with any old-app role, and reports only" do
+    titled = %w[Leader liaison Assistant default].map { |title| affiliation(title, start_date: Date.new(2019, 1, title.length)) }
+    affiliation("Facilitator", start_date: Date.new(2019, 1, 1))
+    affiliation("Program Director")
+
+    expect(described_class.new.scope).to match_array(titled)
+    expect(described_class.new).not_to be_repairable
+  end
+
+  it "labels each Facilitator row by how its stretch meets the Leader row's" do
+    check = described_class.new
+    leader = affiliation("Leader", start_date: Date.new(2019, 4, 1), end_date: Date.new(2025, 7, 1))
+    same = affiliation("Facilitator", start_date: Date.new(2019, 4, 1), end_date: Date.new(2025, 7, 1))
+    earlier = affiliation("Facilitator", start_date: Date.new(2010, 1, 1), end_date: Date.new(2012, 1, 1))
+
+    expect(check.stretch_label(same, leader, same)).to eq("same dates")
+    expect(check.stretch_label(earlier, leader, same)).to eq("a different stretch")
+  end
+
+  describe "#twin_for" do
+    it "finds the Facilitator row with the same dates first" do
+      affiliation("Facilitator", start_date: Date.new(2015, 1, 1))
+      same = affiliation("Facilitator", start_date: Date.new(2019, 1, 1))
+      leader = affiliation("Leader", start_date: Date.new(2019, 1, 1))
+
+      expect(described_class.new.twin_for(leader)).to eq(same)
+    end
+
+    it "falls back to one overlapping with different dates, and is nil when none covers the stretch" do
+      overlapping = affiliation("Facilitator", start_date: Date.new(2018, 1, 1), end_date: Date.new(2022, 12, 31))
+      leader = affiliation("Leader", start_date: Date.new(2019, 4, 1), end_date: Date.new(2025, 7, 1))
+      later = affiliation("Leader", start_date: Date.new(2024, 1, 1), end_date: Date.new(2025, 1, 1))
+
+      expect(described_class.new.twin_for(leader)).to eq(overlapping)
+      expect(described_class.new.twin_for(later)).to be_nil
+    end
+  end
+end
+
 RSpec.describe DataHealth::LegacyOrganizationStatusDrift do
   let!(:active_status) { OrganizationStatus.find_or_create_by!(name: "Active") }
   let!(:inactive_status) { OrganizationStatus.find_or_create_by!(name: "Inactive") }

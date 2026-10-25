@@ -415,6 +415,20 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(Organization.exists?(delete_rec.id)).to be true
       end
 
+      it "moves the duplicate's phones onto the keeper, folding a shared number into one" do
+        keep.contact_methods.create!(kind: "phone", value: "555-0100", primary: true, filemaker_code: "10")
+        delete_rec.contact_methods.create!(kind: "phone", value: "555-0100", primary: true, filemaker_code: "11")
+        delete_rec.contact_methods.create!(kind: "phone", value: "555-0199")
+
+        post dedupe_perform_organizations_path, params: {
+          organization_to_delete_id: delete_rec.id,
+          organization_to_keep_id: keep.id
+        }
+
+        expect(keep.contact_methods.order(:id).pluck(:value, :primary, :filemaker_code))
+          .to eq([ [ "555-0100", true, "10, 11" ], [ "555-0199", false, nil ] ])
+      end
+
       it "combines both organizations' FileMaker codes onto the keeper" do
         keep.update!(filemaker_code: "FM-100")
         delete_rec.update!(filemaker_code: "FM-273")

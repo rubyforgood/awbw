@@ -1,4 +1,7 @@
 class ContactMethod < ApplicationRecord
+  include FilemakerCoded
+  filemaker_archived_in FmPhoneNumber
+
   UNKNOWN_CONTACT_TYPE = "unknown"
   CONTACT_TYPES = [ nil, "work", "personal", UNKNOWN_CONTACT_TYPE ].freeze
 
