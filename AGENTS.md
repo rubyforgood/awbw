@@ -519,7 +519,7 @@ Tailwind only scans the paths listed in the `@source` directives at the top of t
 | `spec/requests/` | ~137 | HTTP request/integration tests |
 | `spec/system/` | ~37 | End-to-end browser tests (Capybara) |
 | `spec/routing/` | ~18 | Route definition tests |
-| `spec/policies/` | ~19 | Authorization policy tests |
+| `spec/policies/` | ~26 | Authorization policy tests |
 | `spec/decorators/` | ~29 | Decorator tests |
 | `spec/services/` | ~109 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
