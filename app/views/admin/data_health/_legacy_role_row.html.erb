@@ -1,7 +1,7 @@
-<%# Locals: record (an Affiliation titled Leader). The person opens their edit page at the
-    affiliation; below it, whether they already have a Facilitator row here and which one, if
-    any, records the same stretch. %>
-<% check = DataHealth::LegacyLeaderAffiliations.new %>
+<%# Locals: record (an Affiliation titled with an old-app role). The person opens their edit
+    page at the affiliation; below it, whether they already have a Facilitator row here and
+    which one, if any, records the same stretch. %>
+<% check = DataHealth::LegacyRoleAffiliations.new %>
 <% facilitators = check.facilitators_for(record) %>
 <% twin = check.twin_for(record, facilitators) %>
 <% elsewhere = check.facilitator_elsewhere_count(record) %>
@@ -19,7 +19,7 @@
   <% end %>
 </div>
 <div class="text-xs text-gray-500">
-  Leader · <%= record.decorate.period_label.presence || "No dates" %><%= " · primary contact" if record.primary_contact? %>
+  <%= record.title %> · <%= record.decorate.period_label.presence || "No dates" %><%= " · primary contact" if record.primary_contact? %>
   <% if record.filemaker_code.present? %> · FileMaker <%= record.filemaker_code %><% end %>
 </div>
 <% facilitators.each do |facilitator| %>
@@ -30,7 +30,7 @@
   </div>
 <% end %>
 <% if facilitators.any? && twin.nil? %>
-  <div class="text-xs text-gray-500">None of these covers this Leader row's stretch.</div>
+  <div class="text-xs text-gray-500">None of these covers this row's stretch.</div>
 <% end %>
 <% if elsewhere.positive? %>
   <div class="text-xs text-gray-500">Also a Facilitator at <%= pluralize(elsewhere, "other organization") %>.</div>

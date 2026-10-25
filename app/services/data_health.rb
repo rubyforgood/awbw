@@ -8,7 +8,7 @@ module DataHealth
     "Affiliations" => [
       FacilitatorAffiliationsFromNonTrainings,
       MisalignedAffiliationProvenance,
-      LegacyLeaderAffiliations,
+      LegacyRoleAffiliations,
       LegacyOrganizationStatusDrift
     ],
     "People" => [

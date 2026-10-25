@@ -248,10 +248,10 @@ module AffiliationServices
       codes && affiliation.filemaker_codes.any? { |code| codes.include?(code) }
     end
 
-    # Some prod rows still carry the old app's "Leader" title, which is a Facilitator.
+    # Some prod rows still carry an old-app role title (Leader, Liaison, …), each a Facilitator.
     def same_title?(held, title)
-      held = held.to_s.squish
-      held.casecmp?(title.to_s.squish) || (title == Affiliation::FACILITATOR_TITLE && held.casecmp?(DataHealth::LegacyLeaderAffiliations::LEGACY_TITLE))
+      held.to_s.squish.casecmp?(title.to_s.squish) ||
+        (title == Affiliation::FACILITATOR_TITLE && DataHealth::LegacyRoleAffiliations.legacy_title?(held))
     end
 
     def link(affiliation, row, label, title:, attributes:, codes:)

@@ -182,30 +182,30 @@ RSpec.describe "Admin::DataHealth", type: :request do
       expect(frame.text).to include("11–12 of 12")
     end
 
-    it "lists Leader rows with their Facilitator twin, each opening the person's edit page" do
+    it "lists old-app role rows with their Facilitator twin, each opening the person's edit page" do
       person = create(:person)
       twin = create(:affiliation, person:, organization:, title: "Facilitator")
       leader = create(:affiliation, person:, organization:, title: "Leader", filemaker_code: "P0001")
 
-      get admin_data_health_rows_path(check: "legacy_leader_affiliations"),
-          headers: { "Turbo-Frame" => "data_health_rows_legacy_leader_affiliations" }
+      get admin_data_health_rows_path(check: "legacy_role_affiliations"),
+          headers: { "Turbo-Frame" => "data_health_rows_legacy_role_affiliations" }
 
       expect(response).to have_http_status(:ok)
-      frame = Nokogiri::HTML(response.body).at_css("turbo-frame#data_health_rows_legacy_leader_affiliations")
+      frame = Nokogiri::HTML(response.body).at_css("turbo-frame#data_health_rows_legacy_role_affiliations")
       expect(frame.text).to include("Has Facilitator row here", "Facilitator ##{twin.id}", "same dates", "FileMaker P0001")
-      expect(frame.to_html).to include(CGI.escapeHTML(edit_person_path(person, return_to: "data_health", check: "legacy_leader_affiliations",
+      expect(frame.to_html).to include(CGI.escapeHTML(edit_person_path(person, return_to: "data_health", check: "legacy_role_affiliations",
                                                                        anchor: "affiliation_#{leader.id}")))
     end
 
-    it "says when a Leader row's person has no Facilitator row at its organization" do
+    it "says when an old-app role row's person has no Facilitator row at its organization" do
       person = create(:person)
-      create(:affiliation, person:, organization:, title: "Leader")
+      create(:affiliation, person:, organization:, title: "Liaison")
       create(:affiliation, person:, title: "Facilitator")
 
-      get admin_data_health_rows_path(check: "legacy_leader_affiliations"),
-          headers: { "Turbo-Frame" => "data_health_rows_legacy_leader_affiliations" }
+      get admin_data_health_rows_path(check: "legacy_role_affiliations"),
+          headers: { "Turbo-Frame" => "data_health_rows_legacy_role_affiliations" }
 
-      frame = Nokogiri::HTML(response.body).at_css("turbo-frame#data_health_rows_legacy_leader_affiliations")
+      frame = Nokogiri::HTML(response.body).at_css("turbo-frame#data_health_rows_legacy_role_affiliations")
       expect(frame.text).to include("No Facilitator row here", "Also a Facilitator at 1 other organization")
     end
 
