@@ -33,11 +33,19 @@ RSpec.describe RegistrationLocations do
     expect(locations.rows.map(&:city_label)).to eq([ "Reno, NV" ])
   end
 
-  it "falls back to the registrant's primary address when the linked org has none" do
-    create(:address, addressable: person, city: "Boise", state: "ID")
-    create(:address, addressable: person, city: "Nampa", state: "ID", primary: true)
+  # Address#ranked_for_owner: active work, else latest-edited active personal,
+  # else inactive personal, else inactive work.
+  it "falls back to the address that stands for the registrant" do
+    create(:address, addressable: person, city: "Boise", state: "ID", address_type: "personal")
+    create(:address, addressable: person, city: "Nampa", state: "ID", address_type: "work")
 
     expect(locations.rows.map(&:city_label)).to eq([ "Nampa, ID" ])
+  end
+
+  it "places a registrant by a retired address rather than nowhere" do
+    create(:address, addressable: person, city: "Boise", state: "ID", address_type: "personal", inactive: true)
+
+    expect(locations.rows.map(&:city_label)).to eq([ "Boise, ID" ])
   end
 
   it "falls back to the registrant's own address when no org is linked" do

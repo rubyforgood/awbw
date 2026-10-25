@@ -56,10 +56,13 @@ class AddressDecorator < ApplicationDecorator
 
   # The saved address a new one copies: an active address before a retired one, and the
   # most recently updated of those.
+  # The one address that stands for this owner (Address::STANDING), sorted in
+  # memory off the loaded association so a form with unsaved blocks pays no query
+  # — the same order Address.ranked_for_owner gives a relation.
   def saved_address
     return @saved_address if defined?(@saved_address)
 
     saved = addressable&.addresses&.select(&:persisted?) || []
-    @saved_address = saved.min_by { |address| [ address.inactive? ? 1 : 0, -address.updated_at.to_f ] }
+    @saved_address = saved.min_by { |address| [ address.standing, -address.updated_at.to_f ] }
   end
 end

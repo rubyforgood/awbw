@@ -51,6 +51,40 @@ class Address < ApplicationRecord
   scope :active, -> { where(inactive: false) }
   scope :for_invoices, -> { where(invoice_address: true) }
 
+  # Which of an owner's addresses stands for them when only one can, best first:
+  # [ inactive?, address_type ] — a nil type matches whatever is left at that
+  # active/inactive level. Work and personal swap places below the active line on
+  # purpose: a current work address is the sharpest thing we know about someone,
+  # and a retired one the stalest (people change jobs; home outlasts the job). A
+  # retired address still beats placing them nowhere.
+  #
+  # Written once, in Ruby, because both the ORDER BY and Address#standing read it —
+  # a hand-kept SQL twin of this list would drift the first time an order changed.
+  STANDING = [
+    [ false, "work" ],
+    [ false, "personal" ],
+    [ false, nil ],
+    [ true, "personal" ],
+    [ true, "work" ]
+  ].freeze
+
+  # Interpolated, not bound: every value comes from STANDING above, never a caller.
+  STANDING_SQL = STANDING.map.with_index { |(inactive, type), rank|
+    tests = [ "addresses.inactive = #{inactive ? 1 : 0}" ]
+    tests << "addresses.address_type = '#{type}'" if type
+    "WHEN #{tests.join(' AND ')} THEN #{rank}"
+  }.join(" ").then { |whens| "CASE #{whens} ELSE #{STANDING.size} END" }.freeze
+
+  # Best-standing first, then most recently edited — "latest edited" is how two
+  # addresses at the same standing are told apart.
+  scope :ranked_for_owner, -> { order(Arel.sql(STANDING_SQL), updated_at: :desc, id: :asc) }
+
+  # This address's place in STANDING, for sorting an already-loaded set the same
+  # way the scope sorts a query.
+  def standing
+    STANDING.index { |rank_inactive, type| rank_inactive == inactive? && (type.nil? || type == address_type) } || STANDING.size
+  end
+
   # A nested-attributes block nobody filled in, which the parent drops instead of
   # building an address that can only fail validation.
   def self.unfilled_attributes?(attributes)

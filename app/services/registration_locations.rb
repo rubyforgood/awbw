@@ -1,8 +1,10 @@
 # Where each registrant is, per registration — where they work, else where they
 # live: each organization linked on the registration, at the address picked on
 # the registration's affiliation with it (Affiliation#organization_address), else
-# that org's oldest active address; with no such address, the registrant's own
-# primary (else oldest) active address. The source for every registrant location
+# that org's oldest active address; with no such address, the one address that
+# stands for the registrant themselves (Address#ranked_for_owner — active work,
+# else latest-edited active personal, else inactive personal, else inactive work).
+# The source for every registrant location
 # chart, count, and filter. A linked org with no address and no own address to
 # fall back on yields a row with no location, so the cities breakdown can count
 # it as Unknown.
@@ -166,8 +168,11 @@ class RegistrationLocations
                          addressable_id: EventRegistrationOrganization.where(event_registration_id: registration_ids).select(:organization_id))
   end
 
+  # Not narrowed to active: a registrant with nothing but a retired address is
+  # better placed there than left out of the map entirely (Address#ranked_for_owner
+  # ranks retired addresses last).
   def registrant_addresses
-    Address.active.where(addressable_type: "Person", addressable_id: @registrations.select(:registrant_id))
+    Address.where(addressable_type: "Person", addressable_id: @registrations.select(:registrant_id))
   end
 
   def oldest_address_by_organization
@@ -179,8 +184,8 @@ class RegistrationLocations
 
   def own_address_by_person
     @own_address_by_person ||= registrant_addresses
-      .order(primary: :desc, id: :asc)
-      .select(:id, :addressable_id, *LOCATION_FIELDS)
+      .ranked_for_owner
+      .select(:id, :addressable_id, :inactive, :address_type, :updated_at, *LOCATION_FIELDS)
       .each_with_object({}) { |address, map| map[address.addressable_id] ||= address }
   end
 end

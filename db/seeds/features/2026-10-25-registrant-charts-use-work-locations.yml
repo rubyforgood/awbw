@@ -10,5 +10,5 @@ summary: >-
   registered under.
 pro_tips:
   - "If the registrant picked one of the organization's addresses, that one counts. Otherwise the organization's first address on file counts."
-  - "A registrant with no organization address on their registration counts where they live instead."
+  - "A registrant with no organization address on their registration counts where their own address puts them: their active work address, else their most recently edited active personal one, else a retired personal, else a retired work. A retired address still counts — better to place someone than to leave them off the map."
   - "City, State, County and Country always describe the same address, so someone registered under organizations in two states won't show up for a city in one and a state in the other."
