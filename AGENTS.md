@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~146 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~151 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~152 files |
 | `app/jobs/` | SolidQueue background jobs | 6 files |
 | `app/models/concerns/` | Shared model modules | 23 concerns |
 
@@ -285,6 +285,7 @@ comparison — add a rule if none fits (e.g. `PersonPolicy#own_profile?`). Conve
 - `AssetUrlImporter` — Downloads a remote file URL and attaches the bytes to ActiveStorage on the given owner as an Asset (open-uri → attach); the subclass's content-type validation still applies
 - `FeatureCatalog` — Syncs the checked-in feature seeds (`db/seeds/features/*.yml`, one file per feature) into the `Feature` table behind the `/features` page (the "Sync latest updates" button). `#import!` (matched by `name`) loads existing features in one query, creates missing ones (case-insensitive name match), overwrites `SYNCED_FIELDS` (area, display_status, released_on, action_path, pr_number, summary, pro_tips, external_url, rhino_description — rich text compared as rendered HTML) on same-name records with whatever the seed carries, so seed corrections and trims propagate; skips any feature edited in-app since creation (`Feature#edited?`) and writes without bumping `updated_at`; returns a `Result` (`created`/`updated`/`skipped`)
 - `DisplayImagePresenter` — Image display logic
+- `DeployedRevision` — The deployed commit from `GIT_SHA` (the DigitalOcean web service maps it to `${web.COMMIT_HASH}`); App settings shows a muted `build <sha>` link to GitHub's compare view of everything merged to `main` since. In development it falls back to the checked-out commit; nil, and no link, when unset elsewhere
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 - `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
 - `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
@@ -518,7 +519,7 @@ Tailwind only scans the paths listed in the `@source` directives at the top of t
 | `spec/routing/` | ~18 | Route definition tests |
 | `spec/policies/` | ~26 | Authorization policy tests |
 | `spec/decorators/` | ~29 | Decorator tests |
-| `spec/services/` | ~109 | Service object tests |
+| `spec/services/` | ~110 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
 | `spec/helpers/` | ~5 | Helper tests |
 | `spec/factories/` | ~67 | FactoryBot factory definitions |
