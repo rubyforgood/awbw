@@ -14,6 +14,10 @@ class ApplicationPolicy < ActionPolicy::Base
     record.persisted? && manage?
   end
 
+  def dedupe?
+    admin?
+  end
+
   private
   # Define shared methods useful for most policies.
 
