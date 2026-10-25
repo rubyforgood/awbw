@@ -594,7 +594,7 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (19 files):
+Located in `lib/tasks/` (18 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
