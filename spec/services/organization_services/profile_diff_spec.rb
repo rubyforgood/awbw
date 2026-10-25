@@ -105,6 +105,17 @@ RSpec.describe OrganizationServices::ProfileDiff do
       expect(diff).to be_empty
     end
 
+    # UpsertAddress stores the dropdown spelling while the answer keeps the typed one.
+    it "does not flag a state or country the submission itself stored as the dropdowns do" do
+      create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701", country: "United States")
+
+      diff = described_class.call(organization: organization, address: {
+        street_address: "1 Main St", city: "Austin", state: "Texas", zip_code: "78701", country: "USA"
+      })
+
+      expect(diff).to be_empty
+    end
+
     it "flags a city that differs on the address matched across cities by street and ZIP" do
       create(:address, addressable: organization, street_address: "1 Main St", city: "Saint Louis", state: "MO", zip_code: "63101")
 
@@ -134,6 +145,14 @@ RSpec.describe OrganizationServices::ProfileDiff do
       })
 
       expect(diff).to be_empty
+    end
+
+    # The linking flow diffs right after the upsert, against the address those answers just built.
+    it "reports nothing on the address UpsertAddress just built from the same answers" do
+      submitted = { street_address: "1 Main St", city: "Austin", state: "Texas", zip_code: "78701", country: "USA" }
+      OrganizationServices::UpsertAddress.call(organization: organization, **submitted)
+
+      expect(described_class.call(organization: organization, address: submitted)).to be_empty
     end
   end
 end

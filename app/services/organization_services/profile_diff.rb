@@ -71,10 +71,27 @@ module OrganizationServices
       [
         field_discrepancy(:address_street, "Address – street", @address[:street_address], existing.street_address),
         field_discrepancy(:address_city, "Address – city", @address[:city], existing.city),
-        field_discrepancy(:address_state, "Address – state", @address[:state], existing.state),
+        state_discrepancy(existing),
         field_discrepancy(:address_zip, "Address – ZIP", @address[:zip_code], existing.zip_code),
-        field_discrepancy(:address_country, "Address – country", @address[:country], existing.country)
+        country_discrepancy(existing)
       ].compact
+    end
+
+    # Compared as UpsertAddress stores it (ADR-0009), so "Texas"/"USA" matches the "TX"/"United States" it became.
+    def state_discrepancy(existing)
+      return if translation.state(@address[:state], country: @address[:country]).to_s.casecmp?(existing.state.to_s)
+
+      field_discrepancy(:address_state, "Address – state", @address[:state], existing.state)
+    end
+
+    def country_discrepancy(existing)
+      return if translation.country(@address[:country], state: @address[:state]).to_s.casecmp?(existing.country.to_s)
+
+      field_discrepancy(:address_country, "Address – country", @address[:country], existing.country)
+    end
+
+    def translation
+      @translation ||= AddressTranslation.new
     end
 
     def matching_address

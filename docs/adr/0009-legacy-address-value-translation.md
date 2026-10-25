@@ -75,10 +75,12 @@ untranslatable answers, and every state answer, were left as typed. Each rewrite
 `autochange.form_answer` Ahoy event (reason `answer_translation`) carrying the answer's
 before value, credited to the Settings import user, with `updated_at`/`updated_by` stamped.
 
-In the same pass, fills on addresses — a blank country read from its state, `""` → nil, a
-locality filled from Unknown — were stamped but logged as one `autochange.address_fills` event
-pointing at the saved report (every change as CSV), while each correction of a typed value got
-its own event.
+**Addresses in that same hand pass** carry a different trail from a `data:translate_addresses`
+run: its fills — a blank country read from its state, `""` → nil, a locality filled from
+Unknown — were stamped but collapsed into one `autochange.address_fills` event pointing at the
+saved report (every change as CSV), while each correction of a typed value got its own event.
+The rake task emits one `autochange.address` per changed address (reason
+`address_translation`), fills included.
 
 ## Consequences
 

@@ -91,9 +91,11 @@ module PersonServices
       new_city = field_value("mailing_city")&.strip
       return if new_city.blank?
 
+      state_answer = field_value("mailing_state")
+      country_answer = field_value("mailing_country")
       translation = AddressTranslation.new
-      new_state = translation.state(field_value("mailing_state"), country: field_value("mailing_country"))
-      new_country = translation.country(field_value("mailing_country"), state: field_value("mailing_state")) if field_value("mailing_country").present?
+      new_state = translation.state(state_answer, country: country_answer)
+      new_country = translation.country(country_answer, state: state_answer) if country_answer.present?
       existing = @person.addresses.order(:id).find do |address|
         AddressNormalizer.city(address.city) == AddressNormalizer.city(new_city) &&
           AddressNormalizer.state(address.state) == AddressNormalizer.state(new_state)

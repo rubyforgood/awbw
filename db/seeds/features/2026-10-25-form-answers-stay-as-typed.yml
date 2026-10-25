@@ -7,3 +7,5 @@ summary: >-
   The address cleanup now fixes addresses only — a person's form answers stay exactly as they
   submitted them. When an answer is turned into an address (linking an organization, or saving
   a registrant's mailing address), its country and state are stored the way the dropdowns do.
+pro_tips:
+  - "The link-organization page treats an answer like USA or Texas as matching the United States or TX it was saved as, so it is not flagged as a difference."
