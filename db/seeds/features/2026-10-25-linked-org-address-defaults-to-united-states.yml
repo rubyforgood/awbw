@@ -2,6 +2,7 @@ name: "Linked organization addresses default to the United States"
 area: people
 display_status: admin_facing
 released_on: 2026-10-25
+pr_number: 2851
 summary: >-
   When you link an organization from a registration or form submission and the
   person left the country blank, the organization's work address is saved in
