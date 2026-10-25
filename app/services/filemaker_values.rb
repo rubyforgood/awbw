@@ -68,15 +68,12 @@ module FilemakerValues
   # Each folds into it — code, blanks, addresses, phones, projects — so what names it lands there.
   RETIRED_DUPLICATE_OF = {
     "ORG00837" => "ORG06521",
-    "ORG01126" => "ORG06489",
     "ORG02183" => "ORG02184",
-    "ORG02287" => "ORG02288",
     "ORG02393" => "ORG02395",
     "ORG02988" => "ORG02990",
     "ORG03581" => "ORG03588",
     "ORG03681" => "ORG03682",
     "ORG04794" => "ORG04795",
-    "ORG05066" => "ORG06370",
     "ORG06025" => "ORG05702",
     "ORG06047" => "ORG05138",
     "ORG06175" => "ORG03150",
