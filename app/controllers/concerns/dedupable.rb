@@ -196,6 +196,8 @@ module Dedupable
   #                       e.g. a login's email and sign-in history (optional)
   #   record_label:       Lambda(record) naming a record across the deduper when #name doesn't tell two
   #                       apart, e.g. two logins of one person (optional, defaults to #name)
+  #   record_path:        Lambda(record) returning the path the preview's column headers link to, for a
+  #                       model with no edit page of its own (e.g. an address links its owner) (optional)
   #   search_model:       Search model the index pickers query (optional, defaults to the model's own
   #                       remote search), e.g. "user_any_status" to reach logins that can't sign in
   #   reference_columns:  Array of column names that reference this model in any table but carry no DB
@@ -254,6 +256,7 @@ module Dedupable
       editable_columns: config[:editable_columns],
       read_only_columns: Array(config[:read_only_columns]).map(&:to_s),
       record_label: config[:record_label] || :name.to_proc,
+      record_path: config[:record_path],
       union_columns: Array(config[:union_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       remote_select_options: config[:remote_select_options] || {},

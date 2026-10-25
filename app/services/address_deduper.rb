@@ -7,10 +7,12 @@
 # records' copies onto the keeper — and on the standalone Dedupe addresses page.
 class AddressDeduper
   # Filled in on the survivor from a merged copy when the survivor has none, so a
-  # merge never drops a phone number, a ZIP, or a geocoded district only one copy had.
+  # merge never drops a phone number, a ZIP, a geocoded district, or the bill-to flag
+  # only one copy had.
   CARRIED_COLUMNS = %w[
     street_address zip_code country county district address_type locality
     phone la_city_council_district la_service_planning_area la_supervisorial_district
+    invoice_address
   ].freeze
 
   # Columns whose "unknown" value means never recorded.
@@ -61,6 +63,17 @@ class AddressDeduper
     [ address.inactive? ? 1 : 0, address.primary? ? 0 : 1, address.id ]
   end
 
+  # The survivor's blank columns a merged copy fills in, with the copy's values.
+  def self.carried_values(survivor, loser)
+    CARRIED_COLUMNS.select { |column| missing?(survivor, column) && !missing?(loser, column) }
+                   .index_with { |column| loser.public_send(column) }
+  end
+
+  def self.missing?(address, column)
+    value = address.public_send(column)
+    value.blank? || (UNKNOWN_AS_BLANK_COLUMNS.include?(column) && value.to_s.casecmp?("unknown"))
+  end
+
   def initialize(addressable, primary_signature: nil)
     @addressable = addressable
     @primary_signature = primary_signature
@@ -85,15 +98,8 @@ class AddressDeduper
   end
 
   def carry_over(loser, survivor)
-    filled = CARRIED_COLUMNS.select { |column| missing?(survivor, column) && !missing?(loser, column) }
-    return if filled.empty?
-
-    survivor.update!(filled.index_with { |column| loser.public_send(column) })
-  end
-
-  def missing?(address, column)
-    value = address.public_send(column)
-    value.blank? || (UNKNOWN_AS_BLANK_COLUMNS.include?(column) && value.to_s.casecmp?("unknown"))
+    filled = self.class.carried_values(survivor, loser)
+    survivor.update!(filled) if filled.any?
   end
 
   def settle_primary(survivors, primary)

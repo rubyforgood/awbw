@@ -1,0 +1,13 @@
+name: "Preview an address merge before it happens"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2708
+action_path: "/addresses/dedupe_index"
+summary: >-
+  On the Dedupe addresses page, each copy that would merge away has a Preview
+  merge link that shows both copies side by side, like the people deduper.
+pro_tips:
+  - "Fields the kept copy is missing — phone, country, locality, districts — are marked as filled in from the other copy."
+  - "Edit the kept copy right on the preview; changes save as you go."
+  - "Use Swap to keep the other copy instead."

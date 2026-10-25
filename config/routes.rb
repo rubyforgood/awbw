@@ -5,7 +5,10 @@ Rails.application.routes.draw do
 
   get "/addresses/options", to: "addresses#options"
   get "/addresses/dedupe_index", to: "addresses#dedupe_index", as: :dedupe_index_addresses
+  get "/addresses/dedupe_preview", to: "addresses#dedupe_preview", as: :dedupe_preview_addresses
   post "/addresses/dedupe_perform", to: "addresses#dedupe_perform", as: :dedupe_perform_addresses
+  patch "/addresses/dedupe_update_keep", to: "addresses#dedupe_update_keep", as: :dedupe_update_keep_addresses
+  post "/addresses/dedupe_perform_owner", to: "addresses#dedupe_perform_owner", as: :dedupe_perform_owner_addresses
   post "/addresses/dedupe_perform_all", to: "addresses#dedupe_perform_all", as: :dedupe_perform_all_addresses
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
