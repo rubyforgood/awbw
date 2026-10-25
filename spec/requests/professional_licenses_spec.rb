@@ -52,8 +52,8 @@ RSpec.describe "ProfessionalLicenses", type: :request do
 
     it "combines location with the registrant filter" do
       holder = create(:person, first_name: "Zephyrina", last_name: "Aldercott")
-      create(:professional_license, person: holder, number: "LIC-778", issuing_country: "Canada")
-      create(:professional_license, number: "LIC-779", issuing_country: "Canada")
+      create(:professional_license, person: holder, number: "LIC-778", issuing_state: "Ontario", issuing_country: "Canada")
+      create(:professional_license, number: "LIC-779", issuing_state: "Ontario", issuing_country: "Canada")
 
       get professional_licenses_path(location: "Canada", person_query: "Zephyrina"),
         headers: { "Turbo-Frame" => "professional_licenses_results" }

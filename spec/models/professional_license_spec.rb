@@ -144,8 +144,12 @@ RSpec.describe ProfessionalLicense, type: :model do
       expect(create(:professional_license, issuing_state: "CA", issuing_country: "").issuing_country).to eq("United States")
     end
 
-    it "keeps a country that was named" do
-      expect(create(:professional_license, issuing_state: "CA", issuing_country: "Mexico").issuing_country).to eq("Mexico")
+    it "is the US for a US state whatever country was left in the box" do
+      expect(create(:professional_license, issuing_state: "CA", issuing_country: "Canada").issuing_country).to eq("United States")
+    end
+
+    it "keeps the country named beside a state outside the USA" do
+      expect(create(:professional_license, issuing_state: "Ontario", issuing_country: "Canada").issuing_country).to eq("Canada")
     end
 
     it "stays blank for a state outside the USA" do

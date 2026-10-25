@@ -92,9 +92,9 @@ class ProfessionalLicense < ApplicationRecord
 
   private
 
-  # A US state with no country named is a US license.
+  # A US state is a US license; the country only means something beside a state outside the USA.
   def default_issuing_country
-    self.issuing_country = Address::DEFAULT_COUNTRY if issuing_country.blank? && issuing_state.in?(Address::US_STATE_ABBREVIATIONS)
+    self.issuing_country = Address::DEFAULT_COUNTRY if issuing_state.in?(Address::US_STATE_ABBREVIATIONS)
   end
 
   def prevent_destroy_with_ce
