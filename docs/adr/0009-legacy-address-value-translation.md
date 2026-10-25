@@ -64,10 +64,21 @@ since a state is required and regions outside the US are legitimate.
 
 ### Form answers
 
-Form answers stay verbatim, as a record of what the person submitted — the cleanup never
-rewrites them. They're translated where they become addresses instead (above), and the
-dashboards and maps that count countries read addresses. The form-results page for an older
-form still shows each answer as typed.
+Form answers are otherwise stored verbatim, as a record of what the person submitted, and
+`data:translate_addresses` never rewrites them. They're translated where they become
+addresses instead (above).
+
+**One exception, made once by hand on 2026-10-25:** in a console pass alongside the
+address cleanup, every `mailing_country` / `organization_country` answer that translates to a
+dropdown country was rewritten to it ("USA", "LA County " → United States). Blank and
+untranslatable answers, and every state answer, were left as typed. Each rewrite is an
+`autochange.form_answer` Ahoy event (reason `answer_translation`) carrying the answer's
+before value, credited to the Settings import user, with `updated_at`/`updated_by` stamped.
+
+In the same pass, fills on addresses — a blank country read from its state, `""` → nil, a
+locality filled from Unknown — were stamped but logged as one `autochange.address_fills` event
+pointing at the saved report (every change as CSV), while each correction of a typed value got
+its own event.
 
 ## Consequences
 
