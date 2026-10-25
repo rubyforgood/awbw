@@ -48,6 +48,21 @@ RSpec.describe AddressTranslation do
       expect(translation.country("West Africa", state: "Togo")).to eq("Togo")
     end
 
+    it "reads the regions staging's addresses name with no country" do
+      { "Gauteng" => "South Africa", "Accra" => "Ghana", "Tamil Nadu" => "India", "Rajasthan" => "India",
+        "Lahore" => "Pakistan", "MONNSERRADO" => "Liberia", "Montserrado" => "Liberia",
+        "Matebeleland North" => "Zimbabwe", "Matabeleland North" => "Zimbabwe",
+        "Yorkshire" => "United Kingdom", "E Sussex" => "United Kingdom", "East Sussex" => "United Kingdom" }.each do |state, country|
+        expect(translation.country(nil, state:)).to eq(country)
+      end
+    end
+
+    it "leaves a place that names more than one country for a person to decide" do
+      [ "Christchurch", "Essex", "Salamanca", "Amsterdam", "West Indies" ].each do |state|
+        expect(translation.country(nil, state:)).to be_nil
+      end
+    end
+
     it "clears a country it can't place, so every stored country is a dropdown one, and reports it" do
       expect(translation.country(" Narnia ", state: "Central Region")).to be_nil
       expect(translation.country("West Africa", state: "-")).to be_nil

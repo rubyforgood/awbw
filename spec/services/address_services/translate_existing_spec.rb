@@ -123,6 +123,26 @@ RSpec.describe AddressServices::TranslateExisting do
     expect(Ahoy::Event.where(name: %w[autochange.address autochange.form_answer]).distinct.count(:visit_id)).to eq(1)
   end
 
+  it "lists every change with its owner and before/after, on a dry run too" do
+    usa = address_with(country: "USA", state: "Texas", locality: Address::OUTSIDE_CA)
+    org_address = create(:address, addressable: create(:organization)).tap { |address| address.update_columns(country: "Usa", state: "TX", locality: Address::OUTSIDE_CA) }
+    submission = create(:form_submission, person: create(:person))
+    answer(submission, "mailing_state", "TX")
+    country = answer(submission, "mailing_country", "US")
+
+    rows = described_class.new(dry_run: true).call.rows
+
+    expect(rows).to include(
+      have_attributes(record_type: "Address", record_id: usa.id, person_id: usa.addressable_id, organization_id: nil,
+                      form_submission_id: nil, field: :country, before: "USA", after: "United States"),
+      have_attributes(record_type: "Address", record_id: usa.id, field: :state, before: "Texas", after: "TX"),
+      have_attributes(record_type: "Address", record_id: org_address.id, person_id: nil, organization_id: org_address.addressable_id,
+                      field: :country, before: "Usa", after: "United States"),
+      have_attributes(record_type: "Form answer", record_id: country.id, person_id: submission.person_id,
+                      form_submission_id: submission.id, field: :submitted_answer, before: "US", after: "United States")
+    )
+  end
+
   it "writes and logs nothing on a dry run, but reports what it would change" do
     usa = address_with(country: "USA", state: "TX")
 
