@@ -77,7 +77,7 @@
   <% sector_paths["Other"] = by_ids.(data.other_sector_response_registrant_ids) if data.other_sector_response_count.positive? %>
   <% age_group_paths = data.age_groups.to_h { |c| [ c.name, by_ids.(data.age_group_registrant_ids_by_category.fetch(c.id, [])) ] } %>
   <% all_age_group_paths = data.all_age_groups.to_h { |c| [ c.name, by_ids.(data.all_age_group_registrant_ids_by_category.fetch(c.id, [])) ] } %>
-  <% state_paths = data.state_registrant_ids_by_state.transform_values { |ids| by_ids.(ids) } %>
+  <% state_paths = data.states.index_with { |state| roster_event_path(event, state: state, charts: 1) } %>
   <% country_paths = data.country_registrant_ids_by_country.transform_values { |ids| by_ids.(ids) } %>
   <% school_district_paths = data.school_district_registrant_ids_by_district.transform_values { |ids| by_ids.(ids) } %>
   <% life_experience_paths = data.life_experiences.to_h { |c| [ c.name, by_ids.(data.life_experience_registrant_ids_by_category.fetch(c.id, [])) ] } %>

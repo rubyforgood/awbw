@@ -47,11 +47,8 @@ RSpec.describe "Events::BulkReminders", type: :request do
     expect(checked?(response.body, sam)).to be(false)
   end
 
-  it "filters recipients by the shared city search, on where they work" do
-    organization = create(:organization)
-    create(:address, addressable: organization, city: "Santa Monica")
-    jane.event_registration_organizations.create!(organization:)
-    create(:address, addressable: sam.registrant, city: "Santa Monica")
+  it "filters recipients by the shared city search" do
+    create(:address, addressable: jane.registrant, city: "Santa Monica")
 
     get preview_reminder_event_path(event, city: "santa"),
         headers: { "Turbo-Frame" => "reminder_recipients" }

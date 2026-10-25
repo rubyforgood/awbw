@@ -600,31 +600,18 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
-  describe "work location scopes" do
-    def registration_working_in(city:, state:, county: nil)
-      registration = create(:event_registration)
-      organization = create(:organization)
-      create(:address, addressable: organization, city:, state:, county:)
-      registration.event_registration_organizations.create!(organization:)
-      registration
-    end
+  describe ".registrant_city" do
+    it "matches registrants with an address in the city (case-insensitive, partial)" do
+      in_city = create(:person)
+      create(:address, addressable: in_city, city: "Santa Monica")
+      out_city = create(:person)
+      create(:address, addressable: out_city, city: "Portland")
+      reg_in = create(:event_registration, registrant: in_city)
+      reg_out = create(:event_registration, registrant: out_city)
 
-    let!(:santa_monica) { registration_working_in(city: "Santa Monica", state: "CA", county: "Los Angeles") }
-    let!(:portland) { registration_working_in(city: "Portland", state: "OR", county: "Multnomah") }
-
-    it "matches the work city (case-insensitive, partial), not the registrant's own address" do
-      create(:address, addressable: portland.registrant, city: "Santa Monica")
-
-      expect(EventRegistration.work_city("santa")).to contain_exactly(santa_monica)
-    end
-
-    it "matches the work state" do
-      expect(EventRegistration.work_state("OR")).to contain_exactly(portland)
-    end
-
-    it "matches the work county within a state" do
-      expect(EventRegistration.work_county("CA|Los Angeles")).to contain_exactly(santa_monica)
-      expect(EventRegistration.work_county("OR|Los Angeles")).to be_empty
+      results = EventRegistration.registrant_city("santa")
+      expect(results).to include(reg_in)
+      expect(results).not_to include(reg_out)
     end
   end
 

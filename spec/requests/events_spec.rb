@@ -1779,13 +1779,12 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Any status")
       end
 
-      it "narrows the roster by work city" do
+      it "narrows the roster by city" do
         here = create(:person, first_name: "Cityful", last_name: "Local")
+        create(:address, addressable: here, city: "Santa Monica")
         there = create(:person, first_name: "Faraway", last_name: "Person")
-        create(:address, addressable: there, city: "Santa Monica")
-        here_org = create(:organization)
-        create(:address, addressable: here_org, city: "Santa Monica")
-        create(:event_registration, event: event, registrant: here).event_registration_organizations.create!(organization: here_org)
+        create(:address, addressable: there, city: "Portland")
+        create(:event_registration, event: event, registrant: here)
         create(:event_registration, event: event, registrant: there)
 
         get registrants_event_path(event, city: "santa")
@@ -2578,11 +2577,9 @@ RSpec.describe "Events", type: :request do
     let!(:ca_kings_reg) { create(:event_registration, event: event, registrant: ca_kings_person) }
 
     before do
-      { ca_reg => [ "CA", "Los Angeles" ], ny_reg => [ "NY", "Kings" ], ca_kings_reg => [ "CA", "Kings" ] }.each do |registration, (state, county)|
-        organization = create(:organization)
-        create(:address, addressable: organization, state:, county:)
-        registration.event_registration_organizations.create!(organization:)
-      end
+      create(:address, addressable: ca_person, state: "CA", county: "Los Angeles")
+      create(:address, addressable: ny_person, state: "NY", county: "Kings")
+      create(:address, addressable: ca_kings_person, state: "CA", county: "Kings")
       sign_in admin
     end
 
@@ -3374,9 +3371,8 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Hospice care")
         end
 
-        it "shows a countries breakdown from the org a registrant registered under" do
-          create(:address, addressable: organization, state: "ON", country: "Canada", inactive: false)
-          registration.event_registration_organizations.create!(organization: organization)
+        it "shows a countries breakdown from registrant addresses" do
+          create(:address, addressable: person, state: "CA", country: "Canada", inactive: false)
 
           get roster_event_path(owned_event), headers: charts_headers
 
@@ -3395,8 +3391,7 @@ RSpec.describe "Events", type: :request do
         end
 
         it "renders the states breakdown as a US choropleth map fed by per-state counts" do
-          create(:address, addressable: organization, state: "CA", inactive: false)
-          registration.event_registration_organizations.create!(organization: organization)
+          create(:address, addressable: person, state: "CA", inactive: false)
 
           get roster_event_path(owned_event), headers: charts_headers
 

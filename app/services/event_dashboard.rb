@@ -147,12 +147,14 @@ class EventDashboard
     recognized_scholarships.map(&:recipient_id).uniq.size
   end
 
-  # This event's registrants grouped by the city they work in, with the
-  # scholarship-recipient count per city — the shared "Registrants by city"
-  # breakdown on the background and recipients pages.
+  # This event's registrants grouped by the city of the organization linked on
+  # their registration, with the scholarship-recipient count per city — the
+  # shared "Registrants by city" breakdown on the background and recipients
+  # pages. Fed already-plucked data so the rollup runs in memory.
   def registrant_city_breakdown
     @registrant_city_breakdown ||= RegistrantCityBreakdown.new(
-      city_registrant_pairs: work_addresses.rows.map { |row| [ row.city_label, row.registrant_id ] },
+      org_registrant_pairs: registration_org_registrant_pairs,
+      city_by_org: city_by_organization,
       scholarship_recipient_ids: scholarships.distinct.pluck(:recipient_id)
     )
   end
@@ -850,34 +852,52 @@ class EventDashboard
       .sort_by { |label, count| [ -count, label ] }
   end
 
-  # The US states registrants work in (RegistrationWorkAddresses).
+  # US states only — international registrants' regions (e.g. provinces) are
+  # excluded so the States breakdown reflects domestic residents.
   def states
-    @states ||= state_registrant_ids_by_state.keys.sort
+    @states ||= us_state_addresses.distinct.pluck(:state).sort
   end
 
+  # Distinct US-resident registrant count per state.
   def state_counts
-    @state_counts ||= state_registrant_ids_by_state.transform_values(&:size)
+    @state_counts ||= us_state_addresses.group(:state).distinct.count(:addressable_id)
   end
 
+  # Registrant ids that have at least one active US address with a state on file —
+  # i.e. the people behind the states count.
   def state_registrant_ids
-    @state_registrant_ids ||= state_registrant_ids_by_state.values.flatten.uniq
+    @state_registrant_ids ||= us_state_addresses.distinct.pluck(:addressable_id)
   end
 
-  def state_registrant_ids_by_state
-    work_addresses.registrant_ids_by_state
-  end
-
-  # The countries registrants work in (RegistrationWorkAddresses).
   def countries
-    @countries ||= country_registrant_ids_by_country.keys.sort
+    @countries ||= Address
+      .active
+      .where(addressable_type: "Person", addressable_id: registrant_ids)
+      .where.not(country: [ nil, "" ])
+      .distinct
+      .pluck(:country)
+      .sort
   end
 
+  # Distinct registrant count per country.
   def country_counts
-    @country_counts ||= country_registrant_ids_by_country.transform_values(&:size)
+    @country_counts ||= Address
+      .active
+      .where(addressable_type: "Person", addressable_id: registrant_ids)
+      .where.not(country: [ nil, "" ])
+      .group(:country)
+      .distinct
+      .count(:addressable_id)
   end
 
+  # Registrant ids that have at least one active address with a country on file.
   def country_registrant_ids
-    @country_registrant_ids ||= country_registrant_ids_by_country.values.flatten.uniq
+    @country_registrant_ids ||= Address
+      .active
+      .where(addressable_type: "Person", addressable_id: registrant_ids)
+      .where.not(country: [ nil, "" ])
+      .distinct
+      .pluck(:addressable_id)
   end
 
   # School districts across active registrants' affiliation organization addresses
@@ -896,8 +916,17 @@ class EventDashboard
     @school_district_registrant_ids ||= affiliation_district_pairs.map(&:last).uniq
   end
 
+  # Registrant ids per country, keyed by country name — the people behind each
+  # country row, for drilling into the matching registrant list.
   def country_registrant_ids_by_country
-    work_addresses.registrant_ids_by_country
+    @country_registrant_ids_by_country ||= Address
+      .active
+      .where(addressable_type: "Person", addressable_id: registrant_ids)
+      .where.not(country: [ nil, "" ])
+      .distinct
+      .pluck(:country, :addressable_id)
+      .group_by(&:first)
+      .transform_values { |rows| rows.map(&:last).uniq }
   end
 
   # Registrant ids per school district, for the breakdown's per-row drill-in. A
@@ -910,10 +939,19 @@ class EventDashboard
       .transform_values(&:to_a)
   end
 
-  # [ state, county ] pairs registrants work in. Pairing in the state lets the
-  # manage filter disambiguate same-named counties ("CA - Warren" vs "NY - Warren").
+  # Distinct [ state, county ] pairs across active registrants' active addresses,
+  # sorted by state then county. Pairing in the state lets the manage filter
+  # disambiguate same-named counties across states (e.g. "CA - Warren" vs
+  # "NY - Warren").
   def counties
-    work_addresses.counties
+    @counties ||= Address
+      .active
+      .where(addressable_type: "Person", addressable_id: registrant_ids)
+      .where.not(county: [ nil, "" ])
+      .where.not(state: [ nil, "" ])
+      .distinct
+      .pluck(:state, :county)
+      .sort
   end
 
   # Life experiences captured at registration: StoryPopulation categories tagged
@@ -947,8 +985,13 @@ class EventDashboard
 
   private
 
-  def work_addresses
-    @work_addresses ||= RegistrationWorkAddresses.new(active_registration_ids)
+  # Active registrant addresses whose state is a recognized US state/territory —
+  # the source for every States figure (count card, choropleth, and drill-in).
+  def us_state_addresses
+    Address
+      .active
+      .where(addressable_type: "Person", addressable_id: registrant_ids)
+      .where("UPPER(addresses.state) IN (?)", Address::US_STATE_ABBREVIATIONS)
   end
 
   # [ [ district, registrant_id ], ... ] from the affiliations linked to this event's
@@ -1294,6 +1337,32 @@ class EventDashboard
   # doesn't re-run Grant.self_funded_ids (a Setting.app_organization + pluck) per call.
   def self_funded_grant_ids
     @self_funded_grant_ids ||= Grant.self_funded_ids
+  end
+
+  # [ [ organization_id, registrant_id ], ... ] from the organizations linked on
+  # each active registration (the registration-time snapshot only, not later
+  # affiliations) — the basis for grouping registrants by their org's city.
+  def registration_org_registrant_pairs
+    @registration_org_registrant_pairs ||= EventRegistrationOrganization
+      .joins(:event_registration)
+      .where(event_registration_id: active_registration_ids)
+      .pluck(:organization_id, "event_registrations.registrant_id")
+  end
+
+  # "City, State" per linked organization, from its first active address (mirrors
+  # Organization#program_location). Orgs with no active address are absent, so
+  # their registrants fall into the breakdown's Unknown bucket.
+  def city_by_organization
+    org_ids = registration_org_registrant_pairs.map(&:first).uniq
+    Address.active
+      .where(addressable_type: "Organization", addressable_id: org_ids)
+      .order(:id)
+      .pluck(:addressable_id, :city, :state)
+      .each_with_object({}) do |(org_id, city, state), map|
+        next if map.key?(org_id)
+        label = [ city, state ].compact_blank.join(", ").presence
+        map[org_id] = label if label
+      end
   end
 
   def paid_registration_ids
