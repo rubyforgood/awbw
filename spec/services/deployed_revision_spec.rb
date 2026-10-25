@@ -17,6 +17,14 @@ RSpec.describe DeployedRevision do
 
       expect(described_class.current).to be_nil
     end
+
+    it "falls back to the checked-out commit in development" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("GIT_SHA").and_return(nil)
+      allow(Rails.env).to receive(:development?).and_return(true)
+
+      expect(described_class.current.short_sha).to eq(`git rev-parse HEAD`.strip.first(7))
+    end
   end
 
   describe "#compare_url" do
