@@ -705,6 +705,14 @@ RSpec.describe Person, type: :model do
       expect(Person.search_name_email('alice@example')).to include(person_alice)
     end
 
+    it 'filters by contact_info matching an address country' do
+      create(:address, addressable: person_bob, country: 'South Africa')
+      create(:address, addressable: person_alice, country: 'India')
+
+      expect(Person.search_by_params(contact_info: 'address_country:"South Africa"')).to contain_exactly(person_bob)
+      expect(Person.search_by_params(contact_info: 'India')).to contain_exactly(person_alice)
+    end
+
     it 'filters by shared_contact_info matching a full name' do
       results = Person.search_by_params(shared_contact_info: 'Alice Smith')
       expect(results).to include(person_alice)
