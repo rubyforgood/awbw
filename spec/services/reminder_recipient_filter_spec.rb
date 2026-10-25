@@ -95,13 +95,15 @@ RSpec.describe ReminderRecipientFilter do
       expect(matched({ email: "amy@--aisha@" }, [ amy, aisha, sam ])).to eq([ amy.id, aisha.id ].to_set)
     end
 
-    it "filters by registrant city, skipping inactive addresses like the roster does" do
+    it "filters by work city, like the roster does" do
       here = registration
-      create(:address, addressable: here.registrant, city: "Santa Monica")
-      moved_away = registration(first_name: "Sam")
-      create(:address, addressable: moved_away.registrant, city: "Santa Monica", inactive: true)
-      expect(matched({ city: "santa" }, [ here, moved_away ])).to eq([ here.id ].to_set)
-      expect(EventRegistration.registrant_city("santa")).not_to include(moved_away)
+      organization = create(:organization)
+      create(:address, addressable: organization, city: "Santa Monica")
+      here.event_registration_organizations.create!(organization:)
+      lives_there = registration(first_name: "Sam")
+      create(:address, addressable: lives_there.registrant, city: "Santa Monica")
+      expect(matched({ city: "santa" }, [ here, lives_there ])).to eq([ here.id ].to_set)
+      expect(EventRegistration.work_city("santa")).to contain_exactly(here)
     end
 
     it "filters by registration comment text" do

@@ -61,7 +61,7 @@
   <% sector_paths = data.sectors.to_h { |s| [ s.name, index_path.(sector: s.id) ] } %>
   <% age_group_paths = data.age_groups.to_h { |c| [ c.name, index_path.(age_group: c.id) ] } %>
   <% all_age_group_paths = data.all_age_groups.to_h { |c| [ c.name, index_path.(age_group: c.id) ] } %>
-  <% state_paths = data.state_counts.keys.index_with { |state| index_path.(org_state: state) } %>
+  <% state_paths = data.state_counts.keys.index_with { |state| index_path.(state: state) } %>
   <% country_paths = data.country_counts.keys.index_with { |country| index_path.(country: country) } %>
   <% school_district_paths = data.school_district_counts.keys.index_with { |district| index_path.(school_district: district) } %>
   <% life_experience_paths = data.life_experiences.to_h { |c| [ c.name, index_path.(life_experience: c.id) ] } %>

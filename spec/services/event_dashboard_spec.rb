@@ -445,9 +445,9 @@ RSpec.describe EventDashboard do
         cancelled_reg = event.event_registrations.find_by(registrant: cancelled_person)
         cancelled_reg.event_registration_organizations.create!(organization: org_excluded)
         create(:address, addressable: org_a, city: "Oakland", state: "OR", country: "United States")
-        chosen = create(:address, addressable: org_a, city: "Fresno", state: "CA", country: "United States")
+        chosen = create(:address, addressable: org_a, city: "Fresno", state: "CA", county: "Fresno", country: "United States")
         person1.affiliations.find_by(organization: org_a).update!(organization_address: chosen, event_registration: reg1)
-        create(:address, addressable: org_c, city: "Albany", state: "NY", country: "Mexico")
+        create(:address, addressable: org_c, city: "Albany", state: "NY", county: "Albany", country: "Mexico")
         create(:address, addressable: org_excluded, city: "Miami", state: "FL", country: "Canada")
       end
 
@@ -466,14 +466,8 @@ RSpec.describe EventDashboard do
         expect(dashboard.registrant_city_breakdown.rows.map(&:city)).to contain_exactly("Fresno, CA", "Albany, NY")
       end
 
-      it "offers the State filter the registrants' own address states" do
-        expect(dashboard.registrant_address_states).to eq(%w[CA NY])
-      end
-    end
-
-    describe "counties" do
-      it "returns unique [ state, county ] pairs from active registrants' active addresses" do
-        expect(dashboard.counties).to eq([ [ "CA", "Los Angeles" ], [ "NY", "Kings" ] ])
+      it "lists the [ state, county ] pairs registrants work in" do
+        expect(dashboard.counties).to eq([ [ "CA", "Fresno" ], [ "NY", "Albany" ] ])
       end
     end
 

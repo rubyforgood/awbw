@@ -1779,12 +1779,13 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Any status")
       end
 
-      it "narrows the roster by city" do
+      it "narrows the roster by work city" do
         here = create(:person, first_name: "Cityful", last_name: "Local")
-        create(:address, addressable: here, city: "Santa Monica")
         there = create(:person, first_name: "Faraway", last_name: "Person")
-        create(:address, addressable: there, city: "Portland")
-        create(:event_registration, event: event, registrant: here)
+        create(:address, addressable: there, city: "Santa Monica")
+        here_org = create(:organization)
+        create(:address, addressable: here_org, city: "Santa Monica")
+        create(:event_registration, event: event, registrant: here).event_registration_organizations.create!(organization: here_org)
         create(:event_registration, event: event, registrant: there)
 
         get registrants_event_path(event, city: "santa")
@@ -2577,9 +2578,11 @@ RSpec.describe "Events", type: :request do
     let!(:ca_kings_reg) { create(:event_registration, event: event, registrant: ca_kings_person) }
 
     before do
-      create(:address, addressable: ca_person, state: "CA", county: "Los Angeles")
-      create(:address, addressable: ny_person, state: "NY", county: "Kings")
-      create(:address, addressable: ca_kings_person, state: "CA", county: "Kings")
+      { ca_reg => [ "CA", "Los Angeles" ], ny_reg => [ "NY", "Kings" ], ca_kings_reg => [ "CA", "Kings" ] }.each do |registration, (state, county)|
+        organization = create(:organization)
+        create(:address, addressable: organization, state:, county:)
+        registration.event_registration_organizations.create!(organization:)
+      end
       sign_in admin
     end
 

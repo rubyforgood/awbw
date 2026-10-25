@@ -867,18 +867,6 @@ class EventDashboard
     work_addresses.registrant_ids_by_state
   end
 
-  # The US states on registrants' own addresses — the options of the roster's
-  # State filter, which matches on those addresses (EventRegistration.registrant_state).
-  def registrant_address_states
-    @registrant_address_states ||= Address
-      .active
-      .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where("UPPER(addresses.state) IN (?)", Address::US_STATE_ABBREVIATIONS)
-      .distinct
-      .pluck(:state)
-      .sort
-  end
-
   # The countries registrants work in (RegistrationWorkAddresses).
   def countries
     @countries ||= country_registrant_ids_by_country.keys.sort
@@ -922,19 +910,10 @@ class EventDashboard
       .transform_values(&:to_a)
   end
 
-  # Distinct [ state, county ] pairs across active registrants' active addresses,
-  # sorted by state then county. Pairing in the state lets the manage filter
-  # disambiguate same-named counties across states (e.g. "CA - Warren" vs
-  # "NY - Warren").
+  # [ state, county ] pairs registrants work in. Pairing in the state lets the
+  # manage filter disambiguate same-named counties ("CA - Warren" vs "NY - Warren").
   def counties
-    @counties ||= Address
-      .active
-      .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where.not(county: [ nil, "" ])
-      .where.not(state: [ nil, "" ])
-      .distinct
-      .pluck(:state, :county)
-      .sort
+    work_addresses.counties
   end
 
   # Life experiences captured at registration: StoryPopulation categories tagged

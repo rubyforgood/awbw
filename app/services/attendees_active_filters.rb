@@ -15,7 +15,7 @@ class AttendeesActiveFilters
   # honours but this list omits narrows the page silently AND is dropped by the
   # filter form's hidden fields on the next change, since both read this list.
   CHIP_PARAMS = %w[
-    registrant_ids organization_id org_city org_state age_group life_experience
+    registrant_ids organization_id org_city age_group life_experience
     country school_district payment_status funder
   ].freeze
   # The roster has no filter form at all, so every drill-in it accepts needs a
@@ -47,7 +47,6 @@ class AttendeesActiveFilters
     when "sector" then record_label("Sector", Sector, value)
     when "organization_id" then record_label("Organization", Organization, value)
     when "org_city" then "Org city: #{value}"
-    when "org_state" then "Org state: #{value}"
     when "age_group" then record_label("Age group", Category, value)
     when "life_experience" then record_label("Life experience", Category, value)
     when "country" then "Org country: #{value}"

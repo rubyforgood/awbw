@@ -1,11 +1,11 @@
 # Where registrants work, per registration: each organization linked on the
 # registration, at the address picked on the registration's affiliation with it
 # (Affiliation#organization_address), else that org's oldest active address. The
-# source for the registrant charts' cities, states, and countries. A linked org
-# with no active address still yields a row, with no location, so the cities
-# breakdown can count it as Unknown.
+# source for the registrant charts' and filters' cities, counties, states, and
+# countries. A linked org with no active address still yields a row, with no
+# location, so the cities breakdown can count it as Unknown.
 class RegistrationWorkAddresses
-  Row = Struct.new(:organization_id, :registrant_id, :city, :state, :country, keyword_init: true) do
+  Row = Struct.new(:registration_id, :organization_id, :registrant_id, :city, :county, :state, :country, keyword_init: true) do
     def city_label
       [ city, state ].compact_blank.join(", ").presence
     end
@@ -19,8 +19,29 @@ class RegistrationWorkAddresses
     @rows ||= links.map do |registration_id, organization_id, registrant_id|
       address = chosen_addresses[chosen_address_ids[[ registration_id, organization_id ]]] ||
         oldest_address_by_organization[organization_id]
-      Row.new(organization_id:, registrant_id:, city: address&.city, state: address&.state, country: address&.country)
+      Row.new(registration_id:, organization_id:, registrant_id:,
+              city: address&.city, county: address&.county, state: address&.state, country: address&.country)
     end
+  end
+
+  # Rows whose one address matches every given part: state and county exactly,
+  # city as a case-insensitive substring.
+  def matching(state: nil, county: nil, city: nil)
+    term = city.to_s.downcase.strip.presence
+    rows.select do |row|
+      (state.blank? || row.state == state) &&
+        (county.blank? || row.county == county) &&
+        (term.nil? || row.city.to_s.downcase.include?(term))
+    end
+  end
+
+  def rows_by_registration
+    @rows_by_registration ||= rows.group_by(&:registration_id)
+  end
+
+  # Distinct [ state, county ] pairs, sorted, for the County filters.
+  def counties
+    @counties ||= rows.filter_map { |row| [ row.state, row.county ] if row.state.present? && row.county.present? }.uniq.sort
   end
 
   # US states only, so regions abroad stay off the States map.
@@ -58,14 +79,14 @@ class RegistrationWorkAddresses
   end
 
   def chosen_addresses
-    @chosen_addresses ||= Address.active.where(id: chosen_address_ids.values.uniq).select(:id, :city, :state, :country).index_by(&:id)
+    @chosen_addresses ||= Address.active.where(id: chosen_address_ids.values.uniq).select(:id, :city, :county, :state, :country).index_by(&:id)
   end
 
   def oldest_address_by_organization
     @oldest_address_by_organization ||= Address.active
       .where(addressable_type: "Organization", addressable_id: links.map(&:second).uniq)
       .order(:id)
-      .select(:id, :addressable_id, :city, :state, :country)
+      .select(:id, :addressable_id, :city, :county, :state, :country)
       .each_with_object({}) { |address, map| map[address.addressable_id] ||= address }
   end
 end
