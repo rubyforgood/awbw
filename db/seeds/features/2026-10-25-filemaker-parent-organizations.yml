@@ -4,8 +4,8 @@ display_status: admin_facing
 released_on: 2026-10-25
 pr_number: 2862
 summary: >-
-  Organizations FileMaker kept under a parent organization, like PROTOTYPES'
-  locations, now come in nested under that parent.
+  Organizations FileMaker kept under a parent organization, like one agency's
+  separate locations, now come in nested under that parent.
 pro_tips:
   - "An organization already nested somewhere else in the portal stays where it is, and the import report notes FileMaker's parent."
   - "The import report lists every organization it nested."

@@ -53,8 +53,8 @@ Constraints already decided elsewhere:
   - **A name match only reaches an org carrying no code from the same table.** One already
     holding another project's code is a namesake; the new org is named `"Name (P1234)"`,
     since org names are unique.
-  - **An organization FileMaker nests under another** (`ParentID`, 16 in prod: PROTOTYPES' 11
-    locations, Human Options' sites) gets its parent's portal org as `parent_id`, read once every
+  - **An organization FileMaker nests under another** (`ParentID`, 16 in prod across two
+    parents) gets its parent's portal org as `parent_id`, read once every
     org is in. One the portal already nests elsewhere keeps its parent (noted), and one that lands
     on the same portal org as its parent stays as it is (decided 2026-10-25).
   - **Organization type** comes from the FileMaker organization's `OrgType`, else the

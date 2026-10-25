@@ -173,8 +173,8 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
   describe "an organization FileMaker nests under another (ParentID)" do
     it "nests it under its parent's portal organization" do
-      fm_organization("ORG00010", OrgName: "Prototypes")
-      fm_organization("ORG00011", OrgName: "Prototypes Ventura", ParentID: "ORG00010")
+      fm_organization("ORG00010", OrgName: "Valley Services")
+      fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG00010")
 
       import = described_class.new.call
 
@@ -186,8 +186,8 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     it "keeps a parent the portal already set, noting FileMaker's" do
       elsewhere = create(:organization)
       child = create(:organization, filemaker_code: "ORG00011", parent: elsewhere)
-      fm_organization("ORG00010", OrgName: "Prototypes")
-      fm_organization("ORG00011", OrgName: "Prototypes Ventura", ParentID: "ORG00010")
+      fm_organization("ORG00010", OrgName: "Valley Services")
+      fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG00010")
 
       import = described_class.new.call
 
@@ -197,8 +197,8 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
     it "leaves an organization alone that is the same portal organization as its parent" do
       both = create(:organization, filemaker_code: "ORG00010, ORG00011")
-      fm_organization("ORG00010", OrgName: "Prototypes")
-      fm_organization("ORG00011", OrgName: "Prototypes Ventura", ParentID: "ORG00010")
+      fm_organization("ORG00010", OrgName: "Valley Services")
+      fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG00010")
 
       import = described_class.new.call
 
@@ -207,7 +207,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     end
 
     it "notes a parent that wasn't imported" do
-      fm_organization("ORG00011", OrgName: "Prototypes Ventura", ParentID: "ORG09999")
+      fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG09999")
 
       import = described_class.new.call
 
