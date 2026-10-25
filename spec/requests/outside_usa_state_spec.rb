@@ -155,4 +155,26 @@ RSpec.describe "Outside USA? state boxes", type: :request do
       expect(page_html.at_css("input[name='public_registration[form_fields_outside_usa][#{state_field.id}]']")["value"]).to eq("Ontario")
     end
   end
+
+  describe "a submitted registration's answers" do
+    let(:event) { create(:event) }
+    let(:person) { create(:person) }
+    let!(:registration) { create(:event_registration, event: event, registrant: person) }
+    let(:form) { create(:form) }
+    let!(:state_field) { create(:form_field, form: form, name: "State", field_identifier: "mailing_state") }
+    let!(:country_field) { create(:form_field, form: form, name: "Country", field_identifier: "mailing_country") }
+
+    it "shows the country answered in the box on the confirmation page" do
+      EventForm.create!(event: event, form: form, role: "registration")
+      submission = form.form_submissions.create!(person: person, event: event)
+      submission.form_answers.create!(form_field: state_field, submitted_answer: "Ontario")
+      submission.form_answers.create!(form_field: country_field, submitted_answer: "Canada")
+
+      get event_public_registration_path(event, reg: registration.slug)
+
+      row = page_html.css("dt").find { |label| label.text.strip == "Country" }&.parent
+      expect(row["class"]).not_to include("hidden")
+      expect(row.at_css("dd").text).to include("Canada")
+    end
+  end
 end

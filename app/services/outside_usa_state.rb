@@ -1,4 +1,4 @@
-# Resolves a state submitted through shared/_state_select: the "Outside USA?" box's
+# Resolves a state submitted through shared/_outside_usa: the "Outside USA?" box's
 # typed value when filled, otherwise the US-state dropdown's pick.
 module OutsideUsaState
   SUFFIX = "_outside_usa"
