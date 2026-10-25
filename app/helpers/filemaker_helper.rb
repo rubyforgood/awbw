@@ -44,6 +44,8 @@ module FilemakerHelper
     when Affiliation then [ "#{record.person&.full_name} at #{record.organization&.name}", edit_affiliation_path(record) ]
     when Payment then [ [ dollars_from_cents(record.amount_cents), person_name(record.payer) ].compact.join(" from "), payment_path(record) ]
     when Workshop then [ record.title, workshop_path(record) ]
+    when Address then [ "#{record.addressable.name}: #{record.street_address}", polymorphic_path(record.addressable) ]
+    when ContactMethod then [ "#{record.contactable.name}: #{record.value}", polymorphic_path(record.contactable) ]
     end
 
     link_to text, path, class: button_classes(:primary)

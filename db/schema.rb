@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_25_125134) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_25_200004) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -89,6 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_125134) do
     t.integer "updated_by_id"
     t.string "zip_code", null: false
     t.boolean "invoice_address"
+    t.string "filemaker_code"
     t.index ["addressable_type", "addressable_id", "invoice_address"], name: "index_addresses_on_addressable_and_invoice_role"
     t.index ["addressable_type", "addressable_id"], name: "index_addresses_on_addressable"
     t.index ["created_by_id"], name: "index_addresses_on_created_by_id"
@@ -459,6 +460,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_125134) do
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.string "value", null: false
+    t.string "filemaker_code"
     t.index ["address_id"], name: "index_contact_methods_on_address_id"
     t.index ["contactable_type", "contactable_id"], name: "index_contact_methods_on_contactable"
     t.index ["created_by_id"], name: "index_contact_methods_on_created_by_id"
