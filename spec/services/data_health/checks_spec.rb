@@ -137,6 +137,16 @@ RSpec.describe DataHealth::LegacyLeaderAffiliations do
     expect(described_class.new).not_to be_repairable
   end
 
+  it "labels each Facilitator row by how its stretch meets the Leader row's" do
+    check = described_class.new
+    leader = affiliation("Leader", start_date: Date.new(2019, 4, 1), end_date: Date.new(2025, 7, 1))
+    same = affiliation("Facilitator", start_date: Date.new(2019, 4, 1), end_date: Date.new(2025, 7, 1))
+    earlier = affiliation("Facilitator", start_date: Date.new(2010, 1, 1), end_date: Date.new(2012, 1, 1))
+
+    expect(check.stretch_label(same, leader, same)).to eq("same dates")
+    expect(check.stretch_label(earlier, leader, same)).to eq("a different stretch")
+  end
+
   describe "#twin_for" do
     it "finds the Facilitator row with the same dates first" do
       affiliation("Facilitator", start_date: Date.new(2015, 1, 1))
