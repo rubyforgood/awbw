@@ -225,6 +225,9 @@ class FmRolodex < ApplicationRecord
     @addresses ||= contact_records(FmAddress, primary_ids: address_ids)
   end
 
+  # Cards flagged as an agency's, narrowed in SQL; #agency? reads the flag exactly.
+  scope :agency_cards, -> { where("JSON_UNQUOTE(JSON_EXTRACT(data, '$.isAgency__c')) NOT IN ('', '0', 'n', 'no', 'false', 'null')") }
+
   # The row is an agency's own contact card, sometimes naming the person to reach there.
   def agency?
     FilemakerValues.flag?(data["isAgency__c"])
