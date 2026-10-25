@@ -1,0 +1,11 @@
+name: "Work addresses and address phones on person edit"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2858
+summary: >-
+  The person edit page now shows the work addresses linked through their affiliations, under
+  their mailing addresses, plus any phone saved on a mailing address that isn't already in their phones.
+pro_tips:
+  - "Work addresses are read-only there. Admins use Edit work address to jump to the affiliation's address picker."
+  - "Each address header shows its phone, so you don't have to open it to find the number."

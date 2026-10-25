@@ -86,19 +86,36 @@
                                   partial: "contact_methods/contact_method_fields",
                                   data: { association_insertion_node: "this" },
                                   class: button_classes(:secondary_outline) %>
+
+      <% address_phones = f.object.decorate.address_phones %>
+      <% if address_phones.any? %>
+        <% numbered = f.object.addresses.size > 1 %>
+        <div class="mt-3">
+          <div class="mb-1 font-medium text-gray-700">On mailing addresses</div>
+          <ol class="text-sm text-gray-900">
+            <% address_phones.each do |number, phone| %>
+              <li><% if numbered %><span class="text-gray-500"><%= number %>.</span> <% end %><%= phone %></li>
+            <% end %>
+          </ol>
+          <p class="mt-1 text-sm text-gray-500">Saved per <%= link_to (numbered ? "address number" : "address"), "#addresses", class: "underline" %></p>
+        </div>
+      <% end %>
     </div>
   </div>
 
   <div class="addresses scroll-mt-4 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm" id="addresses">
     <h3 class="<%= heading_class %>">Mailing addresses</h3>
-    <%= f.simple_fields_for :addresses do |f| %>
-      <%= render "addresses/address_fields", f: f %>
-    <% end %>
+    <div id="person_address_fields">
+      <%= f.simple_fields_for :addresses do |f| %>
+        <%= render "addresses/address_fields", f: f %>
+      <% end %>
+    </div>
+    <%= render "people/work_addresses", person: @person if @person.persisted? %>
 
     <%= link_to_add_association "➕ Add address",
                                 f,
                                 :addresses,
-                                data: { association_insertion_node: "this" },
+                                data: { association_insertion_node: "#person_address_fields", association_insertion_method: "append" },
                                 class: button_classes(:secondary_outline) %>
   </div>
 

@@ -21,6 +21,21 @@ class PersonDecorator < ApplicationDecorator
     avatar
   end
 
+  # Each address phone numbered by its address's position on the edit form, skipping
+  # any already entered as a phone (compared by digits, so formatting doesn't matter).
+  def address_phones
+    listed = contact_methods.map { |contact_method| contact_method.value.to_s.gsub(/\D/, "") }.to_set
+    addresses.each_with_index.filter_map do |address, index|
+      [ index + 1, address.phone ] if address.phone.present? && !listed.include?(address.phone.gsub(/\D/, ""))
+    end
+  end
+
+  # Active affiliations pointing at one of their organization's addresses, one per address.
+  def work_address_affiliations
+    affiliations.active.where.not(organization_address_id: nil)
+      .includes(:organization, :organization_address).order(:id).uniq(&:organization_address_id)
+  end
+
   # A person may hold only one uncancelled membership (Membership enforces it), so
   # more than one usually means a duplicate a merge left behind — flagged for admins
   # on the profile and edit pages so they can consolidate. Cancelled historical
