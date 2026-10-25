@@ -9,3 +9,4 @@ summary: >-
   the United States.
 pro_tips:
   - "A blank country on the organization's matching saved address is filled in too; a country already saved is never changed."
+  - "A blank or Unknown locality on that saved address is filled when the address settles it (Outside USA, Outside CA, LA City, LA County, Orange County); a locality someone chose is kept."

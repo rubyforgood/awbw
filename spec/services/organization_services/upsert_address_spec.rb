@@ -259,4 +259,25 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(old_primary.reload).to have_attributes(primary: true, inactive: false)
     expect(organization.addresses.find_by(city: "Austin")).to have_attributes(primary: false)
   end
+
+  it "fills an Unknown locality on the matching address from its parts" do
+    existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX",
+                                zip_code: "78701", country: nil, locality: Address::UNKNOWN_LOCALITY)
+
+    result = described_class.call(organization: organization, street_address: "1 Main St", city: "Austin", state: "TX",
+                                  zip_code: "78701", country: "United States", overwrite: false)
+
+    expect(existing.reload.locality).to eq(Address::OUTSIDE_CA)
+    expect(result.changes.map(&:label)).to include("Locality")
+  end
+
+  it "keeps a locality someone chose on the matching address" do
+    existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Fresno", state: "CA",
+                                zip_code: "93701", country: nil, locality: "Central CA")
+
+    described_class.call(organization: organization, street_address: "1 Main St", city: "Fresno", state: "CA",
+                         zip_code: "93701", country: "United States", overwrite: false)
+
+    expect(existing.reload.locality).to eq("Central CA")
+  end
 end

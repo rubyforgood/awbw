@@ -29,7 +29,8 @@ module OrganizationServices
       "city" => "City",
       "state" => "State",
       "zip_code" => "ZIP",
-      "country" => "Country"
+      "country" => "Country",
+      "locality" => "Locality"
     }.freeze
 
     def self.call(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil, overwrite: true)
@@ -113,7 +114,18 @@ module OrganizationServices
       updates[:street_address] = @street_address if @street_address.present? && (@overwrite || existing.street_address.blank?)
       updates[:zip_code] = @zip_code if @zip_code.present? && (@overwrite || existing.zip_code.blank?)
       updates[:country] = @country if @country.present? && (@overwrite || existing.country.blank?)
+      locality = filled_locality(existing, updates)
+      updates[:locality] = locality if locality
       updates
+    end
+
+    # Only a blank or Unknown locality is filled, and only with one the address's parts settle.
+    def filled_locality(existing, updates)
+      return if existing.locality.present? && existing.locality != Address::UNKNOWN_LOCALITY
+
+      parts = existing.attributes.symbolize_keys.slice(:city, :state, :country, :county).merge(updates.slice(:city, :state, :country))
+      locality = AddressLocality.for(**parts)
+      locality unless locality == Address::UNKNOWN_LOCALITY
     end
 
     # An Address needs a city and a state to validate, so a submission missing
