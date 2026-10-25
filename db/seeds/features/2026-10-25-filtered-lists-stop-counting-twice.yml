@@ -1,0 +1,10 @@
+name: "Filtered lists stop counting twice"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2856
+summary: >-
+  Features & tips, Subscriptions, and CE registrations ran their counts and
+  totals twice on every visit — once for the page, once for the list that
+  loads into it. They now run once, when the list loads, so the pages open
+  quicker.
