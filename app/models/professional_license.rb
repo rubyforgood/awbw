@@ -17,6 +17,7 @@ class ProfessionalLicense < ApplicationRecord
   # whether those registrations carry payments. prepend so this runs before the
   # dependent: :destroy cascade below clears those registrations.
   before_destroy :prevent_destroy_with_ce, prepend: true
+  before_validation :default_issuing_country
 
   # A license is identified by its kind + number, so the same number under two
   # different kinds is allowed; only a duplicate (kind, number) pair is rejected.
@@ -77,6 +78,11 @@ class ProfessionalLicense < ApplicationRecord
   end
 
   private
+
+  # A US state with no country named is a US license.
+  def default_issuing_country
+    self.issuing_country = Address::DEFAULT_COUNTRY if issuing_country.blank? && issuing_state.in?(Address::US_STATE_ABBREVIATIONS)
+  end
 
   def prevent_destroy_with_ce
     return if removable?

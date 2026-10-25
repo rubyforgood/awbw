@@ -487,24 +487,33 @@ if trauma_ce && trauma_ce.description.blank?
   HTML
 end
 
-# A short post-event survey delivered on the flagship's "Feedback surveys" callout,
-# open now (no drip date) so a callout form can be filled in from any flagship
-# ticket. Its state question exercises the "Outside USA?" box, with the country inside it. The built-in callout
-# links its survey forms only when created, so link this one here. Idempotent.
+# A post-event survey delivered on the flagship's "Feedback surveys" callout, open
+# now so a callout form can be filled in from any flagship ticket. Its state question
+# exercises the "Outside USA?" box, with the country inside it. The built-in callout
+# links its survey forms only when created, so link this one here; an existing survey
+# gets the two location questions and loses its drip date. Idempotent.
 post_event_survey = Form.survey("post_event_survey")
 unless post_event_survey
   post_event_survey = Form.create!(name: "Post-event survey", role: "post_event_survey")
   [
     { name: "How likely are you to recommend this training to a colleague?", answer_type: :slider, required: true },
-    { name: "Which state or province do you mostly work in?", answer_type: :free_form_input_one_line, field_identifier: "practice_state" },
-    { name: "Which country do you mostly work in?", answer_type: :free_form_input_one_line, field_identifier: "practice_country" },
     { name: "What will you take back to your practice?", answer_type: :free_form_input_paragraph }
   ].each { |question| post_event_survey.form_fields.create!(status: :active, **question) }
 end
 
+[
+  { name: "Which state or province do you mostly work in?", field_identifier: "practice_state" },
+  { name: "Which country do you mostly work in?", field_identifier: "practice_country" }
+].each do |question|
+  next if post_event_survey.form_fields.exists?(field_identifier: question[:field_identifier])
+
+  post_event_survey.form_fields.create!(status: :active, answer_type: :free_form_input_one_line,
+    position: post_event_survey.form_fields.maximum(:position).to_i + 1, **question)
+end
+
 feedback_surveys = flagship&.registration_ticket_callouts&.find_by(builtin_key: "feedback_surveys")
-if feedback_surveys && !feedback_surveys.forms.include?(post_event_survey)
-  feedback_surveys.registration_ticket_callout_forms.create!(form: post_event_survey)
+if feedback_surveys
+  feedback_surveys.registration_ticket_callout_forms.find_or_initialize_by(form: post_event_survey).update!(display_from: nil)
   feedback_surveys.update!(hidden: false)
 end
 
