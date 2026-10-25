@@ -9,6 +9,7 @@ summary: >-
   open the person and clean it up.
 pro_tips:
   - "Find it under Data health → Affiliations → Affiliations still titled Leader."
+  - "Each row says whether the person already has a Facilitator affiliation at that organization, and lists it."
   - "A row marked “same dates” sits beside a Facilitator affiliation that already covers it; one marked “overlaps with different dates” needs a look at which dates are right."
   - "Each name opens the person's edit page at that affiliation, and its back link returns you to Data health."
 action_path: "/admin/data_health"
