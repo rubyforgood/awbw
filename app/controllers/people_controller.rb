@@ -429,7 +429,7 @@ class PeopleController < ApplicationController
           delete.age_range_categorizable_items.find_by(is_primary: true)&.category_id
         @keeper_default_pay_customer_id = keep.pay_customers.active.find_by(default: true)&.id
         @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
-        @keeper_primary_contact_signatures = PersonServices::ReconcileContactMethods.primary_signatures(keep, delete)
+        @keeper_primary_contact_signatures = ContactMethodDeduper.primary_signatures(keep, delete)
         @primary_login_id = primary_login(keep, delete)&.id
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
@@ -456,7 +456,7 @@ class PeopleController < ApplicationController
           preferred_customer_id: @keeper_default_pay_customer_id).call
         AddressDeduper.new(keep,
           primary_signature: @keeper_primary_address_signature).call
-        PersonServices::ReconcileContactMethods.new(keep,
+        ContactMethodDeduper.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
         sync_primary_login_email(keep)
       },

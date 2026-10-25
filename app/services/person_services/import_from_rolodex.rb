@@ -19,6 +19,10 @@ module PersonServices
   #                        person is the agency itself, which the organizations import reads)
   #   * failed           — the Person didn't validate
   #
+  # Each address and phone the row brings carries its archive row's ID as its own
+  # filemaker_code, added to the one the person already holds when it's the same place
+  # or number.
+  #
   # An email field holding no address the person's email validation accepts ("ada@@x.org",
   # "ada at x dot org") or an address it rejects is left off — the row imports without it.
   # When that leaves the person with no email on file, the field's whole value is left as a
@@ -387,26 +391,33 @@ module PersonServices
     # Every address the row answers to, not just the one it names as primary —
     # FmRolodex#addresses lists the primary first, so the first that can be built is the
     # person's primary and the rest ride along. An organization's address (a work address,
-    # or any address on an agency's row), one the person already has, and a primary they
-    # already hold are all left as they are; the organizations import places the first.
+    # or any address on an agency's row) and a primary they already hold are left as they
+    # are; the organizations import places the first.
     def build_addresses(person, rolodex)
-      held = person.addresses.map { |address| address_key(address.street_address, address.city) }
       attributes = rolodex.addresses.reject { |address| rolodex.organization_address?(address) }
-                          .filter_map { |address| @address_attributes.call(address.data) }
-                          .reject { |attrs| held.include?(address_key(attrs[:street_address], attrs[:city])) }
-      build_primary_first(person.addresses, attributes)
+                          .filter_map { |address| @address_attributes.call(address.data)&.merge(filemaker_code: address.fm_id) }
+      attach(person.addresses, attributes) { |address| address_key(address[:street_address], address[:city]) }
     end
 
     def build_phones(person, rolodex)
-      held = person.contact_methods.map { |phone| phone_key(phone.value) }
-      attributes = rolodex.phone_numbers.filter_map { |phone| phone_attributes(phone.data) }
-                          .reject { |attrs| held.include?(phone_key(attrs[:value])) }
-      build_primary_first(person.contact_methods, attributes)
+      attributes = rolodex.phone_numbers.filter_map { |phone| phone_attributes(phone) }
+      attach(person.contact_methods, attributes) { |phone| phone_key(phone[:value]) }
     end
 
-    def build_primary_first(association, attributes)
+    # Each archive row lands on one record carrying its code: the one the person already
+    # holds for it (the same address or number), or a new one — the first of which is
+    # primary when the person has none.
+    def attach(association, attributes)
       has_primary = association.any?(&:primary?)
-      attributes.each_with_index { |attrs, index| association.build(attrs.merge(primary: index.zero? && !has_primary)) }
+      attributes.each do |attrs|
+        held = association.find { |record| yield(record) == yield(attrs) }
+        if held
+          held.filemaker_code = held.class.join_filemaker_codes(held.filemaker_code, attrs[:filemaker_code])
+        else
+          association.build(attrs.merge(primary: !has_primary))
+          has_primary = true
+        end
+      end
     end
 
     def address_key(street, city)
@@ -417,11 +428,12 @@ module PersonServices
       value.to_s.gsub(/\D/, "")
     end
 
-    def phone_attributes(fields)
-      number = clip(fields["PhoneNumber"])
+    def phone_attributes(phone)
+      number = clip(phone.data["PhoneNumber"])
       return if number.blank?
 
-      { kind: "phone", value: number, contact_type: contact_type(fields["PhoneType"], allowed: ContactMethod::CONTACT_TYPES) }
+      { kind: "phone", value: number, contact_type: contact_type(phone.data["PhoneType"], allowed: ContactMethod::CONTACT_TYPES),
+        filemaker_code: phone.fm_id }
     end
 
     def ids(people)

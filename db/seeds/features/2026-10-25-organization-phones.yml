@@ -1,0 +1,14 @@
+name: "Phone numbers on organizations"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2860
+summary: >-
+  Organizations now keep their own list of phone numbers, edited the same way
+  as a person's, with one marked primary. The FileMaker import brings an
+  organization's numbers in there.
+pro_tips:
+  - "Add phones in the Phones section of the organization's edit page."
+  - "The profile shows the primary phone, or a phone saved on one of its addresses when it has none."
+  - "Merging two organizations keeps both sets of phones, folding a shared number into one."
+action_path: "/organizations"

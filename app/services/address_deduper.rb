@@ -8,6 +8,7 @@
 class AddressDeduper
   # Filled in on the survivor from a merged copy when the survivor has none, so a
   # merge never drops a phone number, a ZIP, or a geocoded district only one copy had.
+  # FileMaker codes are unioned.
   CARRIED_COLUMNS = %w[
     street_address zip_code country county district address_type locality
     phone la_city_council_district la_service_planning_area la_supervisorial_district
@@ -86,9 +87,9 @@ class AddressDeduper
 
   def carry_over(loser, survivor)
     filled = CARRIED_COLUMNS.select { |column| missing?(survivor, column) && !missing?(loser, column) }
-    return if filled.empty?
-
-    survivor.update!(filled.index_with { |column| loser.public_send(column) })
+    survivor.assign_attributes(filled.index_with { |column| loser.public_send(column) })
+    survivor.filemaker_code = Address.join_filemaker_codes(survivor.filemaker_code, loser.filemaker_code)
+    survivor.save! if survivor.changed?
   end
 
   def missing?(address, column)

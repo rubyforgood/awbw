@@ -136,8 +136,9 @@ Constraints already decided elsewhere:
 - **Conflicts:** a field on a record — an organization's website, mission, type — fills blanks
   and keeps the portal value where the archive disagrees, reported as a comment plus in the
   task output. A record itself comes in new instead: an affiliation whose dates differ, an
-  address the organization doesn't hold, and a phone number no address holds — placed on an
-  address without one, and noted only when none is free (decided 2026-10-25).
+  address the organization doesn't hold, and a phone number it doesn't hold — a phone
+  record (`contact_methods`) on the organization, as a person's are (decided 2026-10-25).
+  Each address and phone carries its archive row's ID as its own `filemaker_code` (ADR-0005).
 - **Out of scope:** event registrations (`fm_participants`, 68,497 rows), payments, funding,
   notes and activities — each its own pass.
 

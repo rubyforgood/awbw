@@ -241,6 +241,20 @@
                                 class: button_classes(:secondary_outline) %>
   </div>
 
+  <div id="phones" class="form-group scroll-mt-48 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm">
+    <h3 class="<%= heading_class %>">Phones</h3>
+    <%= f.simple_fields_for :contact_methods do |sfi| %>
+      <%= render "contact_methods/contact_method_fields", f: sfi %>
+    <% end %>
+
+    <%= link_to_add_association "➕ Add phone",
+                                f,
+                                :contact_methods,
+                                partial: "contact_methods/contact_method_fields",
+                                data: { association_insertion_node: "this" },
+                                class: button_classes(:secondary_outline) %>
+  </div>
+
   <div id="affiliations" class="form-group scroll-mt-48 rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 shadow-sm">
     <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
       <h3 class="font-semibold text-gray-700">Affiliations</h3>

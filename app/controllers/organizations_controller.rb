@@ -207,7 +207,7 @@ class OrganizationsController < ApplicationController
 
   def set_organization
     @organization = Organization.includes(
-      :organization_status, :windows_type, :addresses,
+      :organization_status, :windows_type, :addresses, :contact_methods,
       :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
       affiliations: { person: [ :user, :affiliations, *Organization::PEOPLE_TAGGINGS ] }
@@ -238,6 +238,7 @@ class OrganizationsController < ApplicationController
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES,
+      contact_methods_attributes: [ :id, :kind, :contact_type, :value, :primary, :inactive, :_destroy ],
       addresses_attributes: [
         :id,
         :address_type,
@@ -275,9 +276,11 @@ class OrganizationsController < ApplicationController
       merge_keeper: ->(keep, delete) {
         keep.filemaker_code = Organization.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
         @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
+        @keeper_primary_contact_signatures = ContactMethodDeduper.primary_signatures(keep, delete)
       },
       after_merge: ->(keep) {
         AddressDeduper.new(keep, primary_signature: @keeper_primary_address_signature).call
+        ContactMethodDeduper.new(keep, primary_signatures: @keeper_primary_contact_signatures).call
       },
       belongs_to_options: -> {
         {

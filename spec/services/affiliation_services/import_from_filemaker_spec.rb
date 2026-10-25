@@ -304,8 +304,22 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
 
       affiliation = person.affiliations.sole
       expect(affiliation).to have_attributes(organization: umbrella, title: "Counselor", filemaker_code: nil)
-      expect(affiliation.organization_address).to have_attributes(addressable: umbrella, street_address: "1 Main St", address_type: "work")
+      expect(affiliation.organization_address).to have_attributes(addressable: umbrella, street_address: "1 Main St", address_type: "work",
+                                                                  filemaker_code: "40")
       expect(person.addresses).to be_empty
+    end
+
+    it "adds the archive row's code to a work address the organization already has" do
+      held = create(:address, addressable: umbrella, street_address: "1 Main Street", city: "Pasadena", state: "CA")
+      FmAddress.create!(fm_id: "40", data: { "RolodexID" => "00006", "AddrsLine1" => "1 Main St", "AddrsCity" => "Pasadena",
+                                             "AddrsState" => "CA", "AddrsType" => "Work" })
+      rolodex(OrgID: "ORG00001")
+
+      import
+
+      expect(umbrella.addresses.sole).to eq(held)
+      expect(held.reload.filemaker_code).to eq("40")
+      expect(person.affiliations.sole.organization_address).to eq(held)
     end
 
     it "places a work address on the person's only organization when the card names none" do
@@ -326,7 +340,7 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
 
       import
 
-      expect(person.addresses.sole).to have_attributes(street_address: "1 Main St", address_type: "work")
+      expect(person.addresses.sole).to have_attributes(street_address: "1 Main St", address_type: "work", filemaker_code: "40")
     end
   end
 

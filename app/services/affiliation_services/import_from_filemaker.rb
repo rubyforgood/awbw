@@ -350,14 +350,14 @@ module AffiliationServices
     # person as their own work address.
     def place_work_addresses(rolodex, people, organization, work, label)
       work.sort_by { |address| address.fm_id == rolodex.data["WorksiteAddrsID"] ? 0 : 1 }.each do |fm_address|
-        attributes = @address_attributes.call(fm_address.data, address_type: "work")
+        attributes = @address_attributes.call(fm_address.data, address_type: "work")&.merge(filemaker_code: fm_address.fm_id)
         next unless attributes
 
         people.each do |person|
           target = organization_for(fm_address.data["OrgID"]) || organization || sole_organization(person)
           next keep_with_person(person, attributes, label) unless target
 
-          address = organization_address(target, attributes)
+          address = organization_address(target, attributes, label)
           next failed(address, label) unless address.persisted?
 
           person.affiliations.where(organization: target, organization_address_id: nil).find_each do |affiliation|
@@ -372,20 +372,32 @@ module AffiliationServices
       Organization.find_by(id: ids.first) if ids.one?
     end
 
-    def organization_address(organization, attributes)
-      held = organization.addresses.find { |address| address_key(address.street_address, address.city) == address_key(attributes[:street_address], attributes[:city]) }
-      return held if held
+    def organization_address(organization, attributes, label)
+      held = held_address(organization, attributes)
+      return organization.addresses.create(attributes.merge(primary: organization.addresses.where(primary: true).none?)) unless held
 
-      organization.addresses.create(attributes.merge(primary: organization.addresses.where(primary: true).none?))
+      add_code(held, attributes[:filemaker_code], label)
+      held
     end
 
     def keep_with_person(person, attributes, label)
-      return if person.addresses.any? { |address| address_key(address.street_address, address.city) == address_key(attributes[:street_address], attributes[:city]) }
+      held = held_address(person, attributes)
+      return add_code(held, attributes[:filemaker_code], label) if held
 
       address = person.addresses.create(attributes.merge(primary: person.addresses.where(primary: true).none?))
       return failed(address, label) unless address.persisted?
 
       record(:created, "#{label} → work address ##{address.id} kept on person ##{person.id}, no organization to place it on")
+    end
+
+    def held_address(addressable, attributes)
+      key = address_key(attributes[:street_address], attributes[:city])
+      addressable.addresses.find { |address| address_key(address.street_address, address.city) == key }
+    end
+
+    # An address already on file takes the archive row's code rather than a copy.
+    def add_code(address, code, label)
+      address.update(filemaker_code: Address.join_filemaker_codes(address.filemaker_code, code)) || failed(address, label)
     end
 
     def address_key(street, city)

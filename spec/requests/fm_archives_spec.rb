@@ -335,6 +335,28 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to include(ERB::Util.html_escape(workshop.title))
     end
 
+    it "links an archived address back to the person holding it" do
+      FmAddress.create!(fm_id: "123")
+      person = create(:person)
+      create(:address, addressable: person, street_address: "1 Main St", filemaker_code: "123")
+
+      get fm_archive_path("123", table: "addresses")
+
+      expect(response.body).to include(person_path(person))
+      expect(response.body).to include(ERB::Util.html_escape("#{person.name}: 1 Main St"))
+    end
+
+    it "links an archived phone number back to the person holding it" do
+      FmPhoneNumber.create!(fm_id: "456")
+      person = create(:person)
+      person.contact_methods.create!(kind: "phone", value: "555-0100", filemaker_code: "456")
+
+      get fm_archive_path("456", table: "phone_numbers")
+
+      expect(response.body).to include(person_path(person))
+      expect(response.body).to include(ERB::Util.html_escape("#{person.name}: 555-0100"))
+    end
+
     it "omits the portal section when nothing carries the code" do
       FmRolodex.create!(fm_id: "00006")
 
