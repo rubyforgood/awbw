@@ -109,6 +109,36 @@ RSpec.describe ProfessionalLicense, type: :model do
     end
   end
 
+  describe ".located_in" do
+    let!(:issued_in_california) { create(:professional_license, number: "1", issuing_state: "CA") }
+    let!(:issued_in_canada) { create(:professional_license, number: "2", issuing_state: "Ontario", issuing_country: "Canada") }
+    let!(:held_in_oakland) do
+      create(:professional_license, number: "3", issuing_state: "NY").tap do |license|
+        create(:address, addressable: license.person, city: "Oakland", state: "CA", country: "United States")
+      end
+    end
+
+    it "finds licenses issued in, or held by someone living in, a US state by name or code" do
+      expect(described_class.located_in("California")).to contain_exactly(issued_in_california, held_in_oakland)
+      expect(described_class.located_in("ca")).to contain_exactly(issued_in_california, held_in_oakland)
+    end
+
+    it "finds licenses by province or country" do
+      expect(described_class.located_in("Ontario")).to contain_exactly(issued_in_canada)
+      expect(described_class.located_in("Canada")).to contain_exactly(issued_in_canada)
+    end
+
+    it "finds licenses by the holder's city, from its start" do
+      expect(described_class.located_in("Oak")).to contain_exactly(held_in_oakland)
+    end
+
+    it "ignores a holder's retired address" do
+      held_in_oakland.person.addresses.update_all(inactive: true)
+
+      expect(described_class.located_in("Oakland")).to be_empty
+    end
+  end
+
   describe "issuing country" do
     it "is the US for a US state with no country named" do
       expect(create(:professional_license, issuing_state: "CA", issuing_country: "").issuing_country).to eq("United States")
