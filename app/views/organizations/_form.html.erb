@@ -62,7 +62,7 @@
                     required: true,
                     collection: Organization::ORGANIZATION_TYPES,
                     selected: organization_type_option,
-                    wrapper_html: { class: "mb-0" },
+                    wrapper_html: { class: "mb-0!" },
                     input_html: {
                       value: organization_type_option,
                       class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -72,7 +72,7 @@
                              open: organization_type_option == Organization::ORGANIZATION_TYPE_OTHER || f.object.organization_type_other.present? } do %>
           <%= f.input :organization_type_other,
                       label: "Other organization type",
-                      wrapper_html: { class: "mb-0" },
+                      wrapper_html: { class: "mb-0!" },
                       input_html: {
                         class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                       } %>
