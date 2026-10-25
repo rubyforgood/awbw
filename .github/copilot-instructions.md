@@ -352,7 +352,7 @@ follow this). Match the existing pattern:
 
 ## Turbo frames & streams
 
-Rules from Justin's (jmilljr24) reviews — he built the lazy-frame pattern:
+Rules from past PR reviews:
 
 - **One lazy request per page.** When several parts of a page load lazily (badges,
   counts, panels), load them from one action, not one frame per part — each lazy
