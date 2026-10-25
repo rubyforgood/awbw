@@ -92,7 +92,7 @@ class SmartFormFields
                "organization's address when it has exactly one; with several addresses the address is " \
                "left blank for an admin to set. When it doesn't match, nothing is written and " \
                "an admin resolves it on the submission's Link organization page. Agreement forms " \
-               "(on-demand, new job, reinstatement, close program) go a step further: an unambiguous " \
+               "(on-demand, reinstatement) go a step further: an unambiguous " \
                "name match is processed on arrival exactly as if an admin had linked it by hand.",
       fields: [
         [ "organization_name", "Organization name", "Looked up against existing organizations by name, ignoring capitalization. A match is linked to the submission; no match — or two organizations answering to the same name — leaves it unlinked for an admin to resolve." ],
