@@ -3,6 +3,7 @@ module Admin
     include AdminCardsHelper
 
     REVIEW_BADGE = "Review".freeze
+    NEW_BADGE = "New".freeze
     DATA_HEALTH_BADGE_TITLE = "Data checks only. Possible duplicates and author credit are listed separately on the Data health page.".freeze
 
     def index
@@ -23,7 +24,7 @@ module Admin
 
       @data_health_flagged = safely { DataHealth.checks.any?(&:flagged?) }
       @author_credit_flagged = safely { AuthorCreditDivergenceQuery.new.any? }
-      @unsynced_features_count = safely { FeatureCatalog.new.missing_count } if allowed_to?(:create?, Feature)
+      @features_unsynced = safely { FeatureCatalog.new.recent_missing? } if allowed_to?(:create?, Feature)
       render :badges
     end
 

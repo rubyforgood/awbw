@@ -4,7 +4,7 @@ display_status: admin_facing
 released_on: 2026-10-25
 pr_number: 2847
 summary: >-
-  The badges on the admin home's action buttons now load together in the
-  background, so clicking through to another page no longer waits for them.
-  Data health and Author credit divergences show "Review" when something needs
-  attention; open the page for the full count.
+  Admin home's action badges now load together in the background, so clicks
+  no longer wait for them. Data health and Author credit show "Review" when
+  something needs attention; Sync features & tips shows "New" when there are
+  features to sync.

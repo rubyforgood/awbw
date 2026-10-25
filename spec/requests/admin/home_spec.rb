@@ -102,23 +102,23 @@ RSpec.describe "Admin home", type: :request do
     before do
       allow(DataHealth).to receive(:checks).and_return([ instance_double(DataHealth::Check, flagged?: false), instance_double(DataHealth::Check, flagged?: true) ])
       allow_any_instance_of(AuthorCreditDivergenceQuery).to receive(:any?).and_return(true)
-      allow_any_instance_of(FeatureCatalog).to receive(:missing_count).and_return(3)
+      allow_any_instance_of(FeatureCatalog).to receive(:recent_missing?).and_return(true)
     end
 
-    it "shows Review on Data health and Author credit, and counts unsynced features" do
+    it "shows Review on Data health and Author credit, and New on Sync features" do
       get_badges
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(%(id="badges"))
       expect(badge_stream("data_health_badge")).to match(%r{<span[^>]*>Review</span>}).and include("Data checks only")
       expect(badge_stream("author_credit_badge")).to match(%r{<span[^>]*>Review</span>})
-      expect(badge_stream("unsynced_features_badge")).to match(%r{<span[^>]*>3</span>})
+      expect(badge_stream("unsynced_features_badge")).to match(%r{<span[^>]*>New</span>})
     end
 
     it "renders no badge when nothing is waiting" do
       allow(DataHealth).to receive(:checks).and_return([ instance_double(DataHealth::Check, flagged?: false) ])
       allow_any_instance_of(AuthorCreditDivergenceQuery).to receive(:any?).and_return(false)
-      allow_any_instance_of(FeatureCatalog).to receive(:missing_count).and_return(0)
+      allow_any_instance_of(FeatureCatalog).to receive(:recent_missing?).and_return(false)
 
       get_badges
 
