@@ -163,6 +163,7 @@ class PersonPolicy < ApplicationPolicy
         :street_address,
         :city,
         :state,
+        :state_outside_usa,
         :zip_code,
         :country,
         :county,
@@ -221,7 +222,7 @@ class PersonPolicy < ApplicationPolicy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES,
-      professional_licenses_attributes: [ :id, :number, :kind, :issuing_state, :expires_on, :_destroy ]
+      professional_licenses_attributes: [ :id, :number, :kind, :issuing_state, :issuing_state_outside_usa, :issuing_country, :expires_on, :_destroy ]
     )
     next permitted if admin?
 

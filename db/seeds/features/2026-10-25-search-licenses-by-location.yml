@@ -1,0 +1,13 @@
+name: "Search licenses by location"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+action_path: "/professional_licenses"
+pr_number: 2852
+summary: >-
+  The licenses list has a Location search that finds licenses issued in, or held
+  by someone living in, a city, state, province, or country.
+pro_tips:
+  - "Type a US state by name or code — California or CA both work."
+  - "A city matches from its start, so \"Oak\" finds Oakland."
+  - "Only a holder's current addresses count; retired ones are skipped."

@@ -24,7 +24,7 @@ class PublicFormsController < ApplicationController
 
     @form_fields = public_form_fields.visible
     @prefill_values = {}
-    form_params = merge_retained_uploads(params.dig(:public_registration, :form_fields)&.to_unsafe_h || {})
+    form_params = merge_retained_uploads(OutsideUsaState.form_field_answers(params, :public_registration))
 
     @field_errors = validate_required_fields(form_params)
     if @field_errors.any?

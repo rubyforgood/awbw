@@ -1,4 +1,4 @@
-<% sort_base = params.permit(:person_query, :kind, :expired).to_h.symbolize_keys %>
+<% sort_base = params.permit(:person_query, :kind, :location, :expired).to_h.symbolize_keys %>
 <% sort_link = sort_header_link(frame: "professional_licenses_results", path: ->(p) { professional_licenses_path(p) }, base: sort_base) %>
 <%= turbo_frame_tag :professional_licenses_results do %>
   <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm blur-on-submit">
@@ -14,7 +14,7 @@
             <tr>
               <th class="px-4 py-3 text-left align-bottom text-xs font-medium tracking-wider text-gray-500 uppercase">Registrant</th>
               <th class="px-4 py-3 text-left align-bottom text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase"><%= sort_link.call("kind", "Type") %> / <%= sort_link.call("number", "Number") %></th>
-              <th class="px-4 py-3 text-left align-bottom text-xs font-medium tracking-wider text-gray-500 uppercase">State</th>
+              <th class="px-4 py-3 text-left align-bottom text-xs font-medium tracking-wider text-gray-500 uppercase">Issued in</th>
               <th class="px-4 py-3 text-left align-bottom text-xs font-medium tracking-wider text-gray-500 uppercase">Status</th>
               <th class="px-4 py-3 text-right align-bottom text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">CE hours issued<br>(this year)</th>
               <th class="px-4 py-3 text-right align-bottom text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">CE hours issued<br>(all years)</th>
@@ -41,7 +41,7 @@
                     <i class="fa-solid fa-pen text-2xs text-gray-400"></i>
                   <% end %>
                 </td>
-                <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700"><%= license.issuing_state.presence || "—" %></td>
+                <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700"><%= license.decorate.issuing_place.presence || "—" %></td>
                 <td class="px-4 py-3 text-sm whitespace-nowrap">
                   <%= render "shared/badge", label: status.label, classes: status.classes, icon: status.icon %>
                 </td>

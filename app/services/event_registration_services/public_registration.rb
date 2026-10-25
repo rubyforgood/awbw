@@ -19,6 +19,7 @@ module EventRegistrationServices
     # questions. Their answers fill in the ProfessionalLicense's issuing_state
     # and expires_on (both optional — registrants can supply them later).
     CE_LICENSE_ISSUING_STATE_IDENTIFIER = "ce_license_issuing_state".freeze
+    CE_LICENSE_ISSUING_COUNTRY_IDENTIFIER = "ce_license_issuing_country".freeze
     CE_LICENSE_EXPIRES_ON_IDENTIFIER = "ce_license_expires_on".freeze
 
     # Well-known field_identifier of the "Additional forms" multi-select question.
@@ -259,7 +260,8 @@ module EventRegistrationServices
 
       ContinuingEducationRegistration.enroll!(
         event_registration: event_registration, number: ce_license_number, kind: ce_license_kind,
-        issuing_state: ce_license_issuing_state, expires_on: ce_license_expires_on
+        issuing_state: ce_license_issuing_state, issuing_country: ce_license_issuing_country,
+        expires_on: ce_license_expires_on
       )
     end
 
@@ -285,6 +287,12 @@ module EventRegistrationServices
       return nil unless @continuing_education_form
 
       ce_field_value(CE_LICENSE_ISSUING_STATE_IDENTIFIER)&.strip.presence
+    end
+
+    def ce_license_issuing_country
+      return nil unless @continuing_education_form
+
+      ce_field_value(CE_LICENSE_ISSUING_COUNTRY_IDENTIFIER)&.strip.presence
     end
 
     def ce_license_expires_on

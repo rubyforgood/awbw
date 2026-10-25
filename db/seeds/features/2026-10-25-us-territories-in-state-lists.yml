@@ -1,0 +1,12 @@
+name: "US territories in every state dropdown"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2846
+summary: >-
+  Puerto Rico, Guam, the U.S. Virgin Islands, American Samoa and the Northern Mariana Islands
+  are now in every state dropdown, labeled "State / territory", so nobody from a US territory
+  has to type it in as if they were outside the country.
+pro_tips:
+  - "They're no longer offered as countries. A territory saves with United States as its country."
+  - "The box under each dropdown is now \"Not on list?\" — for any state or province the list doesn't have."

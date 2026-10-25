@@ -108,4 +108,69 @@ RSpec.describe ProfessionalLicense, type: :model do
       expect(license.reload).to be_used_for_ce
     end
   end
+
+  describe ".located_in" do
+    let!(:issued_in_california) { create(:professional_license, number: "1", issuing_state: "CA") }
+    let!(:issued_in_canada) { create(:professional_license, number: "2", issuing_state: "Ontario", issuing_country: "Canada") }
+    let!(:held_in_oakland) do
+      create(:professional_license, number: "3", issuing_state: "NY").tap do |license|
+        create(:address, addressable: license.person, city: "Oakland", state: "CA", country: "United States")
+      end
+    end
+
+    it "finds licenses issued in, or held by someone living in, a US state by name or code" do
+      expect(described_class.located_in("California")).to contain_exactly(issued_in_california, held_in_oakland)
+      expect(described_class.located_in("ca")).to contain_exactly(issued_in_california, held_in_oakland)
+    end
+
+    it "finds licenses by province or country" do
+      expect(described_class.located_in("Ontario")).to contain_exactly(issued_in_canada)
+      expect(described_class.located_in("Canada")).to contain_exactly(issued_in_canada)
+    end
+
+    it "finds licenses by the holder's city, from its start" do
+      expect(described_class.located_in("Oak")).to contain_exactly(held_in_oakland)
+    end
+
+    it "ignores a holder's retired address" do
+      held_in_oakland.person.addresses.update_all(inactive: true)
+
+      expect(described_class.located_in("Oakland")).to be_empty
+    end
+  end
+
+  describe "issuing country" do
+    it "is the US for a US state with no country named" do
+      expect(create(:professional_license, issuing_state: "CA", issuing_country: "").issuing_country).to eq("United States")
+    end
+
+    it "is the US for a US state whatever country was left in the box" do
+      expect(create(:professional_license, issuing_state: "CA", issuing_country: "Canada").issuing_country).to eq("United States")
+    end
+
+    it "is the US for a territory" do
+      expect(create(:professional_license, issuing_state: "PR", issuing_country: "").issuing_country).to eq("United States")
+    end
+
+    it "keeps the country named beside a state outside the USA" do
+      expect(create(:professional_license, issuing_state: "Ontario", issuing_country: "Canada").issuing_country).to eq("Canada")
+    end
+
+    it "stays blank for a state outside the USA" do
+      expect(create(:professional_license, issuing_state: "Ontario", issuing_country: nil).issuing_country).to be_nil
+    end
+  end
+
+  describe "#issuing_state_outside_usa=" do
+    it "wins over the dropdown whichever is assigned first" do
+      typed_first = described_class.new(issuing_state_outside_usa: "Ontario", issuing_state: "CA")
+      typed_last = described_class.new(issuing_state: "CA", issuing_state_outside_usa: "Ontario")
+
+      expect([ typed_first.issuing_state, typed_last.issuing_state ]).to eq(%w[Ontario Ontario])
+    end
+
+    it "keeps the dropdown pick when left blank" do
+      expect(described_class.new(issuing_state: "CA", issuing_state_outside_usa: "").issuing_state).to eq("CA")
+    end
+  end
 end

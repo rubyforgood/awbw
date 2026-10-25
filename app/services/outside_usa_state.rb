@@ -1,0 +1,41 @@
+# Resolves a state submitted through shared/_outside_usa: the "Not on list?" box's
+# typed value when filled, otherwise the US-state dropdown's pick.
+module OutsideUsaState
+  SUFFIX = "_outside_usa"
+
+  def self.pick(dropdown, typed)
+    typed.to_s.strip.presence || dropdown
+  end
+
+  # A form's answers, keyed by field id (or field id → resource id for fanned-out
+  # fields), with each state typed under `form_fields_outside_usa` laid over its dropdown
+  # and the US filled in for a paired country left blank beside a US state.
+  def self.form_field_answers(params, scope)
+    answers = params.dig(scope, :form_fields)&.to_unsafe_h || {}
+    typed = params.dig(scope, :"form_fields#{SUFFIX}")&.to_unsafe_h || {}
+    with_us_countries(answers.deep_merge(filled(typed)))
+  end
+
+  # A paired country question sits in the state's closed "Not on list?" box, so
+  # someone who picked a US state leaves it blank; record the US for them. Pairs
+  # within the submitted questions, which are the ones the form asked.
+  def self.with_us_countries(answers)
+    asked = FormField.where(id: answers.keys).to_a
+    asked.each do |state_field|
+      next unless answers[state_field.id.to_s].in?(Address::US_STATE_ABBREVIATIONS)
+
+      country_key = state_field.paired_country_field(among: asked)&.id&.to_s
+      answers[country_key] = Address::DEFAULT_COUNTRY if country_key && answers[country_key].blank?
+    end
+    answers
+  end
+  private_class_method :with_us_countries
+
+  def self.filled(typed)
+    typed.each_with_object({}) do |(key, value), result|
+      value = value.is_a?(Hash) ? filled(value) : value.to_s.strip
+      result[key] = value if value.present?
+    end
+  end
+  private_class_method :filled
+end

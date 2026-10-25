@@ -194,7 +194,8 @@ module Events
       end
 
       ce_registration.assign_license(number: params[:license_number], kind: params[:license_kind],
-                                     issuing_state: params[:license_issuing_state], expires_on: params[:license_expires_on])
+                                     issuing_state: OutsideUsaState.pick(params[:license_issuing_state], params[:license_issuing_state_outside_usa]),
+                                     issuing_country: params[:license_issuing_country], expires_on: params[:license_expires_on])
       ce_registration.save!
       # assign_license already normalized the number; mirror the saved value rather
       # than re-stripping the raw param.
@@ -456,7 +457,7 @@ module Events
     end
 
     def callout_form_params
-      params.dig(:callout_form, :form_fields)&.to_unsafe_h || {}
+      OutsideUsaState.form_field_answers(params, :callout_form)
     end
 
     # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of
