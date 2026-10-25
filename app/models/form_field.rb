@@ -282,18 +282,16 @@ class FormField < ApplicationRecord
     WIDTH_GRID_SPANS.fetch(width, "md:col-span-12")
   end
 
-  # A `<prefix>_country` question on the same form as `<prefix>_state` is asked
-  # inside the state's "Outside USA?" box rather than on its own.
-  def paired_country_field
-    return unless field_identifier&.end_with?(STATE_SUFFIX)
-
-    form.form_fields.active.find_by(field_identifier: field_identifier.delete_suffix(STATE_SUFFIX) + COUNTRY_SUFFIX)
+  # A `<prefix>_country` question is asked inside its `<prefix>_state` question's
+  # "Outside USA?" box rather than on its own. Both read `among` — the questions
+  # being asked here — so a country whose state partner this page isn't asking
+  # (hidden as already answered, or as logged-out-only) is still asked on its own.
+  def paired_country_field(among:)
+    paired_field(STATE_SUFFIX, COUNTRY_SUFFIX, among)
   end
 
-  def paired_with_state?
-    return false unless field_identifier&.end_with?(COUNTRY_SUFFIX)
-
-    form.form_fields.active.exists?(field_identifier: field_identifier.delete_suffix(COUNTRY_SUFFIX) + STATE_SUFFIX)
+  def paired_with_state?(among:)
+    paired_field(COUNTRY_SUFFIX, STATE_SUFFIX, among).present?
   end
 
   def answer_type_label
@@ -609,5 +607,16 @@ class FormField < ApplicationRecord
     else
       false
     end
+  end
+
+  private
+
+  # The question in `among` whose identifier is this one's with `own_suffix`
+  # swapped for `partner_suffix` (mailing_state <-> mailing_country).
+  def paired_field(own_suffix, partner_suffix, among)
+    return unless field_identifier&.end_with?(own_suffix)
+
+    partner = field_identifier.delete_suffix(own_suffix) + partner_suffix
+    among.find { |field| field.field_identifier == partner }
   end
 end

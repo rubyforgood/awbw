@@ -141,6 +141,11 @@ RSpec.describe "Public form submissions", type: :system do
       expect(page).not_to have_selector("##{pr_dom_id(reg_field('first_name'))}")
       expect(page).not_to have_selector("##{pr_dom_id(reg_field('mailing_city'))}")
 
+      # The mailing state is on file, so its paired country question — which would
+      # otherwise sit inside that state's "Outside USA?" box — is asked on its own.
+      expect(page).not_to have_selector("##{pr_dom_id(reg_field('mailing_state'))}")
+      select_pr reg_field("mailing_country"), "Canada"
+
       select_pr reg_field("primary_sector"), "Education"
       check_pr_box reg_field("additional_sectors"), sector_dv.id.to_s
       select_pr reg_field("primary_age_group"), "Teens (13-17)"
@@ -159,6 +164,7 @@ RSpec.describe "Public form submissions", type: :system do
 
       answers = answers_by_identifier(registration_form.form_submissions.find_by!(person: logged_in_person))
       expect(answers).to include(
+        "mailing_country" => "Canada",
         "primary_sector" => sector_education.id.to_s,
         "additional_sectors" => sector_dv.id.to_s,
         "primary_age_group" => age_teens.id.to_s,

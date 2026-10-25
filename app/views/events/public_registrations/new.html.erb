@@ -121,7 +121,7 @@
         <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
           <% @form_fields.each do |field| %>
             <%# Asked inside its _state question's "Outside USA?" box. %>
-            <% next if field.paired_with_state? %>
+            <% next if field.paired_with_state?(among: @form_fields) %>
             <% if field.group_header? %>
               <%= render "events/public_registrations/group_header", field: field %>
             <% else %>
@@ -130,7 +130,7 @@
                 <% submitted_value = FormBuilderService::PAYMENT_METHOD_PAY_NOW %>
               <% end %>
               <div class="<%= field.grid_span_class %>">
-                <%= render "events/public_registrations/form_field", field: field, value: submitted_value, label: email_label_overrides[field.field_identifier] %>
+                <%= render "events/public_registrations/form_field", field: field, asked: @form_fields, value: submitted_value, label: email_label_overrides[field.field_identifier] %>
               </div>
             <% end %>
           <% end %>
@@ -143,9 +143,10 @@
             </h3>
             <%= render "forms/header", form: @scholarship_form, event: @event %>
             <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
-              <% @scholarship_form.form_fields.reorder(position: :asc).each do |field| %>
+              <% scholarship_fields = @scholarship_form.form_fields.reorder(position: :asc).to_a %>
+              <% scholarship_fields.each do |field| %>
                 <%# Asked inside its _state question's "Outside USA?" box. %>
-                <% next if field.paired_with_state? %>
+                <% next if field.paired_with_state?(among: scholarship_fields) %>
                 <% if field.group_header? %>
                   <%# Skip a section header that just repeats the form name shown as the title above %>
                   <% next if field.name.to_s.strip.casecmp?(@scholarship_form.display_name.to_s.strip) %>
@@ -153,7 +154,7 @@
                 <% else %>
                   <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
                   <div class="<%= field.grid_span_class %>">
-                    <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
+                    <%= render "events/public_registrations/form_field", field: field, asked: scholarship_fields, value: submitted_value %>
                   </div>
                 <% end %>
               <% end %>
@@ -184,16 +185,17 @@
               </dl>
             <% end %>
             <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
-              <% @continuing_education_form.form_fields.reorder(position: :asc).each do |field| %>
+              <% ce_fields = @continuing_education_form.form_fields.reorder(position: :asc).to_a %>
+              <% ce_fields.each do |field| %>
                 <%# Asked inside its _state question's "Outside USA?" box. %>
-                <% next if field.paired_with_state? %>
+                <% next if field.paired_with_state?(among: ce_fields) %>
                 <% if field.group_header? %>
                   <% next if field.name.to_s.strip.casecmp?(@continuing_education_form.display_name.to_s.strip) %>
                   <%= render "events/public_registrations/group_header", field: field %>
                 <% else %>
                   <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
                   <div class="<%= field.grid_span_class %>">
-                    <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
+                    <%= render "events/public_registrations/form_field", field: field, asked: ce_fields, value: submitted_value %>
                   </div>
                 <% end %>
               <% end %>

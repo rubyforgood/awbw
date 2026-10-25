@@ -78,7 +78,7 @@
         <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
           <% @form_fields.each do |field| %>
             <%# Asked inside its _state question's "Outside USA?" box. %>
-            <% next if field.paired_with_state? %>
+            <% next if field.paired_with_state?(among: @form_fields) %>
             <% conditional = field.conditional_visibility? %>
             <% if field.group_header? %>
               <div class="mb-4 border-b border-gray-200 pt-6 pb-2 md:col-span-12">
@@ -107,10 +107,10 @@
                       <%= render "shared/badge", label: field.visibility_label, classes: visibility_badge_styles[field.visibility] %>
                       <%= render "forms/option_source_link", field: field %>
                     </div>
-                    <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier], show_dropdown_warning: true %>
+                    <%= render "events/public_registrations/form_field", field: field, asked: @form_fields, value: nil, label: email_label_overrides[field.field_identifier], show_dropdown_warning: true %>
                   </div>
                 <% else %>
-                  <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier], show_option_source: true, show_dropdown_warning: true %>
+                  <%= render "events/public_registrations/form_field", field: field, asked: @form_fields, value: nil, label: email_label_overrides[field.field_identifier], show_option_source: true, show_dropdown_warning: true %>
                 <% end %>
               </div>
             <% end %>
