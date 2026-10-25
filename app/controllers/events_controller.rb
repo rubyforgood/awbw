@@ -845,7 +845,10 @@ class EventsController < ApplicationController
     scope = Person.where(id: attendee_registrations.select(:registrant_id))
     # Dash-joined person ids, e.g. from the reports-hub participation totals.
     scope = scope.where(id: params[:registrant_ids].to_s.split("-")) if params[:registrant_ids].present?
-    scope = scope.search_by_params({ contact_info: params[:contact_info] }) if params[:contact_info].present?
+    scope = scope.search_name_email(params[:name_email]) if params[:name_email].present?
+    # ContactSearchable's prefixed search over the person's own live addresses and
+    # phones — the people index's box generalised, not the box itself.
+    scope = scope.search_location(params[:contact_info]) if params[:contact_info].present?
     scope = scope.where(id: person_sector_ids(params[:sector])) if params[:sector].present?
     scope = scope.where(id: person_affiliation_status_ids(params[:affiliation_status])) if params[:affiliation_status].present?
     # Breakdown drill-in filters (set when a chart row is clicked).
@@ -871,8 +874,12 @@ class EventsController < ApplicationController
     # one pass, so they all describe the same address: someone working in two states
     # can't match a city from one and the county from the other. A State that
     # contradicts the county's own state matches nobody.
+    # The typed box first, the dropdowns over the top of it: a control someone can
+    # see wins over the same field typed into the box.
+    controls = { state: params[:state], county: params[:county],
+                 country: params[:country], city: params[:city] }.compact_blank
     location_filters = PersonLocations.filters_from(
-      state: params[:state], county: params[:county], city: params[:city], country: params[:country]
+      **PersonLocations.parse_query(params[:work_location]).merge(controls)
     )
     if location_filters.nil?
       scope = scope.none

@@ -3,7 +3,8 @@
 # (they arrive from a chart-row click, the participation summary, or a shared
 # link). The index surfaces each as a removable chip so an admin can see and
 # clear a filter that would otherwise silently shrink the list. Params that
-# already have their own visible control in events/_attendees_search (contact_info,
+# already have their own visible control in events/_attendees_search (name_email,
+# contact_info,
 # event, year, sector, program status, affiliation status, and the registration-level
 # filters shared with the roster — payment method, scholarship, funder name, CE
 # status, user account, topic subscription, city, state, county, comment status and
@@ -15,7 +16,7 @@ class AttendeesActiveFilters
   # honours but this list omits narrows the page silently AND is dropped by the
   # filter form's hidden fields on the next change, since both read this list.
   CHIP_PARAMS = %w[
-    registrant_ids organization_id org_city age_group life_experience
+    registrant_ids organization_id org_city city age_group life_experience
     country school_district payment_status funder
   ].freeze
   # The roster has no filter form at all, so every drill-in it accepts needs a
@@ -47,6 +48,8 @@ class AttendeesActiveFilters
     when "sector" then record_label("Sector", Sector, value)
     when "organization_id" then record_label("Organization", Organization, value)
     when "org_city" then "City: #{value}"
+    # A bare city param comes from a link or bookmark; no visible control shows it.
+    when "city" then "City: #{value}"
     when "age_group" then record_label("Age group", Category, value)
     when "life_experience" then record_label("Life experience", Category, value)
     when "country" then "Country: #{value}"

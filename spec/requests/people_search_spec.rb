@@ -519,4 +519,66 @@ RSpec.describe "People search", type: :request do
       expect(page).to have_css("input[type=hidden][name=organization_id][value='#{org.id}']", visible: :all)
     end
   end
+
+  describe "GET /people (turbo frame) work location filter" do
+    let(:organization) { create(:organization) }
+    let!(:worker) { create(:person, first_name: "Renoworker") }
+    let!(:homebody) { create(:person, first_name: "Boisehome") }
+    let!(:unplaced) { create(:person, first_name: "Noaddress") }
+
+    before do
+      create(:address, addressable: organization, city: "Reno", state: "NV")
+      create(:affiliation, person: worker, organization: organization)
+      create(:address, addressable: homebody, city: "Boise", state: "ID")
+    end
+
+    def search_work_location(query, **params)
+      get people_path, params: { work_location: query, **params }, headers: turbo_headers
+      response
+    end
+
+    it "renders the results frame" do
+      expect(search_work_location("state: NV")).to have_http_status(:ok)
+      expect(response.body).to include('id="people_results"')
+    end
+
+    it "narrows to people located by their work address" do
+      body = search_work_location("city: reno").body
+      expect(body).to include("Renoworker")
+      expect(body).not_to include("Boisehome", "Noaddress")
+    end
+
+    it "falls back to the person's own address" do
+      body = search_work_location("state: ID").body
+      expect(body).to include("Boisehome")
+      expect(body).not_to include("Renoworker", "Noaddress")
+    end
+
+    it "matches a bare term against any location field" do
+      expect(search_work_location("boise").body).to include("Boisehome")
+    end
+
+    it "matches nobody when the county contradicts the state" do
+      body = search_work_location("state: NV county: \"CA::Los Angeles\"").body
+      expect(body).not_to include("Renoworker", "Boisehome")
+    end
+
+    it "keeps the filter on the page links" do
+      other = create(:person, first_name: "Renocolleague")
+      create(:affiliation, person: other, organization: organization)
+
+      body = search_work_location("city: reno", number_of_items_per_page: 1).body
+      expect(body).to include("work_location=city")
+    end
+
+    it "is ignored for a non-admin" do
+      sign_in create(:user)
+      [ worker, homebody ].each do |person|
+        person.update!(profile_is_searchable: true)
+        create(:affiliation, person: person, title: "Facilitator", start_date: 1.year.ago, inactive: false)
+      end
+
+      expect(search_work_location("city: reno").body).to include("Renoworker", "Boisehome")
+    end
+  end
 end
