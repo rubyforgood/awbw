@@ -288,6 +288,17 @@ RSpec.describe "Forms", type: :request do
       end
     end
 
+    context "when an event_id for an allowed survey is given" do
+      let(:survey) { create(:form, role: "day_1_survey", slug: "eval-day-1", published: true) }
+      let(:training) { create(:event, facilitator_training: true) }
+
+      it "links back to the event and includes the event parameter in the Live at link" do
+        get edit_form_path(survey, event_id: training.id)
+        expect(response.body).to include(dashboard_event_path(training))
+        expect(response.body).to include(public_form_url(survey.slug, event: training.id))
+      end
+    end
+
     it "ignores an event_id that is not connected to the form" do
       get edit_form_path(form, event_id: event.id)
       expect(response.body).not_to include(dashboard_event_path(event))

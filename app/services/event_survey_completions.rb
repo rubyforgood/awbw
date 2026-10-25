@@ -5,6 +5,21 @@
 class EventSurveyCompletions
   Completion = Data.define(:submission_id, :submitted_at)
 
+  def self.survey_allowed_for_event?(event, form)
+    return false unless event && form&.survey_role?
+
+    new(event, []).survey_allowed?(form)
+  end
+
+  def self.survey_forms_for(event)
+    return [] unless event
+
+    Form::SURVEY_ROLES.filter_map do |role|
+      form = Form.survey(role)
+      form if form&.publicly_fillable? && survey_allowed_for_event?(event, form)
+    end
+  end
+
   def initialize(event, person_ids)
     @event = event
     @person_ids = person_ids
@@ -20,6 +35,12 @@ class EventSurveyCompletions
 
   def completion(person_id, role)
     completions[[ person_id, role ]]
+  end
+
+  def survey_allowed?(form)
+    return false unless form&.survey_role?
+
+    offered?(form.role) || delivered_roles.include?(form.role)
   end
 
   private

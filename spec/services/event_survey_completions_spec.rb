@@ -135,5 +135,81 @@ RSpec.describe EventSurveyCompletions do
 
       expect(completions.completion(person.id, "day_1_survey")).to be_nil
     end
+
+    it "counts a standalone survey submission associated with the event" do
+      submission = create(:form_submission, form: day_1, event:, person:, role: "public")
+
+      completion = completions.completion(person.id, "day_1_survey")
+      expect(completion.submission_id).to eq(submission.id)
+      expect(completions.roles).to include("day_1_survey")
+    end
+
+    it "does not count a standalone survey submission associated with another event" do
+      other = create(:event)
+      create(:form_submission, form: day_1, event: other, person:, role: "public")
+
+      expect(completions.completion(person.id, "day_1_survey")).to be_nil
+    end
+
+    it "does not count an event-less standalone survey submission" do
+      create(:form_submission, form: day_1, event: nil, person:, role: "public")
+
+      expect(completions.completion(person.id, "day_1_survey")).to be_nil
+    end
+  end
+
+  describe ".survey_allowed_for_event?" do
+    let(:recipient) { create(:form, role: "recipient_survey") }
+    let(:general) { create(:form, role: "general") }
+
+    it "returns true for offered survey roles on the event" do
+      expect(described_class.survey_allowed_for_event?(event, day_1)).to be true
+      expect(described_class.survey_allowed_for_event?(event, day_2)).to be true
+      expect(described_class.survey_allowed_for_event?(event, post_event)).to be true
+      expect(described_class.survey_allowed_for_event?(event, recipient)).to be true
+    end
+
+    it "returns false for roles the event does not offer" do
+      event.update!(on_demand: true)
+
+      expect(described_class.survey_allowed_for_event?(event, day_1)).to be false
+      expect(described_class.survey_allowed_for_event?(event, day_2)).to be false
+      expect(described_class.survey_allowed_for_event?(event, post_event)).to be true
+    end
+
+    it "returns true for a non-offered survey when delivered by an event callout" do
+      event.update!(on_demand: true)
+      create(:registration_ticket_callout, event:, form: day_1)
+
+      expect(described_class.survey_allowed_for_event?(event, day_1)).to be true
+    end
+
+    it "returns false for non-survey forms" do
+      expect(described_class.survey_allowed_for_event?(event, general)).to be false
+    end
+
+    it "returns false when event or form is nil" do
+      expect(described_class.survey_allowed_for_event?(nil, day_1)).to be false
+      expect(described_class.survey_allowed_for_event?(event, nil)).to be false
+    end
+  end
+
+  describe ".survey_forms_for" do
+    before do
+      day_1.update!(slug: "day-1", published: true)
+      post_event.update!(slug: "post-event", published: true)
+    end
+
+    it "returns publicly fillable survey forms offered for the event" do
+      forms = described_class.survey_forms_for(event)
+
+      expect(forms).to include(day_1, post_event)
+    end
+
+    it "excludes forms that are not published or lack slugs" do
+      day_1.update!(published: false)
+
+      expect(described_class.survey_forms_for(event)).not_to include(day_1)
+    end
   end
 end
