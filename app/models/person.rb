@@ -213,6 +213,20 @@ class Person < ApplicationRecord
     options :all, type: :text, default: true, default_operator: :or
   end
 
+  search_scope :search_contact do
+    scope { left_joins(:contact_methods, :addresses) }
+    attributes contact_methods_phone: "contact_methods.value"
+    attributes address_street: "addresses.street_address"
+    attributes address_city:   "addresses.city"
+    attributes address_state:  "addresses.state"
+    attributes address_zip:    "addresses.zip_code"
+    attributes address_phone:  "addresses.phone"
+    attributes all: [ "contact_methods.value",
+                      "addresses.street_address", "addresses.city", "addresses.state",
+                      "addresses.zip_code", "addresses.phone" ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
   FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
   LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
 
@@ -295,11 +309,6 @@ class Person < ApplicationRecord
     tag_ids = Array(ids).reject(&:blank?)
     return all if tag_ids.empty?
     joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
-  scope :with_phone, ->(value) {
-    like = "%#{sanitize_sql_like(value.to_s.strip)}%"
-    where(id: ContactMethod.where(contactable_type: polymorphic_name)
-                           .where("value LIKE ?", like)
-                           .select(:contactable_id)) }
   scope :story_authors, -> { joins(:stories_as_author).distinct }
   scope :blog_contributors, -> { where(blog_contributor: true) }
   scope :placeholder_email, -> { where("email REGEXP ?", PlaceholderEmail.sql_pattern) }
@@ -437,7 +446,6 @@ class Person < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
-    results = results.with_phone(params[:phone]) if params[:phone].present?
     results = results.shared_contact_search(params[:shared_contact_info]) if params[:shared_contact_info].present?
     results = results.by_role(params[:role]) if params[:role].present?
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?

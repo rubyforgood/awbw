@@ -15,9 +15,9 @@ RSpec.describe "People search", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "shows the admin-only phone filter" do
+    it "shows the admin-only contact info filter" do
       get people_path
-      expect(response.body).to include('name="phone"')
+      expect(response.body).to include('name="contact_info"')
     end
 
     it "breaks the person profile button out of the results frame" do
@@ -32,8 +32,8 @@ RSpec.describe "People search", type: :request do
       expect(response.body).to include("Bob")
     end
 
-    it "filters by contact_info" do
-      get people_path, params: { contact_info: "Alice" }, headers: turbo_headers
+    it "filters by name_email" do
+      get people_path, params: { name_email: "Alice" }, headers: turbo_headers
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Alice")
       expect(response.body).not_to include("Bob")
@@ -167,7 +167,7 @@ RSpec.describe "People search", type: :request do
       get people_path
       expect(response.body).not_to include("Admin-only filters")
       expect(response.body).not_to include("staff_tag_ids")
-      expect(response.body).not_to include('name="phone"')
+      expect(response.body).not_to include('name="contact_info"')
     end
 
     it "ignores a staff tag filter passed by URL" do
@@ -187,7 +187,7 @@ RSpec.describe "People search", type: :request do
     end
 
     it "still applies the filters the bar does offer them" do
-      get people_path, params: { contact_info: "Markedone" }, headers: turbo_headers
+      get people_path, params: { name_email: "Markedone" }, headers: turbo_headers
 
       expect(response.body).to include("Markedone")
       expect(response.body).not_to include("Plainone")
@@ -195,7 +195,7 @@ RSpec.describe "People search", type: :request do
 
     describe "contact info search" do
       def search(term)
-        get people_path, params: { contact_info: term }, headers: turbo_headers
+        get people_path, params: { name_email: term }, headers: turbo_headers
         response.body
       end
 
@@ -224,10 +224,10 @@ RSpec.describe "People search", type: :request do
         expect(search("Hiddenway")).not_to include("Markedone")
       end
 
-      it "ignores a phone filter passed by URL" do
+      it "ignores a contact details filter passed by URL" do
         marked.update!(profile_show_phone: true)
         create(:contact_method, contactable: marked, value: "555-0142")
-        get people_path, params: { phone: "555-0142" }, headers: turbo_headers
+        get people_path, params: { contact_info: "555-0142" }, headers: turbo_headers
         expect(response.body).to include("Markedone")
       end
 
@@ -340,12 +340,12 @@ RSpec.describe "People search", type: :request do
     let!(:person) { create(:person, first_name: "Hiddenfacts", profile_show_email: false, profile_show_phone: false) }
 
     def search(term)
-      get people_path, params: { contact_info: term }, headers: turbo_headers
+      get people_path, params: { name_email: term }, headers: turbo_headers
       response.body
     end
 
-    def search_phone(term)
-      get people_path, params: { phone: term }, headers: turbo_headers
+    def search_contact_details(term)
+      get people_path, params: { contact_info: term }, headers: turbo_headers
       response.body
     end
 
@@ -364,14 +364,19 @@ RSpec.describe "People search", type: :request do
       expect(search("Legalname")).to include("Hiddenfacts")
     end
 
-    it "matches a phone the person hides via the phone filter" do
+    it "matches a contact method via the contact info filter" do
       create(:contact_method, contactable: person, value: "555-0142")
-      expect(search_phone("555-0142")).to include("Hiddenfacts")
+      expect(search_contact_details("555-0142")).to include("Hiddenfacts")
     end
 
-    it "matches an inactive phone via the phone filter" do
+    it "matches an inactive contact method via the contact info filter" do
       create(:contact_method, contactable: person, value: "555-0142", inactive: true)
-      expect(search_phone("555-0142")).to include("Hiddenfacts")
+      expect(search_contact_details("555-0142")).to include("Hiddenfacts")
+    end
+
+    it "matches an address via the contact info filter" do
+      create(:address, addressable: person, street_address: "123 Hiddenway")
+      expect(search_contact_details("Hiddenway")).to include("Hiddenfacts")
     end
 
     %w[first_name_last_initial first_name_only].each do |preference|

@@ -719,17 +719,32 @@ RSpec.describe Person, type: :model do
       expect(Person.search_by_params(shared_contact_info: 'alice@example')).not_to include(person_alice)
     end
 
-    it 'filters by phone matching a contact method' do
+    it 'search_contact matches a contact method' do
       create(:contact_method, contactable: person_alice, value: '555-0199')
 
-      expect(Person.search_by_params(phone: '555-0199')).to include(person_alice)
-      expect(Person.search_by_params(phone: '555-0199')).not_to include(person_bob)
+      expect(Person.search_contact('555-0199')).to include(person_alice)
+      expect(Person.search_contact('555-0199')).not_to include(person_bob)
     end
 
-    it 'filters by phone matching an inactive contact method' do
+    it 'search_contact matches an inactive contact method' do
       create(:contact_method, contactable: person_alice, value: '555-0199', inactive: true)
 
-      expect(Person.search_by_params(phone: '555-0199')).to include(person_alice)
+      expect(Person.search_contact('555-0199')).to include(person_alice)
+    end
+
+    it 'search_contact matches an address' do
+      create(:address, addressable: person_bob, street_address: '123 Hiddenway', city: 'Portland')
+
+      expect(Person.search_contact('Hiddenway')).to include(person_bob)
+    end
+
+    it 'search_contact supports attribute prefixes' do
+      create(:address, addressable: person_bob, street_address: '123 Hiddenway', city: 'Portland')
+      create(:contact_method, contactable: person_alice, value: '555-0199')
+
+      expect(Person.search_contact('address_city:portland')).to include(person_bob)
+      expect(Person.search_contact('address_city:portland')).not_to include(person_alice)
+      expect(Person.search_contact('contact_methods_phone:555')).to include(person_alice)
     end
 
     it 'filters by shared_contact_info treating a quoted phrase as one term' do
