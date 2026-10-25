@@ -207,7 +207,7 @@ RSpec.describe "/organizations", type: :request do
       page = Capybara.string(response.body)
       %w[Alpha Bravo Charlie].each { |name| expect(page).to have_content(name) }
       expect(page).not_to have_content("Direct Sector 1")
-      expect(page).to have_content("Not editable here")
+      expect(page).to have_content("Sectors and age groups aren't editable here")
       expect(page).not_to have_css("[name*='sectorable_items_attributes']")
       expect(page).not_to have_css("[name='organization[category_ids][]']")
     end
@@ -262,9 +262,64 @@ RSpec.describe "/organizations", type: :request do
       get new_organization_url
       expect(response).to be_successful
     end
+
+    it "focuses the name field" do
+      get new_organization_url
+
+      expect(Capybara.string(response.body)).to have_css("textarea#organization_name[autofocus]")
+    end
   end
 
   describe "GET /edit" do
+    it "lists address phones in the details, numbered by address when there are several" do
+      organization = create(:organization)
+      create(:address, addressable: organization, phone: "123-123-1234")
+      create(:address, addressable: organization, phone: "123-332-1234")
+
+      get edit_organization_url(organization)
+
+      phones = Capybara.string(response.body).find("ol", text: "123-123-1234")
+      expect(phones).to have_css("li", text: "1. 123-123-1234")
+      expect(phones).to have_css("li", text: "2. 123-332-1234")
+    end
+
+    it "leaves focus alone so in-page links keep their scroll position" do
+      get edit_organization_url(create(:organization))
+
+      expect(Capybara.string(response.body)).not_to have_css("textarea#organization_name[autofocus]")
+    end
+
+    it "opens and rings the address a person's work-address link points at, with a way back" do
+      organization = create(:organization)
+      address = create(:address, addressable: organization)
+      other = create(:address, addressable: organization)
+      person = create(:person)
+
+      get edit_organization_url(organization, highlight_address: address.id, return_to: "person_edit", person_id: person.id)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css("details#address-#{address.id}[open].ring-yellow-500")
+      expect(page).not_to have_css("details#address-#{other.id}[open]")
+      expect(page).to have_link("Edit person", href: edit_person_path(person, anchor: "addresses"))
+    end
+
+    it "shows each address's phone on its collapsed header" do
+      organization = create(:organization)
+      create(:address, addressable: organization, phone: "123-123-1234")
+
+      get edit_organization_url(organization)
+
+      expect(Capybara.string(response.body)).to have_css("#addresses summary", text: "123-123-1234")
+    end
+
+    it "opens the other-type box when the org is typed Other" do
+      organization = create(:organization, organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: "Equine therapy")
+
+      get edit_organization_url(organization)
+
+      expect(Capybara.string(response.body)).to have_css("details[open] summary", text: "Other type?")
+    end
+
     it "renders a successful response" do
       organization = Organization.create!(valid_attributes)
       get edit_organization_url(organization)

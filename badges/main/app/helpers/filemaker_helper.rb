@@ -13,11 +13,12 @@ module FilemakerHelper
   end
 
   # The hint under a FileMaker code input, linking each code to its archive record.
-  def filemaker_code_hint(record)
+  # A `kind` names what the codes are, for records whose codes span several archives.
+  def filemaker_code_hint(record, kind: nil)
     links = filemaker_code_links(record, link_class: "text-blue-600 underline hover:text-blue-800")
-    return FILEMAKER_CODE_FORMAT_HINT unless links
+    return kind ? "#{kind}, #{FILEMAKER_CODE_FORMAT_HINT.downcase_first}" : FILEMAKER_CODE_FORMAT_HINT unless links
 
-    safe_join([ "In the archive:", links ], " ")
+    safe_join([ kind ? "#{kind}:" : "In the archive:", links ], " ")
   end
 
   # The FM projects among an org's codes.

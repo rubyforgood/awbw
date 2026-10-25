@@ -13,6 +13,9 @@
       <% else %>
         <span>Address</span>
       <% end %>
+      <% if f.object.persisted? && f.object.phone.present? %>
+        <span class="text-sm font-normal text-gray-600"><i class="fa-solid fa-phone text-xs text-gray-400" aria-hidden="true"></i> <%= f.object.phone %></span>
+      <% end %>
     </div>
     <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open:rotate-180"></i>
   </summary>
@@ -91,20 +94,26 @@
     <div class="grid grid-cols-1 gap-x-4 md:grid-cols-4">
       <%= f.input :street_address,
                   label: "Street Address",
+                  as: :text,
                   input_html: {
+                    rows: 1,
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
 
       <%= f.input :city,
                   label: "City",
+                  as: :text,
                   input_html: {
+                    rows: 1,
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
 
       <%= render "addresses/state_field", f: f %>
       <%= f.input :zip_code,
                   label: "ZIP Code",
+                  as: :text,
                   input_html: {
+                    rows: 1,
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
 
@@ -114,12 +123,16 @@
     <div class="grid grid-cols-1 gap-x-4 md:grid-cols-4">
       <%= f.input :district,
                   label: "School district",
+                  as: :text,
                   input_html: {
+                    rows: 1,
                     class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                   } %>
       <%= f.input :county,
                   label: "County",
+                  as: :text,
                   input_html: {
+                    rows: 1,
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
 
@@ -135,7 +148,9 @@
                   } %>
       <%= f.input :phone,
                   label: "Phone",
+                  as: :text,
                   input_html: {
+                    rows: 1,
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
     </div>
