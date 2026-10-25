@@ -26,6 +26,8 @@ module OrganizationServices
   #   * each project's City/State with its Locality, District, SPA and supervisorial
   #     district, onto the program's address in that city
   #   * a merged-away project's code, onto the program it merged into
+  #   * an organization's FileMaker ParentID, as its parent's portal organization (ADR-0004),
+  #     each listed in #nested
   #   * a retired duplicate organization (RETIRED_DUPLICATE_OF) — its code, blanks, addresses,
   #     phones, email and projects — onto the organization it duplicated
   #   * an agency's own Rolodex card: its website, mission and addresses (and its email,
@@ -49,7 +51,7 @@ module OrganizationServices
     COMMENT_SOURCES = { FmOrganization => "FileMaker organization", FmProject => "FileMaker project",
                         FmRolodex => "FileMaker Rolodex agency" }.freeze
 
-    attr_reader :results, :differences, :unmatched_types
+    attr_reader :results, :differences, :unmatched_types, :nested
 
     def unmatched_addresses = @address_attributes.unmatched
 
@@ -58,6 +60,7 @@ module OrganizationServices
       @run = run
       @results = OUTCOMES.index_with { [] }
       @differences = []
+      @nested = []
       @unmatched_types = Hash.new(0)
       @staff = StaffTranslation.new
       @import_user_id = Setting.import_user&.id
@@ -88,6 +91,7 @@ module OrganizationServices
       end
       import_batch(by_organization.values.flatten) { |project| import_projects(nil, [ project ]) }
       import_batch(@duplicates) { |fm_organization, projects| fold_duplicate(fm_organization, projects) }
+      import_batch(FmOrganization.where("JSON_UNQUOTE(JSON_EXTRACT(data, '$.ParentID')) NOT IN ('', 'null')")) { |child| nest_under_parent(child) }
       import_batch(merged) { |project| fold_merged(project) }
       import_batch(agency_cards) { |rolodex| import_agency(rolodex) }
       self
@@ -202,6 +206,22 @@ module OrganizationServices
       return unless save(original, fm_organization, label, organization_attributes(fm_organization.data))
 
       import_projects(original, projects)
+    end
+
+    # Read once every organization is in, so both ends are found by code.
+    def nest_under_parent(fm_organization)
+      parent_code = fm_organization.data["ParentID"].to_s.strip
+      label = "#{fm_organization.fm_id} #{organization_name(fm_organization)}".squish
+      child = coded(fm_organization.fm_id)
+      parent = coded(parent_code)
+      return @nested << "#{label}: not nested — it or its parent #{parent_code} wasn't imported" unless child && parent
+      return @nested << "#{label} → ##{child.id}: same organization as its parent #{parent_code}" if child == parent
+
+      nest(child, parent, label)
+      return unless child.parent_id_changed?
+      return failed(child, label) unless child.save
+
+      @nested << "#{label} → ##{child.id} under ##{parent.id} (#{parent_code})"
     end
 
     # FileMaker kept a merged-away project's row, pointing at the one it merged into, so its

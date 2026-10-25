@@ -77,6 +77,11 @@ namespace :fm do
           import.differences.each { |difference| say.("  #{difference}") }
         end
 
+        if import.try(:nested).present?
+          say.("\nNested under their FileMaker parent (ParentID) (#{import.nested.size}):")
+          import.nested.each { |line| say.("  #{line}") }
+        end
+
         tallies = {
           "Organization types read as Other, kept as its description" => import.try(:unmatched_types),
           "Personnel Status values and how they were read" => import.try(:statuses),
