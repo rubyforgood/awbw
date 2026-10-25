@@ -13,6 +13,7 @@ class Address < ApplicationRecord
   UNKNOWN_LOCALITY = "Unknown"
   LOCALITIES = [ LA_CITY, LA_COUNTY, "Southern CA", "Northern CA",
                 "Central CA", ORANGE_COUNTY, OUTSIDE_CA, OUTSIDE_USA, UNKNOWN_LOCALITY ]
+  DEFAULT_COUNTRY = "United States"
   UNKNOWN_CONTACT_TYPE = "unknown"
   CONTACT_TYPES = [ nil, "work", "personal", "mailing", UNKNOWN_CONTACT_TYPE ].freeze
   # USPS abbreviations for the 50 states, DC, and the US territories the atlas
@@ -29,6 +30,8 @@ class Address < ApplicationRecord
   # the link rather than block deletion when an org address is removed.
   has_many :affiliations, foreign_key: :organization_address_id, dependent: :nullify, inverse_of: :organization_address
 
+  attr_accessor :country_required
+
   before_validation :type_as_unknown
 
   validates :locality, presence: true
@@ -40,6 +43,7 @@ class Address < ApplicationRecord
   validates :district, length: { maximum: 255 }
   validates :county, length: { maximum: 255 }
   validates :country, length: { maximum: 255 }
+  validates :country, presence: true, if: :country_required
   validates :phone, length: { maximum: 255 }
 
   scope :active, -> { where(inactive: false) }
@@ -71,10 +75,6 @@ class Address < ApplicationRecord
   # address this is still has to ask.
   def known_type?
     address_type.present? && address_type != UNKNOWN_CONTACT_TYPE
-  end
-
-  def outside_usa?
-    AddressLocality.outside_usa?(state, country)
   end
 
   private

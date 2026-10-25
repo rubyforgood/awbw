@@ -1,4 +1,4 @@
-<% if f.object.outside_usa? || (params[:admin] && allowed_to?(:enter_any_state?, Address)) %>
+<% if f.object.decorate.state_as_text? || (params[:admin] && allowed_to?(:enter_any_state?, Address)) %>
   <%= f.input :state,
               label: "State / province",
               input_html: {

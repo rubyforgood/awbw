@@ -31,6 +31,10 @@ class ApplicationController < ActionController::Base
 
   private
 
+  def require_address_countries(addressable)
+    addressable.addresses.each { |address| address.country_required = true }
+  end
+
   def count_display(shown, total = shown)
     return helpers.number_with_delimiter(total) if shown == total
     "#{helpers.number_with_delimiter(shown)}/#{helpers.number_with_delimiter(total)}"

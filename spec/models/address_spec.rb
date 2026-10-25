@@ -18,6 +18,15 @@ RSpec.describe Address, type: :model do
       expect(address.errors[:locality]).to include("can't be blank")
     end
 
+    it "requires a country only when the form asks for one" do
+      address.country = nil
+      expect(address).to be_valid
+
+      address.country_required = true
+      expect(address).not_to be_valid
+      expect(address.errors[:country]).to include("can't be blank")
+    end
+
     it "requires a city" do
       address.city = nil
       expect(address).not_to be_valid
@@ -88,17 +97,6 @@ RSpec.describe Address, type: :model do
       address.la_supervisorial_district = nil
       address.la_service_planning_area = nil
       expect(address).to be_valid
-    end
-  end
-
-  describe "#outside_usa?" do
-    it "is true for a non-US country, even when the state reads like a US code" do
-      expect(build(:address, state: "CA", country: "Canada")).to be_outside_usa
-    end
-
-    it "is false for a US state with the US or a blank country" do
-      expect(build(:address, state: "CA", country: "United States")).not_to be_outside_usa
-      expect(build(:address, state: "CA", country: nil)).not_to be_outside_usa
     end
   end
 

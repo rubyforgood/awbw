@@ -283,6 +283,7 @@ class PeopleController < ApplicationController
       end
     end
 
+    require_address_countries(@person)
     respond_to do |format|
       if @person.save
         format.html { redirect_to @person, notice: "Person was successfully created." }
@@ -303,6 +304,7 @@ class PeopleController < ApplicationController
     attrs = person_params
     reject_locked_license_changes!(attrs)
     @person.assign_attributes(attrs)
+    require_address_countries(@person)
 
     if @person.save
       redirect_to person_update_return_path, notice: "Person was successfully updated."
