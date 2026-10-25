@@ -109,7 +109,22 @@ RSpec.describe ReminderRecipientFilter do
       create(:address, addressable: lives_there.registrant, city: "Santa Monica")
 
       expect(matched({ city: "santa" }, [ works_there, works_elsewhere, lives_there ])).to eq([ works_there.id, lives_there.id ].to_set)
-      expect(EventRegistration.located_in_city("santa")).to contain_exactly(works_there, lives_there)
+      expect(EventRegistration.located_in(city: "santa")).to contain_exactly(works_there, lives_there)
+    end
+
+    # The City search and the State dropdown have to describe the same address, like
+    # the roster — otherwise someone working in two states matches a city from one
+    # and the state from the other.
+    it "tests the city search and the state dropdown against the same address" do
+      two_states = registration
+      [ [ "Portland", "OR" ], [ "Seattle", "WA" ] ].each do |city, state|
+        organization = create(:organization)
+        create(:address, addressable: organization, city:, state:)
+        two_states.event_registration_organizations.create!(organization:)
+      end
+
+      expect(matched({ city: "seattle", state: "WA" }, [ two_states ])).to eq([ two_states.id ].to_set)
+      expect(matched({ city: "seattle", state: "OR" }, [ two_states ])).to be_empty
     end
 
     it "filters by registration comment text" do

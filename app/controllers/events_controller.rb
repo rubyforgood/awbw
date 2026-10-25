@@ -244,12 +244,10 @@ class EventsController < ApplicationController
     scope = scope.comment_text(params[:comment]) if params[:comment].present?
     scope = scope.funder_name(params[:funder_name]) if params[:funder_name].present?
     scope = scope.submission_status(params[:submission_status], @event) if params[:submission_status].present?
-    scope = scope.located_in_city(params[:city]) if params[:city].present?
+    scope = scope.located_in(state: params[:state], county: params[:county], city: params[:city])
     scope = scope.organization_linking_status(params[:org_status], @event) if params[:org_status].present?
     scope = scope.account_status(params[:account_status]) if params[:account_status].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
-    scope = scope.located_in_state(params[:state]) if params[:state].present?
-    scope = scope.located_in_county(params[:county]) if params[:county].present?
     scope = scope.registrant_sector(params[:sector]) if params[:sector].present?
     scope = scope.registered_between(params[:registered_from], params[:registered_to])
 
@@ -969,7 +967,7 @@ class EventsController < ApplicationController
   # Where each in-scope registration's registrant is, behind the location filters
   # and drill-ins — the same source as the breakdowns they come from.
   def attendee_locations
-    @attendee_locations ||= RegistrationLocations.new(attendee_registrations.pluck(:id))
+    @attendee_locations ||= RegistrationLocations.new(attendee_registrations)
   end
 
   # Anchored the same way the index's own column is: this list spans events, so
@@ -1015,7 +1013,7 @@ class EventsController < ApplicationController
     @attendee_years = @attendee_event_options.filter_map { |event| event.start_date&.year }.uniq.sort.reverse
     person_ids = Person.where(id: EventRegistration.where(event_id: reportable_events.select(:id)).select(:registrant_id))
     @attendee_sectors = Sector.where(id: SectorableItem.where(sectorable_type: "Person", sectorable_id: person_ids).select(:sector_id)).order(:name)
-    locations = RegistrationLocations.new(EventRegistration.where(event_id: reportable_events.select(:id)).pluck(:id))
+    locations = RegistrationLocations.new(EventRegistration.where(event_id: reportable_events.select(:id)))
     @attendee_states = locations.rows.filter_map(&:state).compact_blank.uniq.sort
     @attendee_counties = locations.counties
     @attendee_topic_types = TopicSubscriptionType.active.ordered

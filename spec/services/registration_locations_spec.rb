@@ -56,6 +56,22 @@ RSpec.describe RegistrationLocations do
     expect(described_class.new([ create(:event_registration, event: event).id ]).rows).to be_empty
   end
 
+  # A relation stays a subquery, so a whole-population lookup never inlines every
+  # registration id (the attendees index builds its filter options that way).
+  it "keeps a relation as a subquery instead of plucking its ids" do
+    create(:address, addressable: organization, city: "Austin", state: "TX")
+
+    queries = []
+    subscriber = ->(*, payload) { queries << payload[:sql] }
+    rows = ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
+      described_class.new(EventRegistration.where(event: event)).rows
+    end
+
+    expect(rows.map(&:city_label)).to eq([ "Austin, TX" ])
+    expect(queries.grep(/event_registration_organizations/).first)
+      .to include("SELECT `event_registrations`.`id` FROM `event_registrations`")
+  end
+
   it "groups registrant ids by US state, country, and city" do
     create(:address, addressable: organization, city: "Austin", state: "TX", country: "United States")
     abroad = create(:organization)

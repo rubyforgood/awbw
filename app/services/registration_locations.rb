@@ -13,12 +13,18 @@ class RegistrationLocations
     end
   end
 
-  def initialize(registration_ids)
-    @registration_ids = registration_ids
+  # Takes the registrations to locate, as a relation (kept as a subquery, so a
+  # whole-population lookup never inlines every id) or as an explicit id array.
+  def initialize(registrations)
+    @registrations = if registrations.is_a?(ActiveRecord::Relation)
+      registrations.except(:includes, :eager_load, :preload, :order, :select, :limit, :offset)
+    else
+      EventRegistration.where(id: registrations)
+    end
   end
 
   def rows
-    @rows ||= registrations.flat_map do |registration_id, registrant_id|
+    @rows ||= registration_pairs.flat_map do |registration_id, registrant_id|
       located = organization_ids_by_registration.fetch(registration_id, []).map do |organization_id|
         [ organization_id, chosen_addresses[chosen_address_ids[[ registration_id, organization_id ]]] || oldest_address_by_organization[organization_id] ]
       end
@@ -71,13 +77,17 @@ class RegistrationLocations
             city: address&.city, county: address&.county, state: address&.state, country: address&.country)
   end
 
-  def registrations
-    @registrations ||= EventRegistration.where(id: @registration_ids).pluck(:id, :registrant_id)
+  def registration_pairs
+    @registration_pairs ||= @registrations.pluck(:id, :registrant_id)
+  end
+
+  def registration_ids
+    @registrations.select(:id)
   end
 
   def organization_ids_by_registration
     @organization_ids_by_registration ||= EventRegistrationOrganization
-      .where(event_registration_id: @registration_ids)
+      .where(event_registration_id: registration_ids)
       .pluck(:event_registration_id, :organization_id)
       .group_by(&:first)
       .transform_values { |pairs| pairs.map(&:last) }
@@ -85,19 +95,26 @@ class RegistrationLocations
 
   def chosen_address_ids
     @chosen_address_ids ||= Affiliation
-      .where(event_registration_id: @registration_ids)
+      .where(event_registration_id: registration_ids)
       .where.not(organization_address_id: nil)
       .pluck(:event_registration_id, :organization_id, :organization_address_id)
       .to_h { |registration_id, organization_id, address_id| [ [ registration_id, organization_id ], address_id ] }
   end
 
   def chosen_addresses
-    @chosen_addresses ||= Address.active.where(id: chosen_address_ids.values.uniq).select(:id, :city, :county, :state, :country).index_by(&:id)
+    @chosen_addresses ||= Address.active
+      .where(id: Affiliation.where(event_registration_id: registration_ids).select(:organization_address_id))
+      .select(:id, :city, :county, :state, :country)
+      .index_by(&:id)
+  end
+
+  def linked_organization_ids
+    EventRegistrationOrganization.where(event_registration_id: registration_ids).select(:organization_id)
   end
 
   def oldest_address_by_organization
     @oldest_address_by_organization ||= Address.active
-      .where(addressable_type: "Organization", addressable_id: organization_ids_by_registration.values.flatten.uniq)
+      .where(addressable_type: "Organization", addressable_id: linked_organization_ids)
       .order(:id)
       .select(:id, :addressable_id, :city, :county, :state, :country)
       .each_with_object({}) { |address, map| map[address.addressable_id] ||= address }
@@ -105,7 +122,7 @@ class RegistrationLocations
 
   def own_address_by_person
     @own_address_by_person ||= Address.active
-      .where(addressable_type: "Person", addressable_id: registrations.map(&:last).uniq)
+      .where(addressable_type: "Person", addressable_id: @registrations.select(:registrant_id))
       .order(primary: :desc, id: :asc)
       .select(:id, :addressable_id, :city, :county, :state, :country)
       .each_with_object({}) { |address, map| map[address.addressable_id] ||= address }

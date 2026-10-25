@@ -240,10 +240,12 @@ class AttendeesBreakdowns
     @person_ids ||= @people.except(:includes, :eager_load, :preload, :order).ids
   end
 
+  def scoped_registrations
+    @scoped_registrations ||= @registrations.where(registrant_id: person_ids, event_id: @events.select(:id))
+  end
+
   def registration_ids
-    @registration_ids ||= @registrations
-      .where(registrant_id: person_ids, event_id: @events.select(:id))
-      .pluck(:id)
+    @registration_ids ||= scoped_registrations.pluck(:id)
   end
 
   def sector_rows
@@ -295,7 +297,7 @@ class AttendeesBreakdowns
   end
 
   def locations
-    @locations ||= RegistrationLocations.new(registration_ids)
+    @locations ||= RegistrationLocations.new(scoped_registrations)
   end
 
   def org_registrant_pairs

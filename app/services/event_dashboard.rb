@@ -948,7 +948,7 @@ class EventDashboard
   private
 
   def locations
-    @locations ||= RegistrationLocations.new(active_registration_ids)
+    @locations ||= RegistrationLocations.new(active_registrations)
   end
 
   # [ [ district, registrant_id ], ... ] from the affiliations linked to this event's

@@ -615,23 +615,46 @@ RSpec.describe EventRegistration, type: :model do
     it "matches the work city (case-insensitive, partial) over the registrant's own address" do
       create(:address, addressable: portland.registrant, city: "Santa Monica")
 
-      expect(EventRegistration.located_in_city("santa")).to contain_exactly(santa_monica)
+      expect(EventRegistration.located_in(city: "santa")).to contain_exactly(santa_monica)
     end
 
     it "falls back to the registrant's own address when no org is linked" do
       unlinked = create(:event_registration)
       create(:address, addressable: unlinked.registrant, city: "Santa Barbara", state: "CA")
 
-      expect(EventRegistration.located_in_city("santa")).to contain_exactly(santa_monica, unlinked)
+      expect(EventRegistration.located_in(city: "santa")).to contain_exactly(santa_monica, unlinked)
     end
 
     it "matches the work state" do
-      expect(EventRegistration.located_in_state("OR")).to contain_exactly(portland)
+      expect(EventRegistration.located_in(state: "OR")).to contain_exactly(portland)
     end
 
     it "matches the work county within a state" do
-      expect(EventRegistration.located_in_county("CA|Los Angeles")).to contain_exactly(santa_monica)
-      expect(EventRegistration.located_in_county("OR|Los Angeles")).to be_empty
+      expect(EventRegistration.located_in(county: "CA|Los Angeles")).to contain_exactly(santa_monica)
+      expect(EventRegistration.located_in(county: "OR|Los Angeles")).to be_empty
+    end
+
+    it "passes everything through when no location filter is given" do
+      expect(EventRegistration.located_in).to include(santa_monica, portland)
+    end
+
+    # One call, not three chained scopes: otherwise someone working in two states
+    # matches a city from one and the state from the other.
+    it "tests city, state and county against the same work address" do
+      two_states = create(:event_registration)
+      [ [ "Portland", "OR", "Multnomah" ], [ "Seattle", "WA", "King" ] ].each do |city, state, county|
+        organization = create(:organization)
+        create(:address, addressable: organization, city:, state:, county:)
+        two_states.event_registration_organizations.create!(organization:)
+      end
+
+      expect(EventRegistration.located_in(city: "Seattle", state: "WA")).to contain_exactly(two_states)
+      expect(EventRegistration.located_in(city: "Seattle", state: "OR")).to be_empty
+      expect(EventRegistration.located_in(city: "Seattle", county: "OR|Multnomah")).to be_empty
+    end
+
+    it "matches nothing when the State and County filters name different states" do
+      expect(EventRegistration.located_in(state: "CA", county: "OR|Multnomah")).to be_empty
     end
   end
 

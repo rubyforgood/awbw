@@ -220,20 +220,21 @@ class EventRegistration < ApplicationRecord
     end
     scope
   }
-  # Where the registrant is on the registration — work, else home (RegistrationLocations).
-  scope :located_in_state, ->(state) {
-    where(id: RegistrationLocations.new(pluck(:id)).matching(state:).map(&:registration_id))
-  }
-  # Accepts "STATE|County" (from the manage filter) to scope to a county within
-  # a specific state, or a bare county name for backward compatibility.
-  scope :located_in_county, ->(value) {
-    state, county = value.to_s.include?("|") ? value.split("|", 2) : [ nil, value.to_s ]
-    next none if county.blank?
-    where(id: RegistrationLocations.new(pluck(:id)).matching(state:, county:).map(&:registration_id))
-  }
-  scope :located_in_city, ->(term) {
-    next all if term.blank?
-    where(id: RegistrationLocations.new(pluck(:id)).matching(city: term).map(&:registration_id))
+  # Where the registrant is on the registration — work, else home
+  # (RegistrationLocations). City, state and county arrive together in one call so
+  # they test the same location row: a registrant working in two states would
+  # otherwise match a city from one and the state from the other. County accepts
+  # "STATE|County" (from the roster filter) to scope to a county within a specific
+  # state, or a bare county name for backward compatibility; a county state that
+  # contradicts the State filter can match nothing.
+  scope :located_in, ->(state: nil, county: nil, city: nil) {
+    county_state, county_name = county.to_s.include?("|") ? county.split("|", 2) : [ nil, county.to_s ]
+    next none if county.present? && county_name.blank?
+    states = [ state, county_state ].compact_blank.uniq
+    next none if states.many?
+    next all if states.empty? && county_name.blank? && city.blank?
+    matches = RegistrationLocations.new(all).matching(state: states.first, county: county_name.presence, city: city.presence)
+    where(id: matches.map(&:registration_id))
   }
   scope :registrant_sector, ->(sector_id) {
     joins(registrant: :sectorable_items)

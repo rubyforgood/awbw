@@ -1796,6 +1796,25 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Faraway")
       end
 
+      # The City and State controls sit in the same filter form, so they have to
+      # describe one address — otherwise a registrant working in two states matches
+      # a city from one and the state from the other.
+      it "matches the roster's city and state filters against the same work address" do
+        person = create(:person, first_name: "Bistate", last_name: "Worker")
+        registration = create(:event_registration, event: event, registrant: person)
+        [ %w[Portland OR], %w[Seattle WA] ].each do |city, state|
+          organization = create(:organization)
+          create(:address, addressable: organization, city: city, state: state)
+          registration.event_registration_organizations.create!(organization: organization)
+        end
+
+        get registrants_event_path(event, city: "Seattle", state: "WA")
+        expect(response.body).to include("Bistate")
+
+        get registrants_event_path(event, city: "Seattle", state: "OR")
+        expect(response.body).not_to include("Bistate")
+      end
+
       it "does not crash on the new funder / comment-text / submission filters" do
         get registrants_event_path(event, funder_name: "someone")
         expect(response).to have_http_status(:ok)

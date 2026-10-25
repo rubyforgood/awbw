@@ -10,7 +10,7 @@ class ReminderRecipientFilter
   # `funder_name` is a free-text search on the scholarship funder's name — kept
   # distinct from the awbw/external funding-source `funder` scope so the shared
   # roster/picker filter bar can't collide the two on the roster.
-  TEXT_KEYS = %i[ name reg_org funder_name comment email city ].freeze
+  TEXT_KEYS = %i[ name reg_org funder_name comment email ].freeze
   # Dropdown filters shared with the registrants roster. They reuse the
   # EventRegistration scopes (run once as a query) so both pages stay in sync —
   # same param names, options, and semantics.
@@ -22,11 +22,14 @@ class ReminderRecipientFilter
   # keeps registrants whose person holds an active subscription to any of the chosen
   # topic subscription lists; matched in memory against the registrant's topic_subscriptions.
   PICKER_KEYS = %i[ topic_subscription ].freeze
+  # The City search plus the State and County dropdowns. Resolved as one group so
+  # they describe the same address, which is why city isn't a TEXT_KEY.
+  LOCATION_KEYS = %i[ city state county ].freeze
   # Registration date-range filters shared with the roster. Backed by the
   # EventRegistration.registered_between scope (run once as a query), so the same
   # range narrows both pages identically.
   DATE_KEYS = %i[ registered_from registered_to ].freeze
-  FILTER_KEYS = (TEXT_KEYS + DROPDOWN_KEYS + PICKER_KEYS + DATE_KEYS).freeze
+  FILTER_KEYS = (TEXT_KEYS + DROPDOWN_KEYS + PICKER_KEYS + LOCATION_KEYS + DATE_KEYS).uniq.freeze
   # Every key above that is also a registrants-roster param, so the roster's
   # "Send bulk emails" link can carry the active filters straight into the picker
   # (see EventHelper#reminder_recipient_filters). The remaining text keys (name,
@@ -41,7 +44,7 @@ class ReminderRecipientFilter
 
   def matched_ids
     text_matched = @event_registrations.select { |reg| matches_text?(reg) }.map(&:id).to_set
-    text_matched & dropdown_matched_ids & topic_matched_ids
+    text_matched & dropdown_matched_ids & location_matched_ids & topic_matched_ids
   end
 
   # True when at least one filter is narrowing the list. The view uses this to
@@ -58,15 +61,14 @@ class ReminderRecipientFilter
       matches_reg_org?(reg) &&
       matches_funder?(reg) &&
       matches_comment?(reg) &&
-      matches_email?(reg) &&
-      matches_city?(reg)
+      matches_email?(reg)
   end
 
   # Apply the registrants-roster scopes for whichever dropdowns / date-range
   # filters are set, then return the matching ids. With none set this is every
   # registration, so the text-match set passes through unchanged.
   def dropdown_matched_ids
-    return @event_registrations.map(&:id).to_set if @event.nil?
+    return all_registration_ids if @event.nil?
 
     scope = @event.event_registrations
     scope = scope.registered_between(@params[:registered_from], @params[:registered_to])
@@ -79,9 +81,27 @@ class ReminderRecipientFilter
     scope = scope.organization_linking_status(@params[:org_status], @event) if @params[:org_status].present?
     scope = scope.account_status(@params[:account_status]) if @params[:account_status].present?
     scope = scope.submission_status(@params[:submission_status], @event) if @params[:submission_status].present?
-    scope = scope.located_in_state(@params[:state]) if @params[:state].present?
-    scope = scope.located_in_county(@params[:county]) if @params[:county].present?
     scope.pluck(:id).to_set
+  end
+
+  # The City search and the State / County dropdowns, resolved together through
+  # EventRegistration.located_in so the same values narrow the roster and the picker
+  # identically — and so a registrant working in two states can't match a city from
+  # one and the state from the other. City is multi-term, so each term asks for the
+  # rows that match it *and* the dropdowns, then the terms are unioned.
+  def location_matched_ids
+    return all_registration_ids if LOCATION_KEYS.none? { |key| @params[key].present? }
+
+    terms = terms_for(:city)
+    return located_in_ids(nil) if terms.empty?
+    terms.reduce(Set.new) { |ids, term| ids | located_in_ids(term) }
+  end
+
+  def located_in_ids(city)
+    EventRegistration.where(id: all_registration_ids.to_a)
+      .located_in(state: @params[:state], county: @params[:county], city: city)
+      .pluck(:id)
+      .to_set
   end
 
   # Keeps registrants whose person holds an active subscription to any of the chosen
@@ -89,7 +109,7 @@ class ReminderRecipientFilter
   # passes the other matches through unchanged.
   def topic_matched_ids
     type_ids = Array(@params[:topic_subscription]).reject(&:blank?).map(&:to_i).to_set
-    return @event_registrations.map(&:id).to_set if type_ids.empty?
+    return all_registration_ids if type_ids.empty?
 
     @event_registrations.select do |reg|
       reg.registrant.topic_subscriptions.any? do |sub|
@@ -127,18 +147,6 @@ class ReminderRecipientFilter
     end
   end
 
-  # Matches the registrant's location, like EventRegistration.located_in_city, so the same City
-  # value narrows the roster and the picker identically.
-  def matches_city?(reg)
-    any_term?(:city) do |term|
-      locations.rows_by_registration.fetch(reg.id, []).any? { |row| row.city.to_s.downcase.include?(term) }
-    end
-  end
-
-  def locations
-    @locations ||= RegistrationLocations.new(@event_registrations.map(&:id))
-  end
-
   # Matches against every email we hold for the registrant (their account email,
   # contact email and secondary email), so a search hits whichever address the
   # admin remembers.
@@ -158,8 +166,16 @@ class ReminderRecipientFilter
   # when ANY of them hits (e.g. "amy--aisha" keeps both Amy and Aisha). Single
   # hyphens inside a value are preserved. Returns true when no term was typed.
   def any_term?(key)
-    tokens = @params[key].to_s.downcase.split("--").map(&:strip).reject(&:blank?)
+    tokens = terms_for(key)
     return true if tokens.empty?
     tokens.any? { |token| yield token }
+  end
+
+  def terms_for(key)
+    @params[key].to_s.downcase.split("--").map(&:strip).reject(&:blank?)
+  end
+
+  def all_registration_ids
+    @all_registration_ids ||= @event_registrations.map(&:id).to_set
   end
 end
