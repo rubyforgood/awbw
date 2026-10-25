@@ -215,15 +215,16 @@ class Person < ApplicationRecord
 
   search_scope :search_contact do
     scope { left_joins(:contact_methods, :addresses) }
-    attributes contact_methods_phone: "contact_methods.value"
-    attributes address_street: "addresses.street_address"
-    attributes address_city:   "addresses.city"
-    attributes address_state:  "addresses.state"
-    attributes address_zip:    "addresses.zip_code"
-    attributes address_phone:  "addresses.phone"
+    attributes phone:   "contact_methods.value"
+    attributes street:  "addresses.street_address"
+    attributes city:    "addresses.city"
+    attributes state:   "addresses.state"
+    attributes zip:     "addresses.zip_code"
+    attributes county:  "addresses.county"
+    attributes country: "addresses.country"
     attributes all: [ "contact_methods.value",
                       "addresses.street_address", "addresses.city", "addresses.state",
-                      "addresses.zip_code", "addresses.phone" ]
+                      "addresses.zip_code", "addresses.county", "addresses.country" ]
     options :all, type: :text, default: true, default_operator: :or
   end
 

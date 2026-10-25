@@ -742,9 +742,9 @@ RSpec.describe Person, type: :model do
       create(:address, addressable: person_bob, street_address: '123 Hiddenway', city: 'Portland')
       create(:contact_method, contactable: person_alice, value: '555-0199')
 
-      expect(Person.search_contact('address_city:portland')).to include(person_bob)
-      expect(Person.search_contact('address_city:portland')).not_to include(person_alice)
-      expect(Person.search_contact('contact_methods_phone:555')).to include(person_alice)
+      expect(Person.search_contact('city:portland')).to include(person_bob)
+      expect(Person.search_contact('city:portland')).not_to include(person_alice)
+      expect(Person.search_contact('phone:555')).to include(person_alice)
     end
 
     it 'filters by shared_contact_info treating a quoted phrase as one term' do
