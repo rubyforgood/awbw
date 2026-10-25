@@ -9,5 +9,5 @@ summary: >-
   country, state, and locality of the saved one.
 pro_tips:
   - "With nothing saved, a new address starts in the country of the return address in Settings."
-  - "A blank locality starts on Outside USA for non-USA addresses and Outside CA for other US states."
-  - "Admins can add admin=true to the edit page address to type any state on a US address too."
+  - "A blank locality starts on whatever the address itself settles — Outside USA, Outside CA, LA City, LA County, or Orange County — and stays blank when it can't be worked out."
+  - "On a US address, admins can add ?admin=true to the end of the edit page's web address to type any state."

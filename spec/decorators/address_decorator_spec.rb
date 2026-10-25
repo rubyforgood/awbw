@@ -53,9 +53,18 @@ RSpec.describe AddressDecorator do
       expect(new_address.state_as_text?).to be(false)
     end
 
-    it "prefers the primary saved address" do
-      create(:address, addressable: person, state: "NY", country: "United States", primary: false)
-      create(:address, addressable: person, state: "AB", country: "Canada", primary: true)
+    it "prefers the most recently updated saved address" do
+      create(:address, addressable: person, state: "AB", country: "Canada", updated_at: 2.days.ago)
+      create(:address, addressable: person, state: "NY", country: "United States", updated_at: 1.hour.ago)
+
+      expect(new_address.default_country).to eq("United States")
+      expect(new_address.default_state).to eq("NY")
+      expect(new_address.state_as_text?).to be(false)
+    end
+
+    it "takes an active saved address over a more recently updated inactive one" do
+      create(:address, addressable: person, state: "AB", country: "Canada", updated_at: 2.days.ago)
+      create(:address, addressable: person, state: "NY", country: "United States", inactive: true, updated_at: 1.hour.ago)
 
       expect(new_address.default_country).to eq("Canada")
       expect(new_address.default_state).to eq("AB")
@@ -84,8 +93,22 @@ RSpec.describe AddressDecorator do
       expect(build(:address, locality: nil, state: "NY", country: "United States").decorate.default_locality).to eq("Outside CA")
     end
 
-    it "leaves a blank locality blank in California" do
-      expect(build(:address, locality: nil, state: "CA", country: "United States").decorate.default_locality).to be_nil
+    it "leaves a blank locality blank in California outside LA and Orange counties" do
+      address = build(:address, locality: nil, state: "CA", country: "United States", city: "Fresno", county: "Fresno")
+
+      expect(address.decorate.default_locality).to be_nil
+    end
+
+    it "fills a blank locality with LA City for a Los Angeles address" do
+      address = build(:address, locality: nil, state: "CA", country: "United States", city: "Los Angeles", county: "Los Angeles")
+
+      expect(address.decorate.default_locality).to eq("LA City")
+    end
+
+    it "leaves a blank locality blank for a state no US state answers to" do
+      address = build(:address, locality: nil, state: "ON", country: nil)
+
+      expect(address.decorate.default_locality).to be_nil
     end
 
     it "derives a new address's locality when the saved one has none" do
