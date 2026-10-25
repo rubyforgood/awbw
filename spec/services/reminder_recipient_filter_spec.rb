@@ -109,7 +109,7 @@ RSpec.describe ReminderRecipientFilter do
       create(:address, addressable: lives_there.registrant, city: "Santa Monica")
 
       expect(matched({ city: "santa" }, [ works_there, works_elsewhere, lives_there ])).to eq([ works_there.id, lives_there.id ].to_set)
-      expect(EventRegistration.work_city("santa")).to contain_exactly(works_there, lives_there)
+      expect(EventRegistration.located_in_city("santa")).to contain_exactly(works_there, lives_there)
     end
 
     it "filters by registration comment text" do

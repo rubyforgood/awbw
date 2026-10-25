@@ -147,12 +147,12 @@ class EventDashboard
     recognized_scholarships.map(&:recipient_id).uniq.size
   end
 
-  # This event's registrants grouped by the city they work in, with the
+  # This event's registrants grouped by their location's city, with the
   # scholarship-recipient count per city — the shared "Registrants by city"
   # breakdown on the background and recipients pages.
   def registrant_city_breakdown
     @registrant_city_breakdown ||= RegistrantCityBreakdown.new(
-      city_registrant_pairs: work_addresses.rows.map { |row| [ row.city_label, row.registrant_id ] },
+      city_registrant_pairs: locations.rows.map { |row| [ row.city_label, row.registrant_id ] },
       scholarship_recipient_ids: scholarships.distinct.pluck(:recipient_id)
     )
   end
@@ -850,7 +850,7 @@ class EventDashboard
       .sort_by { |label, count| [ -count, label ] }
   end
 
-  # The US states registrants work in (RegistrationWorkAddresses).
+  # The US states registrants are in — work, else home (RegistrationLocations).
   def states
     @states ||= state_registrant_ids_by_state.keys.sort
   end
@@ -864,10 +864,10 @@ class EventDashboard
   end
 
   def state_registrant_ids_by_state
-    work_addresses.registrant_ids_by_state
+    locations.registrant_ids_by_state
   end
 
-  # The countries registrants work in (RegistrationWorkAddresses).
+  # The countries registrants are in (RegistrationLocations).
   def countries
     @countries ||= country_registrant_ids_by_country.keys.sort
   end
@@ -897,7 +897,7 @@ class EventDashboard
   end
 
   def country_registrant_ids_by_country
-    work_addresses.registrant_ids_by_country
+    locations.registrant_ids_by_country
   end
 
   # Registrant ids per school district, for the breakdown's per-row drill-in. A
@@ -910,10 +910,10 @@ class EventDashboard
       .transform_values(&:to_a)
   end
 
-  # [ state, county ] pairs registrants work in. Pairing in the state lets the
+  # [ state, county ] pairs registrants are in. Pairing in the state lets the
   # manage filter disambiguate same-named counties ("CA - Warren" vs "NY - Warren").
   def counties
-    work_addresses.counties
+    locations.counties
   end
 
   # Life experiences captured at registration: StoryPopulation categories tagged
@@ -947,8 +947,8 @@ class EventDashboard
 
   private
 
-  def work_addresses
-    @work_addresses ||= RegistrationWorkAddresses.new(active_registration_ids)
+  def locations
+    @locations ||= RegistrationLocations.new(active_registration_ids)
   end
 
   # [ [ district, registrant_id ], ... ] from the affiliations linked to this event's

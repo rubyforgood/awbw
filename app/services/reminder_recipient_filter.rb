@@ -79,8 +79,8 @@ class ReminderRecipientFilter
     scope = scope.organization_linking_status(@params[:org_status], @event) if @params[:org_status].present?
     scope = scope.account_status(@params[:account_status]) if @params[:account_status].present?
     scope = scope.submission_status(@params[:submission_status], @event) if @params[:submission_status].present?
-    scope = scope.work_state(@params[:state]) if @params[:state].present?
-    scope = scope.work_county(@params[:county]) if @params[:county].present?
+    scope = scope.located_in_state(@params[:state]) if @params[:state].present?
+    scope = scope.located_in_county(@params[:county]) if @params[:county].present?
     scope.pluck(:id).to_set
   end
 
@@ -127,16 +127,16 @@ class ReminderRecipientFilter
     end
   end
 
-  # Matches the work city, like EventRegistration.work_city, so the same City
+  # Matches the registrant's location, like EventRegistration.located_in_city, so the same City
   # value narrows the roster and the picker identically.
   def matches_city?(reg)
     any_term?(:city) do |term|
-      work_addresses.rows_by_registration.fetch(reg.id, []).any? { |row| row.city.to_s.downcase.include?(term) }
+      locations.rows_by_registration.fetch(reg.id, []).any? { |row| row.city.to_s.downcase.include?(term) }
     end
   end
 
-  def work_addresses
-    @work_addresses ||= RegistrationWorkAddresses.new(@event_registrations.map(&:id))
+  def locations
+    @locations ||= RegistrationLocations.new(@event_registrations.map(&:id))
   end
 
   # Matches against every email we hold for the registrant (their account email,

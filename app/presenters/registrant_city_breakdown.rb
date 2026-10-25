@@ -1,4 +1,4 @@
-# Groups an event's registrants by the city they work in (RegistrationWorkAddresses),
+# Groups an event's registrants by their location's city (RegistrationLocations),
 # counting distinct registrants and scholarship recipients per city. Powers the shared "Registrants by city" breakdown on the event
 # background dashboard and the scholarship-recipients page. Pure/in-memory so
 # EventDashboard feeds it already-plucked data (see [[event_dashboard]]).

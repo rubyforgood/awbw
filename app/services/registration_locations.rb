@@ -1,12 +1,12 @@
-# Where registrants work, per registration: each organization linked on the
-# registration, at the address picked on the registration's affiliation with it
-# (Affiliation#organization_address), else that org's oldest active address. A
-# registration with no work address falls back to the registrant's own primary
-# (else oldest) active address. The source for the registrant charts' and
+# Where each registrant is, per registration — where they work, else where they
+# live: each organization linked on the registration, at the address picked on
+# the registration's affiliation with it (Affiliation#organization_address), else
+# that org's oldest active address; with no such address, the registrant's own
+# primary (else oldest) active address. The source for the registrant charts' and
 # filters' cities, counties, states, and countries. A linked org with no address
 # and no own address to fall back on yields a row with no location, so the
 # cities breakdown can count it as Unknown.
-class RegistrationWorkAddresses
+class RegistrationLocations
   Row = Struct.new(:registration_id, :organization_id, :registrant_id, :city, :county, :state, :country, keyword_init: true) do
     def city_label
       [ city, state ].compact_blank.join(", ").presence
@@ -19,11 +19,11 @@ class RegistrationWorkAddresses
 
   def rows
     @rows ||= registrations.flat_map do |registration_id, registrant_id|
-      work = organization_ids_by_registration.fetch(registration_id, []).map do |organization_id|
+      located = organization_ids_by_registration.fetch(registration_id, []).map do |organization_id|
         [ organization_id, chosen_addresses[chosen_address_ids[[ registration_id, organization_id ]]] || oldest_address_by_organization[organization_id] ]
       end
-      work = [ [ nil, own_address_by_person[registrant_id] ] ] if work.none?(&:last) && own_address_by_person[registrant_id]
-      work.map { |organization_id, address| row(registration_id, organization_id, registrant_id, address) }
+      located = [ [ nil, own_address_by_person[registrant_id] ] ] if located.none?(&:last) && own_address_by_person[registrant_id]
+      located.map { |organization_id, address| row(registration_id, organization_id, registrant_id, address) }
     end
   end
 

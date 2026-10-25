@@ -600,7 +600,7 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
-  describe "work location scopes" do
+  describe "location scopes" do
     def registration_working_in(city:, state:, county: nil)
       registration = create(:event_registration)
       organization = create(:organization)
@@ -612,26 +612,26 @@ RSpec.describe EventRegistration, type: :model do
     let!(:santa_monica) { registration_working_in(city: "Santa Monica", state: "CA", county: "Los Angeles") }
     let!(:portland) { registration_working_in(city: "Portland", state: "OR", county: "Multnomah") }
 
-    it "matches the work city (case-insensitive, partial), not the registrant's own address" do
+    it "matches the work city (case-insensitive, partial) over the registrant's own address" do
       create(:address, addressable: portland.registrant, city: "Santa Monica")
 
-      expect(EventRegistration.work_city("santa")).to contain_exactly(santa_monica)
+      expect(EventRegistration.located_in_city("santa")).to contain_exactly(santa_monica)
     end
 
     it "falls back to the registrant's own address when no org is linked" do
       unlinked = create(:event_registration)
       create(:address, addressable: unlinked.registrant, city: "Santa Barbara", state: "CA")
 
-      expect(EventRegistration.work_city("santa")).to contain_exactly(santa_monica, unlinked)
+      expect(EventRegistration.located_in_city("santa")).to contain_exactly(santa_monica, unlinked)
     end
 
     it "matches the work state" do
-      expect(EventRegistration.work_state("OR")).to contain_exactly(portland)
+      expect(EventRegistration.located_in_state("OR")).to contain_exactly(portland)
     end
 
     it "matches the work county within a state" do
-      expect(EventRegistration.work_county("CA|Los Angeles")).to contain_exactly(santa_monica)
-      expect(EventRegistration.work_county("OR|Los Angeles")).to be_empty
+      expect(EventRegistration.located_in_county("CA|Los Angeles")).to contain_exactly(santa_monica)
+      expect(EventRegistration.located_in_county("OR|Los Angeles")).to be_empty
     end
   end
 

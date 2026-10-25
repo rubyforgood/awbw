@@ -4,7 +4,7 @@
 # match EventDashboard so the shared _registrant_breakdowns partial reads either.
 #
 # Sourced from each person's profile (sectors, age groups, categories) and from the
-# orgs, work addresses, scholarships, and CE tied to their attended-training registrations.
+# orgs, locations, scholarships, and CE tied to their attended-training registrations.
 class AttendeesBreakdowns
   # events: the events whose registrations may be counted (for the attendees index,
   # the viewer's reportable events narrowed by the active filters), so the
@@ -140,12 +140,12 @@ class AttendeesBreakdowns
 
   # --- Cities ----------------------------------------------------------------
 
-  # Attendees grouped by the city they work in on their attended-training
+  # Attendees grouped by their location's city on their attended-training
   # registrations, with scholarship recipients per city — the shared
   # "Registrants by city" breakdown, aggregated across all trainings.
   def registrant_city_breakdown
     @registrant_city_breakdown ||= RegistrantCityBreakdown.new(
-      city_registrant_pairs: work_addresses.rows.map { |row| [ row.city_label, row.registrant_id ] },
+      city_registrant_pairs: locations.rows.map { |row| [ row.city_label, row.registrant_id ] },
       scholarship_recipient_ids: scholarship_recipient_ids
     )
   end
@@ -180,11 +180,11 @@ class AttendeesBreakdowns
   end
 
   def state_registrant_ids_by_state
-    work_addresses.registrant_ids_by_state
+    locations.registrant_ids_by_state
   end
 
   def country_registrant_ids_by_country
-    work_addresses.registrant_ids_by_country
+    locations.registrant_ids_by_country
   end
 
   def school_district_registrant_ids_by_district
@@ -294,8 +294,8 @@ class AttendeesBreakdowns
     rows.group_by { |row| yield(row) }.transform_values { |grouped| grouped.map(&:first).uniq }
   end
 
-  def work_addresses
-    @work_addresses ||= RegistrationWorkAddresses.new(registration_ids)
+  def locations
+    @locations ||= RegistrationLocations.new(registration_ids)
   end
 
   def org_registrant_pairs
