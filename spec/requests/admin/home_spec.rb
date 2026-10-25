@@ -82,72 +82,71 @@ RSpec.describe "Admin home", type: :request do
     expect(response.body).to include(%(href="#{organization_statuses_path}"))
   end
 
-  it "loads the action counts in lazy frames" do
+  it "renders the action buttons right away and fills their badges from one frame request" do
+    create(:profile_change_request)
+
     get "/admin"
 
-    expect(response.body).to include(
-      %(src="#{admin_home_data_health_count_path}"),
-      %(src="#{admin_home_author_credit_count_path}"),
-      %(src="#{admin_home_unsynced_features_count_path}")
-    )
+    expect(response.body.scan(/<turbo-frame[^>]* src=/).size).to eq(1)
+    expect(response.body).to include(%(src="#{admin_home_action_buttons_path}"))
+    expect(response.body).to include(%(href="#{admin_data_health_path}"), %(href="#{author_credit_divergences_path}"))
+    expect(response.body[%r{<turbo-frame id="action_buttons".*?</turbo-frame>}m]).not_to include("rounded-full")
   end
 
-  describe "count badges" do
-    it "renders the Data health total inside its frame" do
-      allow(DataHealth).to receive(:checks).and_return([ instance_double(DataHealth::Check, count: 2), instance_double(DataHealth::Check, count: 3) ])
-
-      get admin_home_data_health_count_path, headers: { "Turbo-Frame" => "data_health_count" }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include(%(id="data_health_count"))
-      expect(response.body).to match(%r{<span[^>]*>5</span>})
-      expect(response.body).to include("Data checks only")
+  describe "action buttons frame" do
+    def get_action_buttons
+      get admin_home_action_buttons_path, headers: { "Turbo-Frame" => "action_buttons" }
     end
 
-    it "renders the Author credit total inside its frame" do
-      entries = [ 1, 4 ].map { |count| DataHealth::Worklists::Entry.new("Label", count, "record", "/") }
-      allow_any_instance_of(DataHealth::Worklists).to receive(:author_credit).and_return(entries)
-
-      get admin_home_author_credit_count_path, headers: { "Turbo-Frame" => "author_credit_count" }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include(%(id="author_credit_count"))
-      expect(response.body).to match(%r{<span[^>]*>5</span>})
+    def button(label)
+      response.body[%r{<(?:a|button)[^>]*>(?:(?!</(?:a|button)>).)*#{label}.*?</(?:a|button)>}m]
     end
 
-    it "renders how many seeded features aren't synced yet" do
-      allow_any_instance_of(FeatureCatalog).to receive(:missing_count).and_return(3)
+    before do
+      allow(DataHealth).to receive(:checks).and_return([ instance_double(DataHealth::Check, flagged?: false), instance_double(DataHealth::Check, flagged?: true) ])
+      allow_any_instance_of(AuthorCreditDivergenceQuery).to receive(:any?).and_return(true)
+      allow_any_instance_of(FeatureCatalog).to receive(:recent_missing?).and_return(true)
+    end
 
-      get admin_home_unsynced_features_count_path, headers: { "Turbo-Frame" => "unsynced_features_count" }
+    it "shows Review on Data health, Author credit, and Sync features, and the pending change request count" do
+      create_list(:profile_change_request, 2)
+
+      get_action_buttons
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include(%(id="unsynced_features_count"))
-      expect(response.body).to match(%r{<span[^>]*>3</span>})
+      expect(response.body).to include(%(id="action_buttons"), %(target="_top"))
+      expect(response.body).not_to include("<turbo-stream")
+      expect(button("Changes requested")).to match(%r{<span[^>]*>2</span>})
+      expect(button("Data health")).to match(%r{<span[^>]*>Review</span>}).and include("Data checks only")
+      expect(button("Author credit divergences")).to match(%r{<span[^>]*>Review</span>})
+      expect(button("Sync features")).to match(%r{<span[^>]*>Review</span>})
     end
 
     it "renders no badge when nothing is waiting" do
-      allow(DataHealth).to receive(:checks).and_return([ instance_double(DataHealth::Check, count: 0) ])
+      allow(DataHealth).to receive(:checks).and_return([ instance_double(DataHealth::Check, flagged?: false) ])
+      allow_any_instance_of(AuthorCreditDivergenceQuery).to receive(:any?).and_return(false)
+      allow_any_instance_of(FeatureCatalog).to receive(:recent_missing?).and_return(false)
 
-      get admin_home_data_health_count_path, headers: { "Turbo-Frame" => "data_health_count" }
+      get_action_buttons
 
-      expect(response.body).to include(%(id="data_health_count"))
+      expect(response.body).to include("Data health", "Author credit divergences", "Sync features")
       expect(response.body).not_to include("rounded-full")
     end
 
-    it "renders an empty frame when a count fails" do
+    it "keeps the buttons and leaves only the failing badge empty when a check fails" do
       allow(DataHealth).to receive(:checks).and_raise(StandardError, "boom")
 
-      get admin_home_data_health_count_path, headers: { "Turbo-Frame" => "data_health_count" }
+      get_action_buttons
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include(%(id="data_health_count"))
-      expect(response.body).not_to include("rounded-full")
+      expect(button("Data health")).not_to include("rounded-full")
+      expect(button("Author credit divergences")).to match(%r{<span[^>]*>Review</span>})
     end
 
     it "denies a non-admin" do
       sign_in create(:user)
 
-      get admin_home_data_health_count_path, headers: { "Turbo-Frame" => "data_health_count" }
+      get_action_buttons
 
       expect(response).not_to have_http_status(:ok)
     end

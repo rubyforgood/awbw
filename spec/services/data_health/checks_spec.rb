@@ -25,6 +25,14 @@ RSpec.describe DataHealth do
     end
   end
 
+  it "flags exactly the checks that count rows" do
+    create(:story)
+
+    described_class.checks.each do |check|
+      expect(check.flagged?).to eq(check.any?), "#{check.key} flags #{check.flagged?} but counts #{check.count}"
+    end
+  end
+
   it "keeps every check's scope a relation, so counting doesn't load the table" do
     described_class.checks.each do |check|
       expect(check.scope).to be_a(ActiveRecord::Relation), "#{check.key} returned #{check.scope.class}"

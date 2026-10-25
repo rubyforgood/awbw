@@ -6,6 +6,7 @@ require "yaml"
 # left entirely alone.
 class FeatureCatalog
   DATA_DIR = Rails.root.join("db/seeds/features")
+  RECENT_SEEDS = 20
 
   SYNCED_FIELDS = %i[
     area display_status released_on action_path pr_number
@@ -49,19 +50,22 @@ class FeatureCatalog
     Result.new(created, updated, skipped)
   end
 
-  def missing_count
-    names = entries.map { |entry| entry.fetch("name") }
+  # Reads only the newest seeds, so a backdated seed merged after a sync waits for a newer one to flag it.
+  def recent_missing?(limit: RECENT_SEEDS)
+    names = seed_paths.last(limit).map { |path| load_seed(path).fetch("name") }
     existing = Feature.where(name: names).pluck(:name).to_set(&:downcase)
-    names.count { |name| existing.exclude?(name.downcase) }
+    names.any? { |name| existing.exclude?(name.downcase) }
   end
 
   def entries
-    Dir[File.join(@dir, "*.yml")].sort.map do |path|
-      YAML.safe_load_file(path, permitted_classes: [ Date ])
-    end
+    seed_paths.map { |path| load_seed(path) }
   end
 
   private
+
+  def seed_paths = Dir[File.join(@dir, "*.yml")].sort
+
+  def load_seed(path) = YAML.safe_load_file(path, permitted_classes: [ Date ])
 
   # Keyed by downcased name to match the case-insensitive column collation.
   def existing_features(names)

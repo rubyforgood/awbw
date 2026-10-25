@@ -69,6 +69,98 @@ RSpec.describe AuthorCreditDivergenceQuery do
     end
   end
 
+  describe "#any?" do
+    let(:personless_user) { create(:user, person: nil) }
+
+    def expect_any_to_match(query)
+      expect(query.any?).to eq(!query.call.empty?)
+    end
+
+    it "is false when every record credits its author cleanly" do
+      person.update!(display_name_preference: "full_name")
+      create(:story, created_by: author_user, author: person, author_credit_preference: nil)
+
+      expect(described_class.new(type: "Story").any?).to be(false)
+      expect_any_to_match(described_class.new(type: "Story"))
+    end
+
+    it "is true for a diverged snapshot" do
+      diverged_story
+
+      expect(described_class.new.any?).to be(true)
+      expect_any_to_match(described_class.new)
+    end
+
+    it "is true for a legacy name, a creator fallback, and an unattributed record" do
+      [
+        -> { create(:workshop, created_by: author_user, author: nil, full_name: "Legacy Name") },
+        -> { create(:story, created_by: author_user, author: nil) },
+        -> { create(:story, created_by: personless_user, author: nil) }
+      ].each do |make|
+        record = make.call
+
+        expect(described_class.new.any?).to be(true)
+        expect_any_to_match(described_class.new)
+        record.destroy!
+      end
+    end
+
+    it "is false when the only creator fallback belongs to a reconciled person" do
+      create(:story, created_by: author_user, author: nil)
+      person.update!(author_credit_reconciled_at: Time.current)
+
+      expect(described_class.new(type: "Story").any?).to be(false)
+      expect(described_class.new(type: "Story", include_reconciled: "1").any?).to be(true)
+      expect_any_to_match(described_class.new(type: "Story"))
+    end
+
+    it "treats a whitespace-only legacy name as no legacy name" do
+      create(:workshop, created_by: author_user, author: nil, full_name: "   ")
+      person.update!(author_credit_reconciled_at: Time.current)
+
+      expect(described_class.new(type: "Workshop").any?).to be(false)
+      expect_any_to_match(described_class.new(type: "Workshop"))
+    end
+
+    it "compares a snapshot against an anonymous or blank-preference author" do
+      story = create(:story, created_by: author_user, author: person)
+      person.update_columns(anonymous_contributions: true)
+      story.update_columns(author_credit_preference: "anonymous")
+      expect(described_class.new(type: "Story").any?).to be(false)
+
+      story.update_columns(author_credit_preference: "full_name")
+      expect(described_class.new(type: "Story").any?).to be(true)
+
+      person.update_columns(anonymous_contributions: false, display_name_preference: "")
+      expect(described_class.new(type: "Story").any?).to be(false)
+      expect_any_to_match(described_class.new(type: "Story"))
+    end
+
+    it "agrees with the full query under every filter" do
+      diverged_story
+      create(:story, created_by: personless_user, author: nil)
+      create(:workshop, created_by: personless_user, author: nil, full_name: "Legacy Name")
+      reconciled = create(:user, :with_person)
+      reconciled.person.update!(author_credit_reconciled_at: Time.current)
+      create(:story, created_by: reconciled, author: nil)
+
+      [ {}, { type: "Story" }, { type: "Resource" }, { person_id: person.id }, { person_id: reconciled.person.id },
+        { person_id: reconciled.person.id, include_reconciled: "1" }, { preference: "first_name_only" },
+        { preference: "anonymous" }, { include_reconciled: "1" } ].each do |filters|
+        query = described_class.new(**filters)
+        expect(query.any?).to eq(!query.call.empty?), "disagrees for #{filters}"
+      end
+    end
+
+    it "honors the person filter" do
+      create(:story, created_by: personless_user, author: nil)
+      diverged_story
+
+      expect(described_class.new(person_id: person.id + 9999).any?).to be(false)
+      expect(described_class.new(person_id: person.id).any?).to be(true)
+    end
+  end
+
   describe "filters" do
     before { diverged_story }
 
