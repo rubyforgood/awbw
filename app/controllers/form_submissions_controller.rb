@@ -154,13 +154,7 @@ class FormSubmissionsController < ApplicationController
   end
 
   def profile_diff_for(organization)
-    entry = submission_org_entry
-    OrganizationServices::ProfileDiff.call(
-      organization: organization,
-      website: entry[:website],
-      organization_type: entry[:organization_type],
-      address: entry[:address]
-    )
+    OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: submission_org_entry)
   end
 
   # Fill the org's blank profile/address fields from the submission, create the

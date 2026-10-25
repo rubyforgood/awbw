@@ -72,12 +72,13 @@ class Organization < ApplicationRecord
   validates :tax_id, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :mission_vision_values, length: { maximum: 255 }
+  # Admin bypass stays on Current.user until #2833 moves it to a controller-set flag (models never call policies).
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
   validate :parent_is_not_self_or_descendant, if: :parent_id_changed?
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
-                                reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
+                                reject_if: proc { |attrs| Address.unfilled_attributes?(attrs) }
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
@@ -93,6 +94,7 @@ class Organization < ApplicationRecord
   # An org is active because someone is affiliated there, not because the legacy
   # status column says so (ADR-0001 D3, ADR-0003 D4).
   scope :active, -> { where(id: Affiliation.active.select(:organization_id)) }
+  scope :name_like, ->(name) { where("organizations.name LIKE ?", "%#{sanitize_sql_like(name)}%") }
   scope :with_active_facilitators, -> { where(id: Affiliation.active.facilitators.select(:organization_id)) }
   scope :address, ->(address) do
     return all if address.blank?

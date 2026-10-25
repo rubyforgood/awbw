@@ -1,0 +1,8 @@
+name: "Story and variation carousels fill the page width"
+area: stories
+display_status: admin_facing
+released_on: 2026-08-16
+pr_number: 2228
+summary: >-
+  Story and workshop variation image carousels now span the full page width with
+  sharper images, and the photo picker button reads "Change primary photo."

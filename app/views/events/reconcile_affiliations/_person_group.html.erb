@@ -1,0 +1,69 @@
+<% color_class = {
+     red: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300",
+     green: "has-[:checked]:bg-green-50 has-[:checked]:text-green-700 has-[:checked]:border-green-300",
+     blue: "has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700 has-[:checked]:border-blue-300",
+     gray: "has-[:checked]:bg-gray-100 has-[:checked]:text-gray-800 has-[:checked]:border-gray-400"
+   } %>
+<% fa_hint = "facilitator affiliation (FA)" %>
+<% outcome_options = {
+     create: [ [ "create", "Create new FA", :blue, fa_hint ], [ "keep", "Skip", :gray ] ],
+     deactivate: [ [ "keep", "Keep active", :green ], [ "delete", "Delete affiliation", :red ], [ "deactivate", "Deactivate affiliation", :red ] ],
+     delete: [ [ "delete", "Delete", :red ], [ "keep", "Keep", :gray ] ],
+     reactivate: [ [ "reactivate", "Reactivate", :green ], [ "create", "Create new FA", :blue, fa_hint ], [ "keep", "Leave inactive", :gray ] ],
+     retarget: [ [ "retarget", "Move to the new event", :blue ], [ "keep", "Leave as is", :gray ] ]
+   } %>
+<% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
+
+<section class="rounded-lg border border-gray-200 bg-white p-4">
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+    <div class="flex items-center gap-2 min-w-0">
+      <%= link_to group[:person].decorate.full_name_with_display_name, edit_event_registration_path(group[:registration]), target: "_blank", rel: "noopener", class: "font-semibold text-gray-900 hover:underline hover:text-blue-700 shrink-0" %>
+      <% others = group[:other_facilitators] %>
+      <% if others.any? %>
+        <% note = "Also a facilitator at #{others.map { |a| a.organization.name }.to_sentence}." %>
+        <% anchor = others.one? ? dom_id(others.first) : "affiliations" %>
+        <%= link_to note, edit_person_path(group[:person], anchor: anchor), target: "_blank", rel: "noopener",
+              title: note, class: "text-xs text-gray-500 truncate hover:underline hover:text-blue-700 min-w-0" %>
+      <% end %>
+    </div>
+    <%= render "event_registrations/attendance_status_badge", registration: group[:registration], return_to: "reconcile_affiliations" %>
+  </div>
+
+  <% if group[:registration]&.status == "incomplete_attendance" && ticked.add?(group[:registration].id) %>
+    <%= render "attendance_days", registration: group[:registration], event: @event %>
+  <% end %>
+
+  <div class="divide-y divide-gray-100 border-t border-gray-100">
+    <% group[:rows].each do |row| %>
+      <%# A row this training created has nothing to preserve, so Delete leads and
+          Deactivate is shown but not selectable — the tooltip says why. %>
+      <% default_choice = row.action == :deactivate && row.minted_here ? "delete" : row.action.to_s %>
+      <% chosen = pre_outcome&.dig(row.key) || default_choice %>
+      <div class="flex flex-wrap items-center gap-3 py-2">
+        <div class="flex-1 min-w-0 text-sm">
+          <% if row.affiliation %>
+            <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "hover:underline" do %>
+              <span class="text-gray-800 hover:text-blue-700"><%= row.organization.name %></span>
+              <span class="text-gray-400">· <%= row.affiliation.decorate.period_label %></span>
+            <% end %>
+          <% else %>
+            <span class="text-gray-800"><%= row.organization.name %></span>
+          <% end %>
+          <% if row.shows_jobs? %>
+            <%= render "job_note", jobs: row.jobs %>
+          <% end %>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+          <% outcome_options[row.action].each do |value, label, color, hint| %>
+            <% unavailable = value == "deactivate" && row.minted_here %>
+            <label class="<%= button_base %> <%= unavailable ? "opacity-50 cursor-not-allowed" : color_class[color] %>" <%= tag.attributes(title: hint) %>>
+              <%= radio_button_tag "outcome[#{row.key}]", value, chosen == value, id: "outcome_#{row.key}_#{value}", class: "h-4 w-4 border-gray-300", form: "reconcile_form", disabled: unavailable %>
+              <%= label %>
+              <%= render "tooltip", kind: value.to_sym %>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>

@@ -4,7 +4,7 @@
           <!-- Header -->
           <div class="mb-6 flex items-center justify-between">
             <h1 class="text-primary font-display text-2xl font-semibold">
-              <%= EventRegistration.model_name.human.pluralize %> (<%= @event_registrations_count %>)
+              <%= EventRegistration.model_name.human.pluralize %> (<%= number_with_delimiter(@event_registrations_count) %>)
             </h1>
             <div class="flex gap-2">
               <% if @filtered_event %>

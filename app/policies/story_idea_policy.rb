@@ -6,7 +6,7 @@ class StoryIdeaPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || owner?
+    admin? || owner? || credited_author?
   end
 
   def new?
@@ -19,6 +19,10 @@ class StoryIdeaPolicy < ApplicationPolicy
 
   def update?
     admin?# || owner?
+  end
+
+  def omit_organization?
+    admin?
   end
 
   def destroy?

@@ -15,7 +15,6 @@
     <% promoted_to_story = f.object.stories.any? %>
     <% if promoted_to_story %>
       <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
-      <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
       <%= f.hidden_field :organization_id, value: f.object.organization_id %>
       <%= f.hidden_field :title, value: f.object.title %>
       <%= f.hidden_field :rhino_body, value: f.object.rhino_body %>
@@ -76,8 +75,8 @@
                       label_method: :type_name,
                       value_method: :id,
                       label: "Organization",
-                      required: !current_user&.super_user?,
-                      include_blank: (current_user&.super_user? || nil),
+                      required: !allowed_to?(:omit_organization?, StoryIdea),
+                      include_blank: (allowed_to?(:omit_organization?, StoryIdea) || nil),
                       disabled: promoted_to_story,
                       hint: "Please contact AWBW if your organization is not listed.",
                       prompt: "Select organization",
@@ -97,13 +96,6 @@
       <p class="mb-3 text-sm text-gray-500">
         Link each workshop in the curriculum, or type a name for one that isn't listed.
       </p>
-      <% legacy_workshop = f.object.persisted? ? f.object.decorate.legacy_workshop_reference : nil %>
-      <% if legacy_workshop.present? %>
-        <div class="mb-3 rounded-lg border border-gray-200 bg-white px-3 py-2">
-          <span class="block text-xs font-medium text-gray-500">Previously linked (read-only)</span>
-          <span class="text-sm text-gray-800"><%= legacy_workshop %></span>
-        </div>
-      <% end %>
       <% if promoted_to_story %>
         <p class="text-sm text-gray-700"><%= story_idea.workshop_title.presence || "—" %></p>
       <% else %>

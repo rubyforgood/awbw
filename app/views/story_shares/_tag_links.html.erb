@@ -1,0 +1,10 @@
+<%# Locals: label; sectors; audiences (decorated categories); optional wrapper_class. %>
+<div class="<%= local_assigns[:wrapper_class] %> mb-8 flex flex-wrap items-center gap-2 text-sm text-gray-700">
+  <span class="font-semibold"><%= label %></span>
+  <% sectors.each do |sector| %>
+    <%= link_to sector.name, story_shares_path(sector_names_all: sector.name), class: "#{StorySharesHelper::SECTOR_TAG_CHIP} px-3 py-1" %>
+  <% end %>
+  <% audiences.each do |category| %>
+    <%= link_to category.display_name, story_shares_path(category_names_all: category.name), class: "#{audience_tag_chip_class(category)} px-3 py-1" %>
+  <% end %>
+</div>

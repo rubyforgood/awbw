@@ -56,8 +56,9 @@ class ModelDeduper
   # Like #reassignment_counts, but also the record names per association so the
   # preview can show *what* moves, not just how many. Names are capped so a huge
   # association can't bloat the page; anything past the cap is reported as a count.
-  # Each entry is { label:, count:, names: [ up to NAME_LIMIT display strings ] }.
+  # Each entry is { label:, count:, names: [ up to NAME_LIMIT display strings ], records: [ the same records ] }.
   NAME_LIMIT = 50
+  SNIPPET_LENGTH = 60
 
   def reassignment_preview(record)
     reassignable_joins.filter_map do |join|
@@ -65,17 +66,22 @@ class ModelDeduper
       count = scope.count
       next if count.zero?
 
+      records = scope.limit(NAME_LIMIT).to_a
       {
         label: join_label(join),
         count: count,
-        names: scope.limit(NAME_LIMIT).map { |related| record_display(related) }
+        names: records.map { |related| record_display(related) },
+        records: records
       }
     end.sort_by { |entry| entry[:label] }
   end
 
-  # A best-effort human name for an associated record: its own name/title, else a
-  # named parent (e.g. an affiliation's person), else its id.
+  # A best-effort human name for an associated record: its decorator's #dedupe_label,
+  # else its own name/title, else a named parent (e.g. an affiliation's person), else its id.
   def record_display(record)
+    labeled = record.decorate.try(:dedupe_label) if record.decorator_class?
+    return labeled if labeled.present?
+
     own = display_string(record)
     return own if own
 

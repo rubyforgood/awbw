@@ -1,6 +1,6 @@
 name: "Unique certificate design for on-demand trainings"
 area: events
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-10-07
 summary: >-
   On-demand facilitator training completions now download their own painted

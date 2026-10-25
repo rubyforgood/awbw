@@ -1,10 +1,15 @@
 <%# Full-bleed story image with the primary-tag pills and a play badge for video stories.
-    Locals: story; aspect (default STORY_IMAGE_ASPECT). %>
+    Locals: story; aspect (default STORY_IMAGE_ASPECT); pills: false to omit the tag pills;
+    video (plays the story's video over the image; banner aspect only). %>
 <% aspect = local_assigns.fetch(:aspect, StorySharesHelper::STORY_IMAGE_ASPECT) %>
+<% video = local_assigns[:video] && youtube_video_id(story.youtube_url) %>
 <div class="relative <%= aspect %> overflow-hidden bg-gray-200">
   <%= render "assets/fitted_image", file: story.display_image, alt: story.title, loading: "lazy" %>
-  <%= render "story_shares/primary_tag_pills", story: story, wrapper_class: "absolute top-3 left-3 right-3" %>
-  <% if story.youtube_url.present? %>
+  <%= render "story_shares/banner_video", story: story if video %>
+  <% if local_assigns.fetch(:pills, true) %>
+    <%= render "story_shares/primary_tag_pills", story: story, wrapper_class: "absolute top-3 left-3 right-3" %>
+  <% end %>
+  <% if story.youtube_url.present? && !video %>
     <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
       <span class="flex h-14 w-14 items-center justify-center rounded-full bg-white/70">
         <i class="fa-solid fa-play ml-1 text-lg text-gray-800"></i>

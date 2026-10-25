@@ -1,6 +1,6 @@
 name: "Event invoice with PDF download"
 area: payments
-display_status: public_facing
+display_status: admin_facing
 released_on: 2026-06-17
 action_path: "/registration/sample"
 pr_number: 1709

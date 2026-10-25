@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe RegistrantCeForm do
   let(:event) { create(:event, :ended) }
   let(:registration) { create(:event_registration, event:) }
-  let(:form) { create(:form, name: "CE Evaluation") }
+  let(:form) { create(:form, name: "CE Evaluation", anonymous: true) }
   let!(:required_field) { create(:form_field, form:, name: "How was it?", required: true) }
   let(:callout) { create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE hours", form:) }
 
@@ -66,10 +66,24 @@ RSpec.describe RegistrantCeForm do
       expect(described_class.new(registration)).not_to be_complete
     end
 
-    it "is true when every required field is answered" do
+    it "is true once the registrant has submitted, though no submission is theirs" do
       EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:, form:,
         form_params: { required_field.id.to_s => "Great" })
-      expect(described_class.new(registration)).to be_complete
+
+      ce_form = described_class.new(registration)
+      expect(ce_form.submission).to be_nil
+      expect(ce_form).to be_complete
+      expect(ce_form).to be_completed_anonymously
+    end
+
+    it "is not completed anonymously before they submit" do
+      expect(described_class.new(registration)).not_to be_completed_anonymously
+    end
+
+    it "is not satisfied by someone else's completion" do
+      create(:form_completion, form:, event:)
+
+      expect(described_class.new(registration)).not_to be_complete
     end
 
     it "still finds the submission after the form's role changes" do
@@ -87,6 +101,7 @@ RSpec.describe RegistrantCeForm do
       before do
         create(:form_field_resource, form_field: clarity, resource: masks)
         create(:form_field_resource, form_field: clarity, resource: collage)
+        %w[Yes No].each { |name| create(:form_field_answer_option, form_field: clarity, answer_option: create(:answer_option, name:)) }
       end
 
       def submit(per_resource)

@@ -58,13 +58,22 @@ When changing a model or controller, check whether these related files need upda
 - **In service objects and POROs, read constructor arguments from instance variables (`@foo`) — don't add `private attr_reader`** for them. Reserve `attr_reader` for values the object deliberately exposes to callers (e.g. `BulkInviteService#results`).
 - **Prefer decorators (Draper, app/decorators/) over view helpers for model-specific presentation** — when display logic is "about a record" (labels, badges, formatted attributes, status pills), put it on that model's decorator and call `record.decorate.thing`. Reserve `app/helpers/` for generic, cross-model view utilities that aren't tied to one model. Decorators keep presentation testable and out of ERB.
 - Use `after_commit` instead of `after_save` for side effects
+- **Authorization lives in policies.** Controllers, views, helpers, and decorators never check `current_user` for permission (admin, owner, self, membership) — no `current_user&.super_user?`, `current_user.person_id == person.id`, or `record.user == current_user`. Call `authorize!` / `allowed_to?(:rule?, record)` (`h.allowed_to?` in decorators); if no rule fits, add one plus a policy spec. `current_user` is fine for non-permission uses (stamping `created_by`, scoping to the user's own records, display).
+  - **Models never call policies** — the controller passes a flag (`@story_idea.organization_required = !allowed_to?(:omit_organization?, StoryIdea)`).
+  - **Ask the gated thing's policy** — bookmarks ask `BookmarkPolicy`, not `UserPolicy` just because it has a matching rule.
+  - **Inline `allowed_to?`** — no one-off wrappers (`def viewing_own_or_admin?`); the rule name says it.
+  - **Name rules as the permission, reading naturally** — `:omit_organization?`, not `:organization_optional?`. Reuse sibling names (`UserPolicy#own_account?` ↔ `PersonPolicy#own_profile?`).
+  - **Default view first, admin override second** — `allowed_to?(:manage?, user) ? "User" : "You"`.
+  - **Don't re-check what `authorize!` guarantees** — no admin check inside an admin-only page.
+  - **Shared rules live in `ApplicationPolicy`, checked against the model** (`allowed_to?(:dedupe?, Address)`; model policies override). Avoid feature-wide symbol policies like `DedupePolicy` (rubyforgood/awbw#2839).
+  - **Pass a record, not `decorated.class`** — a Draper decorator class has no policy.
 - **Never pass `to:` to `authorize!` when it names the action you're in** — ActionPolicy defaults the rule to `"#{action_name}?"` for *every* action (`index`, `show`, `new`, `create`, `edit`, `update`, `destroy`, and custom actions alike), for records, classes, and symbol policies. Write `authorize! @setting` in `show`, not `authorize! @setting, to: :show?`; `authorize! :home` in `index`, not `authorize! :home, to: :index?`; keep other options (`authorize! @submission, context: { … }`). Only pass `to:` when checking a *different* rule than the current action (e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or `authorize! :workshop, to: :summary?`).
 - **Default to no comment.** Most code should carry none — clear names and small methods explain themselves. Only add a comment for a genuinely non-obvious *why* or a gotcha that would trip up the next reader, and only when you can't make the code say it instead (a better name, a named constant, an extracted method). Never restate what the code already says, and don't comment a constant, scope, or step whose intent is clear from its name. When a comment truly earns its place, keep it to **one line**; let it run longer only when the logic is genuinely complex and the reasoning can't be inferred from the code plus domain knowledge.
 - **Comment on what the code does now, never on what it used to do or an alternative it isn't.** A comment describes current behavior — not the old version, not a bug that was fixed, not the approach that was rejected, not what another component *doesn't* do. Cut phrases like "used to", "no longer", "instead of", "rather than", "would otherwise", "we don't X here". If a *why* needs a contrast, state the reason positively (e.g. "update_columns so the over-allocation persists past the cost validation", not "update_columns because a plain update would be rejected"). Git history, not comments, carries the past.
 
 ## Roles & admin
 
-- **"Admin" means `User#super_user?`** — there is no separate admin model, role enum, or `admin?` method on `User`. A user is an admin when their `super_user` flag is set. In policies use the `ApplicationPolicy#admin?` helper (it returns `user&.super_user?`); in controllers and views check `current_user&.super_user?` directly. When a requirement, gate, or copy says "admin" / "super-admin", it resolves to this flag.
+- **"Admin" means `User#super_user?`** — there is no separate admin model, role enum, or `admin?` method on `User`. A user is an admin when their `super_user` flag is set. In policies use the `ApplicationPolicy#admin?` helper (it returns `user&.super_user?`); elsewhere, ask a policy rule (Code Style → "Authorization lives in policies"). When a requirement, gate, or copy says "admin" / "super-admin", it resolves to this flag.
 
 ## RuboCop (rubocop-rails-omakase)
 
@@ -325,6 +334,18 @@ follow this). Match the existing pattern:
   in-card forms answering with turbo streams — omit it. When a results frame's
   cards contain several such links, prefer `turbo_frame_tag :x_results,
   target: "_top"` so no link can be forgotten.
+- **Per-page dropdown: render `shared/_per_page_select` inside the filter form.**
+  The form's `collection` controller submits it on change — no `onchange` or
+  `<script>`. The param is always `number_of_items_per_page` (read it as
+  `params[:number_of_items_per_page].presence || <default>`, no clamping, so any
+  size works from the URL); presets live in `PaginationHelper::PER_PAGE_OPTIONS`.
+  Pass the controller's fallback as `default:` so Clear filters resets to it, and
+  carry the param through the results view's `pagination_params`.
+- **A frameless filter form wired to `collection` submits text as you type, so
+  morph the page to keep focus:** `turbo_refreshes_with method: :morph, scroll:
+  :preserve` in the view, `data: { turbo_action: "replace" }` on the form, and
+  `data-turbo-permanent` (plus an `id`) on any TomSelect wrapper so the morph
+  doesn't strip its widget. Workshop logs is the reference.
 
 ## Features & tips page (`/features`)
 
@@ -357,6 +378,17 @@ what changed.
   sentences), `released_on` (ship date), plus optional `pro_tips` (list),
   `description`, `external_url`, `action_path` (in-app "Check out this feature"
   link), and `pr_number` (GitHub PR link).
+- **`display_status` is who the announcement is for, not who the feature is for.**
+  Admins see every entry, so the whole table is their full changelog; `user_facing`
+  (logged-in users) and `public_facing` (everyone — logged-in users see both) entries
+  are release announcements, reserved for **big features**.
+  - **Every change** → one `admin_facing` entry.
+  - **Big feature** → also add a `user_facing` / `public_facing` twin: its own file
+    named `YYYY-MM-DD-user-slug.yml` / `YYYY-MM-DD-public-slug.yml`, a different `name`,
+    the same `released_on`, written for users. Admins see both.
+- **`released_on` is the PR's merge date** (Pacific). When you touch the seeds and see an
+  entry off from its PR's merge date by more than a day or two, update it and its filename
+  prefix. Sync matches records by `name`, so re-dating never creates duplicates.
 - **Sentence case, plain language** — read by facilitators, not devs.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy`).
 
@@ -400,6 +432,14 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 **Target lifecycle callbacks** — use `[name]TargetConnected(element)` and `[name]TargetDisconnected(element)` to respond to dynamically added/removed targets (e.g., cocoon nested fields, Turbo streams).
 
 **Visibility** — toggle the `hidden` class via `classList.toggle("hidden", condition)` instead of setting `style.display`. Use `class="hidden"` in HTML for initial hidden state, not `style="display:none"`.
+
+## Database (MySQL via Trilogy)
+
+- **The database is MySQL 8, connected through the Trilogy adapter** — not Postgres. Write raw SQL (`Arel.sql`, `where("…")`, Blazer queries, console snippets) in **MySQL dialect**: backtick-quote identifiers if needed, `CHAR_LENGTH`/`IFNULL`/`GROUP_CONCAT`/`REGEXP`, no `ILIKE`, no `::type` casts, no `RETURNING`, no `DISTINCT ON`.
+- **Don't use MySQL reserved words as aliases** (e.g. `AS rows`, `AS rank`) — use `total`, `row_count`, etc.
+- **SQL for the user to run on prod goes into Blazer, which runs one statement at a time** — Trilogy rejects multi-statement strings (`1064 … near 'SELECT …'`). Hand over **one paste-ready code block**: a `-- N. what it shows` header above each query, the **first query live and every other query commented out line-by-line with `-- `** (Blazer's editor toggles a selection with Cmd+/), no trailing semicolons, read-only (`SELECT` only). Data changes go in a Ruby console script with a `DRY_RUN` switch, not SQL.
+- **Refer to admin tools by name, never by URL or mount path** (e.g. "Blazer", not its route) in instructions, PRs, comments, and AI files — this is a public repo and paths attract bots.
+- Errors surface as `Trilogy::ProtocolError` / `Trilogy::QueryError` wrapped in `ActiveRecord::StatementInvalid`; MySQL error numbers (e.g. `1048` not-null, `1062` duplicate, `3730` FK drop) identify the cause.
 
 ## Migrations
 

@@ -46,7 +46,7 @@ RSpec.describe "stories/new", type: :view do
         windows_type_id: story_idea.windows_type_id,
         youtube_url: story_idea.youtube_url,
         story_idea_id: story_idea.id,
-        story_workshops_attributes: [ { workshop_id: story_idea.workshop_id } ]
+        story_workshops_attributes: [ { workshop_id: story_idea.workshops.first.id } ]
       )
     end
 
@@ -72,7 +72,7 @@ RSpec.describe "stories/new", type: :view do
 
       assert_select "form[action=?]", stories_path do
         assert_select "select[name=?]", "story[story_workshops_attributes][0][workshop_id]" do
-          assert_select "option[selected][value=?]", story_idea.workshop_id.to_s
+          assert_select "option[selected][value=?]", story_idea.workshops.first.id.to_s
         end
       end
     end

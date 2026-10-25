@@ -1,5 +1,6 @@
 class StoryDecorator < ApplicationDecorator
   include ::Linkable
+  include ::StoryReferenceLinks
 
   def detail(length: 50)
     text = rhino_body&.to_plain_text
@@ -11,55 +12,73 @@ class StoryDecorator < ApplicationDecorator
   end
 
   def workshop_title
-    return direct_workshop_title if story_workshops.empty?
     story_workshops.map { |sw| workshop_reference_label(sw) }.compact_blank.presence&.join(" / ")
   end
 
-  def workshop_links
-    return direct_workshop_links if story_workshops.empty?
-    parts = story_workshops.map { |sw| workshop_reference_link(sw) }.compact
-    h.safe_join(parts, " / ") if parts.any?
+  def spotlighted_facilitator_label
+    return unless spotlighted_facilitator
+
+    [ "Spotlighted facilitator", spotlighted_facilitator.name.presence ].compact.join(": ")
   end
 
-  def workshop_reference_count
-    return story_workshops.size if story_workshops.any?
-    [ workshop, external_workshop_title.presence ].compact.size
+  def spotlighted_facilitator_link(link_class: "hover:underline")
+    person = spotlighted_facilitator
+    return if person.nil?
+    return person.name unless h.allowed_to?(:show?, person)
+    h.link_to(person.name, h.person_path(person), class: link_class, data: { turbo_frame: "_top" })
   end
 
-  # Read-only display of the legacy single-workshop columns kept as a safety net
-  # during the join-table migration; the form surfaces it so nothing silently hides.
-  def legacy_workshop_reference
-    direct_workshop_title
+  def tag_sectors
+    @tag_sectors ||= begin
+      primary = primary_sector
+      viewable_tags(sectorable_items.map(&:sector)).sort_by { |sector| [ sector == primary ? 0 : 1, sector.name.downcase ] }
+    end
+  end
+
+  def tag_audience_categories
+    @tag_audience_categories ||= begin
+      primary = primary_category
+      audiences = categorizable_items.map(&:category).select { |category| category&.category_type&.name.in?(CategoriesTaggable::AUDIENCE_CATEGORY_TYPES) }
+      viewable_tags(audiences).sort_by { |category| [ category == primary ? 0 : 1, category.name.downcase ] }
+    end
+  end
+
+  # Each group's lead tag (its primary, else the first alphabetically) shows as a chip; the rest collapse into "+N more".
+  def lead_tag_sector = tag_sectors.first
+
+  def lead_tag_audience_category = tag_audience_categories.first
+
+  def more_tag_links(link_class: "hover:underline")
+    sector_links = tag_sectors.drop(1).map { |sector| tag_page_link(sector.name, { sector_names_all: sector.name }, link_class) }
+    audience_links = tag_audience_categories.drop(1).map { |category| tag_page_link(category.name, { category_names_all: category.name }, link_class) }
+    sector_links + audience_links
+  end
+
+  def windows_audience_chip
+    return unless windows_type && h.allowed_to?(:manage?, Story)
+
+    h.tag.span(class: "admin-only inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-900",
+               title: "Windows audience (admin only)") do
+      h.safe_join([ h.tag.i(class: "fa-solid fa-lock text-2xs text-blue-700", aria: { hidden: true }), windows_type.short_name ])
+    end
+  end
+
+  def showcase_path(**params)
+    h.allowed_to?(:show?, object, with: StorySharePolicy) ? h.story_share_path(object, **params) : h.story_path(object)
   end
 
   private
 
-  def direct_workshop_title
-    [ workshop&.title, external_workshop_title.presence ].compact_blank.presence&.join(" / ")
+  def tag_page_link(name, params, link_class)
+    h.link_to(name, h.taggings_path(params), class: link_class, data: { turbo_frame: "_top" })
   end
 
-  def direct_workshop_links
-    parts = [
-      (h.link_to(workshop.title, h.workshop_path(workshop), class: "hover:underline") if workshop),
-      (h.html_escape(external_workshop_title) if external_workshop_title.presence)
-    ].compact
-    h.safe_join(parts, " / ") if parts.any?
+  def viewable_tags(tags)
+    tags = tags.compact
+    h.allowed_to?(:manage?, Story) ? tags : tags.select(&:published?)
   end
 
-  def workshop_reference_label(story_workshop)
-    workshop_title = story_workshop.workshop&.title
-    external_title = story_workshop.external_workshop_title.presence
-    return "#{external_title} (from the #{workshop_title})" if external_title && workshop_title
-    external_title || workshop_title
-  end
-
-  def workshop_reference_link(story_workshop)
-    workshop = story_workshop.workshop
-    external_title = story_workshop.external_workshop_title.presence
-    return h.html_escape(external_title) if workshop.nil?
-
-    link = h.link_to(workshop.title, h.workshop_path(workshop), class: "hover:underline")
-    return link unless external_title
-    h.safe_join([ external_title, " (from the ", link, ")" ])
+  def workshop_references
+    story_workshops
   end
 end

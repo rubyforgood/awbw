@@ -16,7 +16,7 @@
 <%= render layout: "shared/index_page",
            locals: { domain: :stories, eyebrow: "Community", title: "Stories",
                      subtitle: "Check out stories from Windows Facilitators around the world and the healing they make possible through art",
-                     actions: actions } do %>
+                     subtitle_width: "max-w-none", actions: actions } do %>
   <%= render "search_boxes" %>
 
   <%= render "shared/filtered_to", record: @author, clear_path: stories_path %>

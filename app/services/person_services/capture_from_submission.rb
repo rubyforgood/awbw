@@ -40,8 +40,7 @@ module PersonServices
     end
 
     def call
-      apply_nickname
-      apply_value(@person, :legal_first_name, field_value("legal_first_name"))
+      apply_legal_first_name(field_value("legal_first_name"))
       apply_value(@person, :pronouns, field_value("pronouns"))
       apply_value(@person, :pronunciation, field_value("pronunciation"))
       apply_value(@person, :email_type, field_value("primary_email_type")&.downcase)
@@ -57,15 +56,11 @@ module PersonServices
 
     private
 
-    # A nickname becomes the person's first name and moves the legal first name to
-    # its own column, matching how a new registrant's name is resolved at sign-up.
-    def apply_nickname
-      nickname = field_value("nickname")&.strip
-      return if nickname.blank?
-      return decline(:first_name, nickname, @person.first_name) unless @overwrite
+    # Recorded only when it differs from the first name, so a matching answer never displaces a legal name on file.
+    def apply_legal_first_name(value)
+      return unless @person.legal_first_name_differs?(value)
 
-      @person.update!(first_name: nickname)
-      apply_value(@person, :legal_first_name, field_value("first_name"))
+      apply_value(@person, :legal_first_name, value)
     end
 
     def apply_value(record, attribute, value)
@@ -106,10 +101,8 @@ module PersonServices
       if existing
         if @overwrite
           existing.update!(
-            street_address: field_value("mailing_street"),
-            zip_code: field_value("mailing_zip"),
-            primary: true,
-            inactive: false
+            { street_address: field_value("mailing_street").presence, zip_code: field_value("mailing_zip").presence }
+              .compact.merge(primary: true, inactive: false)
           )
         else
           apply_value(existing, :street_address, field_value("mailing_street"))
@@ -124,10 +117,11 @@ module PersonServices
       @person.addresses.where(primary: true).update_all(primary: false, inactive: true) if @overwrite
 
       @person.addresses.create!(
-        street_address: field_value("mailing_street"),
+        # street/ZIP are NOT NULL with no default, so a skipped answer lands as "".
+        street_address: field_value("mailing_street").to_s,
         city: new_city,
         state: new_state,
-        zip_code: field_value("mailing_zip"),
+        zip_code: field_value("mailing_zip").to_s,
         country: new_country,
         locality: AddressLocality.for(city: new_city, state: new_state, country: new_country),
         address_type: field_value("mailing_address_type")&.downcase || "unknown",

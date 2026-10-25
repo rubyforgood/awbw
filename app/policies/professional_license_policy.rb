@@ -16,6 +16,6 @@ class ProfessionalLicensePolicy < ApplicationPolicy
   private
 
   def owner?
-    authenticated? && record.person&.user == user
+    authenticated? && user.person_id.present? && user.person_id == record.person_id
   end
 end

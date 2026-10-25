@@ -51,9 +51,8 @@
                   as: :select,
                   collection: Address::LOCALITIES,
                   include_blank: true,
-                  selected: f.object.locality,
+                  selected: f.object.decorate.default_locality,
                   input_html: {
-                    value: f.object.locality,
                     class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                   } %>
       <%= f.input :la_city_council_district,
@@ -102,14 +101,7 @@
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
 
-      <%= f.input :state,
-                  as: :select,
-                  collection: state_select_options(f.object.state),
-                  selected: f.object.state,
-                  input_html: {
-                    value: f.object.state,
-                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  } %>
+      <%= render "addresses/state_field", f: f %>
       <%= f.input :zip_code,
                   label: "ZIP Code",
                   input_html: {
@@ -133,6 +125,11 @@
 
       <%= f.input :country,
                   label: "Country",
+                  as: :select,
+                  collection: GeographyHelper::COUNTRIES,
+                  selected: f.object.decorate.default_country,
+                  include_blank: "Select a country",
+                  hint: "Not listed? Pick the closest one or leave this blank.",
                   input_html: {
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>

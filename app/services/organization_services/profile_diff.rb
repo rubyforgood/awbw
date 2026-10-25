@@ -20,6 +20,11 @@ module OrganizationServices
       new(organization:, website:, organization_type:, address:).call
     end
 
+    # Compares the website, type, and address of a FormSubmission#org_entry-shaped hash.
+    def self.for_entry(organization:, entry:)
+      call(organization:, website: entry[:website], organization_type: entry[:organization_type], address: entry[:address])
+    end
+
     def initialize(organization:, website: nil, organization_type: nil, address: {})
       @organization = organization
       @website = website

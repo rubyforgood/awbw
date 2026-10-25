@@ -68,6 +68,7 @@ class Person < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
   has_many :form_submissions, dependent: :destroy
+  has_many :form_completions, dependent: :destroy
 
   # Asset associations
   has_one_attached :avatar, dependent: :purge do |attachable|
@@ -112,6 +113,14 @@ class Person < ApplicationRecord
     name&.strip&.gsub(DASH_VARIANTS, "-")
   end
 
+  def self.same_name?(one, other)
+    one.to_s.squish.casecmp?(other.to_s.squish)
+  end
+
+  def legal_first_name_differs?(name)
+    !Person.same_name?(name, first_name)
+  end
+
   CONTACT_TYPES = [ "work", "personal" ].freeze
   UNKNOWN_CONTACT_TYPE = "unknown"
   # What an email can be stored as; people choosing their own pick from CONTACT_TYPES.
@@ -147,7 +156,7 @@ class Person < ApplicationRecord
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
-                                reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
+                                reject_if: proc { |attrs| Address.unfilled_attributes?(attrs) }
   accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
@@ -199,6 +208,27 @@ class Person < ApplicationRecord
     options :all, type: :text, default: true, default_operator: :or
   end
 
+  search_scope :search_name_email do
+    attributes :first_name, :legal_first_name, :last_name, :email, :email_2
+    attributes all: [ :first_name, :legal_first_name, :last_name, :email, :email_2 ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
+  search_scope :search_contact do
+    scope { left_joins(:contact_methods, :addresses) }
+    attributes phone:   "contact_methods.value"
+    attributes street:  "addresses.street_address"
+    attributes city:    "addresses.city"
+    attributes state:   "addresses.state"
+    attributes zip:     "addresses.zip_code"
+    attributes county:  "addresses.county"
+    attributes country: "addresses.country"
+    attributes all: [ "contact_methods.value",
+                      "addresses.street_address", "addresses.city", "addresses.state",
+                      "addresses.zip_code", "addresses.county", "addresses.country" ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
   FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
   LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
 
@@ -206,8 +236,30 @@ class Person < ApplicationRecord
     (people.first_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden))
     OR (people.last_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden))
     OR (people.profile_show_email AND (people.email LIKE :pattern OR users.email LIKE :pattern))
-    OR (people.profile_show_phone AND (users.phone LIKE :pattern OR contact_methods.value LIKE :pattern))
   SQL
+
+  # Spaces and periods are dropped on both sides so an initialled name ("Cathy S.") finds itself.
+  DISPLAYED_NAME_MATCH_SQL = <<~SQL.squish
+    (COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden)
+      AND LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name)
+    OR (COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden)
+      AND LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name)
+    OR (COALESCE(people.display_name_preference, '') IN ('', 'full_name')
+      AND LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name)
+    OR (people.display_name_preference = 'first_name_last_initial'
+      AND LOWER(REPLACE(CONCAT(people.first_name, LEFT(people.last_name, 1)), ' ', '')) LIKE :name)
+  SQL
+
+  # Matches only the name parts #name shows, so search can't surface a hidden last name.
+  scope :displayed_name_like, ->(query) {
+    name = query.to_s.gsub(/[\s.]+/, "").downcase
+    if name.blank?
+      none
+    else
+      where(DISPLAYED_NAME_MATCH_SQL, name: "%#{sanitize_sql_like(name)}%",
+            first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES, last_name_hidden: LAST_NAME_HIDDEN_PREFERENCES)
+    end
+  }
 
   # Same term syntax as SearchCop: a quoted phrase is one term, otherwise split on whitespace.
   SEARCH_TERM_PATTERN = /"([^"]*)"|'([^']*)'|(\S+)/
@@ -216,7 +268,7 @@ class Person < ApplicationRecord
   def self.shared_contact_search(query)
     terms = query.scan(SEARCH_TERM_PATTERN).map { |groups| groups.compact.first }.compact_blank
     terms.reduce(all) do |relation, term|
-      matches = unscoped.left_joins(:user, :active_phones).where(
+      matches = unscoped.left_joins(:user).where(
         SHARED_CONTACT_MATCH_SQL,
         pattern: "%#{sanitize_sql_like(term)}%",
         first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES,
@@ -678,7 +730,8 @@ class Person < ApplicationRecord
   def normalize_names
     self.first_name = Person.normalize_name(first_name)
     self.last_name = Person.normalize_name(last_name)
-    self.legal_first_name = Person.normalize_name(legal_first_name)
+    self.legal_first_name = Person.normalize_name(legal_first_name).presence
+    self.legal_first_name = nil unless legal_first_name.nil? || legal_first_name_differs?(legal_first_name)
   end
 
   def unique_name_and_email_combination

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_24_093529) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -416,6 +416,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.integer "updated_by_id"
     t.index ["commentable_type", "commentable_id", "created_at"], name: "idx_on_commentable_type_commentable_id_created_at_89c6e27600"
     t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
+    t.index ["created_at"], name: "index_comments_on_created_at"
     t.index ["created_by_id"], name: "index_comments_on_created_by_id"
     t.index ["updated_by_id"], name: "index_comments_on_updated_by_id"
   end
@@ -1146,6 +1147,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.index ["windows_type_id"], name: "index_form_builders_on_windows_type_id"
   end
 
+  create_table "form_completions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "person_id", null: false
+    t.integer "form_id", null: false
+    t.bigint "event_id", null: false
+    t.date "completed_on", null: false
+    t.index ["event_id"], name: "index_form_completions_on_event_id"
+    t.index ["form_id"], name: "index_form_completions_on_form_id"
+    t.index ["person_id", "form_id", "event_id"], name: "index_form_completions_on_person_id_and_form_id_and_event_id", unique: true
+  end
+
   create_table "form_field_answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "answer_option_id"
     t.datetime "created_at", precision: nil, null: false
@@ -1232,6 +1243,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.string "slug"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "updated_by_id"
+    t.boolean "anonymous", default: false, null: false
     t.index ["created_by_id"], name: "index_forms_on_created_by_id"
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
     t.index ["slug"], name: "index_forms_on_slug", unique: true
@@ -1960,7 +1972,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.integer "updated_by_id"
     t.string "url"
     t.integer "windows_type_id"
-    t.integer "workshop_id"
     t.string "role"
     t.index ["author_id"], name: "index_resources_on_author_id"
     t.index ["created_by_id"], name: "index_resources_on_created_by_id"
@@ -1969,7 +1980,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.index ["role"], name: "index_resources_on_role", unique: true
     t.index ["updated_by_id"], name: "index_resources_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
-    t.index ["workshop_id"], name: "index_resources_on_workshop_id"
   end
 
   create_table "scholarship_agreement_responses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2064,6 +2074,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.string "ce_accreditation_url"
     t.string "ce_accreditation_abbreviation"
     t.integer "import_user_id"
+    t.integer "home_featured_stories_limit"
     t.index ["ce_administrator_id"], name: "index_settings_on_ce_administrator_id"
     t.index ["created_by_id"], name: "index_settings_on_created_by_id"
     t.index ["import_user_id"], name: "index_settings_on_import_user_id"
@@ -2124,7 +2135,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
-    t.string "external_workshop_title"
     t.boolean "featured", default: false, null: false
     t.integer "organization_id"
     t.boolean "permission_given"
@@ -2138,7 +2148,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.integer "updated_by_id", null: false
     t.string "website_url"
     t.integer "windows_type_id", null: false
-    t.integer "workshop_id"
     t.string "youtube_url"
     t.bigint "co_author_id"
     t.string "co_author_credit_preference"
@@ -2154,7 +2163,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.index ["story_share_carousel_position"], name: "index_stories_on_story_share_carousel_position"
     t.index ["updated_by_id"], name: "index_stories_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_stories_on_windows_type_id"
-    t.index ["workshop_id"], name: "index_stories_on_workshop_id"
   end
 
   create_table "stories_workshops", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2176,14 +2184,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
-    t.string "external_workshop_title"
     t.integer "organization_id"
     t.boolean "permission_given"
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
     t.integer "windows_type_id", null: false
-    t.integer "workshop_id"
     t.string "youtube_url"
     t.bigint "co_author_id"
     t.string "co_author_credit_preference"
@@ -2196,7 +2202,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.index ["spotlighted_facilitator_id"], name: "index_story_ideas_on_spotlighted_facilitator_id"
     t.index ["updated_by_id"], name: "index_story_ideas_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_story_ideas_on_windows_type_id"
-    t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
   end
 
   create_table "story_ideas_workshops", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2521,19 +2526,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.index ["workshop_id"], name: "index_workshop_logs_on_workshop_id"
   end
 
-  create_table "workshop_resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.integer "created_by_id"
-    t.integer "resource_id"
-    t.datetime "updated_at", precision: nil, null: false
-    t.integer "updated_by_id"
-    t.integer "workshop_id"
-    t.index ["created_by_id"], name: "index_workshop_resources_on_created_by_id"
-    t.index ["resource_id"], name: "index_workshop_resources_on_resource_id"
-    t.index ["updated_by_id"], name: "index_workshop_resources_on_updated_by_id"
-    t.index ["workshop_id"], name: "index_workshop_resources_on_workshop_id"
-  end
-
   create_table "workshop_series_memberships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "created_by_id"
@@ -2798,6 +2790,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
   add_foreign_key "form_builders", "users", column: "created_by_id"
   add_foreign_key "form_builders", "users", column: "updated_by_id"
   add_foreign_key "form_builders", "windows_types"
+  add_foreign_key "form_completions", "events"
+  add_foreign_key "form_completions", "forms"
+  add_foreign_key "form_completions", "people"
   add_foreign_key "form_field_answer_options", "answer_options"
   add_foreign_key "form_field_answer_options", "form_fields"
   add_foreign_key "form_field_answer_options", "users", column: "created_by_id"
@@ -2902,7 +2897,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
   add_foreign_key "resources", "users", column: "created_by_id"
   add_foreign_key "resources", "users", column: "updated_by_id"
   add_foreign_key "resources", "windows_types"
-  add_foreign_key "resources", "workshops"
   add_foreign_key "scholarship_agreement_responses", "scholarships"
   add_foreign_key "scholarship_agreement_responses", "users", column: "created_by_id"
   add_foreign_key "scholarship_agreement_responses", "users", column: "responded_by_id"
@@ -2931,7 +2925,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
   add_foreign_key "stories", "users", column: "created_by_id"
   add_foreign_key "stories", "users", column: "updated_by_id"
   add_foreign_key "stories", "windows_types"
-  add_foreign_key "stories", "workshops"
   add_foreign_key "stories_workshops", "stories"
   add_foreign_key "stories_workshops", "workshops"
   add_foreign_key "story_ideas", "organizations"
@@ -2939,7 +2932,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
   add_foreign_key "story_ideas", "users", column: "created_by_id"
   add_foreign_key "story_ideas", "users", column: "updated_by_id"
   add_foreign_key "story_ideas", "windows_types"
-  add_foreign_key "story_ideas", "workshops"
   add_foreign_key "story_ideas_workshops", "story_ideas"
   add_foreign_key "story_ideas_workshops", "workshops"
   add_foreign_key "topic_subscriptions", "events", column: "interested_event_id"
@@ -2977,10 +2969,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
   add_foreign_key "workshop_logs", "users", column: "updated_by_id"
   add_foreign_key "workshop_logs", "windows_types"
   add_foreign_key "workshop_logs", "workshops"
-  add_foreign_key "workshop_resources", "resources"
-  add_foreign_key "workshop_resources", "users", column: "created_by_id"
-  add_foreign_key "workshop_resources", "users", column: "updated_by_id"
-  add_foreign_key "workshop_resources", "workshops"
   add_foreign_key "workshop_series_memberships", "users", column: "created_by_id"
   add_foreign_key "workshop_series_memberships", "users", column: "updated_by_id"
   add_foreign_key "workshop_series_memberships", "workshops", column: "workshop_child_id"

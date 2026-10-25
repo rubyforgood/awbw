@@ -18,6 +18,12 @@
         <i class="fa-solid fa-arrow-left text-xs"></i> Data health
       <% end %>
     </div>
+  <% elsif params[:return_to] == "dedupe" %>
+    <div class="mb-2">
+      <%= link_to dedupe_index_people_path(anchor: "dedupe-record-#{@person.id}"), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Dedupe people
+      <% end %>
+    </div>
   <% elsif params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
     <div class="mb-2">
       <%= link_to link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>

@@ -1,0 +1,8 @@
+name: "Jump from a person to their user account"
+area: people
+display_status: admin_facing
+released_on: 2026-08-17
+pr_number: 2231
+summary: >-
+  A person's edit page has a User card linking straight to their user account. Count
+  badges on these cards are hidden when there's nothing to count.

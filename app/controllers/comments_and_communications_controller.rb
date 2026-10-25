@@ -20,12 +20,13 @@ class CommentsAndCommunicationsController < ApplicationController
       if feed.grouped?
         @groups = feed.grouped_paginate(params[:page], 20)
         count = feed.subject_group_count
-        @count_display = "#{count} #{'subject'.pluralize(count)}"
+        @count_display = "#{helpers.number_with_delimiter(count)} #{'subject'.pluralize(count)}"
       else
         @entries = feed.paginate(params[:page], 20)
         shown = @entries.total_entries
-        @count_display = shown == @total_count ? @total_count : "#{shown}/#{@total_count}"
+        @count_display = count_display(shown, @total_count)
       end
+      FeedRecordPreloader.new(@groups ? @groups.flat_map(&:entries) : @entries).call
       render :comments_and_communications_results
     else
       feed = PersonCommentAndCommunicationAggregator.new(@person)

@@ -44,6 +44,15 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include(workshop_logs_path)
       end
 
+      it "labels only the oldest form for each survey role as the default for new events" do
+        default = create(:form, :standalone, name: "Day 1 Survey", role: "day_1_survey")
+        copy = create(:form, :standalone, name: "DUPLICATE of Day 1 Survey", role: "day_1_survey")
+        get forms_path, headers: frame_headers
+        doc = Nokogiri::HTML(response.body)
+        expect(doc.css("#form_#{default.id}").text).to include("Default for new events")
+        expect(doc.css("#form_#{copy.id}").text).not_to include("Default for new events")
+      end
+
       it "shows the public link for a published form" do
         create(:form, :standalone, name: "Volunteer", slug: "volunteer", published: true)
         get forms_path, headers: frame_headers
@@ -208,7 +217,7 @@ RSpec.describe "Forms", type: :request do
 
     it "lists each section's fields behind an expandable toggle" do
       get new_form_path
-      expect(response.body).to include("First Name")
+      expect(response.body).to include("Preferred first name")
       expect(response.body).to include("Confirm Email")
       expect(response.body).to include('data-controller="expandable-card"')
     end
@@ -308,11 +317,32 @@ RSpec.describe "Forms", type: :request do
   describe "GET /forms/:id/edit" do
     before { sign_in admin }
 
+    it "marks the default survey form as the one new events send" do
+      form = create(:form, :standalone, name: "Day 1 Survey", role: "day_1_survey")
+      get edit_form_path(form)
+      expect(response.body).to include("Default for new events")
+    end
+
+    it "links a non-default survey form to the default new events send" do
+      original = create(:form, :standalone, name: "Day 1 Survey", role: "day_1_survey")
+      copy = create(:form, :standalone, name: "DUPLICATE of Day 1 Survey", role: "day_1_survey")
+      get edit_form_path(copy)
+      link = Nokogiri::HTML(response.body).css("a").find { |a| a.text.squish == "New events send Day 1 Survey" }
+      expect(link&.[]("href")).to eq(edit_form_path(original))
+      expect(response.body).not_to include("Default for new events")
+    end
+
     it "shows form field editor" do
       form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
       get edit_form_path(form)
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("First Name")
+      expect(response.body).to include("Preferred first name")
+    end
+
+    it "warns that a published form without identity questions turns away logged-out visitors" do
+      form = create(:form, :standalone, slug: "no-identity", published: true)
+      get edit_form_path(form)
+      expect(response.body).to include("to accept submissions from people who aren't logged in")
     end
 
     it "offers the survey roles" do
@@ -442,6 +472,37 @@ RSpec.describe "Forms", type: :request do
 
       expect(response.body).to include('data-controller="expand-all"')
       expect(response.body).to include("Expand all")
+    end
+
+    it "warns that a published form not set to anonymous needs name and email questions" do
+      form = create(:form, :standalone, slug: "volunteer", published: true)
+      get edit_form_path(form)
+      expect(response.body).to include("needs first name, last name, and email questions")
+    end
+
+    it "skips the warning for a form only delivered through callouts, which know the registrant" do
+      form = create(:form, :standalone)
+      get edit_form_path(form)
+      expect(response.body).not_to include("needs first name, last name, and email questions")
+    end
+
+    it "drops the warning once the form is anonymous" do
+      form = create(:form, :standalone, slug: "volunteer", published: true, anonymous: true)
+      get edit_form_path(form)
+      expect(response.body).not_to include("needs first name, last name, and email questions")
+    end
+
+    it "offers the anonymous setting in form settings" do
+      form = create(:form, :standalone)
+      get edit_form_path(form)
+      expect(response.body).to include('name="form[anonymous]"')
+    end
+
+    it "offers the anonymous setting on an event-connected form too, since callouts deliver it" do
+      form = create(:form, :standalone)
+      EventForm.create!(form:, event: create(:event), role: "registration")
+      get edit_form_path(form)
+      expect(response.body).to include('name="form[anonymous]"')
     end
 
     it "offers the public-link section for a standalone form with no events" do
@@ -678,6 +739,20 @@ RSpec.describe "Forms", type: :request do
       patch form_path(form), params: { form: { name: "New Name" } }
       expect(form.reload.name).to eq("New Name")
       expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "turns on anonymous responses" do
+      form = create(:form, :standalone, role: "post_event_survey")
+      patch form_path(form), params: { form: { anonymous: "1" } }
+      expect(form.reload.anonymous?).to be(true)
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "refuses anonymous responses on a form processed against a person" do
+      form = create(:form, :standalone, role: "registration")
+      patch form_path(form), params: { form: { anonymous: "1" } }
+      expect(form.reload.anonymous?).to be(false)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "updates the form header HTML" do
@@ -1011,7 +1086,7 @@ RSpec.describe "Forms", type: :request do
       form = FormBuilderService.new(name: "Preview", sections: %i[person_identifier]).call
       get form_path(form)
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("First Name")
+      expect(response.body).to include("Preferred first name")
     end
 
     it "shows every field including conditional ones, without applying the conditional logic" do
@@ -1517,7 +1592,7 @@ RSpec.describe "Forms", type: :request do
     it "lists an included section's actual fields behind an expandable toggle" do
       form = FormBuilderService.new(name: "Editable", sections: %i[person_identifier]).call
       get edit_sections_form_path(form)
-      expect(response.body).to include("First Name")
+      expect(response.body).to include("Preferred first name")
       expect(response.body).to include('data-controller="form-section-toggle expandable-card"')
     end
 

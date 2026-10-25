@@ -63,13 +63,20 @@ namespace :fm do
       end
 
       if import.invalid_emails.any?
-        say.("\nImported without an email the portal can't take (#{import.invalid_emails.size}, also left as a comment on each person):")
+        say.("\nImported without an email the portal can't take (#{import.invalid_emails.size}, people left with no email — also a comment on each):")
         import.invalid_emails.each { |line| say.("  #{line}") }
       end
 
       if import.unmatched_tags.any?
         say.("\nTerms no sector, age group or recorded translation answers to:")
         import.unmatched_tags.sort_by { |name, count| [ -count, name ] }.each { |name, count| say.("  #{count.to_s.rjust(5)}  #{name}") }
+      end
+
+      import.unmatched_addresses.each do |field, values|
+        next if values.empty?
+
+        say.("\nAddress #{field} values nothing translates (#{field == :country ? 'left blank' : 'kept as typed'}):")
+        values.sort_by { |value, count| [ -count, value ] }.each { |value, count| say.("  #{count.to_s.rjust(5)}  #{value}") }
       end
 
       if import.unmatched_staff.any?

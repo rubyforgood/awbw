@@ -25,8 +25,6 @@ RSpec.describe Workshop do
     it { should have_many(:category_types).through(:categories) }
     it { should have_many(:quotable_item_quotes).dependent(:destroy) } # As quotable
     it { should have_many(:quotes).through(:quotable_item_quotes) }
-    it { should have_many(:workshop_resources).dependent(:destroy) }
-    it { should have_many(:resources).through(:workshop_resources) }
     it { should have_many(:age_ranges) }
 
     # Nested Attributes
@@ -337,6 +335,41 @@ RSpec.describe Workshop do
       workshop = create(:workshop)
 
       expect { workshop.destroy }.to change(Workshop, :count).by(-1)
+    end
+  end
+
+  describe "#connected_resources" do
+    let(:workshop) { create(:workshop) }
+    let(:resource) { create(:resource) }
+
+    def mention(rich_text, record)
+      rich_text.update!(body: "<p>See it</p>")
+      ActionTextMention.create!(action_text_rich_text: rich_text, mentionable: record)
+    end
+
+    it "includes resources the workshop mentions" do
+      mention(workshop.rhino_materials, resource)
+
+      expect(workshop.connected_resources).to contain_exactly(resource)
+    end
+
+    it "includes resources that mention the workshop" do
+      mention(resource.rhino_body, workshop)
+
+      expect(workshop.connected_resources).to contain_exactly(resource)
+    end
+
+    it "lists a resource mentioned in both directions once" do
+      mention(workshop.rhino_materials, resource)
+      mention(resource.rhino_body, workshop)
+
+      expect(workshop.connected_resources.to_a).to eq([ resource ])
+    end
+
+    it "ignores mentions of other record types" do
+      mention(workshop.rhino_materials, create(:workshop))
+
+      expect(workshop.connected_resources).to be_empty
     end
   end
 

@@ -1,0 +1,12 @@
+name: "Story import stars a story's only sector or audience"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-23
+action_path: "/stories/import/new"
+summary: >-
+  When an imported story has just one sector or just one audience and the sheet names no primary,
+  that tag is starred as primary, so the story is featured on its Story Share page.
+pro_tips:
+  - "A primary named in the sheet always wins."
+  - "\"Other\" doesn't count: a story tagged Domestic Violence and Other gets Domestic Violence starred, and an Other-only story gets Other starred."
+  - "Stories with several sectors or audiences and no primary are left unstarred; star one by hand to feature them."

@@ -47,8 +47,8 @@ module TitleDisplayHelper
     end
 
     # --- Hidden from search badge (publicly accessible, but excluded from portal searches) ---
-    if current_user&.super_user? && !home_page &&
-       record.respond_to?(:hidden_from_search?) && record.hidden_from_search?
+    if !home_page && record.respond_to?(:hidden_from_search?) && record.hidden_from_search? &&
+       allowed_to?(:update?, record)
       icon = content_tag(:span, content_tag(:i, "", class: "fa-solid fa-filter-circle-xmark"), class: "inline-flex justify-center w-4")
       fragments << content_tag(
         :span,

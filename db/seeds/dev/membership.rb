@@ -2,7 +2,7 @@
 
 puts "Creating memberships for dev people…"
 
-standard = Membership::ANNUAL_COST_CENTS
+standard = Membership.annual_cost_cents
 
 pool = Person.where.missing(:memberships).order(:last_name, :first_name).to_a
 
@@ -38,7 +38,7 @@ else
       [ [ Date.current - 5.days, standard ] ], [] ],
 
     [ "overdue — unpaid past the grace window", nil, nil,
-      [ [ Date.current - (Membership::GRACE_PERIOD_DAYS + 15).days, standard ] ], [] ],
+      [ [ Date.current - (Membership.grace_period_days + 15).days, standard ] ], [] ],
 
     [ "renewal already created for next year", nil, nil,
       [ [ Date.current - 11.months, standard ], [ Date.current + 1.month, standard ] ],

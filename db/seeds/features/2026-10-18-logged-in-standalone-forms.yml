@@ -1,0 +1,11 @@
+name: "Logged-in people's form answers go to their profile"
+area: content
+display_status: admin_facing
+released_on: 2026-10-18
+summary: >-
+  When you're logged in, a public form skips the "Logged out only" questions your
+  profile already answers and saves your response to your account. On forms that
+  allow anonymous responses, your name and email are filled in for you, and you
+  can clear them to stay anonymous.
+pro_tips:
+  - "Set a form's name and email questions to \"Logged out only\" so logged-in people don't have to retype them."

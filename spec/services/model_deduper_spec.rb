@@ -289,6 +289,29 @@ RSpec.describe ModelDeduper do
     end
   end
 
+  describe "#reassignment_preview names" do
+    subject(:service) { described_class.new(model_class: Person) }
+
+    let(:person) { create(:person) }
+
+    def names_for(label)
+      service.reassignment_preview(person).find { |entry| entry[:label] == label }[:names]
+    end
+
+    it "describes each moving record by what it is, not the person it belongs to" do
+      organization = create(:organization, name: "Sunrise Shelter")
+      create(:affiliation, person: person, organization: organization, title: "Coordinator", start_date: Date.new(2024, 3, 1))
+      create(:contact_method, contactable: person, kind: "phone", value: "555-0100")
+      create(:comment, commentable: person, body: "Called about the spring training and left a voicemail for a follow-up next week")
+      create(:notification, person: person, email_subject: "Your registration is confirmed", created_at: Time.zone.local(2025, 6, 2))
+
+      expect(names_for("Affiliations")).to eq([ "Sunrise Shelter · Coordinator · Since Mar 2024" ])
+      expect(names_for("Contact methods")).to eq([ "Phone · 555-0100" ])
+      expect(names_for("Comments")).to eq([ "Called about the spring training and left a voicemail for..." ])
+      expect(names_for("Notifications (person)")).to eq([ "Your registration is confirmed · Jun 2, 2025" ])
+    end
+  end
+
   describe "#lost_references" do
     subject(:service) { described_class.new(model_class: Organization) }
 

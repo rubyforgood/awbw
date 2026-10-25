@@ -70,7 +70,6 @@ class EventRegistrationImporter
     first_name: "first_name",
     last_name: "last_name",
     email: "primary_email",
-    nickname: "nickname",
     pronouns: "pronouns",
     secondary_email: "secondary_email",
     organization: "organization_name",
@@ -133,7 +132,7 @@ class EventRegistrationImporter
     :payments_recorded, :payments_amount_cents,
     :scholarships_recorded, :scholarships_amount_cents,
     :discounts_recorded, :discounts_amount_cents,
-    :ce_enrollments, :unrecognized_headers,
+    :ce_enrollments, :unrecognized_headers, :untranslated_addresses,
     :skipped, :rows,
     keyword_init: true
   ) do
@@ -189,10 +188,11 @@ class EventRegistrationImporter
       payments_recorded: 0, payments_amount_cents: 0,
       scholarships_recorded: 0, scholarships_amount_cents: 0,
       discounts_recorded: 0, discounts_amount_cents: 0,
-      ce_enrollments: 0, unrecognized_headers: [],
+      ce_enrollments: 0, unrecognized_headers: [], untranslated_addresses: {},
       skipped: [], rows: []
     )
     @organization_matcher = OrganizationServices::NameMatcher.new
+    @address_translation = AddressTranslation.new
     @organization_cache = {}
     @form_field_cache = {}
     @seen_row_keys = {}
@@ -208,6 +208,8 @@ class EventRegistrationImporter
       @payment_batches.each_value { |members| apply_payment_batch(members) }
       raise ActiveRecord::Rollback if @dry_run
     end
+    unmatched = @address_translation.unmatched
+    @result.untranslated_addresses = %i[country state].select { |field| unmatched[field].any? }.index_with { |field| unmatched[field].to_h }
     @result
   end
 
@@ -319,7 +321,7 @@ class EventRegistrationImporter
     preview.person_status = :new
     preview.person_label = "#{values[:first_name]} #{values[:last_name]}"
     person = Person.new(
-      first_name: values[:first_name], last_name: values[:last_name], email: values[:email],
+      first_name: values[:nickname] || values[:first_name], last_name: values[:last_name], email: values[:email],
       created_by: @import_user, updated_by: @import_user
     )
     person.email = placeholder_email(person, preview) if person.email.blank?
@@ -338,7 +340,7 @@ class EventRegistrationImporter
 
   def find_matching_person(values, organization)
     if values[:email]
-      person = PersonMatcher.call(email: values[:email], last_name: values[:last_name], first_names: [ values[:first_name] ])
+      person = PersonMatcher.call(email: values[:email], last_name: values[:last_name], first_names: [ values[:first_name], values[:nickname] ])
       return [ person, nil ]
     end
 
@@ -519,6 +521,7 @@ class EventRegistrationImporter
     answers = PLAIN_ANSWERS.each_with_object({}) do |(field, identifier), hash|
       hash[identifier] = values[field] if values[field]
     end
+    answers["legal_first_name"] = values[:first_name] if values[:nickname]
     answers["organization_type"] = organization_type(values[:organization_type]) if values[:organization_type]
     answers["mailing_address_type"] = contact_type(values[:mailing_address_type])
     answers["phone_type"] = contact_type(values[:phone_type])
@@ -526,7 +529,19 @@ class EventRegistrationImporter
     answers["additional_sectors"] = sector_ids(values[:additional_sectors], preview, scope: Sector.published).map(&:to_s).presence
     answers["primary_age_group"] = age_group_ids(values[:primary_age_group], preview).first&.to_s
     answers["additional_age_groups"] = age_group_ids(values[:additional_age_groups], preview).map(&:to_s).presence
+    translate_address_answers(answers, "mailing")
+    translate_address_answers(answers, "organization")
     answers.compact
+  end
+
+  # The sheet's free-text state and country, as the registration form's dropdowns store them.
+  def translate_address_answers(answers, prefix)
+    state = answers["#{prefix}_state"]
+    country = answers["#{prefix}_country"]
+    return if state.blank? && country.blank?
+
+    answers["#{prefix}_state"] = @address_translation.state(state, country:)
+    answers["#{prefix}_country"] = @address_translation.country(country, state:)
   end
 
   def organization_type(raw)
@@ -534,7 +549,7 @@ class EventRegistrationImporter
   end
 
   def contact_type(raw)
-    CONTACT_TYPES.find { |type| type.casecmp?(raw.to_s) }
+    CONTACT_TYPES.find { |type| type.casecmp?(@address_translation.address_type(raw).to_s) }
   end
 
   def sector_ids(raw, preview, scope:)
@@ -834,16 +849,8 @@ class EventRegistrationImporter
   # The org answers fill-blanks won't apply, from the comparison the link-organization
   # flow already uses.
   def organization_declines(organization, answers)
-    OrganizationServices::ProfileDiff.call(
-      organization: organization,
-      website: answers["organization_website"],
-      organization_type: answers["organization_type"],
-      address: {
-        street_address: answers["organization_street"], city: answers["organization_city"],
-        state: answers["organization_state"], zip_code: answers["organization_zip"],
-        country: answers["organization_country"]
-      }
-    ).map { |discrepancy| [ discrepancy.label, discrepancy.submitted, discrepancy.saved ] }
+    OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: FormSubmission.org_entry_from(answers))
+      .map { |discrepancy| [ discrepancy.label, discrepancy.submitted, discrepancy.saved ] }
   end
 
   def enroll_ce(registration, values)

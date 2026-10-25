@@ -104,6 +104,32 @@ RSpec.describe EventSurveyCompletions do
       expect(completions.completion(person.id, "day_2_survey")).to be_present
     end
 
+    context "on an anonymous survey" do
+      before { day_1.update!(anonymous: true) }
+
+      it "returns the registrant's completion date with no submission to link to" do
+        create(:form_completion, form: day_1, event:, person:, completed_on: Date.new(2026, 10, 30))
+
+        completion = completions.completion(person.id, "day_1_survey")
+
+        expect(completion.submission_id).to be_nil
+        expect(completion.submitted_at.to_date).to eq(Date.new(2026, 10, 30))
+      end
+
+      it "credits no one for an anonymous submission on its own" do
+        create(:form_submission, form: day_1, event:, person: nil)
+
+        expect(completions.completion(person.id, "day_1_survey")).to be_nil
+      end
+
+      it "counts the survey as answered for the event" do
+        create(:form_completion, form: day_1, event:, person:)
+        event.update!(facilitator_training: false)
+
+        expect(completions.roles).to eq(%w[day_1_survey])
+      end
+    end
+
     it "is nil when the registrant hasn't submitted the role" do
       create(:registration_ticket_callout, event:, form: day_1)
 

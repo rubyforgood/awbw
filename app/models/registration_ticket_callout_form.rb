@@ -13,6 +13,7 @@ class RegistrationTicketCalloutForm < ApplicationRecord
 
   validates :form_id, uniqueness: { scope: :registration_ticket_callout_id }
   validates :position, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
+  validate :anonymous_form_on_anonymous_callout
 
   scope :ordered, -> { order(:position, :id) }
 
@@ -26,5 +27,14 @@ class RegistrationTicketCalloutForm < ApplicationRecord
   # Drips like a callout: hidden until it opens. No date either side is open.
   def dripping?(now = Time.current)
     available_from.present? && available_from > now
+  end
+
+  private
+
+  def anonymous_form_on_anonymous_callout
+    return unless form && registration_ticket_callout&.anonymous_responses?
+
+    errors.add(:form, "(#{form.display_name}) must have anonymous responses turned on") unless form.anonymous?
+    errors.add(:form, "(#{form.display_name}) can't ask for a name or email") if form.naming_fields.any?
   end
 end

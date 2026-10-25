@@ -40,12 +40,9 @@ RSpec.describe Form do
   end
 
   describe "survey roles" do
-    it "allows only one form per survey role" do
+    it "allows many forms per survey role" do
       create(:form, role: "day_1_survey")
-      duplicate = build(:form, role: "day_1_survey")
-
-      expect(duplicate).not_to be_valid
-      expect(duplicate.errors[:role]).to include("is already used by another form")
+      expect(build(:form, role: "day_1_survey")).to be_valid
     end
 
     it "allows many general forms" do
@@ -55,6 +52,53 @@ RSpec.describe Form do
 
     it "treats every role option naming a survey as a survey role, in dropdown order" do
       expect(Form::SURVEY_ROLES).to eq(%w[day_1_survey day_2_survey post_event_survey recipient_survey])
+    end
+  end
+
+  describe ".survey" do
+    it "returns the oldest standalone form with the role" do
+      oldest = create(:form, role: "day_1_survey")
+      create(:form, role: "day_1_survey")
+
+      expect(Form.survey("day_1_survey")).to eq(oldest)
+    end
+
+    it "skips event-owned forms" do
+      create(:form, role: "day_1_survey", owner: create(:event))
+      standalone = create(:form, role: "day_1_survey")
+
+      expect(Form.survey("day_1_survey")).to eq(standalone)
+    end
+
+    it "returns nil when no form has the role" do
+      expect(Form.survey("day_2_survey")).to be_nil
+    end
+  end
+
+  describe ".survey_default_ids" do
+    it "lists the oldest standalone form for each survey role" do
+      day_1 = create(:form, role: "day_1_survey")
+      create(:form, role: "day_1_survey")
+      post_event = create(:form, role: "post_event_survey")
+      create(:form, role: "registration")
+      create(:form, role: "day_2_survey", owner: create(:event))
+
+      expect(Form.survey_default_ids).to contain_exactly(day_1.id, post_event.id)
+    end
+  end
+
+  describe "#default_survey" do
+    it "is the oldest standalone form sharing the survey role" do
+      original = create(:form, role: "day_1_survey")
+      copy = create(:form, role: "day_1_survey")
+
+      expect(copy.default_survey).to eq(original)
+      expect(original.default_survey).to eq(original)
+    end
+
+    it "is nil for a non-survey role or an event-owned form" do
+      expect(create(:form, role: "registration").default_survey).to be_nil
+      expect(create(:form, role: "day_1_survey", owner: create(:event)).default_survey).to be_nil
     end
   end
 
@@ -94,39 +138,129 @@ RSpec.describe Form do
     end
   end
 
-  describe "#accepts_anonymous_submissions?" do
+  describe "anonymous" do
+    it "defaults to off" do
+      expect(create(:form).anonymous?).to be(false)
+    end
+
+    it "can be turned on for a survey or general form" do
+      expect(build(:form, role: "post_event_survey", anonymous: true)).to be_valid
+      expect(build(:form, role: "general", anonymous: true)).to be_valid
+    end
+
+    Form::IDENTIFIED_ROLES.each do |role|
+      it "can't be turned on for a #{role} form, which is processed against a person" do
+        form = build(:form, role:, anonymous: true)
+
+        expect(form).not_to be_valid
+        expect(form.errors[:anonymous]).to be_present
+      end
+    end
+
+    describe "on the CE hours callout" do
+      let(:form) { create(:form, anonymous: true) }
+
+      before do
+        create(:form_field, form:, name: "How was it?")
+        create(:registration_ticket_callout, builtin_key: "ce_hours", form:)
+      end
+
+      it "can't be turned off" do
+        form.anonymous = false
+
+        expect(form).not_to be_valid
+        expect(form.errors[:anonymous]).to include("must stay on for a CE hours evaluation")
+      end
+
+      it "can't gain a name or email question" do
+        form.assign_attributes(form_fields_attributes: [ { name: "Email", field_identifier: "primary_email" } ])
+
+        expect(form).not_to be_valid
+        expect(form.errors[:base]).to include("A CE hours evaluation can't ask for a name or email")
+      end
+
+      it "can drop a name or email question it already asks" do
+        email = form.form_fields.create!(name: "Email", field_identifier: "primary_email", answer_type: :free_form_input_one_line)
+        form.reload.assign_attributes(form_fields_attributes: [ { id: email.id, _destroy: "1" } ])
+
+        expect(form).to be_valid
+      end
+    end
+  end
+
+  describe "#requires_identity?" do
+    it "is true unless the form is set to anonymous" do
+      expect(build(:form).requires_identity?).to be(true)
+      expect(build(:form, anonymous: true).requires_identity?).to be(false)
+    end
+  end
+
+  describe "#missing_identity_questions?" do
     let(:form) { create(:form) }
 
-    it "is true when the name/email questions are all optional" do
-      create(:form_field, form: form, field_identifier: "first_name", required: false)
-      create(:form_field, form: form, field_identifier: "last_name", required: false)
-      create(:form_field, form: form, field_identifier: "primary_email", required: false)
+    it "is true when a form not set to anonymous lacks any of first name, last name, or email" do
+      create(:form_field, form:, field_identifier: "first_name")
+      create(:form_field, form:, field_identifier: "last_name")
 
-      expect(form.reload.accepts_anonymous_submissions?).to be(true)
+      expect(form.reload.missing_identity_questions?).to be(true)
     end
 
-    it "is false when any identity question is required" do
-      create(:form_field, form: form, field_identifier: "first_name", required: false)
-      create(:form_field, form: form, field_identifier: "primary_email", required: true)
+    it "is false once all three are asked" do
+      Form::IDENTITY_IDENTIFIERS.each { |identifier| create(:form_field, form:, field_identifier: identifier) }
 
-      expect(form.reload.accepts_anonymous_submissions?).to be(false)
+      expect(form.reload.missing_identity_questions?).to be(false)
     end
 
-    it "is false when the form asks for no identity questions at all" do
-      create(:form_field, form: form, field_identifier: "why_volunteer", required: false)
+    it "is false for an anonymous form" do
+      form.update!(anonymous: true)
 
-      expect(form.reload.accepts_anonymous_submissions?).to be(false)
+      expect(form.missing_identity_questions?).to be(false)
+    end
+  end
+
+  describe "#identified_by?" do
+    let(:form) { create(:form, anonymous: true) }
+    let!(:first_name) { create(:form_field, form:, field_identifier: "first_name") }
+    let!(:last_name) { create(:form_field, form:, field_identifier: "last_name") }
+    let!(:email) { create(:form_field, form:, field_identifier: "primary_email") }
+
+    def params(first: "Sam", last: "Rivera", address: "sam@example.com")
+      { first_name.id.to_s => first, last_name.id.to_s => last, email.id.to_s => address }
     end
 
-    Form::AGREEMENT_ROLES.each do |role|
-      it "is false for a #{role} agreement form even when its identity questions are optional" do
-        agreement = create(:form, role: role)
-        create(:form_field, form: agreement, field_identifier: "first_name", required: false)
-        create(:form_field, form: agreement, field_identifier: "last_name", required: false)
-        create(:form_field, form: agreement, field_identifier: "primary_email", required: false)
+    it "is true when first name, last name, and email are all answered" do
+      expect(form.identified_by?(params)).to be(true)
+    end
 
-        expect(agreement.reload.accepts_anonymous_submissions?).to be(false)
-      end
+    it "is false when any one of the three is blank" do
+      expect(form.identified_by?(params(first: ""))).to be(false)
+      expect(form.identified_by?(params(last: ""))).to be(false)
+      expect(form.identified_by?(params(address: ""))).to be(false)
+    end
+
+    it "is false for whitespace-only answers" do
+      expect(form.identified_by?(params(first: " ", last: " ", address: " "))).to be(false)
+    end
+
+    it "is false when the params leave a question out" do
+      expect(form.identified_by?(params.except(email.id.to_s))).to be(false)
+    end
+
+    it "is false when the form has no name and email questions" do
+      bare = create(:form, anonymous: true)
+
+      expect(bare.identified_by?(params)).to be(false)
+    end
+
+    it "accepts a legal first name in place of a first name" do
+      legal = create(:form_field, form:, field_identifier: "legal_first_name")
+      answers = params(first: "").merge(legal.id.to_s => "Samantha")
+
+      expect(form.identified_by?(answers)).to be(true)
+    end
+
+    it "reads string or symbol keys" do
+      expect(form.identified_by?(params.transform_keys(&:to_sym))).to be(true)
     end
   end
 
@@ -142,11 +276,22 @@ RSpec.describe Form do
       end
     end
 
-    it "defers to the field's own required flag on a non-agreement form" do
+    it "never requires a name or email question on an anonymous form, even one flagged required" do
+      anonymous = create(:form, anonymous: true)
+      email = create(:form_field, form: anonymous, field_identifier: "primary_email", required: true)
+      other = create(:form_field, form: anonymous, field_identifier: "why_volunteer", required: true)
+
+      expect(anonymous.requires_answer?(email)).to be(false)
+      expect(anonymous.requires_answer?(other)).to be(true)
+    end
+
+    it "forces the name and email questions on any form not set to anonymous" do
       general = create(:form)
       email = create(:form_field, form: general, field_identifier: "primary_email", required: false)
+      other = create(:form_field, form: general, field_identifier: "why_volunteer", required: false)
 
-      expect(general.requires_answer?(email)).to be(false)
+      expect(general.requires_answer?(email)).to be(true)
+      expect(general.requires_answer?(other)).to be(false)
     end
   end
 

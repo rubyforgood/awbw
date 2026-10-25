@@ -1,0 +1,10 @@
+name: "Registration imports keep going when an address has no ZIP or street"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-24
+summary: >-
+  A spreadsheet row with a mailing address but no ZIP code or street now saves the
+  address with those left blank, instead of stopping the import.
+pr_number: 2830
+pro_tips:
+  - "A form or import that skips the ZIP or street never clears one already on file."

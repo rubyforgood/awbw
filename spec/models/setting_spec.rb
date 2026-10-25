@@ -69,6 +69,7 @@ RSpec.describe Setting do
       expect(described_class.annual_membership_cents).to eq(2500)
       expect(described_class.membership_renewal_window_days).to eq(30)
       expect(described_class.membership_grace_period_days).to eq(30)
+      expect(described_class.home_featured_stories_limit).to be_nil
     end
 
     it "lets a stored zero win over the default" do
@@ -144,6 +145,28 @@ RSpec.describe Setting do
       Setting.create!(organization: create(:organization, website_url: nil))
 
       expect(described_class.organization_website).to be_nil
+    end
+  end
+
+  describe ".default_address_country" do
+    let(:organization) { create(:organization) }
+
+    it "reads the return address's country" do
+      Setting.create!(organization: organization, return_address: create(:address, addressable: organization, country: "Canada"))
+
+      expect(described_class.default_address_country).to eq("Canada")
+    end
+
+    it "reads a US spelling as the United States option" do
+      Setting.create!(organization: organization, return_address: create(:address, addressable: organization, country: "USA"))
+
+      expect(described_class.default_address_country).to eq("United States")
+    end
+
+    it "falls back to the United States without a return address" do
+      Setting.create!(organization: organization)
+
+      expect(described_class.default_address_country).to eq("United States")
     end
   end
 
@@ -250,6 +273,10 @@ RSpec.describe Setting do
 
     it "rejects a negative window" do
       expect(described_class.new(membership_renewal_window_days: -1)).not_to be_valid
+    end
+
+    it "rejects a home story limit below one" do
+      expect(described_class.new(home_featured_stories_limit: 0)).not_to be_valid
     end
   end
 

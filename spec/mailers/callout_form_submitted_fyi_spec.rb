@@ -45,4 +45,15 @@ RSpec.describe NotificationMailer, "#callout_form_submitted_fyi" do
     expect(mail.subject).not_to include("New Day 1 Survey")
     expect(mail.body.encoded).to include("Updated Day 1 Survey submission")
   end
+
+  it "names no one for an anonymous submission" do
+    submission = create(:form_submission, person: nil, form: create(:form, name: "CE Evaluation", anonymous: true),
+      event: create(:event))
+
+    mail = described_class.callout_form_submitted_fyi(submission)
+
+    expect(mail.subject).to include("CE Evaluation").and include("an anonymous respondent")
+    expect(mail.html_part.body.decoded).to include("Anonymous")
+    expect(mail.text_part.body.decoded).to include("Anonymous")
+  end
 end

@@ -58,6 +58,7 @@ module Dedupable
     @attachment_plan = deduper.attachment_plan(@record_to_keep, @record_to_delete)
     @unhandled_references = deduper.unhandled_references(@record_to_delete)
     @merge_notes = Array(config[:merge_notes]&.call(@record_to_keep, @record_to_delete))
+    @merge_outcomes = config[:merge_outcomes]&.call(@record_to_keep, @record_to_delete) || {}
     @merge_blocks = Array(config[:merge_blocks]&.call(@record_to_keep, @record_to_delete))
     @dedupe = build_dedupe_vars(config)
 
@@ -186,6 +187,8 @@ module Dedupable
   #                       for a target set too large to enumerate (e.g. author_id => "person") (optional)
   #   field_notes:        Hash of { column_name => hint } rendered under the keeper's field, to guide
   #                       an admin on what to enter (e.g. full_name is a legacy free-text author) (optional)
+  #   field_logins:       Lambda(record) returning { column_name => User } for fields holding a login's
+  #                       email, so the preview flags them with the login's status (optional)
   #   deprecated_columns: Array of column names to render muted with a "Deprecated" badge (optional)
   #   editable_columns:   Array of column names the preview shows and lets an admin edit on the keeper;
   #                       only these are accepted on save (optional, defaults to every column)
@@ -203,10 +206,15 @@ module Dedupable
   #                       attachments) so the preview shows them side by side for comparison (optional)
   #   merge_notes:        Lambda(keep, delete) returning an array of informational (non-blocking)
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
+  #   merge_outcomes:     Lambda(keep, delete) returning { fields: { column_name => { keep:, delete: } },
+  #                       records: { record => text } } — what the merge changes beyond keeping the keeper's
+  #                       values, flagged beside that field or moving record (optional)
   #   merge_blocks:       Lambda(keep, delete) returning an array of reasons this particular merge is
   #                       unsafe (e.g. both people carry an active pay subscription). Any reason disables
   #                       the preview's merge button and refuses the POST (optional)
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
+  #   record_partial:     Partial rendering a record's whole line on the index (local: record), in place
+  #                       of record_label + record_extras — e.g. to link it or add a hover card (optional)
   #   back_path:          Override the index eyebrow's return path (e.g. when the deduper was
   #                       opened from an event's registrants page, not the model index) (optional)
   #   back_label:         Label for that eyebrow link, without the "← " prefix (optional)
@@ -250,9 +258,11 @@ module Dedupable
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       remote_select_options: config[:remote_select_options] || {},
       field_notes: config[:field_notes] || {},
+      field_logins: config[:field_logins],
       deprecated_columns: Array(config[:deprecated_columns]).map(&:to_s),
       preview_images: config[:preview_images],
       record_extras: config[:record_extras],
+      record_partial: config[:record_partial],
       back_path: config[:back_path],
       back_label: config[:back_label],
       subtitle: config[:subtitle]

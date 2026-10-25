@@ -59,7 +59,7 @@
             <%= turbo_frame_tag "backlink_#{info[:table]}",
                   class: class_names("block min-w-0 overflow-x-auto rounded-lg border p-3",
                                      fm_related_table_highlight(@record, info[:table]) || "border-gray-200") do %>
-              <h3 class="text-sm font-medium text-gray-500"><%= label %> (<%= info[:records].total_entries %>)</h3>
+              <h3 class="text-sm font-medium text-gray-500"><%= label %> (<%= number_with_delimiter(info[:records].total_entries) %>)</h3>
               <% if (counterpart = @record.portal_counterpart(info[:table])) %>
                 <p class="text-xs text-gray-600">In the portal as <%= counterpart.downcase %></p>
               <% end %>

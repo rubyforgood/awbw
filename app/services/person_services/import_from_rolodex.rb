@@ -19,11 +19,11 @@ module PersonServices
   #   * failed           — the Person didn't validate
   #
   # An email field holding no address the person's email validation accepts ("ada@@x.org",
-  # "ada at x dot org") or an address it rejects is left off — the row imports without it —
-  # and the field's whole value is left as a comment on the person and listed in
-  # #invalid_emails, so it can be fixed by hand. A row with no usable address left is always
-  # a new person, given the next free placeholder email (1@…, 2@…) when someone already
-  # carries the name.
+  # "ada at x dot org") or an address it rejects is left off — the row imports without it.
+  # When that leaves the person with no email on file, the field's whole value is left as a
+  # comment on the person and listed in #invalid_emails, so it can be fixed by hand. A row
+  # with no usable address left is always a new person, given the next free placeholder
+  # email (1@…, 2@…) when someone already carries the name.
   #
   # A row whose name + email matches nobody is created, even when someone already shares
   # the name or the email: folding the occasional duplicate with the person deduper beats
@@ -40,15 +40,15 @@ module PersonServices
     DATE_FORMATS = %w[%m/%d/%Y %Y-%m-%d %m-%d-%Y %Y/%m/%d].freeze
     # A two-digit year below this is read as 20xx, at or above it as 19xx.
     TWO_DIGIT_YEAR_PIVOT = 10
-    CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "cell" => "personal",
-                      "mobile" => "personal", "work" => "work", "business" => "work",
-                      "professional" => "work", "mailing" => "mailing" }.freeze
+    CONTACT_TYPES = AddressTranslation::CONTACT_TYPES
     # Answers to "which kind of email is this?" that aren't a kind at all.
     PRECEDENCE_TYPES = %w[preferred primary main].freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
-    # Both archive fields hold an address (FmRolodex::PORTAL_FIELDS maps each to
-    # people.email), the primary one first, so it becomes the person's own email.
-    EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
+    # EmailPrimary holds a flag, never an address, so only EMail is read for one. The flag
+    # says whether EMail is the person's primary email ("1") or their secondary ("2").
+    EMAIL_FIELDS = %w[EMail].freeze
+    EMAIL_FLAG_FIELD = "EmailPrimary"
+    SECONDARY_EMAIL_FLAG = "2"
     STRING_LIMIT = 255
     BATCH_SIZE = 1_000
 
@@ -74,6 +74,7 @@ module PersonServices
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
+      @address_attributes = FmAddressAttributes.new
       @staff = StaffTranslation.new
       @import_user_id = Setting.import_user&.id
     end
@@ -90,12 +91,20 @@ module PersonServices
       self
     end
 
+    def self.invalid_email_heading(fm_id)
+      "FileMaker Rolodex #{fm_id} has an email this profile couldn't take:"
+    end
+
     def unmatched_tags
       @translation.unmatched
     end
 
     def unmatched_staff
       @staff.unmatched
+    end
+
+    def unmatched_addresses
+      @address_attributes.unmatched
     end
 
     private
@@ -124,7 +133,7 @@ module PersonServices
       return record(:skipped, "#{label}: missing first or last name") if first_name.blank? || last_name.blank?
 
       row_emails = emails(data)
-      email, email_2 = row_emails
+      email, email_2 = secondary_email?(data) ? [ nil, row_emails.first ] : row_emails
       match = match_people(rolodex, row_emails, first_name, last_name)
       return link(match, rolodex, label) if match.any?
 
@@ -204,7 +213,12 @@ module PersonServices
     end
 
     def needs_placeholder_email?(person, data)
-      person.email.blank? && invalid_email_values(data).any? && same_name(person.first_name, person.last_name).exists?
+      person.email.blank? && (invalid_email_values(data).any? || person.email_2.present?) &&
+        same_name(person.first_name, person.last_name).exists?
+    end
+
+    def secondary_email?(data)
+      data[EMAIL_FLAG_FIELD].to_s.strip == SECONDARY_EMAIL_FLAG
     end
 
     def profile_attributes(data)
@@ -213,7 +227,7 @@ module PersonServices
         best_time_to_call: clip(data["BestTimeToCall"]),
         racial_ethnic_identity: clip(data["Ethnicity"]),
         date_of_birth: parse_date(data["DateOfBirth"]),
-        email_type: email_type(data["EmailType"]),
+        (secondary_email?(data) ? :email_2_type : :email_type) => email_type(data["EmailType"]),
         member_since: member_since(data)
       }
     end
@@ -279,12 +293,14 @@ module PersonServices
     end
 
     def note_invalid_emails(person, rolodex, label)
+      return if person.email_on_file
+
       values = invalid_email_values(rolodex.data)
       return if values.empty?
 
       quoted = values.map { |value| "“#{value}”" }
       Comment.create!(commentable: person,
-                      body: "FileMaker Rolodex #{rolodex.fm_id} has an email this profile couldn't take:\n#{quoted.join("\n")}")
+                      body: "#{self.class.invalid_email_heading(rolodex.fm_id)}\n#{quoted.join("\n")}")
       @invalid_emails << "#{label} → ##{person.id}: #{quoted.join('; ')}"
     end
 
@@ -383,7 +399,7 @@ module PersonServices
     def build_addresses(person, rolodex)
       held = person.addresses.map { |address| address_key(address.street_address, address.city) }
       attributes = rolodex.addresses.reject { |address| work_address?(rolodex, address) }
-                          .filter_map { |address| address_attributes(address.data) }
+                          .filter_map { |address| @address_attributes.call(address.data) }
                           .reject { |attrs| held.include?(address_key(attrs[:street_address], attrs[:city])) }
       build_primary_first(person.addresses, attributes)
     end
@@ -414,49 +430,6 @@ module PersonServices
       value.to_s.gsub(/\D/, "")
     end
 
-    def address_attributes(fields)
-      street = [ street_line(fields), fields["AddrsLine2"] ].filter_map { |line| line.to_s.strip.presence }.join(", ")
-      city = clip(fields["AddrsCity"].to_s.strip)
-      state = clip(fields["AddrsState"].to_s.strip)
-      return if street.blank? || city.blank? || state.blank?
-
-      country = clip(fields["AddrsCountry"])
-      county = county(fields)
-      {
-        street_address: clip(street),
-        city:,
-        state:,
-        zip_code: zip_code(fields),
-        country:,
-        county:,
-        address_type: contact_type(fields["AddrsType"], allowed: Address::CONTACT_TYPES),
-        # FileMaker records a locality only on a project, so a person's own address has
-        # none to carry over and the parts have to say.
-        locality: AddressLocality.for(city:, state:, country:, county:)
-      }
-    end
-
-    # The address's own postal code, or the one it points at in the archive's ZIP table
-    # when it carries none itself — the field it mirrors, and where the county is read.
-    def zip_code(fields)
-      [ fields["AddrsPostalCode"], fields["PostalCodeLookup"] ]
-        .filter_map { |value| value.to_s.strip.presence }.first.to_s.truncate(STRING_LIMIT)
-    end
-
-    def county(fields)
-      zip_counties[zip_lookup(fields)[/\A\d{5}/]]
-    end
-
-    def zip_lookup(fields)
-      (fields["PostalCodeLookup"].presence || fields["AddrsPostalCode"]).to_s.strip
-    end
-
-    # One query for the archive's ~80,000 zip codes beats one per address across a full import.
-    def zip_counties
-      @zip_counties ||= FmPostalCode.pluck(:fm_id, Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(data, '$.County'))"))
-                                    .to_h { |zip, county| [ zip, clip(county) ] }
-    end
-
     def phone_attributes(fields)
       number = clip(fields["PhoneNumber"])
       return if number.blank?
@@ -469,16 +442,6 @@ module PersonServices
     # place is left blank, which both models then record as unknown.
     def contact_type(value, allowed:)
       CONTACT_TYPES[value.to_s.strip.downcase].presence_in(allowed)
-    end
-
-    # The house number has its own field, sometimes already repeated at the front of
-    # the first line.
-    def street_line(fields)
-      number = fields["StreetNo"].to_s.strip
-      line = fields["AddrsLine1"].to_s.strip
-      return line if number.blank? || line[/\A\S+/] == number
-
-      "#{number} #{line}".strip
     end
 
     # Every string copied here lands in a varchar(255) the archive's free text isn't

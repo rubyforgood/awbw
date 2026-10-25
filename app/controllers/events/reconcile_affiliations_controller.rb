@@ -10,7 +10,8 @@ module Events
       track_view("events.reconcile_affiliations", { event_id: @event.id })
 
       reconcile = AffiliationServices::ReconcileEvent.new(@event)
-      @person_groups = reconcile.actionable_person_groups
+      @cancelled_groups, @person_groups = reconcile.actionable_person_groups
+        .partition { |group| group[:registration]&.status == "cancelled" }
       @skipped_sections = reconcile.skipped_reason_sections
       @has_rows = reconcile.any_rows?
       # Restore the admin's per-row radio choices when they come back from confirm.

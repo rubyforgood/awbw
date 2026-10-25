@@ -1,0 +1,10 @@
+name: "Event forms can't also be public standalone forms"
+area: registration
+display_status: admin_facing
+released_on: 2026-08-18
+pr_number: 2256
+action_path: "/forms"
+summary: >-
+  A form connected to an event can only be filled out through that event. Linking a
+  published form to an event retires its public link, and the form editor explains
+  why.

@@ -2,6 +2,7 @@
     bars, so every free-text filter renders the same markup. Locals:
       param         – input name/id (Symbol or String)
       label         – optional field label (omitted when nil)
+      tooltip       – optional help text shown as a title on an info icon beside the label
       placeholder   – optional input placeholder
       value         – optional input value (defaults to params[param])
       submit        – true adds the magnifier search button inside the field
@@ -17,7 +18,14 @@
              placeholder: local_assigns[:placeholder],
              **local_assigns.fetch(:input_options, {}) %>
 <%= tag.div class: local_assigns.fetch(:wrapper_class, "w-full md:w-48") do %>
-  <%= label_tag param, label_text, class: local_assigns.fetch(:label_class, search_label_class) if label_text %>
+  <% if label_text %>
+    <%= label_tag param, nil, class: local_assigns.fetch(:label_class, search_label_class) do %>
+      <%= label_text %>
+      <% if local_assigns[:tooltip].present? %>
+        <i class="fa-solid fa-circle-info ml-0.5 text-[0.65rem] text-gray-400" title="<%= local_assigns[:tooltip] %>"></i>
+      <% end %>
+    <% end %>
+  <% end %>
   <% if submit %>
     <div class="relative">
       <%= input %>

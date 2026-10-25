@@ -29,13 +29,12 @@ class SmartFormFields
       key: :identity,
       title: "Who the registrant is",
       summary: "These decide which Person the submission belongs to. Email and last name plus either " \
-               "the first name or the nickname are matched against existing people, so a returning " \
+               "the first_name or legal_first_name are matched against existing people, so a returning " \
                "registrant updates their record instead of creating a duplicate.",
       fields: [
-        [ "first_name", "First name", "Sets the person's first name. Part of the duplicate-match key. If a nickname is also answered, this becomes the legal first name instead." ],
-        [ "legal_first_name", "Legal first name", "Sets the person's legal first name, shown to admins on their profile. Also accepted when matching a returning registrant, and used as the first name when the form doesn't ask for one." ],
+        [ "first_name", "Preferred first name", "Sets the person's first name — the name they go by. Part of the duplicate-match key." ],
+        [ "legal_first_name", "Other first name", "Sets the person's legal first name, shown to admins on their profile. Also accepted when matching a returning registrant, and used as the first name when the form doesn't ask for one." ],
         [ "last_name", "Last name", "Sets the person's last name. Part of the duplicate-match key — matching is skipped entirely when this is blank." ],
-        [ "nickname", "Preferred nickname", "Becomes the person's first name, and the answer to First name moves to legal first name. Also accepted when matching a returning registrant, so someone who registered under their legal name is still recognized." ],
         [ "pronouns", "Pronouns", "Sets the person's pronouns." ],
         [ "pronunciation", "Name pronunciation", "Sets the admin-only note on the person's profile for how to say their name." ],
         [ "primary_email", "Email", "Sets the person's email, lowercased. Part of the duplicate-match key." ],

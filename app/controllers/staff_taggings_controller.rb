@@ -22,7 +22,7 @@ class StaffTaggingsController < ApplicationController
       else
         filtered.reorder(created_at: @sort_direction)
       end
-      @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+      @count_display = count_display(filtered.count, base_scope.count)
       @mark_column_label = mark_column_label
       @staff_taggings = filtered.paginate(page: params[:page], per_page: per_page)
 
@@ -66,7 +66,7 @@ class StaffTaggingsController < ApplicationController
   def destroy
     authorize! @staff_tagging
     @staff_tagging.destroy
-    redirect_to staff_taggings_path, notice: "Staff tagging was successfully removed.", status: :see_other
+    redirect_to staff_tagging_return_path, notice: "Staff tagging was successfully removed.", status: :see_other
   end
 
   def toggle_marked

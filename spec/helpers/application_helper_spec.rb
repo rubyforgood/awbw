@@ -42,8 +42,8 @@ RSpec.describe ApplicationHelper, type: :helper do
   describe "#credited_author_link" do
     let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
 
-    it "links to the person profile when the credit resolves to a searchable person" do
-      allow(person).to receive(:profile_is_searchable).and_return(true)
+    it "links to the person profile when the viewer can open it" do
+      allow(helper).to receive(:allowed_to?).with(:show?, person).and_return(true)
       workshop = create(:workshop, author_credit_preference: "full_name")
       allow(workshop).to receive(:author).and_return(person)
 
@@ -53,16 +53,16 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(html).to include("Ada Lovelace")
     end
 
-    it "renders plain text when the person profile is not searchable" do
-      allow(person).to receive(:profile_is_searchable).and_return(false)
+    it "renders plain text when the viewer can't open the person profile" do
+      allow(helper).to receive(:allowed_to?).with(:show?, person).and_return(false)
       workshop = create(:workshop, author_credit_preference: "full_name")
       allow(workshop).to receive(:author).and_return(person)
 
       expect(helper.credited_author_link(workshop)).to eq("Ada Lovelace")
     end
 
-    it "never links a suppressed credit, even to a searchable person" do
-      allow(person).to receive(:profile_is_searchable).and_return(true)
+    it "never links a suppressed credit, even to a viewable person" do
+      allow(helper).to receive(:allowed_to?).with(:show?, person).and_return(true)
       workshop = create(:workshop, author_credit_preference: "anonymous")
       allow(workshop).to receive(:author).and_return(person)
 
@@ -71,10 +71,10 @@ RSpec.describe ApplicationHelper, type: :helper do
 
     it "renders each author's credited name, joined by the shared separator" do
       create(:professional_license, person: person, kind: "LMFT")
-      allow(person).to receive(:profile_is_searchable).and_return(true)
+      allow(helper).to receive(:allowed_to?).with(:show?, person).and_return(true)
       co_author = create(:person, first_name: "Cathy", last_name: "Smith",
                                   display_name_preference: "first_name_last_initial")
-      allow(co_author).to receive(:profile_is_searchable).and_return(false)
+      allow(helper).to receive(:allowed_to?).with(:show?, co_author).and_return(false)
       story = create(:story, author_credit_preference: "full_name")
       allow(story).to receive(:author).and_return(person)
       allow(story).to receive(:co_author).and_return(co_author)
@@ -95,7 +95,7 @@ RSpec.describe ApplicationHelper, type: :helper do
 
     it "credits the org, not the creator, when no author is named" do
       creator_person = create(:person, first_name: "Cara", last_name: "Creator")
-      allow(creator_person).to receive(:profile_is_searchable).and_return(true)
+      allow(helper).to receive(:allowed_to?).with(:show?, creator_person).and_return(true)
       creator = create(:user)
       allow(creator).to receive(:person).and_return(creator_person)
       workshop = create(:workshop, author: nil, full_name: nil, author_credit_preference: "full_name")
@@ -108,7 +108,7 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
 
     it "forwards a caller's data attrs (e.g. turbo_frame) onto the link so call sites can break out of a frame" do
-      allow(person).to receive(:profile_is_searchable).and_return(true)
+      allow(helper).to receive(:allowed_to?).with(:show?, person).and_return(true)
       workshop = create(:workshop, author_credit_preference: "full_name")
       allow(workshop).to receive(:author).and_return(person)
 
@@ -136,7 +136,7 @@ RSpec.describe ApplicationHelper, type: :helper do
 
     it "falls back to the profile byline when the viewer is not an admin" do
       allow(helper).to receive(:allowed_to?).with(:manage?, person).and_return(false)
-      allow(person).to receive(:profile_is_searchable).and_return(true)
+      allow(helper).to receive(:allowed_to?).with(:show?, person).and_return(true)
 
       html = helper.credited_author_edit_button(workshop)
       expect(html).to include(person_path(person))
@@ -152,17 +152,26 @@ RSpec.describe ApplicationHelper, type: :helper do
   end
 
   describe "#timezone_visibility_hint" do
-    let(:me) { create(:user) }
-    let(:other) { create(:user) }
+    let(:person_user) { create(:user) }
 
-    before { allow(helper).to receive(:current_user).and_return(me) }
-
-    it "uses second person when the form is about the current user" do
-      expect(helper.timezone_visibility_hint(me)).to eq("You will see times and dates in this timezone.")
+    before do
+      allow(helper).to receive(:allowed_to?) { |rule, target| UserPolicy.new(target, user: viewer).apply(rule) }
     end
 
-    it "uses 'User' when an admin edits someone else" do
-      expect(helper.timezone_visibility_hint(other)).to eq("User will see times and dates in this timezone.")
+    context "when a non-admin edits their own settings" do
+      let(:viewer) { person_user }
+
+      it "uses second person" do
+        expect(helper.timezone_visibility_hint(person_user)).to eq("You will see times and dates in this timezone.")
+      end
+    end
+
+    context "when an admin edits a user" do
+      let(:viewer) { create(:user, :admin) }
+
+      it "uses 'User'" do
+        expect(helper.timezone_visibility_hint(person_user)).to eq("User will see times and dates in this timezone.")
+      end
     end
   end
 

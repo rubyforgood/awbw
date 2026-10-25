@@ -1,0 +1,8 @@
+name: "Workshop logs, variations, and monthly reports carry an author"
+area: people
+display_status: admin_facing
+released_on: 2026-08-22
+pr_number: 2335
+summary: >-
+  Workshop logs and monthly reports now record an author, like stories and
+  variations, and profiles list all content by its author.

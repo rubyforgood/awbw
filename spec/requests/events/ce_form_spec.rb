@@ -10,7 +10,7 @@ RSpec.describe "Events::Callouts CE form", type: :request do
       end_date: Time.zone.local(2026, 7, 23, 16, 0))
   end
   let(:registration) { create(:event_registration, event:) }
-  let(:form) { create(:form, name: "CE Evaluation") }
+  let(:form) { create(:form, name: "CE Evaluation", anonymous: true) }
   let!(:field) { create(:form_field, form:, name: "How was the training?", required: true) }
   let(:callout) { create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE hours", form:) }
 
@@ -57,6 +57,31 @@ RSpec.describe "Events::Callouts CE form", type: :request do
       travel_to Time.zone.local(2026, 7, 23, 10, 0)
       get registration_ce_path(registration.slug)
       expect(response.body).not_to include("Complete the form")
+    end
+  end
+
+  describe "submitting the CE form" do
+    before { travel_to Time.zone.local(2026, 7, 24, 10, 0) }
+
+    def submit_form
+      post registration_callout_form_submit_path(registration.slug, callout, form),
+        params: { callout_form: { form_fields: { field.id.to_s => "Great" } } }
+    end
+
+    it "records the answers with no person and still meets the certificate's form requirement" do
+      submit_form
+
+      expect(FormSubmission.last.person).to be_nil
+      expect(registration.reload.ce_form_requirement_met?).to be(true)
+    end
+
+    it "marks the CE page step submitted without offering to review the answers" do
+      submit_form
+
+      get registration_ce_path(registration.slug)
+
+      expect(response.body).to include("Submitted")
+      expect(response.body).not_to include("Review your responses")
     end
   end
 end

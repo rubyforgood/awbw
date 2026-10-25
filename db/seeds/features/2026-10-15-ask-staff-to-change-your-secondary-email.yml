@@ -1,6 +1,6 @@
 name: "Ask staff to change your secondary email"
 area: people
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-10-15
 pr_number: 2697
 summary: >-

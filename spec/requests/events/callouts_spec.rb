@@ -629,6 +629,32 @@ RSpec.describe "Events::Callouts", type: :request do
     let(:scholarship)  { create(:scholarship, recipient: registration.registrant, amount_cents: 5_000) }
     let!(:allocation)  { create(:allocation, source: scholarship, allocatable: registration, amount: 5_000) }
 
+    describe "an anonymous recipients survey on the scholarship page" do
+      let(:survey) { create(:form, name: "Recipients survey", role: "recipient_survey", anonymous: true) }
+      let!(:survey_field) { create(:form_field, form: survey, name: "What did you take away?") }
+      let(:scholarship_callout) { create(:registration_ticket_callout, event:, builtin_key: "scholarship") }
+
+      before do
+        scholarship.update!(agreement_signed: true, tasks_completed: true)
+        scholarship_callout.update!(hidden: false)
+        scholarship_callout.registration_ticket_callout_forms.create!(form: survey)
+      end
+
+      it "records the answers anonymously and shows the survey as completed without the answers" do
+        post registration_callout_form_submit_path(registration.slug, scholarship_callout, survey),
+          params: { callout_form: { form_fields: { survey_field.id.to_s => "So much" } } }
+
+        expect(FormSubmission.last.person).to be_nil
+        expect(registration.reload.post_survey_completed?).to be(true)
+
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to include("submitted anonymously")
+        expect(response.body).not_to include("So much")
+        expect(response.body).not_to include("callout_form[form_fields][#{survey_field.id}]")
+      end
+    end
+
     describe "GET /registration/:slug/scholarship" do
       it "shows the amount as offered with an Agree button while unsigned" do
         get registration_scholarship_path(registration.slug)

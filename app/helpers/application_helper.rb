@@ -19,7 +19,7 @@ module ApplicationHelper
   end
 
   # Byline for an AuthorCreditable record. Links each credited author to their person
-  # profile when it's searchable; a non-searchable author renders as plain text. The
+  # profile when the viewer can open it; anyone else renders as plain text. The
   # names and the separator come from the record (`credited_name_for_person`,
   # `CREDIT_SEPARATOR`), so this matches the plain-text credit everywhere else. Falls
   # back to the plain author_credit label when the credit resolves to nobody linkable
@@ -30,7 +30,7 @@ module ApplicationHelper
 
     safe_join(people.map { |person|
       name = record.credited_name_for_person(person)
-      person.profile_is_searchable ? link_to(name, person_path(person), **link_options) : name
+      allowed_to?(:show?, person) ? link_to(name, person_path(person), **link_options) : name
     }, AuthorCreditable::CREDIT_SEPARATOR)
   end
 
@@ -635,7 +635,7 @@ module ApplicationHelper
   # Timezone hint phrased for whoever the form is about: second person when you're
   # editing your own settings, third person ("User") when an admin edits someone else.
   def timezone_visibility_hint(user)
-    subject = user == current_user ? "You" : "User"
+    subject = allowed_to?(:manage?, user) ? "User" : "You"
     "#{subject} will see times and dates in this timezone."
   end
 
@@ -739,7 +739,7 @@ module ApplicationHelper
   def default_organization_for_form(object)
     return object.organization if object.organization.present?
 
-    if current_user.super_user?
+    if allowed_to?(:manage?, object)
       Setting.app_organization
     elsif current_user.person&.affiliations&.count == 1
       current_user.person.primary_organization

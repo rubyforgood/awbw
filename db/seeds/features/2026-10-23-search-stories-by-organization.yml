@@ -1,0 +1,10 @@
+name: "Search stories by organization name"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-23
+action_path: "/story_share"
+summary: >-
+  Typing an organization's name into the Story Share search or the Stories page keyword box
+  now finds that organization's stories, even when the story text never names it.
+pro_tips:
+  - "Part of a name works too: \"riverbend\" finds stories from Riverbend Shelter."

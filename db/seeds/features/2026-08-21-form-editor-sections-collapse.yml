@@ -1,0 +1,9 @@
+name: "Form editor settings collapse behind toggles"
+area: content
+display_status: admin_facing
+released_on: 2026-08-21
+pr_number: 2276
+action_path: "/forms"
+summary: >-
+  The form editor's Form settings, Public form, and Form header sections start
+  collapsed, so the questions are right at the top. Click a section to open it.

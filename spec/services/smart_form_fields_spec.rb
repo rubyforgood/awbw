@@ -48,11 +48,12 @@ RSpec.describe SmartFormFields do
         app/services/organization_services/capture_from_submission.rb
         app/services/public_form_submission.rb
       ].map { |path| Rails.root.join(path).read }.join("\n")
-      read_identifiers = sources.scan(/field_value\("([a-z0-9_]+)"\)/).flatten.uniq
+      scanned = sources.scan(/field_value\("([a-z0-9_]+)"\)/).flatten.uniq
+      read_identifiers = (scanned + FormSubmission::ORG_ENTRY_FIELD_IDENTIFIERS).uniq
       documented = described_class.identifiers + described_class::ANSWER_ONLY_IDENTIFIERS
 
       # Guards the guard: a regex that stopped matching would pass vacuously.
-      expect(read_identifiers.size).to be > 20
+      expect(scanned.size).to be > 15
       expect(read_identifiers - documented).to be_empty
     end
   end

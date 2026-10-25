@@ -1,0 +1,11 @@
+name: "Merge preview describes the records that move"
+area: people
+display_status: admin_facing
+released_on: 2026-10-24
+action_path: "/people/dedupe_index"
+summary: >-
+  When merging two people, the preview now says what each moving record is: an affiliation's
+  organization, title, and dates; a contact method's kind and number; a comment or notification's opening words.
+pro_tips:
+  - "Each field's value now sits under its label, lined up with the editable field on the right."
+  - "Blank fields on the person being deleted no longer show \"Will be dropped\"."

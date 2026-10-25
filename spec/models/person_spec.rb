@@ -116,6 +116,18 @@ RSpec.describe Person, type: :model do
       expect(person.legal_first_name).to eq("Mary-Katherine")
     end
 
+    it "drops a legal first name that matches the first name, ignoring case and whitespace" do
+      person = create(:person, first_name: "Mary Ann", legal_first_name: "  mary   ANN ", last_name: "Rivera")
+
+      expect(person.legal_first_name).to be_nil
+    end
+
+    it "keeps a legal first name that differs from the first name" do
+      person = create(:person, first_name: "Sam", legal_first_name: "Samantha", last_name: "Rivera")
+
+      expect(person.legal_first_name).to eq("Samantha")
+    end
+
     it "handles nil values" do
       person = create(:person, user: nil, first_name: "Jane", last_name: "Doe",
                        email: nil, email_2: nil,
@@ -382,6 +394,29 @@ RSpec.describe Person, type: :model do
       person.display_name_preference = "full_name"
       person.anonymous_contributions = true
       expect(person.name).to eq("Jane Doe")
+    end
+  end
+
+  describe ".displayed_name_like" do
+    let!(:full) { create(:person, first_name: "Wilhelmina", last_name: "Thornquist", display_name_preference: "full_name") }
+    let!(:initialled) { create(:person, first_name: "Octavia", last_name: "Brambleton", display_name_preference: "first_name_last_initial") }
+
+    it "matches first, last, and full names when the full name shows" do
+      expect(described_class.displayed_name_like("wilhelmina")).to include(full)
+      expect(described_class.displayed_name_like("Thornquist")).to include(full)
+      expect(described_class.displayed_name_like("Wilhelmina Thornquist")).to include(full)
+    end
+
+    it "matches the name as an initialled credit shows it" do
+      expect(described_class.displayed_name_like("Octavia B.")).to include(initialled)
+    end
+
+    it "does not match a last name the preference hides" do
+      expect(described_class.displayed_name_like("Brambleton")).not_to include(initialled)
+    end
+
+    it "matches nothing for a blank query" do
+      expect(described_class.displayed_name_like(" ")).to be_empty
     end
   end
 
@@ -665,6 +700,11 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_alice)
     end
 
+    it 'search_name_email matches names and emails' do
+      expect(Person.search_name_email('Alice')).to include(person_alice)
+      expect(Person.search_name_email('alice@example')).to include(person_alice)
+    end
+
     it 'filters by shared_contact_info matching a full name' do
       results = Person.search_by_params(shared_contact_info: 'Alice Smith')
       expect(results).to include(person_alice)
@@ -679,20 +719,32 @@ RSpec.describe Person, type: :model do
       expect(Person.search_by_params(shared_contact_info: 'alice@example')).not_to include(person_alice)
     end
 
-    it 'filters by shared_contact_info matching a shared login phone' do
-      person_bob.update!(profile_show_phone: true)
-      person_bob.user.update!(phone: '555-0199')
+    it 'search_contact matches a contact method' do
+      create(:contact_method, contactable: person_alice, value: '555-0199')
 
-      expect(Person.search_by_params(shared_contact_info: '555-0199')).to include(person_bob)
+      expect(Person.search_contact('555-0199')).to include(person_alice)
+      expect(Person.search_contact('555-0199')).not_to include(person_bob)
     end
 
-    it 'filters by shared_contact_info matching terms across a name and a shared phone' do
-      person_alice.update!(profile_show_phone: true)
-      person_alice.user.update!(phone: '555-0199')
+    it 'search_contact matches an inactive contact method' do
+      create(:contact_method, contactable: person_alice, value: '555-0199', inactive: true)
 
-      results = Person.search_by_params(shared_contact_info: 'Alice 555-0199')
-      expect(results).to include(person_alice)
-      expect(results).not_to include(person_bob)
+      expect(Person.search_contact('555-0199')).to include(person_alice)
+    end
+
+    it 'search_contact matches an address' do
+      create(:address, addressable: person_bob, street_address: '123 Hiddenway', city: 'Portland')
+
+      expect(Person.search_contact('Hiddenway')).to include(person_bob)
+    end
+
+    it 'search_contact supports attribute prefixes' do
+      create(:address, addressable: person_bob, street_address: '123 Hiddenway', city: 'Portland')
+      create(:contact_method, contactable: person_alice, value: '555-0199')
+
+      expect(Person.search_contact('city:portland')).to include(person_bob)
+      expect(Person.search_contact('city:portland')).not_to include(person_alice)
+      expect(Person.search_contact('phone:555')).to include(person_alice)
     end
 
     it 'filters by shared_contact_info treating a quoted phrase as one term' do

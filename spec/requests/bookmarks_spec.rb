@@ -90,6 +90,12 @@ RSpec.describe "Bookmarks", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "shows their own bookmarks heading even when another user_id is passed" do
+      get personal_bookmarks_path, params: { user_id: other_user.id }
+      expect(response.body).to include("My")
+      expect(response.body).not_to include(ERB::Util.html_escape("#{other_user.full_name}'s"))
+    end
+
     it "includes WorkshopVariationIdea in bookmark type dropdown" do
       get personal_bookmarks_path
       expect(response.body).to include("value=\"WorkshopVariationIdea\"")
@@ -127,6 +133,27 @@ RSpec.describe "Bookmarks", type: :request do
       get personal_bookmarks_path,
           headers: { "Turbo-Frame" => "personal_bookmarks_results" }
       expect(response).to have_http_status(:ok)
+    end
+
+    context "with the bookmarked item's creator" do
+      let(:creator) { create(:user, person: create(:person, first_name: "Cara", last_name: "Creator")) }
+
+      before { workshop.update_columns(created_by_id: creator.id) }
+
+      it "links the creator's profile when the viewer can open it" do
+        create(:affiliation, person: creator.person)
+
+        get personal_bookmarks_path, headers: { "Turbo-Frame" => "personal_bookmarks_results" }
+
+        expect(response.body).to include(person_path(creator.person))
+      end
+
+      it "shows the creator's name without a link when the viewer can't open the profile" do
+        get personal_bookmarks_path, headers: { "Turbo-Frame" => "personal_bookmarks_results" }
+
+        expect(response.body).not_to include(person_path(creator.person))
+        expect(response.body).to include("Cara")
+      end
     end
 
     it "can filter personal bookmarks by keyword via turbo frame" do
@@ -224,6 +251,11 @@ RSpec.describe "Bookmarks", type: :request do
 
   context "as an admin" do
     before { sign_in admin }
+
+    it "shows another user's name on their personal bookmarks" do
+      get personal_bookmarks_path, params: { user_id: other_user.id }
+      expect(response.body).to include(ERB::Util.html_escape("#{other_user.full_name}'s"))
+    end
 
     it "can access global index" do
       get bookmarks_path

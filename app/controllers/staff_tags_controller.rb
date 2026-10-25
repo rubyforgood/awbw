@@ -5,7 +5,7 @@ class StaffTagsController < ApplicationController
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     base_scope = authorized_scope(StaffTag.all)
-    @count_display = base_scope.count
+    @count_display = count_display(base_scope.count)
     @staff_tags = base_scope.ordered.paginate(page: params[:page], per_page: per_page).decorate
     @taggings_counts = StaffTagging.where(staff_tag_id: @staff_tags.map(&:id)).group(:staff_tag_id).count
   end
