@@ -1,14 +1,13 @@
 module AffiliationServices
-  # Processes a "close program" agreement (Form role close_program): the person
-  # told us their AWBW program at an organization is ending. End-dates their
-  # active-or-pending Facilitator affiliation(s) there to the effective date —
-  # and their job affiliation(s) too when they're also leaving the job — and
+  # Processes a program closure (an approved ProfileChangeRequest removing a
+  # Facilitator row): the person told us their AWBW program at an organization
+  # is ending. End-dates their active-or-pending Facilitator affiliation(s)
+  # there to the effective date — and their job affiliation(s) too when they're also leaving the job — and
   # leaves a comment on each recording why and as of when. The organization's
   # own status/dates re-derive from the Affiliation after-save callbacks, so
   # closing the last active facilitator flips the org Inactive automatically.
   #
-  # Returns the affiliations it end-dated, so callers can report them (the flash
-  # notice and the processing panel's "ended by this agreement" flag). Idempotent
+  # Returns the affiliations it end-dated, so callers can report them. Idempotent
   # in effect: a row already ended on or before the effective date isn't touched.
   class CloseProgram
     COMMENT_TOPIC = "Program closure".freeze

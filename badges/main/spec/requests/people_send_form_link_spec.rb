@@ -5,8 +5,8 @@ RSpec.describe "People send_form_link", type: :request do
   # No portal user, so preferred_email is the person's own email.
   let(:person) { create(:person, user: nil, email: "fac@example.com") }
   let(:form) do
-    create(:form, name: "Collaboration agreement (new job)", role: "new_job",
-                  slug: "collab-new-job", published: true)
+    create(:form, name: "Collaboration agreement (reinstatement)", role: "reinstatement",
+                  slug: "collab-reinstatement", published: true)
   end
 
   describe "POST /people/:id/send_form_link" do
@@ -22,7 +22,7 @@ RSpec.describe "People send_form_link", type: :request do
         expect(notification.noticeable).to eq(person)
         expect(notification.recipient_email).to eq("fac@example.com")
         expect(notification.custom_subject).to include(form.display_name)
-        expect(notification.custom_message).to include("/f/collab-new-job")
+        expect(notification.custom_message).to include("/f/collab-reinstatement")
         expect(notification.sender).to eq(admin)
         expect(response).to redirect_to(edit_person_path(person, agreement_links: 1, anchor: "agreement-links"))
       end
@@ -100,13 +100,13 @@ RSpec.describe "People send_form_link", type: :request do
         Notification.create!(kind: "form_link_request", noticeable: person, recipient_role: "person",
                              recipient_email: "fac@example.com", notification_type: 0,
                              custom_subject: "Link to complete #{form.display_name}",
-                             custom_message: "http://example.com/f/collab-new-job", sender: admin)
+                             custom_message: "http://example.com/f/collab-reinstatement", sender: admin)
       end
 
       get edit_person_path(person)
 
       expect(response.body).to include("Email form links")
-      expect(response.body).to include("New job")
+      expect(response.body).to include("Reinstatement")
       expect(response.body).to include(send_form_link_person_path(person, form_id: form.id))
       expect(response.body).to include("Sent 2 times")
     end

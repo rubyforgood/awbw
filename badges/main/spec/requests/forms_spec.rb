@@ -30,9 +30,66 @@ RSpec.describe "Forms", type: :request do
       end
 
       it "shows the form role in the results frame" do
-        create(:form, :standalone, name: "New Job Form", role: "new_job")
+        create(:form, :standalone, name: "Returning Form", role: "reinstatement")
         get forms_path, headers: frame_headers
-        expect(response.body).to include("New Job")
+        expect(response.body).to include("Reinstatement")
+      end
+
+      it "filters the results frame by form role" do
+        create(:form, :standalone, name: "Scholarship Form", role: "scholarship")
+        create(:form, :standalone, name: "Reinstatement Form", role: "reinstatement")
+        get forms_path(role: "scholarship"), headers: frame_headers
+        expect(response.body).to include("Scholarship Form")
+        expect(response.body).not_to include("Reinstatement Form")
+      end
+
+      it "counts role-less forms as general when filtering by general" do
+        create(:form, :standalone, name: "Roleless Form", role: nil)
+        create(:form, :standalone, name: "Reinstatement Form", role: "reinstatement")
+        get forms_path(role: "general"), headers: frame_headers
+        expect(response.body).to include("Roleless Form")
+        expect(response.body).not_to include("Reinstatement Form")
+      end
+
+      it "filters the results frame by form name" do
+        create(:form, :standalone, name: "Scholarship Form")
+        create(:form, :standalone, name: "Reinstatement Form")
+        get forms_path(name: "scholar"), headers: frame_headers
+        expect(response.body).to include("Scholarship Form")
+        expect(response.body).not_to include("Reinstatement Form")
+      end
+
+      it "keeps the name search on the sort links" do
+        get forms_path(name: "scholar"), headers: frame_headers
+        hrefs = Nokogiri::HTML(response.body).css("thead a").map { |link| link["href"] }
+        expect(hrefs).to all(include("name=scholar"))
+      end
+
+      it "ignores an unknown role filter" do
+        create(:form, :standalone, name: "Reinstatement Form", role: "reinstatement")
+        get forms_path(role: "bogus"), headers: frame_headers
+        expect(response.body).to include("Reinstatement Form")
+      end
+
+      it "keeps the role filter on the sort links" do
+        get forms_path(role: "scholarship"), headers: frame_headers
+        hrefs = Nokogiri::HTML(response.body).css("thead a").map { |link| link["href"] }
+        expect(hrefs).to all(include("role=scholarship"))
+      end
+
+      it "renders the role filter next to the new form button, with no name search box" do
+        get forms_path(role: "scholarship")
+        filters = Nokogiri::HTML(response.body).at_css("form[data-turbo-frame='forms_results']")
+        expect(filters.at_css("input[name='name']")).to be_nil
+        expect(filters.at_css("select[name='role'] option[selected]")["value"]).to eq("scholarship")
+        expect(filters.at_css("select[name='role'] option[value='']").text).to eq("All form roles")
+      end
+
+      it "carries a name from the URL through a role change" do
+        get forms_path(name: "scholar")
+        name_input = Nokogiri::HTML(response.body).at_css("form[data-turbo-frame='forms_results'] input[name='name']")
+        expect(name_input["type"]).to eq("hidden")
+        expect(name_input["value"]).to eq("scholar")
       end
 
       it "lists owner-attached forms in an owned-forms section with an answers link" do

@@ -51,7 +51,7 @@
         <div>
           <%= label_tag :form_id, "Form", class: search_label_class %>
           <%# Multiselect so submissions from several forms (e.g. an agreement and
-              its new-job / reinstatement copies) can be viewed together. ts-flat keeps
+              its reinstatement copy) can be viewed together. ts-flat keeps
               the inner control transparent and height-matched to the sibling fields. %>
           <%= select_tag "form_id",
                 options_from_collection_for_select(@forms, :id, :display_name, Array(params[:form_id]).map(&:to_i)),

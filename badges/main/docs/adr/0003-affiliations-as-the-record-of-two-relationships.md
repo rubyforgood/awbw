@@ -200,7 +200,7 @@ facilitator affiliation depends on what that row represents:
   active registration status.
 
 **Everything ends the day BEFORE the training. One rule, no exceptions**, matching
-`AffiliationServices::ApplyScenarioEndDating`
+`AffiliationServices::EndOtherOrganizations`
 ([ADR-0002](0002-org-linking-flows-and-agreement-scenarios.md) D4, which points back
 here — one convention, two callers).
 
