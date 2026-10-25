@@ -1,0 +1,11 @@
+name: "CE hours evaluations are always anonymous"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-24
+pr_number: 2835
+summary: >-
+  The form on an event's CE hours callout must have anonymous responses turned
+  on and can't ask for a name or email. Answers are never linked to the person,
+  but you can still see who completed it.
+pro_tips:
+  - "To use a form as the CE evaluation, turn on \"Anonymous responses\" and remove any name or email questions first."
