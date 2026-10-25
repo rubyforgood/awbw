@@ -82,11 +82,7 @@ class StaffTaggingsController < ApplicationController
     authorize! @staff_tagging, to: :update?
     @staff_tagging.save_index_note(params[:note])
     respond_to do |format|
-      format.turbo_stream do
-        render turbo_stream: turbo_stream.replace(helpers.dom_id(@staff_tagging, :note_hint),
-                                                  partial: "shared/index_note_hint",
-                                                  locals: { record: @staff_tagging, comment: @staff_tagging.comments.reload.first })
-      end
+      format.turbo_stream
       format.any { head :ok }
     end
   end
