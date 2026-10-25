@@ -20,9 +20,11 @@ description: >-
   with nobody assigned keeps its history through the placeholder person AWBW
   Placeholder.</li><li>Job titles from FileMaker become job affiliations.</li><li>Work
   addresses land on the organization, and the person's affiliation there points at
-  them.</li><li>Agency contact cards become organizations, and the contact person
-  they name now comes in as a person.</li></ul>
+  them.</li><li>Agency contact cards become organizations with their addresses as
+  work addresses, and a contact person they name comes in as a person
+  affiliated there, at that work address.</li></ul>
 pro_tips:
   - "An organization or affiliation already in the portal is linked rather than duplicated, and only its blank fields are filled in."
-  - "Where FileMaker says something different, the portal's value is kept and a comment on the record lists what FileMaker had."
+  - "Where FileMaker has an organization's website, mission or type differently, the portal's is kept and a comment on the organization lists what FileMaker had."
+  - "An affiliation with different dates, an address the organization doesn't have, or a new phone number comes in as its own record, leaving the portal's as it was."
 action_path: "/organizations"

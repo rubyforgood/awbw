@@ -67,7 +67,7 @@ namespace :fm do
           messages.each { |message| say.("  #{message}") }
         end
 
-        if import.differences.any?
+        if import.try(:differences).present?
           say.("\nKept the portal's value where FileMaker differs (#{import.differences.size}, also left as a comment):")
           import.differences.each { |difference| say.("  #{difference}") }
         end

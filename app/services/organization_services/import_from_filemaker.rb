@@ -164,7 +164,7 @@ module OrganizationServices
       stamp(organization, row.data)
       add_addresses(organization, @addresses.fetch(row.fm_id, []).map(&:data))
       rows.select { |source| source.is_a?(FmProject) }.each { |project| place_project(organization, project.data) }
-      add_phone(organization, @phones.fetch(row.fm_id, []).map(&:data))
+      kept += add_phones(organization, @phones.fetch(row.fm_id, []).map(&:data))
       fill_email(organization, @emails.fetch(row.fm_id, []).map { |email| email.data["EmailAddress"] })
       return failed(organization, label) unless organization.save
 
@@ -225,7 +225,7 @@ module OrganizationServices
       kept = fill(organization, website_url: clip(data["WebSite"]), mission_vision_values: clip(data["Mission"]))
       stamp(organization, data)
       add_addresses(organization, rolodex.addresses.map(&:data))
-      add_phone(organization, rolodex.phone_numbers.map(&:data))
+      kept += add_phones(organization, rolodex.phone_numbers.map(&:data))
       fill_email(organization, [ data["EMail"] ]) unless names_a_person?(data)
       outcome = agency_outcome(organization)
       return failed(organization, label) unless organization.save
@@ -403,12 +403,27 @@ module OrganizationServices
       value.to_s[/\d+/]&.to_i
     end
 
-    # The portal keeps an organization's phone on its address, so the archive's main
-    # number goes onto the primary one when that has none.
-    def add_phone(organization, rows)
-      number = rows.sort_by { |fields| flag?(fields["Primacy"]) ? 0 : 1 }.filter_map { |fields| clip(fields["PhoneNumber"].to_s.strip) }.first
-      address = organization.addresses.find(&:primary?) || organization.addresses.first
-      address.phone = number if number && address && address.phone.blank?
+    # The portal keeps an organization's phone on its addresses, so each number the archive
+    # has that no address holds yet goes onto one without a phone, the primary first. One
+    # with nowhere left to go is returned as a difference to note.
+    def add_phones(organization, rows)
+      held = organization.addresses.filter_map { |address| phone_key(address.phone) }
+      numbers = rows.sort_by { |fields| flag?(fields["Primacy"]) ? 0 : 1 }
+                    .filter_map { |fields| clip(fields["PhoneNumber"].to_s.strip) }
+                    .uniq { |number| phone_key(number) }.reject { |number| held.include?(phone_key(number)) }
+      numbers.filter_map do |number|
+        address = organization.addresses.sort_by { |held_address| held_address.primary? ? 0 : 1 }.find { |held_address| held_address.phone.blank? }
+        if address
+          address.phone = number
+          next
+        end
+
+        [ "Phone", organization.addresses.filter_map(&:phone).to_sentence.presence || "no address to hold it", number ]
+      end
+    end
+
+    def phone_key(value)
+      value.to_s.gsub(/\D/, "").presence
     end
 
     def fill_email(organization, values)
