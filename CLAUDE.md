@@ -310,6 +310,9 @@ follow this). Match the existing pattern:
 - The controller `index` branches on `turbo_frame_request?`: the frame request
   builds the filtered/paginated scope and renders the results view; otherwise it
   renders the full `index`.
+- **The skeleton request runs none of the frame's queries.** Build scopes, counts,
+  and totals only inside the `turbo_frame_request?` branch; a `@total = scope.count`
+  above the branch runs on both requests, so the page queries twice.
 - **Name the frame-response view after its Turbo frame tag id** — the
   `turbo_frame_tag` id, the controller render target, and the view filename are
   one shared `<resource>_results` token (e.g. `turbo_frame_tag :grants_results` ←
@@ -356,6 +359,27 @@ follow this). Match the existing pattern:
   :preserve` in the view, `data: { turbo_action: "replace" }` on the form, and
   `data-turbo-permanent` (plus an `id`) on any TomSelect wrapper so the morph
   doesn't strip its widget. Workshop logs is the reference.
+
+## Turbo frames & streams
+
+Rules from Justin's (jmilljr24) reviews — he built the lazy-frame pattern:
+
+- **One lazy request per page.** When several parts of a page load lazily (badges,
+  counts, panels), load them from one action, not one frame per part — each lazy
+  request holds a Puma thread, so the user's next click queues behind them. Wrap
+  the parts in one frame (admin home `action_buttons` is the reference).
+- **Keep a frame response a pure frame swap — no `<turbo-stream>` tags inside it.**
+  If a frame's response needs to update elements outside the frame, widen the
+  frame to contain them. Some older results views still tuck streams into their
+  frame; don't copy them.
+- **Answer stream requests with a `*.turbo_stream.erb` template** via
+  `respond_to { |format| format.turbo_stream }`, not inline `render turbo_stream:`
+  in the controller — the template keeps markup in views and out of actions.
+- **Don't set `turbo: false` to make something work — find the root cause.**
+  Links that leave a frame use `data: { turbo_frame: "_top" }` (or a `target: "_top"`
+  frame); keep `turbo: false` for downloads, new tabs, and pages that truly need a
+  full load. Turbo already disables a form's submitter while it submits, so a Turbo
+  form needs no double-submit guard (`submit_once` is for forms that stay non-Turbo).
 
 ## Features & tips page (`/features`)
 
