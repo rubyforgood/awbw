@@ -220,27 +220,20 @@ class EventRegistration < ApplicationRecord
     end
     scope
   }
-  scope :registrant_state, ->(state) {
-    joins(registrant: :addresses)
-      .where(addresses: { inactive: false, state: state })
-      .distinct
+  # Where the registrant works on the registration (RegistrationWorkAddresses).
+  scope :work_state, ->(state) {
+    where(id: RegistrationWorkAddresses.new(pluck(:id)).matching(state:).map(&:registration_id))
   }
   # Accepts "STATE|County" (from the manage filter) to scope to a county within
   # a specific state, or a bare county name for backward compatibility.
-  scope :registrant_county, ->(value) {
+  scope :work_county, ->(value) {
     state, county = value.to_s.include?("|") ? value.split("|", 2) : [ nil, value.to_s ]
     next none if county.blank?
-    conditions = { inactive: false, county: county }
-    conditions[:state] = state if state.present?
-    joins(registrant: :addresses).where(addresses: conditions).distinct
+    where(id: RegistrationWorkAddresses.new(pluck(:id)).matching(state:, county:).map(&:registration_id))
   }
-  scope :registrant_city, ->(term) {
-    return all if term.blank?
-    like = "%#{sanitize_sql_like(term.downcase.strip)}%"
-    joins(registrant: :addresses)
-      .where("LOWER(addresses.city) LIKE ?", like)
-      .where(addresses: { inactive: false })
-      .distinct
+  scope :work_city, ->(term) {
+    next all if term.blank?
+    where(id: RegistrationWorkAddresses.new(pluck(:id)).matching(city: term).map(&:registration_id))
   }
   scope :registrant_sector, ->(sector_id) {
     joins(registrant: :sectorable_items)

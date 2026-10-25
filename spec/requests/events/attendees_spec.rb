@@ -130,7 +130,7 @@ RSpec.describe "Events attendees", type: :request do
         get attendees_events_url(country: "Canada", state: "OR")
         # The chip labels the applied filter and its ✕ links back to the index
         # with only that param dropped (the other filters are preserved).
-        expect(response.body).to include("Country: Canada")
+        expect(response.body).to include("Org country: Canada")
         expect(Capybara.string(response.body))
           .to have_link(href: attendees_events_path(state: "OR"))
       end
@@ -341,12 +341,20 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).to include("Online Search")
         end
 
-        it "filters by a breakdown drill-in (country)" do
-          create(:address, addressable: attendee, country: "Canada", inactive: false)
+        it "filters by work country and state (via the org they registered under)" do
+          org = create(:organization, name: "Toronto Org")
+          create(:address, addressable: org, state: "ON", country: "Canada", inactive: false)
+          attendee_registration.event_registration_organizations.create!(organization: org)
           other = create(:person, first_name: "Zed", last_name: "Zulu")
+          create(:address, addressable: other, state: "OR", country: "Canada", inactive: false)
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
 
           get attendees_events_url(country: "Canada"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Zed Zulu")
+
+          org.addresses.first.update!(state: "WA", country: "United States")
+          get attendees_events_url(state: "WA"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Zed Zulu")
         end
@@ -540,23 +548,27 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).to include("Ada Lovelace")
         end
 
-        it "filters by address data (city) without requiring a registration to carry it" do
-          create(:address, addressable: attendee, city: "Portland", state: "OR", inactive: false)
+        it "filters by work city, not the person's own address" do
+          org = create(:organization)
+          create(:address, addressable: org, city: "Portland", state: "OR", inactive: false)
+          attendee_registration.event_registration_organizations.create!(organization: org)
           other = create(:person, first_name: "Cara", last_name: "Coast")
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
-          create(:address, addressable: other, city: "Seattle", state: "WA", inactive: false)
+          create(:address, addressable: other, city: "Portland", state: "OR", inactive: false)
 
           get attendees_events_url(city: "portland"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Cara Coast")
         end
 
-        # City and state have to describe one address, the way the roster's shared
-        # join does — otherwise someone with homes in two states matches a city from
-        # one and a state from the other.
-        it "matches city and state against the same address" do
-          create(:address, addressable: attendee, city: "Portland", state: "OR", inactive: false)
-          create(:address, addressable: attendee, city: "Seattle", state: "WA", inactive: false)
+        # City and state have to describe one address — otherwise someone working in
+        # two states matches a city from one and a state from the other.
+        it "matches city and state against the same work address" do
+          [ %w[Portland OR], %w[Seattle WA] ].each do |city, state|
+            org = create(:organization)
+            create(:address, addressable: org, city:, state:, inactive: false)
+            attendee_registration.event_registration_organizations.create!(organization: org)
+          end
 
           get attendees_events_url(city: "Seattle", state: "WA"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
@@ -656,7 +668,7 @@ RSpec.describe "Events attendees", type: :request do
             .at_css("turbo-stream[action='replace'][target='attendees_chips'] template")
           expect(template).to be_present
 
-          remove_link = "a[aria-label='Remove Country: Canada filter']"
+          remove_link = "a[aria-label='Remove Org country: Canada filter']"
           expect(Capybara.string(template.inner_html)).to have_selector(
             "#{remove_link}[href='#{attendees_events_path(ce_status: "issued")}']", visible: :all
           )

@@ -1,0 +1,13 @@
+name: "Registrant charts and location filters use where people work"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2842
+summary: >-
+  The cities, states, and countries charts, and the City, State, and County
+  filters on the roster, the attendees page, and the bulk email picker, now
+  use where each registrant works: the address of the organization they
+  registered under.
+pro_tips:
+  - "If the registrant picked one of the organization's addresses, that one counts. Otherwise the organization's first address on file counts."
+  - "A registrant with no organization linked on their registration has no work location, so the location filters leave them out."
