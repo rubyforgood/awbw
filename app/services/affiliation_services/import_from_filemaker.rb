@@ -8,7 +8,10 @@ module AffiliationServices
   #      closed, with a comment naming the role FileMaker gave. Only a Leader or Liaison is a
   #      primary contact — turned on for a Facilitator row the portal already had. It links
   #      an existing Facilitator row only for the same stretch (#same_stint), so separate
-  #      stints stay separate. Each carries the row's PrsnlRecID as its filemaker_code.
+  #      stints stay separate. Each carries the row's PrsnlRecID as its filemaker_code. A row
+  #      whose project wasn't imported lands at the organization on the person's Rolodex card
+  #      (created from its name when nothing matches); one naming no person — or only an
+  #      agency's own card — gets AWBW Placeholder where nothing else affiliates anyone.
   #   2. People-to-organizations (FmPeopleToOrganization) — a job at an organization, with
   #      its title, carrying the row's RecordID.
   #   3. The Rolodex card itself (FmRolodex) — the organization its OrgID (or its typed
@@ -67,6 +70,8 @@ module AffiliationServices
       @projects = FmProject.all.index_by(&:fm_id)
       @personnel_ids = FmPersonnel.pluck(:fm_id).to_set
       @job_ids = FmPeopleToOrganization.pluck(:fm_id).to_set
+      @cards = FmRolodex.where(fm_id: FmPersonnel.distinct.pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(data, '$.PersonID'))")).compact_blank)
+                        .index_by(&:fm_id)
       @unstaffed = []
       @read = 0
 
@@ -105,10 +110,12 @@ module AffiliationServices
       label = "#{row.fm_id} #{data["Name"].to_s.squish}".squish
       return record(:already_imported, label) if @affiliations.include?(row.fm_id)
 
+      card = @cards[data["PersonID"].to_s]
+      organization = organization_for(data["ProjectID"]) || card_organization(card, label)
+      return record(:skipped, "#{label}: #{missing_organization(data, card)}") unless organization
+
       people = @people.records(data["PersonID"])
-      organization = organization_for(data["ProjectID"])
-      return record(:skipped, "#{label}: project #{data["ProjectID"].presence || "(none)"} wasn't imported") unless organization
-      return @unstaffed << [ row, organization, label ] if data["PersonID"].blank?
+      return @unstaffed << [ row, organization, label ] if data["PersonID"].blank? || (people.empty? && card&.agency?)
       return record(:skipped, "#{label}: person #{data["PersonID"]} wasn't imported") if people.empty?
 
       dates = personnel_dates(data, @projects[data["ProjectID"].to_s])
@@ -118,6 +125,37 @@ module AffiliationServices
         affiliation = affiliate(person, organization, row, label, title: Affiliation::FACILITATOR_TITLE, attributes:, codes: @personnel_ids, dated: true)
         note_role(affiliation, row, role) if affiliation && role.present?
       end
+    end
+
+    # A row whose project wasn't imported (or names none) lands at the organization on the
+    # person's Rolodex card — the one its OrgID names, else the one its typed name means,
+    # created when nothing answers to it, since the person staffed a program there.
+    def card_organization(card, label)
+      return unless card
+
+      organization_for(card.data["OrgID"]) || named_organization(card.data["Organization"]) ||
+        create_card_organization(card.data["Organization"].to_s.squish, label)
+    end
+
+    def create_card_organization(name, label)
+      return if name.blank?
+
+      organization = Organization.create(name: clip(name), created_by_id: @import_user_id, updated_by_id: @import_user_id)
+      unless organization.persisted?
+        failed(organization, label)
+        return
+      end
+
+      record(:created, "#{label} → organization ##{organization.id} (#{organization.name}), named on the person's Rolodex card")
+      organization
+    end
+
+    def missing_organization(data, card)
+      project = data["ProjectID"].presence
+      prefix = project ? "project #{project} wasn't imported" : "no project"
+      return "#{prefix}, and no Rolodex card for person #{data["PersonID"].presence || "(none)"}" unless card
+
+      "#{prefix}, and the person's Rolodex card names no organization"
     end
 
     # A Personnel row naming no one still records that the program ran. Read last, once every

@@ -155,5 +155,13 @@ the real run.
 - **Merged projects** (`MergerWithID`): folded — the merged-away project's code joins the
   survivor's org, so its personnel land there. One the portal already keeps as its own org
   is reported for a hand merge rather than merged automatically.
-- **Unmatched people:** skipped and reported. A row naming no person at all gets AWBW
-  Placeholder instead, when its organization has no other affiliations (decided 2026-10-24).
+- **Unmatched people:** skipped and reported. A row naming no person at all — or only an
+  agency's own Rolodex card — gets AWBW Placeholder instead, when its organization has no
+  other affiliations (decided 2026-10-24).
+- **Personnel with no project** (27 rows in prod, none with a project on their agreement):
+  the row lands at the organization on the person's Rolodex card — its `OrgID`, else its
+  typed name, created as a new organization when nothing matches. A card naming no
+  organization is skipped and reported (decided 2026-10-25).
+- **A full accounting of what didn't come over** — every FileMaker person and organization no
+  portal record carries a code for — is a later Data health check, read through
+  `filemaker_code`.
