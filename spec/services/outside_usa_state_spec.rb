@@ -34,6 +34,30 @@ RSpec.describe OutsideUsaState do
       expect(described_class.form_field_answers(params, :public_registration)).to eq("1" => { "7" => "Ontario", "8" => "NY" })
     end
 
+    context "with a country question paired to the state" do
+      let(:form) { create(:form) }
+      let(:state) { create(:form_field, form: form, field_identifier: "mailing_state") }
+      let(:country) { create(:form_field, form: form, field_identifier: "mailing_country") }
+
+      it "records the US for a blank country beside a US state" do
+        params = params_for(form_fields: { state.id.to_s => "CA", country.id.to_s => "" })
+
+        expect(described_class.form_field_answers(params, :public_registration)[country.id.to_s]).to eq("United States")
+      end
+
+      it "leaves a blank country alone beside a typed state" do
+        params = params_for(form_fields: { state.id.to_s => "", country.id.to_s => "" }, typed: { state.id.to_s => "Ontario" })
+
+        expect(described_class.form_field_answers(params, :public_registration)[country.id.to_s]).to eq("")
+      end
+
+      it "keeps a picked country" do
+        params = params_for(form_fields: { state.id.to_s => "CA", country.id.to_s => "Mexico" })
+
+        expect(described_class.form_field_answers(params, :public_registration)[country.id.to_s]).to eq("Mexico")
+      end
+    end
+
     it "returns the answers untouched when no state was typed" do
       params = params_for(form_fields: { "1" => "CA" })
 

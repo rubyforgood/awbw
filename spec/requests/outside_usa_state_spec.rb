@@ -120,6 +120,28 @@ RSpec.describe "Outside USA? state boxes", type: :request do
       expect(FormAnswer.find_by(form_field: state_field).submitted_answer).to eq("Ontario")
     end
 
+    context "with a matching country question" do
+      let!(:country_field) { create(:form_field, form: form, name: "Country", field_identifier: "mailing_country") }
+
+      it "asks the country inside the state's Outside USA? box only" do
+        get public_form_path(form.slug)
+
+        countries = page_html.css("select[name='public_registration[form_fields][#{country_field.id}]']")
+        expect(countries.size).to eq(1)
+        expect(countries.first.ancestors("details")).to be_present
+      end
+
+      it "records the country picked in the box" do
+        post public_form_path(form.slug), params: { public_registration: {
+          Honeypot::FIELD_NAME => "",
+          form_fields: { state_field.id.to_s => "", country_field.id.to_s => "Canada" },
+          form_fields_outside_usa: { state_field.id.to_s => "Ontario" }
+        } }
+
+        expect(FormAnswer.find_by(form_field: country_field).submitted_answer).to eq("Canada")
+      end
+    end
+
     it "keeps a typed state in its box when the form comes back with errors" do
       create(:form_field, form: form, name: "Pet", field_identifier: "pet_name", required: true)
 

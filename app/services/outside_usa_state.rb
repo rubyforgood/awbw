@@ -8,12 +8,26 @@ module OutsideUsaState
   end
 
   # A form's answers, keyed by field id (or field id → resource id for fanned-out
-  # fields), with each state typed under `form_fields_outside_usa` laid over its dropdown.
+  # fields), with each state typed under `form_fields_outside_usa` laid over its dropdown
+  # and the US filled in for a paired country left blank beside a US state.
   def self.form_field_answers(params, scope)
     answers = params.dig(scope, :form_fields)&.to_unsafe_h || {}
     typed = params.dig(scope, :"form_fields#{SUFFIX}")&.to_unsafe_h || {}
-    answers.deep_merge(filled(typed))
+    with_us_countries(answers.deep_merge(filled(typed)))
   end
+
+  # A paired country question sits in the state's closed "Outside USA?" box, so
+  # someone who picked a US state leaves it blank; record the US for them.
+  def self.with_us_countries(answers)
+    FormField.where(id: answers.keys).where("field_identifier LIKE ?", "%\\#{FormField::STATE_SUFFIX}").find_each do |state_field|
+      next unless answers[state_field.id.to_s].in?(Address::US_STATE_ABBREVIATIONS)
+
+      country_key = state_field.paired_country_field&.id&.to_s
+      answers[country_key] = Address::DEFAULT_COUNTRY if country_key && answers.key?(country_key) && answers[country_key].blank?
+    end
+    answers
+  end
+  private_class_method :with_us_countries
 
   def self.filled(typed)
     typed.each_with_object({}) do |(key, value), result|
