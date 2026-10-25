@@ -162,17 +162,18 @@ class ReminderRecipientFilter
       .compact_blank.map(&:downcase)
   end
 
-  # Text filters accept several values separated by "--" and match a registrant
-  # when ANY of them hits (e.g. "amy--aisha" keeps both Amy and Aisha). Single
-  # hyphens inside a value are preserved. Returns true when no term was typed.
+  # The grammar every search box in the app shares (ContactSearchable): the words
+  # inside an alternative all have to match, and "--" keeps either (e.g.
+  # "amy--aisha" keeps both Amy and Aisha). Single hyphens inside a value are
+  # preserved. Returns true when no term was typed.
   def any_term?(key)
     tokens = terms_for(key)
     return true if tokens.empty?
-    tokens.any? { |token| yield token }
+    tokens.any? { |token| token.split(/\s+/).all? { |word| yield word } }
   end
 
   def terms_for(key)
-    @params[key].to_s.downcase.split("--").map(&:strip).reject(&:blank?)
+    ContactSearchable.alternatives(@params[key].to_s.downcase)
   end
 
   def all_registration_ids

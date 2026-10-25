@@ -680,22 +680,22 @@ RSpec.describe Person, type: :model do
       expect(results).to include(person_alice, person_bob)
     end
 
-    it 'filters by contact_info matching name' do
-      results = Person.search_by_params(contact_info: 'Alice')
+    it 'filters by name_email matching name' do
+      results = Person.search_name_email('Alice')
       expect(results).to include(person_alice)
       expect(results).not_to include(person_bob)
     end
 
-    it 'filters by contact_info matching legal first name' do
+    it 'filters by name_email matching legal first name' do
       person_carol = create(:person, first_name: 'Carol', legal_first_name: 'Caroline', last_name: 'White')
 
-      results = Person.search_by_params(contact_info: 'Caroline')
+      results = Person.search_name_email('Caroline')
       expect(results).to include(person_carol)
       expect(results).not_to include(person_alice, person_bob)
     end
 
-    it 'filters by contact_info matching email' do
-      results = Person.search_by_params(contact_info: 'bob@example')
+    it 'filters by name_email matching email' do
+      results = Person.search_name_email('bob@example')
       expect(results).to include(person_bob)
       expect(results).not_to include(person_alice)
     end
@@ -774,24 +774,24 @@ RSpec.describe Person, type: :model do
       expect(Person.search_by_params(shared_contact_info: 'Smith')).to include(person_alice)
     end
 
-    it 'filters by contact_info matching an email the person hides' do
+    it 'filters by name_email matching an email the person hides' do
       person_alice.update!(email: 'alice@example.com', profile_show_email: false)
 
-      expect(Person.search_by_params(contact_info: 'alice@example')).to include(person_alice)
+      expect(Person.search_name_email('alice@example')).to include(person_alice)
     end
 
     %w[first_name_last_initial first_name_only].each do |preference|
-      it "filters by contact_info matching the last name when the display preference is #{preference}" do
+      it "filters by name_email matching the last name when the display preference is #{preference}" do
         person_alice.update!(display_name_preference: preference)
 
-        expect(Person.search_by_params(contact_info: 'Smith')).to include(person_alice)
+        expect(Person.search_name_email('Smith')).to include(person_alice)
       end
     end
 
-    it 'filters by contact_info matching the first name when the display preference is last_name_only' do
+    it 'filters by name_email matching the first name when the display preference is last_name_only' do
       person_alice.update!(display_name_preference: 'last_name_only', profile_show_email: false)
 
-      expect(Person.search_by_params(contact_info: 'Alice')).to include(person_alice)
+      expect(Person.search_name_email('Alice')).to include(person_alice)
     end
 
     it 'chains shared_contact_info and organization_name' do
@@ -806,8 +806,8 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_bob)
     end
 
-    it 'chains contact_info and organization_name' do
-      results = Person.search_by_params(contact_info: 'Alice', organization_name: 'Alpha')
+    it 'chains the name search onto a search_by_params filter, the way the index does' do
+      results = Person.search_by_params(organization_name: 'Alpha').search_name_email('Alice')
       expect(results).to include(person_alice)
       expect(results).not_to include(person_bob)
     end

@@ -1779,6 +1779,43 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Any status")
       end
 
+      # The roster keyword box speaks the grammar every other box does
+      # (ContactSearchable): words AND, "--" is either.
+      it "narrows the roster by either of two keywords" do
+        amy = create(:person, first_name: "Amykeyword", last_name: "One")
+        aisha = create(:person, first_name: "Aishakeyword", last_name: "Two")
+        sam = create(:person, first_name: "Samkeyword", last_name: "Three")
+        [ amy, aisha, sam ].each { |registrant| create(:event_registration, event: event, registrant: registrant) }
+
+        get registrants_event_path(event, keyword: "amykeyword--aishakeyword")
+
+        expect(response.body).to include("Amykeyword", "Aishakeyword")
+        expect(response.body).not_to include("Samkeyword")
+      end
+
+      it "makes every word in a roster keyword match, in any order" do
+        match = create(:person, first_name: "Amykeyword", last_name: "Joneskeyword")
+        half = create(:person, first_name: "Amykeyword", last_name: "Daviskeyword")
+        [ match, half ].each { |registrant| create(:event_registration, event: event, registrant: registrant) }
+
+        get registrants_event_path(event, keyword: "joneskeyword amykeyword")
+
+        expect(response.body).to include("Joneskeyword")
+        expect(response.body).not_to include("Daviskeyword")
+      end
+
+      it "ANDs the words inside each roster alternative and ORs the alternatives" do
+        amy = create(:person, first_name: "Amykeyword", last_name: "Joneskeyword")
+        mary = create(:person, first_name: "Marykeyword", last_name: "Daviskeyword")
+        mixed = create(:person, first_name: "Amykeyword", last_name: "Daviskeyword")
+        [ amy, mary, mixed ].each { |registrant| create(:event_registration, event: event, registrant: registrant) }
+
+        get registrants_event_path(event, keyword: "amykeyword joneskeyword--marykeyword daviskeyword")
+
+        expect(response.body).to include("Joneskeyword", "Marykeyword")
+        expect(response.body).not_to include("Amykeyword Daviskeyword")
+      end
+
       it "narrows the roster by work city" do
         here = create(:person, first_name: "Cityful", last_name: "Local")
         there = create(:person, first_name: "Faraway", last_name: "Person")

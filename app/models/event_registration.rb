@@ -511,26 +511,34 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  KEYWORD_MATCH_SQL = <<~SQL.freeze
+    LOWER(people.first_name) LIKE :term
+    OR LOWER(people.legal_first_name) LIKE :term
+    OR LOWER(people.last_name) LIKE :term
+    OR LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :term
+    OR LOWER(CONCAT(people.legal_first_name, ' ', people.last_name)) LIKE :term
+    OR LOWER(users.email) LIKE :term
+    OR LOWER(people.email) LIKE :term
+    OR LOWER(contact_methods.value) LIKE :term
+    OR LOWER(addresses.city) LIKE :term
+    OR LOWER(addresses.phone) LIKE :term
+    OR LOWER(organizations.name) LIKE :term
+  SQL
+  # The grammar every search box in the app shares (ContactSearchable): the words
+  # inside an alternative all have to match, and "amy--aisha" keeps either. Each
+  # word asks the whole OR block above, so "jones amy" finds Amy Jones the same as
+  # "amy jones" — the CONCAT rows are what used to carry that, for one word order.
   scope :keyword, ->(term) {
-    return none if term.blank?
+    alternatives = ContactSearchable.alternatives(term).map { |value| value.split(/\s+/) }
+    next none if alternatives.empty?
 
-    sanitized = "%#{sanitize_sql_like(term.downcase.strip)}%"
-    left_joins(registrant: [ :user, :contact_methods, :addresses, { affiliations: [ :organization ] } ])
+    joined = left_joins(registrant: [ :user, :contact_methods, :addresses, { affiliations: [ :organization ] } ])
       .left_joins(registrant: { affiliations: { organization: :addresses } })
-      .where(
-        "LOWER(people.first_name) LIKE :term
-        OR LOWER(people.legal_first_name) LIKE :term
-        OR LOWER(people.last_name) LIKE :term
-        OR LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :term
-        OR LOWER(CONCAT(people.legal_first_name, ' ', people.last_name)) LIKE :term
-        OR LOWER(users.email) LIKE :term
-        OR LOWER(people.email) LIKE :term
-        OR LOWER(contact_methods.value) LIKE :term
-        OR LOWER(addresses.city) LIKE :term
-        OR LOWER(addresses.phone) LIKE :term
-        OR LOWER(organizations.name) LIKE :term",
-        term: sanitized
-      )
+    alternatives
+      .map { |words|
+        words.reduce(joined) { |scope, word| scope.where(KEYWORD_MATCH_SQL, term: "%#{sanitize_sql_like(word.downcase)}%") }
+      }
+      .reduce(:or)
       .distinct
   }
 

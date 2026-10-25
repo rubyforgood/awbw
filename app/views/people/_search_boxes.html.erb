@@ -9,7 +9,7 @@
   <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
     <!-- Name or email -->
     <%= render "shared/filter_text", param: :name_email, label: "Name or email", submit: true,
-          wrapper_class: "w-full md:flex-1" %>
+          tooltip: ContactSearchable::SEARCH_SYNTAX_HINT, wrapper_class: "w-full md:flex-1" %>
 
     <!-- Organization name -->
     <%= render "shared/filter_text", param: :organization_name, label: "Organization", submit: true,
@@ -74,7 +74,7 @@
         <!-- Contact info (admin only) -->
         <%= render "shared/filter_text", param: :contact_info, label: "Contact info", submit: true,
               wrapper_class: "w-full",
-              tooltip: "Prefixes: phone:, street:, city:, state:, zip:, county:, country:" %>
+              tooltip: ContactSearchable::CONTACT_SEARCH_HINT %>
       </div>
     </div>
   <% end %>

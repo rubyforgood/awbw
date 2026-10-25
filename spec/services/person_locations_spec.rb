@@ -148,6 +148,45 @@ RSpec.describe PersonLocations do
     end
   end
 
+  describe ".parse_query" do
+    it "reads prefixes, quoted values and bare terms" do
+      expect(described_class.parse_query('city: austin state: TX')).to eq(city: "austin", state: "TX")
+      expect(described_class.parse_query('locality: "Outside CA"')).to eq(locality: "Outside CA")
+      expect(described_class.parse_query("zip: 78701 la_council: 3")).to eq(zip_code: "78701", la_city_council_district: "3")
+    end
+
+    # A mistyped prefix should show too much, not an empty page nobody can explain.
+    it "keeps a bare term and an unknown prefix as an any-field term" do
+      expect(described_class.parse_query("austin")).to eq(any: [ "austin" ])
+      expect(described_class.parse_query("citty: austin")).to eq(any: [ "citty:austin" ])
+    end
+
+    it "is empty for a blank query" do
+      expect(described_class.parse_query(nil)).to eq({})
+    end
+  end
+
+  describe "#matching with a bare term" do
+    before do
+      create(:address, addressable: organization, city: "Austin", state: "TX",
+             county: "Travis", locality: Address::OUTSIDE_CA, zip_code: "78701")
+    end
+
+    it "matches any location field on the row" do
+      expect(locations.matching(any: [ "travis" ])).to be_present
+      expect(locations.matching(any: [ "787" ])).to be_present
+      expect(locations.matching(any: [ "Outside CA" ])).to be_present
+      expect(locations.matching(any: [ "boise" ])).to be_empty
+    end
+
+    it "makes every term hold, alongside the prefixed ones" do
+      expect(locations.matching(any: [ "austin", "travis" ])).to be_present
+      expect(locations.matching(any: [ "austin", "boise" ])).to be_empty
+      expect(locations.matching(state: "TX", any: [ "travis" ])).to be_present
+      expect(locations.matching(state: "OR", any: [ "travis" ])).to be_empty
+    end
+  end
+
   describe ".filters_from" do
     it "folds the county option's own state into the state filter" do
       expect(described_class.filters_from(county: "CA|Los Angeles")).to eq(state: "CA", county: "Los Angeles")

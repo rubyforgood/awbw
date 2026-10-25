@@ -25,6 +25,9 @@ class Person < ApplicationRecord
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :active_phones, -> { phone.where(inactive: false) }, as: :contactable, class_name: "ContactMethod"
+  # Searching someone up reads their live addresses only: a retired one is still
+  # the right place to SHOW them (Address::STANDING) but a wrong place to find them.
+  has_many :active_addresses, -> { active }, as: :addressable, class_name: "Address", inverse_of: :addressable
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
@@ -208,26 +211,18 @@ class Person < ApplicationRecord
     options :all, type: :text, default: true, default_operator: :or
   end
 
-  search_scope :search_name_email do
+  search_scope :name_email_matches do
     attributes :first_name, :legal_first_name, :last_name, :email, :email_2
     attributes all: [ :first_name, :legal_first_name, :last_name, :email, :email_2 ]
-    options :all, type: :text, default: true, default_operator: :or
+    # "amy jones" means the one person, not everyone called either. See
+    # ContactSearchable for the shared grammar.
+    options :all, type: :text, default: true, default_operator: :and
   end
+  # Takes the app's `--` for "either", the same as the Contact info box beside it.
+  scope :search_name_email, ->(query) { name_email_matches(ContactSearchable.expand_alternatives(query)) }
 
-  search_scope :search_contact do
-    scope { left_joins(:contact_methods, :addresses) }
-    attributes phone:   "contact_methods.value"
-    attributes street:  "addresses.street_address"
-    attributes city:    "addresses.city"
-    attributes state:   "addresses.state"
-    attributes zip:     "addresses.zip_code"
-    attributes county:  "addresses.county"
-    attributes country: "addresses.country"
-    attributes all: [ "contact_methods.value",
-                      "addresses.street_address", "addresses.city", "addresses.state",
-                      "addresses.zip_code", "addresses.county", "addresses.country" ]
-    options :all, type: :text, default: true, default_operator: :or
-  end
+  include ContactSearchable
+  searches_contact :contact_methods, :active_addresses
 
   FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
   LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
@@ -447,7 +442,6 @@ class Person < ApplicationRecord
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
-    results = results.search(params[:contact_info]) if params[:contact_info].present?
     results = results.shared_contact_search(params[:shared_contact_info]) if params[:shared_contact_info].present?
     results = results.by_role(params[:role]) if params[:role].present?
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?

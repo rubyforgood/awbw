@@ -41,6 +41,7 @@
   <% primary_text.each do |f| %>
     <%= render "shared/filter_text", param: f[:param], label: f[:label], placeholder: f[:placeholder],
           field_class: field_class, label_class: label_class, submit: f[:search],
+          tooltip: ContactSearchable::SEARCH_SYNTAX_HINT,
           wrapper_class: f[:search] ? "w-full md:flex-1 md:min-w-0" : "w-full md:w-48" %>
   <% end %>
 

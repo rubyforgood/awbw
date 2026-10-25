@@ -44,6 +44,17 @@ RSpec.describe ReminderRecipientFilter do
       expect(matched({ name: "amy--aisha" }, [ amy, aisha, sam ])).to eq([ amy.id, aisha.id ].to_set)
     end
 
+    # The grammar every box shares: words AND inside an alternative, alternatives OR.
+    it "makes every word match, in any order, and ORs across --" do
+      amy = registration(first_name: "Amy", last_name: "Jones")
+      mary = registration(first_name: "Mary", last_name: "Davis")
+      mixed = registration(first_name: "Amy", last_name: "Davis")
+      regs = [ amy, mary, mixed ]
+
+      expect(matched({ name: "jones amy" }, regs)).to eq([ amy.id ].to_set)
+      expect(matched({ name: "amy jones--mary davis" }, regs)).to eq([ amy.id, mary.id ].to_set)
+    end
+
     it "preserves single hyphens inside a name term" do
       hyphen = registration(first_name: "Mary", last_name: "Jane-Wells")
       other = registration(first_name: "Sam")
