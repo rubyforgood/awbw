@@ -54,7 +54,7 @@
     <% if active_rows.any? %>
       <%= render "affiliations/header", label: label %>
     <% else %>
-      <p class="py-4 text-center text-sm text-gray-500">No active affiliations.</p>
+      <p class="py-4 text-center text-sm text-gray-500"><%= rows.any? ? "No active affiliations." : "No affiliations yet." %></p>
     <% end %>
     <% active_rows.each do |affiliation, index| %>
       <%= f.fields_for :affiliations, affiliation, child_index: index do |affiliation_form| %>
@@ -70,7 +70,7 @@
        data-controller="paginated-fields" data-paginated-fields-per-page-value="10">
     <% if inactive_rows.any? %>
       <%= render "affiliations/header", label: label %>
-    <% else %>
+    <% elsif rows.any? %>
       <p class="py-4 text-center text-sm text-gray-500">No inactive affiliations.</p>
     <% end %>
     <% inactive_rows.each do |affiliation, index| %>

@@ -91,6 +91,16 @@ RSpec.describe Address, type: :model do
     end
   end
 
+  describe "text field line breaks" do
+    it "drops blank lines and surrounding whitespace, keeping one break between real lines" do
+      address = build(:address, street_address: "  12 Main St \r\n\r\n\n Suite 4 \n", city: "Los Angeles\n\n", county: "\n")
+
+      expect(address.street_address).to eq("12 Main St\nSuite 4")
+      expect(address.city).to eq("Los Angeles")
+      expect(address.county).to eq("")
+    end
+  end
+
   describe "#display_lines" do
     it "renders the street line and a combined city, state zip line" do
       address = build(:address, street_address: "123 Main St", city: "Springfield",

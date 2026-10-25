@@ -41,6 +41,8 @@ class Address < ApplicationRecord
   has_many :affiliations, foreign_key: :organization_address_id, dependent: :nullify, inverse_of: :organization_address
 
   before_validation :type_as_unknown
+  normalizes :street_address, :city, :zip_code, :district, :county, :phone,
+             with: ->(value) { value.lines.map(&:strip).compact_blank.join("\n") }
 
   validates :locality, presence: true
   validates :city, presence: true, length: { maximum: 255 }

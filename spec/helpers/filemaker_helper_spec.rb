@@ -184,6 +184,21 @@ RSpec.describe FilemakerHelper, type: :helper do
     it "explains the comma-separated format for a record without codes" do
       expect(helper.filemaker_code_hint(build(:person, filemaker_code: nil))).to eq("Comma-separated if multiple")
     end
+
+    it "leads with the kind of code when one is named" do
+      expect(helper.filemaker_code_hint(build(:organization, filemaker_code: nil), kind: "Project or organization ID"))
+        .to eq("Project or organization ID, comma-separated if multiple")
+    end
+
+    it "names the kind of code in front of its archive links" do
+      FmProject.create!(fm_id: "P2775")
+
+      html = helper.filemaker_code_hint(build(:organization, filemaker_code: "P2775"), kind: "Project or organization ID")
+
+      expect(html).to include("Project or organization ID:")
+      expect(html).not_to include("In the archive:")
+      expect(html).to include("P2775</a>")
+    end
   end
 
   describe "#filemaker_organization_links" do

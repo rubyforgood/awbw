@@ -1,0 +1,31 @@
+<%# locals: (person:) %>
+<% affiliations = person.decorate.work_address_affiliations %>
+<% if affiliations.any? %>
+  <div class="mb-3 space-y-2">
+    <% affiliations.each do |affiliation| %>
+      <% address = affiliation.organization_address %>
+      <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+        <div class="flex min-w-0 flex-wrap items-center gap-2">
+          <span class="<%= DomainTheme.bg_class_for(:organizations, intensity: 200) %> <%= DomainTheme.text_class_for(:organizations, intensity: 900) %> rounded-full px-2 py-0.5 text-xs font-medium">Work</span>
+          <span class="font-semibold text-gray-800"><%= address.name %></span>
+          <span class="text-sm text-gray-600">at <%= affiliation.organization.name %></span>
+          <% if address.phone.present? %>
+            <span class="text-sm text-gray-600"><i class="fa-solid fa-phone text-xs text-gray-400" aria-hidden="true"></i> <%= address.phone %></span>
+          <% end %>
+        </div>
+        <% if allowed_to?(:manage?, Person) %>
+          <%= link_to edit_organization_path(affiliation.organization, highlight_address: address.id, return_to: "person_edit",
+                                                                       person_id: person.id, anchor: "address-#{address.id}"),
+                      class: "text-sm #{eyebrow_link_class}" do %>
+            Edit on organization <i class="fa-solid fa-arrow-right text-xs"></i>
+          <% end %>
+        <% else %>
+          <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id),
+                      target: "_blank", rel: "noopener", class: button_classes(:secondary_outline, size: :sm) do %>
+            Request a change <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

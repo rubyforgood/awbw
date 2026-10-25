@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~146 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~153 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~155 files |
 | `app/jobs/` | SolidQueue background jobs | 6 files |
 | `app/models/concerns/` | Shared model modules | 25 concerns |
 
@@ -219,6 +219,7 @@ comparison — add a rule if none fits (e.g. `PersonPolicy#own_profile?`). Conve
 - `Analytics::AnonymizeSubmissionEvents` — Strips the actor from the Ahoy events a form submission, its answers, their uploads, and the quotes captured from it left behind (nils `user_id` and `visit_id`, drops `person_id`/`created_by_id`/`updated_by_id` from the recorded attributes/changes) while keeping the events. Run by `CalloutFormSubmission` when a credited submission to an anonymous form goes anonymous
 - `Analytics::AhoyTracker` — Coordinates ahoy event tracking
 - `Analytics::PersonActivityEvents` — Aggregates Ahoy events for a person, their user, and associated data (powers the person edit History card + `person_id` filter on the Ahoy activities index)
+- `Analytics::OrganizationActivityEvents` — An organization's own Ahoy events plus its addresses' (deleted ones matched through their delete snapshot), passed as `events:` to `application/_activity_log` on the org edit page so a merged-away address stays in the org's Change log
 - `Analytics::EventReferenceLoader` — Batch-loads the records referenced in a page of Ahoy event properties (association changes, associated records), one query per type, so the activity table's Details column links each to its show page without an N+1
 - `Analytics::ContentCreationBreakdown` — Counts content created in the selected time range for the Ahoy charts page's Total / User-generated / Admin-generated cards. Each record is credited by its author's account (super_user → admin), falling back to the creating account when no author is set, so promoted ideas and admin-entered facilitator content land on the user side and the two cards always sum to the total
 

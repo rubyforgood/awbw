@@ -21,6 +21,28 @@ class PersonDecorator < ApplicationDecorator
     avatar
   end
 
+  # Each address phone numbered by its address's position on the edit form, skipping
+  # any already entered as a phone (compared by digits, so formatting doesn't matter).
+  def address_phones
+    addresses.each_with_index.filter_map do |address, index|
+      [ index + 1, address.phone ] if unlisted_phone?(address.phone)
+    end
+  end
+
+  # Each linked work address phone with its organization's name, skipping any already entered as a phone.
+  def work_address_phones
+    work_address_affiliations.filter_map do |affiliation|
+      phone = affiliation.organization_address.phone
+      [ affiliation.organization.name, phone ] if unlisted_phone?(phone)
+    end
+  end
+
+  # Active affiliations pointing at one of their organization's addresses, one per address.
+  def work_address_affiliations
+    affiliations.active.where.not(organization_address_id: nil)
+      .includes(:organization, :organization_address).order(:id).uniq(&:organization_address_id)
+  end
+
   # A person may hold only one uncancelled membership (Membership enforces it), so
   # more than one usually means a duplicate a merge left behind — flagged for admins
   # on the profile and edit pages so they can consolidate. Cancelled historical
@@ -190,6 +212,13 @@ class PersonDecorator < ApplicationDecorator
   end
 
   private
+
+  def unlisted_phone?(phone)
+    return false if phone.blank?
+
+    @listed_phone_digits ||= contact_methods.map { |contact_method| contact_method.value.to_s.gsub(/\D/, "") }.to_set
+    !@listed_phone_digits.include?(phone.gsub(/\D/, ""))
+  end
 
   def profile_piece_content?(flag)
     case flag
