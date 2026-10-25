@@ -1,8 +1,6 @@
 # `submitted_answer` is stored verbatim — exactly what the applicant typed — so
 # their words are never silently altered (e.g. "revenue < $5k" or "C++ <T>"
-# survive intact). It is NOT HTML-sanitized on write. The one exception is the
-# address country/state answers, which AddressServices::TranslateExisting rewrites
-# as the dropdowns store them (ADR-0009), logging every change as an Ahoy event.
+# survive intact). It is NOT HTML-sanitized on write.
 #
 # Safety is enforced at render time instead: every place that displays an answer
 # uses plain `<%= %>`, which auto-escapes, so any markup shows as inert text.
