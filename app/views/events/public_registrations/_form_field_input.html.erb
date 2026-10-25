@@ -40,15 +40,25 @@
   <% case field.answer_type %>
   <% when "free_form_input_one_line" %>
     <% if field.field_identifier&.end_with?("_state") %>
+      <%# Not `required`: a registrant abroad leaves it blank and types in the box below. %>
+      <% state = OutsideUsaState.pick(value, params.dig(param_scope, "form_fields#{OutsideUsaState::SUFFIX}", field.id.to_s, *resource&.id&.to_s)) %>
       <select name="<%= field_name %>"
               id="<%= field_id %>"
-              class="<%= input_classes %>"
-              <%= "required" if required %>>
+              class="<%= input_classes %>">
         <option value="">Select a state</option>
         <% us_states.each do |name, abbr| %>
-          <option value="<%= abbr %>" <%= "selected" if value == abbr %>><%= name %> (<%= abbr %>)</option>
+          <option value="<%= abbr %>" <%= "selected" if state == abbr %>><%= name %> (<%= abbr %>)</option>
         <% end %>
       </select>
+      <%= render layout: "shared/outside_usa", locals: { open: outside_usa_state?(state) } do %>
+        <input type="text"
+               name="<%= param_scope %>[form_fields<%= OutsideUsaState::SUFFIX %>][<%= field.id %>]<%= "[#{resource.id}]" if resource %>"
+               id="<%= field_id %><%= OutsideUsaState::SUFFIX %>"
+               value="<%= state if outside_usa_state?(state) %>"
+               placeholder="State / province"
+               aria-label="State or province"
+               class="<%= input_classes %>">
+      <% end %>
     <% elsif field.field_identifier&.end_with?("_country") %>
       <% selected_country = value.to_s.strip %>
       <select name="<%= field_name %>"

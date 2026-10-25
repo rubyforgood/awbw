@@ -16,8 +16,15 @@
   <%= f.input :proposed_street_address, label: "Street", required: false, input_html: { class: "w-full", autocomplete: "address-line1" } %>
   <div class="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_8rem]">
     <%= f.input :proposed_city, label: "City", required: false, wrapper_html: { class: "mb-0" }, input_html: { class: "w-full", autocomplete: "address-level2" } %>
-    <%= f.input :proposed_state, label: "State", as: :select, required: false, collection: state_select_options(f.object.proposed_state),
-                include_blank: true, wrapper_html: { class: "mb-0" }, input_html: { class: "w-full", autocomplete: "address-level1" } %>
+    <div>
+      <%= f.input :proposed_state, label: "State", as: :select, required: false, collection: us_states,
+                  selected: (f.object.proposed_state unless outside_usa_state?(f.object.proposed_state)),
+                  include_blank: true, wrapper_html: { class: "mb-0" }, input_html: { class: "w-full", autocomplete: "address-level1" } %>
+      <%= render layout: "shared/outside_usa", locals: { open: outside_usa_state?(f.object.proposed_state) } do %>
+        <%= f.input :proposed_state_outside_usa, label: "State / province", required: false, wrapper_html: { class: "mb-0" },
+                    input_html: { value: (f.object.proposed_state if outside_usa_state?(f.object.proposed_state)), class: "w-full" } %>
+      <% end %>
+    </div>
     <%= f.input :proposed_zip_code, label: "ZIP code", required: false, wrapper_html: { class: "mb-0" }, input_html: { class: "w-full", autocomplete: "postal-code" } %>
   </div>
 </fieldset>

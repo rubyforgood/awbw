@@ -1,5 +1,9 @@
 class ProfessionalLicense < ApplicationRecord
+  include OutsideUsaTypeable
+
   has_paper_trail
+
+  typed_outside_usa :issuing_state
 
   belongs_to :person
   belongs_to :created_by, class_name: "User", optional: true

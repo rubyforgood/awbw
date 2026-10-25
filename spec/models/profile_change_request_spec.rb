@@ -242,6 +242,12 @@ RSpec.describe ProfileChangeRequest, type: :model do
     end
   end
 
+  describe "#proposed_state_outside_usa=" do
+    it "takes the place of the dropdown's state" do
+      expect(described_class.new(proposed_state: "", proposed_state_outside_usa: "Ontario").proposed_state).to eq("Ontario")
+    end
+  end
+
   describe "#auto_appliable?" do
     it "is true for the email fields and organization_name, false for affiliation" do
       expect(build(:profile_change_request, :primary_email)).to be_auto_appliable

@@ -104,7 +104,9 @@ class ContinuingEducationRegistrationsController < ApplicationController
   def apply_ce_params(ce_registration)
     ce_registration.assign_license(number: params.dig(:continuing_education_registration, :license_number),
                                    kind: params.dig(:continuing_education_registration, :license_kind),
-                                   issuing_state: params.dig(:continuing_education_registration, :license_issuing_state),
+                                   issuing_state: OutsideUsaState.pick(params.dig(:continuing_education_registration, :license_issuing_state),
+                                                                       params.dig(:continuing_education_registration, :license_issuing_state_outside_usa)),
+                                   issuing_country: params.dig(:continuing_education_registration, :license_issuing_country),
                                    expires_on: params.dig(:continuing_education_registration, :license_expires_on),
                                    license_id: params.dig(:continuing_education_registration, :professional_license_id))
     ce_registration.hours = params.dig(:continuing_education_registration, :hours)

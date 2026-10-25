@@ -248,6 +248,7 @@ class OrganizationsController < ApplicationController
         :street_address,
         :city,
         :state,
+        :state_outside_usa,
         :zip_code,
         :county,
         :country,

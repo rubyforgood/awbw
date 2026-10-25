@@ -1,4 +1,6 @@
 class ProfileChangeRequest < ApplicationRecord
+  include OutsideUsaTypeable
+
   belongs_to :person
   belongs_to :requested_by, class_name: "User"
   belongs_to :reviewed_by, class_name: "User", optional: true
@@ -8,6 +10,8 @@ class ProfileChangeRequest < ApplicationRecord
   belongs_to :affiliation, optional: true
   belongs_to :professional_license, optional: true
   belongs_to :proposed_organization_address, class_name: "Address", optional: true
+
+  typed_outside_usa :proposed_state
 
   OTHER_FIELD = "other".freeze
   LICENSE_FIELD = "professional_license".freeze

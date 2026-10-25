@@ -181,7 +181,7 @@ class Person < ApplicationRecord
   # A blank row (number + kind + state + expiry all empty) is ignored rather than
   # creating an empty license.
   accepts_nested_attributes_for :professional_licenses, allow_destroy: true,
-    reject_if: proc { |attrs| attrs.slice("number", "kind", "issuing_state", "expires_on").values.all?(&:blank?) }
+    reject_if: proc { |attrs| attrs.slice("number", "kind", "issuing_state", "issuing_state_outside_usa", "issuing_country", "expires_on").values.all?(&:blank?) }
 
   # Search Cop
   include SearchCop

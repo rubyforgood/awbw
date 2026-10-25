@@ -25,7 +25,8 @@ class ContinuingEducationRegistration < ApplicationRecord
   # them from params and routes them through #assign_license; declared here so the
   # form builder can bind to them (SimpleForm reads the object when a field's
   # value is nil, e.g. a blank expiry on a placeholder license).
-  attr_accessor :license_kind, :license_number, :license_issuing_state, :license_expires_on
+  attr_accessor :license_kind, :license_number, :license_issuing_state, :license_issuing_state_outside_usa,
+                :license_issuing_country, :license_expires_on
 
   # Set when the transfer flow creates the destination record with a deliberately
   # snapshotted hours/cost (including a $0 cost), so #default_from_event doesn't
@@ -160,10 +161,11 @@ class ContinuingEducationRegistration < ApplicationRecord
   # wins, to avoid duplicating or colliding on the unique (person, number) index.
   # Does not save the registration itself — callers persist it alongside their other
   # changes.
-  def assign_license(number:, kind:, issuing_state: nil, expires_on: nil, license_id: nil)
+  def assign_license(number:, kind:, issuing_state: nil, issuing_country: nil, expires_on: nil, license_id: nil)
     number = number.to_s.strip.presence
     kind = kind.to_s.strip.presence
     issuing_state = issuing_state.to_s.strip.presence
+    issuing_country = issuing_country.presence
     expires_on = expires_on.presence
     current = professional_license
     person = event_registration.registrant
@@ -171,7 +173,7 @@ class ContinuingEducationRegistration < ApplicationRecord
     if license_id.present? && license_id != "new"
       picked = person.professional_licenses.find_by(id: license_id)
       if picked
-        picked.update!(number: number, kind: kind, issuing_state: issuing_state, expires_on: expires_on)
+        picked.update!(number: number, kind: kind, issuing_state: issuing_state, issuing_country: issuing_country, expires_on: expires_on)
         self.professional_license = picked
         return
       end
@@ -184,7 +186,7 @@ class ContinuingEducationRegistration < ApplicationRecord
       self.professional_license = match
     else
       target = license_id == "new" ? person.professional_licenses.new : current
-      target.update!(number: number, kind: kind, issuing_state: issuing_state, expires_on: expires_on)
+      target.update!(number: number, kind: kind, issuing_state: issuing_state, issuing_country: issuing_country, expires_on: expires_on)
       self.professional_license = target
     end
   end

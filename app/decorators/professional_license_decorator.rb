@@ -4,7 +4,16 @@ class ProfessionalLicenseDecorator < ApplicationDecorator
   # One line identifying the license, e.g. "LMFT · 12345 · CA · expires June 30, 2027".
   def summary
     expires = "expires #{expires_on.to_fs(:long)}" if expires_on
-    [ kind, number, issuing_state, expires ].compact_blank.join(" · ")
+    [ kind, number, issuing_place, expires ].compact_blank.join(" · ")
+  end
+
+  # "CA", or "Ontario, Canada" for a license issued outside the USA.
+  def issuing_place
+    [ issuing_state, (issuing_country if foreign_country?) ].compact_blank.join(", ")
+  end
+
+  def outside_usa?
+    h.outside_usa_state?(issuing_state) || foreign_country?
   end
 
   # Status pill combining validity + expiry date: expired on / expiring soon /
@@ -43,6 +52,10 @@ class ProfessionalLicenseDecorator < ApplicationDecorator
   end
 
   private
+
+  def foreign_country?
+    issuing_country.present? && issuing_country != Address::DEFAULT_COUNTRY
+  end
 
   # Sum CE hours from registrations whose certificate has been sent, optionally
   # narrowed by the given block. Whole totals drop the decimal.

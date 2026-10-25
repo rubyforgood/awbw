@@ -44,6 +44,25 @@ RSpec.describe "State field on address forms", type: :request do
       expect(added.at_css("select[name$='[locality]'] option[selected]")["value"]).to eq("Outside USA")
     end
 
+    it "offers an Outside USA? box beside the US-state dropdown" do
+      create(:address, addressable: person, state: "CA", country: "United States")
+
+      get edit_person_path(person)
+
+      expect(Nokogiri::HTML(response.body).at_css("details input[name$='[state_outside_usa]']")).to be_present
+    end
+
+    it "saves a state typed in the Outside USA? box" do
+      address = create(:address, addressable: person, state: "CA", country: "United States")
+
+      patch person_path(person), params: { person: { addresses_attributes: { "0" => {
+        id: address.id, city: address.city, street_address: address.street_address, zip_code: address.zip_code,
+        state: "", state_outside_usa: "Ontario"
+      } } } }
+
+      expect(address.reload.state).to eq("Ontario")
+    end
+
     it "ignores admin=true" do
       create(:address, addressable: person, state: "CA", country: "United States")
 

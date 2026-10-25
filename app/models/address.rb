@@ -1,4 +1,6 @@
 class Address < ApplicationRecord
+  include OutsideUsaTypeable
+
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
@@ -32,6 +34,9 @@ class Address < ApplicationRecord
   ].freeze
 
   belongs_to :addressable, polymorphic: true, touch: true
+
+  typed_outside_usa :state
+
   # Affiliations that point to this address as their organization address. Nullify
   # the link rather than block deletion when an org address is removed.
   has_many :affiliations, foreign_key: :organization_address_id, dependent: :nullify, inverse_of: :organization_address

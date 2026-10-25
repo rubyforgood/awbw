@@ -41,7 +41,7 @@
                     <i class="fa-solid fa-pen text-2xs text-gray-400"></i>
                   <% end %>
                 </td>
-                <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700"><%= license.issuing_state.presence || "—" %></td>
+                <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700"><%= license.decorate.issuing_place.presence || "—" %></td>
                 <td class="px-4 py-3 text-sm whitespace-nowrap">
                   <%= render "shared/badge", label: status.label, classes: status.classes, icon: status.icon %>
                 </td>
