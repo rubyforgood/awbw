@@ -694,6 +694,59 @@ RSpec.describe "FormSubmissions", type: :request do
         end
       end
 
+      context "for an event registration submission" do
+        let(:form) { create(:form, role: "registration", name: "Facilitator Training Registration") }
+        let(:training) { create(:event, :published, facilitator_training: true, start_date: Time.find_zone(Event::PROGRAM_ZONE).local(2026, 9, 12, 10)) }
+        let(:submission) { create(:form_submission, form: form, person: person, role: "registration", event: training) }
+        let!(:registration) { create(:event_registration, event: training, registrant: person) }
+
+        before do
+          add_answer("organization_name", "Acme Inc")
+          add_answer("organization_position", "SELS")
+        end
+
+        it "adds the Facilitator affiliation a facilitator training confers, dated to the training" do
+          organization = create(:organization, name: "Acme Inc")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(person.affiliations.where(organization: organization).pluck(:title, :start_date))
+            .to contain_exactly([ "SELS", nil ], [ "Facilitator", Date.new(2026, 9, 12) ])
+        end
+
+        it "links the org to the registration, pinned to the submission" do
+          organization = create(:organization, name: "Acme Inc")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          link = registration.event_registration_organizations.sole
+          expect(link.organization).to eq(organization)
+          expect(link.form_submission).to eq(submission)
+        end
+
+        it "adds only the job affiliation for an event that isn't a facilitator training" do
+          training.update!(facilitator_training: false)
+          organization = create(:organization, name: "Acme Inc")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "SELS" ])
+        end
+
+        it "names the registration and both affiliations on the editor" do
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("Links it to their #{training.title} registration")
+          expect(response.body).to include("Adds a Facilitator affiliation there")
+        end
+
+        it "shows no agreement processing panel" do
+          get form_submission_path(submission)
+
+          expect(response.body).not_to include("Processing")
+        end
+      end
+
       context "for an on-demand agreement registered to the on-demand training" do
         let(:form) { create(:form, role: "registration", name: "Collaboration agreement (on-demand)") }
         let(:training) { create(:event, :published, facilitator_training: true, on_demand: true) }

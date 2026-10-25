@@ -245,7 +245,7 @@ RSpec.describe FormSubmission do
     end
   end
 
-  describe "#on_demand_registration" do
+  describe "#event_registration_for_link" do
     let(:person) { create(:person, user: nil) }
     let(:training) { create(:event, facilitator_training: true, on_demand: true) }
     let(:agreement_form) { create(:form, role: "registration") }
@@ -254,19 +254,49 @@ RSpec.describe FormSubmission do
     it "finds the person's registration for the event a public on-demand agreement was stamped with" do
       submission = create(:form_submission, form: agreement_form, person: person, role: "public", event: training)
 
-      expect(submission.on_demand_registration).to eq(registration)
+      expect(submission.event_registration_for_link).to eq(registration)
     end
 
-    it "is nil for a submission made through the event's registration flow" do
+    it "finds the registration a submission made through the event's registration flow belongs to" do
       submission = create(:form_submission, form: agreement_form, person: person, role: "registration", event: training)
 
-      expect(submission.on_demand_registration).to be_nil
+      expect(submission.event_registration_for_link).to eq(registration)
     end
 
     it "is nil when no event was stamped" do
       submission = create(:form_submission, form: agreement_form, person: person, role: "public")
 
-      expect(submission.on_demand_registration).to be_nil
+      expect(submission.event_registration_for_link).to be_nil
+    end
+
+    it "is nil for an event callout submission" do
+      submission = create(:form_submission, form: create(:form), person: person, role: "day_1_survey", event: training)
+
+      expect(submission.event_registration_for_link).to be_nil
+    end
+  end
+
+  describe "#link_scenario" do
+    let(:training) { create(:event, facilitator_training: true, start_date: Time.find_zone(Event::PROGRAM_ZONE).local(2026, 9, 12, 10)) }
+
+    it "is the agreement scenario for an agreement submission" do
+      submission = create(:form_submission, form: create(:form, role: "reinstatement"))
+
+      expect(submission.link_scenario).to eq("reinstatement")
+    end
+
+    it "is the event's scenario for an event registration submission, dated to the training" do
+      submission = create(:form_submission, form: create(:form, role: "registration"), role: "registration", event: training)
+
+      expect(submission.link_scenario).to eq("facilitator_training")
+      expect(submission.link_training_date).to eq(Date.new(2026, 9, 12))
+    end
+
+    it "is nil for an event callout submission, dated to the submission" do
+      submission = create(:form_submission, form: create(:form), role: "day_1_survey", event: training)
+
+      expect(submission.link_scenario).to be_nil
+      expect(submission.link_training_date).to eq(submission.created_at.to_date)
     end
   end
 
