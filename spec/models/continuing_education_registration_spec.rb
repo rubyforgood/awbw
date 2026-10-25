@@ -189,7 +189,7 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
 
     it "requires the CE callout's post-training form to be completed once one is set" do
       event = create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago)
-      form = create(:form, name: "CE Evaluation")
+      form = create(:form, name: "CE Evaluation", anonymous: true)
       required_field = create(:form_field, form:, required: true)
       callout = create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE hours", form:)
 

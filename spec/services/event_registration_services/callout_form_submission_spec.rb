@@ -413,6 +413,27 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     end
   end
 
+  describe "on the CE hours callout" do
+    let(:callout) { create(:registration_ticket_callout, event:, builtin_key: "ce_hours") }
+    let(:first) { create(:form_field, form:, name: "First name", field_identifier: "first_name") }
+    let(:last) { create(:form_field, form:, name: "Last name", field_identifier: "last_name") }
+    let(:email) { create(:form_field, form:, name: "Email", field_identifier: "primary_email") }
+    let(:identity) { { first.id.to_s => "Sam", last.id.to_s => "Rivera", email.id.to_s => "sam@example.com" } }
+
+    it "never credits the registrant, even on a form not set to anonymous" do
+      submission = submit(identity.merge(field.id.to_s => "Great"))
+
+      expect(submission.person).to be_nil
+      expect(FormCompletion.where(person: registration.registrant, form:, event:)).to exist
+    end
+
+    it "never credits the registrant who names themself on an anonymous form" do
+      form.update!(anonymous: true)
+
+      expect(submit(identity.merge(field.id.to_s => "Great")).person).to be_nil
+    end
+  end
+
   it "always credits the registrant on a form that isn't anonymous, with or without name questions" do
     expect(submit({ field.id.to_s => "Great" }).person).to eq(registration.registrant)
     expect(FormCompletion.count).to eq(0)

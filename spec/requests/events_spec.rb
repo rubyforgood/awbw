@@ -1407,6 +1407,18 @@ RSpec.describe "Events", type: :request do
         expect(callout.reload.forms).to eq([ form ])
       end
 
+      it "won't link a form that isn't anonymous as the CE hours evaluation" do
+        callout = create(:registration_ticket_callout, event:, builtin_key: "ce_hours")
+        form = create(:form, name: "CE eval")
+        patch event_path(event), params: { event: {
+          registration_ticket_callouts_attributes: { "0" => { id: callout.id,
+            registration_ticket_callout_forms_attributes: { "0" => { form_id: form.id } } } }
+        } }
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("CE hours evaluation (CE eval) must have anonymous responses turned on")
+        expect(callout.reload.forms).to be_empty
+      end
+
       it "adds event staff via nested attributes" do
         person = create(:person)
         patch event_path(event), params: { event: {
