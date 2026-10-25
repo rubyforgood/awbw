@@ -27,7 +27,8 @@
     <%= render "shared/audit_info", resource: @organization %>
     <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
       <div class="mt-4 flex justify-end">
-        <%= render "application/activity_log", record: @organization %>
+        <%= render "application/activity_log", record: @organization,
+                   events: Analytics::OrganizationActivityEvents.new(@organization).relation %>
       </div>
     <% end %>
   </div>
