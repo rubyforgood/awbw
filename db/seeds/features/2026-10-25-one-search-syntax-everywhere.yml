@@ -2,7 +2,7 @@ name: "One search syntax across every filter box"
 area: reporting
 display_status: admin_facing
 released_on: 2026-10-25
-pr_number: 2844
+pr_number: 2857
 summary: >-
   Every search box now works the same way: several words all have to match, "--"
   means either, and quotes make a phrase. The Contact info boxes on people and
