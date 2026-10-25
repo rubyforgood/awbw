@@ -7,13 +7,8 @@
 <% end %>
 <% actions = capture do %>
   <%= form_with url: forms_path, method: :get,
-        data: { controller: "collection", turbo_frame: "forms_results", turbo_action: "advance" },
-        autocomplete: "off",
-        class: "flex flex-wrap items-center gap-3" do %>
-    <%= label_tag :name, "Form name", class: "sr-only" %>
-    <%= text_field_tag :name, params[:name],
-                       placeholder: "Search by name",
-                       class: "w-56 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+        data: { controller: "collection", turbo_frame: "forms_results", turbo_action: "advance" } do %>
+    <% if params[:name].present? %><%= hidden_field_tag :name, params[:name] %><% end %>
     <%= label_tag :role, "Form role", class: "sr-only" %>
     <%= select_tag :role,
                    options_for_select(Form::ROLE_OPTIONS, params[:role]),

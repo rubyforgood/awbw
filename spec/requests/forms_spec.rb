@@ -77,12 +77,19 @@ RSpec.describe "Forms", type: :request do
         expect(hrefs).to all(include("role=scholarship"))
       end
 
-      it "renders the name search and role filter next to the new form button" do
-        get forms_path(name: "scholar", role: "scholarship")
+      it "renders the role filter next to the new form button, with no name search box" do
+        get forms_path(role: "scholarship")
         filters = Nokogiri::HTML(response.body).at_css("form[data-turbo-frame='forms_results']")
-        expect(filters.at_css("input[name='name']")["value"]).to eq("scholar")
+        expect(filters.at_css("input[name='name']")).to be_nil
         expect(filters.at_css("select[name='role'] option[selected]")["value"]).to eq("scholarship")
         expect(filters.at_css("select[name='role'] option[value='']").text).to eq("All form roles")
+      end
+
+      it "carries a name from the URL through a role change" do
+        get forms_path(name: "scholar")
+        name_input = Nokogiri::HTML(response.body).at_css("form[data-turbo-frame='forms_results'] input[name='name']")
+        expect(name_input["type"]).to eq("hidden")
+        expect(name_input["value"]).to eq("scholar")
       end
 
       it "lists owner-attached forms in an owned-forms section with an answers link" do
