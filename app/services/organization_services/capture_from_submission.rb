@@ -51,26 +51,18 @@ module OrganizationServices
 
       profile_changes = SyncProfile.call(
         organization: organization,
-        website: field_value("organization_website"),
-        organization_type: field_value("organization_type"),
+        website: entry[:website],
+        organization_type: entry[:organization_type],
         overwrite: @overwrite,
         submission: @submission
       ).changes
 
-      address_result = UpsertAddress.call(
-        organization: organization,
-        street_address: field_value("organization_street"),
-        city: field_value("organization_city"),
-        state: field_value("organization_state"),
-        zip_code: field_value("organization_zip"),
-        country: field_value("organization_country"),
-        overwrite: @overwrite
-      )
+      address_result = UpsertAddress.call(organization: organization, overwrite: @overwrite, **entry[:address])
 
       AffiliationServices::CreateFromRegistration.call(
         person: @person,
         organization: organization,
-        job_title: field_value(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER),
+        job_title: entry[:position],
         training_date: @training_date,
         organization_address: address_result.address,
         facilitator_training: @facilitator_training,
@@ -85,10 +77,16 @@ module OrganizationServices
     def find_organization
       return @organization if @organization
 
-      name = field_value(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER)&.strip
+      name = entry[:org_name]&.strip
       return nil if name.blank?
 
       Organization.find_by(name: name)
+    end
+
+    def entry
+      @entry ||= FormSubmission.org_entry_from(
+        FormSubmission::ORG_ENTRY_FIELD_IDENTIFIERS.index_with { |identifier| field_value(identifier) }
+      )
     end
 
     def field_value(key)

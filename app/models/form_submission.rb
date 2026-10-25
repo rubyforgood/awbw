@@ -131,10 +131,21 @@ class FormSubmission < ApplicationRecord
   # OrganizationServices::LinkSubmittedOrganization reads them. Shared by the
   # admin linking editor and the auto-processing a public submission runs.
   def org_entry
-    answers = answers_by_identifier
+    self.class.org_entry_from(answers_by_identifier).merge(submission: self)
+  end
+
+  # The same org entry from a bare field_identifier => answer hash, for callers
+  # holding answers that aren't saved on a submission (the spreadsheet importer,
+  # a public form mid-submit).
+  ORG_ENTRY_FIELD_IDENTIFIERS = [
+    FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER, FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER,
+    "organization_website", "organization_type", "organization_street", "organization_city",
+    "organization_state", "organization_zip", "organization_country"
+  ].freeze
+
+  def self.org_entry_from(answers)
     read = ->(identifier) { answers[identifier].presence }
     {
-      submission: self,
       org_name: read.call(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER),
       position: read.call(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER),
       website: read.call("organization_website"),
