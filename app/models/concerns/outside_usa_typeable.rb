@@ -1,5 +1,5 @@
 # Pairs a state attribute with the `<attribute>_outside_usa` box from
-# shared/_state_select. A typed value wins over the dropdown whichever one params
+# shared/_outside_usa. A typed value wins over the dropdown whichever one params
 # assign first, and writes straight to the column so nested autosave sees the change.
 module OutsideUsaTypeable
   extend ActiveSupport::Concern

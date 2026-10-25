@@ -77,6 +77,8 @@
       <fieldset disabled>
         <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
           <% @form_fields.each do |field| %>
+            <%# Asked inside its _state question's "Outside USA?" box. %>
+            <% next if field.paired_with_state? %>
             <% conditional = field.conditional_visibility? %>
             <% if field.group_header? %>
               <div class="mb-4 border-b border-gray-200 pt-6 pb-2 md:col-span-12">

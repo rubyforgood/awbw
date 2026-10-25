@@ -120,6 +120,8 @@
 
         <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
           <% @form_fields.each do |field| %>
+            <%# Asked inside its _state question's "Outside USA?" box. %>
+            <% next if field.paired_with_state? %>
             <% if field.group_header? %>
               <%= render "events/public_registrations/group_header", field: field %>
             <% else %>
@@ -142,6 +144,8 @@
             <%= render "forms/header", form: @scholarship_form, event: @event %>
             <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
               <% @scholarship_form.form_fields.reorder(position: :asc).each do |field| %>
+                <%# Asked inside its _state question's "Outside USA?" box. %>
+                <% next if field.paired_with_state? %>
                 <% if field.group_header? %>
                   <%# Skip a section header that just repeats the form name shown as the title above %>
                   <% next if field.name.to_s.strip.casecmp?(@scholarship_form.display_name.to_s.strip) %>
@@ -181,6 +185,8 @@
             <% end %>
             <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
               <% @continuing_education_form.form_fields.reorder(position: :asc).each do |field| %>
+                <%# Asked inside its _state question's "Outside USA?" box. %>
+                <% next if field.paired_with_state? %>
                 <% if field.group_header? %>
                   <% next if field.name.to_s.strip.casecmp?(@continuing_education_form.display_name.to_s.strip) %>
                   <%= render "events/public_registrations/group_header", field: field %>

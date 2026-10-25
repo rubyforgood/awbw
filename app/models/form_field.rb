@@ -279,8 +279,6 @@ class FormField < ApplicationRecord
   end
 
   def grid_span_class
-    return "hidden" if paired_with_state?
-
     WIDTH_GRID_SPANS.fetch(width, "md:col-span-12")
   end
 

@@ -200,10 +200,6 @@ RSpec.describe FormField do
 
       expect(state.paired_country_field).to be_nil
     end
-
-    it "takes no grid space for a paired country question" do
-      expect(country.grid_span_class).to eq("hidden")
-    end
   end
 
   describe "#grid_span_class" do
