@@ -163,7 +163,7 @@ This codebase (Rails 8.1)
 | `StaffTaggable` | Adds the polymorphic `staff_taggings`/`staff_tags` associations for internal admin StaffTags (Person today) |
 | `TagFilterable` | Scope-based filtering by tag names |
 | `Trendable` | Trending metrics tracking |
-| `UserStampable` | Forces `created_by_id` at create and stamps `updated_by_id` on every write, from `Current.user` (no-op without the columns or when `Current.user` is nil) `#update_columns_stamped(**columns, user: Current.user)` is the callback-skipping write for changes logged to Ahoy by hand — it adds `updated_at` and `updated_by_id` (used by `Affiliation`'s org-status flip, the Story Share admin menu, and `AddressServices::TranslateExisting`) |
+| `UserStampable` | Forces `created_by_id` at create and stamps `updated_by_id` on every write, from `Current.user` (no-op without the columns or when `Current.user` is nil). `#update_columns_stamped(**columns, user: Current.user)` is the callback-skipping write for changes logged to Ahoy by hand — it adds `updated_at` and `updated_by_id` (used by `Affiliation`'s org-status flip, the Story Share admin menu, and `AddressServices::TranslateExisting`) |
 | `WindowsTypeFilterable` | Filter by WindowsType association |
 
 ## Controllers
