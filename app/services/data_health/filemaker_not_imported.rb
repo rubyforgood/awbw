@@ -3,7 +3,7 @@ module DataHealth
   # An FM organization also counts as imported when a portal org carries one of its
   # projects' codes, as the archive page links it (FmArchivesController).
   class FilemakerNotImported
-    PER_PAGE = 25
+    PER_PAGE = 100
 
     Kind = Data.define(:key, :label, :archive, :portal, :explanation)
 
