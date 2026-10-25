@@ -1,0 +1,17 @@
+name: "Prefixed search on the attendees and organizations pages"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2857
+summary: >-
+  The people index's Contact info box now has siblings: the attendees page gets
+  one of its own, and the organizations Address box takes the same prefixes. The
+  roster keyword search and the bulk email picker now read "--" as "either", the
+  way tag filters already do.
+pro_tips:
+  - "Prefixes: phone:, street:, city:, state:, zip:, county:, country:, locality:, district:, la_council:, la_supervisorial:, la_spa:, and type: for work or personal."
+  - "type: personal city: austin asks for one address that is BOTH personal and in Austin — that is how to search a personal city on its own."
+  - "In these boxes several words all have to match, in any order, and amy--aisha finds either. The two combine: amy jones--mary davis finds Amy Jones and Mary Davis, not Amy Davis."
+  - "Write Oregon as state: OR. A bare or means either."
+  - "These boxes search live addresses only. A retired address still places someone on the charts, but is not how you look them up."
+  - "The people index search is unchanged — it works exactly as it did."

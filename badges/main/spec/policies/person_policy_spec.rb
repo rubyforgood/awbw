@@ -471,6 +471,13 @@ RSpec.describe PersonPolicy, type: :policy do
       expect(index_filters_for(nil).keys).to contain_exactly(*shared_filter_keys)
     end
 
+    it "drops the work location filter for a regular user" do
+      filters = ActionController::Parameters.new(work_location: "city: reno")
+      scoped = policy_for(record: Person, user: regular_user)
+        .apply_scope(filters, type: :action_controller_params, name: :index)
+      expect(scoped.keys).not_to include("work_location")
+    end
+
     it "narrows a non-admin's contact-info search to shared contact info" do
       expect(index_filters_for(regular_user)[:shared_contact_info]).to eq("ada")
     end

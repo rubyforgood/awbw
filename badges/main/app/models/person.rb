@@ -25,6 +25,9 @@ class Person < ApplicationRecord
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :active_phones, -> { phone.where(inactive: false) }, as: :contactable, class_name: "ContactMethod"
+  # Searching someone up reads their live addresses only: a retired one is still
+  # the right place to SHOW them (Address::STANDING) but a wrong place to find them.
+  has_many :active_addresses, -> { active }, as: :addressable, class_name: "Address", inverse_of: :addressable
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
@@ -228,6 +231,12 @@ class Person < ApplicationRecord
                       "addresses.zip_code", "addresses.county", "addresses.country" ]
     options :all, type: :text, default: true, default_operator: :or
   end
+
+  # Alongside `search_contact` above, not in place of it: the people index keeps
+  # the box it has. This one answers the attendees page, over live addresses and
+  # with the wider prefix set.
+  include ContactSearchable
+  searches_contact :contact_methods, :active_addresses, as: :search_location
 
   FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
   LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
@@ -447,7 +456,6 @@ class Person < ApplicationRecord
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
-    results = results.search(params[:contact_info]) if params[:contact_info].present?
     results = results.shared_contact_search(params[:shared_contact_info]) if params[:shared_contact_info].present?
     results = results.by_role(params[:role]) if params[:role].present?
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?

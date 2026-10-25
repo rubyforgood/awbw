@@ -15,6 +15,7 @@ class Organization < ApplicationRecord
   belongs_to :parent, class_name: "Organization", optional: true, inverse_of: :children
   has_many :children, class_name: "Organization", foreign_key: :parent_id, inverse_of: :parent, dependent: :nullify
   has_many :addresses, as: :addressable, dependent: :destroy
+  has_many :active_addresses, -> { active }, as: :addressable, class_name: "Address", inverse_of: :addressable
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
   has_many :invoices, as: :invoicee, dependent: :restrict_with_error
@@ -86,6 +87,9 @@ class Organization < ApplicationRecord
     attributes :name
   end
 
+  include ContactSearchable
+  searches_contact :active_addresses
+
   # Scopes
   # See TagFilterable, Trendable, WindowsTypeFilterable
   # An org is active because someone is affiliated there, not because the legacy
@@ -93,31 +97,6 @@ class Organization < ApplicationRecord
   scope :active, -> { where(id: Affiliation.active.select(:organization_id)) }
   scope :name_like, ->(name) { where("organizations.name LIKE ?", "%#{sanitize_sql_like(name)}%") }
   scope :with_active_facilitators, -> { where(id: Affiliation.active.facilitators.select(:organization_id)) }
-  scope :address, ->(address) do
-    return all if address.blank?
-    terms = address.to_s.strip.split(/[\s,]+/).reject(&:blank?)
-    return all if terms.empty?
-
-    scope = joins(:addresses)
-    terms.each do |term|
-      wildcard = "%#{sanitize_sql_like(term)}%"
-      scope = scope.where(<<~SQL.squish, wildcard: wildcard)
-        addresses.street_address LIKE :wildcard OR
-        addresses.city LIKE :wildcard OR
-        addresses.state LIKE :wildcard OR
-        addresses.county LIKE :wildcard OR
-        addresses.country LIKE :wildcard OR
-        addresses.district LIKE :wildcard OR
-        addresses.locality LIKE :wildcard OR
-        addresses.phone LIKE :wildcard OR
-        addresses.zip_code LIKE :wildcard OR
-        CAST(addresses.la_city_council_district AS CHAR) LIKE :wildcard OR
-        CAST(addresses.la_service_planning_area AS CHAR) LIKE :wildcard OR
-        CAST(addresses.la_supervisorial_district AS CHAR) LIKE :wildcard
-      SQL
-    end
-    scope.distinct
-  end
   # Off facilitator affiliations only, never the legacy organization_status, so the
   # filter and the status chip can't disagree (ADR-0001 D3).
   scope :program_status, ->(bucket) {
@@ -228,7 +207,7 @@ class Organization < ApplicationRecord
     organizations = organizations.search(params[:query]) if params[:query].present?
     organizations = organizations.sector_names_all(params[:sector_names_all].presence || params[:sector_name])
     organizations = organizations.category_names_all(params[:category_names_all].presence || params[:age_group_name])
-    organizations = organizations.address(params[:address]) if params[:address].present?
+    organizations = organizations.search_contact(params[:address]) if params[:address].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
     organizations = organizations.program_status(params[:program_status]) if params[:program_status].present?
     organizations

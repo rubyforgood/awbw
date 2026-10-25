@@ -14,11 +14,28 @@ class PersonLocations
     city county state country locality zip_code district
     la_city_council_district la_supervisorial_district la_service_planning_area
   ].freeze
-  # Fields a filter matches on a case-insensitive substring, because they arrive
-  # from a free-text box. The rest are picked from a list this class built, so
+  # Fields a filter matches on a case-insensitive substring, because someone types
+  # them rather than picking them. The rest come from a list this class built, so
   # they match whole (case-insensitively, as the database's own collation does).
-  # Add a field here when it gets a text box of its own.
-  SEARCHED_FIELDS = %i[ city ].freeze
+  SEARCHED_FIELDS = %i[ city locality district zip_code ].freeze
+  # The prefix someone types for each field. Named for the word rather than the
+  # column, the same bargain ContactSearchable strikes — and matching it, so the
+  # two boxes on the attendees page read alike even though they answer about
+  # different addresses.
+  FIELD_PREFIXES = {
+    city: :city, county: :county, state: :state, country: :country,
+    locality: :locality, zip: :zip_code, district: :district,
+    la_council: :la_city_council_district,
+    la_supervisorial: :la_supervisorial_district,
+    la_spa: :la_service_planning_area
+  }.freeze
+  # A term with no prefix, which has to match SOMEWHERE on the row. Not a column,
+  # so #matching handles it apart from the rest.
+  ANY_FIELD = :any
+  # `city: austin`, `locality: "Outside CA"`, or a bare term.
+  QUERY_TOKEN = /(?:(\w+):\s*)?("[^"]*"|\S+)/
+  SEARCH_HINT = "Prefixes: #{FIELD_PREFIXES.keys.map { |prefix| "#{prefix}:" }.join(', ')}. " \
+                "All of them have to describe one address. #{ContactSearchable::SEARCH_SYNTAX_HINT}".freeze
   # County filter options carry their state so same-named counties across states
   # don't collide — "CA|Los Angeles" on the registrants roster, "CA::Los Angeles"
   # on the attendees index.
@@ -45,6 +62,19 @@ class PersonLocations
   def self.split_county(value)
     state, county = value.to_s.split(COUNTY_STATE_SEPARATOR, 2)
     county.nil? ? [ nil, state ] : [ state, county ]
+  end
+
+  # A typed query ("city: austin locality: \"Outside CA\"") as fields #matching
+  # understands. An unrecognised prefix and a bare term both become ANY_FIELD
+  # terms rather than an error — someone mistyping `citty:` should see too much,
+  # not an empty page they can't explain.
+  def self.parse_query(query)
+    query.to_s.scan(QUERY_TOKEN).each_with_object({}) do |(prefix, value), filters|
+      field = FIELD_PREFIXES[prefix&.downcase&.to_sym]
+      value = value.delete_prefix('"').delete_suffix('"')
+      next filters[field] = value if field
+      filters[ANY_FIELD] = [ *filters[ANY_FIELD], prefix ? "#{prefix}:#{value}" : value ]
+    end
   end
 
   # Takes the people to locate, as a relation (kept as a subquery, so a
@@ -75,8 +105,12 @@ class PersonLocations
   # the whole filter set in one call; chaining two calls is what loses that.
   def matching(**filters)
     filters = filters.compact_blank
-    filters.assert_valid_keys(*LOCATION_FIELDS)
-    rows.select { |row| filters.all? { |field, value| matches?(row, field, value) } }
+    filters.assert_valid_keys(*LOCATION_FIELDS, ANY_FIELD)
+    any_terms = Array(filters.delete(ANY_FIELD))
+    rows.select do |row|
+      filters.all? { |field, value| matches?(row, field, value) } &&
+        any_terms.all? { |term| LOCATION_FIELDS.any? { |field| matches?(row, field, term, searched: true) } }
+    end
   end
 
   # Distinct [ state, county ] pairs, sorted, for the County filters.
@@ -114,9 +148,9 @@ class PersonLocations
 
   private
 
-  def matches?(row, field, value)
+  def matches?(row, field, value, searched: SEARCHED_FIELDS.include?(field))
     actual = row.public_send(field).to_s
-    return actual.downcase.include?(value.to_s.downcase.strip) if SEARCHED_FIELDS.include?(field)
+    return actual.downcase.include?(value.to_s.downcase.strip) if searched
     actual.casecmp?(value.to_s)
   end
 

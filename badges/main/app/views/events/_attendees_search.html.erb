@@ -8,7 +8,7 @@
 <% field_class = search_field_class %>
 <%# Open the drawer on load when any collapsed filter already carries a value, so an
     active filter is never hidden behind the toggle. %>
-<% collapsed_keys = %i[event_id event_year sector program_status affiliation_status payment_method scholarship funder_name ce_status account_status topic_subscription city state county comment_status comment] %>
+<% collapsed_keys = %i[event_id event_year sector program_status affiliation_status payment_method scholarship funder_name ce_status account_status topic_subscription contact_info work_location city state county comment_status comment] %>
 <% more_active = collapsed_keys.any? { |k| params[k].present? } %>
 
 <%# Keep drill-in filters applied while the admin tweaks a visible select — the
@@ -27,7 +27,9 @@
 <% chips = render "events/attendees_chips" %>
 
 <% primary = capture do %>
-  <%= render "shared/filter_text", param: :contact_info, label: "Name, email, or phone",
+  <%# Person.search_name_email — the people index's own scope, borrowed whole so
+      the same words find the same people on both pages. %>
+  <%= render "shared/filter_text", param: :name_email, label: "Name or email",
         field_class: field_class, submit: true, wrapper_class: "w-full md:flex-1 md:min-w-[14rem]" %>
 
   <%# Attendance and event type default to "attended" / "trainings" — the population
@@ -102,8 +104,24 @@
           selected: Array(params[:topic_subscription]).map(&:to_i), placeholder: "Any topic" %>
   <% end %>
 
-  <%= render "shared/filter_text", param: :city, label: "City",
-        placeholder: "City name", field_class: field_class %>
+  <%# The people index's Contact info box generalised (ContactSearchable) — more
+      prefixes, live addresses only, and the shared grammar — admin-only here as
+      it is there. It reads the person's OWN contact record, while the box below
+      reads where they work on these registrations, so the labels say which. %>
+  <% if allowed_to?(:manage?, Person) %>
+    <%= render "shared/filter_text", param: :contact_info, label: "Their own contact info", submit: true,
+          placeholder: "city: austin", field_class: field_class,
+          tooltip: ContactSearchable::CONTACT_SEARCH_HINT %>
+  <% end %>
+
+  <%# Where someone WORKS on the filtered event's date (PersonLocations), as
+      against the contact box above, which reads their own address. Prefixed the
+      same way so the two read alike, and one box rather than a field each: every
+      prefix has to describe the same address, which only holds if they arrive
+      together. %>
+  <%= render "shared/filter_text", param: :work_location, label: "Where they work", submit: true,
+        placeholder: "city: austin", field_class: field_class,
+        tooltip: PersonLocations::SEARCH_HINT, wrapper_class: "w-full md:w-64" %>
 
   <%= render "shared/filter_select", param: :state, label: "State",
         options: @attendee_states,

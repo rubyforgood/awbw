@@ -172,7 +172,7 @@ RSpec.describe Organization do
     end
   end
 
-  describe '.address' do
+  describe '.search_contact' do
     let!(:status) { create(:organization_status, name: "Active") }
 
     let!(:org_la) do
@@ -194,42 +194,42 @@ RSpec.describe Organization do
     let!(:org_no_address) { create(:organization, name: "No Address Org", organization_status: status) }
 
     it 'returns all organizations when address is blank' do
-      expect(Organization.address("")).to include(org_la, org_ny, org_no_address)
-      expect(Organization.address(nil)).to include(org_la, org_ny, org_no_address)
+      expect(Organization.search_contact("")).to include(org_la, org_ny, org_no_address)
+      expect(Organization.search_contact(nil)).to include(org_la, org_ny, org_no_address)
     end
 
     it 'finds organization by city name' do
-      results = Organization.address("Los Angeles")
+      results = Organization.search_contact("Los Angeles")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny, org_no_address)
     end
 
     it 'finds organization by zip code' do
-      results = Organization.address("90001")
+      results = Organization.search_contact("90001")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
 
     it 'finds organization by state abbreviation' do
-      results = Organization.address("CA")
+      results = Organization.search_contact("CA")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
 
     it 'finds organization by partial street address' do
-      results = Organization.address("123 Main")
+      results = Organization.search_contact("123 Main")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
 
     it 'finds organization by full address with commas' do
-      results = Organization.address("123 Main St, Los Angeles, CA 90001")
+      results = Organization.search_contact("123 Main St, Los Angeles, CA 90001")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
 
     it 'finds organization by city and state' do
-      results = Organization.address("Los Angeles, CA")
+      results = Organization.search_contact("Los Angeles, CA")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
@@ -237,18 +237,18 @@ RSpec.describe Organization do
     it 'does not return duplicates when org has multiple matching addresses' do
       create(:address, addressable: org_la, street_address: "789 Oak Ave",
              city: "Los Angeles", state: "CA", zip_code: "90002", locality: "LA City")
-      results = Organization.address("Los Angeles")
+      results = Organization.search_contact("Los Angeles")
       expect(results.to_a.count { |o| o.id == org_la.id }).to eq(1)
     end
 
     it 'does not return organizations without addresses' do
-      results = Organization.address("Los Angeles")
+      results = Organization.search_contact("Los Angeles")
       expect(results).not_to include(org_no_address)
     end
 
     it 'finds organization by phone number' do
       org_la.addresses.first.update!(phone: "213-555-1234")
-      results = Organization.address("213-555-1234")
+      results = Organization.search_contact("213-555-1234")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
