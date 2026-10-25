@@ -84,17 +84,16 @@ module OrganizationServices
     end
 
     def entry
-      @entry ||= FormSubmission.org_entry_from(
-        FormSubmission::ORG_ENTRY_FIELD_IDENTIFIERS.index_with { |identifier| field_value(identifier) }
-      )
+      @entry ||= FormSubmission.org_entry_from(org_answers)
     end
 
-    def field_value(key)
-      return @answers[key] if @answers
+    def org_answers
+      identifiers = FormSubmission::ORG_ENTRY_FIELD_IDENTIFIERS
+      return @answers.slice(*identifiers) if @answers
 
-      field = @form.form_fields.find_by(field_identifier: key)
-      return nil unless field
-      @form_params[field.id.to_s]
+      @form.form_fields.where(field_identifier: identifiers)
+        .pluck(:field_identifier, :id)
+        .to_h { |identifier, id| [ identifier, @form_params[id.to_s] ] }
     end
   end
 end
