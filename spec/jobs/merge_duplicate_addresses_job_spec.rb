@@ -22,6 +22,18 @@ RSpec.describe MergeDuplicateAddressesJob, type: :job do
     expect(person.addresses.count).to eq(1)
   end
 
+  it "logs each merged-away address to the owner's activity as the admin who ran it" do
+    admin = create(:user, :admin)
+    merged_away = person.addresses.order(:id).drop(1).map(&:id)
+
+    described_class.new.perform(admin)
+
+    events = Ahoy::Event.where(name: "destroy.address", resource_id: merged_away)
+    expect(events.pluck(:user_id)).to eq([ admin.id, admin.id ])
+    expect(events.map { |event| event.properties["source"] }.uniq).to eq([ MergeDuplicateAddressesJob::SOURCE ])
+    expect(Analytics::PersonActivityEvents.new(person).relation).to include(*events)
+  end
+
   it "reports a record that fails and keeps merging the rest" do
     allow(AddressDeduper).to receive(:merge_duplicates).and_call_original
     allow(AddressDeduper).to receive(:merge_duplicates).with(org).and_raise("boom")
