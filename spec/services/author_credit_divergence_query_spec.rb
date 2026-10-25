@@ -114,6 +114,44 @@ RSpec.describe AuthorCreditDivergenceQuery do
       expect_any_to_match(described_class.new(type: "Story"))
     end
 
+    it "treats a whitespace-only legacy name as no legacy name" do
+      create(:workshop, created_by: author_user, author: nil, full_name: "   ")
+      person.update!(author_credit_reconciled_at: Time.current)
+
+      expect(described_class.new(type: "Workshop").any?).to be(false)
+      expect_any_to_match(described_class.new(type: "Workshop"))
+    end
+
+    it "compares a snapshot against an anonymous or blank-preference author" do
+      story = create(:story, created_by: author_user, author: person)
+      person.update_columns(anonymous_contributions: true)
+      story.update_columns(author_credit_preference: "anonymous")
+      expect(described_class.new(type: "Story").any?).to be(false)
+
+      story.update_columns(author_credit_preference: "full_name")
+      expect(described_class.new(type: "Story").any?).to be(true)
+
+      person.update_columns(anonymous_contributions: false, display_name_preference: "")
+      expect(described_class.new(type: "Story").any?).to be(false)
+      expect_any_to_match(described_class.new(type: "Story"))
+    end
+
+    it "agrees with the full query under every filter" do
+      diverged_story
+      create(:story, created_by: personless_user, author: nil)
+      create(:workshop, created_by: personless_user, author: nil, full_name: "Legacy Name")
+      reconciled = create(:user, :with_person)
+      reconciled.person.update!(author_credit_reconciled_at: Time.current)
+      create(:story, created_by: reconciled, author: nil)
+
+      [ {}, { type: "Story" }, { type: "Resource" }, { person_id: person.id }, { person_id: reconciled.person.id },
+        { person_id: reconciled.person.id, include_reconciled: "1" }, { preference: "first_name_only" },
+        { preference: "anonymous" }, { include_reconciled: "1" } ].each do |filters|
+        query = described_class.new(**filters)
+        expect(query.any?).to eq(!query.call.empty?), "disagrees for #{filters}"
+      end
+    end
+
     it "honors the person filter" do
       create(:story, created_by: personless_user, author: nil)
       diverged_story
