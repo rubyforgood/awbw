@@ -24,9 +24,16 @@ class PersonDecorator < ApplicationDecorator
   # Each address phone numbered by its address's position on the edit form, skipping
   # any already entered as a phone (compared by digits, so formatting doesn't matter).
   def address_phones
-    listed = contact_methods.map { |contact_method| contact_method.value.to_s.gsub(/\D/, "") }.to_set
     addresses.each_with_index.filter_map do |address, index|
-      [ index + 1, address.phone ] if address.phone.present? && !listed.include?(address.phone.gsub(/\D/, ""))
+      [ index + 1, address.phone ] if unlisted_phone?(address.phone)
+    end
+  end
+
+  # Each linked work address phone with its organization's name, skipping any already entered as a phone.
+  def work_address_phones
+    work_address_affiliations.filter_map do |affiliation|
+      phone = affiliation.organization_address.phone
+      [ affiliation.organization.name, phone ] if unlisted_phone?(phone)
     end
   end
 
@@ -205,6 +212,13 @@ class PersonDecorator < ApplicationDecorator
   end
 
   private
+
+  def unlisted_phone?(phone)
+    return false if phone.blank?
+
+    @listed_phone_digits ||= contact_methods.map { |contact_method| contact_method.value.to_s.gsub(/\D/, "") }.to_set
+    !@listed_phone_digits.include?(phone.gsub(/\D/, ""))
+  end
 
   def profile_piece_content?(flag)
     case flag

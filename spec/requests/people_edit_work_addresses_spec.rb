@@ -32,8 +32,15 @@ RSpec.describe "Work addresses and address phones on the person edit form", type
       get edit_person_path(person)
 
       phones = Capybara.string(response.body).find("#phones")
-      expect(phones).to have_text("On mailing addresses")
+      expect(phones).to have_text("On addresses")
       expect(phones).to have_text("555-020-0000")
+    end
+
+    it "lists the linked work address phone under the phones, with its organization" do
+      get edit_person_path(person)
+
+      phones = Capybara.string(response.body).find("#phones")
+      expect(phones).to have_css("li", text: /Work\s+555-010-0000\s+at Sunrise Center/)
     end
   end
 

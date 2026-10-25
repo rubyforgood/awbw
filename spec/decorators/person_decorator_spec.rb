@@ -12,6 +12,21 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#work_address_phones" do
+    it "pairs each linked work address phone with its organization, leaving out ones already listed" do
+      person = create(:person)
+      sunrise = create(:organization, name: "Sunrise Center")
+      harbor = create(:organization, name: "Harbor House")
+      create(:affiliation, person: person, organization: sunrise,
+                           organization_address: create(:address, addressable: sunrise, phone: "123-123-1444"))
+      create(:affiliation, person: person, organization: harbor,
+                           organization_address: create(:address, addressable: harbor, phone: "123-123-1233"))
+      create(:contact_method, contactable: person, value: "(123) 123-1233")
+
+      expect(person.decorate.work_address_phones).to eq([ [ "Sunrise Center", "123-123-1444" ] ])
+    end
+  end
+
   describe "#work_address_affiliations" do
     it "lists active affiliations linked to an org address, once per address" do
       person = create(:person)

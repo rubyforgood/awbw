@@ -87,16 +87,24 @@
                                   data: { association_insertion_node: "this" },
                                   class: button_classes(:secondary_outline) %>
 
-      <% address_phones = f.object.decorate.address_phones %>
-      <% if address_phones.any? %>
+      <% decorated_person = f.object.decorate %>
+      <% address_phones = decorated_person.address_phones %>
+      <% work_phones = f.object.persisted? ? decorated_person.work_address_phones : [] %>
+      <% if address_phones.any? || work_phones.any? %>
         <% numbered = f.object.addresses.size > 1 %>
         <div class="mt-3">
-          <div class="mb-1 font-medium text-gray-700">On mailing addresses</div>
-          <ol class="text-sm text-gray-900">
+          <div class="mb-1 font-medium text-gray-700">On addresses</div>
+          <ul class="space-y-0.5 text-sm text-gray-900">
             <% address_phones.each do |number, phone| %>
               <li><% if numbered %><span class="text-gray-500"><%= number %>.</span> <% end %><%= phone %></li>
             <% end %>
-          </ol>
+            <% work_phones.each do |organization_name, phone| %>
+              <li>
+                <span class="<%= DomainTheme.bg_class_for(:organizations, intensity: 200) %> <%= DomainTheme.text_class_for(:organizations, intensity: 900) %> rounded-full px-1.5 py-0.5 text-xs font-medium">Work</span>
+                <%= phone %> <span class="text-gray-500">at <%= organization_name %></span>
+              </li>
+            <% end %>
+          </ul>
           <p class="mt-1 text-sm text-gray-500">Saved per <%= link_to (numbered ? "address number" : "address"), "#addresses", class: "underline" %></p>
         </div>
       <% end %>
