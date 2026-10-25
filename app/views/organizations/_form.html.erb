@@ -16,7 +16,7 @@
                 required: true,
                 wrapper_html: { class: "w-full md:w-auto md:flex-1 md:basis-64" },
                 input_html: {
-                  autofocus: params[:highlight_address].blank?,
+                  autofocus: f.object.new_record?,
                   rows: 1,
                   class: "w-full rounded-md border-gray-300 shadow-sm
                     focus:border-blue-500 focus:ring focus:ring-blue-200"
@@ -67,7 +67,7 @@
                       value: organization_type_option,
                       class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     } %>
-        <%= render layout: "shared/outside_usa",
+        <%= render layout: "shared/hint_details",
                    locals: { summary: "Other type?",
                              open: organization_type_option == Organization::ORGANIZATION_TYPE_OTHER || f.object.organization_type_other.present? } do %>
           <%= f.input :organization_type_other,
@@ -228,7 +228,7 @@
     </div>
   </div>
 
-  <div id="addresses" class="form-group scroll-mt-20 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm">
+  <div id="addresses" class="form-group scroll-mt-48 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm">
     <h3 class="<%= heading_class %>">Addresses</h3>
     <%= f.simple_fields_for :addresses do |sfi| %>
       <%= render "organizations/address_fields", f: sfi %>
@@ -241,7 +241,7 @@
                                 class: button_classes(:secondary_outline) %>
   </div>
 
-  <div id="affiliations" class="form-group scroll-mt-20 rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 shadow-sm">
+  <div id="affiliations" class="form-group scroll-mt-48 rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 shadow-sm">
     <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
       <h3 class="font-semibold text-gray-700">Affiliations</h3>
       <% if show_status_select %>
@@ -308,7 +308,7 @@
       </div>
       <% if allowed_to?(:manage?, Organization) %>
         <% org_events = @organization_events || [] %>
-        <div id="program-status" class="group relative min-w-0 flex-1 cursor-help scroll-mt-20">
+        <div id="program-status" class="group relative min-w-0 flex-1 cursor-help scroll-mt-48">
           <label class="mb-1 inline-flex items-center gap-1 text-md font-medium text-gray-700">
             Program status <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
           </label>

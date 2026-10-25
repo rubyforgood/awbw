@@ -262,6 +262,12 @@ RSpec.describe "/organizations", type: :request do
       get new_organization_url
       expect(response).to be_successful
     end
+
+    it "focuses the name field" do
+      get new_organization_url
+
+      expect(Capybara.string(response.body)).to have_css("textarea#organization_name[autofocus]")
+    end
   end
 
   describe "GET /edit" do
@@ -275,6 +281,12 @@ RSpec.describe "/organizations", type: :request do
       phones = Capybara.string(response.body).find("ol", text: "123-123-1234")
       expect(phones).to have_css("li", text: "1. 123-123-1234")
       expect(phones).to have_css("li", text: "2. 123-332-1234")
+    end
+
+    it "leaves focus alone so in-page links keep their scroll position" do
+      get edit_organization_url(create(:organization))
+
+      expect(Capybara.string(response.body)).not_to have_css("textarea#organization_name[autofocus]")
     end
 
     it "opens and rings the address a person's work-address link points at, with a way back" do
