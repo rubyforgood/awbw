@@ -216,7 +216,7 @@
                 <%= render layout: "shared/outside_usa", locals: { open: license&.decorate&.outside_usa? } do %>
                   <%= form.text_field :license_issuing_state_outside_usa, id: "license_issuing_state_outside_usa",
                         value: (license_issuing_state if outside_usa_state?(license_issuing_state)),
-                        placeholder: "State / province", aria: { label: "State or province" },
+                        placeholder: "Province / State", aria: { label: "Province or state" },
                         class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
                   <%= form.select :license_issuing_country, GeographyHelper::COUNTRIES,
                         { selected: license&.issuing_country, include_blank: "Select a country" },

@@ -51,7 +51,7 @@
                         selected: (license.issuing_state unless outside_usa_state?(license.issuing_state)) %>
       <%= render layout: "shared/outside_usa", locals: { open: license.outside_usa? } do %>
         <div>
-          <label for="professional_license_issuing_state_outside_usa" class="<%= label_class %>">State / province</label>
+          <label for="professional_license_issuing_state_outside_usa" class="<%= label_class %>">Province / State</label>
           <%= f.input_field :issuing_state_outside_usa, class: field_class,
                             value: (license.issuing_state if outside_usa_state?(license.issuing_state)) %>
         </div>

@@ -1,7 +1,7 @@
 <% address = f.object.decorate %>
 <% if address.state_as_text? || (params[:admin] && allowed_to?(:enter_any_state?, Address)) %>
   <%= f.input :state,
-              label: "State / province",
+              label: "Province / State",
               input_html: {
                 value: address.default_state,
                 class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -20,7 +20,7 @@
                 } %>
     <%= render layout: "shared/outside_usa", locals: { open: false } do %>
       <%= f.input :state_outside_usa,
-                  label: "State / province",
+                  label: "Province / State",
                   wrapper_html: { class: "mb-0" },
                   input_html: {
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"

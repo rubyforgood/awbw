@@ -55,8 +55,8 @@
                name="<%= param_scope %>[form_fields<%= OutsideUsaState::SUFFIX %>][<%= field.id %>]<%= "[#{resource.id}]" if resource %>"
                id="<%= field_id %><%= OutsideUsaState::SUFFIX %>"
                value="<%= state if outside_usa_state?(state) %>"
-               placeholder="State / province"
-               aria-label="State or province"
+               placeholder="Province / State"
+               aria-label="Province or state"
                class="<%= input_classes %>">
       <% end %>
     <% elsif field.field_identifier&.end_with?("_country") %>

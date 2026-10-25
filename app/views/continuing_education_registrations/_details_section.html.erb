@@ -56,7 +56,7 @@
           <%= render layout: "shared/outside_usa", locals: { open: license&.decorate&.outside_usa?, data: { "ce-license-picker-target": "outsideUsa" } } do %>
             <%= f.text_field :license_issuing_state_outside_usa, id: "continuing_education_registration_license_issuing_state_outside_usa",
                   value: (license&.issuing_state if outside_usa_state?(license&.issuing_state)),
-                  placeholder: "State / province", aria: { label: "State or province" }, data: { "ce-license-picker-target": "typedState" },
+                  placeholder: "Province / State", aria: { label: "Province or state" }, data: { "ce-license-picker-target": "typedState" },
                   class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
             <%= f.select :license_issuing_country, GeographyHelper::COUNTRIES,
                   { selected: license&.issuing_country, include_blank: "Select a country" },
