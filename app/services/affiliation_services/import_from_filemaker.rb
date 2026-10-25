@@ -37,7 +37,6 @@ module AffiliationServices
     # Every Personnel role is a Facilitator, the shape prod's January 2026 conversion gave the
     # old app's roles. Only a role FileMaker names as Leader or Liaison makes a primary contact.
     PRIMARY_ROLES = %w[leader leaders liaison].freeze
-    LEGACY_LEADER_TITLE = "Leader"
     ROLE_COMMENT_TOPIC = "FileMaker import"
     # Stands in where a Personnel row names a project but no person.
     PLACEHOLDER_NAME = { first_name: "AWBW", last_name: "Placeholder" }.freeze
@@ -231,22 +230,12 @@ module AffiliationServices
     end
 
     # A person can facilitate at one organization over several separate stretches, so a
-    # Personnel row links only the affiliation recording the same one: the periods overlap,
-    # reading a blank start as "since whenever" and a blank end as "still going" — except an
-    # ended row with no end date, which reads as the moment it started, so it can't reach a
-    # later stretch. Identical dates win, then the nearest start, then one with dates at all.
+    # Personnel row links only the affiliation recording the same one (AffiliationStint).
+    # Identical dates win, then the nearest start, then one with dates at all.
     def same_stint(candidates, dates)
-      period = stint(dates[:start_date], dates[:end_date], dates[:inactive])
-      candidates.select { |affiliation| overlap?(period, stint(affiliation.start_date, affiliation.end_date, affiliation.inactive?)) }
+      stint = AffiliationStint.for(start_date: dates[:start_date], end_date: dates[:end_date], ended: dates[:inactive])
+      candidates.select { |affiliation| AffiliationStint.of(affiliation).overlap?(stint) }
                 .min_by { |affiliation| stint_rank(affiliation, dates) }
-    end
-
-    def stint(start_date, end_date, ended)
-      [ start_date, end_date || (start_date if ended) ]
-    end
-
-    def overlap?((starts, ends), (other_starts, other_ends))
-      (starts.nil? || other_ends.nil? || starts <= other_ends) && (other_starts.nil? || ends.nil? || other_starts <= ends)
     end
 
     def stint_rank(affiliation, dates)
@@ -262,7 +251,7 @@ module AffiliationServices
     # Some prod rows still carry the old app's "Leader" title, which is a Facilitator.
     def same_title?(held, title)
       held = held.to_s.squish
-      held.casecmp?(title.to_s.squish) || (title == Affiliation::FACILITATOR_TITLE && held.casecmp?(LEGACY_LEADER_TITLE))
+      held.casecmp?(title.to_s.squish) || (title == Affiliation::FACILITATOR_TITLE && held.casecmp?(FoldLegacyLeaders::LEGACY_TITLE))
     end
 
     def link(affiliation, row, label, title:, attributes:, codes:)
