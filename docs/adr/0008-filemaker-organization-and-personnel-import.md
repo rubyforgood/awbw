@@ -76,7 +76,9 @@ Constraints already decided elsewhere:
     Facilitator + primary contact. Prod, profiled 2026-10-24: 1,829 Facilitators are primary
     contacts (402 aren't), all 53 Liaisons are, and 111 rows are still titled "Leader" (which
     the exact-match Facilitator scope doesn't count, and which the import matches as a
-    Facilitator rather than duplicating).
+    Facilitator rather than duplicating). Of those, 109 sit beside an undated, primary
+    Facilitator twin the January conversion made, and 2 have none; the Data health check
+    "Affiliations still titled Leader" folds them in (`AffiliationServices::FoldLegacyLeaders`).
     - Every role becomes a **Facilitator** affiliation, with a "FileMaker import" comment
       recording the role FileMaker gave. No prod row is titled Assistant, so the old app's
       assistants likely became the 402 Facilitators who aren't primary contacts.
