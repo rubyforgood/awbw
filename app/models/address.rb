@@ -13,7 +13,13 @@ class Address < ApplicationRecord
   UNKNOWN_LOCALITY = "Unknown"
   LOCALITIES = [ LA_CITY, LA_COUNTY, "Southern CA", "Northern CA",
                 "Central CA", ORANGE_COUNTY, OUTSIDE_CA, OUTSIDE_USA, UNKNOWN_LOCALITY ]
+  # The one spelling of the US the country dropdown carries, so a value compared or
+  # copied against it matches the option rather than rendering the select blank.
   DEFAULT_COUNTRY = "United States"
+  # The parts of an address someone has to type. Locality, state and country arrive on a
+  # new form block already filled from the saved address, so they say nothing about
+  # whether anyone touched it.
+  ENTERED_FIELDS = %w[city street_address zip_code].freeze
   UNKNOWN_CONTACT_TYPE = "unknown"
   CONTACT_TYPES = [ nil, "work", "personal", "mailing", UNKNOWN_CONTACT_TYPE ].freeze
   # USPS abbreviations for the 50 states, DC, and the US territories the atlas
@@ -45,6 +51,12 @@ class Address < ApplicationRecord
 
   scope :active, -> { where(inactive: false) }
   scope :for_invoices, -> { where(invoice_address: true) }
+
+  # A nested-attributes block nobody filled in, which the parent drops instead of
+  # building an address that can only fail validation.
+  def self.unfilled_attributes?(attributes)
+    attributes.slice(*ENTERED_FIELDS).values.all?(&:blank?)
+  end
 
   def name
     "#{street_address}, #{city}, #{state} #{zip_code}"

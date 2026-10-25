@@ -6,7 +6,7 @@
 #
 # Built once per run and reused, so an import's report can list everything it couldn't place.
 class AddressTranslation
-  UNITED_STATES = "United States"
+  UNITED_STATES = Address::DEFAULT_COUNTRY
 
   # The words the archive and the forms use for a kind of address, phone, or email.
   CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "cell" => "personal",

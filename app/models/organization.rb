@@ -75,7 +75,7 @@ class Organization < ApplicationRecord
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
-                                reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
+                                reject_if: proc { |attrs| Address.unfilled_attributes?(attrs) }
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }

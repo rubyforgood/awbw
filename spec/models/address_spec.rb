@@ -166,4 +166,35 @@ RSpec.describe Address, type: :model do
       expect(organization.addresses.for_invoices).to be_empty
     end
   end
+
+  describe ".unfilled_attributes?" do
+    it "is true for a block carrying only the pre-filled country, state, and locality" do
+      attrs = { "country" => "Canada", "state" => "AB", "locality" => "Outside USA",
+                "city" => "", "street_address" => "", "zip_code" => "" }.with_indifferent_access
+
+      expect(described_class.unfilled_attributes?(attrs)).to be(true)
+    end
+
+    it "is false once a typed field is filled in" do
+      attrs = { "city" => "Calgary", "street_address" => "", "zip_code" => "" }.with_indifferent_access
+
+      expect(described_class.unfilled_attributes?(attrs)).to be(false)
+    end
+  end
+
+  describe "an unfilled nested address block" do
+    it "is dropped rather than failing the organization it was added to" do
+      organization = create(:organization)
+      create(:address, addressable: organization, city: "Albany", state: "NY",
+                       country: "United States", locality: "Outside CA")
+
+      saved = organization.update(addresses_attributes: {
+        "0" => { "locality" => "Outside CA", "state" => "NY", "country" => "United States",
+                 "city" => "", "street_address" => "", "zip_code" => "" }
+      })
+
+      expect(saved).to be(true)
+      expect(organization.addresses.reload.count).to eq(1)
+    end
+  end
 end
