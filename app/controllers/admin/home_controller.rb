@@ -17,35 +17,23 @@ module Admin
       @pending_change_requests_count = ProfileChangeRequest.pending.count
     end
 
-    def data_health_count
+    def badge_counts
       authorize! :home, to: :index?
 
-      render_count_badge(:data_health_count, title: DATA_HEALTH_BADGE_TITLE) { DataHealth.checks.sum(&:count) }
-    end
-
-    def author_credit_count
-      authorize! :home, to: :index?
-
-      render_count_badge(:author_credit_count) { DataHealth::Worklists.new.author_credit.sum(&:count) }
-    end
-
-    def unsynced_features_count
-      authorize! Feature, to: :create?
-
-      render_count_badge(:unsynced_features_count) { FeatureCatalog.new.missing_count }
+      @data_health_count = safe_count { DataHealth.checks.sum(&:count) }
+      @author_credit_count = safe_count { DataHealth::Worklists.new.author_credit.sum(&:count) }
+      @unsynced_features_count = safe_count { FeatureCatalog.new.missing_count } if allowed_to?(:create?, Feature)
+      render :badge_counts
     end
 
     private
 
-    # A badge is a nicety, so a failing count renders an empty frame and leaves the button usable.
-    def render_count_badge(frame_id, title: nil)
-      count = begin
-        yield
-      rescue StandardError => e
-        Rails.error.report(e)
-        nil
-      end
-      render partial: "count_badge_frame", locals: { frame_id: frame_id, count: count, title: title }
+    # A badge is a nicety, so a failing count leaves its badge empty and the button usable.
+    def safe_count
+      yield
+    rescue StandardError => e
+      Rails.error.report(e)
+      nil
     end
   end
 end

@@ -1,0 +1,7 @@
+<%= turbo_frame_tag :badge_counts do %>
+  <%= turbo_stream.update "data_health_count", partial: "count_badge", locals: { count: @data_health_count, title: Admin::HomeController::DATA_HEALTH_BADGE_TITLE } %>
+  <%= turbo_stream.update "author_credit_count", partial: "count_badge", locals: { count: @author_credit_count } %>
+  <% if @unsynced_features_count %>
+    <%= turbo_stream.update "unsynced_features_count", partial: "count_badge", locals: { count: @unsynced_features_count } %>
+  <% end %>
+<% end %>
