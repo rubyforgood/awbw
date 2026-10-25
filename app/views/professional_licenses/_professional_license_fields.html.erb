@@ -5,7 +5,7 @@
 <% editable = f.object.new_record? || allowed_to?(:edit?, f.object) %>
 <% if editable %>
   <div class="nested-fields mb-3 rounded-lg border border-gray-200 bg-white p-3">
-    <div class="grid grid-cols-1 items-end gap-4 md:grid-cols-5">
+    <div class="grid grid-cols-1 items-start gap-4 md:grid-cols-5">
       <div>
         <%= f.input :number,
                     wrapper: false,
@@ -21,13 +21,29 @@
       </div>
 
       <div>
+        <% license = f.object.decorate %>
         <%= f.input :issuing_state,
                     as: :select,
                     collection: us_states,
                     include_blank: true,
+                    selected: (license.issuing_state unless outside_usa_state?(license.issuing_state)),
                     wrapper: false,
                     label: "Issuing state",
                     input_html: { class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+        <%= render layout: "shared/outside_usa", locals: { open: license.outside_usa? } do %>
+          <%= f.input :issuing_state_outside_usa,
+                      wrapper: false,
+                      label: "State / province",
+                      input_html: { value: (license.issuing_state if outside_usa_state?(license.issuing_state)),
+                                    class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+          <%= f.input :issuing_country,
+                      as: :select,
+                      collection: GeographyHelper::COUNTRIES,
+                      include_blank: true,
+                      wrapper: false,
+                      label: "Country",
+                      input_html: { class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+        <% end %>
       </div>
 
       <div>
@@ -39,7 +55,7 @@
                     input_html: { class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
       </div>
 
-      <div class="flex items-center justify-end gap-3 text-right">
+      <div class="flex items-center justify-end gap-3 text-right md:pt-8">
         <% if f.object.persisted? %>
           <%= link_to "Edit", edit_professional_license_path(f.object, return_to: "person"),
                       class: "text-sm text-gray-400 hover:text-blue-600 underline whitespace-nowrap",
@@ -74,7 +90,7 @@
         </div>
         <div>
           <dt class="text-xs tracking-wide text-gray-400 uppercase">Issuing state</dt>
-          <dd class="font-medium text-gray-900"><%= f.object.issuing_state.presence || "—" %></dd>
+          <dd class="font-medium text-gray-900"><%= f.object.decorate.issuing_place.presence || "—" %></dd>
         </div>
         <div>
           <dt class="text-xs tracking-wide text-gray-400 uppercase">Expires</dt>

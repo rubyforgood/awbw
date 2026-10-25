@@ -1,0 +1,12 @@
+name: "Enter a license or state from outside the USA"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2846
+summary: >-
+  Every US-state dropdown now has an "Outside USA?" link that opens a box to type
+  a state or province. Professional licenses also record the issuing country.
+pro_tips:
+  - "Covers licenses on the person form, the CE page on the registration ticket, the admin license and CE registration pages, address and work-address forms, and state questions on public and registration forms."
+  - "A typed state wins over the dropdown. Clear the box to go back to a US state."
+  - "A license's state and country show together, e.g. \"Ontario, Canada\"."

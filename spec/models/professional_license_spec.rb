@@ -108,4 +108,17 @@ RSpec.describe ProfessionalLicense, type: :model do
       expect(license.reload).to be_used_for_ce
     end
   end
+
+  describe "#issuing_state_outside_usa=" do
+    it "wins over the dropdown whichever is assigned first" do
+      typed_first = described_class.new(issuing_state_outside_usa: "Ontario", issuing_state: "CA")
+      typed_last = described_class.new(issuing_state: "CA", issuing_state_outside_usa: "Ontario")
+
+      expect([ typed_first.issuing_state, typed_last.issuing_state ]).to eq(%w[Ontario Ontario])
+    end
+
+    it "keeps the dropdown pick when left blank" do
+      expect(described_class.new(issuing_state: "CA", issuing_state_outside_usa: "").issuing_state).to eq("CA")
+    end
+  end
 end

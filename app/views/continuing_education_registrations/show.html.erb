@@ -40,7 +40,7 @@
         </div>
         <div class="bg-white px-4 py-3">
           <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Issuing state</dt>
-          <dd class="mt-1 text-sm text-gray-900"><%= license&.issuing_state.presence || "—" %></dd>
+          <dd class="mt-1 text-sm text-gray-900"><%= license&.decorate&.issuing_place.presence || "—" %></dd>
         </div>
         <div class="bg-white px-4 py-3">
           <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">License expires</dt>

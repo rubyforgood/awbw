@@ -1,6 +1,30 @@
 require "rails_helper"
 
 RSpec.describe ProfessionalLicenseDecorator do
+  describe "#issuing_place" do
+    it "names the state alone for a US license" do
+      expect(build(:professional_license, issuing_state: "CA", issuing_country: "United States").decorate.issuing_place).to eq("CA")
+    end
+
+    it "adds the country for a license issued outside the USA" do
+      expect(build(:professional_license, issuing_state: "Ontario", issuing_country: "Canada").decorate.issuing_place).to eq("Ontario, Canada")
+    end
+  end
+
+  describe "#outside_usa?" do
+    it "is true for a state the US list can't show" do
+      expect(build(:professional_license, issuing_state: "Ontario").decorate).to be_outside_usa
+    end
+
+    it "is true for a country other than the US" do
+      expect(build(:professional_license, issuing_state: nil, issuing_country: "Canada").decorate).to be_outside_usa
+    end
+
+    it "is false for a US state" do
+      expect(build(:professional_license, issuing_state: "CA").decorate).not_to be_outside_usa
+    end
+  end
+
   describe "#expiry_badge" do
     it "reads as no expiration date when none is on file" do
       badge = build(:professional_license, expires_on: nil).decorate.expiry_badge
