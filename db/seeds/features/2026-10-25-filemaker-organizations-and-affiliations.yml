@@ -27,4 +27,5 @@ pro_tips:
   - "An organization or affiliation already in the portal is linked rather than duplicated, and only its blank fields are filled in."
   - "Where FileMaker has an organization's website, mission or type differently, the portal's is kept and a comment on the organization lists what FileMaker had."
   - "An affiliation with different dates, an address the organization doesn't have, or a new phone number comes in as its own record, leaving the portal's as it was."
+  - "When either the portal's affiliation or FileMaker's has no dates, the portal's is updated instead of adding a second one."
 action_path: "/organizations"

@@ -146,6 +146,16 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
         expect(person.affiliations.count).to eq(2)
       end
 
+      it "links the portal's dated row when the archive's row has no dates, keeping its dates" do
+        dated = stint(Date.new(2019, 1, 1), Date.new(2021, 6, 30))
+        personnel("PS0001", DateEntered: "")
+
+        import
+
+        expect(dated.reload).to have_attributes(filemaker_code: "PS0001", start_date: Date.new(2019, 1, 1), end_date: Date.new(2021, 6, 30))
+        expect(person.affiliations.count).to eq(1)
+      end
+
       it "links a row with no dates at all, taking the archive's" do
         undated = stint(nil)
         personnel("PS0001", DateEntered: "3/1/2024")
