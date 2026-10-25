@@ -5,9 +5,9 @@ released_on: 2026-10-25
 pr_number: 2843
 summary: >-
   On person and organization address forms, a non-USA address shows State as a
-  text box (so a province like AB can be entered) and Country is now required.
-  A new address starts in the country of the saved one, or the United States.
+  text box so a province like AB can be entered. A new address starts with the
+  country, state, and locality of the saved one.
 pro_tips:
-  - "A non-USA address with no locality starts on Outside USA."
+  - "With nothing saved, a new address starts in the country of the return address in Settings."
+  - "A blank locality starts on Outside USA for non-USA addresses and Outside CA for other US states."
   - "Admins can add admin=true to the edit page address to type any state on a US address too."
-  - "Changing the country switches the state field after you save and reopen the address."

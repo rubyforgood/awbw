@@ -18,15 +18,6 @@ RSpec.describe Address, type: :model do
       expect(address.errors[:locality]).to include("can't be blank")
     end
 
-    it "requires a country only when the form asks for one" do
-      address.country = nil
-      expect(address).to be_valid
-
-      address.country_required = true
-      expect(address).not_to be_valid
-      expect(address.errors[:country]).to include("can't be blank")
-    end
-
     it "requires a city" do
       address.city = nil
       expect(address).not_to be_valid

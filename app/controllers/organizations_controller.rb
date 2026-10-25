@@ -114,7 +114,6 @@ class OrganizationsController < ApplicationController
       end
     end
 
-    require_address_countries(@organization)
     if @organization.save
       redirect_to @organization, notice: "Organization was successfully created."
     else
@@ -126,7 +125,6 @@ class OrganizationsController < ApplicationController
   def update
     authorize! @organization
     @organization.assign_attributes(organization_params)
-    require_address_countries(@organization)
 
     if @organization.save
       redirect_to organization_path(@organization), notice: "Organization was successfully updated.", status: :see_other

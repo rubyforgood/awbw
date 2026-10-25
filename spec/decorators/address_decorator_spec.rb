@@ -29,38 +29,45 @@ RSpec.describe AddressDecorator do
     end
   end
 
-  describe "#default_country and #state_as_text?" do
+  describe "defaults for a new address" do
     let(:person) { create(:person) }
 
     def new_address
       person.addresses.reload.build.decorate
     end
 
-    it "keeps a saved address's own country and state field" do
-      address = create(:address, addressable: person, state: "CA", country: "Canada").decorate
+    it "keeps a saved address's own values" do
+      address = create(:address, addressable: person, state: "CA", country: "Canada", locality: "Outside USA").decorate
 
       expect(address.default_country).to eq("Canada")
+      expect(address.default_state).to eq("CA")
       expect(address.state_as_text?).to be(true)
     end
 
-    it "starts a new address in the saved address's country" do
-      create(:address, addressable: person, country: "United States")
+    it "copies the saved address's country, state, and locality" do
+      create(:address, addressable: person, state: "CA", country: "United States", locality: "LA County")
 
       expect(new_address.default_country).to eq("United States")
+      expect(new_address.default_state).to eq("CA")
+      expect(new_address.default_locality).to eq("LA County")
       expect(new_address.state_as_text?).to be(false)
     end
 
     it "prefers the primary saved address" do
-      create(:address, addressable: person, country: "United States", primary: false)
+      create(:address, addressable: person, state: "NY", country: "United States", primary: false)
       create(:address, addressable: person, state: "AB", country: "Canada", primary: true)
 
       expect(new_address.default_country).to eq("Canada")
+      expect(new_address.default_state).to eq("AB")
       expect(new_address.state_as_text?).to be(true)
     end
 
-    it "starts a new address in the United States when nothing is saved" do
-      expect(new_address.default_country).to eq("United States")
-      expect(new_address.state_as_text?).to be(false)
+    it "falls back to the Settings default country when nothing is saved" do
+      allow(Setting).to receive(:default_address_country).and_return("Canada")
+
+      expect(new_address.default_country).to eq("Canada")
+      expect(new_address.default_state).to be_nil
+      expect(new_address.state_as_text?).to be(true)
     end
   end
 
@@ -73,8 +80,19 @@ RSpec.describe AddressDecorator do
       expect(build(:address, locality: nil, state: "AB", country: "Canada").decorate.default_locality).to eq("Outside USA")
     end
 
-    it "leaves a blank locality blank for a US address" do
+    it "fills a blank locality with Outside CA for a US state other than California" do
+      expect(build(:address, locality: nil, state: "NY", country: "United States").decorate.default_locality).to eq("Outside CA")
+    end
+
+    it "leaves a blank locality blank in California" do
       expect(build(:address, locality: nil, state: "CA", country: "United States").decorate.default_locality).to be_nil
+    end
+
+    it "derives a new address's locality when the saved one has none" do
+      person = create(:person)
+      create(:address, addressable: person, state: "NY", country: "United States").update_column(:locality, nil)
+
+      expect(person.addresses.reload.build.decorate.default_locality).to eq("Outside CA")
     end
   end
 end

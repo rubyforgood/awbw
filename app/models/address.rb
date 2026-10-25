@@ -30,8 +30,6 @@ class Address < ApplicationRecord
   # the link rather than block deletion when an org address is removed.
   has_many :affiliations, foreign_key: :organization_address_id, dependent: :nullify, inverse_of: :organization_address
 
-  attr_accessor :country_required
-
   before_validation :type_as_unknown
 
   validates :locality, presence: true
@@ -43,7 +41,6 @@ class Address < ApplicationRecord
   validates :district, length: { maximum: 255 }
   validates :county, length: { maximum: 255 }
   validates :country, length: { maximum: 255 }
-  validates :country, presence: true, if: :country_required
   validates :phone, length: { maximum: 255 }
 
   scope :active, -> { where(inactive: false) }
