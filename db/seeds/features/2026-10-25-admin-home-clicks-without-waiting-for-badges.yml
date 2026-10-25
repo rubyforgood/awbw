@@ -1,9 +1,10 @@
-name: "Admin home links work while the action counts load"
+name: "Admin home links work while the action badges load"
 area: reporting
 display_status: admin_facing
 released_on: 2026-10-25
 pr_number: 2847
 summary: >-
-  The counts on the admin home's Data health, Author credit divergences, and
-  Sync features buttons now load together in the background, so clicking
-  through to another page no longer waits for them to finish.
+  The badges on the admin home's action buttons now load together in the
+  background, so clicking through to another page no longer waits for them.
+  Data health and Author credit divergences show "Resolve" when something needs
+  attention; open the page for the full count.

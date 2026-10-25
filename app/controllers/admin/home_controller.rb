@@ -2,7 +2,8 @@ module Admin
   class HomeController < ApplicationController
     include AdminCardsHelper
 
-    DATA_HEALTH_BADGE_TITLE = "Data checks only. Possible duplicates and author credit are counted separately on the Data health page.".freeze
+    RESOLVE_BADGE = "Resolve".freeze
+    DATA_HEALTH_BADGE_TITLE = "Data checks only. Possible duplicates and author credit are listed separately on the Data health page.".freeze
 
     def index
       authorize! :home, to: :index?
@@ -17,19 +18,19 @@ module Admin
       @pending_change_requests_count = ProfileChangeRequest.pending.count
     end
 
-    def badge_counts
+    def badges
       authorize! :home, to: :index?
 
-      @data_health_count = safe_count { DataHealth.checks.sum(&:count) }
-      @author_credit_count = safe_count { DataHealth::Worklists.new.author_credit.sum(&:count) }
-      @unsynced_features_count = safe_count { FeatureCatalog.new.missing_count } if allowed_to?(:create?, Feature)
-      render :badge_counts
+      @data_health_flagged = safely { DataHealth.checks.any?(&:flagged?) }
+      @author_credit_flagged = safely { AuthorCreditDivergenceQuery.new.any? }
+      @unsynced_features_count = safely { FeatureCatalog.new.missing_count } if allowed_to?(:create?, Feature)
+      render :badges
     end
 
     private
 
-    # A badge is a nicety, so a failing count leaves its badge empty and the button usable.
-    def safe_count
+    # A badge is a nicety, so a failing check leaves its badge empty and the button usable.
+    def safely
       yield
     rescue StandardError => e
       Rails.error.report(e)

@@ -20,6 +20,8 @@ module DataHealth
       @count ||= missing.any? ? 1 : 0
     end
 
+    def flagged? = any?
+
     def lists_rows? = false
 
     def scope = Setting.none

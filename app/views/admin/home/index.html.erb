@@ -159,7 +159,7 @@
             <% end %>
             <%= link_to admin_data_health_path, class: button_classes(:primary_outline) do %>
               <i class="fa-solid fa-heart-pulse"></i> Data health
-              <%= tag.span id: "data_health_count" %>
+              <%= tag.span id: "data_health_badge" %>
             <% end %>
             <% if allowed_to?(:import?, EventRegistration) %>
               <%= link_to new_event_registration_import_path(return_to: "admin_home"), class: button_classes(:primary_outline) do %>
@@ -168,18 +168,18 @@
             <% end %>
             <%= link_to author_credit_divergences_path, class: button_classes(:primary_outline) do %>
               <i class="fa-solid fa-pen-nib"></i> Author credit divergences
-              <%= tag.span id: "author_credit_count" %>
+              <%= tag.span id: "author_credit_badge" %>
             <% end %>
             <% if allowed_to?(:create?, Feature) %>
               <%= button_to import_features_path,
                             class: button_classes(:primary_outline),
                             form: { data: { turbo_confirm: "Add any newly-shipped features and fill in missing details? Your existing edits are kept." } } do %>
                 <i class="fa-solid fa-arrows-rotate"></i> Sync features &amp; tips
-                <%= tag.span id: "unsynced_features_count" %>
+                <%= tag.span id: "unsynced_features_badge" %>
               <% end %>
             <% end %>
           </div>
-          <%= turbo_frame_tag :badge_counts, src: admin_home_badge_counts_path %>
+          <%= turbo_frame_tag :badges, src: admin_home_badges_path %>
         </div>
       </div>
 
