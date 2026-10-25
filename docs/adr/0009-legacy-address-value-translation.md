@@ -66,6 +66,10 @@ them. The one exception is the hand cleanup below.
 Prod data was cleaned by hand over these two days, with addresses as the record:
 
 - **Addresses:** cities, states, and countries corrected in the portal.
+- **Blank address fields filled in** from the rest of each address: country from the state,
+  county from the ZIP (FileMaker's ZIP table), and an Unknown locality from the city, county,
+  and the regions FileMaker projects give each California county. Values someone set were
+  kept. One `autochange.address_fills` Ahoy event points at the saved report of every fill.
 - **Some form answers**, because they hadn't become addresses yet: organization address
   answers on submissions not yet linked to an organization, which turn into the
   organization's address when someone links one. Fixed: country spellings, placeholder values
