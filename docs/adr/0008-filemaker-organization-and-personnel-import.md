@@ -93,8 +93,9 @@ Constraints already decided elsewhere:
   - **One row, one stretch.** A person can facilitate at one org over several separate
     stretches (2020–2022, 2024–Oct 2025, Feb 2026–now), so a Personnel row links an existing
     Facilitator row only when their dates agree — each the same or blank on one side, and
-    still start-before-end once the blanks fill. Any other dates are a separate stretch and
-    come in as a new affiliation (decided 2026-10-25), leaving the portal's untouched.
+    still start-before-end once the blanks fill. A row with no dates on either side updates
+    the other (taking its dates, or the code alone). Any other dates are a separate stretch
+    and come in as a new affiliation (decided 2026-10-25), leaving the portal's untouched.
   - **A row naming a project but no person** (29 of the blank-role rows) still records that
     the program ran. Once every other row is read, an organization nothing else affiliates
     anyone with gets one Facilitator affiliation for the placeholder person **AWBW
