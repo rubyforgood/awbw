@@ -51,93 +51,92 @@
     <div class="w-full md:ml-auto md:w-auto"><%= render "shared/form_image_field", f: f, field_name: :logo, compact: true %></div>
   </div>
 
-  <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
-    <div class="<%= card_class %>">
-      <h3 class="<%= heading_class %>">Details</h3>
-      <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-        <% organization_type_option = f.object.decorate.organization_type_option %>
-        <%= f.input :organization_type,
-                    label: "Organization type",
-                    as: :select,
-                    required: true,
-                    collection: Organization::ORGANIZATION_TYPES,
-                    selected: organization_type_option,
-                    input_html: {
-                      value: organization_type_option,
-                      class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    } %>
-        <%= f.input :organization_type_other,
-                    label: "Other organization type",
-                    hint: "Please specify if 'Other' selected",
-                    input_html: {
-                      class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                    } %>
-        <%= f.input :email,
-                    label: "Email",
-                    as: :email,
-                    input_html: {
-                      class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    } %>
-        <% if f.object.website_url.present? && (URI.parse(f.object.website_url) rescue nil).nil? %>
-          <% website_warning = "<span class='text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 text-sm'>Invalid</span>" %>
-        <% end %>
-        <%= f.input :website_url,
-                    label: "Website URL #{website_warning}".html_safe,
-                    as: :string,
-                    hint: "Invalid URLs won't be clickable in Portal",
-                    wrapper_html: { id: "website-url-field" },
-                    input_html: {
-                      class: "w-full rounded-md #{"bg-red-200" if website_warning.present? } border-gray-300
-                      shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    } %>
-        <%= f.association :windows_type,
-                          label: "Windows audience",
-                          include_blank: true,
-                          required: false,
-                          wrapper_html: { class: "mb-0!" },
-                          input_html: {
-                            class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                          } %>
-      </div>
-    </div>
-
-    <%# The breakdown only lists what the profile preferences allow, so with both off
-        there's nothing on the other end to link to. %>
-    <% breakdown_shown = f.object.profile_show_sectors? || f.object.profile_show_age_ranges? %>
-    <% breakdown_path = populations_served_organization_path(f.object, return_to: "organization_edit") if f.object.persisted? && breakdown_shown %>
-    <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <h3 class="mb-2 font-semibold text-gray-700">Sectors</h3>
-          <% sectors = f.object.active_facilitator_sectors %>
-          <% if sectors.any? %>
-            <%= render "organizations/sector_preview", sectors: sectors, breakdown_path: breakdown_path, new_tab: true %>
-          <% else %>
-            <p class="text-sm text-gray-500 italic">None yet.</p>
-          <% end %>
-        </div>
-        <div>
-          <h3 class="mb-2 font-semibold text-gray-700">Age groups served</h3>
-          <% age_groups = f.object.active_facilitator_age_groups %>
-          <% if age_groups.any? %>
-            <%= render "shared/age_group_tags", primary: age_groups %>
-          <% else %>
-            <p class="text-sm text-gray-500 italic">None yet.</p>
-          <% end %>
-        </div>
-      </div>
-      <p class="mt-3 text-xs text-gray-500">
-        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-        Not editable here. These come from the primary sector and primary age group of each active facilitator at this organization — edit a facilitator's profile to change them.
-      </p>
-      <% if breakdown_path %>
-        <div class="mt-2">
-          <%= link_to breakdown_path, target: "_blank", rel: "noopener", class: "text-sm #{eyebrow_link_class}" do %>
-            See all sectors and age groups <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-          <% end %>
-        </div>
+  <div class="<%= card_class %>">
+    <h3 class="<%= heading_class %>">Details</h3>
+    <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-4">
+      <% organization_type_option = f.object.decorate.organization_type_option %>
+      <%= f.input :organization_type,
+                  label: "Organization type",
+                  as: :select,
+                  required: true,
+                  collection: Organization::ORGANIZATION_TYPES,
+                  selected: organization_type_option,
+                  input_html: {
+                    value: organization_type_option,
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  } %>
+      <%= f.input :organization_type_other,
+                  label: "Other organization type",
+                  hint: "Please specify if 'Other'",
+                  input_html: {
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  } %>
+      <%= f.input :email,
+                  label: "General inbox",
+                  as: :email,
+                  input_html: {
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  } %>
+      <% if f.object.website_url.present? && (URI.parse(f.object.website_url) rescue nil).nil? %>
+        <% website_warning = "<span class='text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 text-sm'>Invalid</span>" %>
       <% end %>
+      <%= f.input :website_url,
+                  label: "Website URL #{website_warning}".html_safe,
+                  as: :string,
+                  hint: "Invalid URLs won't be clickable",
+                  wrapper_html: { id: "website-url-field" },
+                  input_html: {
+                    class: "w-full rounded-md #{"bg-red-200" if website_warning.present? } border-gray-300
+                    shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  } %>
     </div>
+  </div>
+
+  <%# The breakdown only lists what the profile preferences allow, so with both off
+      there's nothing on the other end to link to. %>
+  <% breakdown_shown = f.object.profile_show_sectors? || f.object.profile_show_age_ranges? %>
+  <% breakdown_path = populations_served_organization_path(f.object, return_to: "organization_edit") if f.object.persisted? && breakdown_shown %>
+  <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div>
+        <h3 class="mb-2 font-semibold text-gray-700">Sectors</h3>
+        <% sectors = f.object.active_facilitator_sectors %>
+        <% if sectors.any? %>
+          <%= render "organizations/sector_preview", sectors: sectors, breakdown_path: breakdown_path, new_tab: true %>
+        <% else %>
+          <p class="text-sm text-gray-500 italic">None yet.</p>
+        <% end %>
+      </div>
+      <div>
+        <h3 class="mb-2 font-semibold text-gray-700">Age groups served</h3>
+        <% age_groups = f.object.active_facilitator_age_groups %>
+        <% if age_groups.any? %>
+          <%= render "shared/age_group_tags", primary: age_groups %>
+        <% else %>
+          <p class="text-sm text-gray-500 italic">None yet.</p>
+        <% end %>
+      </div>
+      <%= f.association :windows_type,
+                        label: "Windows audience",
+                        include_blank: true,
+                        required: false,
+                        wrapper_html: { class: "mb-0!" },
+                        label_html: { class: "font-semibold" },
+                        input_html: {
+                          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                        } %>
+    </div>
+    <p class="mt-3 text-xs text-gray-500">
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      Sectors and age groups aren't editable here. They come from the primary sector and primary age group of each active facilitator at this organization — edit a facilitator's profile to change them.
+    </p>
+    <% if breakdown_path %>
+      <div class="mt-2">
+        <%= link_to breakdown_path, target: "_blank", rel: "noopener", class: "text-sm #{eyebrow_link_class}" do %>
+          See all sectors and age groups <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 
   <%# Compared as program-status buckets, not raw status names — the legacy column
@@ -158,10 +157,6 @@
                   label: "Tax ID (EIN)",
                   hint: "Shown in the site footer",
                   input_html: { class: "w-full" } %>
-      <% high_profile_gem = tag.i(class: "fa-solid fa-gem text-purple-600", aria: { hidden: true }) %>
-      <%= f.input :high_profile,
-                  label: "High profile",
-                  hint: "Shows a #{high_profile_gem} next to the org on dashboards and reports".html_safe %>
       <% if params[:admin] %>
         <div class="grid grid-cols-2 gap-x-3">
           <%= f.input :start_date,
@@ -182,6 +177,11 @@
                       } %>
         </div>
       <% end %>
+      <% high_profile_gem = tag.i(class: "fa-solid fa-gem text-purple-600", aria: { hidden: true }) %>
+      <%= f.input :high_profile,
+                  label: "High profile",
+                  wrapper_html: { class: "lg:col-start-4" },
+                  hint: "Shows a #{high_profile_gem} next to the org on dashboards and reports".html_safe %>
     </div>
   <% end %>
 
@@ -254,10 +254,11 @@
           <%= f.input :start_date,
                       label: false,
                       as: :string,
+                      wrapper_html: { class: "mb-0!" },
                       input_html: {
                         type: 'date',
                         value: f.object.start_date&.strftime('%Y-%m-%d'),
-                        class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-2"
+                        class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                       } %>
         </div>
       <% end %>

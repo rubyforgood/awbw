@@ -114,4 +114,13 @@ RSpec.describe "the Active/Inactive split on the affiliation editor", type: :req
     expect(parsed.at_css("label[for='aff-tab-active']").text.split.last).to eq("0")
     expect(rows_in("person_affiliation_rows_inactive").size).to eq(2)
   end
+
+  it "shows one empty message when there are no affiliations to split" do
+    get edit_organization_path(create(:organization))
+
+    expect(parsed.at_css("label[for='aff-tab-active']")).to be_nil
+    expect(response.body).to include("No affiliations yet.")
+    expect(response.body).not_to include("No active affiliations.")
+    expect(response.body).not_to include("No inactive affiliations.")
+  end
 end

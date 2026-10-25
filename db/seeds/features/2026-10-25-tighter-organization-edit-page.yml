@@ -1,0 +1,12 @@
+name: "Tighter organization edit page"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2858
+summary: >-
+  The organization edit page takes much less scrolling. Section titles sit inside their boxes,
+  the logo fits beside the name, and the header stays in view as you scroll — matching the person edit page.
+pro_tips:
+  - "Windows audience now sits with the sectors and age groups it describes."
+  - "Admin-only fields (FileMaker ID, tax ID, high profile) share one blue strip."
+  - "An org with no affiliations now says \"No affiliations yet\" once, not both empty-tab messages."
