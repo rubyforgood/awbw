@@ -11,8 +11,59 @@ module FilemakerValues
   # A two-digit year below this is read as 20xx, at or above it as 19xx.
   TWO_DIGIT_YEAR_PIVOT = 10
   CONTACT_TYPES = AddressTranslation::CONTACT_TYPES
-  # Staff retired a FileMaker record by renaming it: "DELETE", "Harbor House Do Not Use", "created in error".
-  RETIRED_NAME = /\bdelete\b|do not use|created in error/i
+  # Organizations and projects staff retired in FileMaker by renaming them, by code, as
+  # prod's archive names them; the import leaves them out. P0038, P0798, P0825, P2156 and
+  # P2524 are retired too but a portal org already carries each, so they still import.
+  RETIRED_RECORDS = {
+    "ORG00837" => "Catalyst DO NOT USE",
+    "ORG01126" => "Community Counseling Center DO NOT USE",
+    "ORG02183" => "House of Ruth Do Not Use",
+    "ORG02287" => "InnerCHANGE Do Not Use",
+    "ORG02393" => "Jewish Family Service (JFS) Do Not Use",
+    "ORG02988" => "Marjaree Mason Center Do Not Use",
+    "ORG03581" => "Pacific Clinics DO NOT USE",
+    "ORG03681" => "Peace Over Violence Do Not Use",
+    "ORG04794" => "The Joe Torre Safe at Home Foundation DO NOT USE",
+    "ORG05066" => "Turning Point Do Not Use",
+    "ORG06025" => "YWCA of Greater Los Angeles Do Not Use",
+    "ORG06047" => "Union Rescue Mission Do Not Use",
+    "ORG06175" => "Monarch Services Do Not Use",
+    "ORG06183" => "Family Crisis Services, Inc. Do Not Use",
+    "ORG06184" => "YWCA Greater Lafayette Do Not Use",
+    "ORG06186" => "Proud Mama Bears Do Not Use",
+    "ORG06188" => "PROTOTYPES SPA 3 DO NOT USE",
+    "ORG06189" => "Lumina Alliance Do Not Use",
+    "ORG06190" => "Partners Against Violence Do Not Use",
+    "ORG06197" => "Alliance for Community Transformations Do Not Use",
+    "ORG06208" => "Arise Do Not Use",
+    "ORG06223" => "Bradley Angle Do Not Use",
+    "ORG06226" => "Laurel House Do Not Use",
+    "ORG06230" => "NEWS Domestic Violence & Sexual Abuse Services Do Not Use",
+    "ORG06316" => "Empowerhouse Do Not Use",
+    "ORG06322" => "VIP Community Mental Health Center Do Not Use",
+    "ORG06509" => "DELETE Catalyst Domestic Violence Services",
+    "ORG06689" => "HCDVCC DO NOT USE",
+    "ORG06767" => "The Adult Skills Center (TASC) DO NOT USE",
+    "ORG06809" => "Created in Error",
+    "ORG06981" => "DO NOT USE Children's Hospital Los Angeles",
+    "P1405" => "Family Crisis Services DUPLICATE/Do not use",
+    "P1630" => "DELETE",
+    "P2228" => "DELETE",
+    "P2255" => "created in error",
+    "P2262" => "DELETE RECORD",
+    "P2312" => "DO NOT USE Domestic Violence Solutions for Santa Barbara County",
+    "P2344" => "DELETE Catalyst Domestic Violence Services",
+    "P2370" => "DELETE",
+    "P2394" => "DELETE",
+    "P2416" => "DELETE",
+    "P2465" => "DELETE",
+    "P2466" => "DELETE",
+    "P2475" => "DELETE",
+    "P2476" => "DELETE",
+    "P2497" => "DELETE",
+    "P2605" => "DELETE",
+    "P2762" => "DO NOT USE Children's Hospital Los Angeles"
+  }.freeze
 
   # Every string copied here lands in a varchar(255) the archive's free text isn't
   # bounded by, and an over-long incidental field would otherwise cost the record —
@@ -31,8 +82,8 @@ module FilemakerValues
     email.length <= STRING_LIMIT && email.match?(URI::MailTo::EMAIL_REGEXP)
   end
 
-  def retired_name?(name)
-    name.to_s.match?(RETIRED_NAME)
+  def retired_record?(code)
+    RETIRED_RECORDS.key?(code.to_s.strip)
   end
 
   def flag?(value)

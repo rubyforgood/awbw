@@ -171,8 +171,13 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     expect(Organization.sole).to have_attributes(name: "Lone Program", filemaker_code: "P0006", parent_id: nil)
   end
 
-  describe "rows FileMaker marks as retired" do
-    it "leaves out an organization marked Do Not Use, bringing its projects in unnested" do
+  describe "records retired in FileMaker" do
+    before do
+      stub_const("FilemakerValues::RETIRED_RECORDS", { "ORG00007" => "Harbor House Do Not Use", "P0002" => "DELETE",
+                                                       "P0003" => "Harbor House Program" })
+    end
+
+    it "leaves out a retired organization, bringing its projects in unnested" do
       fm_organization("ORG00007", OrgName: "Harbor House Do Not Use")
       project("P0007", "ORG00007", ProjectName: "Harbor Teen Program")
       project("P0008", "ORG00007", ProjectName: "Harbor Adult Program")
@@ -181,11 +186,11 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
       expect(Organization.pluck(:name, :parent_id)).to contain_exactly([ "Harbor Teen Program", nil ], [ "Harbor Adult Program", nil ])
     end
 
-    it "leaves out projects named DELETE or created in error, keeping their organization one place" do
+    it "leaves out retired projects by code, whatever their name, keeping their organization one place" do
       fm_organization("ORG00001")
       project("P0001", "ORG00001")
       project("P0002", "ORG00001", ProjectName: "DELETE")
-      project("P0003", "ORG00001", ProjectName: "created in error")
+      project("P0003", "ORG00001", ProjectName: "Harbor House Program")
 
       results = import.results
 
@@ -193,19 +198,17 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
       expect(Organization.sole).to have_attributes(name: "Harbor House", filemaker_code: "ORG00001, P0001")
     end
 
-    it "still imports a retired row the portal already carries the code for" do
-      existing = create(:organization, name: "Harbor House Art Program", filemaker_code: "P0002")
+    it "brings in an unlisted project even when its name says DELETE" do
       fm_organization("ORG00001")
-      project("P0002", "ORG00001", ProjectName: "Harbor House Art Program - DELETE")
+      project("P0004", "ORG00001", ProjectName: "Harbor House Art Program - DELETE")
 
       import
 
-      expect(Organization.sole).to eq(existing)
-      expect(existing.reload.filemaker_code).to eq("ORG00001, P0002")
+      expect(Organization.sole.filemaker_code).to eq("ORG00001, P0004")
     end
 
-    it "creates no organization for an agency card marked Do Not Use" do
-      FmRolodex.create!(fm_id: "00091", data: { "isAgency__c" => "1", "Organization" => "Elm Street Clinic DO NOT USE" })
+    it "creates no organization for an agency card naming a retired one" do
+      FmRolodex.create!(fm_id: "00091", data: { "isAgency__c" => "1", "OrgID" => "ORG00007", "Organization" => "Harbor House Do Not Use" })
 
       expect(import.results[:skipped].sole).to include("00091", "retired")
       expect(Organization.count).to eq(0)
