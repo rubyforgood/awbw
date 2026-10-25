@@ -60,7 +60,7 @@ This codebase (Rails 8.1)
 | `app/controllers/` | Rails controllers (admin/, events/, home/) | ~93 files |
 | `app/views/` | ERB templates | ~824 files |
 | `app/decorators/` | Draper decorators for view logic | ~60 files |
-| `app/policies/` | ActionPolicy authorization rules | ~63 files |
+| `app/policies/` | ActionPolicy authorization rules | ~75 files |
 | `app/presenters/` | Presentation objects | 8 files |
 | `app/helpers/` | View helpers | ~50 files |
 | `app/mailers/` | ActionMailer classes | 6 files |
@@ -519,7 +519,7 @@ Tailwind only scans the paths listed in the `@source` directives at the top of t
 | `spec/requests/` | ~137 | HTTP request/integration tests |
 | `spec/system/` | ~37 | End-to-end browser tests (Capybara) |
 | `spec/routing/` | ~18 | Route definition tests |
-| `spec/policies/` | ~19 | Authorization policy tests |
+| `spec/policies/` | ~26 | Authorization policy tests |
 | `spec/decorators/` | ~29 | Decorator tests |
 | `spec/services/` | ~109 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
