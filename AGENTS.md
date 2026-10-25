@@ -197,11 +197,8 @@ or symbol. So write `authorize! @setting` in `show` (not `authorize! @setting, t
 (e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or
 `authorize! :workshop, to: :summary?`).
 
-Authorization checks always go through a policy rule. Controllers, views, helpers, and decorators
-call `authorize!` / `allowed_to?` and never compare `current_user` themselves (ownership, admin,
-self) — add a rule to the policy instead (e.g. `PersonPolicy#own_profile?`).
-Ask the policy of the thing being gated, call `allowed_to?` inline (no one-off wrapper methods),
-and render the default view with an admin override. Full conventions: CLAUDE.md → Code Style.
+Authorization always goes through a policy rule (`authorize!` / `allowed_to?`), never a `current_user`
+comparison — add a rule if none fits (e.g. `PersonPolicy#own_profile?`). Conventions: CLAUDE.md → Code Style.
 
 ### Controller Concerns
 

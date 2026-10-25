@@ -128,7 +128,7 @@ class UsersController < ApplicationController
       # Session identity check, so it stays out of policies: re-signing in keeps you logged in after editing your own login.
       bypass_sign_in(@user) if @user == current_user
 
-      if allowed_to?(:confirm_email_change?, @user) && @user.saved_change_to_unconfirmed_email? && @user.unconfirmed_email.present?
+      if @user.saved_change_to_unconfirmed_email? && @user.unconfirmed_email.present?
         redirect_to confirm_email_change_user_path(@user)
         return
       end
