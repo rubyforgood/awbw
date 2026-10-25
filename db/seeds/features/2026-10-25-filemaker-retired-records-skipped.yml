@@ -1,0 +1,13 @@
+name: "FileMaker import leaves out retired organizations"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2861
+summary: >-
+  The FileMaker import no longer brings over organizations and programs staff
+  had retired by renaming them "DELETE", "Do Not Use", or "created in error".
+pro_tips:
+  - "One the portal already has keeps its link, so the people and programs tied to it still land there."
+  - "Programs under a retired organization still come in, on their own rather than nested under it."
+  - "Each one left out is listed in the import report."
+action_path: "/organizations"

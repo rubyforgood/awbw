@@ -11,6 +11,8 @@ module FilemakerValues
   # A two-digit year below this is read as 20xx, at or above it as 19xx.
   TWO_DIGIT_YEAR_PIVOT = 10
   CONTACT_TYPES = AddressTranslation::CONTACT_TYPES
+  # Staff retired a FileMaker record by renaming it: "DELETE", "Harbor House Do Not Use", "created in error".
+  RETIRED_NAME = /\bdelete\b|do not use|created in error/i
 
   # Every string copied here lands in a varchar(255) the archive's free text isn't
   # bounded by, and an over-long incidental field would otherwise cost the record —
@@ -27,6 +29,10 @@ module FilemakerValues
 
   def valid_email?(email)
     email.length <= STRING_LIMIT && email.match?(URI::MailTo::EMAIL_REGEXP)
+  end
+
+  def retired_name?(name)
+    name.to_s.match?(RETIRED_NAME)
   end
 
   def flag?(value)

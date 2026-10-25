@@ -14,7 +14,8 @@ module OrganizationServices
   #   * created          — a new organization
   #   * linked           — an existing organization took the row's code and was filled
   #   * already_imported — an organization already carried the row's code
-  #   * skipped          — nameless rows, and merged projects with nowhere to fold into
+  #   * skipped          — nameless rows, rows retired in FileMaker (#retired_name?) that no
+  #                        organization carries the code of, and merged projects with nowhere to fold into
   #   * failed           — the Organization didn't validate
   #
   # Fields fill blanks only. Where the portal already holds a different value it keeps its
@@ -73,6 +74,8 @@ module OrganizationServices
       @phones = FmPhoneNumber.all.group_by { |phone| phone.data["OrgID"].to_s }
       @emails = FmEmailAddress.all.group_by { |email| email.data["OrgID"].to_s }
 
+      retired, projects = projects.partition { |project| retired?(project_name(project), project.fm_id) }
+      retired.each { |project| record(:skipped, "#{project.fm_id} #{project_name(project)}: retired in FileMaker") }
       merged, live = projects.partition { |project| merged_into(project) }
       by_organization = live.group_by { |project| project.data["OrgID"].to_s }
       read = 0
@@ -104,8 +107,8 @@ module OrganizationServices
       data = fm_organization.data
       name = clip(data["OrgName"].to_s.squish)
       label = "#{fm_organization.fm_id} #{name}".squish
-      if name.blank?
-        record(:skipped, "#{label}: no name")
+      if name.blank? || retired?(name, fm_organization.fm_id)
+        record(:skipped, "#{label}: #{name.blank? ? "no name" : "retired in FileMaker"}")
         return import_projects(nil, projects)
       end
 
@@ -221,6 +224,7 @@ module OrganizationServices
       label = "#{rolodex.fm_id} #{name}".squish
       organization = coded(data["OrgID"]) || (@name_matcher.call(name)&.organization if name)
       return record(:skipped, "#{label}: agency card with no organization named") if organization.nil? && name.blank?
+      return record(:skipped, "#{label}: agency card naming an organization retired in FileMaker") if organization.nil? && retired_name?(name)
 
       organization ||= Organization.new(name:)
       kept = fill(organization, website_url: clip(data["WebSite"]), mission_vision_values: clip(data["Mission"]))
@@ -249,6 +253,11 @@ module OrganizationServices
     # A card naming a contact person carries that person's email, not the agency's.
     def names_a_person?(data)
       data["FirstName"].present? && data["LastName"].present?
+    end
+
+    # A retired row the portal already holds stays, so what points at it still lands there.
+    def retired?(name, code)
+      retired_name?(name) && !@codes.include?(code)
     end
 
     def coded(code)

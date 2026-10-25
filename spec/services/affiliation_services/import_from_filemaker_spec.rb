@@ -259,6 +259,14 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
         expect(import.results[:created]).to include(a_string_including("organization ##{created.id}", "Rolodex card"))
       end
 
+      it "creates no organization for a card naming one FileMaker marks Do Not Use" do
+        rolodex(Organization: "Foothill Family Services Do Not Use")
+        personnel("PS0001", ProjectID: "")
+
+        expect(import.results[:skipped]).to include(a_string_including("PS0001", "retired"))
+        expect(Organization.where("name LIKE ?", "Foothill%")).to be_empty
+      end
+
       it "gives an agency's own card AWBW Placeholder at the agency" do
         FmRolodex.create!(fm_id: "00777", data: { "isAgency__c" => "1", "OrgID" => "ORG00001" })
         personnel("PS0001", PersonID: "00777", ProjectID: "")

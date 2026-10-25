@@ -135,7 +135,7 @@ module AffiliationServices
     end
 
     def create_card_organization(name, label)
-      return if name.blank?
+      return if name.blank? || retired_name?(name)
 
       organization = Organization.create(name: clip(name), created_by_id: @import_user_id, updated_by_id: @import_user_id)
       unless organization.persisted?
@@ -151,6 +151,7 @@ module AffiliationServices
       project = data["ProjectID"].presence
       prefix = project ? "project #{project} wasn't imported" : "no project"
       return "#{prefix}, and no Rolodex card for person #{data["PersonID"].presence || "(none)"}" unless card
+      return "#{prefix}, and the person's Rolodex card names an organization retired in FileMaker" if retired_name?(card.data["Organization"])
 
       "#{prefix}, and the person's Rolodex card names no organization"
     end

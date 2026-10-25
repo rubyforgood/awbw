@@ -171,6 +171,47 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     expect(Organization.sole).to have_attributes(name: "Lone Program", filemaker_code: "P0006", parent_id: nil)
   end
 
+  describe "rows FileMaker marks as retired" do
+    it "leaves out an organization marked Do Not Use, bringing its projects in unnested" do
+      fm_organization("ORG00007", OrgName: "Harbor House Do Not Use")
+      project("P0007", "ORG00007", ProjectName: "Harbor Teen Program")
+      project("P0008", "ORG00007", ProjectName: "Harbor Adult Program")
+
+      expect(import.results[:skipped].sole).to include("ORG00007", "retired")
+      expect(Organization.pluck(:name, :parent_id)).to contain_exactly([ "Harbor Teen Program", nil ], [ "Harbor Adult Program", nil ])
+    end
+
+    it "leaves out projects named DELETE or created in error, keeping their organization one place" do
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001")
+      project("P0002", "ORG00001", ProjectName: "DELETE")
+      project("P0003", "ORG00001", ProjectName: "created in error")
+
+      results = import.results
+
+      expect(results[:skipped]).to contain_exactly(a_string_including("P0002", "retired"), a_string_including("P0003", "retired"))
+      expect(Organization.sole).to have_attributes(name: "Harbor House", filemaker_code: "ORG00001, P0001")
+    end
+
+    it "still imports a retired row the portal already carries the code for" do
+      existing = create(:organization, name: "Harbor House Art Program", filemaker_code: "P0002")
+      fm_organization("ORG00001")
+      project("P0002", "ORG00001", ProjectName: "Harbor House Art Program - DELETE")
+
+      import
+
+      expect(Organization.sole).to eq(existing)
+      expect(existing.reload.filemaker_code).to eq("ORG00001, P0002")
+    end
+
+    it "creates no organization for an agency card marked Do Not Use" do
+      FmRolodex.create!(fm_id: "00091", data: { "isAgency__c" => "1", "Organization" => "Elm Street Clinic DO NOT USE" })
+
+      expect(import.results[:skipped].sole).to include("00091", "retired")
+      expect(Organization.count).to eq(0)
+    end
+  end
+
   it "folds a merged-away project's code into the program it merged into" do
     fm_organization("ORG00001")
     project("P0001", "ORG00001")
