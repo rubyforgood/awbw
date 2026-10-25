@@ -6,9 +6,9 @@ class FeaturesController < ApplicationController
   def index
     authorize! Feature
     scope = authorized_scope(Feature.all)
-    @total = scope.count
 
     if turbo_frame_request?
+      @total = scope.count
       @features = filtered_features(scope).decorate
       @sorted_by_logged = sorted_by_logged?
       render :features_results

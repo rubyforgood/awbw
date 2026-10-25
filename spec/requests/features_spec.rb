@@ -35,6 +35,18 @@ RSpec.describe "/features", type: :request do
         expect(response.body).not_to include("Sync latest updates")
         expect(response.body).not_to include("New feature")
       end
+
+      it "leaves the feature count to the results frame" do
+        counts = []
+        subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+          counts << payload[:sql] if payload[:sql].match?(/SELECT COUNT\(.*FROM `features`/)
+        end
+        get features_path
+        ActiveSupport::Notifications.unsubscribe(subscriber)
+
+        expect(response).to have_http_status(:ok)
+        expect(counts).to be_empty
+      end
     end
 
     context "as an admin" do
