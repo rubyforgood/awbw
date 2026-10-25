@@ -57,7 +57,6 @@ class PublicFormSubmission
 
       OtherResponses::CaptureFromSubmission.call(submission)
       Quotes::CaptureFromSubmission.call(submission)
-      process_close_program(submission)
       send_notifications(submission)
 
       Current.form_submission_id = submission.id
@@ -94,45 +93,11 @@ class PublicFormSubmission
     registration
   end
 
-  # A close-program submission end-dates the person's affiliations at the named
-  # organization (see AffiliationServices::CloseProgram). We only auto-process
-  # when the submitted organization name matches an org exactly (case-insensitive).
-  # An unmatched name is left for an admin to resolve on the submission's processing
-  # panel, which runs the same service once they link the organization by hand.
-  def process_close_program(submission)
-    return unless @form.role == "close_program"
-    return unless submission.person
-
-    answers = submission.answers_by_identifier
-    organization = organization_named(answers[FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER])
-    return unless organization
-
-    ended = AffiliationServices::CloseProgram.call(
-      person: submission.person,
-      organization: organization,
-      effective_date: parse_date(answers["close_effective_date"]),
-      reason: answers["close_reason"],
-      leaving_job: answers["close_leaving_job"].to_s.casecmp?("Yes")
-    )
-
-    submission.link_organization!(organization.id)
-    submission.record_scenario_ended!(ended.map(&:id))
-  end
-
-  def parse_date(value)
-    Date.iso8601(value.to_s)
-  rescue ArgumentError, TypeError
-    nil
-  end
-
   # Link + fill the submitted organization. An agreement submission is processed
   # through the same linking core an admin would run (process_agreement_organization);
   # any other role runs the same capture an event registration does, so a job
-  # affiliation comes from the typed position either way. Skipped on a
-  # close-program form, whose submission ends affiliations at the org rather than
-  # creating them (process_close_program).
+  # affiliation comes from the typed position either way.
   def capture_organization(submission, registration)
-    return if @form.role == "close_program"
     return process_agreement_organization(submission, registration) if submission.agreement_scenario?
 
     organization = OrganizationServices::CaptureFromSubmission.call(
@@ -143,10 +108,8 @@ class PublicFormSubmission
   end
 
   # An agreement submission whose organization name resolves unambiguously is
-  # processed on arrival, the way a close-program submission already is: the
-  # linking core applies the scenario (a new job ends the person's other orgs'
-  # rows and start-dates the new one), confers the standing Facilitator
-  # affiliation, and fills the org's blank profile fields — identical to an admin
+  # processed on arrival: the linking core confers the standing Facilitator
+  # affiliation and fills the org's blank profile fields — identical to an admin
   # linking it by hand, so the two paths can't drift (ADR-0002). Anything the
   # core would have to guess at is left for an admin on the submission's linking
   # page.
@@ -164,7 +127,6 @@ class PublicFormSubmission
     )
 
     submission.link_organization!(organization.id)
-    submission.record_scenario_ended!(result.ended_affiliations.map(&:id))
     registration&.link_submitted_organization!(organization, submission: submission, autofill: result.saved)
     organization
   end

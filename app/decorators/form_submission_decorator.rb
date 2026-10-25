@@ -4,15 +4,12 @@ class FormSubmissionDecorator < ApplicationDecorator
   # What linking an organization from this submission's editor does beyond the
   # submission itself, mirroring FormSubmissionsController#link_and_report.
   def link_organization_effects
-    return [] if linking_scenario == "close_program"
-
     registration = event_registration_for_link
     position = org_entry[:position]
     [
       ("Links it to their #{registration.event.title} registration" if registration),
       ("Adds a “#{position}” job affiliation there" if position),
-      ("Adds a Facilitator affiliation there" if OrganizationServices::LinkSubmittedOrganization::FACILITATOR_CONFERRING_SCENARIOS.include?(link_scenario)),
-      ("Ends their affiliations at other organizations" if linking_scenario == "new_job")
+      ("Adds a Facilitator affiliation there" if OrganizationServices::LinkSubmittedOrganization::FACILITATOR_CONFERRING_SCENARIOS.include?(link_scenario))
     ].compact
   end
 

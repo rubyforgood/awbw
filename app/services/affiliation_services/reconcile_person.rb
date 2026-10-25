@@ -175,7 +175,7 @@ module AffiliationServices
     # they record facilitation that really happened — so the years before this
     # training survive (ADR-0003 D6).
     #
-    # The day BEFORE the training, matching ApplyScenarioEndDating: a row that ends
+    # The day BEFORE the training: a row that ends
     # on the same day another starts counts on both, which double-counts the person
     # in any report that totals a date. Never before the row's own start date.
     def deactivation_end_date(affiliation)

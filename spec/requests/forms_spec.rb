@@ -30,33 +30,33 @@ RSpec.describe "Forms", type: :request do
       end
 
       it "shows the form role in the results frame" do
-        create(:form, :standalone, name: "New Job Form", role: "new_job")
+        create(:form, :standalone, name: "Returning Form", role: "reinstatement")
         get forms_path, headers: frame_headers
-        expect(response.body).to include("New Job")
+        expect(response.body).to include("Reinstatement")
       end
 
       it "filters the results frame by form role" do
         create(:form, :standalone, name: "Scholarship Form", role: "scholarship")
-        create(:form, :standalone, name: "New Job Form", role: "new_job")
+        create(:form, :standalone, name: "Reinstatement Form", role: "reinstatement")
         get forms_path(role: "scholarship"), headers: frame_headers
         expect(response.body).to include("Scholarship Form")
-        expect(response.body).not_to include("New Job Form")
+        expect(response.body).not_to include("Reinstatement Form")
       end
 
       it "counts role-less forms as general when filtering by general" do
         create(:form, :standalone, name: "Roleless Form", role: nil)
-        create(:form, :standalone, name: "New Job Form", role: "new_job")
+        create(:form, :standalone, name: "Reinstatement Form", role: "reinstatement")
         get forms_path(role: "general"), headers: frame_headers
         expect(response.body).to include("Roleless Form")
-        expect(response.body).not_to include("New Job Form")
+        expect(response.body).not_to include("Reinstatement Form")
       end
 
       it "filters the results frame by form name" do
         create(:form, :standalone, name: "Scholarship Form")
-        create(:form, :standalone, name: "New Job Form")
+        create(:form, :standalone, name: "Reinstatement Form")
         get forms_path(name: "scholar"), headers: frame_headers
         expect(response.body).to include("Scholarship Form")
-        expect(response.body).not_to include("New Job Form")
+        expect(response.body).not_to include("Reinstatement Form")
       end
 
       it "keeps the name search on the sort links" do
@@ -66,9 +66,9 @@ RSpec.describe "Forms", type: :request do
       end
 
       it "ignores an unknown role filter" do
-        create(:form, :standalone, name: "New Job Form", role: "new_job")
+        create(:form, :standalone, name: "Reinstatement Form", role: "reinstatement")
         get forms_path(role: "bogus"), headers: frame_headers
-        expect(response.body).to include("New Job Form")
+        expect(response.body).to include("Reinstatement Form")
       end
 
       it "keeps the role filter on the sort links" do

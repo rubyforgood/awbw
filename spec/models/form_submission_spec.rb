@@ -30,13 +30,13 @@ RSpec.describe FormSubmission do
 
     it "filters by several forms at once when form_id is an array" do
       agreement = create(:form)
-      new_job = create(:form)
+      copy = create(:form)
       on_agreement = create(:form_submission, form: agreement)
-      on_new_job = create(:form_submission, form: new_job)
+      on_copy = create(:form_submission, form: copy)
       create(:form_submission)
 
-      expect(FormSubmission.search_by_params(form_id: [ agreement.id, new_job.id ]))
-        .to contain_exactly(on_agreement, on_new_job)
+      expect(FormSubmission.search_by_params(form_id: [ agreement.id, copy.id ]))
+        .to contain_exactly(on_agreement, on_copy)
     end
 
     it "ignores blank entries in a multi-form filter" do

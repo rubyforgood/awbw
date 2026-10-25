@@ -24,13 +24,13 @@ RSpec.describe Form do
   describe ".agreement_forms (agreement scenarios by role)" do
     it "returns publicly fillable forms with an agreement role" do
       on_demand = create(:form, role: "registration", slug: "collab", published: true)
-      new_job = create(:form, role: "new_job", slug: "collab-new-job", published: true)
+      reinstatement = create(:form, role: "reinstatement", slug: "collab-reinstatement", published: true)
 
-      expect(Form.agreement_forms).to contain_exactly(on_demand, new_job)
+      expect(Form.agreement_forms).to contain_exactly(on_demand, reinstatement)
     end
 
     it "excludes unpublished, event-connected, and non-agreement-role forms" do
-      create(:form, role: "new_job", slug: "draft", published: false)
+      create(:form, role: "reinstatement", slug: "draft", published: false)
       create(:form, role: "scholarship", slug: "scholarship", published: true)
       connected = create(:form, role: "registration", slug: "event-reg")
       create(:event_form, form: connected)
