@@ -68,19 +68,9 @@ Form answers are otherwise stored verbatim, as a record of what the person submi
 `data:translate_addresses` never rewrites them. They're translated where they become
 addresses instead (above).
 
-**One exception, made once by hand on 2026-10-25:** in a console pass alongside the
-address cleanup, every `mailing_country` / `organization_country` answer that translates to a
-dropdown country was rewritten to it ("USA", "LA County " → United States). Blank and
-untranslatable answers, and every state answer, were left as typed. Each rewrite is an
-`autochange.form_answer` Ahoy event (reason `answer_translation`) carrying the answer's
-before value, credited to the Settings import user, with `updated_at`/`updated_by` stamped.
-
-**Addresses in that same hand pass** carry a different trail from a `data:translate_addresses`
-run: its fills — a blank country read from its state, `""` → nil, a locality filled from
-Unknown — were stamped but collapsed into one `autochange.address_fills` event pointing at the
-saved report (every change as CSV), while each correction of a typed value got its own event.
-The rake task emits one `autochange.address` per changed address (reason
-`address_translation`), fills included.
+The prod cleanup on 2026-10-25 was done by hand: an admin corrected address cities, states,
+and countries in the portal, and answers were left as typed, since the addresses are the
+record.
 
 ## Consequences
 

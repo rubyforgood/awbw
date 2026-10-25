@@ -1,8 +1,6 @@
 # `submitted_answer` is stored verbatim — exactly what the applicant typed — so
 # their words are never silently altered (e.g. "revenue < $5k" or "C++ <T>"
-# survive intact). It is NOT HTML-sanitized on write. One exception, made once by hand
-# on 2026-10-25 (ADR-0009): country answers that translate to a dropdown country were
-# rewritten to it, each logged as an "autochange.form_answer" Ahoy event with its before.
+# survive intact). It is NOT HTML-sanitized on write.
 #
 # Safety is enforced at render time instead: every place that displays an answer
 # uses plain `<%= %>`, which auto-escapes, so any markup shows as inert text.
