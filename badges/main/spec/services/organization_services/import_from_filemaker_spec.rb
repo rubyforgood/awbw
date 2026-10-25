@@ -171,6 +171,51 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     expect(Organization.sole).to have_attributes(name: "Lone Program", filemaker_code: "P0006", parent_id: nil)
   end
 
+  describe "an organization FileMaker nests under another (ParentID)" do
+    it "nests it under its parent's portal organization" do
+      fm_organization("ORG00010", OrgName: "Valley Services")
+      fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG00010")
+
+      import = described_class.new.call
+
+      parent = Organization.find_by!(filemaker_code: "ORG00010")
+      expect(Organization.find_by!(filemaker_code: "ORG00011").parent_id).to eq(parent.id)
+      expect(import.nested.sole).to include("ORG00011", "under ##{parent.id}")
+    end
+
+    it "keeps a parent the portal already set, noting FileMaker's" do
+      elsewhere = create(:organization)
+      child = create(:organization, filemaker_code: "ORG00011", parent: elsewhere)
+      fm_organization("ORG00010", OrgName: "Valley Services")
+      fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG00010")
+
+      import = described_class.new.call
+
+      expect(child.reload.parent).to eq(elsewhere)
+      expect(import.differences).to include(a_string_including("ORG00011", "kept parent ##{elsewhere.id}"))
+    end
+
+    it "leaves an organization alone that is the same portal organization as its parent" do
+      both = create(:organization, filemaker_code: "ORG00010, ORG00011")
+      fm_organization("ORG00010", OrgName: "Valley Services")
+      fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG00010")
+
+      import = described_class.new.call
+
+      expect(both.reload.parent_id).to be_nil
+      expect(import.nested.sole).to include("ORG00011", "same organization as its parent")
+    end
+
+    it "notes a parent that wasn't imported" do
+      fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG09999")
+
+      import = described_class.new.call
+
+      expect(Organization.sole.parent_id).to be_nil
+      expect(import.nested.sole).to include("ORG00011", "ORG09999", "wasn't imported")
+    end
+  end
+
   describe "records retired in FileMaker" do
     before do
       stub_const("FilemakerValues::RETIRED_RECORDS", %w[ORG00007 P0002 P0003])
