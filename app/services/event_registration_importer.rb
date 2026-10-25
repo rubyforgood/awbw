@@ -849,16 +849,8 @@ class EventRegistrationImporter
   # The org answers fill-blanks won't apply, from the comparison the link-organization
   # flow already uses.
   def organization_declines(organization, answers)
-    OrganizationServices::ProfileDiff.call(
-      organization: organization,
-      website: answers["organization_website"],
-      organization_type: answers["organization_type"],
-      address: {
-        street_address: answers["organization_street"], city: answers["organization_city"],
-        state: answers["organization_state"], zip_code: answers["organization_zip"],
-        country: answers["organization_country"]
-      }
-    ).map { |discrepancy| [ discrepancy.label, discrepancy.submitted, discrepancy.saved ] }
+    OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: FormSubmission.org_entry_from(answers))
+      .map { |discrepancy| [ discrepancy.label, discrepancy.submitted, discrepancy.saved ] }
   end
 
   def enroll_ce(registration, values)

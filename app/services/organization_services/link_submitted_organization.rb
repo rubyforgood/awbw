@@ -118,12 +118,7 @@ module OrganizationServices
     def conflicts
       return [] unless @entry
 
-      OrganizationServices::ProfileDiff.call(
-        organization: @organization,
-        website: @entry[:website],
-        organization_type: @entry[:organization_type],
-        address: submitted_address
-      )
+      ProfileDiff.for_entry(organization: @organization, entry: @entry)
     end
 
     def submitted_address

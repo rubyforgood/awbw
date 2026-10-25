@@ -61,6 +61,15 @@ RSpec.describe OrganizationServices::ProfileDiff do
     expect(diff.map(&:field)).to contain_exactly(:website_url, :organization_type)
   end
 
+  it "reads website, type, and address from an org entry" do
+    organization.update!(organization_type: "For-profit", website_url: "https://acme.org")
+    entry = FormSubmission.org_entry_from("organization_website" => "https://other.org", "organization_type" => "Government agency")
+
+    diff = described_class.for_entry(organization: organization, entry: entry)
+
+    expect(diff.map(&:field)).to contain_exactly(:website_url, :organization_type)
+  end
+
   describe "address" do
     it "flags street, ZIP and country that differ from the org's same-city address" do
       create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78701", country: "USA")

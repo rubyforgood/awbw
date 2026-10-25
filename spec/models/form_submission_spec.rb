@@ -111,6 +111,28 @@ RSpec.describe FormSubmission do
     end
   end
 
+  describe ".org_entry_from" do
+    it "shapes org answers by identifier, blanks as nil" do
+      entry = described_class.org_entry_from(
+        "organization_name" => "Acme", "organization_position" => "", "organization_city" => "Denver", "organization_state" => "CO"
+      )
+
+      expect(entry).to include(org_name: "Acme", position: nil, website: nil)
+      expect(entry[:address]).to include(city: "Denver", state: "CO", street_address: nil)
+    end
+  end
+
+  describe "#org_entry" do
+    it "builds the entry from the submission's answers and carries the submission" do
+      form = create(:form)
+      field = create(:form_field, form: form, field_identifier: "organization_name", name: "Organization")
+      submission = create(:form_submission, form: form)
+      submission.form_answers.create!(form_field: field, submitted_answer: "Acme")
+
+      expect(submission.org_entry).to include(submission: submission, org_name: "Acme")
+    end
+  end
+
   describe "index filter scopes" do
     def submission_with_org_answer(org_name, person: create(:person, user: nil))
       submission = create(:form_submission, person: person)
