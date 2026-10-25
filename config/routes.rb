@@ -56,7 +56,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get "/",                         to: "home#index" # admin home page
-    get "home/badges",               to: "home#badges", as: "home_badges"
+    get "home/action_buttons",       to: "home#action_buttons", as: "home_action_buttons"
     get "activities/events",         to: "ahoy_activities#index", as: "activities_events"
     get "activities/events/:id",    to: "ahoy_activities#show", as: "activities_event"
     get "activities/visits",         to: "ahoy_activities#visits", as: "activities_visits"
