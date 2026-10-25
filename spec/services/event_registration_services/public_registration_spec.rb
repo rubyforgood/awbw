@@ -964,13 +964,14 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       ce_form.form_fields.find_by!(field_identifier: key).id.to_s
     end
 
-    def register_with_ce(answer, license: nil, kind: nil, issuing_state: nil, expires_on: nil)
+    def register_with_ce(answer, license: nil, kind: nil, issuing_state: nil, issuing_country: nil, expires_on: nil)
       params = base_form_params(first_name: "Cy", last_name: "Reed", email: "cy@example.com")
       ce_params = {}
       ce_params[ce_field_id(described_class::CE_CREDIT_INTEREST_IDENTIFIER)] = answer unless answer.nil?
       ce_params[ce_field_id(described_class::CE_LICENSE_NUMBER_IDENTIFIER)] = license if license
       ce_params[ce_field_id(described_class::CE_LICENSE_KIND_IDENTIFIER)] = kind if kind
       ce_params[ce_field_id(described_class::CE_LICENSE_ISSUING_STATE_IDENTIFIER)] = issuing_state if issuing_state
+      ce_params[ce_field_id(described_class::CE_LICENSE_ISSUING_COUNTRY_IDENTIFIER)] = issuing_country if issuing_country
       ce_params[ce_field_id(described_class::CE_LICENSE_EXPIRES_ON_IDENTIFIER)] = expires_on if expires_on
       described_class.call(event: event, registration_form: form, form_params: params,
                            continuing_education_form: ce_form, continuing_education_params: ce_params)
@@ -1037,6 +1038,12 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       license = result.event_registration.continuing_education_registrations.first.professional_license
       expect(license.issuing_state).to eq("CA")
       expect(license.expires_on).to eq(Date.new(2027, 5, 31))
+    end
+
+    it "records the license issuing country when given" do
+      result = register_with_ce("Yes", license: "555", issuing_state: "Ontario", issuing_country: "Canada")
+      license = result.event_registration.continuing_education_registrations.first.professional_license
+      expect(license).to have_attributes(issuing_state: "Ontario", issuing_country: "Canada")
     end
 
     it "uses a placeholder license when no number is given" do

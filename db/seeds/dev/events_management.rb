@@ -489,7 +489,7 @@ end
 
 # A short post-event survey delivered on the flagship's "Feedback surveys" callout,
 # open now (no drip date) so a callout form can be filled in from any flagship
-# ticket. Its state question exercises the "Outside USA?" box. The built-in callout
+# ticket. Its state question exercises the "Outside USA?" box, with the country inside it. The built-in callout
 # links its survey forms only when created, so link this one here. Idempotent.
 post_event_survey = Form.survey("post_event_survey")
 unless post_event_survey
@@ -497,6 +497,7 @@ unless post_event_survey
   [
     { name: "How likely are you to recommend this training to a colleague?", answer_type: :slider, required: true },
     { name: "Which state or province do you mostly work in?", answer_type: :free_form_input_one_line, field_identifier: "practice_state" },
+    { name: "Which country do you mostly work in?", answer_type: :free_form_input_one_line, field_identifier: "practice_country" },
     { name: "What will you take back to your practice?", answer_type: :free_form_input_paragraph }
   ].each { |question| post_event_survey.form_fields.create!(status: :active, **question) }
 end

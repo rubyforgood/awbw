@@ -179,6 +179,33 @@ RSpec.describe FormField do
     it { should define_enum_for(:width).with_values([ :full, :half, :third, :quarter ]).with_prefix(true) }
   end
 
+  describe "state and country pairing" do
+    let(:form) { create(:form) }
+    let!(:state) { create(:form_field, form: form, field_identifier: "practice_state") }
+    let!(:country) { create(:form_field, form: form, field_identifier: "practice_country") }
+
+    it "pairs a _country question with the same form's matching _state question" do
+      expect(state.paired_country_field).to eq(country)
+      expect(country).to be_paired_with_state
+    end
+
+    it "leaves a _country question unpaired without a matching _state question" do
+      lone = create(:form_field, form: form, field_identifier: "organization_country")
+
+      expect(lone).not_to be_paired_with_state
+    end
+
+    it "ignores an inactive country question" do
+      country.update!(status: :inactive)
+
+      expect(state.paired_country_field).to be_nil
+    end
+
+    it "takes no grid space for a paired country question" do
+      expect(country.grid_span_class).to eq("hidden")
+    end
+  end
+
   describe "#grid_span_class" do
     let(:form) { create(:form) }
 

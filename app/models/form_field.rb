@@ -142,6 +142,9 @@ class FormField < ApplicationRecord
   # explicit position and are left untouched.
   before_validation :append_to_bottom, on: :create, if: -> { position.blank? }
 
+  STATE_SUFFIX = "_state"
+  COUNTRY_SUFFIX = "_country"
+
   # Enum
   enum :status, [ :inactive, :active ]
   enum :visibility, [ :always_ask, :scholarship_only, :logged_out_only, :answers_on_file ]
@@ -276,7 +279,23 @@ class FormField < ApplicationRecord
   end
 
   def grid_span_class
+    return "hidden" if paired_with_state?
+
     WIDTH_GRID_SPANS.fetch(width, "md:col-span-12")
+  end
+
+  # A `<prefix>_country` question on the same form as `<prefix>_state` is asked
+  # inside the state's "Outside USA?" box rather than on its own.
+  def paired_country_field
+    return unless field_identifier&.end_with?(STATE_SUFFIX)
+
+    form.form_fields.active.find_by(field_identifier: field_identifier.delete_suffix(STATE_SUFFIX) + COUNTRY_SUFFIX)
+  end
+
+  def paired_with_state?
+    return false unless field_identifier&.end_with?(COUNTRY_SUFFIX)
+
+    form.form_fields.active.exists?(field_identifier: field_identifier.delete_suffix(COUNTRY_SUFFIX) + STATE_SUFFIX)
   end
 
   def answer_type_label

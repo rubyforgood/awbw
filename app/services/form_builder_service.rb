@@ -136,6 +136,7 @@ class FormBuilderService
       "If seeking CE hours, what is your license type? (e.g. LMFT, LCSW, LPCC, LEP)",
       "What is your license number?",
       "In which state was your license issued?",
+      "In which country was your license issued?",
       "When does your license expire?"
     ],
     scholarship: [
@@ -627,6 +628,10 @@ class FormBuilderService
                          "In which state was your license issued?",
                          :free_form_input_one_line,
                          key: "ce_license_issuing_state", group: "continuing_education", required: false)
+    position = add_field(form, position,
+                         "In which country was your license issued?",
+                         :free_form_input_one_line,
+                         key: "ce_license_issuing_country", group: "continuing_education", required: false)
     position = add_field(form, position,
                          "When does your license expire?",
                          :free_form_input_one_line,
