@@ -30,12 +30,17 @@ class AddressTranslation
     "Australia" => [ "nsw", "new south wales", "vic", "victoria", "qld", "queensland", "tas", "tasmania",
                      "south australia", "western australia" ],
     "United Kingdom" => [ "england", "scotland", "wales", "northern ireland", "london", "bucks", "buckinghamshire",
-                          "somerset", "argyle and bute", "argyll and bute" ],
+                          "somerset", "argyle and bute", "argyll and bute", "yorkshire", "e sussex", "east sussex" ],
     "Vietnam" => [ "ha noi", "hanoi" ],
     "Mexico" => [ "mexico city", "cdmx" ],
     "Japan" => [ "tokyo" ],
     "Philippines" => [ "metro manila" ],
-    "Ghana" => [ "greater accra" ],
+    "Ghana" => [ "greater accra", "accra" ],
+    "South Africa" => [ "gauteng" ],
+    "India" => [ "tamil nadu", "rajasthan" ],
+    "Pakistan" => [ "lahore" ],
+    "Liberia" => [ "montserrado", "monnserrado" ],
+    "Zimbabwe" => [ "matabeleland north", "matebeleland north" ],
     "Trinidad and Tobago" => [ "trinidad", "tobago" ]
   }.flat_map { |country, regions| regions.map { |region| [ region, country ] } }.to_h.freeze
 

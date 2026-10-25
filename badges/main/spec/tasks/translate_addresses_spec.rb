@@ -40,6 +40,22 @@ RSpec.describe "data:translate_addresses" do
     expect(report_text).to include("Address country: \"USA\" → \"United States\"", "Narnia")
   end
 
+  it "saves every change as CSV rows, printing them only with VERBOSE=true" do
+    usa = address_with(country: "USA", state: "TX")
+    row = "Address,#{usa.id},#{usa.addressable_id},,,country,USA,United States"
+
+    output = run_task
+
+    expect(report_text).to include("record_type,record_id,person_id,organization_id,form_submission_id,field,before,after", row)
+    expect(output).not_to include(row)
+
+    Rake::Task["data:translate_addresses"].reenable
+    ENV["VERBOSE"] = "true"
+    expect(run_task).to include(row)
+  ensure
+    ENV.delete("VERBOSE")
+  end
+
   it "writes with DRY_RUN=false, credits each change to the import user, and saves that run's report" do
     import_user = create(:user)
     Setting.create!(import_user:)
