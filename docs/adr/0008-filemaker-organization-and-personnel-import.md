@@ -64,8 +64,10 @@ Constraints already decided elsewhere:
 - **Agencies:** a Rolodex card flagged `isAgency__c` is the agency's own card. Its website,
   mission and addresses fill the org its `OrgID` names (or the one its `Organization` name
   matches, created when nothing does); its email too, unless the card names a contact
-  person, whose email it then is. A card naming a contact person also becomes that person
-  in the people pass, and every address on it stays with the org.
+  person, whose email it then is. A card naming a contact person also becomes that person,
+  and every address on it stays with the org. `fm:import_people` skipped every agency card,
+  so `fm:import_organizations` runs the Rolodex import over agency cards alone as its first
+  step — the people already imported and cleaned up are left as they are.
 - **Personnel → facilitator affiliation:** an `fm_personnels` row becomes an `Affiliation`
   between the person (by Rolodex code) and the project's org, carrying `PrsnlRecID` as its
   `filemaker_code` so each row imports once. `event_registration_id` stays NULL — these are

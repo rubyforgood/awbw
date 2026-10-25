@@ -241,7 +241,7 @@ module OrganizationServices
     end
 
     def agency_cards
-      FmRolodex.where("JSON_UNQUOTE(JSON_EXTRACT(data, '$.isAgency__c')) <> ''").order(:fm_id).select(&:agency?)
+      FmRolodex.agency_cards.order(:fm_id).select(&:agency?)
                .reject { |rolodex| flag?(rolodex.data["Delete"]) }
     end
 

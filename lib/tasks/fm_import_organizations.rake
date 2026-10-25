@@ -2,12 +2,14 @@
 
 # Bring FileMaker's organizations, projects and the ties between them and people into the
 # portal (ADR-0008). Run after fm:import_people, which makes the people; this pass finds them
-# by their Rolodex code. Two steps, in order:
-#   1. OrganizationServices::ImportFromFilemaker — organizations, projects (as programs nested
+# by their Rolodex code. Three steps, in order:
+#   1. PersonServices::ImportFromRolodex over agency cards only — the contact person an agency
+#      card names, which fm:import_people skipped
+#   2. OrganizationServices::ImportFromFilemaker — organizations, projects (as programs nested
 #      under them), their addresses, phones, emails, and agencies' own Rolodex cards
-#   2. AffiliationServices::ImportFromFilemaker — personnel, people-to-organizations, and each
+#   3. AffiliationServices::ImportFromFilemaker — personnel, people-to-organizations, and each
 #      Rolodex card's organization, title and work addresses
-# Both are idempotent: a row whose code a record already carries is left alone.
+# Each is idempotent: a row whose code a record already carries is left alone.
 #
 # Dry-run by default. Set DRY_RUN=false to write changes; VERBOSE=true lists every row.
 # A real run commits each batch as it goes, so stopping partway keeps what it finished and
@@ -34,17 +36,20 @@ namespace :fm do
       Current.source = "fm_import_organizations"
       say.("Run #{run}#{" (dry run)" if dry_run}")
       started = Time.current
+      # The people pass skipped every agency card, so the contact person one names comes in
+      # here — only those cards, leaving everyone fm:import_people already brought over alone.
       steps = {
-        "Organizations and projects" => OrganizationServices::ImportFromFilemaker,
-        "Affiliations and work addresses" => AffiliationServices::ImportFromFilemaker
+        "People named on agency cards" => ->(progress) { PersonServices::ImportFromRolodex.new(scope: FmRolodex.agency_cards, progress:, run:) },
+        "Organizations and projects" => ->(progress) { OrganizationServices::ImportFromFilemaker.new(progress:, run:) },
+        "Affiliations and work addresses" => ->(progress) { AffiliationServices::ImportFromFilemaker.new(progress:, run:) }
       }
       imports = {}
 
       run_steps = lambda do
-        steps.each do |title, service|
+        steps.each do |title, build|
           say.("\n#{title}…")
           progress = ->(read) { puts "  #{read} rows read — #{(Time.current - started).round}s" }
-          imports[title] = service.new(progress:, run:).call
+          imports[title] = build.call(progress).call
         end
       end
 
