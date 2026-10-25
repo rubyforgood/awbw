@@ -59,8 +59,8 @@
         <%= f.input :organization_type,
                     label: "Organization type",
                     as: :select,
-                    required: true,
-                    collection: Organization::ORGANIZATION_TYPES,
+                    collection: OrganizationDecorator.organization_type_options,
+                    include_blank: "Unknown",
                     selected: organization_type_option,
                     wrapper_html: { class: "mb-0!" },
                     input_html: {

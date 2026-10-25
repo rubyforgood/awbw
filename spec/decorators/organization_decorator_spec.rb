@@ -1,6 +1,13 @@
 require "rails_helper"
 
 RSpec.describe OrganizationDecorator do
+  describe ".organization_type_options" do
+    it "labels Other to point at the box below while keeping its stored value" do
+      expect(described_class.organization_type_options.last).to eq([ "Other (specify below)", Organization::ORGANIZATION_TYPE_OTHER ])
+      expect(described_class.organization_type_options.map(&:last)).to eq(Organization::ORGANIZATION_TYPES)
+    end
+  end
+
   describe "#address_phones" do
     it "numbers each phone by its address's position, skipping addresses without one" do
       organization = create(:organization)

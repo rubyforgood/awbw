@@ -46,6 +46,12 @@ class OrganizationDecorator < ApplicationDecorator
                   class: "inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full border text-xs font-semibold #{self.class.program_status_classes(status)}")
   end
 
+  def self.organization_type_options
+    Organization::ORGANIZATION_TYPES.map do |type|
+      [ type == Organization::ORGANIZATION_TYPE_OTHER ? "Other (specify below)" : type, type ]
+    end
+  end
+
   # Each phone numbered by its address's position on the edit form.
   def address_phones
     object.addresses.each_with_index.filter_map { |address, index| [ index + 1, address.phone ] if address.phone.present? }
