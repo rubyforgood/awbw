@@ -46,10 +46,10 @@ class AttendeesActiveFilters
     when "registrant_ids" then "#{value.to_s.split("-").size} selected people"
     when "sector" then record_label("Sector", Sector, value)
     when "organization_id" then record_label("Organization", Organization, value)
-    when "org_city" then "Org city: #{value}"
+    when "org_city" then "City: #{value}"
     when "age_group" then record_label("Age group", Category, value)
     when "life_experience" then record_label("Life experience", Category, value)
-    when "country" then "Org country: #{value}"
+    when "country" then "Country: #{value}"
     when "school_district" then "School district: #{value}"
     when "payment_status" then option_label("Payment", EventRegistration::PAYMENT_STATUS_FILTER_OPTIONS, value)
     when "funder" then option_label("Funding", EventRegistration::FUNDER_FILTER_OPTIONS, value)

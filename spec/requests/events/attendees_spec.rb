@@ -130,7 +130,7 @@ RSpec.describe "Events attendees", type: :request do
         get attendees_events_url(country: "Canada", state: "OR")
         # The chip labels the applied filter and its ✕ links back to the index
         # with only that param dropped (the other filters are preserved).
-        expect(response.body).to include("Org country: Canada")
+        expect(response.body).to include("Country: Canada")
         expect(Capybara.string(response.body))
           .to have_link(href: attendees_events_path(state: "OR"))
       end
@@ -688,7 +688,7 @@ RSpec.describe "Events attendees", type: :request do
             .at_css("turbo-stream[action='replace'][target='attendees_chips'] template")
           expect(template).to be_present
 
-          remove_link = "a[aria-label='Remove Org country: Canada filter']"
+          remove_link = "a[aria-label='Remove Country: Canada filter']"
           expect(Capybara.string(template.inner_html)).to have_selector(
             "#{remove_link}[href='#{attendees_events_path(ce_status: "issued")}']", visible: :all
           )
