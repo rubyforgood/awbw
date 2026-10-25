@@ -48,8 +48,7 @@ class AttendeesActiveFilters
     when "sector" then record_label("Sector", Sector, value)
     when "organization_id" then record_label("Organization", Organization, value)
     when "org_city" then "City: #{value}"
-    # The City box moved into the prefixed "Where they work" box, so a bare city
-    # param now arrives from a link or an older bookmark with nothing to show it.
+    # A bare city param comes from a link or bookmark; no visible control shows it.
     when "city" then "City: #{value}"
     when "age_group" then record_label("Age group", Category, value)
     when "life_experience" then record_label("Life experience", Category, value)
