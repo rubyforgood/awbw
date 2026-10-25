@@ -169,6 +169,16 @@ class Event < ApplicationRecord
     on_demand? && facilitator_training?
   end
 
+  # Which linking scenario a registration for this event maps to (ADR-0002 D2):
+  # an on-demand facilitator training shares the agreement path's "on_demand"
+  # scenario, a scheduled one is "facilitator_training", and anything else
+  # confers no Facilitator affiliation.
+  def linking_scenario
+    return "non_facilitator_training" unless facilitator_training?
+
+    on_demand? ? "on_demand" : "facilitator_training"
+  end
+
   # Which certificate design this event's completion certificate uses — also the
   # key for its admin-uploaded frame override (Resource.certificate_frame_file):
   # :on_demand (self-paced facilitator training), :training (live facilitator

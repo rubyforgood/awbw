@@ -359,12 +359,31 @@ class FormSubmission < ApplicationRecord
     end
   end
 
-  # The on-demand training registration this agreement minted (PublicFormSubmission
-  # stamps the event), so linking the org here also links it on the roster.
-  def on_demand_registration
-    return unless linking_scenario == "on_demand" && event_id && person_id
+  # What linking an org from this submission's editor does: the agreement
+  # scenario, else — for an event registration — the same scenario the event's
+  # registrants editor applies.
+  def link_scenario
+    linking_scenario || (event.linking_scenario if event_registration_submission?)
+  end
+
+  # The registration linking here also links the org onto: the on-demand
+  # training registration an agreement minted (PublicFormSubmission stamps the
+  # event), or the registration an event registration submission was made for.
+  def event_registration_for_link
+    return unless linking_scenario == "on_demand" || event_registration_submission?
+    return unless event_id && person_id
 
     EventRegistration.find_by(event_id: event_id, registrant_id: person_id)
+  end
+
+  # The date a conferred Facilitator affiliation starts: the training's start
+  # for an event registration, else the submission date.
+  def link_training_date
+    (event.starts_on if event_registration_submission?) || created_at.to_date
+  end
+
+  def event_registration_submission?
+    role == "registration" && event.present?
   end
 
   def agreement_scenario?
