@@ -271,16 +271,28 @@ RSpec.describe "/organizations", type: :request do
   end
 
   describe "GET /edit" do
-    it "lists address phones in the details, numbered by address when there are several" do
+    it "lists address phones under the phone editor, numbered by address when there are several" do
       organization = create(:organization)
       create(:address, addressable: organization, phone: "123-123-1234")
       create(:address, addressable: organization, phone: "123-332-1234")
 
       get edit_organization_url(organization)
 
-      phones = Capybara.string(response.body).find("ol", text: "123-123-1234")
+      phones = Capybara.string(response.body).find("#phones")
+      expect(phones).to have_text("On addresses")
       expect(phones).to have_css("li", text: "1. 123-123-1234")
       expect(phones).to have_css("li", text: "2. 123-332-1234")
+    end
+
+    it "edits the organization's own phone numbers beside them" do
+      organization = create(:organization)
+      organization.contact_methods.create!(kind: "phone", value: "555-0100")
+
+      get edit_organization_url(organization)
+
+      phones = Capybara.string(response.body).find("#phones")
+      expect(phones).to have_field(with: "555-0100")
+      expect(phones).to have_link("➕ Add phone")
     end
 
     it "leaves focus alone so in-page links keep their scroll position" do
