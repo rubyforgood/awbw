@@ -30,9 +30,9 @@ RSpec.describe "Forms", type: :request do
       end
 
       it "shows the form role in the results frame" do
-        create(:form, :standalone, name: "New Job Form", role: "new_job")
+        create(:form, :standalone, name: "Returning Form", role: "reinstatement")
         get forms_path, headers: frame_headers
-        expect(response.body).to include("New Job")
+        expect(response.body).to include("Reinstatement")
       end
 
       it "filters the results frame by form role" do

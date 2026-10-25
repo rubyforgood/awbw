@@ -1,6 +1,6 @@
 # ADR-0002 — Org linking: one core, three flows, and what each does to affiliations
 
-- **Status:** Accepted
+- **Status:** Accepted — amended 2026-10-25 (see Amendment)
 - **Date:** 2026-08-22
 
 ## Context
@@ -144,3 +144,14 @@ submission behind it can't be filed under different words.
 Event-page **Unlink** deliberately does *not*
 retract the back-applied link (it can't be told apart from one made directly in
 the submission editor, and Unlink is scoped to the registration join only).
+
+## Amendment (2026-10-25) — new_job and close_program removed
+
+The `new_job` and `close_program` form roles are gone. The linking scenarios are
+now `on_demand`, `facilitator_training`, `reinstatement`, and
+`non_facilitator_training`; `Form::AGREEMENT_ROLES` is `registration` /
+`reinstatement`. No scenario ends affiliations at linking time, so D3's
+per-scenario end-dating and the processing panel's "Ended by this agreement"
+flag and one-click End no longer apply. A job change or program closure is
+handled through a `ProfileChangeRequest` (`AffiliationServices::EndOtherOrganizations`
+/ `AffiliationServices::CloseProgram`), which keeps D4's day-before dating.

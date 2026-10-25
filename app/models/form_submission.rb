@@ -208,21 +208,19 @@ class FormSubmission < ApplicationRecord
   # with the admin-facing label for the panel chip and index filter.
   LINKING_SCENARIOS = {
     "on_demand" => "On-demand agreement",
-    "new_job" => "New job agreement",
-    "reinstatement" => "Reinstatement agreement",
-    "close_program" => "Program closure"
+    "reinstatement" => "Reinstatement agreement"
   }.freeze
 
   # Agreement-scenario submissions — a specific scenario, or "any" for all of
   # them at once. On-demand is a standalone public submission to a
-  # registration-role form; new_job/reinstatement/close_program are form roles.
+  # registration-role form; reinstatement is a form role.
   scope :scenario, ->(value) {
     scoped = joins(:form)
     on_demand = scoped.where(role: "public", forms: { role: "registration" })
     case value
     when "on_demand" then on_demand
-    when "new_job", "reinstatement", "close_program" then scoped.where(forms: { role: value })
-    when "any" then scoped.where(forms: { role: %w[new_job reinstatement close_program] }).or(on_demand)
+    when "reinstatement" then scoped.where(forms: { role: value })
+    when "any" then scoped.where(forms: { role: "reinstatement" }).or(on_demand)
     else all
     end
   }
@@ -354,7 +352,7 @@ class FormSubmission < ApplicationRecord
   # on-demand agreement. Nil for everything else — no agreement processing.
   def linking_scenario
     case form.role
-    when "new_job", "reinstatement", "close_program" then form.role
+    when "reinstatement" then form.role
     when "registration" then "on_demand" if role == "public"
     end
   end
@@ -408,21 +406,6 @@ class FormSubmission < ApplicationRecord
 
   def linked_organizations
     Organization.where(id: linked_organization_ids)
-  end
-
-  # Affiliations the agreement scenario end-dated when an admin linked the
-  # submitted organization — flagged on the processing panel so a wrongly-ended
-  # one (e.g. a multi-org facilitator changing only one job) can be corrected.
-
-  def scenario_ended_affiliation_ids
-    (metadata || {}).fetch("scenario_ended_affiliation_ids", [])
-  end
-
-  def record_scenario_ended!(affiliation_ids)
-    return if affiliation_ids.empty?
-
-    ids = scenario_ended_affiliation_ids | affiliation_ids.map(&:to_i)
-    update!(metadata: (metadata || {}).merge("scenario_ended_affiliation_ids" => ids))
   end
 
   # --- Linked registrations (bulk payment designations) ---

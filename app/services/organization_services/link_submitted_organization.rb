@@ -12,18 +12,13 @@ module OrganizationServices
   # profile sync and conflict detection are skipped, but the affiliations are
   # still created — untitled, anchored to the org's sole address when it has one.
   class LinkSubmittedOrganization
-    Result = Struct.new(:saved, :conflicts, :address, :ended_affiliations, keyword_init: true) do
-      # Flash notice naming the org, everything the form actually wrote onto it,
-      # and any affiliations the agreement scenario ended. Flash messages render
-      # html_safe, so submitted text is escaped. `verb` is the past tense
-      # ("linked" / "created and linked").
+    Result = Struct.new(:saved, :conflicts, :address, keyword_init: true) do
+      # Flash notice naming the org and everything the form actually wrote onto
+      # it. Flash messages render html_safe, so submitted text is escaped. `verb`
+      # is the past tense ("linked" / "created and linked").
       def notice(organization:, verb:)
         text = "#{ERB::Util.html_escape(organization.name)} #{verb}."
         text += " Saved from the form: #{saved.map { |change| ERB::Util.html_escape(change.description) }.to_sentence}." if saved.any?
-        if ended_affiliations.any?
-          ended = ended_affiliations.map { |a| ERB::Util.html_escape("#{a.organization.name} (#{a.title.presence || "no title"})") }
-          text += " Ended by this agreement: #{ended.to_sentence}."
-        end
         text
       end
 
@@ -40,13 +35,13 @@ module OrganizationServices
       end
     end
 
-    # The five linking scenarios (ADR-0002 D2), derived per call — from the
+    # The four linking scenarios (ADR-0002 D2), derived per call — from the
     # form's role for a standalone submission (FormSubmission#linking_scenario)
     # or from the event for a registration (an on-demand facilitator training
     # shares the submission path's "on_demand" scenario). All but
     # non_facilitator_training confer the standing Facilitator affiliation; a
     # nil scenario (a non-agreement form) confers nothing.
-    FACILITATOR_CONFERRING_SCENARIOS = %w[on_demand facilitator_training reinstatement new_job].freeze
+    FACILITATOR_CONFERRING_SCENARIOS = %w[on_demand facilitator_training reinstatement].freeze
     SCENARIOS = (FACILITATOR_CONFERRING_SCENARIOS + %w[non_facilitator_training]).freeze
 
     def self.call(person:, organization:, entry:, scenario:, training_date: nil, event_registration: nil)
@@ -63,7 +58,6 @@ module OrganizationServices
     end
 
     def call
-      ended_affiliations = apply_scenario_end_dating
       profile_changes = sync_profile
       address_result = upsert_address
 
@@ -74,29 +68,14 @@ module OrganizationServices
         training_date: @training_date,
         organization_address: address_result.address || sole_address,
         facilitator_training: FACILITATOR_CONFERRING_SCENARIOS.include?(@scenario),
-        event_registration: @event_registration,
-        # A new job demonstrably starts with the agreement; every other
-        # scenario leaves the job affiliation undated (unknown tenure).
-        job_start_date: (@training_date if @scenario == "new_job")
+        event_registration: @event_registration
       )
 
       Result.new(saved: profile_changes + address_result.changes, conflicts: conflicts,
-                 address: address_result.address, ended_affiliations: ended_affiliations)
+                 address: address_result.address)
     end
 
     private
-
-    # An agreement scenario first settles the person's existing affiliations
-    # (a new job ends the other orgs' rows) so the creations below start from
-    # the right state. Returns what it ended.
-    def apply_scenario_end_dating
-      return [] unless @scenario
-
-      AffiliationServices::ApplyScenarioEndDating.call(
-        person: @person, organization: @organization, scenario: @scenario,
-        effective_date: (@training_date || Date.current).to_date
-      )
-    end
 
     def sync_profile
       return [] unless @entry

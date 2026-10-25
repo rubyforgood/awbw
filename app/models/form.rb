@@ -12,21 +12,18 @@ class Form < ApplicationRecord
   # Form roles whose standalone public submissions are agreement intake
   # scenarios with affiliation processing (ADR-0002): a standalone
   # registration-role form is the on-demand agreement (the registration flow,
-  # timestamped at submission), new_job / reinstatement carry their own
-  # reconciliation rules, and close_program end-dates the person's affiliations
-  # at the named organization (deactivation, the mirror of the others). Drives
-  # the person-page "send link" panel and the submissions index scenario filter.
-  AGREEMENT_ROLES = %w[registration new_job reinstatement close_program].freeze
+  # timestamped at submission) and reinstatement re-confers a lapsed
+  # facilitator's affiliation. Drives the person-page "send link" panel and the
+  # submissions index scenario filter.
+  AGREEMENT_ROLES = %w[registration reinstatement].freeze
 
   ROLE_OPTIONS = [
     [ "General", "general" ],
     [ "Registration", "registration" ],
-    [ "New job", "new_job" ],
     [ "Reinstatement", "reinstatement" ],
     [ "Scholarship", "scholarship" ],
     [ "Bulk Payment", "bulk_payment" ],
     [ "Continuing Education", "continuing_education" ],
-    [ "Close program", "close_program" ],
     [ "Day 1 survey", "day_1_survey" ],
     [ "Day 2 survey", "day_2_survey" ],
     [ "Post-event survey", "post_event_survey" ],

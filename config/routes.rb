@@ -384,11 +384,7 @@ Rails.application.routes.draw do
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
-  resources :affiliations, only: [ :edit, :update, :destroy ] do
-    member do
-      post :end, to: "affiliations#end_affiliation"
-    end
-  end
+  resources :affiliations, only: [ :edit, :update, :destroy ]
   resources :quotes
 
   resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }

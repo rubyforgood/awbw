@@ -1,6 +1,6 @@
 <%# Admin aid for processing an agreement scenario submission (ADR-0002):
-    what the person submitted for their organization, their current affiliations
-    with scenario-specific actions, and their portal account status. %>
+    what the person submitted for their organization, their current
+    affiliations, and their portal account status. %>
 <% scenario = submission.linking_scenario %>
 <% person = submission.person %>
 <% answers = submission.answers_by_identifier %>
@@ -9,9 +9,7 @@
 <% affiliations = person.affiliations.includes(:organization).order(Arel.sql("end_date IS NOT NULL, end_date DESC, start_date DESC")) %>
 <% guidance = {
      "on_demand" => "New facilitator from the on-demand training — link their organization below, then invite them to the portal.",
-     "reinstatement" => "Returning facilitator — link their organization below: linking adds a fresh Facilitator affiliation dated to this submission unless an active one already exists. Then invite or re-invite them to the portal.",
-     "new_job" => "Facilitator starting at a new organization — link it below: linking ends their affiliations at other organizations automatically (or end one by hand here first) and starts the new ones on the submission date. Check that their login email still reaches them.",
-     "close_program" => "Closing their program — link the organization below to end their Facilitator affiliation there as of the date they gave (and their job affiliation too, if they said they're leaving), with a comment recording why. An exact name match is processed automatically on submission; link here when it wasn't."
+     "reinstatement" => "Returning facilitator — link their organization below: linking adds a fresh Facilitator affiliation dated to this submission unless an active one already exists. Then invite or re-invite them to the portal."
    }[scenario] %>
 
 <div class="mt-6 rounded-2xl border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> <%= DomainTheme.bg_class_for(:forms) %> p-6 shadow-sm">
@@ -57,7 +55,6 @@
             <th class="py-1.5 pr-3">Start</th>
             <th class="py-1.5 pr-3">End</th>
             <th class="py-1.5 pr-3">Status</th>
-            <th class="py-1.5"></th>
           </tr>
         </thead>
         <tbody>
@@ -81,24 +78,6 @@
                                       "Upcoming" => "bg-blue-50 text-blue-700",
                                       "Inactive" => "bg-gray-100 text-gray-600" } %>
                 <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium <%= status_classes.fetch(status) %>"><%= status %></span>
-                <% if submission.scenario_ended_affiliation_ids.include?(affiliation.id) %>
-                  <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"
-                        title="End-dated automatically when the submitted organization was linked — edit the affiliation if this was wrong (e.g. they stayed at this organization too)."><i class="fa-solid fa-wand-magic-sparkles text-3xs"></i>Ended by this agreement</span>
-                <% end %>
-              </td>
-              <td class="py-2 text-right">
-                <%# Ends the day before the agreement takes effect, matching the
-                    automatic scenario end-dating (see ADR-0002 D4). %>
-                <% end_on = submission.created_at.to_date - 1.day %>
-                <%# A not-yet-started row is end-datable too — ApplyScenarioEndDating
-                    ends those automatically, so the manual button has to match. %>
-                <% if scenario == "new_job" && !affiliation.inactive_on? && !matches_submitted %>
-                  <%= button_to "End", end_affiliation_path(affiliation, form_submission_id: submission.id, end_date: end_on.iso8601),
-                                class: button_classes(:secondary_outline, extra: "whitespace-nowrap"),
-                                form: { data: { turbo_confirm: "End #{person.name}'s affiliation with #{affiliation.organization.name} as of #{end_on.to_fs(:long)} (the day before this agreement)?" } } %>
-                <% elsif submission.scenario_ended_affiliation_ids.include?(affiliation.id) %>
-                  <%= link_to "Edit", edit_affiliation_path(affiliation), class: "text-sm text-blue-600 hover:underline" %>
-                <% end %>
               </td>
             </tr>
           <% end %>

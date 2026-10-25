@@ -58,12 +58,12 @@ RSpec.describe FormSubmissionDecorator do
       ])
     end
 
-    it "warns that a new-job agreement ends their other organizations' affiliations" do
-      submission = submission_for(create(:form, role: "new_job"))
+    it "names the Facilitator affiliation a reinstatement confers" do
+      submission = submission_for(create(:form, role: "reinstatement"), position: "Counselor")
 
       expect(submission.link_organization_effects).to eq([
-        "Adds a Facilitator affiliation there",
-        "Ends their affiliations at other organizations"
+        "Adds a “Counselor” job affiliation there",
+        "Adds a Facilitator affiliation there"
       ])
     end
 
@@ -71,12 +71,6 @@ RSpec.describe FormSubmissionDecorator do
       submission = submission_for(create(:form), position: "Volunteer")
 
       expect(submission.link_organization_effects).to eq([ "Adds a “Volunteer” job affiliation there" ])
-    end
-
-    it "lists nothing for a close-program submission, which ends affiliations instead" do
-      submission = submission_for(create(:form, role: "close_program"), position: "Director")
-
-      expect(submission.link_organization_effects).to be_empty
     end
   end
 end
