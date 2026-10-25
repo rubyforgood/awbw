@@ -20,7 +20,7 @@ class PersonPolicy < ApplicationPolicy
   # behind the same admin gate the :index params_filter enforces.
   ADMIN_ONLY_FILTERS = %i[
     role facilitator_status membership_status
-    staff_tag_ids topic_subscription_type_id contact_info
+    staff_tag_ids topic_subscription_type_id contact_info work_location
   ].freeze
 
   SHARED_ONLY_FILTERS = {

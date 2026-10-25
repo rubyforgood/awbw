@@ -30,10 +30,12 @@ class PeopleController < ApplicationController
       filters = authorized_scope(params, as: :index).to_unsafe_h
       name_email = filters.delete(:name_email)
       contact_info = filters.delete(:contact_info)
+      work_location = filters.delete(:work_location)
       filtered = base_scope.search_by_params(filters)
       filtered = filtered.search_name_email(name_email)
       filtered = filtered.search_contact(contact_info)
       filtered = filtered.distinct if contact_info.present?
+      filtered = located_by_work_location(filtered, work_location) if work_location.present?
       filtered = filtered.order(:first_name, :last_name)
 
       total = filtered.count
@@ -51,10 +53,12 @@ class PeopleController < ApplicationController
     filters = params.to_unsafe_h
     name_email = filters.delete(:name_email)
     contact_info = filters.delete(:contact_info)
+    work_location = filters.delete(:work_location)
     people = Person.includes(:user).search_by_params(filters)
     people = people.search_name_email(name_email)
     people = people.search_contact(contact_info)
     people = people.distinct if contact_info.present?
+    people = located_by_work_location(people, work_location) if work_location.present?
     @email_addresses = people.filter_map { |person| person.preferred_email.presence }.uniq.sort
   end
 
@@ -378,6 +382,12 @@ class PeopleController < ApplicationController
   end
 
   private
+
+  def located_by_work_location(people, query)
+    filters = PersonLocations.filters_from(**PersonLocations.parse_query(query))
+    return people.none if filters.nil?
+    people.where(id: PersonLocations.new(people.select(:id)).matching(**filters).map(&:registrant_id))
+  end
 
   def dedupe_config
     {

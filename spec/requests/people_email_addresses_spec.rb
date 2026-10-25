@@ -29,6 +29,19 @@ RSpec.describe "People email addresses", type: :request do
       expect(response.body).to include("carol@example.com")
     end
 
+    it "narrows by where people work" do
+      organization = create(:organization)
+      create(:address, addressable: organization, city: "Reno", state: "NV")
+      worker = create(:person, email: "reno@example.com", user: nil)
+      create(:affiliation, person: worker, organization: organization)
+      create(:person, email: "elsewhere@example.com", user: nil)
+
+      get email_addresses_people_path(work_location: "city: reno")
+
+      expect(response.body).to include("reno@example.com")
+      expect(response.body).not_to include("elsewhere@example.com")
+    end
+
     it "falls back to the person's preferred email when the email column is blank" do
       create(:person, email: nil, user: create(:user, email: "dana@example.com"))
       create(:person, email: nil, email_2: "rio@example.com", user: nil)
