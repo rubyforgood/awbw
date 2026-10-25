@@ -167,6 +167,16 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       expect(person.affiliations.count).to eq(1)
     end
 
+    it "links a row the old app titled Liaison instead of adding a Facilitator beside it" do
+      existing = create(:affiliation, person:, organization: program, title: "Liaison", primary_contact: true)
+      personnel("PS0001", Role: "Liaison")
+
+      import
+
+      expect(person.affiliations.sole).to eq(existing)
+      expect(existing.reload.filemaker_code).to eq("PS0001")
+    end
+
     it "links a row the old app titled Leader instead of adding a Facilitator beside it" do
       existing = create(:affiliation, person:, organization: program, title: "Leader", primary_contact: true)
       personnel("PS0001")

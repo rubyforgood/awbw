@@ -123,17 +123,18 @@ RSpec.describe DataHealth::MisalignedAffiliationProvenance do
   end
 end
 
-RSpec.describe DataHealth::LegacyLeaderAffiliations do
+RSpec.describe DataHealth::LegacyRoleAffiliations do
   let(:person) { create(:person) }
   let(:organization) { create(:organization) }
 
   def affiliation(title, **attributes) = create(:affiliation, person:, organization:, title:, **attributes)
 
-  it "lists affiliations still titled Leader, and reports only" do
-    leader = affiliation("Leader")
+  it "lists affiliations titled with any old-app role, and reports only" do
+    titled = %w[Leader liaison Assistant default].map { |title| affiliation(title, start_date: Date.new(2019, 1, title.length)) }
     affiliation("Facilitator", start_date: Date.new(2019, 1, 1))
+    affiliation("Program Director")
 
-    expect(described_class.new.scope).to contain_exactly(leader)
+    expect(described_class.new.scope).to match_array(titled)
     expect(described_class.new).not_to be_repairable
   end
 
