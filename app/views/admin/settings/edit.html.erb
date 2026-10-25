@@ -189,4 +189,11 @@
 
     <%= f.button :submit, "Save settings", class: button_classes(:primary) %>
   <% end %>
+
+  <% if (revision = DeployedRevision.current) %>
+    <p class="mt-10 text-right text-xs text-gray-300">
+      <%= link_to "build #{revision.short_sha}", revision.compare_url,
+                  target: "_blank", rel: "noopener", class: "hover:text-gray-500" %>
+    </p>
+  <% end %>
 </div>
