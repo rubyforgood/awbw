@@ -9,6 +9,7 @@ module PersonServices
     IDENTITY_COLUMNS = %w[kind value contact_type].freeze
 
     # Outside the identity, so a merge never drops the address link only one copy had.
+    # FileMaker codes are unioned.
     CARRIED_COLUMNS = %w[address_id].freeze
 
     def self.signature(contact_method)
@@ -73,9 +74,9 @@ module PersonServices
       filled = CARRIED_COLUMNS.select do |column|
         survivor.public_send(column).blank? && loser.public_send(column).present?
       end
-      return if filled.empty?
-
-      survivor.update!(filled.index_with { |column| loser.public_send(column) })
+      survivor.assign_attributes(filled.index_with { |column| loser.public_send(column) })
+      survivor.filemaker_code = ContactMethod.join_filemaker_codes(survivor.filemaker_code, loser.filemaker_code)
+      survivor.save! if survivor.changed?
     end
 
     def settle_primary(contact_methods)

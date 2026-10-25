@@ -1,5 +1,7 @@
 class Address < ApplicationRecord
+  include FilemakerCoded
   include OutsideUsaTypeable
+  filemaker_archived_in FmAddress
 
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true

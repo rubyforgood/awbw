@@ -436,10 +436,22 @@ RSpec.describe PersonServices::ImportFromRolodex do
     results
 
     person = Person.find_by!(filemaker_code: "00060")
-    expect(person.addresses.order(:id).pluck(:street_address, :primary))
-      .to eq([ [ "1 Main St", true ], [ "2 Second St", false ] ])
-    expect(person.contact_methods.order(:id).pluck(:value, :primary))
-      .to eq([ [ "555-0100", true ], [ "555-0200", false ] ])
+    expect(person.addresses.order(:id).pluck(:street_address, :primary, :filemaker_code))
+      .to eq([ [ "1 Main St", true, "A21" ], [ "2 Second St", false, "A20" ] ])
+    expect(person.contact_methods.order(:id).pluck(:value, :primary, :filemaker_code))
+      .to eq([ [ "555-0100", true, "P21" ], [ "555-0200", false, "P20" ] ])
+  end
+
+  it "folds two archive rows for one address into one address carrying both codes" do
+    FmAddress.create!(fm_id: "A22", data: { "RolodexID" => "00061", "AddrsLine1" => "1 Main St",
+                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    FmAddress.create!(fm_id: "A23", data: { "RolodexID" => "00061", "AddrsLine1" => "1 Main Street",
+                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    rolodex("00061", EMail: "ada@example.com")
+
+    results
+
+    expect(Person.find_by!(filemaker_code: "00061").addresses.sole.filemaker_code).to eq("A22, A23")
   end
 
   it "reads the address and phone tables once, not once per row" do
@@ -705,6 +717,22 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(person.addresses.order(:id).pluck(:street_address, :primary))
         .to eq([ [ "1 Main St", true ], [ "2 Second St", false ] ])
       expect(person.contact_methods.pluck(:value, :primary)).to eq([ [ "555-0100", true ] ])
+    end
+
+    it "adds the archive's codes to the address and phone the person already holds" do
+      address = create(:address, addressable: person, street_address: "1 Main St", city: "Los Angeles", state: "CA")
+      phone = person.contact_methods.create!(kind: "phone", value: "(555) 0100")
+      FmAddress.create!(fm_id: "A72", data: { "RolodexID" => "00074", "AddrsLine1" => "1 Main Street",
+                                              "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+      FmPhoneNumber.create!(fm_id: "P72", data: { "RolodexID" => "00074", "PhoneNumber" => "555-0100" })
+      rolodex("00074", EMail: "ada@example.com")
+
+      described_class.new.call
+
+      expect(person.addresses.sole).to eq(address)
+      expect(address.reload.filemaker_code).to eq("A72")
+      expect(person.contact_methods.sole).to eq(phone)
+      expect(phone.reload.filemaker_code).to eq("P72")
     end
   end
 

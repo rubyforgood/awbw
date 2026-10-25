@@ -151,6 +151,15 @@ RSpec.describe AddressDeduper do
     expect(keep.reload.phone).to eq("555-9000")
   end
 
+  it "keeps every FileMaker code the merged addresses carried" do
+    keep = address(filemaker_code: "12")
+    address(filemaker_code: "7, 30")
+
+    described_class.new(person).call
+
+    expect(keep.reload.filemaker_code).to eq("12, 30, 7")
+  end
+
   it "leaves the survivor's own phone alone when the duplicate also has one" do
     keep = address(phone: "555-1000")
     address(phone: "555-9000")

@@ -93,4 +93,13 @@ RSpec.describe PersonServices::ReconcileContactMethods do
 
     expect(keep.reload.address_id).to eq(kept_address.id)
   end
+
+  it "keeps every FileMaker code the merged contact methods carried" do
+    keep = contact_method(filemaker_code: "22")
+    contact_method(filemaker_code: "35")
+
+    described_class.new(person).call
+
+    expect(keep.reload.filemaker_code).to eq("22, 35")
+  end
 end
