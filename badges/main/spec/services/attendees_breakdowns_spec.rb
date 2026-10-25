@@ -19,9 +19,14 @@ RSpec.describe AttendeesBreakdowns do
     expect(breakdowns.sector_counts).to eq(sector.id => 1)
   end
 
-  it "counts US states from active addresses" do
-    create(:address, addressable: person, state: "CA", inactive: false)
+  it "counts US states and countries from where they work (active affiliations)" do
+    create(:address, addressable: person, state: "NY", country: "Canada")
+    organization = create(:organization)
+    create(:address, addressable: organization, state: "CA", country: "United States")
+    create(:affiliation, person: registration.registrant, organization: organization)
+
     expect(breakdowns.state_counts).to eq("CA" => 1)
+    expect(breakdowns.country_counts).to eq("United States" => 1)
   end
 
   it "aggregates organizations linked on the person's training registrations" do
@@ -31,10 +36,10 @@ RSpec.describe AttendeesBreakdowns do
     expect(breakdowns.organization_counts).to eq(organization.id => 1)
   end
 
-  it "groups attendees by the city of the org linked on their training registration" do
+  it "groups attendees by the city they work in" do
     organization = create(:organization, name: "Wellness Org")
     create(:address, addressable: organization, city: "Austin", state: "TX", inactive: false)
-    registration.event_registration_organizations.create!(organization: organization)
+    create(:affiliation, person: registration.registrant, organization: organization)
 
     rows = breakdowns.registrant_city_breakdown.rows
     expect(rows.map(&:city)).to eq([ "Austin, TX" ])
@@ -137,9 +142,10 @@ RSpec.describe AttendeesBreakdowns do
     it "returns the people behind each dimension" do
       sector = create(:sector, name: "Healthcare")
       create(:sectorable_item, sectorable: person, sector: sector, is_primary: true)
-      create(:address, addressable: person, state: "CA", inactive: false)
       organization = create(:organization, name: "Wellness Org")
+      create(:address, addressable: organization, state: "CA", inactive: false)
       registration.event_registration_organizations.create!(organization: organization)
+      create(:affiliation, person: registration.registrant, organization: organization)
       scholarship = create(:scholarship, recipient: person, amount_cents: 1_000)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
 

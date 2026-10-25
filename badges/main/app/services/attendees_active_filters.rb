@@ -19,8 +19,8 @@ class AttendeesActiveFilters
     country school_district payment_status funder
   ].freeze
   # The roster has no filter form at all, so every drill-in it accepts needs a
-  # chip — including the two the index leaves out because it has controls for them.
-  ROSTER_CHIP_PARAMS = %w[ registrant_ids sector state ].freeze
+  # chip — including sector, which the index leaves out because it has a control for it.
+  ROSTER_CHIP_PARAMS = %w[ registrant_ids sector ].freeze
 
   def initialize(params, chip_params: CHIP_PARAMS)
     @params = params
@@ -45,9 +45,8 @@ class AttendeesActiveFilters
     case param
     when "registrant_ids" then "#{value.to_s.split("-").size} selected people"
     when "sector" then record_label("Sector", Sector, value)
-    when "state" then "State: #{value}"
     when "organization_id" then record_label("Organization", Organization, value)
-    when "org_city" then "Org city: #{value}"
+    when "org_city" then "City: #{value}"
     when "age_group" then record_label("Age group", Category, value)
     when "life_experience" then record_label("Life experience", Category, value)
     when "country" then "Country: #{value}"
