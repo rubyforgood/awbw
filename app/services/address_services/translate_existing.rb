@@ -75,7 +75,8 @@ module AddressServices
       return true if @dry_run
 
       changes = updates.to_h { |field, after| [ field, { before: record[field], after: } ] }
-      record.update_columns_stamped(**updates, user: @user)
+      # update_columns so a table-wide rewrite leaves every row's last-updated time as it was.
+      record.update_columns(updates)
       @tracker.track("autochange.#{record.class.model_name.singular}", {
         resource_type: record.class.name, resource_id: record.id, resource_title: title, changes:, reason: REASON, **extra
       })

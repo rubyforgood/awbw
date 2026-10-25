@@ -4,6 +4,5 @@ display_status: admin_facing
 released_on: 2026-10-24
 pr_number: 2834
 summary: >-
-  When the portal changes a record on its own — a Story Share menu edit, the address
-  cleanup — the record's "last updated" now shows who triggered it and when, matching
-  its entry in Activities.
+  When the portal changes a record on its own, the record's "last updated" now names who
+  triggered the change and when, instead of still crediting whoever last edited it by hand.
