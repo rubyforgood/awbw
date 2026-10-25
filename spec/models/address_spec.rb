@@ -91,6 +91,17 @@ RSpec.describe Address, type: :model do
     end
   end
 
+  describe "#outside_usa?" do
+    it "is true for a non-US country, even when the state reads like a US code" do
+      expect(build(:address, state: "CA", country: "Canada")).to be_outside_usa
+    end
+
+    it "is false for a US state with the US or a blank country" do
+      expect(build(:address, state: "CA", country: "United States")).not_to be_outside_usa
+      expect(build(:address, state: "CA", country: nil)).not_to be_outside_usa
+    end
+  end
+
   describe "#display_lines" do
     it "renders the street line and a combined city, state zip line" do
       address = build(:address, street_address: "123 Main St", city: "Springfield",

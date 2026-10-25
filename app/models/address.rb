@@ -73,6 +73,10 @@ class Address < ApplicationRecord
     address_type.present? && address_type != UNKNOWN_CONTACT_TYPE
   end
 
+  def outside_usa?
+    AddressLocality.outside_usa?(state, country)
+  end
+
   private
 
   # Every address carries a type, so one saved without an answer says so. Rows written

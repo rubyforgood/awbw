@@ -1,0 +1,11 @@
+name: "Type the state or province on non-USA addresses"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+summary: >-
+  On person and organization address forms, an address whose country isn't the
+  United States shows State as a text box instead of the US-state dropdown, so a
+  province like AB for Alberta can be entered.
+pro_tips:
+  - "Admins can add admin=true to the edit page address to type any state on a US address too."
+  - "Set the country and save first; the text box appears on the next edit."

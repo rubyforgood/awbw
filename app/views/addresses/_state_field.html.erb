@@ -1,0 +1,17 @@
+<% if f.object.outside_usa? || (params[:admin] && allowed_to?(:enter_any_state?, Address)) %>
+  <%= f.input :state,
+              label: "State / province",
+              input_html: {
+                class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              } %>
+<% else %>
+  <%= f.input :state,
+              label: "State",
+              as: :select,
+              collection: state_select_options(f.object.state),
+              include_blank: true,
+              selected: f.object.state,
+              input_html: {
+                class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              } %>
+<% end %>

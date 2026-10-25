@@ -102,14 +102,7 @@
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
 
-      <%= f.input :state,
-                  as: :select,
-                  collection: state_select_options(f.object.state),
-                  selected: f.object.state,
-                  input_html: {
-                    value: f.object.state,
-                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  } %>
+      <%= render "addresses/state_field", f: f %>
       <%= f.input :zip_code,
                   label: "ZIP Code",
                   input_html: {
