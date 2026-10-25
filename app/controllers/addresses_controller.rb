@@ -16,12 +16,12 @@ class AddressesController < ApplicationController
   end
 
   def dedupe_index
-    authorize! :dedupe, to: :dedupe?
+    authorize! Address, to: :dedupe?
     @groups = AddressServices::DuplicateFinder.new.groups
   end
 
   def dedupe_perform
-    authorize! :dedupe, to: :dedupe?
+    authorize! Address, to: :dedupe?
     addressable = GlobalID::Locator.locate_signed(params[:addressable_sgid], for: DEDUPE_PURPOSE)
     raise ActiveRecord::RecordNotFound, "Record not found" unless addressable.respond_to?(:addresses)
 
