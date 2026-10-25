@@ -11,6 +11,48 @@ module FilemakerValues
   # A two-digit year below this is read as 20xx, at or above it as 19xx.
   TWO_DIGIT_YEAR_PIVOT = 10
   CONTACT_TYPES = AddressTranslation::CONTACT_TYPES
+  # Organizations and projects staff retired in FileMaker by renaming them ("DELETE",
+  # "… Do Not Use", "created in error"); the import leaves them out. P0038, P0798, P0825,
+  # P2156 and P2524 are retired too but a portal org already carries each, so they import.
+  RETIRED_RECORDS = %w[
+    ORG00837 ORG02183 ORG02393 ORG02988 ORG03581 ORG03681 ORG04794 ORG06025 ORG06047
+    ORG06175 ORG06183 ORG06184 ORG06186 ORG06188 ORG06189 ORG06190 ORG06197 ORG06208
+    ORG06223 ORG06226 ORG06230 ORG06316 ORG06322 ORG06509 ORG06689 ORG06767 ORG06809
+    ORG06981 P1405 P1630 P2228 P2255 P2262 P2312 P2344 P2370 P2394 P2416 P2465 P2466 P2475
+    P2476 P2497 P2605 P2762
+  ].freeze
+  RETIRED_MARKER = /\b(do not use|delete)\b/i
+  # Retired in FileMaker, but no namesake there shares a city with it, so it comes in as its
+  # own organization, its name tidied of the marker and told apart by its code.
+  RETIRED_RENAMED = %w[ORG01126 ORG02287 ORG05066].freeze
+  # The retired organizations that duplicated another, by the code of the one they duplicated.
+  # Each folds into it — code, blanks, addresses, phones, projects — so what names it lands there.
+  RETIRED_DUPLICATE_OF = {
+    "ORG00837" => "ORG06521",
+    "ORG02183" => "ORG02184",
+    "ORG02393" => "ORG02395",
+    "ORG02988" => "ORG02990",
+    "ORG03581" => "ORG03588",
+    "ORG03681" => "ORG03682",
+    "ORG04794" => "ORG04795",
+    "ORG06025" => "ORG05702",
+    "ORG06047" => "ORG05138",
+    "ORG06175" => "ORG03150",
+    "ORG06183" => "ORG01658",
+    "ORG06184" => "ORG06049",
+    "ORG06188" => "ORG05988",
+    "ORG06189" => "ORG05580",
+    "ORG06190" => "ORG04132",
+    "ORG06197" => "ORG03185",
+    "ORG06208" => "ORG01257",
+    "ORG06223" => "ORG00636",
+    "ORG06226" => "ORG02709",
+    "ORG06230" => "ORG03243",
+    "ORG06316" => "ORG01571",
+    "ORG06322" => "ORG05340",
+    "ORG06767" => "ORG06339",
+    "ORG06981" => "ORG02607"
+  }.freeze
 
   # Every string copied here lands in a varchar(255) the archive's free text isn't
   # bounded by, and an over-long incidental field would otherwise cost the record —
@@ -27,6 +69,14 @@ module FilemakerValues
 
   def valid_email?(email)
     email.length <= STRING_LIMIT && email.match?(URI::MailTo::EMAIL_REGEXP)
+  end
+
+  def retired_record?(code)
+    RETIRED_RECORDS.include?(code.to_s.strip)
+  end
+
+  def duplicate_of(code)
+    RETIRED_DUPLICATE_OF[code.to_s.strip]
   end
 
   def flag?(value)

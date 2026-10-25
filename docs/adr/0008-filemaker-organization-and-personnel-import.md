@@ -60,7 +60,17 @@ Constraints already decided elsewhere:
     is Other with the word as its description. A value naming two types, as FileMaker's
     multi-select stored them, takes the first.
   - Every FileMaker organization comes over, whether or not a project or person points at it
-    (decided 2026-10-24).
+    (decided 2026-10-24) — except one staff retired by renaming it ("DELETE", "… Do Not Use",
+    "created in error"). Those are listed by code in `FilemakerValues::RETIRED_RECORDS`
+    (48 of prod's 53; the other 5 a portal org already carries, so they import) and skipped
+    and reported. Most retired organizations are "X Do Not Use" duplicates whose Rolodex cards
+    and jobs still point at them (76 cards in prod), so the 24 whose namesake shares a city with
+    them are mapped in `RETIRED_DUPLICATE_OF` to the one they duplicated and fold into it like a
+    merged project: the code, blanks, addresses, phones and projects move over and what names the
+    code lands there. Where no namesake shares a city (3 in prod), it's a different organization
+    and comes in as its own, "Do Not Use" dropped and its code added to the name
+    (`RETIRED_RENAMED`), to dedupe later if need be. The rest are
+    skipped, their projects unnested (decided 2026-10-25).
 - **Agencies:** a Rolodex card flagged `isAgency__c` is the agency's own card. Its website,
   mission and addresses fill the org its `OrgID` names (or the one its `Organization` name
   matches, created when nothing does); its email too, unless the card names a contact

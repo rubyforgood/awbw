@@ -171,6 +171,112 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     expect(Organization.sole).to have_attributes(name: "Lone Program", filemaker_code: "P0006", parent_id: nil)
   end
 
+  describe "records retired in FileMaker" do
+    before do
+      stub_const("FilemakerValues::RETIRED_RECORDS", %w[ORG00007 P0002 P0003])
+    end
+
+    describe "a retired duplicate of another organization" do
+      before { stub_const("FilemakerValues::RETIRED_DUPLICATE_OF", { "ORG00007" => "ORG00001" }) }
+
+      it "folds into the organization it duplicated: its code, data, and projects" do
+        fm_organization("ORG00001")
+        fm_organization("ORG00007", OrgName: "Harbor House Do Not Use", Website: "harbor.example.org", Mission: "Shelter for all")
+        project("P0007", "ORG00007", ProjectName: "Harbor Teen Program")
+        FmAddress.create!(fm_id: "1", data: { "OrgID" => "ORG00007", "AddrsLine1" => "1 Main St", "AddrsCity" => "Pasadena", "AddrsState" => "CA" })
+        FmPhoneNumber.create!(fm_id: "2", data: { "OrgID" => "ORG00007", "PhoneNumber" => "555-0100" })
+
+        results = import.results
+
+        original = Organization.find_by!(name: "Harbor House")
+        expect(results[:linked]).to include(a_string_including("ORG00007", "##{original.id}", "duplicate of ORG00001"))
+        expect(original).to have_attributes(filemaker_code: "ORG00001, ORG00007", website_url: "harbor.example.org",
+                                            mission_vision_values: "Shelter for all")
+        expect(original.addresses.sole).to have_attributes(street_address: "1 Main St", filemaker_code: "1")
+        expect(original.contact_methods.sole).to have_attributes(value: "555-0100", filemaker_code: "2")
+        expect(original.children.sole).to have_attributes(name: "Harbor Teen Program", filemaker_code: "P0007")
+        expect(Organization.where("name LIKE ?", "%Do Not Use%")).to be_empty
+      end
+
+      it "lands an agency card naming the duplicate on the original" do
+        fm_organization("ORG00001")
+        fm_organization("ORG00007", OrgName: "Harbor House Do Not Use")
+        FmRolodex.create!(fm_id: "00091", data: { "isAgency__c" => "1", "OrgID" => "ORG00007", "WebSite" => "harbor.example.org" })
+
+        import
+
+        expect(Organization.sole).to have_attributes(name: "Harbor House", website_url: "harbor.example.org")
+      end
+
+      it "is skipped, its projects unnested, when the original wasn't imported" do
+        fm_organization("ORG00007", OrgName: "Harbor House Do Not Use")
+        project("P0007", "ORG00007", ProjectName: "Harbor Teen Program")
+
+        expect(import.results[:skipped].sole).to include("ORG00007", "ORG00001", "wasn't imported")
+        expect(Organization.sole).to have_attributes(name: "Harbor Teen Program", parent_id: nil)
+      end
+    end
+
+    describe "a retired organization whose namesake is elsewhere" do
+      before { stub_const("FilemakerValues::RETIRED_RENAMED", %w[ORG00008]) }
+
+      it "comes in as its own organization, told apart from its namesake by its code" do
+        create(:organization, name: "Harbor House")
+        fm_organization("ORG00008", OrgName: "Harbor House Do Not Use", Website: "harbor.example.org")
+
+        import
+
+        expect(Organization.find_by!(filemaker_code: "ORG00008")).to have_attributes(name: "Harbor House (ORG00008)", website_url: "harbor.example.org")
+      end
+
+      it "names the one organization it makes with its single project the same way" do
+        fm_organization("ORG00008", OrgName: "Harbor House Do Not Use")
+        project("P0008", "ORG00008", ProjectName: "Harbor Teen Program")
+
+        import
+
+        expect(Organization.sole).to have_attributes(name: "Harbor House (ORG00008)", filemaker_code: "ORG00008, P0008")
+      end
+    end
+
+    it "leaves out a retired organization, bringing its projects in unnested" do
+      fm_organization("ORG00007", OrgName: "Harbor House Do Not Use")
+      project("P0007", "ORG00007", ProjectName: "Harbor Teen Program")
+      project("P0008", "ORG00007", ProjectName: "Harbor Adult Program")
+
+      expect(import.results[:skipped].sole).to include("ORG00007", "retired")
+      expect(Organization.pluck(:name, :parent_id)).to contain_exactly([ "Harbor Teen Program", nil ], [ "Harbor Adult Program", nil ])
+    end
+
+    it "leaves out retired projects by code, whatever their name, keeping their organization one place" do
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001")
+      project("P0002", "ORG00001", ProjectName: "DELETE")
+      project("P0003", "ORG00001", ProjectName: "Harbor House Program")
+
+      results = import.results
+
+      expect(results[:skipped]).to contain_exactly(a_string_including("P0002", "retired"), a_string_including("P0003", "retired"))
+      expect(Organization.sole).to have_attributes(name: "Harbor House", filemaker_code: "ORG00001, P0001")
+    end
+
+    it "brings in an unlisted project even when its name says DELETE" do
+      fm_organization("ORG00001")
+      project("P0004", "ORG00001", ProjectName: "Harbor House Art Program - DELETE")
+
+      import
+
+      expect(Organization.sole.filemaker_code).to eq("ORG00001, P0004")
+    end
+
+    it "creates no organization for an agency card naming a retired one" do
+      FmRolodex.create!(fm_id: "00091", data: { "isAgency__c" => "1", "OrgID" => "ORG00007", "Organization" => "Harbor House Do Not Use" })
+
+      expect(import.results[:skipped].sole).to include("00091", "retired")
+      expect(Organization.count).to eq(0)
+    end
+  end
+
   it "folds a merged-away project's code into the program it merged into" do
     fm_organization("ORG00001")
     project("P0001", "ORG00001")
