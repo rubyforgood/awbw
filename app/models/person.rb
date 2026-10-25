@@ -221,10 +221,11 @@ class Person < ApplicationRecord
     attributes address_city:   "addresses.city"
     attributes address_state:  "addresses.state"
     attributes address_zip:    "addresses.zip_code"
+    attributes address_country: "addresses.country"
     attributes address_phone:  "addresses.phone"
     attributes all: [ "contact_methods.value",
                       "addresses.street_address", "addresses.city", "addresses.state",
-                      "addresses.zip_code", "addresses.phone" ]
+                      "addresses.zip_code", "addresses.country", "addresses.phone" ]
     options :all, type: :text, default: true, default_operator: :or
   end
 
