@@ -68,9 +68,17 @@ Form answers are otherwise stored verbatim, as a record of what the person submi
 `data:translate_addresses` never rewrites them. They're translated where they become
 addresses instead (above).
 
-The prod cleanup on 2026-10-25 was done by hand: an admin corrected address cities, states,
-and countries in the portal, and answers were left as typed, since the addresses are the
-record.
+### Prod data cleanup, 2026-10-24 to 2026-10-25
+
+Prod data was cleaned by hand over these two days, with addresses as the record:
+
+- **Addresses:** cities, states, and countries corrected in the portal.
+- **Organization address answers on submissions not yet linked to an organization** — the ones
+  that still become an address when linked: country spellings, placeholder values ("N/A",
+  "-"), and values typed into the wrong field. Each change is an `autochange.form_answer` Ahoy
+  event with its before value.
+
+All other answers stay as typed.
 
 ## Consequences
 
