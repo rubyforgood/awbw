@@ -112,5 +112,45 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
       expect(person.affiliations.where(organization: organization).pluck(:organization_address_id).uniq)
         .to eq([ address.id ])
     end
+
+    context "when the submitted address has no country" do
+      let(:address_answers) { { street_address: "1 Main St", city: "Fresno", state: "CA", zip_code: "93701", country: "" } }
+
+      it "creates the org address in the United States" do
+        result = described_class.call(person: person, organization: organization,
+                                      entry: entry.merge(address: address_answers), scenario: "on_demand")
+
+        expect(result.address.country).to eq(Address::DEFAULT_COUNTRY)
+      end
+
+      it "fills a blank country on the org's matching address" do
+        existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Fresno",
+                                    state: "CA", zip_code: "93701", country: nil)
+
+        described_class.call(person: person, organization: organization,
+                             entry: entry.merge(address: address_answers), scenario: "on_demand")
+
+        expect(existing.reload.country).to eq(Address::DEFAULT_COUNTRY)
+      end
+
+      it "keeps a country already on the org's matching address" do
+        existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Fresno",
+                                    state: "CA", zip_code: "93701", country: "Mexico")
+
+        described_class.call(person: person, organization: organization,
+                             entry: entry.merge(address: address_answers), scenario: "on_demand")
+
+        expect(existing.reload.country).to eq("Mexico")
+      end
+    end
+
+    it "keeps a submitted country" do
+      address_answers = { street_address: "1 King St", city: "Toronto", state: "ON", zip_code: "M5H", country: "Canada" }
+
+      result = described_class.call(person: person, organization: organization,
+                                    entry: entry.merge(address: address_answers), scenario: "on_demand")
+
+      expect(result.address.country).to eq("Canada")
+    end
   end
 end

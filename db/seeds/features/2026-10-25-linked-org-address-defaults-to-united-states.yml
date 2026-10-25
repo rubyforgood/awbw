@@ -1,0 +1,10 @@
+name: "Linked organization addresses default to the United States"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+summary: >-
+  When you link an organization from a registration or form submission and the
+  person left the country blank, the organization's work address is saved in
+  the United States.
+pro_tips:
+  - "A blank country on the organization's matching saved address is filled in too; a country already saved is never changed."
