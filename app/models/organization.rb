@@ -69,6 +69,7 @@ class Organization < ApplicationRecord
   validates :tax_id, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :mission_vision_values, length: { maximum: 255 }
+  # Admin bypass stays on Current.user until #2833 moves it to a controller-set flag (models never call policies).
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
   validate :parent_is_not_self_or_descendant, if: :parent_id_changed?
 

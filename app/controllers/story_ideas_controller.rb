@@ -37,7 +37,7 @@ class StoryIdeasController < ApplicationController
     # Credit the submitter as the author, so the idea lists on their profile by
     # authorship like every other content type. An admin can reassign it later.
     @story_idea.author ||= current_user.person
-    @story_idea.organization_required = organization_required?
+    @story_idea.organization_required = !allowed_to?(:omit_organization?, StoryIdea)
     authorize! @story_idea
 
     success = false
@@ -81,7 +81,7 @@ class StoryIdeasController < ApplicationController
 
     StoryIdea.transaction do
       @story_idea.assign_attributes(story_idea_params.except(:images, :category_ids, :sector_ids))
-      @story_idea.organization_required = organization_required?
+      @story_idea.organization_required = !allowed_to?(:omit_organization?, StoryIdea)
       if @story_idea.save
         assign_associations(@story_idea)
         success = true
@@ -115,10 +115,6 @@ class StoryIdeasController < ApplicationController
 
   def set_story_idea
     @story_idea = StoryIdea.find(params[:id])
-  end
-
-  def organization_required?
-    !current_user&.super_user?
   end
 
   def story_idea_params

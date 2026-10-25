@@ -33,6 +33,7 @@ RSpec.describe TitleDisplayHelper, type: :helper do
         allow(helper).to receive(:controller_name).and_return("resources")
         allow(helper).to receive(:controller_path).and_return("resources")
         allow(helper).to receive(:current_user).and_return(current_user)
+        allow(helper).to receive(:allowed_to?) { |rule, target| ResourcePolicy.new(target, user: current_user).apply(rule) }
       end
 
       let(:record) { build(:resource, title: "Hidden Resource", hidden_from_search: true) }

@@ -197,6 +197,9 @@ or symbol. So write `authorize! @setting` in `show` (not `authorize! @setting, t
 (e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or
 `authorize! :workshop, to: :summary?`).
 
+Authorization always goes through a policy rule (`authorize!` / `allowed_to?`), never a `current_user`
+comparison — add a rule if none fits (e.g. `PersonPolicy#own_profile?`). Conventions: CLAUDE.md → Code Style.
+
 ### Controller Concerns
 
 - `AhoyTracking` — Event tracking integration

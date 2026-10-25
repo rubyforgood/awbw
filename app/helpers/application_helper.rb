@@ -635,7 +635,7 @@ module ApplicationHelper
   # Timezone hint phrased for whoever the form is about: second person when you're
   # editing your own settings, third person ("User") when an admin edits someone else.
   def timezone_visibility_hint(user)
-    subject = user == current_user ? "You" : "User"
+    subject = allowed_to?(:manage?, user) ? "User" : "You"
     "#{subject} will see times and dates in this timezone."
   end
 
@@ -739,7 +739,7 @@ module ApplicationHelper
   def default_organization_for_form(object)
     return object.organization if object.organization.present?
 
-    if current_user.super_user?
+    if allowed_to?(:manage?, object)
       Setting.app_organization
     elsif current_user.person&.affiliations&.count == 1
       current_user.person.primary_organization

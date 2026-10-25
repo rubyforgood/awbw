@@ -111,7 +111,7 @@ class PeopleController < ApplicationController
         # (cancelled, no-show, transferred-out), flagged with their status; everyone
         # else sees only active ones.
         registrations = @person.event_registrations.includes(:event).order("events.start_date DESC").references(:events)
-        registrations = registrations.active unless viewing_own_or_admin?
+        registrations = registrations.active unless allowed_to?(:own_record?, @person)
         @event_registrations = registrations.paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
       when "workshop_ideas"
@@ -553,15 +553,9 @@ class PeopleController < ApplicationController
   # Showing anonymous content to anyone but the person and admins would tie an
   # "Anonymous" credit back to a name.
   def visible_authored_content(scope)
-    return scope if viewing_own_or_admin?
+    return scope if allowed_to?(:own_record?, @person)
     return scope.none if @person.anonymous_contributions?
     scope.credited_openly
-  end
-
-  # The profile's own person, or an admin — the audience allowed to see private/
-  # reconciled-away content that's hidden from other profile viewers.
-  def viewing_own_or_admin?
-    allowed_to?(:manage?, Person) || current_user&.person_id == @person.id
   end
 
   def set_person

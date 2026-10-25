@@ -170,12 +170,8 @@ module PersonHelper
     admin_activities_events_path(person_id: person, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1")
   end
 
-  def own_profile?(person)
-    current_user.present? && current_user.person_id == person.id
-  end
-
   def owner_and_admins_label(person)
-    own_profile?(person) ? "Only visible to you and admins" : "Only visible to this person and admins"
+    allowed_to?(:own_profile?, person) ? "Only visible to you and admins" : "Only visible to this person and admins"
   end
 
   def profile_hidden_icon
