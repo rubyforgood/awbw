@@ -69,6 +69,60 @@ RSpec.describe AuthorCreditDivergenceQuery do
     end
   end
 
+  describe "#any?" do
+    let(:personless_user) { create(:user, person: nil) }
+
+    def expect_any_to_match(query)
+      expect(query.any?).to eq(!query.call.empty?)
+    end
+
+    it "is false when every record credits its author cleanly" do
+      person.update!(display_name_preference: "full_name")
+      create(:story, created_by: author_user, author: person, author_credit_preference: nil)
+
+      expect(described_class.new(type: "Story").any?).to be(false)
+      expect_any_to_match(described_class.new(type: "Story"))
+    end
+
+    it "is true for a diverged snapshot" do
+      diverged_story
+
+      expect(described_class.new.any?).to be(true)
+      expect_any_to_match(described_class.new)
+    end
+
+    it "is true for a legacy name, a creator fallback, and an unattributed record" do
+      [
+        -> { create(:workshop, created_by: author_user, author: nil, full_name: "Legacy Name") },
+        -> { create(:story, created_by: author_user, author: nil) },
+        -> { create(:story, created_by: personless_user, author: nil) }
+      ].each do |make|
+        record = make.call
+
+        expect(described_class.new.any?).to be(true)
+        expect_any_to_match(described_class.new)
+        record.destroy!
+      end
+    end
+
+    it "is false when the only creator fallback belongs to a reconciled person" do
+      create(:story, created_by: author_user, author: nil)
+      person.update!(author_credit_reconciled_at: Time.current)
+
+      expect(described_class.new(type: "Story").any?).to be(false)
+      expect(described_class.new(type: "Story", include_reconciled: "1").any?).to be(true)
+      expect_any_to_match(described_class.new(type: "Story"))
+    end
+
+    it "honors the person filter" do
+      create(:story, created_by: personless_user, author: nil)
+      diverged_story
+
+      expect(described_class.new(person_id: person.id + 9999).any?).to be(false)
+      expect(described_class.new(person_id: person.id).any?).to be(true)
+    end
+  end
+
   describe "filters" do
     before { diverged_story }
 

@@ -67,6 +67,11 @@ class AuthorCreditDivergenceQuery
     )
   end
 
+  # Whether any section has a row, stopping at the first one rather than building every section.
+  def any?
+    unauthored_any? || preference_any?
+  end
+
   private
 
   attr_reader :person_id, :type, :preference, :include_reconciled
@@ -91,14 +96,37 @@ class AuthorCreditDivergenceQuery
     includes
   end
 
+  def preference_scope(model)
+    scope = scoped(model).where.not(author_credit_preference: nil)
+    preference ? scope.where(author_credit_preference: preference) : scope
+  end
+
   def preference_groups
-    records = models.flat_map do |model|
-      scope = scoped(model).where.not(author_credit_preference: nil)
-      scope = scope.where(author_credit_preference: preference) if preference
-      scope.select(&:author_credit_diverged?)
-    end
+    records = models.flat_map { |model| preference_scope(model).select(&:author_credit_diverged?) }
 
     group_by_person(records)
+  end
+
+  def preference_any?
+    models.any? do |model|
+      preference_scope(model).find_each.any? do |record|
+        record.author_credit_diverged? && counted_person?(record.credit_governing_person)
+      end
+    end
+  end
+
+  # Every author-less record lands in exactly one of legacy, creator, or unattributed.
+  def unauthored_any?
+    authorable_models.any? do |model|
+      scoped(model).where(author_id: nil).find_each.any? do |record|
+        creator = record.created_by&.person
+        if record.legacy_author_name_text.present? || creator.blank?
+          !(preference || person_id)
+        else
+          counted_person?(creator)
+        end
+      end
+    end
   end
 
   # No credited person here, which is the whole problem — so no person filter.
@@ -171,15 +199,20 @@ class AuthorCreditDivergenceQuery
   end
 
   def build_group(person, records)
-    return nil if person.blank?
-    return nil if person_id.present? && person.id != person_id.to_i
-    return nil if person.author_credit_reconciled_at.present? && !include_reconciled
+    return nil unless counted_person?(person)
 
     PersonGroup.new(
       person: person,
       records: sorted(records),
       suggested_preference: most_restrictive(records)
     )
+  end
+
+  def counted_person?(person)
+    return false if person.blank?
+    return false if person_id.present? && person.id != person_id.to_i
+
+    person.author_credit_reconciled_at.blank? || include_reconciled
   end
 
   def sorted(records)
