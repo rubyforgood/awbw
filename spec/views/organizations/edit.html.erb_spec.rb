@@ -42,6 +42,17 @@ RSpec.describe "organizations/edit", type: :view do
     assert_select "select[name*=?] option[selected]", "[country]", text: "Canada"
   end
 
+  it "offers work or mailing as the address type, keeping a mailing address mailing and reading any other as work" do
+    create(:address, addressable: organization, address_type: "mailing")
+    create(:address, addressable: organization, address_type: "unknown")
+    render
+
+    assert_select "select[name*=?]", "[address_type]", count: 2 do |selects|
+      expect(selects.map { |select| select.css("option").map(&:text) }).to all(eq(%w[Work Mailing]))
+      expect(selects.map { |select| select.at_css("option[selected]").text }).to eq(%w[Mailing Work])
+    end
+  end
+
   describe "status select visibility" do
     before(:each) { assign(:organization_statuses, OrganizationStatus.all) }
 

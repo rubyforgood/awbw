@@ -82,6 +82,11 @@ namespace :fm do
           import.nested.each { |line| say.("  #{line}") }
         end
 
+        if import.try(:unplaced).present?
+          say.("\nProjects whose place couldn't be saved, missing a city or state (#{import.unplaced.size}):")
+          import.unplaced.each { |line| say.("  #{line}") }
+        end
+
         tallies = {
           "Organization types read as Other, kept as its description" => import.try(:unmatched_types),
           "Personnel Status values and how they were read" => import.try(:statuses),

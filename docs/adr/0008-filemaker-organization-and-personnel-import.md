@@ -130,12 +130,19 @@ Constraints already decided elsewhere:
 - **The Rolodex card → job affiliation:** the card's `OrgID` (or its typed `Organization`, via
   `NameMatcher`) and `Title` become a job affiliation there — the field `FmRolodex::PORTAL_FIELDS`
   already mapped to `affiliations.title`. No code: the card's ID is the person's.
-- **Work addresses:** the Rolodex `WorksiteAddrsID` address, any address typed Work, and
+- **Work addresses:** the Rolodex `WorksiteAddrsID` address, any address typed as work (Work,
+  Organization, Program, Corporate Office, District Office — ADR-0009's `CONTACT_TYPES`), and
   every address on an agency's card become an `Address` on the organization, and the
   person's affiliations there that name no address point at it
   (`affiliations.organization_address_id`), the worksite first. The organization is the one
   FileMaker filed the address under (its `OrgID`), else the card's, else the person's only
   one. A work address with no organization to land on stays with the person, typed work.
+  The people pass already filed the few typed Organization/Program/Corporate/District Office
+  on a person's card (26 in prod) on the person; this pass adds them to the organization too
+  and leaves the person's copy (decided 2026-10-25).
+- **An organization's address is typed Work, or Mailing** when FileMaker says Mailing or
+  Postal. The organization address form offers just those two, so a save keeps it
+  (decided 2026-10-25).
 - **Locality and districts come from the project, not derived.** `fm_projects` is the one
   place FileMaker records a `Locality`, and its vocabulary is where `Address::LOCALITIES`
   came from — so a project's `Locality`, `District`, `SPA` and `LASupervisorialDistrict`
@@ -144,9 +151,17 @@ Constraints already decided elsewhere:
   no locality to carry, which is why the Rolodex pass works it out with `AddressLocality`.
   Those project rows also carry real County → Locality pairs, so they are where to read
   AWBW's Northern/Central/Southern line from instead of inventing it.
+  - **A project with no State but a California Locality** (LA City, LA County, Orange County,
+    Northern/Central/Southern CA) is placed in CA, United States: those localities exist only
+    in California (122 projects in prod, decided 2026-10-25).
+  - **A project with no City, or no State and no California Locality**, can't become an
+    address, so its locality and districts are listed in the run's report ("Projects whose
+    place couldn't be saved") for staff to fix by hand.
 - **Addresses are built by `FmAddressAttributes`** (ADR-0009), as the Rolodex pass does, so
   state, country, type and locality are stored as the dropdowns offer; a project's city/state
-  goes through `AddressTranslation` the same way.
+  goes through `AddressTranslation` the same way. A row with a city and state but no street
+  still comes in (336 organization rows in prod), folding into an address the record already
+  holds in that city (`FmAddressAttributes.held`); a row with no city or state is left out.
 - **Conflicts:** a field on a record — an organization's website, mission, type — fills blanks
   and keeps the portal value where the archive disagrees, reported as a comment plus in the
   task output. A record itself comes in new instead: an affiliation whose dates differ, an

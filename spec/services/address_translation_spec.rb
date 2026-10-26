@@ -127,10 +127,16 @@ RSpec.describe AddressTranslation do
 
   describe "#address_type" do
     it "reads the archive's and forms' words as the address types we store" do
-      { "Home" => "personal", "cell" => "personal", "Work" => "work", "Business" => "work", "Mailing" => "mailing" }.each do |typed, type|
+      {
+        "Home" => "personal", "cell" => "personal", "Home/Eve" => "personal", "Cell/Personal" => "personal",
+        "Work" => "work", "Business" => "work", "Work/Day" => "work", "Office" => "work", "Organization" => "work",
+        "Program" => "work", "Corporate Office" => "work", "District Office" => "work",
+        "Mailing" => "mailing", "Postal" => "mailing"
+      }.each do |typed, type|
         expect(translation.address_type(typed)).to eq(type)
       end
       expect(translation.address_type("Vacation")).to be_nil
+      expect(translation.address_type("Home/Work")).to be_nil
     end
   end
 

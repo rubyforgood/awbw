@@ -454,6 +454,19 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.find_by!(filemaker_code: "00061").addresses.sole.filemaker_code).to eq("A22, A23")
   end
 
+  it "folds a street-less row into an address in its city, and brings one in for a new city" do
+    FmAddress.create!(fm_id: "A24", data: { "RolodexID" => "00062", "AddrsLine1" => "1 Main St",
+                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    FmAddress.create!(fm_id: "A25", data: { "RolodexID" => "00062", "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    FmAddress.create!(fm_id: "A26", data: { "RolodexID" => "00062", "AddrsCity" => "Fresno", "AddrsState" => "CA" })
+    rolodex("00062", EMail: "ada@example.com")
+
+    results
+
+    expect(Person.find_by!(filemaker_code: "00062").addresses.order(:id).pluck(:street_address, :city, :filemaker_code))
+      .to eq([ [ "1 Main St", "Los Angeles", "A24, A25" ], [ "", "Fresno", "A26" ] ])
+  end
+
   it "reads the address and phone tables once, not once per row" do
     3.times do |i|
       FmAddress.create!(fm_id: "A8#{i}", data: { "RolodexID" => "0008#{i}", "AddrsLine1" => "#{i} Main St",

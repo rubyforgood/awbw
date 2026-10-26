@@ -1,0 +1,14 @@
+name: "Mailing addresses on organizations, and more FileMaker types read on import"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2864
+action_path: "/organizations"
+summary: >-
+  An organization's address can now be marked Mailing as well as Work. The FileMaker import keeps
+  mailing addresses as mailing, reads more of FileMaker's address and phone types, and brings in
+  addresses that have a city and state but no street.
+pro_tips:
+  - "Pick Work or Mailing in each address's Type dropdown on the organization edit page."
+  - "FileMaker phones typed Work/Day or Home/Eve now come in as work or personal."
+  - "A FileMaker project with no state but a California locality is placed in California. The import report lists any project it still couldn't place, for fixing by hand."

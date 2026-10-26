@@ -396,21 +396,23 @@ module PersonServices
     def build_addresses(person, rolodex)
       attributes = rolodex.addresses.reject { |address| rolodex.organization_address?(address) }
                           .filter_map { |address| @address_attributes.call(address.data)&.merge(filemaker_code: address.fm_id) }
-      attach(person.addresses, attributes) { |address| address_key(address[:street_address], address[:city]) }
+      attach(person.addresses, attributes) { |address| FmAddressAttributes.held(person.addresses, address) }
     end
 
     def build_phones(person, rolodex)
       attributes = rolodex.phone_numbers.filter_map { |phone| phone_attributes(phone) }
-      attach(person.contact_methods, attributes) { |phone| phone_key(phone[:value]) }
+      attach(person.contact_methods, attributes) do |phone|
+        person.contact_methods.find { |held| phone_key(held.value) == phone_key(phone[:value]) }
+      end
     end
 
     # Each archive row lands on one record carrying its code: the one the person already
-    # holds for it (the same address or number), or a new one — the first of which is
-    # primary when the person has none.
+    # holds for it (the block finds it), or a new one — the first of which is primary when
+    # the person has none.
     def attach(association, attributes)
       has_primary = association.any?(&:primary?)
       attributes.each do |attrs|
-        held = association.find { |record| yield(record) == yield(attrs) }
+        held = yield(attrs)
         if held
           held.filemaker_code = held.class.join_filemaker_codes(held.filemaker_code, attrs[:filemaker_code])
         else
@@ -418,10 +420,6 @@ module PersonServices
           has_primary = true
         end
       end
-    end
-
-    def address_key(street, city)
-      [ AddressNormalizer.street(street), AddressNormalizer.city(city) ]
     end
 
     def phone_key(value)

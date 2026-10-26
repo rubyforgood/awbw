@@ -1,9 +1,19 @@
 # Turns an FmAddress row's fields into Address attributes — state, country, type and
 # locality translated as the dropdowns store them (ADR-0009) — or nil when the row lacks the
-# street, city or state an address needs. One instance serves a whole import: the archive's
+# city or state an address needs. One instance serves a whole import: the archive's
 # ZIP table is read once, and #unmatched gathers every value it couldn't translate.
 class FmAddressAttributes
   STRING_LIMIT = 255
+
+  # The address an addressable already holds for a row: the same street in the same city, or,
+  # for a row with no street, any address in that city.
+  def self.held(addresses, attributes)
+    city = AddressNormalizer.city(attributes[:city])
+    street = AddressNormalizer.street(attributes[:street_address])
+    addresses.find do |address|
+      AddressNormalizer.city(address.city) == city && (street.empty? || AddressNormalizer.street(address.street_address) == street)
+    end
+  end
 
   def initialize
     @translation = AddressTranslation.new
@@ -11,21 +21,22 @@ class FmAddressAttributes
 
   def unmatched = @translation.unmatched
 
-  def call(fields, address_type: nil)
+  # An organization's address is its mailing address when the archive says so, else its work one.
+  def call(fields, organization: false)
     street = [ street_line(fields), fields["AddrsLine2"] ].filter_map { |line| line.to_s.strip.presence }.join(", ")
     city = clip(fields["AddrsCity"].to_s.strip)
     state = clip(fields["AddrsState"].to_s.strip)
-    return if street.blank? || city.blank? || state.blank?
+    return if city.blank? || state.blank?
 
     @translation.address(
-      street_address: clip(street),
+      street_address: street.truncate(STRING_LIMIT),
       city:,
       state:,
       zip_code: zip_code(fields),
       country: clip(fields["AddrsCountry"]),
       county: county(fields),
       address_type: fields["AddrsType"]
-    ).then { |attributes| address_type ? attributes.merge(address_type:) : attributes }
+    ).then { |attributes| organization ? attributes.merge(address_type: organization_type(attributes[:address_type])) : attributes }
   end
 
   # An address holding just a city and state — where the archive records a place (a
@@ -36,6 +47,10 @@ class FmAddressAttributes
   end
 
   private
+
+  def organization_type(type)
+    type.presence_in(Address::ORGANIZATION_CONTACT_TYPES) || "work"
+  end
 
   # The house number has its own field, sometimes already repeated at the front of
   # the first line.
