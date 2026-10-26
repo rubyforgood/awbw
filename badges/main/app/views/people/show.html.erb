@@ -98,11 +98,15 @@
             <% end %>
           </div>
         <% end %>
-        <!-- Contact info + social -->
-        <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm md:justify-start">
+        <!-- Emails -->
+        <% email_chips = capture do %>
           <% if @person.profile_email.present? %>
             <% if @person.profile_show_email? %>
               <%= render "people/profile_pieces/email_chip", person: @person %>
+            <% elsif allowed_to?(:manage?, Person) %>
+              <span class="<%= admin_only_chip_class %>" title="Primary email (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <!--email_off--><%= mail_to @person.profile_email, @person.profile_email, class: "hover:text-primary" %><!--email_on--> <span class="text-2xs text-blue-700 uppercase">(<%= @person.profile_email_label %>)</span>
+              </span>
             <% end %>
             <% if @person.user&.unconfirmed_email.present? && allowed_to?(:show_email_change?, @person) %>
               <% pending_label = capture do %>Email change to <strong class="font-semibold"><%= @person.user.unconfirmed_email %></strong> pending
@@ -117,19 +121,33 @@
                     title: "Change to #{@person.user.unconfirmed_email} awaiting confirmation. Only the person and admins can see this; it is hidden from other profile visitors." %>
             <% end %>
           <% end %>
-          <% if @person.profile_phone.present? && @person.profile_show_phone? %>
-            <%= render "people/profile_pieces/phone_chip", person: @person %>
+          <% if @person.email_2.present? && allowed_to?(:manage?, Person) %>
+            <span class="<%= admin_only_chip_class %>" title="Email2 (admin only)">
+              <i class="fa-solid fa-lock text-xs text-blue-700"></i> <!--email_off--><%= mail_to @person.email_2, @person.email_2, class: "hover:text-primary" %><!--email_on--> <span class="text-2xs text-blue-700 uppercase">(<%= @person.email_2_label %>)</span>
+            </span>
+          <% end %>
+        <% end %>
+        <% if email_chips.present? %>
+          <div id="profile_emails" class="mt-3 flex flex-col items-center gap-2 text-sm md:items-start">
+            <%= email_chips %>
+          </div>
+        <% end %>
+        <!-- Phone + social -->
+        <div class="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm md:justify-start">
+          <% if @person.profile_phone.present? %>
+            <% if @person.profile_show_phone? %>
+              <%= render "people/profile_pieces/phone_chip", person: @person %>
+            <% elsif allowed_to?(:manage?, Person) %>
+              <span class="<%= admin_only_chip_class %>" title="Phone (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= link_to @person.profile_phone, tel_href(@person.profile_phone), class: "hover:text-primary" %> <span class="text-2xs text-blue-700 uppercase">(primary)</span>
+              </span>
+            <% end %>
           <% end %>
           <% if @person.social_media? && @person.profile_show_social_media? %>
             <%= render "people/social_media_buttons", person: @person %>
           <% end %>
           <%# Admin-only contact extras that have no public profile home. %>
           <% if allowed_to?(:manage?, Person) %>
-            <% if @person.email_2.present? %>
-              <span class="<%= admin_only_chip_class %>" title="Secondary email (admin only)">
-                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <!--email_off--><%= mail_to @person.email_2, @person.email_2, class: "hover:text-primary" %><!--email_on--><% if @person.email_2_type.present? %> <span class="text-2xs text-blue-700 uppercase">(<%= @person.email_2_type %>)</span><% end %>
-              </span>
-            <% end %>
             <% shown_phone = @person.phone_number %>
             <% @person.contact_methods.each do |cm| %>
               <% next if cm.phone? && !cm.inactive? && cm.value == shown_phone %>
