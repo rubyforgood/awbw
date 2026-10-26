@@ -685,7 +685,8 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
-  # Each registration-form submission's FormSubmission#org_entry, oldest first. Memoized:
+  # Each of this event's registration-form submissions' FormSubmission#org_entry, oldest
+  # first — events can share a form, so another event's submissions are left out. Memoized:
   # the linking actions ask for these entries half a dozen times per request
   # (profile, address, position, then again to build the notice).
   def registration_submission_entries(registration)
@@ -697,8 +698,9 @@ class EventRegistrationsController < ApplicationController
     form = registration.event.registration_form
     return [] unless form
 
+    # Event-less submissions predate event_id, so they can't be attributed to another event.
     entries = registration.registrant.form_submissions
-      .where(form: form)
+      .where(form: form, event: [ registration.event, nil ])
       .order(:created_at)
       .includes(form_answers: :form_field)
       .map(&:org_entry)

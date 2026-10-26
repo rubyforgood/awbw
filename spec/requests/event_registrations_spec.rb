@@ -1394,6 +1394,22 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("No other affiliations on record")
         end
 
+        it "shows only this event's submissions when another event shares the registration form" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_name")
+          other_event = create(:event, title: "Other Event")
+          [ event, other_event ].each { |e| create(:event_form, :registration, event: e, form: reg_form) }
+          this_submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
+          other_submission = create(:form_submission, person: regular_user.person, form: reg_form, event: other_event)
+          create(:form_answer, form_submission: this_submission, form_field: field, submitted_answer: "Helping Hands")
+          create(:form_answer, form_submission: other_submission, form_field: field, submitted_answer: "Other Event Agency")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Helping Hands")
+          expect(response.body).not_to include("Other Event Agency")
+        end
+
         it "flags a persistent discrepancy on a linked org whose saved profile differs from the submission" do
           organization.update!(name: "Acme", organization_type: "For-profit")
           reg_form = create(:form, name: "Reg form")
@@ -1824,6 +1840,24 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(matching.reload.linked_organization_ids).to include(organization.id)
           expect(other.reload.linked_organization_ids).to be_empty
+        end
+
+        it "leaves another event's submission on the shared registration form unlinked" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_name")
+          other_event = create(:event, title: "Other Event")
+          [ event, other_event ].each { |e| create(:event_form, :registration, event: e, form: reg_form) }
+          this_submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
+          other_submission = create(:form_submission, person: regular_user.person, form: reg_form, event: other_event)
+          [ this_submission, other_submission ].each do |submission|
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Helping Hands")
+          end
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(this_submission.reload.linked_organization_ids).to include(organization.id)
+          expect(other_submission.reload.linked_organization_ids).to be_empty
         end
 
         it "records the linking registration on the created affiliations" do

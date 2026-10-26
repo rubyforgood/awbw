@@ -1,0 +1,8 @@
+name: "Link organizations page shows only this event's registration answers"
+area: people
+display_status: admin_facing
+released_on: 2026-10-26
+summary: >-
+  When two events share a registration form, a person registered for both now
+  sees only the answers they gave for this event on its link organizations page,
+  and linking an org no longer marks their other event's submission as linked.
