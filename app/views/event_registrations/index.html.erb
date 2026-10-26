@@ -73,15 +73,11 @@
                             <i class="fa-solid fa-clipboard-list text-2xs shrink-0 <%= DomainTheme.text_class_for(:event_registrations) %>"></i>
                             <span class="truncate font-semibold <%= DomainTheme.text_class_for(:event_registrations) %>"><%= person_name(event_registration.registrant) %></span>
                           <% end %>
-                          <% if (sitting_count = submission_sittings[[ event_registration.registrant_id, event_registration.event_id ]]&.count) %>
-                            <%= link_to event_registrant_submissions_path(event_registration.event, person_id: event_registration.registrant_id, return_to: "index"),
-                                        class: "relative shrink-0 text-green-600 hover:text-green-800",
-                                        title: sitting_count > 1 ? "Submitted #{sitting_count} times" : "Completed registration form" do %>
-                              <i class="fa-solid fa-file-lines"></i>
-                              <% if sitting_count > 1 %>
-                                <span class="text-3xs absolute -top-1.5 -right-2 rounded-full bg-green-600 px-1 leading-tight font-semibold text-white"><%= sitting_count %></span>
-                              <% end %>
-                            <% end %>
+                          <% if (sittings = submission_sittings[[ event_registration.registrant_id, event_registration.event_id ]]) %>
+                            <%= render "submissions_icon",
+                                       sittings: sittings,
+                                       path: event_registrant_submissions_path(event_registration.event, person_id: event_registration.registrant_id, return_to: "index"),
+                                       scholarship_requested: event_registration.scholarship_requested? %>
                           <% elsif events_with_forms.include?(event_registration.event_id) %>
                             <i class="fa-regular fa-file-lines shrink-0 text-gray-300" title="No registration form submitted"></i>
                           <% end %>

@@ -37,7 +37,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
         link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(event, person_id: regular_user.person.id, return_to: "index")}']")
         expect(link).to be_present
-        expect(link["title"]).to eq("Submitted 2 times")
+        expect(link["title"].lines.size).to eq(2)
+        expect(link["title"].lines.first).to include(" + ")
         expect(link.text.strip).to eq("2")
       end
 
@@ -217,13 +218,14 @@ RSpec.describe "EventRegistrations", type: :request do
         let(:reg_form) { create(:form, :standalone, name: "Registration Form") }
         let(:person) { existing_registration.registrant }
 
-        it "shows green icon when person submitted the current registration form" do
+        it "shows the registrants page's blue icon when person submitted the current registration form" do
           create(:event_form, event: event, form: reg_form, role: "registration")
           create(:form_submission, person: person, form: reg_form, event: event)
 
           get event_registrations_path
 
-          expect(response.body).to include("fa-solid fa-file-lines")
+          expect(response.body).to include("fa-regular fa-file-lines")
+          expect(response.body).to include("text-blue-600")
         end
 
         it "shows gray icon when person has not submitted any form" do
