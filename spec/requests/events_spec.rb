@@ -2360,10 +2360,9 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('text-blue-600')
       end
 
-      it "links the icon to the submissions page with a count badge when there's more than one" do
+      it "links the icon to the submissions page with a badge counting each registration, even seconds apart" do
         create(:event_form, event: event, form: reg_form, role: "registration")
-        2.times { create(:form_submission, person: person, form: reg_form, event: event) }
-        registration = event.event_registrations.find_by(registrant: person)
+        2.times { |i| create(:form_submission, person: person, form: reg_form, event: event, role: "registration", created_at: Time.zone.local(2026, 9, 1, 10) + i.seconds) }
 
         get registrants_event_path(event)
 
@@ -2372,14 +2371,17 @@ RSpec.describe "Events", type: :request do
         expect(link.text.strip).to eq("2")
       end
 
-      it "shows no count badge for a single submission" do
+      it "counts a registration submitted with its scholarship and CE forms once, with no badge" do
         create(:event_form, event: event, form: reg_form, role: "registration")
-        create(:form_submission, person: person, form: reg_form, event: event)
-        registration = event.event_registrations.find_by(registrant: person)
+        submitted_at = Time.zone.local(2026, 9, 1, 10)
+        create(:form_submission, person: person, form: reg_form, event: event, role: "registration", created_at: submitted_at)
+        create(:form_submission, person: person, form: create(:form), event: event, role: "scholarship", created_at: submitted_at + 1.second)
+        create(:form_submission, person: person, form: create(:form), event: event, role: "continuing_education", created_at: submitted_at + 2.seconds)
 
         get registrants_event_path(event)
 
         link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)}']")
+        expect(link).to be_present
         expect(link.text.strip).to be_empty
       end
 

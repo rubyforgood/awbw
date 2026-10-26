@@ -23,16 +23,20 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response).to have_http_status(:success)
       end
 
-      it "links a registrant's submissions from one icon, counting them when there's more than one" do
+      it "links a registrant's submissions from one icon, counting each time they submitted" do
         form = create(:form)
+        scholarship_form = create(:form)
         create(:event_form, :registration, event: event, form: form)
-        2.times { create(:form_submission, person: regular_user.person, form: form, event: event) }
+        first_sitting = Time.zone.local(2026, 9, 1, 10)
+        create(:form_submission, person: regular_user.person, form: form, event: event, role: "registration", created_at: first_sitting)
+        create(:form_submission, person: regular_user.person, form: scholarship_form, event: event, role: "scholarship", created_at: first_sitting + 1.second)
+        create(:form_submission, person: regular_user.person, form: form, event: event, role: "registration", created_at: first_sitting + 3.days)
 
         get event_registrations_path
 
         link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(event, person_id: regular_user.person.id, return_to: "index")}']")
         expect(link).to be_present
-        expect(link["title"]).to eq("2 form submissions")
+        expect(link["title"]).to eq("Submitted 2 times")
         expect(link.text.strip).to eq("2")
       end
 

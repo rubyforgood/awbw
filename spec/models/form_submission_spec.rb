@@ -76,6 +76,36 @@ RSpec.describe FormSubmission do
     end
   end
 
+  describe ".sitting_count" do
+    let(:start) { Time.zone.local(2026, 10, 1, 9) }
+
+    it "counts a registration with its scholarship and CE forms as one sitting" do
+      role_times = [ [ "registration", start ], [ "scholarship", start + 1.second ], [ "continuing_education", start + 2.seconds ] ]
+
+      expect(described_class.sitting_count(role_times)).to eq(1)
+    end
+
+    it "counts every registration on its own, even seconds apart" do
+      role_times = [ [ "registration", start ], [ "registration", start + 2.seconds ], [ "scholarship", start + 3.seconds ] ]
+
+      expect(described_class.sitting_count(role_times)).to eq(2)
+    end
+
+    it "counts a later standalone CE or scholarship return as its own sitting" do
+      role_times = [
+        [ "registration", start ], [ "scholarship", start + 1.second ],
+        [ "continuing_education", start + 2.days ],
+        [ "scholarship", start + 5.days ], [ "continuing_education", start + 5.days + 1.second ]
+      ]
+
+      expect(described_class.sitting_count(role_times.shuffle)).to eq(3)
+    end
+
+    it "is zero with no submissions" do
+      expect(described_class.sitting_count([])).to eq(0)
+    end
+  end
+
   describe "slug" do
     it "generates a unique slug for bulk payment submissions" do
       submission = create(:form_submission, role: "bulk_payment")

@@ -258,6 +258,17 @@ class FormSubmission < ApplicationRecord
     nil
   end
 
+  SITTING_WINDOW = 1.minute
+
+  # How many times a person sat down to submit, from [role, created_at] pairs. Each
+  # registration counts on its own; other forms (scholarship, CE, …) saved alongside
+  # one in the same request fold into it, and standalone ones cluster by time.
+  def self.sitting_count(role_times)
+    registration_times, other_times = role_times.partition { |role, _| role == "registration" }.map { |pairs| pairs.map(&:last) }
+    standalone_times = other_times.reject { |time| registration_times.any? { |registered| (time - registered).abs <= SITTING_WINDOW } }
+    registration_times.size + standalone_times.sort.slice_when { |earlier, later| later - earlier > SITTING_WINDOW }.count
+  end
+
   def self.generate_unique_slug
     loop do
       slug = SecureRandom.urlsafe_base64(16)
