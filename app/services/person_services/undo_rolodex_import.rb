@@ -14,12 +14,15 @@ module PersonServices
     end
 
     # Untouched, so deleting a person's address doesn't make the person look edited since.
+    # Tagged with the run it reversed, so its own activity can be found as exactly as the run's.
     def call
       ActiveRecord::Base.no_touching do
-        events.each do |event|
-          case event.name
-          when /\Acreate\./ then undo_create(event)
-          when /\Aupdate\./ then undo_update(event)
+        Analytics::LifecycleBuffer.tagging(undone_run: @run) do
+          events.each do |event|
+            case event.name
+            when /\Acreate\./ then undo_create(event)
+            when /\Aupdate\./ then undo_update(event)
+            end
           end
         end
       end
