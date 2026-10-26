@@ -22,7 +22,7 @@
       <p class="text-sm text-gray-700"><%= membership.coverage_label %> <span class="font-medium"><%= membership.end_date.strftime("%b %-d, %Y") %></span></p>
     <% end %>
 
-    <% invoices_due = membership&.invoices_due %>
+    <% invoices_due = local_assigns[:invoices_due] %>
     <% if invoices_due&.any? %>
       <div class="space-y-2">
         <% invoices_due.each do |invoice| %>

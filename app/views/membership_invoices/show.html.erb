@@ -38,12 +38,12 @@
   </dl>
 
   <div class="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-gray-200 pt-6">
-    <% if @membership_invoice.deletable? %>
+    <% if @deletion_blocked_reason.nil? %>
       <%= button_to "Delete invoice", membership_invoice_path(@membership_invoice),
             method: :delete, class: button_classes(:danger_outline),
             data: { turbo_confirm: "Delete this invoice? This cannot be undone." } %>
     <% else %>
-      <p class="text-xs text-gray-500">Can't be deleted: <%= @membership_invoice.deletion_blocked_reason %>.</p>
+      <p class="text-xs text-gray-500">Can't be deleted: <%= @deletion_blocked_reason %>.</p>
     <% end %>
   </div>
   <%= render "shared/audit_info", resource: @membership_invoice %>

@@ -64,7 +64,7 @@ class PeopleController < ApplicationController
 
   def show
     authorize! @person
-    @person = Person.includes(:avatar_attachment, :contact_methods, :user,
+    @person = Person.includes(:avatar_attachment, :contact_methods, :user, :pay_subscriptions,
                               categorizable_items: { category: :category_type }).find(params[:id]).decorate
     track_view(@person)
     @pending_change_requests = own_pending_change_requests unless turbo_frame_request?
@@ -773,7 +773,10 @@ class PeopleController < ApplicationController
     return unless Membership.enabled? && allowed_to?(:own_record?, @person)
 
     @membership = @person.current_membership&.decorate
-    return unless @membership && allowed_to?(:manage_subscription?, @membership)
+    return unless @membership
+
+    @membership_invoices_due = @membership.object.invoices_due.includes(:allocations).to_a
+    return unless allowed_to?(:manage_subscription?, @membership)
 
     processor = @person.payment_processor
     membership_sub = processor&.subscription

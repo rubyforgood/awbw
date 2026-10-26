@@ -35,6 +35,7 @@ class MembershipInvoicesController < ApplicationController
 
   def show
     authorize! @membership_invoice
+    @deletion_blocked_reason = @membership_invoice.deletion_blocked_reason
   end
 
   def destroy
@@ -59,7 +60,9 @@ class MembershipInvoicesController < ApplicationController
   end
 
   def set_membership_invoice
-    @membership_invoice = MembershipInvoice.find(params[:id])
+    @membership_invoice = MembershipInvoice
+      .includes(:allocations, membership: :person, created_by: :person, updated_by: :person)
+      .find(params[:id])
   end
 
   def next_start_date

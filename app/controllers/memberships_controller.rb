@@ -11,6 +11,8 @@ class MembershipsController < ApplicationController
         .by_person_name(params[:person_name])
       scope = scope.public_send(@status_filter) unless @status_filter == "all"
       @memberships = scope.order(start_date: :desc).paginate(page: params[:page], per_page: 25)
+      @memberships.total_entries
+      @memberships.load
 
       render "memberships/memberships_results"
     else

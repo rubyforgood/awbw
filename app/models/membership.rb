@@ -66,7 +66,7 @@ class Membership < ApplicationRecord
   def ended? = !active? && !owes? && !upcoming?
 
   def renewal_in_flight?
-    return false unless person.payment_processor&.subscribed?
+    return false unless stripe_active?
 
     invoice = current_invoice
     invoice&.overdue? && invoice.start_date >= Date.current - 1.day

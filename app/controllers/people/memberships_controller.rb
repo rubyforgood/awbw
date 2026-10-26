@@ -9,6 +9,7 @@ module People
         .includes(person: :pay_subscriptions, membership_invoices: :allocations)
         .order(created_at: :desc)
         .decorate
+        .to_a
     end
 
     def new
