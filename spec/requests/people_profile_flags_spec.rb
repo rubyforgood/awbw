@@ -168,6 +168,25 @@ RSpec.describe "Person profile flag visibility", type: :request do
     end
   end
 
+  describe "#profile_show_phone" do
+    context "when false" do
+      before { person.update!(profile_show_phone: false) }
+
+      it "shows the phone to an admin in the header as an admin-only chip" do
+        sign_in admin
+        get person_path(person)
+        chip = Capybara.string(response.body).find("span[title='Phone (admin only)']")
+        expect(chip).to have_text("555-123-4567 (primary)")
+      end
+
+      it "leaves the admin-only header chip off the owner's view" do
+        sign_in owner_user
+        get person_path(person)
+        expect(response.body).not_to include("Phone (admin only)")
+      end
+    end
+  end
+
   describe "#profile_show_email" do
     let(:email) { person.user.email }
 
@@ -191,6 +210,36 @@ RSpec.describe "Person profile flag visibility", type: :request do
         get person_path(person)
         expect(hidden_card.native.to_html).to include(email)
       end
+
+      it "shows email to an admin in the header as an admin-only chip" do
+        sign_in admin
+        get person_path(person)
+        chip = Capybara.string(response.body).find("span[title='Primary email (admin only)']")
+        expect(chip).to have_text(email)
+        expect(chip).to have_text("(primary · user account)")
+      end
+
+      it "labels the admin-only secondary chip as email2 with its type" do
+        person.update!(email_2: "second@example.com", email_2_type: "personal")
+        sign_in admin
+        get person_path(person)
+        chip = Capybara.string(response.body).find("span[title='Email2 (admin only)']")
+        expect(chip).to have_text("second@example.com (email2 · personal)")
+      end
+
+      it "stacks the primary email above email2" do
+        person.update!(email_2: "second@example.com")
+        sign_in admin
+        get person_path(person)
+        titles = Capybara.string(response.body).all("#profile_emails > span").map { |chip| chip[:title] }
+        expect(titles).to eq([ "Primary email (admin only)", "Email2 (admin only)" ])
+      end
+
+      it "leaves the admin-only header chip off the owner's view" do
+        sign_in owner_user
+        get person_path(person)
+        expect(response.body).not_to include("Primary email (admin only)")
+      end
     end
 
     context "when true" do
@@ -206,6 +255,18 @@ RSpec.describe "Person profile flag visibility", type: :request do
         sign_in admin
         get person_path(person)
         expect(response.body).to include(email)
+      end
+
+      it "tags the login email as the user account for admins" do
+        sign_in admin
+        get person_path(person)
+        expect(Capybara.string(response.body)).to have_css("span[title='Login email (admin only)']", text: "user account")
+      end
+
+      it "leaves the user account tag off for other viewers" do
+        sign_in other_user
+        get person_path(person)
+        expect(response.body).not_to include("Login email (admin only)")
       end
     end
 

@@ -1,0 +1,12 @@
+name: "Hidden contact info shows to admins on profiles"
+area: people
+display_status: admin_facing
+released_on: 2026-10-26
+pr_number: 2878
+summary: >-
+  When a person or organization turns off showing their email, phone, or website,
+  admins still see it at the top of the profile, on a locked admin-only chip.
+pro_tips:
+  - "A person's primary email sits above their email2, marked \"primary\" — and \"user account\" when it's the address they log in with."
+  - "A person's hidden phone gets a locked chip marked \"primary\" too."
+  - "An organization's hidden email, phone, and website each get their own locked chip."
