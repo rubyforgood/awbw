@@ -1,0 +1,133 @@
+#!/bin/sh
+#/ Usage: bin/conductor-setup
+#/
+#/ Setup files that are not tracked in git for Conductor workspaces.
+#/ This is run automatically when a new workspace is created.
+
+set -e
+cd $(dirname "$0")/..
+
+# Resolve mise so the project's Ruby/Node are on PATH. This script runs under
+# /bin/sh, which does not source ~/.zshenv, so the shims-in-zshenv install
+# documented in CONTRIBUTING.md does not apply here — and a fresh machine may
+# have no mise at all, only the system Ruby (2.6), which can't satisfy the
+# Gemfile and yields a cryptic "Could not find 'bundler'" error. Check the
+# common install locations (the official installer lands mise in ~/.local/bin,
+# Homebrew in /opt/homebrew/bin) and bootstrap it if it's missing, so setup is
+# self-contained and doesn't depend on the developer's shell being configured.
+MISE=""
+if command -v mise > /dev/null 2>&1; then
+  MISE="mise"
+else
+  for candidate in /opt/homebrew/bin/mise /usr/local/bin/mise "$HOME/.local/bin/mise"; do
+    if [ -x "$candidate" ]; then
+      MISE="$candidate"
+      break
+    fi
+  done
+fi
+
+if [ -z "$MISE" ]; then
+  echo "mise not found — installing it (needed for the project's Ruby/Node)..."
+  curl -fsSL https://mise.run | sh
+  MISE="$HOME/.local/bin/mise"
+fi
+
+if [ ! -x "$MISE" ] && ! command -v "$MISE" > /dev/null 2>&1; then
+  echo "Error: mise is required but could not be installed."
+  echo "Install it manually, then re-run: https://mise.jdx.dev/getting-started.html"
+  exit 1
+fi
+
+# Trust mise.toml (avoids a per-workspace prompt) and install the pinned
+# toolchain (.ruby-version + node) before activating — a fresh machine won't
+# have Ruby 4.0.1 yet, so the shims would otherwise resolve to nothing.
+# Use shims (not the activate hook): the shims output is a single POSIX
+# `export PATH=...` line, so it runs under any /bin/sh — including dash on
+# Linux — whereas `mise activate <shell>` emits shell-specific code that only
+# works in that exact shell. The script's interpreter, not the developer's
+# login shell, is what matters here.
+"$MISE" trust > /dev/null 2>&1 || true
+"$MISE" install
+eval "$("$MISE" activate bash --shims)"
+
+# CONDUCTOR_PORT is Conductor-specific. Expose it under the generic
+# WORKSPACE_PORT name so the rest of the app (database.yml, initializers,
+# bin/setup) only references WORKSPACE_PORT. Export it before bin/setup runs
+# so the per-workspace database is created with the right suffix.
+export WORKSPACE_PORT=${WORKSPACE_PORT:-${CONDUCTOR_PORT:-}}
+
+if [ -z "$CONDUCTOR_ROOT_PATH" ]; then
+  echo "Not running inside Conductor. Falling back to normal setup..."
+  bin/setup "$@"
+  exit 0
+fi
+
+echo "Setting up Conductor workspace..."
+
+# Symlink .env from the root repo so all workspaces share the same config.
+if [ -f "$CONDUCTOR_ROOT_PATH/.env" ]; then
+  echo "Symlinking .env from $CONDUCTOR_ROOT_PATH/.env..."
+  ln -sf "$CONDUCTOR_ROOT_PATH/.env" .env
+else
+  echo "Warning: $CONDUCTOR_ROOT_PATH/.env not found."
+  echo "bin/setup will create a workspace-local .env from .env.sample; to share one"
+  echo "across workspaces instead: cp .env.sample $CONDUCTOR_ROOT_PATH/.env"
+fi
+
+# Copy only the untracked master key; config/credentials.yml is tracked, so each workspace uses its branch's copy.
+if [ -f "$CONDUCTOR_ROOT_PATH/config/master.key" ]; then
+  echo "Copying config/master.key from repo root..."
+  cp "$CONDUCTOR_ROOT_PATH/config/master.key" config/master.key
+fi
+
+# Copy credential key files if they exist
+if [ -d "$CONDUCTOR_ROOT_PATH/config/credentials" ]; then
+  for key_file in "$CONDUCTOR_ROOT_PATH"/config/credentials/*.key; do
+    if [ -f "$key_file" ]; then
+      echo "Copying $(basename "$key_file") from repo root..."
+      mkdir -p config/credentials
+      cp "$key_file" "config/credentials/$(basename "$key_file")"
+    fi
+  done
+fi
+
+# Symlink storage directory for Active Storage
+if [ -d "$CONDUCTOR_ROOT_PATH/storage" ]; then
+  echo "Symlinking storage from $CONDUCTOR_ROOT_PATH/storage..."
+  rm -rf storage
+  ln -sf "$CONDUCTOR_ROOT_PATH/storage" storage
+else
+  echo "Creating storage directory at $CONDUCTOR_ROOT_PATH/storage..."
+  mkdir -p "$CONDUCTOR_ROOT_PATH/storage"
+  ln -sf "$CONDUCTOR_ROOT_PATH/storage" storage
+fi
+
+# Symlink .bundle for private gem credentials
+if [ -d "$CONDUCTOR_ROOT_PATH/.bundle" ]; then
+  if [ -e .bundle ] && [ ! -L .bundle ]; then
+    echo "Error: .bundle exists and is not a symlink. Remove it manually first."
+    exit 1
+  fi
+  echo "Symlinking .bundle from $CONDUCTOR_ROOT_PATH/.bundle..."
+  ln -sf "$CONDUCTOR_ROOT_PATH/.bundle" .bundle
+fi
+
+# Install gems before bin/setup so they're available when it loads the Rails
+# env (bin/setup requires config/environment before it runs bundle itself).
+# npm packages aren't needed to boot Rails, so leave `npm ci` to bin/setup
+# instead of running it twice.
+echo ""
+echo "== Installing dependencies =="
+bundle check > /dev/null 2>&1 || bundle install
+
+# Run full setup (database drop, create, migrate, seed). Conductor workspaces
+# are always dev, so load the full dev sample dataset via --seed-dev.
+bin/setup --skip-server --seed-dev
+
+PORT=${WORKSPACE_PORT:-${PORT:-3000}}
+echo ""
+echo "Conductor setup complete!"
+echo "App will run at http://localhost:${PORT}"
+echo "Vite dev server at http://localhost:$((PORT + 36))"
+echo "Database: awbw_development_${WORKSPACE_PORT}"

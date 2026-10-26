@@ -88,7 +88,7 @@ Also watch for **scope creep**: unrelated changes bundled into the same diff (a 
 
 ## Check against project conventions
 
-This repo documents its conventions in `CLAUDE.md` and `AGENTS.md` (and mirrors `CLAUDE.md` to `.github/copilot-instructions.md`). Read the relevant parts and flag violations the author would want to fix. Common ones in this codebase:
+This repo documents its conventions in `CLAUDE.md` and `AGENTS.md` (and mirrors `CLAUDE.md` to `.github/copilot-instructions.md`). Those files are opt-in and may not exist in a given clone — when they don't, read the samples in `docs/ai/`. Read the relevant parts and flag violations the author would want to fix. Common ones in this codebase:
 
 - **Money** — display via `dollars_from_cents` / `MoneyFormatter`, never `number_to_currency` or `format("%.2f", …)`; store and compute in integer cents.
 - **New full-page views** — set `content_for(:page_bg_class, "…")` matching the action's policy, and register the view in `spec/views/page_bg_class_alignment_spec.rb`'s `EXPECTED_MAPPINGS`.

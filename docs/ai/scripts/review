@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Code review: triggers the AI to review the current workspace diff against the
+# review guidelines and post concise inline comments for each qualifying bug.
+# This script just prints the trigger; the agent runs the `ai-review` skill
+# (.claude/skills/ai-review/SKILL.md), which holds the full guidelines.
+echo "Run the ai-review skill."
