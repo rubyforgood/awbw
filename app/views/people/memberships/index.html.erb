@@ -39,12 +39,10 @@
               <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
                 <% unless membership.ended? %>
                   <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
-                  <span class="text-gray-600">Auto-renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
+                  <span class="text-gray-600">Renewals: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
                 <% end %>
 
-                <% if membership.stripe_active? %>
-                  <%= render "shared/badge", label: "Stripe", classes: "bg-green-100 text-green-700 border-green-200" %>
-                <% end %>
+                <%= render "memberships/stripe_badge", membership: membership %>
 
                 <% if membership.period_label.present? %>
                   <span class="text-gray-600">Dates: <span class="font-medium text-gray-800"><%= membership.period_label %></span></span>

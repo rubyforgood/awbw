@@ -227,6 +227,39 @@ RSpec.describe Membership, type: :model do
     end
   end
 
+  describe "#stripe_active? and #stripe_past_due?" do
+    def stripe_subscription_status(membership, status)
+      customer = Pay::Customer.create!(owner: membership.person, processor: "stripe",
+        processor_id: "cus_#{membership.id}", default: true)
+      Pay::Stripe::Subscription.create!(customer: customer, name: "default",
+        processor_id: "sub_#{membership.id}", processor_plan: "membership",
+        status: status, quantity: 1, metadata: { "membership_id" => membership.id })
+    end
+
+    it "asks Pay whether this membership's subscription is active" do
+      membership = create(:membership)
+      stripe_subscription_status(membership, "active")
+
+      expect(membership.stripe_active?).to be(true)
+      expect(membership.stripe_past_due?).to be(false)
+    end
+
+    it "reports a past-due subscription as past due, not active" do
+      membership = create(:membership)
+      stripe_subscription_status(membership, "past_due")
+
+      expect(membership.stripe_active?).to be(false)
+      expect(membership.stripe_past_due?).to be(true)
+    end
+
+    it "is nil without a subscription" do
+      membership = create(:membership)
+
+      expect(membership.stripe_active?).to be_nil
+      expect(membership.stripe_past_due?).to be_nil
+    end
+  end
+
   describe "#sync_dates_from_invoice" do
     it "sets start_date and end_date from a paid invoice" do
       membership = create(:membership).tap { |m| m.update!(end_date: nil) }

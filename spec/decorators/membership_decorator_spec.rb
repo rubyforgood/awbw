@@ -3,12 +3,12 @@ require "rails_helper"
 RSpec.describe MembershipDecorator, type: :decorator do
   let(:standard_cost) { MoneyFormatter.dollars_from_cents(Membership.annual_cost_cents) }
 
-  def create_stripe_subscription(membership, ends_at: nil)
+  def create_stripe_subscription(membership, status: "active", ends_at: nil)
     customer = Pay::Customer.create!(owner: membership.person, processor: "stripe",
       processor_id: "cus_#{membership.id}", default: true)
-    Pay::Subscription.create!(customer: customer, name: "default",
+    Pay::Stripe::Subscription.create!(customer: customer, name: "default",
       processor_id: "sub_#{membership.id}", processor_plan: "membership",
-      status: "active", quantity: 1, ends_at: ends_at,
+      status: status, quantity: 1, ends_at: ends_at,
       metadata: { "membership_id" => membership.id })
   end
 
@@ -38,38 +38,60 @@ RSpec.describe MembershipDecorator, type: :decorator do
       expect(subscription.decorate.auto_renewal_label).to eq("cancelled on Aug 3, 2026")
     end
 
-    it "reads the date automatic renewal stops when the Stripe subscription is ending" do
+    it "leaves the label alone when the Stripe subscription is ending" do
       membership = create(:membership)
-      create_stripe_subscription(membership, ends_at: Time.utc(2027, 1, 1, 8))
+      create_stripe_subscription(membership, ends_at: 1.month.from_now)
 
-      expect(membership.decorate.auto_renewal_label).to eq("stops Jan 1, 2027")
+      expect(membership.decorate.auto_renewal_label).to eq("enabled")
     end
   end
 
-  describe "#subscription_stopping?" do
-    it "is true while a billing-portal cancellation waits for the period to end" do
+  describe "#stripe_badge" do
+    it "is green while the membership's subscription is active" do
+      membership = create(:membership)
+      create_stripe_subscription(membership)
+
+      badge = membership.decorate.stripe_badge
+
+      expect(badge[:label]).to eq("Stripe active")
+      expect(badge[:classes]).to include("green")
+    end
+
+    it "is green for a subscription set to cancel at the period's end" do
       membership = create(:membership)
       create_stripe_subscription(membership, ends_at: 1.month.from_now)
 
-      expect(membership.decorate).to be_subscription_stopping
+      expect(membership.decorate.stripe_badge[:label]).to eq("Stripe active")
     end
 
-    it "is false once the subscription has ended" do
+    it "is amber while a payment is past due" do
+      membership = create(:membership)
+      create_stripe_subscription(membership, status: "past_due")
+
+      badge = membership.decorate.stripe_badge
+
+      expect(badge[:label]).to eq("Stripe past due")
+      expect(badge[:classes]).to include("amber")
+    end
+
+    it "is nil without a subscription, so the directory shows nothing to collect from" do
+      expect(create(:membership).decorate.stripe_badge).to be_nil
+    end
+
+    it "is nil once the subscription has ended" do
       membership = create(:membership)
       create_stripe_subscription(membership, ends_at: 1.month.ago)
 
-      expect(membership.decorate).not_to be_subscription_stopping
+      expect(membership.decorate.stripe_badge).to be_nil
     end
 
-    it "is false when the membership's own renewals are already off" do
-      membership = create(:membership, autorenewal_cancelled_at: Time.current)
-      create_stripe_subscription(membership, ends_at: 1.month.from_now)
+    it "reads this membership's own subscription, not another membership's" do
+      membership = create(:membership)
+      other = create(:membership, person: membership.person, autorenewal_cancelled_at: Time.current,
+        start_date: Date.current - 3.years, end_date: Date.current - 2.years)
+      create_stripe_subscription(other)
 
-      expect(membership.decorate).not_to be_subscription_stopping
-    end
-
-    it "is false without a subscription" do
-      expect(create(:membership).decorate).not_to be_subscription_stopping
+      expect(membership.decorate.stripe_badge).to be_nil
     end
   end
 

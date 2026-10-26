@@ -1,4 +1,17 @@
 class MembershipDecorator < ApplicationDecorator
+  STRIPE_BADGES = {
+    active: {
+      label: "Stripe active",
+      icon: "fa-solid fa-circle-check",
+      classes: "bg-green-50 text-green-700 border-green-200"
+    },
+    past_due: {
+      label: "Stripe past due",
+      icon: "fa-solid fa-triangle-exclamation",
+      classes: "bg-amber-50 text-amber-700 border-amber-200"
+    }
+  }.freeze
+
   def cost_label
     return "Standard (#{h.dollars_from_cents(Membership.annual_cost_cents)})" if cost_cents.nil?
 
@@ -27,21 +40,11 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def auto_renewal_label
-    return "stops #{subscription_stop_date}" if subscription_stopping?
     return "enabled" if active? && !autorenewal_cancelled?
     return "cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}" if active?
     return "on — renews if the outstanding invoice is paid" if owes? && !autorenewal_cancelled?
 
     "off"
-  end
-
-  # Autopay switched off in Stripe's billing portal: the year is still paid, but nothing
-  # will renew it.
-  def subscription_stopping?
-    return false unless active? && !autorenewal_cancelled?
-
-    sub = stripe_subscription
-    sub.present? && sub.canceled? && !sub.ended?
   end
 
   def period_label
@@ -51,11 +54,10 @@ class MembershipDecorator < ApplicationDecorator
     "#{start_date.strftime("%b %-d, %Y")} – #{end_str}"
   end
 
-  def stripe_active? = person.payment_processor&.subscribed?
+  # This membership's Stripe autopay, or nil when there is no subscription to collect from.
+  def stripe_badge
+    return STRIPE_BADGES[:past_due] if stripe_past_due?
 
-  private
-
-  def subscription_stop_date
-    stripe_subscription.ends_at.in_time_zone(Membership::TIME_ZONE).strftime("%b %-d, %Y")
+    STRIPE_BADGES[:active] if stripe_active?
   end
 end

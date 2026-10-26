@@ -15,12 +15,12 @@ RSpec.describe "Memberships", type: :request do
       end_date: start_date + 1.year - 1.day)
   end
 
-  def create_stripe_subscription(membership, ends_at: nil)
+  def create_stripe_subscription(membership, status: "active")
     customer = Pay::Customer.create!(owner: membership.person, processor: "stripe",
       processor_id: "cus_#{membership.id}", default: true)
-    Pay::Subscription.create!(customer: customer, name: "default",
+    Pay::Stripe::Subscription.create!(customer: customer, name: "default",
       processor_id: "sub_#{membership.id}", processor_plan: "membership",
-      status: "active", quantity: 1, ends_at: ends_at,
+      status: status, quantity: 1,
       metadata: { "membership_id" => membership.id })
   end
 
@@ -29,22 +29,32 @@ RSpec.describe "Memberships", type: :request do
 
     before { sign_in admin }
 
-    it "shows when automatic renewal stops for a member who cancelled in Stripe" do
+    it "shows an active Stripe subscription on the row" do
       membership = create(:membership, person: person)
-      create_stripe_subscription(membership, ends_at: Time.utc(2027, 1, 1, 8))
+      create_stripe_subscription(membership)
 
       get memberships_path, headers: frame
 
-      expect(response.body).to include("Auto-renewal: stops Jan 1, 2027")
+      expect(response.body).to include("Stripe active")
     end
 
-    it "leaves rows that are renewing alone" do
+    it "shows a past-due Stripe subscription on the row" do
+      membership = create(:membership, person: person)
+      create_stripe_subscription(membership, status: "past_due")
+
+      get memberships_path, headers: frame
+
+      expect(response.body).to include("Stripe past due")
+    end
+
+    it "shows nothing to collect from when there is no subscription" do
       create(:membership, person: person)
 
       get memberships_path, headers: frame
 
       expect(response.body).to include(person.full_name)
-      expect(response.body).not_to include("Auto-renewal:")
+      expect(response.body).not_to include("Stripe active")
+      expect(response.body).not_to include("Stripe past due")
     end
   end
 

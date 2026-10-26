@@ -26,6 +26,9 @@ class Membership < ApplicationRecord
 
   accepts_nested_attributes_for :membership_invoices
 
+  # Pay owns the subscription's state; this scopes it to this membership's own sub.
+  delegate :active?, :past_due?, to: :stripe_subscription, prefix: :stripe, allow_nil: true
+
   # When nil, charge standard cost. A value is an override
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
