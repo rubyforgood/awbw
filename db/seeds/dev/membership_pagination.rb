@@ -1,7 +1,9 @@
 # `rake db:seed:membership_pagination`. Not part of `rake db:seed:dev`.
 # 30 memberships per directory state (Active / Ending / Lapsed / Ended) so every
-# filter tab paginates. Invoice variety (partial / upcoming / comped) lives in the
-# dedicated `db/seeds/dev/membership.rb` scenarios.
+# filter tab paginates. Years run back to back the way EnsureInvoice mints them, and
+# each person's dates are offset so the directory doesn't read as one synthetic batch.
+# Invoice variety (partial / upcoming / comped) lives in the dedicated
+# `db/seeds/dev/membership.rb` scenarios.
 
 puts "Creating membership pagination volume…"
 
@@ -12,62 +14,77 @@ first_names = %w[
 
 standard = Membership.annual_cost_cents
 
-pay = ->(invoice, cents) do
+minted_at = ->(start_date) {
+  [ start_date.in_time_zone - Membership.renewal_window_days, Time.current ].min
+}
+
+pay = ->(invoice, cents, on:) do
   payment = CashPayment.create!(
     person: invoice.person,
     amount_cents: cents,
     amount_cents_remaining: cents,
     currency: "usd"
   )
-  Allocation.create!(source: payment, allocatable: invoice, amount: cents)
+  payment.update_columns(created_at: on, updated_at: on)
+  allocation = Allocation.create!(source: payment, allocatable: invoice, amount: cents)
+  allocation.update_columns(created_at: on)
 end
 
 year = ->(membership, start_date, cost_cents: standard, paid: false) do
   invoice = membership.membership_invoices.create!(start_date: start_date, cost_cents: cost_cents)
-  pay.(invoice, cost_cents) if paid
+  minted = minted_at.(start_date)
+  invoice.update_columns(created_at: minted, updated_at: minted)
+
+  if paid
+    paid_on = start_date.in_time_zone + 9.days
+    pay.(invoice, cost_cents, on: paid_on)
+    invoice.update_columns(updated_at: paid_on)
+  end
+
   invoice
 end
 
-add = ->(first_name, last_name, marker, &build) do
+add = ->(first_name, last_name, marker, index, &build) do
   person = Person.find_or_create_by!(email: "#{marker}@paginationdemo.membership.seed.example.com") do |p|
     p.first_name = first_name
     p.last_name = last_name
   end
   next if person.memberships.exists?
 
-  build.call(person)
+  build.call(person, index)
 end
 
 build_group = ->(last_name, prefix, &build) do
   first_names.each_with_index do |first_name, i|
-    add.(first_name, last_name, "#{prefix}#{'%02d' % i}", &build)
+    add.(first_name, last_name, "#{prefix}#{'%02d' % i}", i, &build)
   end
   puts "  #{first_names.size} #{last_name.downcase} memberships"
 end
 
 # Active — covered, renewing
-build_group.("Active", "active") do |person|
+build_group.("Active", "active") do |person, i|
   membership = person.memberships.create!
-  year.(membership, Date.current - 3.months, paid: true)
+  year.(membership, Date.current - (3.months + i.days), paid: true)
 end
 
-# Ending — covered, renewal cancelled
-build_group.("Ending", "ending") do |person|
-  membership = person.memberships.create!(autorenewal_cancelled_at: Time.current)
-  year.(membership, Date.current - 3.months, paid: true)
+# Ending — covered, renewal cancelled at some point in the last month
+build_group.("Ending", "ending") do |person, i|
+  membership = person.memberships.create!(autorenewal_cancelled_at: (Date.current - i.days).in_time_zone)
+  year.(membership, Date.current - (3.months + i.days), paid: true)
 end
 
-# Lapsed — not covered, owes the current year
-build_group.("Lapsed", "lapsed") do |person|
+# Lapsed — not covered, owes the renewal issued at the end of the paid year
+build_group.("Lapsed", "lapsed") do |person, i|
   membership = person.memberships.create!
-  year.(membership, Date.current - 2.years, paid: true)
-  year.(membership, Date.current - 8.months)
+  paid = year.(membership, Date.current - (2.years + i.days), paid: true)
+  year.(membership, paid.end_date + 1.day)
 end
 
-# Ended — not covered, nothing owed
-build_group.("Ended", "ended") do |person|
-  membership = person.memberships.create!
-  year.(membership, Date.current - 2.years, paid: true)
+# Ended — not covered, nothing owed, because renewals were stopped during the year
+build_group.("Ended", "ended") do |person, i|
+  start = Date.current - (2.years + i.days)
+  membership = person.memberships.create!(autorenewal_cancelled_at: start + 10.months)
+  year.(membership, start, paid: true)
 end
 
 puts "  #{Membership.count} memberships, #{MembershipInvoice.count} membership invoices"
