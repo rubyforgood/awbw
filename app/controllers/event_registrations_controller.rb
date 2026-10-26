@@ -60,10 +60,7 @@ class EventRegistrationsController < ApplicationController
   def edit
     authorize! @event_registration
     set_form_variables
-    registration_form = @event_registration.event&.registration_form
-    @form_submission = registration_form && @event_registration.registrant.form_submissions
-      .where(form: registration_form, event: @event_registration.event)
-      .order(:created_at).first
+    set_registration_form_submissions
 
     if @event_registration.checkout_session_id.present? &&
        @event_registration.payment_unresolved.nil? &&
@@ -144,6 +141,7 @@ class EventRegistrationsController < ApplicationController
         format.turbo_stream { head :unprocessable_content }
         format.html do
           set_form_variables
+          set_registration_form_submissions
           render :edit, status: :unprocessable_content
         end
       end
@@ -508,6 +506,13 @@ class EventRegistrationsController < ApplicationController
   end
 
   private
+
+  def set_registration_form_submissions
+    registration_form = @event_registration.event&.registration_form
+    @form_submissions = registration_form ? @event_registration.registrant.form_submissions
+      .where(form: registration_form, event: @event_registration.event)
+      .order(:created_at) : FormSubmission.none
+  end
 
   def dedupe_config
     # Opened from an event's registrants page (bulk actions) → scope the suggested

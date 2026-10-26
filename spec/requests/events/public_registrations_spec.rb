@@ -793,18 +793,77 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
 
     # A returning registrant appends a new submission each time, so the default
-    # view (no form_submission_id) must land on their freshest answers.
-    it "defaults to the most recently created submission when the registrant re-registered" do
-      older = FormSubmission.find_by(person: person, form: form)
-      older.form_answers.create!(form_field: essay_field, submitted_answer: "my older reasons")
-      newer = create(:form_submission, person: person, form: form, event: event)
-      newer.form_answers.create!(form_field: essay_field, submitted_answer: "my newer reasons")
+    # view (no form_submission_id) opens their freshest answers.
+    context "when the registrant re-registered" do
+      let!(:older) do
+        FormSubmission.find_by(person: person, form: form).tap do |submission|
+          submission.update!(created_at: Time.zone.local(2026, 9, 1, 10))
+          submission.form_answers.create!(form_field: essay_field, submitted_answer: "my older reasons")
+        end
+      end
+      let!(:newer) do
+        create(:form_submission, person: person, form: form, event: event, created_at: Time.zone.local(2026, 10, 2, 10)).tap do |submission|
+          submission.form_answers.create!(form_field: essay_field, submitted_answer: "my newer reasons")
+        end
+      end
 
+      it "opens the newest submission and collapses the earlier ones" do
+        get event_public_registration_path(event, person_id: person.id)
+
+        page = Nokogiri::HTML(response.body)
+        collapsed = page.at_css("details#form-submission-#{older.id}")
+        expect(response.body).to include("Earlier submissions")
+        expect(collapsed).to be_present
+        expect(collapsed["open"]).to be_nil
+        expect(collapsed.text).to include("my older reasons").and include("September 01, 2026")
+        expect(page.css("details").text).not_to include("my newer reasons")
+        expect(response.body).to include("my newer reasons")
+      end
+
+      it "opens a named submission and collapses the rest" do
+        get event_public_registration_path(event, person_id: person.id, form_submission_id: older.id)
+
+        page = Nokogiri::HTML(response.body)
+        expect(response.body).to include("Other submissions")
+        expect(page.at_css("details#form-submission-#{newer.id}").text).to include("my newer reasons")
+        expect(page.css("details").text).not_to include("my older reasons")
+      end
+    end
+
+    context "when the registrant also paid for others with the bulk payment form" do
+      let(:bulk_form) { create(:form, name: "Group payment form") }
+      let!(:bulk_payment) do
+        EventForm.create!(event: event, form: bulk_form, role: "bulk_payment")
+        attendees_field = create(:form_field, form: bulk_form, field_identifier: "bulk_payment_attendees", name: "Attendees")
+        create(:form_submission, person: person, form: bulk_form, event: event, role: "bulk_payment", created_at: 1.day.from_now).tap do |submission|
+          submission.form_answers.create!(form_field: attendees_field,
+            submitted_answer: [ { first_name: "Avery", last_name: "Attendee", email: "avery@example.com" } ].to_json)
+        end
+      end
+
+      it "lists the bulk payment among their other submissions, with its attendees and ticket" do
+        get event_public_registration_path(event, person_id: person.id)
+
+        collapsed = Nokogiri::HTML(response.body).at_css("details#form-submission-#{bulk_payment.id}")
+        expect(collapsed).to be_present
+        expect(collapsed.at_css("summary").text).to include("Group payment form — Submitted on")
+        expect(collapsed.text).to include("Avery").and include("avery@example.com")
+        expect(collapsed.to_html).to include(bulk_payment_ticket_path(bulk_payment.slug))
+      end
+
+      it "leaves out another person's bulk payment" do
+        bulk_payment.update!(person: create(:person))
+
+        get event_public_registration_path(event, person_id: person.id)
+
+        expect(response.body).not_to include("form-submission-#{bulk_payment.id}")
+      end
+    end
+
+    it "shows no other submissions when there is only one" do
       get event_public_registration_path(event, person_id: person.id)
 
-      expect(response).to have_http_status(:success)
-      expect(response.body).to include("my newer reasons")
-      expect(response.body).not_to include("my older reasons")
+      expect(response.body).not_to include("Earlier submissions")
     end
 
     it "renders header and field-label HTML unescaped on the response page" do
@@ -1393,13 +1452,15 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(ContinuingEducationRegistration.sole.professional_license).to eq(ProfessionalLicense.sole)
     end
 
-    it "shows the license answer on file on the ticket when a reapplication leaves it blank" do
+    it "shows the license answer in the application that sent it when a reapplication leaves it blank" do
       apply
       apply(license_number: "", license_kind: "")
 
       get event_public_registration_path(event, reg: EventRegistration.sole.slug)
 
-      expect(response.body).to include("42111")
+      page = Nokogiri::HTML(response.body)
+      expect(page.at_css("#continuing-education").text).not_to include("42111")
+      expect(page.at_css("details").text).to include("42111")
     end
 
     it "leaves the license alone once the CE certificate is issued" do
@@ -1411,15 +1472,20 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(ContinuingEducationRegistration.sole.professional_license.number).to eq("42111")
     end
 
-    it "shows the newest CE and scholarship answers on the ticket" do
+    it "shows each application's CE and scholarship answers with the registration they came in with" do
       apply
       apply(license_number: "99999", need: "Our grant ended")
 
       get event_public_registration_path(event, reg: EventRegistration.sole.slug)
 
-      expect(response.body).to include("99999", "Our grant ended")
-      expect(response.body).not_to include("42111")
-      expect(response.body).not_to include("Our training budget was cut")
+      page = Nokogiri::HTML(response.body)
+      expect(page.at_css("#continuing-education").text).to include("99999")
+      expect(page.at_css("#continuing-education").text).not_to include("42111")
+      expect(page.at_css("#scholarship-application").text).to include("Our grant ended")
+      expect(page.at_css("#scholarship-application").text).not_to include("Our training budget was cut")
+      earlier = page.at_css("details")
+      expect(earlier.at_css("summary").text).to include("+")
+      expect(earlier.text).to include("42111", "Our training budget was cut")
     end
 
     context "when the registrant is signed in" do

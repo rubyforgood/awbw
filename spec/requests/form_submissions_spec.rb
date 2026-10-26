@@ -895,7 +895,7 @@ RSpec.describe "FormSubmissions", type: :request do
         get changes_form_submission_path(submission, return_to: "event_registrant_submissions")
 
         expect(response.body).to include("Back to submissions")
-        expect(response.body).to include(event_registrant_submissions_path(submission.resolved_event, person_id: submission.person_id))
+        expect(response.body).to include(event_registrant_submissions_path(submission.resolved_event, person_id: submission.person_id, anchor: "form-submission-#{submission.id}"))
       end
     end
 

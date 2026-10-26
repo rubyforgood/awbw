@@ -262,16 +262,38 @@ before linking between them.** They share the answer-display partials
 (`form_submissions/submission`, `shared/form_answer_value`, the section grouping), so keep
 presentation in those partials, not forked per page.
 
+- **"Ticket" = the registrant's own registration page**, `registration_ticket_path(slug)` →
+  `events/registrations#show` (renders `event_registrations/_ticket`: event details, callout
+  cards, "View your form responses"). The slug is the unguessable token handed to the
+  registrant. When someone says the ticket "shows" submissions or answers, they mean the
+  form-responses page it links to (next bullet).
 - **"Public submission" / "public form display" = the person's own slug-accessible view of
   their submission, reached through the ticket** (and linkable from lists). Today that's the
   event **public registration confirmation** (`events/public_registrations#show`,
   `page_bg "public"`), accessed publicly via `?reg=<registration_slug>` (the unguessable
   ticket token) or, for admins, `?person_id=` (gated by `person_form_submission?`). When
   someone says "public form display," this is what they mean — **not** the admin `show`.
+  It shows each **sitting** with exactly what was sent in it (`RegistrationResponses`): the
+  newest registration's sitting open as cards (registration, scholarship, CE), or the one named
+  by `?form_submission_id=`; the rest collapsed in `<details id="form-submission-<id>">`.
+- **A registrant can have several registration submissions per event** (re-registering
+  appends one). Views list or count them all — never silently take `.first`/`.last`.
+  Count and list them by **sitting** (`FormSubmissionSittings`): a registration plus the
+  scholarship/CE forms saved right after it is one; each registration counts on its own, even
+  seconds apart; a form sent alone later is its own. Bulk payments stay out of counts,
+  tooltips, and edit links (they pay for other people), but a payer who is also a
+  registrant sees theirs among the collapsed submissions on their form-responses page.
 - **Admin submission views** (both `page_bg admin-only`; both carry the admin-only "What this
   submission changed" bar when `FormSubmissionChanges#edited?`):
   - `form_submissions#show` — top-level `/form_submissions/:id` (admin-or-slug).
-  - `events/form_submissions#show` — event-scoped registrant submissions ("← Back to registrants").
+  - `events/form_submissions#show` — the event-scoped **submissions page**: every form
+    submission the person made for the event, each anchored `#form-submission-<id>`. Link to
+    one with `anchor: "form-submission-#{id}"`. Its eyebrow branches on `return_to`
+    (`registrants`, `event_registration`, `index`, `link_organization`, each with
+    `event_registration_id`; the last two carry the origin's own `return_to` as
+    `registration_return_to` / `link_org_return_to`), defaulting to "Back to registrants".
+- **Edit registration** shows one admin-only "What this registration's form changed" bar per
+  registration submission, and links each submission (form name + date) to the submissions page.
 - **Link-organizations pages** (admin) also render a submission summary and the changes link:
   `event_registrations/link_organization` and `form_submissions/link_organization`.
 - The **"What this submission changed"** audit page is `form_submissions#changes` (admin-only);
