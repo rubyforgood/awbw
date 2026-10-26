@@ -1086,7 +1086,7 @@ class EventsController < ApplicationController
     return {} unless field
 
     FormAnswer.joins(:form_submission)
-      .where(form_submissions: { person_id: registrations.map(&:registrant_id), form_id: registration_form.id }, form_field_id: field.id)
+      .where(form_submissions: { event_id: @event.id, person_id: registrations.map(&:registrant_id), form_id: registration_form.id }, form_field_id: field.id)
       .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
       .to_h
   end

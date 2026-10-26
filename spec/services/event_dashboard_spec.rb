@@ -90,11 +90,11 @@ RSpec.describe EventDashboard do
       # person1 → Adults; person2 → Adults + Teens; cancelled → Children (ignored).
       create(:event_form, event: event, form: registration_form, role: "registration")
       create(:form_answer, form_field: age_group_field, submitted_answer: age_group1.id.to_s,
-                           form_submission: create(:form_submission, person: person1, form: registration_form))
+                           form_submission: create(:form_submission, person: person1, form: registration_form, event: event))
       create(:form_answer, form_field: age_group_field, submitted_answer: "#{age_group1.id}, #{age_group2.id}",
-                           form_submission: create(:form_submission, person: person2, form: registration_form))
+                           form_submission: create(:form_submission, person: person2, form: registration_form, event: event))
       create(:form_answer, form_field: age_group_field, submitted_answer: age_group_excluded.id.to_s,
-                           form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
+                           form_submission: create(:form_submission, person: cancelled_person, form: registration_form, event: event))
 
       # Additional age group(s) served, captured as "additional_age_groups" answers.
       # person1 → Adults + Teens (Adults dupes the primary answer, so it dedupes);
@@ -102,9 +102,9 @@ RSpec.describe EventDashboard do
       # additional) differ from the primary-only breakdown.
       create(:form_answer, form_field: additional_age_groups_field,
                            submitted_answer: "#{age_group1.id}, #{age_group2.id}",
-                           form_submission: create(:form_submission, person: person1, form: registration_form))
+                           form_submission: create(:form_submission, person: person1, form: registration_form, event: event))
       create(:form_answer, form_field: additional_age_groups_field, submitted_answer: age_group1.id.to_s,
-                           form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
+                           form_submission: create(:form_submission, person: cancelled_person, form: registration_form, event: event))
 
       # States from active registrant addresses; inactive address excluded.
       create(:address, addressable: person1, state: "CA", county: "Los Angeles")
@@ -331,6 +331,14 @@ RSpec.describe EventDashboard do
         expect(map[sector1.id]).to contain_exactly(person1.id)
         expect(map[sector2.id]).to contain_exactly(person2.id)
       end
+
+      it "ignores a primary sector named on the shared form for a different event" do
+        primary_field = registration_form.form_fields.find_by!(field_identifier: "primary_sector")
+        create(:form_answer, form_field: primary_field, submitted_answer: sector2.id.to_s,
+                             form_submission: create(:form_submission, person: person1, form: registration_form, event: create(:event)))
+
+        expect(dashboard.primary_sector_registrant_ids_by_sector[sector2.id]).to contain_exactly(person2.id)
+      end
     end
 
     describe "life experiences" do
@@ -370,6 +378,13 @@ RSpec.describe EventDashboard do
         map = dashboard.age_group_registrant_ids_by_category
         expect(map[age_group1.id]).to contain_exactly(person1.id, person2.id)
         expect(map[age_group2.id]).to contain_exactly(person2.id)
+      end
+
+      it "ignores a registrant's answer on the shared form for a different event" do
+        create(:form_answer, form_field: age_group_field, submitted_answer: age_group2.id.to_s,
+                             form_submission: create(:form_submission, person: person1, form: registration_form, event: create(:event)))
+
+        expect(dashboard.age_group_registrant_ids_by_category[age_group2.id]).to contain_exactly(person2.id)
       end
     end
 

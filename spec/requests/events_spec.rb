@@ -2080,7 +2080,7 @@ RSpec.describe "Events", type: :request do
         field = registration_form.form_fields.find_by(field_identifier: "organization_name") ||
           create(:form_field, form: registration_form, field_identifier: "organization_name")
         create(:event_form, :registration, event: event, form: registration_form) unless event.registration_form
-        submission = create(:form_submission, person: person, form: registration_form)
+        submission = create(:form_submission, person: person, form: registration_form, event: event)
         create(:form_answer, form_submission: submission, form_field: field, submitted_answer: name)
       end
 
@@ -2103,6 +2103,16 @@ RSpec.describe "Events", type: :request do
       end
 
       it "shows a 'None' chip when a registrant has no linked org and submitted nothing" do
+        get registrants_event_path(event)
+
+        expect(org_cell_text).to include("None")
+        expect(org_cell_text).not_to include("Pending")
+      end
+
+      it "ignores an org name submitted for another event on the shared registration form" do
+        submit_organization_name("Some Unlisted Org")
+        FormSubmission.where(person: person).update(event: create(:event))
+
         get registrants_event_path(event)
 
         expect(org_cell_text).to include("None")
@@ -3273,7 +3283,7 @@ RSpec.describe "Events", type: :request do
         it "shows each registrant's Primary sector and Primary age group in the roster" do
           registration_form = create(:form, name: "Registration")
           create(:event_form, event: owned_event, form: registration_form, role: "registration")
-          submission = create(:form_submission, person: person, form: registration_form)
+          submission = create(:form_submission, person: person, form: registration_form, event: owned_event)
 
           sector = create(:sector, name: "Sexual Assault")
           sector_field = create(:form_field, form: registration_form, field_identifier: "primary_sector")
@@ -3532,7 +3542,7 @@ RSpec.describe "Events", type: :request do
           create(:event_form, event: owned_event, form: registration_form, role: "registration")
           age_range = create(:category_type, name: "AgeRange")
           adults = create(:category, name: "Adults", category_type: age_range)
-          submission = create(:form_submission, person: person, form: registration_form)
+          submission = create(:form_submission, person: person, form: registration_form, event: owned_event)
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: adults.id.to_s)
 
           get roster_event_path(owned_event), headers: charts_headers
@@ -3553,7 +3563,7 @@ RSpec.describe "Events", type: :request do
                                               answer_type: :multi_select_checkbox)
           additional_field = create(:form_field, form: registration_form, field_identifier: "additional_age_groups",
                                                  answer_type: :multi_select_checkbox)
-          submission = create(:form_submission, person: person, form: registration_form)
+          submission = create(:form_submission, person: person, form: registration_form, event: owned_event)
           create(:form_answer, form_submission: submission, form_field: primary_field, submitted_answer: adults.id.to_s)
           create(:form_answer, form_submission: submission, form_field: additional_field, submitted_answer: teens.id.to_s)
 
