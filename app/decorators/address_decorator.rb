@@ -7,6 +7,16 @@ class AddressDecorator < ApplicationDecorator
     address_type&.humanize
   end
 
+  # The types a person can pick for their own address, plus whatever this one already holds
+  # so saving the form doesn't change it.
+  def person_type_options
+    [ *Address::PERSON_CONTACT_TYPES, address_type ].compact_blank.uniq.map { |type| [ type.humanize, type ] }
+  end
+
+  def person_type_selected
+    address_type.presence || "personal"
+  end
+
   # Names the address an owner has marked for invoices, so whoever is billing can see
   # which one dynamic invoices pick without opening the organization.
   def picker_label
