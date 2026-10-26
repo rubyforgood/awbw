@@ -187,17 +187,15 @@ RSpec.describe Membership, type: :model do
       expect(membership.reload.next_billing_start_date).to eq(covered.end_date + 1.day)
     end
 
-    it "skips a comped or prepaid year to the next one that needs money" do
+    it "skips a comped upcoming year" do
       covered = create(:membership_invoice, membership: membership, cost_cents: 2_500,
         start_date: Date.current - 1.month, end_date: Date.current + 11.months)
       create(:allocation, source: create(:payment, amount_cents: 2_500),
         allocatable: covered, amount: 2_500)
       create(:membership_invoice, :comped, membership: membership,
         start_date: covered.end_date + 1.day, end_date: covered.end_date + 1.year)
-      billed = create(:membership_invoice, membership: membership, cost_cents: 2_500,
-        start_date: covered.end_date + 1.year + 1.day, end_date: covered.end_date + 2.years)
 
-      expect(membership.next_billing_invoice).to eq(billed)
+      expect(membership.next_billing_invoice).to be_nil
     end
   end
 

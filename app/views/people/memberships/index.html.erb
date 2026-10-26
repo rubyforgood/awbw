@@ -51,9 +51,7 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-              <% if !membership.covered_on? || params[:admin] == "true" %>
-                <%= link_to "Add invoice", new_membership_membership_invoice_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
-              <% end %>
+              <%= link_to "Add invoice", new_membership_membership_invoice_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
 
               <% unless membership.ended? %>
                 <%= link_to "Edit cost", edit_membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>

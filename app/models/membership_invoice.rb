@@ -32,6 +32,7 @@ class MembershipInvoice < ApplicationRecord
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :end_date_not_before_start_date
   validate :no_overlapping_invoice_for_person
+  validate :only_one_upcoming_invoice
 
   def self.chargeable
     arel_table[:cost_cents].gt(0)
@@ -123,6 +124,16 @@ class MembershipInvoice < ApplicationRecord
     return unless overlapping.exists?
 
     errors.add(:base, "This person already has a membership invoice overlapping #{start_date} to #{end_date}")
+  end
+
+  def only_one_upcoming_invoice
+    return if start_date.blank? || membership_id.blank? || start_date <= Date.current
+
+    upcoming = membership.membership_invoices.where("start_date > ?", Date.current)
+    upcoming = upcoming.where.not(id: id) if persisted?
+    return unless upcoming.exists?
+
+    errors.add(:base, "This membership already has an upcoming invoice — delete it before adding another")
   end
 
   private

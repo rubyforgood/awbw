@@ -68,12 +68,12 @@ RSpec.describe Membership::EnsureInvoice do
       expect(invoice.end_date).to eq(Date.new(2028, 10, 13))
     end
 
-    it "creates a invoice twice running without overlapping" do
+    it "reuses the invoice it just created instead of minting a second" do
       first = described_class.call(membership: subscription, covering: Date.new(2027, 10, 14))
-      second = described_class.call(membership: subscription, covering: first.end_date + 1.day)
+      second = described_class.call(membership: subscription, covering: Date.new(2027, 10, 14))
 
-      expect(second.start_date).to eq(first.end_date + 1.day)
-      expect(subscription.membership_invoices.count).to eq(3)
+      expect(second).to eq(first)
+      expect(subscription.membership_invoices.count).to eq(2)
     end
   end
 

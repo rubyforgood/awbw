@@ -272,7 +272,7 @@ RSpec.describe MembershipInvoice, type: :model do
     end
 
     it "is true for an unpaid future invoice when another invoice remains" do
-      sibling(Date.current + 2.years)
+      sibling(Date.current - 2.years)
       future = sibling(Date.current + 1.day)
 
       expect(future).to be_deletable
@@ -280,7 +280,7 @@ RSpec.describe MembershipInvoice, type: :model do
     end
 
     it "is false once anything is allocated to it" do
-      sibling(Date.current + 2.years)
+      sibling(Date.current - 2.years)
       invoice = sibling(Date.current + 1.day)
       create(:allocation, source: create(:payment, amount_cents: 100), allocatable: invoice, amount: 100)
 
@@ -289,7 +289,7 @@ RSpec.describe MembershipInvoice, type: :model do
     end
 
     it "is true for a future comped invoice, so a mis-comped year can be reissued" do
-      sibling(Date.current + 2.years)
+      sibling(Date.current - 2.years)
       comped = create(:membership_invoice, :comped, membership: subscription,
         start_date: Date.current + 1.day, end_date: Date.current + 1.year)
 

@@ -17,9 +17,9 @@ RSpec.describe "MembershipInvoices", type: :request do
 
   describe "GET /membership_invoices/:id" do
     let(:subscription) { create(:membership, person: create(:person, first_name: "Renewal")) }
-    let!(:later) do
+    let!(:earlier) do
       create(:membership_invoice, membership: subscription,
-        start_date: Date.current + 2.years, end_date: Date.current + 3.years - 1.day)
+        start_date: Date.current - 2.years, end_date: Date.current - 1.year - 1.day)
     end
     let(:invoice) do
       create(:membership_invoice, membership: subscription,
@@ -292,7 +292,7 @@ RSpec.describe "MembershipInvoices", type: :request do
       before { sign_in admin }
 
       it "deletes an unpaid invoice when another invoice remains" do
-        invoice(Date.current + 2.years)
+        invoice(Date.current - 2.years)
         record = invoice(Date.current + 1.day)
 
         expect { delete membership_invoice_path(record) }.to change(MembershipInvoice, :count).by(-1)
@@ -309,7 +309,7 @@ RSpec.describe "MembershipInvoices", type: :request do
       end
 
       it "refuses to delete an invoice with payments" do
-        invoice(Date.current + 2.years)
+        invoice(Date.current - 2.years)
         record = invoice(Date.current + 1.day)
         create(:allocation, source: create(:payment, amount_cents: 100), allocatable: record, amount: 100)
 

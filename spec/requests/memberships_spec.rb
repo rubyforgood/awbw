@@ -405,12 +405,12 @@ RSpec.describe "Memberships", type: :request do
 
     before { sign_in admin }
 
-    it "is hidden while the subscription already covers today" do
+    it "is offered while the subscription already covers today" do
       membership_invoice_for(subscription: subscription)
 
       get person_memberships_path(person)
 
-      expect(response.body).not_to include("Add invoice")
+      expect(response.body).to include("Add invoice")
     end
 
     it "is offered once coverage has lapsed" do
@@ -425,14 +425,6 @@ RSpec.describe "Memberships", type: :request do
       subscription
 
       get person_memberships_path(person)
-
-      expect(response.body).to include("Add invoice")
-    end
-
-    it "can be forced back with ?admin=true" do
-      membership_invoice_for(subscription: subscription)
-
-      get person_memberships_path(person, admin: "true")
 
       expect(response.body).to include("Add invoice")
     end
