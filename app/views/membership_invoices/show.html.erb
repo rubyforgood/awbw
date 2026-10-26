@@ -47,9 +47,7 @@
     <% end %>
   </div>
   <%= render "shared/audit_info", resource: @membership_invoice %>
-  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-    <div class="mt-4 flex justify-end">
-      <%= render "application/activity_log", record: @membership_invoice %>
-    </div>
-  <% end %>
+  <div class="mt-4 flex justify-end">
+    <%= render "application/activity_log", record: @membership_invoice %>
+  </div>
 </div>
