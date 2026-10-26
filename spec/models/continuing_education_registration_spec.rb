@@ -125,6 +125,16 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(other.reload.expires_on).to eq(Date.new(2028, 1, 1))
     end
 
+    it "adds a second license when a new event's registration gives a new number" do
+      earlier = described_class.enroll!(event_registration: create(:event_registration, registrant: person), number: "12345", kind: "LCSW")
+
+      ce = described_class.enroll!(event_registration: registration, number: "99999", kind: "LCSW")
+
+      expect(person.professional_licenses.pluck(:number)).to contain_exactly("12345", "99999")
+      expect(earlier.reload.professional_license.number).to eq("12345")
+      expect(ce.professional_license.number).to eq("99999")
+    end
+
     it "leaves an issued certificate's license as issued" do
       first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
       first.update!(certificate_sent_at: Time.current)
