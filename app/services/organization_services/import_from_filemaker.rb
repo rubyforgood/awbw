@@ -47,6 +47,10 @@ module OrganizationServices
       /govt|government/i => "Government agency",
       /\Aother\z/i => Organization::ORGANIZATION_TYPE_OTHER
     }.freeze
+    # FileMaker kept no school flag of its own, so the word in its type field is the only thing
+    # that says an organization is one. Independent of the type, as the index's filter is: a
+    # school can be a government agency, a nonprofit, or none of the four.
+    SCHOOL_PATTERN = /school/i
     TYPE_FIELDS = %i[organization_type organization_type_other].freeze
     COMMENT_SOURCES = { FmOrganization => "FileMaker organization", FmProject => "FileMaker project",
                         FmRolodex => "FileMaker Rolodex agency" }.freeze
@@ -385,11 +389,12 @@ module OrganizationServices
       value = value.to_s.squish
       return {} if value.blank?
 
+      school = value.match?(SCHOOL_PATTERN) ? { school: true } : {}
       type = ORGANIZATION_TYPE_PATTERNS.find { |pattern, _type| value.match?(pattern) }&.last
-      return { organization_type: type } if type
+      return school.merge(organization_type: type) if type
 
       @unmatched_types[value] += 1
-      { organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: clip(value) }
+      school.merge(organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: clip(value))
     end
 
     # Staff edited both systems, so neither side is newer by rule: a blank takes the

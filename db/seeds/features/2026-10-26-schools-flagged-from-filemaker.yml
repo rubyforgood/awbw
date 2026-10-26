@@ -1,0 +1,21 @@
+name: "Schools flagged from the FileMaker import"
+area: people
+display_status: admin_facing
+released_on: 2026-10-26
+pr_number: 2863
+summary: >-
+  An organization the old FileMaker system called a school now arrives with the
+  School box already ticked, so the Type filter on the organizations page finds it.
+description: >-
+  <ul><li>FileMaker had no school box of its own — the only thing that said so was
+  the word in its organization type field, which is where this reads it
+  from.</li><li>The box is independent of the type, the same way the filter is: a
+  school can be a government agency, a nonprofit, or none of the four. A FileMaker
+  type of "501c3/Nonprofit School District" ticks the box and still reads as
+  501c3/nonprofit.</li><li>A word the four types can't hold — School, Individual,
+  Grassroots, Educational Institution — still reads as Other and keeps its own
+  word as the description, so nothing FileMaker said is lost.</li><li>A box
+  someone already ticked is never unticked by an import.</li></ul>
+pro_tips:
+  - "Pick School in the Type filter on the organizations page to see them all, whatever each one's type says."
+  - "\"Educational Institution\" doesn't tick the box — it can mean a university or a district office, not a school."

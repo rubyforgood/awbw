@@ -201,6 +201,35 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
       end
     end
 
+    it "ticks the school flag for a type word naming one, whatever type it reads as" do
+      fm_organization("ORG00060", OrgName: "Lincoln High", OrgType: "School")
+      fm_organization("ORG00061", OrgName: "Charter Trust", OrgType: "501c3/Nonprofit School District")
+
+      import
+
+      expect(Organization.find_by!(filemaker_code: "ORG00060"))
+        .to have_attributes(school: true, organization_type: "Other", organization_type_other: "School")
+      expect(Organization.find_by!(filemaker_code: "ORG00061"))
+        .to have_attributes(school: true, organization_type: "501c3/nonprofit", organization_type_other: nil)
+    end
+
+    it "leaves the school flag alone for a type word that doesn't name one" do
+      fm_organization("ORG00062", OrgType: "Educational Institution")
+
+      import
+
+      expect(Organization.sole).to have_attributes(school: false, organization_type_other: "Educational Institution")
+    end
+
+    it "keeps a school flag an organization already carries" do
+      existing = create(:organization, name: "Harbor House", school: true)
+      fm_organization("ORG00063", OrgName: "Harbor House", OrgType: "501c3/Nonprofit")
+
+      import
+
+      expect(existing.reload).to have_attributes(school: true, organization_type: "501c3/nonprofit")
+    end
+
     it "takes the organization's type over its single project's" do
       fm_organization("ORG00001", OrgType: "Government Agency")
       project("P0001", "ORG00001", AgencyType: "School")
