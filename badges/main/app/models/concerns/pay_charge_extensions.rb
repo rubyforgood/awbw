@@ -18,6 +18,8 @@ module PayChargeExtensions
       create_event_registration_payment(event_registration_id)
     elsif (form_submission_id = metadata["form_submission_id"])
       create_bulk_payment(form_submission_id)
+    elsif (membership_invoice_id = metadata["membership_invoice_id"])
+      create_membership_invoice_payment(membership_invoice_id)
     elsif (membership_id = membership_id_from_metadata)
       create_membership_payment(membership_id)
     elsif (person_id = metadata["person_id"])
@@ -34,6 +36,17 @@ module PayChargeExtensions
       data&.dig("stripe_invoice", "parent", "subscription_details", "metadata", "membership_id")
   end
 
+  # one off payment on overdue invoice when invoice_id is present
+  def create_membership_invoice_payment(invoice_id)
+    invoice = MembershipInvoice.find_by(id: invoice_id)
+    return unless invoice
+
+    person = invoice.person
+    return unless person
+
+    record_membership_payment(person: person, invoice: invoice)
+  end
+
   def create_membership_payment(membership_id)
     membership = Membership.find_by(id: membership_id)
     return unless membership
@@ -44,6 +57,10 @@ module PayChargeExtensions
     invoice = Membership::EnsureInvoice.call(membership: membership, covering: invoice_period_date)
     return unless invoice
 
+    record_membership_payment(person: person, invoice: invoice)
+  end
+
+  def record_membership_payment(person:, invoice:)
     payment = ExternalProcessorPayment.create!(
       stripe_charge_id: processor_id,
       external_origin: false,

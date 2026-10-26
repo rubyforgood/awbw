@@ -1362,11 +1362,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_011551) do
   end
 
   create_table "memberships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "cancelled_at"
+    t.datetime "autorenewal_cancelled_at"
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
+    t.date "end_date"
     t.bigint "person_id", null: false
+    t.date "start_date"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.index ["created_by_id"], name: "index_memberships_on_created_by_id"
@@ -2063,7 +2065,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_011551) do
     t.string "invoice_prefix"
     t.integer "annual_membership_cents"
     t.integer "membership_renewal_window_days"
-    t.integer "membership_grace_period_days"
     t.integer "created_by_id"
     t.integer "updated_by_id"
     t.datetime "created_at", null: false

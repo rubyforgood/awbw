@@ -1,81 +1,177 @@
-# `rake db:seed:dev`.
+# `rake db:seed:membership`, or as part of `rake db:seed:dev`.
+#
+# One dedicated person per membership and invoice scenario, each with a login so the
+# admin directory's lock toggle is exercisable on the non-payment / expired cases.
+# Years run back to back, the way EnsureInvoice mints them, and invoices and payments
+# carry the dates they would really have had. Idempotent: a person who already holds a
+# membership is skipped.
 
-puts "Creating memberships for dev people…"
+puts "Creating membership management scenarios…"
 
+admin = User.find_by!(email: "umberto.user@example.com")
 standard = Membership.annual_cost_cents
+domain = "membershipdemo.seed.example.com"
 
-pool = Person.where.missing(:memberships).order(:last_name, :first_name).to_a
-
-if pool.size < 9
-  puts "  Skipping: needs at least 9 people without a membership (found #{pool.size}). Run db:seed:dev first."
-else
-  pay = ->(year, cents) do
-    payment = CashPayment.create!(
-      person: year.person,
-      amount_cents: cents,
-      amount_cents_remaining: cents,
-      currency: "usd"
-    )
-    Allocation.create!(source: payment, allocatable: year, amount: cents)
+member = ->(email:, first:, last:) do
+  user = User.find_or_create_by!(email: "#{email}@#{domain}") do |u|
+    u.password = "password"
+    u.super_user = false
+    u.confirmed_at = Time.current
   end
-
-  year_for = ->(subscription, start_date, cost_cents) do
-    subscription.membership_invoices.create!(start_date: start_date, cost_cents: cost_cents)
+  if user.person.nil?
+    user.update!(person: Person.create!(
+      first_name: first,
+      last_name: last,
+      email: user.email,
+      created_by: admin,
+      updated_by: admin,
+      profile_is_searchable: true
+    ))
   end
+  user.person
+end
 
-  scenarios = [
-    # [ label, cost_cents, cancelled_at, years, payments ]
-    [ "comped first year, as an invite leaves it", nil, nil,
-      [ [ Date.current - 2.months, 0 ] ], [] ],
+# A year is minted a renewal window before it starts, so the invoice exists ahead of
+# the charge.
+minted_at = ->(start_date) {
+  [ start_date.in_time_zone - Membership.renewal_window_days, Time.current ].min
+}
 
-    [ "paid up for the current year", nil, nil,
-      [ [ Date.current - 3.months, standard ] ], [ [ 0, standard ] ] ],
+pay = ->(invoice, cents, on:) do
+  payment = CashPayment.create!(
+    person: invoice.person,
+    amount_cents: cents,
+    amount_cents_remaining: cents,
+    currency: "usd"
+  )
+  payment.update_columns(created_at: on, updated_at: on)
+  allocation = Allocation.create!(source: payment, allocatable: invoice, amount: cents)
+  allocation.update_columns(created_at: on)
+end
 
-    [ "part paid inside the grace window — badge shows what is left", nil, nil,
-      [ [ Date.current - 10.days, standard ] ], [ [ 0, 1_000 ] ] ],
+year = ->(membership, start_date, cost_cents: standard, paid: false, partial: nil) do
+  invoice = membership.membership_invoices.create!(start_date: start_date, cost_cents: cost_cents)
+  minted = minted_at.(start_date)
+  invoice.update_columns(created_at: minted, updated_at: minted)
 
-    [ "unpaid but still inside the grace window", nil, nil,
-      [ [ Date.current - 5.days, standard ] ], [] ],
-
-    [ "overdue — unpaid past the grace window", nil, nil,
-      [ [ Date.current - (Membership.grace_period_days + 15).days, standard ] ], [] ],
-
-    [ "renewal already created for next year", nil, nil,
-      [ [ Date.current - 11.months, standard ], [ Date.current + 1.month, standard ] ],
-      [ [ 0, standard ] ] ],
-
-    [ "grandfathered at a lower cost", 1_500, nil,
-      [ [ Date.current - 2.years, 1_500 ], [ Date.current - 1.year, 1_500 ], [ Date.current, 1_500 ] ],
-      [ [ 0, 1_500 ], [ 1, 1_500 ] ] ],
-
-    [ "honorary - never billed", 0, nil,
-      [ [ Date.current - 1.year, 0 ], [ Date.current, 0 ] ], [] ],
-
-    [ "cancelled, coverage runs to the end of the year", nil, Time.current - 1.week,
-      [ [ Date.current - 4.months, standard ] ], [ [ 0, standard ] ] ]
-  ]
-
-  scenarios.each_with_index do |(label, cost_cents, cancelled_at, years, payments), index|
-    person = pool[index]
-
-    subscription = person.memberships.create!(cost_cents: cost_cents, cancelled_at: cancelled_at)
-    created = years.map { |start_date, cost_cents| year_for.(subscription, start_date, cost_cents) }
-    payments.each { |year_index, cents| pay.(created[year_index], cents) }
-
-    puts "  #{person.full_name}: #{label}"
+  paid_on = start_date.in_time_zone + 9.days
+  if paid
+    pay.(invoice, cost_cents, on: paid_on)
+  elsif partial
+    pay.(invoice, partial, on: paid_on)
   end
+  invoice.update_columns(updated_at: paid_on) if paid || partial
 
-  # New subscription after old sub lapsed
-  rejoiner = pool[9] || pool.first
-  if rejoiner.memberships.count < 2
-    lapsed = rejoiner.memberships.create!(cost_cents: 1_500, cancelled_at: Time.current - 2.years)
-    pay.(year_for.(lapsed, Date.current - 4.years, 1_500), 1_500)
+  invoice
+end
 
-    rejoined = rejoiner.memberships.create!
-    pay.(year_for.(rejoined, Date.current - 1.month, standard), standard)
+autopay = ->(person, membership, invoice, ends_at: nil) do
+  customer = Pay::Customer.create!(
+    owner: person,
+    processor: "stripe",
+    processor_id: "cus_mseed_#{membership.id}",
+    default: true
+  )
+  Pay::Stripe::Subscription.create!(
+    customer: customer,
+    name: "default",
+    processor_id: "sub_mseed_#{membership.id}",
+    processor_plan: "membership",
+    status: "active",
+    quantity: 1,
+    current_period_start: invoice.start_date.in_time_zone,
+    current_period_end: (invoice.end_date + 1.day).in_time_zone,
+    ends_at: ends_at,
+    metadata: { "membership_id" => membership.id }
+  )
+end
 
-    puts "  #{rejoiner.full_name}: lapsed at the old cost, rejoined at the standard one"
-  end
+seed = ->(email:, first:, last:, label:, &block) do
+  person = member.(email: email, first: first, last: last)
+  next if person.memberships.exists?
+
+  block.call(person)
+  puts "  #{person.full_name}: #{label}"
+end
+
+seed.(email: "active.member", first: "Active", last: "Member", label: "Active — current year paid") do |person|
+  membership = person.memberships.create!
+  year.(membership, Date.current - 3.months, paid: true)
+end
+
+seed.(email: "ending.member", first: "Ending", last: "Member", label: "Ending — covered, renewal cancelled") do |person|
+  membership = person.memberships.create!(autorenewal_cancelled_at: 2.weeks.ago)
+  year.(membership, Date.current - 3.months, paid: true)
+end
+
+seed.(email: "lapsed.owing", first: "Lapsed", last: "Owing", label: "Lapsed — renewal issued at the year's end, never paid") do |person|
+  membership = person.memberships.create!
+  paid = year.(membership, Date.current - 2.years, paid: true)
+  year.(membership, paid.end_date + 1.day)
+end
+
+seed.(email: "ended.former", first: "Ended", last: "Former", label: "Ended — renewals stopped, coverage ran out") do |person|
+  start = Date.current - 2.years
+  membership = person.memberships.create!(autorenewal_cancelled_at: start + 10.months)
+  year.(membership, start, paid: true)
+end
+
+seed.(email: "partial.payer", first: "Partial", last: "Payer", label: "Lapsed — partial payment on the renewal") do |person|
+  membership = person.memberships.create!
+  paid = year.(membership, Date.current - 2.years, paid: true)
+  year.(membership, paid.end_date + 1.day, partial: 2_000)
+end
+
+seed.(email: "upcoming.renewal", first: "Upcoming", last: "Renewal", label: "Active — next year's invoice already issued") do |person|
+  membership = person.memberships.create!
+  current = year.(membership, Date.current - 3.months, paid: true)
+  year.(membership, current.end_date + 1.day)
+end
+
+seed.(email: "comped.year", first: "Comped", last: "Year", label: "Active — current year comped") do |person|
+  membership = person.memberships.create!
+  year.(membership, Date.current - 3.months, cost_cents: 0)
+end
+
+seed.(email: "grandfathered.member", first: "Grandfathered", last: "Member", label: "Active — locked at a lower cost") do |person|
+  membership = person.memberships.create!(cost_cents: 1_500)
+  year.(membership, Date.current - 3.months, cost_cents: 1_500, paid: true)
+end
+
+seed.(email: "honorary.member", first: "Honorary", last: "Member", label: "Active — honorary, never billed") do |person|
+  membership = person.memberships.create!(cost_cents: 0)
+  year.(membership, Date.current - 3.months, cost_cents: 0)
+end
+
+seed.(email: "rejoiner.member", first: "Rejoiner", last: "Member", label: "Active — lapsed, then rejoined") do |person|
+  first_year = Date.current - 4.years
+  lapsed = person.memberships.create!(cost_cents: 1_500, autorenewal_cancelled_at: first_year + 10.months)
+  lapsed.update_columns(created_at: first_year.in_time_zone, updated_at: first_year.in_time_zone)
+  year.(lapsed, first_year, cost_cents: 1_500, paid: true)
+
+  rejoined = person.memberships.create!
+  year.(rejoined, Date.current - 1.month, paid: true)
+end
+
+seed.(email: "duplicate.member", first: "Duplicate", last: "Member", label: "Anomaly — two uncancelled memberships") do |person|
+  first = person.memberships.create!
+  year.(first, Date.current - 3.months, paid: true)
+  second = person.memberships.create!(autorenewal_cancelled_at: Time.current)
+  year.(second, Date.current - 5.years, paid: true)
+  second.update_columns(autorenewal_cancelled_at: nil, created_at: (Date.current - 5.years).in_time_zone)
+end
+
+seed.(email: "autopay.active", first: "Autopay", last: "Active", label: "Active — Stripe autopay on") do |person|
+  membership = person.memberships.create!
+  invoice = year.(membership, Date.current - 3.months, paid: true)
+  autopay.(person, membership, invoice)
+end
+
+seed.(email: "autopay.cancelling", first: "Autopay", last: "Cancelling", label: "Active — autopay set to stop at the year's end") do |person|
+  membership = person.memberships.create!
+  invoice = year.(membership, Date.current - 3.months, paid: true)
+  ends_at = Time.use_zone(Membership::TIME_ZONE) { (invoice.end_date + 1.day).beginning_of_day }
+  autopay.(person, membership, invoice, ends_at: ends_at)
 end
 
 puts "  #{Membership.count} memberships, #{MembershipInvoice.count} membership invoices"

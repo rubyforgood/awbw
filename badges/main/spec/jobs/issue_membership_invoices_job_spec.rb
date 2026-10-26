@@ -2,10 +2,12 @@ require "rails_helper"
 
 RSpec.describe IssueMembershipInvoicesJob, type: :job do
   def term_ending(date, subscription: create(:membership))
-    create(:membership_invoice,
+    invoice = create(:membership_invoice,
       membership: subscription,
       start_date: date - 1.year + 1.day,
       end_date: date)
+    create(:allocation, source: create(:payment), allocatable: invoice, amount: invoice.cost_cents)
+    invoice
   end
 
   describe "#perform" do
@@ -35,7 +37,7 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
     end
 
     it "skips a cancelled subscription" do
-      term_ending(Date.current + 10.days, subscription: create(:membership, :cancelled))
+      term_ending(Date.current + 10.days, subscription: create(:membership, :autorenewal_cancelled))
 
       expect { described_class.new.perform }.not_to change(MembershipInvoice, :count)
     end
@@ -60,12 +62,6 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
 
       expect(subscription.membership_invoices.reorder(:start_date).last.cost_cents)
         .to eq(Membership.annual_cost_cents)
-    end
-
-    it "renews an unpaid invoice, since renewal doesn't depend on payment" do
-      term_ending(Date.current + 10.days)
-
-      expect { described_class.new.perform }.to change(MembershipInvoice, :count).by(1)
     end
 
     it "creates nothing on a second run" do

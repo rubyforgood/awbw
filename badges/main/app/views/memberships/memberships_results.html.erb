@@ -1,0 +1,25 @@
+<%= turbo_frame_tag :memberships_results do %>
+  <% empty_copy = {
+    "active" => "No active memberships.",
+    "ending" => "No memberships ending — nothing has renewals switched off.",
+    "lapsed" => "No lapsed memberships.",
+    "ended" => "No ended memberships.",
+    "all" => "No memberships yet."
+  }.fetch(@status_filter, "No memberships.") %>
+
+  <section class="border-primary/10 rounded-2xl border bg-white shadow-sm">
+    <% if @memberships.any? %>
+      <% if @status_filter == "lapsed" %>
+        <p class="m-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-600">Some members below may show <span class="font-medium">Active</span>. Their renewal charge may still be pending in Stripe (it can lag up to a day).</p>
+      <% end %>
+      <div class="divide-y divide-gray-200">
+        <% @memberships.each do |membership| %>
+          <%= render "memberships/membership_row", membership: membership %>
+        <% end %>
+      </div>
+      <div class="pagination flex justify-center px-4 py-4"><%= tailwind_paginate @memberships %></div>
+    <% else %>
+      <p class="p-6 text-gray-500 italic"><%= empty_copy %></p>
+    <% end %>
+  </section>
+<% end %>

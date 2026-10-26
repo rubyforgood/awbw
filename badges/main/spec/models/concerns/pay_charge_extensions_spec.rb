@@ -167,8 +167,16 @@ RSpec.describe PayChargeExtensions do
     end
   end
   describe "membership subscription charges" do
+    around { |example| travel_to(Time.current.midday) { example.run } }
+
     let(:member) { create(:person) }
     let(:membership) { create(:membership, person: member) }
+
+    # The charge pipeline derives its invoice period with `.to_date` on either the stored
+    # current_period_start (read back in UTC) or Time.at(stamp) (system-local). Anchor each
+    # at noon so the calendar day survives whatever zone the host runs in.
+    def utc_noon(date) = Time.utc(date.year, date.month, date.day, 12)
+    def local_noon(date) = Time.local(date.year, date.month, date.day, 12)
 
     def renewal_charge(period_start:, amount: Membership.annual_cost_cents, charge_id: "ch_membership")
       pay_subscription = Pay::Subscription.create!(
@@ -191,7 +199,7 @@ RSpec.describe PayChargeExtensions do
         cost_cents: Membership.annual_cost_cents,
         start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
-      renewal_charge(period_start: Date.current.to_time)
+      renewal_charge(period_start: utc_noon(Date.current))
 
       expect(invoice.reload).to be_paid_in_full
       expect(invoice.allocations.sole.amount).to eq(Membership.annual_cost_cents)
@@ -201,7 +209,7 @@ RSpec.describe PayChargeExtensions do
       create(:membership_invoice, membership: membership,
         start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
-      renewal_charge(period_start: Date.current.to_time)
+      renewal_charge(period_start: utc_noon(Date.current))
 
       expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_membership").person).to eq(member)
     end
@@ -209,7 +217,7 @@ RSpec.describe PayChargeExtensions do
     it "creates the year when the renewal arrives before the nightly job made one" do
       next_period = Date.current + 2.years
 
-      expect { renewal_charge(period_start: next_period.to_time) }
+      expect { renewal_charge(period_start: utc_noon(next_period)) }
         .to change { membership.membership_invoices.count }.by(1)
 
       expect(membership.membership_invoices.last.start_date).to eq(next_period)
@@ -219,7 +227,7 @@ RSpec.describe PayChargeExtensions do
       invoice = create(:membership_invoice, membership: membership,
         cost_cents: 1_000, start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
-      renewal_charge(period_start: Date.current.to_time, amount: Membership.annual_cost_cents)
+      renewal_charge(period_start: utc_noon(Date.current), amount: Membership.annual_cost_cents)
 
       expect(invoice.allocations.sole.amount).to eq(1_000)
       expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_membership").amount_cents_remaining)
@@ -249,7 +257,7 @@ RSpec.describe PayChargeExtensions do
         cost_cents: Membership.annual_cost_cents,
         start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
-      period_start = Date.current.to_time.to_i
+      period_start = local_noon(Date.current).to_i
       Pay::Charge.create!(
         customer: pay_customer, processor_id: "ch_checkout",
         amount: Membership.annual_cost_cents, amount_refunded: 0, currency: "usd",
@@ -272,6 +280,30 @@ RSpec.describe PayChargeExtensions do
       expect(invoice.allocations.sole.amount).to eq(Membership.annual_cost_cents)
       expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_checkout"))
         .to have_attributes(external_origin: false, person: member)
+    end
+  end
+
+  describe "membership invoice payments" do
+    let(:member) { create(:person) }
+    let(:membership) { create(:membership, person: member) }
+
+    it "allocates a one-off balance payment to the invoice it names, not the charge date's" do
+      target = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current - 2.years, end_date: Date.current - 1.year - 1.day)
+      current = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current, end_date: Date.current + 1.year - 1.day)
+
+      Pay::Charge.create!(
+        customer: pay_customer, processor_id: "ch_balance",
+        amount: 2_500, amount_refunded: 0, currency: "usd",
+        metadata: { "membership_id" => membership.id, "membership_invoice_id" => target.id },
+        object: { "id" => "ch_balance", "amount" => 2_500, "currency" => "usd", "paid" => true,
+                  "metadata" => {}, "refunds" => { "data" => [], "has_more" => false } }
+      )
+
+      expect(target.reload).to be_paid_in_full
+      expect(current.reload).not_to be_paid_in_full
+      expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_balance").person).to eq(member)
     end
   end
 end

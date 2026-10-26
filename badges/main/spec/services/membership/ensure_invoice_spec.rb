@@ -51,12 +51,6 @@ RSpec.describe Membership::EnsureInvoice do
       expect(described_class.call(membership: subscription, covering: existing.end_date))
         .to eq(existing)
     end
-
-    it "is idempotent when called twice for the same date" do
-      expect {
-        2.times { described_class.call(membership: subscription, covering: Date.new(2027, 1, 1)) }
-      }.not_to change(MembershipInvoice, :count)
-    end
   end
 
   describe "renewing" do
@@ -74,12 +68,12 @@ RSpec.describe Membership::EnsureInvoice do
       expect(invoice.end_date).to eq(Date.new(2028, 10, 13))
     end
 
-    it "creates a invoice twice running without overlapping" do
+    it "reuses the invoice it just created instead of minting a second" do
       first = described_class.call(membership: subscription, covering: Date.new(2027, 10, 14))
-      second = described_class.call(membership: subscription, covering: first.end_date + 1.day)
+      second = described_class.call(membership: subscription, covering: Date.new(2027, 10, 14))
 
-      expect(second.start_date).to eq(first.end_date + 1.day)
-      expect(subscription.membership_invoices.count).to eq(3)
+      expect(second).to eq(first)
+      expect(subscription.membership_invoices.count).to eq(2)
     end
   end
 
@@ -100,7 +94,7 @@ RSpec.describe Membership::EnsureInvoice do
   end
 
   describe "a cancelled subscription" do
-    before { subscription.update!(cancelled_at: Time.current) }
+    before { subscription.update!(autorenewal_cancelled_at: Time.current) }
 
     it "creates nothing" do
       expect {

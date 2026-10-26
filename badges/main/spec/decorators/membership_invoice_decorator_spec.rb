@@ -11,8 +11,14 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
   end
 
   describe "#status_badge" do
-    it "reads Upcoming before the year starts" do
-      expect(invoice(start_date: Date.current + 1.day).status_badge.label).to eq("Upcoming")
+    it "reads Upcoming · Paid for a paid future invoice" do
+      badge = invoice(start_date: Date.current + 1.day, paid: 2_500).status_badge
+      expect(badge.label).to eq("Upcoming · Paid")
+      expect(badge.classes).to eq(described_class::BADGE_CLASSES[:green])
+    end
+
+    it "reads Upcoming with amount before the year starts" do
+      expect(invoice(start_date: Date.current + 1.day).status_badge.label).to eq("Upcoming · $25")
     end
 
     it "reads Paid for a settled year" do
@@ -23,30 +29,15 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
       expect(invoice(cost_cents: 0).status_badge.label).to eq("Paid")
     end
 
-    it "shows what's left while inside the grace window" do
+    it "reads Overdue with amount for an unpaid invoice whose term has started" do
       badge = invoice(start_date: Date.current - 1).status_badge
 
-      expect(badge.label).to eq("$25 due")
-      expect(badge.classes).to eq(described_class::BADGE_CLASSES[:amber])
-    end
-
-    it "shows what's left after a part payment" do
-      expect(invoice(paid: 1_000, start_date: Date.current - 1).status_badge.label).to eq("$15 due")
-    end
-
-    it "reads Overdue past the grace window" do
-      badge = invoice(start_date: Date.current - Membership.grace_period_days - 1).status_badge
-
-      expect(badge.label).to eq("Overdue")
+      expect(badge.label).to eq("Overdue · $25")
       expect(badge.classes).to eq(described_class::BADGE_CLASSES[:red])
     end
 
-    it "reads Overdue rather than Expired for an unpaid year that has run out" do
-      expect(invoice(start_date: Date.current - 2.years).status_badge.label).to eq("Overdue")
-    end
-
-    it "reads Expired for a paid year that has run out" do
-      expect(invoice(cost_cents: 0, start_date: Date.current - 2.years).status_badge.label).to eq("Expired")
+    it "reads Overdue with amount for an invoice after a part payment" do
+      expect(invoice(paid: 1_000, start_date: Date.current).status_badge.label).to eq("Overdue · $15")
     end
   end
 

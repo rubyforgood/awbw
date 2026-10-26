@@ -28,7 +28,8 @@ RSpec.describe "People multiple-memberships warning", type: :request do
   it "does not flag a person with a single active membership plus a cancelled one" do
     person = create(:person)
     create(:membership, person: person)
-    create(:membership, :cancelled, person: person)
+    create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current - 3.years, end_date: Date.current - 2.years)
 
     get person_path(person)
 

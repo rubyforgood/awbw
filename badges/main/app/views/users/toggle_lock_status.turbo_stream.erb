@@ -1,2 +1,6 @@
-<%= turbo_stream.replace "user_lock_status", partial: "users/lock_status_indicator", locals: { user: @user } %>
+<% if params[:membership_id].present? %>
+  <% membership = Membership.find(params[:membership_id]) %>
+  <%= turbo_stream.replace "membership_#{membership.id}",
+        partial: "memberships/membership_row", locals: { membership: membership } %>
+<% end %>
 <%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>

@@ -1,0 +1,47 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="border-primary/10 mx-auto max-w-2xl rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to person_memberships_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Membership
+    <% end %>
+  </div>
+
+  <h1 class="text-primary mb-1 font-display text-2xl font-bold">New membership</h1>
+  <p class="mb-6 text-sm text-gray-500"><%= @person.full_name %></p>
+
+  <%= simple_form_for @membership, url: person_memberships_path(@person) do |f| %>
+    <%= render "shared/errors", resource: f.object %>
+
+    <%= f.input :cost_dollars,
+          label: "Cost ($ per year)",
+          required: false,
+          hint: "Leave blank for the standard cost (#{dollars_from_cents(Membership.annual_cost_cents)}). Set an amount only to lock this person in at that price.",
+          input_html: { min: 0, step: 0.01, placeholder: "Standard", class: "bg-white" } %>
+
+    <fieldset class="mt-6 border-t border-gray-200 pt-6">
+      <legend class="mb-3 text-sm font-medium text-gray-700">First invoice</legend>
+
+      <%= f.simple_fields_for :membership_invoices do |invoice| %>
+        <%= invoice.input :start_date,
+              as: :date,
+              html5: true,
+              label: "Starts",
+              hint: "Runs 12 months from this date.",
+              input_html: { class: "bg-white" } %>
+
+        <%= invoice.input :cost_dollars,
+              label: "Cost ($)",
+              hint: "Enter 0 if this invoice is already covered, e.g. by their training.",
+              input_html: { min: 0, step: 0.01, class: "bg-white" } %>
+      <% end %>
+    </fieldset>
+
+    <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-6">
+      <div class="ml-auto flex items-center gap-3">
+        <%= link_to "Cancel", person_memberships_path(@person), class: button_classes(:secondary_outline) %>
+        <%= f.button :submit, "Create membership", class: button_classes(:primary) %>
+      </div>
+    </div>
+  <% end %>
+</div>

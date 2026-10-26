@@ -10,9 +10,8 @@ class Setting < ApplicationRecord
   DEFAULT_INVOICE_PREFIX = "INV".freeze
   PLACEHOLDER_EMAIL_DOMAIN = "example.com".freeze
   DEFAULT_CE_ADMINISTRATOR_TITLE = "CE Administrator".freeze
-  DEFAULT_ANNUAL_MEMBERSHIP_CENTS = 2500
+  DEFAULT_ANNUAL_MEMBERSHIP_CENTS = 10000
   DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS = 30
-  DEFAULT_MEMBERSHIP_GRACE_PERIOD_DAYS = 30
 
   belongs_to :organization, optional: true
   belongs_to :return_address, class_name: "Address", optional: true
@@ -32,7 +31,7 @@ class Setting < ApplicationRecord
   validates :ce_accreditation_abbreviation, length: { maximum: 60 }
   validates :ce_accreditation_url, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]),
                                              message: "must be a full http(s) address" }, allow_blank: true
-  validates :annual_membership_cents, :membership_renewal_window_days, :membership_grace_period_days,
+  validates :annual_membership_cents, :membership_renewal_window_days,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :home_featured_stories_limit, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
@@ -234,12 +233,6 @@ class Setting < ApplicationRecord
   def self.membership_renewal_window_days
     stored(:membership_renewal_window_days) ||
       ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS).to_i
-  end
-
-  # How long past a term's start an unpaid membership invoice still reads as current.
-  def self.membership_grace_period_days
-    stored(:membership_grace_period_days) ||
-      ENV.fetch("ANNUAL_MEMBERSHIP_GRACE_PERIOD_DAYS", DEFAULT_MEMBERSHIP_GRACE_PERIOD_DAYS).to_i
   end
 
   # How many featured stories the portal home lists, counted among the stories the
