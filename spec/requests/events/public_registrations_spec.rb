@@ -1360,13 +1360,27 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(ProfessionalLicense.count).to eq(1)
     end
 
-    it "keeps each application's CE answers in its own CE submission" do
+    it "updates the one CE submission in place and logs the answer it replaces" do
       apply
+      events = []
+      allow(Analytics::LifecycleBuffer).to receive(:push).and_wrap_original { |push, event| events << event && push.call(event) }
+
       apply(license_number: "99999")
 
-      submissions = FormSubmission.where(role: "continuing_education", event: event).order(:created_at)
-      license_answers = submissions.map { |submission| submission.form_answers.find_by(form_field_id: ce_fid("ce_license_number")).submitted_answer }
-      expect(license_answers).to eq(%w[42111 99999])
+      expect(FormSubmission.where(role: "continuing_education", event: event).count).to eq(1)
+      update = events.find { |event| event[:name] == "update.form_answer" }
+      expect(update.dig(:properties, :changes)).to eq("submitted_answer" => { before: "42111", after: "99999" })
+    end
+
+    it "logs an answer a reapplication clears" do
+      apply
+      events = []
+      allow(Analytics::LifecycleBuffer).to receive(:push).and_wrap_original { |push, event| events << event && push.call(event) }
+
+      apply(license_number: "")
+
+      update = events.find { |event| event[:name] == "update.form_answer" }
+      expect(update.dig(:properties, :changes)).to eq("submitted_answer" => { before: "42111", after: "" })
     end
 
     it "shows the newest CE answers on the ticket" do
