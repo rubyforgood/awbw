@@ -77,6 +77,7 @@
                         class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                       } %>
         <% end %>
+        <%= f.input :school, label: "School", wrapper_html: { class: "mt-2 mb-0!" } %>
       </div>
       <% if f.object.website_url.present? && (URI.parse(f.object.website_url) rescue nil).nil? %>
         <% website_warning = "<span class='text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 text-sm'>Invalid</span>" %>

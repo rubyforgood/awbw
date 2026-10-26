@@ -64,8 +64,7 @@ class Organization < ApplicationRecord
   # (e.g. the legacy "Other (please specify below)") folds into "Other" for display
   # so an unmatched select can't silently save as the first option.
   ORGANIZATION_TYPE_OTHER = "Other"
-  ORGANIZATION_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", "Educational institution",
-                         ORGANIZATION_TYPE_OTHER ].freeze
+  ORGANIZATION_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", ORGANIZATION_TYPE_OTHER ].freeze
 
   # Validations
   validates :logo,

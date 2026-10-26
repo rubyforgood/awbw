@@ -311,14 +311,14 @@ RSpec.describe Organization do
     end
 
     context "with organization type filter" do
-      let!(:school) { create(:organization, organization_type: "Educational institution") }
+      let!(:company) { create(:organization, organization_type: "For-profit") }
       let!(:agency) { create(:organization, organization_type: "Government agency") }
       let!(:legacy_other) { create(:organization, organization_type: "Other (please specify below)") }
       let!(:untyped) { create(:organization, organization_type: nil) }
 
       it "matches any of the chosen types" do
-        results = Organization.search_by_params(organization_types: [ "Educational institution", "Government agency" ])
-        expect(results).to contain_exactly(school, agency)
+        results = Organization.search_by_params(organization_types: [ "For-profit", "Government agency" ])
+        expect(results).to contain_exactly(company, agency)
       end
 
       it "counts unlisted legacy values as Other" do

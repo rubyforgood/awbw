@@ -39,13 +39,12 @@ module OrganizationServices
     BATCH_SIZE = 500
     # FileMaker's OrgType / AgencyType words onto Organization::ORGANIZATION_TYPES, first
     # match winning — so a value naming two types ("501c3/Nonprofit Government Agency"), as
-    # FileMaker's multi-select stored them, takes the first. Any other word ("Grassroots")
-    # is Other, with the word kept as its description.
+    # FileMaker's multi-select stored them, takes the first. Any other word ("School",
+    # "Grassroots") is Other, with the word kept as its description.
     ORGANIZATION_TYPE_PATTERNS = {
       /501|non.?profit/i => "501c3/nonprofit",
       /for.?profit|\bLLC\b/i => "For-profit",
       /govt|government/i => "Government agency",
-      /school|college|universit|educat/i => "Educational institution",
       /\Aother\z/i => Organization::ORGANIZATION_TYPE_OTHER
     }.freeze
     TYPE_FIELDS = %i[organization_type organization_type_other].freeze

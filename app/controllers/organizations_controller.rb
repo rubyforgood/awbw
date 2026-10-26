@@ -214,7 +214,7 @@ class OrganizationsController < ApplicationController
   def organization_params
     params.require(:organization).permit(
       :name, :description, :start_date, :end_date, :mission_vision_values,
-      :organization_type, :organization_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
+      :organization_type, :organization_type_other, :school, :filemaker_code, :logo, :notes, :email, :website_url,
       :organization_status_id, :location_id, :windows_type_id, :high_profile, :parent_id,
       :tax_id,
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,

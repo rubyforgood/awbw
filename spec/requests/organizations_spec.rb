@@ -489,6 +489,15 @@ RSpec.describe "/organizations", type: :request do
         expect(organization.reload.high_profile).to be(true)
       end
 
+      it "updates the school flag from the edit form's checkbox" do
+        organization = Organization.create!(valid_attributes)
+        get edit_organization_url(organization)
+        expect(Capybara.string(response.body)).to have_field("School", type: "checkbox", checked: false)
+
+        patch organization_url(organization), params: { organization: { school: "1" } }
+        expect(organization.reload.school).to be(true)
+      end
+
       it "saves the organization's phones" do
         organization = Organization.create!(valid_attributes)
         patch organization_url(organization), params: { organization: { contact_methods_attributes: {
