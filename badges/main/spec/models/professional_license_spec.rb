@@ -36,6 +36,32 @@ RSpec.describe ProfessionalLicense, type: :model do
     end
   end
 
+  describe "a license type typed into the number" do
+    it "splits a known type off the front of the number" do
+      expect(described_class.split_kind_from_number(kind: nil, number: "LMFT  42111")).to eq([ "LMFT", "42111" ])
+      expect(described_class.split_kind_from_number(kind: "", number: "lcsw #555")).to eq([ "LCSW", "555" ])
+      expect(described_class.split_kind_from_number(kind: nil, number: "LPCC12345")).to eq([ "LPCC", "12345" ])
+    end
+
+    it "leaves the number alone when the type is already set or the prefix isn't a license type" do
+      expect(described_class.split_kind_from_number(kind: "LCSW", number: "LMFT 42111")).to eq([ "LCSW", "LMFT 42111" ])
+      expect(described_class.split_kind_from_number(kind: nil, number: "CA 12345")).to eq([ nil, "CA 12345" ])
+      expect(described_class.split_kind_from_number(kind: nil, number: "LMFT")).to eq([ nil, "LMFT" ])
+    end
+
+    it "splits it when the license saves" do
+      license = create(:professional_license, person: person, kind: nil, number: "LMFT 42111")
+
+      expect(license.reload).to have_attributes(kind: "LMFT", number: "42111")
+    end
+
+    it "finds the existing license instead of creating a second one" do
+      existing = create(:professional_license, person: person, kind: "LMFT", number: "42111")
+
+      expect(described_class.find_or_create_for(person: person, number: "LMFT 42111")).to eq(existing)
+    end
+  end
+
   describe "#number_known?" do
     it "is true only when a number is present" do
       expect(build(:professional_license, number: "X")).to be_number_known

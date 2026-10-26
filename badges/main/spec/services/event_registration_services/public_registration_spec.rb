@@ -1019,10 +1019,10 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(existing.reload.continuing_education_registrations.count).to eq(1)
     end
 
-    it "records the typed license number on the CE registration's license" do
+    it "records the typed license number on the CE registration's license, splitting off a type typed in front" do
       result = register_with_ce("Yes", license: "LMFT 555")
       license = result.event_registration.continuing_education_registrations.first.professional_license
-      expect(license.number).to eq("LMFT 555")
+      expect(license).to have_attributes(kind: "LMFT", number: "555")
       expect(license.person).to eq(result.event_registration.registrant)
     end
 
