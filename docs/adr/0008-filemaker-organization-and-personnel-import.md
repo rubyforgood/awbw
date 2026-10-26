@@ -7,9 +7,10 @@
 ## TL;DR
 
 Two runs after `fm:import_people` (#2630), each reversible on its own: `fm:import_organizations`
-makes organizations and projects (`OrganizationServices::ImportFromFilemaker`), then
-`fm:import_affiliations` brings in the contact people agency cards name and makes affiliations
-and work addresses (`AffiliationServices::ImportFromFilemaker`). Row counts are production's, profiled
+brings in the contact people agency cards name and makes every organization
+(`OrganizationServices::ImportFromFilemaker`), then `fm:import_affiliations` makes affiliations
+and work addresses (`AffiliationServices::ImportFromFilemaker`) and creates no organizations.
+Row counts are production's, profiled
 2026-10-12 (ADR-0005).
 
 | Archive table | Rows | What a row is | Becomes | Code it leaves |
@@ -102,7 +103,7 @@ Constraints already decided elsewhere:
   matches, created when nothing does); its email too, unless the card names a contact
   person, whose email it then is. A card naming a contact person also becomes that person,
   and every address on it stays with the org. `fm:import_people` skipped every agency card,
-  so `fm:import_affiliations` runs the Rolodex import over agency cards alone as its first
+  so `fm:import_organizations` runs the Rolodex import over agency cards alone as its first
   step — the people already imported and cleaned up are left as they are.
 - **Personnel → facilitator affiliation:** an `fm_personnels` row becomes an `Affiliation`
   between the person (by Rolodex code) and the project's org, carrying `PrsnlRecID` as its
@@ -239,8 +240,9 @@ the real run.
   other affiliations (decided 2026-10-24).
 - **Personnel with no project** (27 rows in prod, none with a project on their agreement):
   the row lands at the organization on the person's Rolodex card — its `OrgID`, else its
-  typed name, created as a new organization when nothing matches. A card naming no
-  organization is skipped and reported (decided 2026-10-25).
+  typed name, created as a new organization when nothing matches. `fm:import_organizations`
+  creates that organization, so undoing an affiliations run never removes one. A card naming
+  no organization is skipped and reported (decided 2026-10-25).
 - **A full accounting of what didn't come over** — every FileMaker person and organization no
   portal record carries a code for — is a later Data health check, read through
   `filemaker_code`.

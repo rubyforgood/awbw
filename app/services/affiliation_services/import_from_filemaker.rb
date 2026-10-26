@@ -9,9 +9,9 @@ module AffiliationServices
   #      primary contact — turned on for a Facilitator row the portal already had. It links
   #      an existing Facilitator row only when their dates agree (#same_dates); other dates
   #      are a separate stretch and become their own affiliation. Each carries the row's PrsnlRecID as its filemaker_code. A row
-  #      whose project wasn't imported lands at the organization on the person's Rolodex card
-  #      (created from its name when nothing matches); one naming no person — or only an
-  #      agency's own card — gets AWBW Placeholder where nothing else affiliates anyone.
+  #      whose project wasn't imported lands at the organization on the person's Rolodex
+  #      card; one naming no person — or only an agency's own card — gets AWBW Placeholder
+  #      where nothing else affiliates anyone.
   #   2. People-to-organizations (FmPeopleToOrganization) — a job at an organization, with
   #      its title, carrying the row's RecordID.
   #   3. The Rolodex card itself (FmRolodex) — the organization its OrgID (or its typed
@@ -120,7 +120,7 @@ module AffiliationServices
       return record(:already_imported, label) if @affiliations.include?(row.fm_id)
 
       card = @cards[data["PersonID"].to_s]
-      organization = organization_for(data["ProjectID"]) || card_organization(card, label)
+      organization = organization_for(data["ProjectID"]) || card_organization(card)
       return record(:skipped, "#{label}: #{missing_organization(data, card)}") unless organization
 
       people = @people.records(data["PersonID"])
@@ -142,26 +142,11 @@ module AffiliationServices
 
     # A row whose project wasn't imported (or names none) lands at the organization on the
     # person's Rolodex card — the one its OrgID names, else the one its typed name means,
-    # created when nothing answers to it, since the person staffed a program there.
-    def card_organization(card, label)
+    # which the organizations pass created when nothing answered to it.
+    def card_organization(card)
       return unless card
 
-      organization_for(card.data["OrgID"]) || named_organization(card.data["Organization"]) ||
-        create_card_organization(card, label)
-    end
-
-    def create_card_organization(card, label)
-      name = card.data["Organization"].to_s.squish
-      return if name.blank? || retired_record?(card.data["OrgID"])
-
-      organization = Organization.create(name: clip(name), created_by_id: @import_user_id, updated_by_id: @import_user_id)
-      unless organization.persisted?
-        failed(organization, label)
-        return
-      end
-
-      record(:created, "#{label} → organization ##{organization.id} (#{organization.name}), named on the person's Rolodex card")
-      organization
+      organization_for(card.data["OrgID"]) || named_organization(card.data["Organization"])
     end
 
     def missing_organization(data, card)
@@ -170,7 +155,10 @@ module AffiliationServices
       return "#{prefix}, and no Rolodex card for person #{data["PersonID"].presence || "(none)"}" unless card
       return "#{prefix}, and the person's Rolodex card names #{card.data["OrgID"]}, retired in FileMaker" if retired_record?(card.data["OrgID"])
 
-      "#{prefix}, and the person's Rolodex card names no organization"
+      named = card.data["Organization"].to_s.squish.presence || card.data["OrgID"].presence
+      return "#{prefix}, and the person's Rolodex card names no organization" unless named
+
+      "#{prefix}, and the person's Rolodex card names #{named}, which wasn't imported"
     end
 
     # A Personnel row naming no one still records that the program ran. Read last, once every

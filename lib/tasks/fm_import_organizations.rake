@@ -2,14 +2,15 @@
 
 # Bring FileMaker's organizations, projects and the ties between them and people into the
 # portal (ADR-0008), as two runs so each can be checked and reversed on its own:
-#   1. fm:import_organizations — OrganizationServices::ImportFromFilemaker: organizations,
-#      projects (as programs nested under them), their addresses, phones, emails, and
-#      agencies' own Rolodex cards
-#   2. fm:import_affiliations — after the first, and after fm:import_people:
+#   1. fm:import_organizations — after fm:import_people:
 #      a. PersonServices::ImportFromRolodex over agency cards only — the contact person an
 #         agency card names, which fm:import_people skipped
-#      b. AffiliationServices::ImportFromFilemaker — personnel, people-to-organizations, and
-#         each Rolodex card's organization, title and work addresses
+#      b. OrganizationServices::ImportFromFilemaker — organizations, projects (as programs
+#         nested under them), their addresses, phones, emails, agencies' own Rolodex cards,
+#         and the organization a card names for someone staffing an unimported project
+#   2. fm:import_affiliations — AffiliationServices::ImportFromFilemaker, after the first:
+#      personnel, people-to-organizations, and each Rolodex card's organization, title and
+#      work addresses
 # Each is idempotent: a row whose code a record already carries is left alone.
 #
 # Dry-run by default. Set DRY_RUN=false to write changes; VERBOSE=true lists every row.
@@ -19,9 +20,9 @@
 # affiliations run before the organizations run — an organization someone is affiliated with
 # is kept.
 # FM_IDS names the archive rows to read, by their own ID — for organizations, an organization,
-# a project or an agency card (an organization and its projects come as a pair either way,
-# since one can't be read without the other); for affiliations, a personnel record, a
-# people-to-organizations record, or a Rolodex card:
+# a project, an agency card or a personnel record (an organization and its projects come as a
+# pair either way, since one can't be read without the other); for affiliations, a personnel
+# record, a people-to-organizations record, or a Rolodex card:
 #   bin/rails fm:import_organizations                 # preview, writes nothing
 #   DRY_RUN=false bin/rails fm:import_organizations   # create + link organizations
 #   DRY_RUN=false bin/rails fm:import_affiliations    # then the affiliations
@@ -135,22 +136,22 @@ namespace :fm do
     end
   end
 
-  desc "Create organizations from the FileMaker archive's organizations, projects and agency cards. Idempotent. DRY_RUN=false to execute."
+  desc "Create organizations, and the people agency cards name, from the FileMaker archive (after fm:import_people). Idempotent. DRY_RUN=false to execute."
   task import_organizations: :environment do
     import_from_archive.call("import_organizations", {
-      "Organizations and projects" => ->(**options) { OrganizationServices::ImportFromFilemaker.new(**options) }
-    })
-  end
-
-  desc "Create affiliations from the FileMaker archive (after fm:import_people and fm:import_organizations). Idempotent. DRY_RUN=false to execute."
-  task import_affiliations: :environment do
-    import_from_archive.call("import_affiliations", {
       # The people pass skipped every agency card, so the contact person one names comes in
       # here — only those cards, leaving everyone fm:import_people already brought over alone.
       "People named on agency cards" => lambda do |fm_ids:, progress:, run:|
         cards = fm_ids.any? ? FmRolodex.agency_cards.where(fm_id: fm_ids) : FmRolodex.agency_cards
         PersonServices::ImportFromRolodex.new(scope: cards, relink: fm_ids.any?, progress:, run:)
       end,
+      "Organizations and projects" => ->(**options) { OrganizationServices::ImportFromFilemaker.new(**options) }
+    })
+  end
+
+  desc "Create affiliations from the FileMaker archive (after fm:import_organizations). Idempotent. DRY_RUN=false to execute."
+  task import_affiliations: :environment do
+    import_from_archive.call("import_affiliations", {
       "Affiliations and work addresses" => ->(**options) { AffiliationServices::ImportFromFilemaker.new(**options) }
     })
   end

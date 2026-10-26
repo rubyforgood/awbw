@@ -52,7 +52,7 @@ RSpec.describe "fm:import_affiliations" do
       expect { run_task }.to change(ActiveStorage::Blob, :count).by(1)
 
       expect(Affiliation.count).to eq(0)
-      expect(ActiveStorage::Blob.last.download).to include("People named on agency cards", "Affiliations and work addresses", "DRY RUN")
+      expect(ActiveStorage::Blob.last.download).to include("Affiliations and work addresses", "DRY RUN")
     end
 
     it "affiliates the person with the organization the organizations import made" do
@@ -71,21 +71,7 @@ RSpec.describe "fm:import_affiliations" do
       expect(person.affiliations.pluck(:filemaker_code)).to eq([ "PS0001" ])
     end
 
-    it "brings in the person an agency card names, which the people import skipped, and affiliates them there" do
-      clinic = create(:organization, name: "Harbor Clinic")
-      FmRolodex.create!(fm_id: "00301", data: { "isAgency__c" => "1", "Organization" => "Harbor Clinic", "Title" => "Director",
-                                                "FirstName" => "Grace", "LastName" => "Hopper", "EMail" => "grace@harbor.example.org" })
-      FmRolodex.create!(fm_id: "00302", data: { "FirstName" => "Ada", "LastName" => "Lovelace" })
-
-      run_task(dry_run: false)
-
-      contact = Person.find_by!(filemaker_code: "00301")
-      expect(contact.affiliations.sole).to have_attributes(organization: clinic, title: "Director")
-      expect(Person.where(filemaker_code: "00302")).to be_empty
-    end
-
-    it "points the person named on an agency card at the work address the organizations import placed" do
-      contact = create(:person, filemaker_code: "00300")
+    it "affiliates the person an agency card names with its agency, at the work address the organizations import placed" do
       FmAddress.create!(fm_id: "9", data: { "RolodexID" => "00300", "AddrsLine1" => "9 Elm St", "AddrsCity" => "Ojai",
                                             "AddrsState" => "CA", "AddrsType" => "Home" })
       FmRolodex.create!(fm_id: "00300", data: { "isAgency__c" => "1", "Organization" => "Elm Street Clinic", "Title" => "Director",
@@ -95,8 +81,24 @@ RSpec.describe "fm:import_affiliations" do
       run_task(dry_run: false)
 
       clinic = Organization.find_by!(name: "Elm Street Clinic")
+      contact = Person.find_by!(filemaker_code: "00300")
       expect(contact.affiliations.sole).to have_attributes(organization: clinic, title: "Director", organization_address: clinic.addresses.sole)
       expect(contact.addresses).to be_empty
+    end
+
+    it "affiliates someone staffing an unimported project with the organization their card names, which undoing leaves" do
+      FmPersonnel.create!(fm_id: "PS0002", data: { "PersonID" => "00200", "ProjectID" => "", "Status" => "Active" })
+      FmRolodex.create!(fm_id: "00200", data: { "FirstName" => "Ada", "LastName" => "Lovelace", "Organization" => "Foothill Family Services" })
+
+      run_task(task: "fm:import_organizations", dry_run: false)
+      foothill = Organization.find_by!(name: "Foothill Family Services")
+      run = run_task(dry_run: false)[/ RUN=(fm-import-affiliations-\d+)/, 1]
+
+      expect(person.affiliations.find_by!(filemaker_code: "PS0002").organization).to eq(foothill)
+
+      run_task(task: "fm:undo_import", run:, dry_run: false)
+
+      expect(Organization.where(id: foothill.id)).to exist
     end
 
     it "names the run so fm:undo_import can reverse it, leaving the organizations" do

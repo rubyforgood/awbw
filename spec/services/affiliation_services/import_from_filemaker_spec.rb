@@ -281,15 +281,22 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
         expect(person.affiliations.sole).to have_attributes(organization: umbrella, title: "Facilitator", filemaker_code: "PS0001")
       end
 
-      it "creates the organization the card only names, and reports it" do
+      it "lands at the organization the card only names" do
+        foothill = create(:organization, name: "Foothill Family Services")
         rolodex(Organization: "Foothill Family Services")
         personnel("PS0001", ProjectID: "")
 
-        import = described_class.new.call
+        import
 
-        created = Organization.find_by!(name: "Foothill Family Services")
-        expect(person.affiliations.sole.organization).to eq(created)
-        expect(import.results[:created]).to include(a_string_including("organization ##{created.id}", "Rolodex card"))
+        expect(person.affiliations.sole.organization).to eq(foothill)
+      end
+
+      it "is skipped, saying why, when the organization the card names wasn't imported" do
+        rolodex(Organization: "Foothill Family Services")
+        personnel("PS0001", ProjectID: "")
+
+        expect { expect(import.results[:skipped]).to include(a_string_including("PS0001", "Foothill Family Services", "wasn't imported")) }
+          .not_to change(Organization, :count)
       end
 
       it "creates no organization for a card naming a retired one" do

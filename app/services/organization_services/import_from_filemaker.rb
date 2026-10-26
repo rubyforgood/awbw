@@ -32,6 +32,8 @@ module OrganizationServices
   #     phones, email and projects — onto the organization it duplicated
   #   * an agency's own Rolodex card: its website, mission and addresses (and its email,
   #     when the card names no contact person whose email it would be)
+  #   * the organization a Rolodex card names, for someone staffing a project that wasn't
+  #     imported, created by name when nothing answers to it
   class ImportFromFilemaker
     include FilemakerValues
 
@@ -105,6 +107,7 @@ module OrganizationServices
       import_batch(parents) { |child| nest_under_parent(child) }
       import_batch(merged) { |project| fold_merged(project) }
       import_batch(agency_cards.select { |rolodex| wanted?(rolodex.fm_id) }) { |rolodex| import_agency(rolodex) }
+      import_batch(unplaced_staff_cards) { |rolodex| import_card_organization(rolodex) }
       self
     end
 
@@ -308,6 +311,28 @@ module OrganizationServices
 
       note_differences(organization, rolodex, label, kept) if kept.any?
       record(outcome, "#{label} → ##{organization.id} (agency card)")
+    end
+
+    # A Personnel row whose project wasn't imported (or names none) places its person at the
+    # organization on their Rolodex card, so the one its typed name means is created when
+    # nothing answers to it — the person staffed a program there.
+    def unplaced_staff_cards
+      unplaced = FmPersonnel.all.select do |row|
+        (wanted?(row.fm_id) || wanted?(row.data["PersonID"])) && !@codes.include?(row.data["ProjectID"].to_s)
+      end
+      FmRolodex.where(fm_id: unplaced.map { |row| row.data["PersonID"].to_s }.compact_blank.uniq).order(:fm_id).to_a
+    end
+
+    def import_card_organization(rolodex)
+      data = rolodex.data
+      name = data["Organization"].to_s.squish
+      return if name.blank? || retired_record?(data["OrgID"]) || coded(data["OrgID"]) || @name_matcher.call(name)
+
+      label = "#{rolodex.fm_id} #{rolodex.name}".squish
+      organization = Organization.create(name: clip(name), created_by_id: @import_user_id, updated_by_id: @import_user_id)
+      return failed(organization, label) unless organization.persisted?
+
+      record(:created, "#{label} → ##{organization.id} (#{organization.name}), named on the Rolodex card of someone staffing a project that wasn't imported")
     end
 
     def agency_outcome(organization)
