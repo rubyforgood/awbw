@@ -1372,15 +1372,25 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(update.dig(:properties, :changes)).to eq("submitted_answer" => { before: "42111", after: "99999" })
     end
 
-    it "logs an answer a reapplication clears" do
+    it "keeps the license answers on file when a reapplication leaves them blank" do
       apply
-      events = []
-      allow(Analytics::LifecycleBuffer).to receive(:push).and_wrap_original { |push, event| events << event && push.call(event) }
+      post event_public_registration_path(event),
+           params: {
+             scholarship_requested: "true",
+             public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
+               essay_field.id.to_s => "this answer has plenty of words",
+               first_name_field.id.to_s => "Cy",
+               last_name_field.id.to_s => "Reed",
+               primary_email_field.id.to_s => "cy@example.com",
+               ce_fid("ce_credit_interest") => "Yes",
+               ce_fid("ce_license_number") => "",
+               ce_fid("ce_license_kind") => ""
+             } }
+           }
 
-      apply(license_number: "")
-
-      update = events.find { |event| event[:name] == "update.form_answer" }
-      expect(update.dig(:properties, :changes)).to eq("submitted_answer" => { before: "42111", after: "" })
+      answers = FormSubmission.find_by!(role: "continuing_education", event: event).form_answers
+      expect(answers.find_by(form_field_id: ce_fid("ce_license_number")).submitted_answer).to eq("42111")
+      expect(answers.find_by(form_field_id: ce_fid("ce_license_kind")).submitted_answer).to eq("LCSW")
     end
 
     it "shows the newest CE answers on the ticket" do

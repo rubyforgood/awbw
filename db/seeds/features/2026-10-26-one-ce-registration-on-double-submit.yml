@@ -9,5 +9,6 @@ summary: >-
   updated in place, and each changed or cleared answer shows in the activity log.
 pro_tips:
   - "Every registration form submission is still kept, so you can see each time they applied."
+  - "Leaving the license number, type, state, or expiry blank when reapplying keeps what they entered before."
   - "Updating the license from the CE callout writes it onto that event's CE answers, never another event's."
 action_path: "/events"
