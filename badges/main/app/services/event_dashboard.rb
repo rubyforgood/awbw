@@ -1391,7 +1391,7 @@ class EventDashboard
     FormAnswer
       .where(form_field_id: field_ids)
       .joins(:form_submission)
-      .where(form_submissions: { person_id: registrant_ids })
+      .where(form_submissions: { event_id: event.id, person_id: registrant_ids })
       .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
       .flat_map do |person_id, submitted_answer|
         submitted_answer.to_s.split(",").map(&:strip)
@@ -1447,7 +1447,7 @@ class EventDashboard
     FormAnswer
       .where(form_field_id: field.id)
       .joins(:form_submission)
-      .where(form_submissions: { person_id: registrant_ids })
+      .where(form_submissions: { event_id: event.id, person_id: registrant_ids })
       .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
       .flat_map do |person_id, submitted_answer|
         submitted_answer.to_s.split(",").map(&:strip)
