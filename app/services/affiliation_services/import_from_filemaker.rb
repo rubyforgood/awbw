@@ -423,12 +423,16 @@ module AffiliationServices
       address.update(filemaker_code: Address.join_filemaker_codes(address.filemaker_code, code)) || failed(address, label)
     end
 
+    # Of the organizations carrying the code, the one FileMaker means.
     def organization_for(code)
       code = code.to_s.strip
       return if code.blank?
 
       ids = @organizations.ids(code)
-      Organization.find_by(id: ids.first) if ids.any?
+      return Organization.find_by(id: ids.first) if ids.size < 2
+
+      @names ||= OrganizationServices::FilemakerNames.new(projects: @projects.values)
+      @names.pick(Organization.where(id: ids).order(:id).to_a)
     end
 
     def failed(record, label)

@@ -22,6 +22,13 @@ module FilemakerValues
     P2476 P2497 P2605 P2762
   ].freeze
   RETIRED_MARKER = /\b(do not use|delete)\b/i
+  # Codes whose portal organization is the FileMaker record under a name the import can't
+  # match (a typo, an acronym, a rebrand), so the import trusts the code over the name.
+  # P2156 is retired in FileMaker but imports onto the portal org already carrying it.
+  SAME_PLACE_CODES = %w[
+    P0228 P0256 P0324 P0431 P0496 P0567 P0643 P0760 P0780 P0790 P0794 P0873 P0889 P1460 P1889
+    P2120 P2156
+  ].freeze
   # Retired in FileMaker, but no namesake there shares a city with it, so it comes in as its
   # own organization, its name tidied of the marker and told apart by its code.
   RETIRED_RENAMED = %w[ORG01126 ORG02287 ORG05066].freeze
@@ -73,6 +80,10 @@ module FilemakerValues
 
   def retired_record?(code)
     RETIRED_RECORDS.include?(code.to_s.strip)
+  end
+
+  def same_place_code?(code)
+    SAME_PLACE_CODES.include?(code.to_s.strip)
   end
 
   def duplicate_of(code)
