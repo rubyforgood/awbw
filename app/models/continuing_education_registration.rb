@@ -38,6 +38,8 @@ class ContinuingEducationRegistration < ApplicationRecord
   validates :hours, numericality: { greater_than_or_equal_to: 0 }
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :license_belongs_to_registrant
+  # Create-only: merges move CE rows across first and fold the duplicates afterward.
+  validates :professional_license, uniqueness: { scope: :event_registration_id, message: "already has CE on this registration" }, on: :create
   validate :cost_not_below_allocations, on: :update
 
   scope :for_event, ->(event_id) { joins(:event_registration).where(event_registrations: { event_id: event_id }) }

@@ -31,6 +31,26 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg.errors[:professional_license]).to include("must belong to the registrant")
     end
 
+    describe "one CE registration per license on a registration" do
+      let(:registration) { create(:event_registration) }
+      let(:license) { create(:professional_license, person: registration.registrant) }
+
+      before { create(:continuing_education_registration, event_registration: registration, professional_license: license) }
+
+      it "rejects a second CE registration for the same license" do
+        duplicate = build(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+        expect(duplicate).not_to be_valid
+        expect(duplicate.errors[:professional_license]).to include("already has CE on this registration")
+      end
+
+      it "allows CE for another of the registrant's licenses" do
+        second_license = create(:professional_license, person: registration.registrant, kind: "LMFT", number: "77777")
+
+        expect(build(:continuing_education_registration, event_registration: registration, professional_license: second_license)).to be_valid
+      end
+    end
+
     describe "cost_not_below_allocations" do
       it "allows setting cost above allocations" do
         ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
