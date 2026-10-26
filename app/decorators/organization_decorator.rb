@@ -67,6 +67,13 @@ class OrganizationDecorator < ApplicationDecorator
     Organization::ORGANIZATION_TYPE_OTHER
   end
 
+  # The type as a short caption: an Other type shows its description, and a school says so.
+  def organization_type_caption
+    type = organization_type_option
+    type = object.organization_type_other if type == Organization::ORGANIZATION_TYPE_OTHER && object.organization_type_other.present?
+    [ type, ("School" if object.school?) ].compact_blank.join(" · ").presence
+  end
+
   # Star marking a high-profile organization, shown next to the org name on list
   # pages (event dashboard, background reporting). Nil for ordinary orgs so it
   # renders nothing.

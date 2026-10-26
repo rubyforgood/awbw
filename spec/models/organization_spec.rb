@@ -321,6 +321,12 @@ RSpec.describe Organization do
         expect(results).to contain_exactly(company, agency)
       end
 
+      it "matches School on the school flag, whatever the type" do
+        school = create(:organization, organization_type: "Government agency", school: true)
+        expect(Organization.search_by_params(organization_types: [ "School" ])).to contain_exactly(school)
+        expect(Organization.search_by_params(organization_types: [ "For-profit", "School" ])).to contain_exactly(company, school)
+      end
+
       it "counts unlisted legacy values as Other" do
         expect(Organization.search_by_params(organization_types: [ "Other" ])).to contain_exactly(legacy_other)
       end

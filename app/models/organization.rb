@@ -65,6 +65,9 @@ class Organization < ApplicationRecord
   # so an unmatched select can't silently save as the first option.
   ORGANIZATION_TYPE_OTHER = "Other"
   ORGANIZATION_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", ORGANIZATION_TYPE_OTHER ].freeze
+  # The index's Type filter also offers School, which matches the school flag whatever the type.
+  SCHOOL_TYPE_FILTER = "School"
+  ORGANIZATION_TYPE_FILTER_OPTIONS = (ORGANIZATION_TYPES - [ ORGANIZATION_TYPE_OTHER ] + [ SCHOOL_TYPE_FILTER, ORGANIZATION_TYPE_OTHER ]).freeze
 
   # Validations
   validates :logo,
@@ -168,9 +171,11 @@ class Organization < ApplicationRecord
   scope :with_organization_types, ->(types) {
     types = Array(types).compact_blank
     next all if types.empty?
-    next where(organization_type: types) unless types.include?(ORGANIZATION_TYPE_OTHER)
 
-    where(organization_type: types).or(where.not(organization_type: ORGANIZATION_TYPES + [ "" ]))
+    matches = where(organization_type: types - [ SCHOOL_TYPE_FILTER ])
+    matches = matches.or(where.not(organization_type: ORGANIZATION_TYPES + [ "" ])) if types.include?(ORGANIZATION_TYPE_OTHER)
+    matches = matches.or(where(school: true)) if types.include?(SCHOOL_TYPE_FILTER)
+    matches
   }
 
   scope :category_names_all, ->(names) {

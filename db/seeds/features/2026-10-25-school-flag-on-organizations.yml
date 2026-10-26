@@ -6,3 +6,6 @@ pr_number: 2866
 summary: >-
   A School checkbox on the organization edit page, under Organization type, flags an organization
   as a school whatever its type.
+pro_tips:
+  - "Pick School in the organizations page's Type filter to find every school, whatever its type."
+  - "Admins see each organization's type, and School, in small text under its name on the organizations page."

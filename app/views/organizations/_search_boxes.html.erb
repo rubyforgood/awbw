@@ -13,7 +13,7 @@
           selected: Array(params[:age_range_ids]).map(&:to_i), placeholder: "Any age group",
           wrapper_class: "w-full md:flex-1" %>
     <%= render "shared/filter_multiselect", param: :organization_types, label: "Type",
-          options: Organization::ORGANIZATION_TYPES,
+          options: Organization::ORGANIZATION_TYPE_FILTER_OPTIONS,
           selected: Array(params[:organization_types]), placeholder: "Any type",
           wrapper_class: "w-full md:flex-1" %>
     <%= render "shared/filter_text", param: :address, label: "Address", submit: true,

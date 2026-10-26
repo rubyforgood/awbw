@@ -1,5 +1,5 @@
 module OrganizationHelper
-  def organization_profile_button(organization, truncate_at: nil, subtitle: nil, label: nil, data: {}, inactive: false, tint: nil, compact: false)
+  def organization_profile_button(organization, truncate_at: nil, subtitle: nil, caption: nil, label: nil, data: {}, inactive: false, tint: nil, compact: false)
     # Compact mode shrinks the control to roughly a text input's height, for use
     # inline beside form fields (e.g. the affiliation editor rows).
     padding = compact ? "px-3 py-1" : "px-4 py-2"
@@ -80,9 +80,15 @@ module OrganizationHelper
         "".html_safe
       end
 
+      caption_tag = if caption.present?
+        content_tag(:span, caption, class: "mt-0.5 text-2xs text-gray-500 font-normal truncate")
+      else
+        "".html_safe
+      end
+
       text_block = content_tag(
         :div,
-        name + subtitle_tag,
+        name + subtitle_tag + caption_tag,
         class: "flex flex-col leading-tight text-left min-w-0"
       )
 

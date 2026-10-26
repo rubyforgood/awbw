@@ -51,6 +51,19 @@ RSpec.describe "/organizations", type: :request do
       expect(response).to be_successful
       expect(response.body).to include("13-17")
     end
+
+    it "captions each card with its type for admins only" do
+      organization = Organization.create!(valid_attributes.merge(organization_type: "For-profit", school: true))
+      create(:affiliation, organization: organization, person: create(:person))
+
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
+      expect(response.body).to include("For-profit · School")
+
+      sign_in user
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
+      expect(response.body).to include(organization.name)
+      expect(response.body).not_to include("For-profit · School")
+    end
   end
 
   describe "GET /show" do
