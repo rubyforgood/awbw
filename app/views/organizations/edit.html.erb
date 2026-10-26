@@ -34,7 +34,7 @@
     <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
       <div class="mt-4 flex justify-end">
         <%= render "application/activity_log", record: @organization,
-                   events: Analytics::OrganizationActivityEvents.new(@organization).relation %>
+                   events: Analytics::OrganizationActivityEvents.new(@organization).change_log %>
       </div>
     <% end %>
   </div>

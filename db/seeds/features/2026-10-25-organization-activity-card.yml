@@ -5,4 +5,4 @@ released_on: 2026-10-25
 pr_number: 2866
 summary: >-
   The organization edit page's Associated records now has an Activity card, like the person edit
-  page, opening the activity timeline scoped to that organization and its addresses.
+  page, opening the activity timeline scoped to that organization.
