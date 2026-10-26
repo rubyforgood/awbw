@@ -67,6 +67,25 @@ RSpec.describe PersonServices::ReconcileProfessionalLicenses do
     expect(person.professional_licenses.reload.count).to eq(3)
   end
 
+  it "splits a license type typed into the number of an existing license" do
+    typed = license(number: nil, kind: nil)
+    typed.update_columns(number: "LMFT 42111")
+
+    described_class.new(person).call
+
+    expect(typed.reload).to have_attributes(kind: "LMFT", number: "42111")
+  end
+
+  it "merges a typed-in license into the matching license it duplicates" do
+    real = license(number: "42111", kind: "LMFT")
+    typed = license(number: nil, kind: nil)
+    typed.update_columns(number: "LMFT 42111")
+
+    described_class.new(person).call
+
+    expect(person.professional_licenses.reload.pluck(:id)).to eq([ real.id ])
+  end
+
   it "moves the placeholder's CE registrations onto the survivor" do
     real = license(number: "LIC-A")
     placeholder = license(number: nil)

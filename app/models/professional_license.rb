@@ -18,6 +18,11 @@ class ProfessionalLicense < ApplicationRecord
   # dependent: :destroy cascade below clears those registrations.
   before_destroy :prevent_destroy_with_ce, prepend: true
   before_validation :default_issuing_country
+  before_validation :split_kind_out_of_number
+
+  # California BBS license types, recognized when typed in front of the number ("LMFT 42111").
+  TYPED_KINDS = %w[LMFT LCSW LPCC LEP AMFT ACSW APCC].freeze
+  TYPED_KIND_PATTERN = /\A(#{TYPED_KINDS.join("|")})(?=[\s#:.\-\d])[\s#:.\-]*(\S.*)\z/i
 
   # A license is identified by its kind + number, so the same number under two
   # different kinds is allowed; only a duplicate (kind, number) pair is rejected.
@@ -59,7 +64,17 @@ class ProfessionalLicense < ApplicationRecord
   # the person's single placeholder license (both nil) rather than spawning
   # duplicate placeholders.
   def self.find_or_create_for(person:, number: nil, kind: nil)
+    kind, number = split_kind_from_number(kind: kind, number: number)
     find_or_create_by(person: person, number: number.presence, kind: kind.presence)
+  end
+
+  # [kind, number], with a known license type typed in front of the number moved
+  # into the kind. Left as given when the kind is already set.
+  def self.split_kind_from_number(kind:, number:)
+    return [ kind, number ] if kind.present?
+
+    match = number.to_s.strip.match(TYPED_KIND_PATTERN)
+    match ? [ match[1].upcase, match[2] ] : [ kind, number ]
   end
 
   # Completeness: have we recorded the actual license number yet?
@@ -95,6 +110,10 @@ class ProfessionalLicense < ApplicationRecord
   # A US state is a US license; the country only means something beside a state outside the USA.
   def default_issuing_country
     self.issuing_country = Address::DEFAULT_COUNTRY if issuing_state.in?(Address::US_STATE_ABBREVIATIONS)
+  end
+
+  def split_kind_out_of_number
+    self.kind, self.number = self.class.split_kind_from_number(kind: kind, number: number)
   end
 
   def prevent_destroy_with_ce

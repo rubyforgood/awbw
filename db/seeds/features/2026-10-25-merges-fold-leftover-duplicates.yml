@@ -10,3 +10,4 @@ summary: >-
 pro_tips:
   - "Merging two registrations for the same event now also combines a CE signup that was still waiting on a license number with the one that has it."
   - "A phone number matches on its digits, so 555 400-1000 and +1 (555) 400-1000 become one."
+  - "A license number typed with its type in front, like LMFT 42111, is saved as type LMFT and number 42111 — on new registrations, and when people merge."
