@@ -2,6 +2,34 @@
 
 - **Status:** Proposed
 - **Date:** 2026-10-17
+- **Updated:** 2026-10-25
+
+## TL;DR
+
+`fm:import_organizations` runs after `fm:import_people` (#2630) in three steps — the contact
+people agency cards name, then organizations and projects
+(`OrganizationServices::ImportFromFilemaker`), then affiliations and work addresses
+(`AffiliationServices::ImportFromFilemaker`). Row counts are production's, profiled
+2026-10-12 (ADR-0005).
+
+| Archive table | Rows | What a row is | Becomes | Code it leaves |
+|---|---|---|---|---|
+| `fm_organizations` | 7,240 | An umbrella organization or agency (`OrgID`, `ParentID`) | An `Organization`, parent of its programs — or, with exactly one project, the same org as that program | `ORG…` on the org |
+| `fm_projects` | 2,007 | One art program run at an organization (`ProjectID`, `OrgID`) | An `Organization` (the program) nested under its organization; `Locality` and districts onto its address | `P…` on the org |
+| `fm_personnels` | 9,037 | A person assigned to a project, with role and status (`PersonID`, `ProjectID`) | A Facilitator `Affiliation` at the project's org, plus a comment naming the FileMaker role | `PS…` on the affiliation |
+| `fm_people_to_organizations` | 1,128 | A person's job at an organization, with title (`PersonID`, `OrgID`) | A job `Affiliation` with that title, undated | `RecordID` on the affiliation |
+| `fm_rolodexes` | 39,795 | A person's card (`OrgID`, `Organization`, `Title`, `WorksiteAddrsID`), or an agency's own card (`isAgency__c`) | A person's card: a job `Affiliation` at its organization, and its work addresses on that org. An agency's card: fills the org's website, mission, email and addresses; its contact person becomes a `Person` | None — the card's ID is the person's, from the people pass |
+| `fm_addresses` | 28,556 | An address under a card (`RolodexID`), an organization (`OrgID`), or both | An `Address` on the org, always Work (Mailing/Postal becomes its invoice address); the people pass already took the personal ones | `AddrsID` on the address |
+| `fm_phone_numbers` | 34,040 | A phone under a card, an organization, or both | A phone `ContactMethod` on the org | `PhoneID` on the phone |
+| `fm_email_addresses` | 29 | An organization's email (`OrgID`) | The org's `email`, when blank | None |
+
+- **Matching:** each row finds its record by `filemaker_code` first, then exact name, so a
+  rerun re-reads and re-fills rather than duplicating.
+- **Fields fill blanks only;** where the portal disagrees it keeps its value, noted in a
+  comment and the run's report.
+- **Left out:** 45 codes staff retired in FileMaker (24 fold into the organization they
+  duplicated, 21 are skipped), and event registrations, payments, funding, notes and
+  activities.
 
 ## Context
 
@@ -11,16 +39,7 @@ everything that ties a person to an organization — job titles, facilitator ass
 and work addresses — so they can arrive with the organizations they belong to. This is
 that second pass.
 
-The archive tables involved (row counts from the export):
-
-| Archive table | Rows | What a row is |
-|---|---|---|
-| `fm_organizations` | 7,191 | An umbrella organization or agency (`OrgID`, `ParentID`) |
-| `fm_projects` | 1,976 | One art program run at an organization (`ProjectID`, `OrgID`) |
-| `fm_personnels` | 8,907 | A person assigned to a project, with role and agreement status (`PersonID`, `ProjectID`) |
-| `fm_people_to_organizations` | 1,127 | A person's job at an organization, with title (`PersonID`, `OrgID`) |
-| `fm_rolodexes` | 39,608 | The person's own card: their organization (`OrgID`, `Organization`), `Title`, worksite (`WorksiteAddrsID`); or, flagged `isAgency__c`, an agency's card |
-| `fm_addresses`, `fm_phone_numbers`, `fm_email_addresses` | 28,398 / 33,915 / 29 | Contact rows, filed under a Rolodex card (`RolodexID`), an organization (`OrgID`), or both |
+The archive tables involved, and where each lands, are in the TL;DR above.
 
 Constraints already decided elsewhere:
 
@@ -63,11 +82,13 @@ Constraints already decided elsewhere:
     → Other. Any other word ("School", "Educational Institution", "Individual", "Grassroots")
     is Other with the word as its description. A value naming two types, as FileMaker's
     multi-select stored them, takes the first.
+  - **School:** a type naming "school" also sets `school`, independent of the type, since
+    FileMaker kept no school flag of its own (#2866).
   - Every FileMaker organization comes over, whether or not a project or person points at it
     (decided 2026-10-24) — except one staff retired by renaming it ("DELETE", "… Do Not Use",
     "created in error"). Those are listed by code in `FilemakerValues::RETIRED_RECORDS`
-    (48 of prod's 53; the other 5 a portal org already carries, so they import) and skipped
-    and reported. Most retired organizations are "X Do Not Use" duplicates whose Rolodex cards
+    (45 of prod's 53; 3 more come in renamed, below, and the other 5 a portal org already
+    carries, so they import) and skipped and reported. Most retired organizations are "X Do Not Use" duplicates whose Rolodex cards
     and jobs still point at them (76 cards in prod), so the 24 whose namesake shares a city with
     them are mapped in `RETIRED_DUPLICATE_OF` to the one they duplicated and fold into it like a
     merged project: the code, blanks, addresses, phones and projects move over and what names the
@@ -174,7 +195,18 @@ Constraints already decided elsewhere:
   address the organization doesn't hold, and a phone number it doesn't hold — a phone
   record (`contact_methods`) on the organization, as a person's are (decided 2026-10-25).
   Each address and phone carries its archive row's ID as its own `filemaker_code` (ADR-0005).
-- **Out of scope:** event registrations (`fm_participants`, 68,497 rows), payments, funding,
+- **Who and when:** a new record's `created_by` / `updated_by` are the staff FileMaker named
+  (`EnteredBy`/`CreatedBy`, `ModifiedBy`), resolved through `StaffAlias`
+  (`data:load_staff_aliases`), else the import user picked in Settings; its `created_at` /
+  `updated_at` are FileMaker's own dates. An existing record keeps its stamps. The task aborts
+  with no import user or no staff aliases, and reports every staff name no alias answers to
+  (#2863).
+- **Running it:** dry-run by default (`DRY_RUN=false` writes). A real run commits each batch
+  as it goes, so a stopped run keeps what it finished and the rerun skips it. Every record it
+  creates or fills is logged under the run's name, which `fm:undo_import RUN=…` reverses.
+  `FM_IDS` reads just the named archive rows — an organization always with its projects, and
+  a project with its organization. The report is saved as an ActiveStorage blob.
+- **Out of scope:** event registrations (`fm_participants`, 68,850 rows), payments, funding,
   notes and activities — each its own pass.
 
 ## Open questions
