@@ -698,9 +698,8 @@ class EventRegistrationsController < ApplicationController
     form = registration.event.registration_form
     return [] unless form
 
-    # Event-less submissions predate event_id, so they can't be attributed to another event.
     entries = registration.registrant.form_submissions
-      .where(form: form, event: [ registration.event, nil ])
+      .where(form: form, event: registration.event)
       .order(:created_at)
       .includes(form_answers: :form_field)
       .map(&:org_entry)

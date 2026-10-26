@@ -1414,11 +1414,11 @@ RSpec.describe EventRegistration, type: :model do
       field = create(:form_field, form: form, field_identifier: "organization_name")
 
       pending = create(:event_registration, event: event)
-      pending_submission = create(:form_submission, person: pending.registrant, form: form)
+      pending_submission = create(:form_submission, person: pending.registrant, form: form, event: event)
       create(:form_answer, form_submission: pending_submission, form_field: field, submitted_answer: "Unlisted Org")
 
       linked = create(:event_registration, event: event)
-      linked_submission = create(:form_submission, person: linked.registrant, form: form)
+      linked_submission = create(:form_submission, person: linked.registrant, form: form, event: event)
       create(:form_answer, form_submission: linked_submission, form_field: field, submitted_answer: "Linked Org")
       create(:event_registration_organization, event_registration: linked)
 
@@ -1429,11 +1429,11 @@ RSpec.describe EventRegistration, type: :model do
 
     it "filters none: no organization name submitted and nothing linked" do
       form = create(:form)
-      create(:event_form, :registration, event: event, form: form)
+      create(:event_form, :registration, event: event, form: form, event: event)
       field = create(:form_field, form: form, field_identifier: "organization_name")
 
       pending = create(:event_registration, event: event)
-      pending_submission = create(:form_submission, person: pending.registrant, form: form)
+      pending_submission = create(:form_submission, person: pending.registrant, form: form, event: event)
       create(:form_answer, form_submission: pending_submission, form_field: field, submitted_answer: "Unlisted Org")
 
       linked = create(:event_registration, event: event)
@@ -1442,6 +1442,19 @@ RSpec.describe EventRegistration, type: :model do
       no_answer = create(:event_registration, event: event)
 
       expect(EventRegistration.organization_linking_status("none", event)).to contain_exactly(no_answer)
+    end
+
+    it "ignores an organization name submitted for another event on the shared form" do
+      form = create(:form)
+      other_event = create(:event)
+      [ event, other_event ].each { |e| create(:event_form, :registration, event: e, form: form) }
+      field = create(:form_field, form: form, field_identifier: "organization_name")
+      registration = create(:event_registration, event: event)
+      other_submission = create(:form_submission, person: registration.registrant, form: form, event: other_event)
+      create(:form_answer, form_submission: other_submission, form_field: field, submitted_answer: "Other Event Org")
+
+      expect(EventRegistration.organization_linking_status("pending", event)).to be_empty
+      expect(EventRegistration.organization_linking_status("none", event)).to contain_exactly(registration)
     end
 
     it "treats every unlinked registration as none when the form has no organization field" do

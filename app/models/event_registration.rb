@@ -495,7 +495,7 @@ class EventRegistration < ApplicationRecord
     return nil unless field
 
     FormAnswer.joins(:form_submission)
-      .where(form_field_id: field.id, form_submissions: { form_id: form.id })
+      .where(form_field_id: field.id, form_submissions: { event_id: event.id, form_id: form.id })
       .where.not(submitted_answer: [ nil, "" ])
       .select(Arel.sql("form_submissions.person_id"))
   end
