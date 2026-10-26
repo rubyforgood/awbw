@@ -91,7 +91,7 @@ RSpec.describe "Membership subscription checkouts", type: :request do
   end
 
   it "defers the first charge to the day after a year that is already paid" do
-    membership = create(:membership, person: person)
+    membership = create(:membership, person: person, start_date: nil, end_date: nil)
     invoice = create(:membership_invoice, membership: membership, cost_cents: 2_500,
       start_date: Date.current, end_date: Date.current + 1.year - 1.day)
     create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: invoice, amount: 2_500)
@@ -151,6 +151,43 @@ RSpec.describe "Membership subscription checkouts", type: :request do
     post memberships_subscription_checkouts_path
 
     expect(response).to redirect_to("https://checkout.stripe.com/membership")
+  end
+
+  it "prices the subscription from an already-billed next year" do
+    membership = create(:membership, person: person, cost_cents: 1_500)
+    create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: Date.current + 1.year, end_date: Date.current + 2.years - 1.day)
+    sign_in user
+
+    post memberships_subscription_checkouts_path
+
+    expect(checkout_args.dig(:line_items, 0, :price_data, :unit_amount)).to eq(2_500)
+  end
+
+  it "defers the first charge to an upcoming unpaid year rather than charging now" do
+    membership = create(:membership, person: person)
+    upcoming = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: Date.current + 1.year, end_date: Date.current + 2.years - 1.day)
+    sign_in user
+
+    post memberships_subscription_checkouts_path
+
+    expect(checkout_args[:subscription_data][:billing_cycle_anchor])
+      .to eq(Time.use_zone(Membership::TIME_ZONE) { upcoming.start_date.beginning_of_day.to_i })
+    expect(checkout_args[:subscription_data][:proration_behavior]).to eq("none")
+  end
+
+  it "refuses automatic renewal while the next year is comped" do
+    membership = create(:membership, person: person)
+    create(:membership_invoice, :comped, membership: membership,
+      start_date: Date.current + 1.year, end_date: Date.current + 2.years - 1.day)
+    sign_in user
+
+    post memberships_subscription_checkouts_path
+
+    expect(response).to redirect_to(person_path(person))
+    expect(flash[:alert]).to match(/already covered/)
+    expect(checkout_args).to be_empty
   end
 
   it "is refused while membership is disabled" do

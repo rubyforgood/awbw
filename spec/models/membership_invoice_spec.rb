@@ -96,8 +96,7 @@ RSpec.describe MembershipInvoice, type: :model do
     end
 
     it "does not treat a persisted invoice as overlapping itself" do
-      existing.cost_cents = 3_000
-      expect(existing).to be_valid
+      expect(existing.reload).to be_valid
     end
   end
 
@@ -139,14 +138,25 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
-  describe "#cost_cents" do
-    it "cannot be lowered below what has already been allocated" do
-      invoice = create(:membership_invoice, cost_cents: 2_500)
-      create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: invoice, amount: 2_500)
+  describe "immutability" do
+    let(:invoice) { create(:membership_invoice, cost_cents: 2_500) }
 
-      invoice.reload.cost_cents = 1_000
+    it "refuses to change the cost after creation" do
+      invoice.cost_cents = 1_000
+
       expect(invoice).not_to be_valid
-      expect(invoice.errors[:cost_cents].join).to match(/already allocated/)
+      expect(invoice.errors[:base].join).to match(/can't be changed/)
+    end
+
+    it "refuses to change the dates after creation" do
+      invoice.start_date += 1.day
+
+      expect(invoice).not_to be_valid
+      expect(invoice.errors[:base].join).to match(/can't be changed/)
+    end
+
+    it "allows a resave with no changes" do
+      expect(invoice.reload).to be_valid
     end
   end
 
@@ -300,10 +310,19 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(invoice.deletion_blocked_reason).to match(/payments or credits/)
     end
 
-    it "is false when comped" do
+    it "is true for a future comped invoice, so a mis-comped year can be reissued" do
       sibling(Date.current + 2.years)
       comped = create(:membership_invoice, :comped, membership: subscription,
         start_date: Date.current + 1.day, end_date: Date.current + 1.year)
+
+      expect(comped).to be_deletable
+      expect(comped.deletion_blocked_reason).to be_nil
+    end
+
+    it "is false for a comped invoice that has already started" do
+      sibling(Date.current + 2.years)
+      comped = create(:membership_invoice, :comped, membership: subscription,
+        start_date: Date.current - 1.year, end_date: Date.current - 1.day)
 
       expect(comped).not_to be_deletable
       expect(comped.deletion_blocked_reason).to eq("it is comped")

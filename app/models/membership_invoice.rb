@@ -26,12 +26,13 @@ class MembershipInvoice < ApplicationRecord
   before_validation :derive_end_date, on: :create
   before_destroy :prevent_destroy_unless_deletable
   after_save :sync_membership_dates, if: :paid_in_full?
+  after_commit :enqueue_subscription_price_sync, on: :create, if: :next_billing_year?
 
   validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :end_date_not_before_start_date
   validate :no_overlapping_invoice_for_person
-  validate :cost_not_below_allocations, on: :update
+  validate :terms_cannot_change, on: :update
 
   def self.chargeable
     arel_table[:cost_cents].gt(0)
@@ -83,7 +84,7 @@ class MembershipInvoice < ApplicationRecord
 
   def deletion_blocked_reason
     return "it has payments or credits applied" if allocations.exists?
-    return "it is comped" if cost_cents.to_i.zero?
+    return "it is comped" if cost_cents.to_i.zero? && !upcoming?
     return "it covers today — click Cancel recurring first" if active_on?(Date.current) && !membership.autorenewal_cancelled?
     return "it is the membership's only invoice" unless other_invoices?
 
@@ -125,15 +126,23 @@ class MembershipInvoice < ApplicationRecord
     errors.add(:base, "This person already has a membership invoice overlapping #{start_date} to #{end_date}")
   end
 
-  def cost_not_below_allocations
-    return if cost_cents.blank?
-    return if cost_cents.to_i >= allocations_sum
+  private
 
-    errors.add(:cost_cents,
-      "can't be less than the amount already allocated (#{MoneyFormatter.dollars_from_cents(allocations_sum)})")
+  def terms_cannot_change
+    return if cost_cents == cost_cents_in_database &&
+      start_date == start_date_in_database &&
+      end_date == end_date_in_database
+
+    errors.add(:base, "A membership invoice can't be changed once it's created — delete it and add a new one")
   end
 
-  private
+  def next_billing_year?
+    Membership.enabled? && start_date.present? && start_date > Date.current
+  end
+
+  def enqueue_subscription_price_sync
+    SyncMembershipSubscriptionPriceJob.perform_later(id)
+  end
 
   def sync_membership_dates
     membership.sync_dates_from_invoice(self)

@@ -377,7 +377,7 @@ Rails.application.routes.draw do
     resources :membership_invoices, only: [ :new, :create ]
   end
 
-  resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ]
+  resources :membership_invoices, only: [ :index, :show, :destroy ]
 
   namespace :memberships do
     resources :subscription_checkouts, only: [ :create ]

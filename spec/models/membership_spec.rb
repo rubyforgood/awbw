@@ -119,6 +119,88 @@ RSpec.describe Membership, type: :model do
     end
   end
 
+  describe "#next_billing_cents" do
+    let(:membership) { create(:membership) }
+
+    it "uses the earliest future invoice's price over the membership's own cost" do
+      membership.update!(cost_cents: 1_500)
+      create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current + 1.year, end_date: Date.current + 2.years - 1.day)
+
+      expect(membership.next_billing_cents).to eq(2_500)
+    end
+
+    it "falls back to the membership's locked cost" do
+      membership.update!(cost_cents: 1_500)
+
+      expect(membership.next_billing_cents).to eq(1_500)
+    end
+
+    it "falls back to the standard cost" do
+      expect(membership.next_billing_cents).to eq(Membership.annual_cost_cents)
+    end
+
+    it "is zero when the next year is comped" do
+      create(:membership_invoice, :comped, membership: membership,
+        start_date: Date.current + 1.year, end_date: Date.current + 2.years - 1.day)
+
+      expect(membership.next_billing_cents).to eq(0)
+    end
+  end
+
+  describe "#next_billing_start_date" do
+    let(:membership) { create(:membership) }
+
+    it "is the day after paid coverage ends" do
+      membership = create(:membership, start_date: nil, end_date: nil)
+      invoice = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current - 1.month, end_date: Date.current + 11.months)
+      create(:allocation, source: create(:payment, amount_cents: 2_500),
+        allocatable: invoice, amount: 2_500)
+
+      expect(membership.reload.next_billing_start_date).to eq(invoice.end_date + 1.day)
+    end
+
+    it "is the next billed year when nothing covers today" do
+      upcoming = create(:membership_invoice, membership: membership,
+        start_date: Date.current + 1.month, end_date: Date.current + 13.months)
+
+      expect(membership.next_billing_start_date).to eq(upcoming.start_date)
+    end
+
+    it "is nil when the membership has lapsed with nothing ahead" do
+      create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current - 2.years, end_date: Date.current - 1.year - 1.day)
+
+      expect(membership.next_billing_start_date).to be_nil
+    end
+
+    it "is the day after coverage ends when a later year leaves a gap" do
+      membership = create(:membership, start_date: nil, end_date: nil)
+      covered = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current - 1.month, end_date: Date.current + 11.months)
+      create(:allocation, source: create(:payment, amount_cents: 2_500),
+        allocatable: covered, amount: 2_500)
+      create(:membership_invoice, membership: membership,
+        start_date: covered.end_date + 1.year, end_date: covered.end_date + 2.years)
+
+      expect(membership.reload.next_billing_start_date).to eq(covered.end_date + 1.day)
+    end
+
+    it "skips a comped or prepaid year to the next one that needs money" do
+      covered = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current - 1.month, end_date: Date.current + 11.months)
+      create(:allocation, source: create(:payment, amount_cents: 2_500),
+        allocatable: covered, amount: 2_500)
+      create(:membership_invoice, :comped, membership: membership,
+        start_date: covered.end_date + 1.day, end_date: covered.end_date + 1.year)
+      billed = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: covered.end_date + 1.year + 1.day, end_date: covered.end_date + 2.years)
+
+      expect(membership.next_billing_invoice).to eq(billed)
+    end
+  end
+
   describe "#stripe_subscription" do
     it "finds the Pay::Subscription carrying this membership's id in its metadata" do
       membership = create(:membership)

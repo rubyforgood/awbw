@@ -95,6 +95,35 @@ class Membership < ApplicationRecord
     membership_invoices.find { |invoice| invoice.active_on?(Date.current) } || membership_invoices.first
   end
 
+  # The earliest invoice starting after today — the year the next charge lands in.
+  def next_future_invoice
+    membership_invoices.where("start_date > ?", Date.current).order(:start_date).first
+  end
+
+  # The earliest future invoice that still needs money. Comped and prepaid years are
+  # skipped so the next charge lands on a year that can absorb it.
+  def next_billing_invoice
+    membership_invoices
+      .where("start_date > ?", Date.current)
+      .merge(MembershipInvoice.not_paid_in_full)
+      .order(:start_date)
+      .first
+  end
+
+  # What the next automatic charge should be. A comped year ahead returns 0.
+  def next_billing_cents
+    next_future_invoice&.cost_cents || cost_cents || Membership.annual_cost_cents
+  end
+
+  # The day the next automatic charge should land: the day after paid coverage ends
+  # (which fills a gap), the next billed year when nothing covers today, or nil when
+  # the membership has lapsed.
+  def next_billing_start_date
+    return end_date + 1.day if end_date.present? && covered_on?(Date.current)
+
+    next_billing_invoice&.start_date
+  end
+
   # Invoices that still owe money (comped and paid ones excluded), newest first —
   # what the profile card lists.
   def invoices_due
@@ -104,7 +133,8 @@ class Membership < ApplicationRecord
   def stripe_subscription
     return if person.blank?
 
-    person.pay_subscriptions.find { |sub| sub.metadata&.dig("membership_id").to_i == id }
+    person.pay_customers.flat_map(&:subscriptions)
+      .find { |sub| sub.metadata&.dig("membership_id").to_i == id }
   end
 
   def deletable?

@@ -184,7 +184,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshop_variation_ideas/index.html.erb" => "admin-only bg-blue-100",
     "app/views/membership_invoices/index.html.erb"      => "admin-only bg-blue-100",
     "app/views/membership_invoices/new.html.erb"        => "admin-only bg-blue-100",
-    "app/views/membership_invoices/edit.html.erb"       => "admin-only bg-blue-100",
+    "app/views/membership_invoices/show.html.erb"       => "admin-only bg-blue-100",
     "app/views/memberships/index.html.erb" => "admin-only bg-blue-100",
     "app/views/people/memberships/index.html.erb" => "admin-only bg-blue-100",
     "app/views/people/memberships/new.html.erb"   => "admin-only bg-blue-100",

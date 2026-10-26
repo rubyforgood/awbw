@@ -27,11 +27,21 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def auto_renewal_label
+    return "stops #{subscription_stop_date}" if subscription_stopping?
     return "enabled" if active? && !autorenewal_cancelled?
     return "cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}" if active?
     return "on — renews if the outstanding invoice is paid" if owes? && !autorenewal_cancelled?
 
     "off"
+  end
+
+  # Autopay switched off in Stripe's billing portal: the year is still paid, but nothing
+  # will renew it.
+  def subscription_stopping?
+    return false unless active? && !autorenewal_cancelled?
+
+    sub = stripe_subscription
+    sub.present? && sub.canceled? && !sub.ended?
   end
 
   def period_label
@@ -42,4 +52,10 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def stripe_active? = person.payment_processor&.subscribed?
+
+  private
+
+  def subscription_stop_date
+    stripe_subscription.ends_at.in_time_zone(Membership::TIME_ZONE).strftime("%b %-d, %Y")
+  end
 end

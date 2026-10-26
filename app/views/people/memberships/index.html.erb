@@ -86,7 +86,7 @@
           <% else %>
             <ul class="space-y-2">
               <% membership.membership_invoices.each do |invoice| %>
-                <%= render "membership_invoices/invoice_row", invoice: invoice, editable: true, linked: true %>
+                <%= render "membership_invoices/invoice_row", invoice: invoice, viewable: true, linked: true %>
               <% end %>
             </ul>
           <% end %>

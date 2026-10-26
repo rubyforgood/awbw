@@ -1,6 +1,6 @@
 class MembershipInvoicesController < ApplicationController
   before_action :set_membership, only: [ :new, :create ]
-  before_action :set_membership_invoice, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_membership_invoice, only: [ :show, :destroy ]
 
   def index
     authorize!
@@ -35,22 +35,6 @@ class MembershipInvoicesController < ApplicationController
 
   def show
     authorize! @membership_invoice
-    redirect_to person_memberships_path(@membership_invoice.registrant), status: :see_other
-  end
-
-  def edit
-    authorize! @membership_invoice
-  end
-
-  def update
-    authorize! @membership_invoice
-
-    if @membership_invoice.update(membership_invoice_params)
-      redirect_to person_memberships_path(@membership_invoice.person),
-        notice: "Membership invoice updated.", status: :see_other
-    else
-      render :edit, status: :unprocessable_content
-    end
   end
 
   def destroy
@@ -84,6 +68,6 @@ class MembershipInvoicesController < ApplicationController
   end
 
   def membership_invoice_params
-    params.expect(membership_invoice: [ :start_date, :end_date, :cost_dollars ])
+    params.expect(membership_invoice: [ :start_date, :cost_dollars ])
   end
 end

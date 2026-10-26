@@ -15,6 +15,9 @@
       <% if membership.period_label.present? %>
         <span><%= membership.period_label %></span>
       <% end %>
+      <% if membership.autorenewal_cancelled? || membership.subscription_stopping? %>
+        <span class="text-amber-700">Auto-renewal: <%= membership.auto_renewal_label %></span>
+      <% end %>
     </div>
   </div>
 

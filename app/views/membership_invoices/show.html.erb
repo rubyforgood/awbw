@@ -1,0 +1,55 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% invoice = @membership_invoice.decorate %>
+<% person = @membership_invoice.person %>
+
+<div class="border-primary/10 mx-auto max-w-2xl rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to person_memberships_path(person), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Membership
+    <% end %>
+  </div>
+
+  <h1 class="text-primary mb-1 font-display text-2xl font-bold">Membership invoice</h1>
+  <p class="mb-6 text-sm text-gray-500"><%= person.full_name %></p>
+
+  <div class="mb-6 flex flex-wrap items-center gap-2">
+    <%= render "membership_invoices/status_pill", invoice: invoice, linked: true %>
+  </div>
+
+  <dl class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+    <div>
+      <dt class="text-xs tracking-wide text-gray-500 uppercase">Period</dt>
+      <dd class="mt-1 font-medium text-gray-800"><%= invoice.period_range %></dd>
+    </div>
+    <div>
+      <dt class="text-xs tracking-wide text-gray-500 uppercase">Cost</dt>
+      <dd class="mt-1 font-medium text-gray-800"><%= invoice.cost %></dd>
+    </div>
+    <div>
+      <dt class="text-xs tracking-wide text-gray-500 uppercase">Paid</dt>
+      <dd class="mt-1 font-medium text-gray-800"><%= invoice.paid %></dd>
+    </div>
+    <% unless invoice.paid_in_full? %>
+      <div>
+        <dt class="text-xs tracking-wide text-gray-500 uppercase">Remaining</dt>
+        <dd class="mt-1 font-medium text-gray-800"><%= invoice.remaining %></dd>
+      </div>
+    <% end %>
+  </dl>
+
+  <div class="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-gray-200 pt-6">
+    <% if @membership_invoice.deletable? %>
+      <%= button_to "Delete invoice", membership_invoice_path(@membership_invoice),
+            method: :delete, class: button_classes(:danger_outline),
+            data: { turbo_confirm: "Delete this invoice? This cannot be undone." } %>
+    <% else %>
+      <p class="text-xs text-gray-500">Can't be deleted: <%= @membership_invoice.deletion_blocked_reason %>.</p>
+    <% end %>
+  </div>
+  <%= render "shared/audit_info", resource: @membership_invoice %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @membership_invoice %>
+    </div>
+  <% end %>
+</div>

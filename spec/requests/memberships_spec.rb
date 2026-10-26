@@ -15,6 +15,39 @@ RSpec.describe "Memberships", type: :request do
       end_date: start_date + 1.year - 1.day)
   end
 
+  def create_stripe_subscription(membership, ends_at: nil)
+    customer = Pay::Customer.create!(owner: membership.person, processor: "stripe",
+      processor_id: "cus_#{membership.id}", default: true)
+    Pay::Subscription.create!(customer: customer, name: "default",
+      processor_id: "sub_#{membership.id}", processor_plan: "membership",
+      status: "active", quantity: 1, ends_at: ends_at,
+      metadata: { "membership_id" => membership.id })
+  end
+
+  describe "GET /memberships" do
+    let(:frame) { { "Turbo-Frame" => "memberships_results" } }
+
+    before { sign_in admin }
+
+    it "shows when automatic renewal stops for a member who cancelled in Stripe" do
+      membership = create(:membership, person: person)
+      create_stripe_subscription(membership, ends_at: Time.utc(2027, 1, 1, 8))
+
+      get memberships_path, headers: frame
+
+      expect(response.body).to include("Auto-renewal: stops Jan 1, 2027")
+    end
+
+    it "leaves rows that are renewing alone" do
+      create(:membership, person: person)
+
+      get memberships_path, headers: frame
+
+      expect(response.body).to include(person.full_name)
+      expect(response.body).not_to include("Auto-renewal:")
+    end
+  end
+
   describe "GET /people/:person_id/memberships" do
     it "is not available to a signed-out visitor" do
       get person_memberships_path(person)
