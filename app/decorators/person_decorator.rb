@@ -102,6 +102,10 @@ class PersonDecorator < ApplicationDecorator
     user&.email.presence || object.email_on_file
   end
 
+  def profile_email_label
+    user&.email.present? ? "primary · user account" : "primary"
+  end
+
   def profile_phone
     phone_number.presence || user&.phone.presence
   end

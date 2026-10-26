@@ -89,23 +89,33 @@
               <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= mail_to @organization.email, @organization.email, class: "hover:text-primary" %>
             </span>
           <% end %>
-          <% if @organization.profile_show_phone? %>
-            <% phone = @organization.phone_number %>
-            <% if phone.present? %>
+          <% phone = @organization.phone_number %>
+          <% if phone.present? %>
+            <% if @organization.profile_show_phone? %>
               <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
                 <i class="fa-solid fa-phone text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i> <%= link_to phone, tel_href(phone), class: "hover:text-primary" %>
               </span>
+            <% elsif allowed_to?(:manage?, Organization) %>
+              <span class="<%= admin_only_chip_class %>" title="Phone (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= link_to phone, tel_href(phone), class: "hover:text-primary" %>
+              </span>
             <% end %>
           <% end %>
-          <% if @organization.profile_show_website? && @organization.website_url.present? %>
+          <% if @organization.website_url.present? %>
             <% safe_url = @organization.website_link_url %>
-            <% if safe_url.present? %>
+            <% if safe_url.present? && @organization.profile_show_website? %>
               <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
                 <i class="fa-solid fa-globe text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i> <%= link_to @organization.website_url, safe_url,
                               target: "_blank", rel: "noopener noreferrer",
                               class: "hover:text-primary" %>
               </span>
-            <% elsif allowed_to?(:edit?, @organization) %>
+            <% elsif safe_url.present? && allowed_to?(:manage?, Organization) %>
+              <span class="<%= admin_only_chip_class %>" title="Website (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= link_to @organization.website_url, safe_url,
+                              target: "_blank", rel: "noopener noreferrer",
+                              class: "hover:text-primary" %>
+              </span>
+            <% elsif safe_url.blank? && allowed_to?(:edit?, @organization) %>
               <span class="admin-only inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs text-red-700">
                 <i class="fa-solid fa-triangle-exclamation"></i>
                 Bad URL: "<%= link_to @organization.website_url, edit_organization_path(@organization, anchor: "website-url-field"), class: "underline" %>"

@@ -197,6 +197,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
         get person_path(person)
         chip = Capybara.string(response.body).find("span[title='Primary email (admin only)']")
         expect(chip).to have_text(email)
+        expect(chip).to have_text("(primary · user account)")
       end
 
       it "leaves the admin-only header chip off the owner's view" do
