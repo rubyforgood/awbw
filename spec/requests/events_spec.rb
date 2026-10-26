@@ -2360,6 +2360,29 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('text-blue-600')
       end
 
+      it "links the icon to the submissions page with a count badge when there's more than one" do
+        create(:event_form, event: event, form: reg_form, role: "registration")
+        2.times { create(:form_submission, person: person, form: reg_form, event: event) }
+        registration = event.event_registrations.find_by(registrant: person)
+
+        get registrants_event_path(event)
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)}']")
+        expect(link).to be_present
+        expect(link.text.strip).to eq("2")
+      end
+
+      it "shows no count badge for a single submission" do
+        create(:event_form, event: event, form: reg_form, role: "registration")
+        create(:form_submission, person: person, form: reg_form, event: event)
+        registration = event.event_registrations.find_by(registrant: person)
+
+        get registrants_event_path(event)
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)}']")
+        expect(link.text.strip).to be_empty
+      end
+
       it "reserves an empty slot (no icon) when person has not submitted, keeping later icons aligned" do
         create(:event_form, event: event, form: reg_form, role: "registration")
 

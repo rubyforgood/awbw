@@ -793,18 +793,47 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
 
     # A returning registrant appends a new submission each time, so the default
-    # view (no form_submission_id) must land on their freshest answers.
-    it "defaults to the most recently created submission when the registrant re-registered" do
-      older = FormSubmission.find_by(person: person, form: form)
-      older.form_answers.create!(form_field: essay_field, submitted_answer: "my older reasons")
-      newer = create(:form_submission, person: person, form: form, event: event)
-      newer.form_answers.create!(form_field: essay_field, submitted_answer: "my newer reasons")
+    # view (no form_submission_id) opens their freshest answers.
+    context "when the registrant re-registered" do
+      let!(:older) do
+        FormSubmission.find_by(person: person, form: form).tap do |submission|
+          submission.update!(created_at: Time.zone.local(2026, 9, 1, 10))
+          submission.form_answers.create!(form_field: essay_field, submitted_answer: "my older reasons")
+        end
+      end
+      let!(:newer) do
+        create(:form_submission, person: person, form: form, event: event, created_at: Time.zone.local(2026, 10, 2, 10)).tap do |submission|
+          submission.form_answers.create!(form_field: essay_field, submitted_answer: "my newer reasons")
+        end
+      end
 
+      it "opens the newest submission and collapses the earlier ones" do
+        get event_public_registration_path(event, person_id: person.id)
+
+        page = Nokogiri::HTML(response.body)
+        collapsed = page.at_css("details#form-submission-#{older.id}")
+        expect(response.body).to include("Earlier submissions")
+        expect(collapsed).to be_present
+        expect(collapsed["open"]).to be_nil
+        expect(collapsed.text).to include("my older reasons").and include("September 01, 2026")
+        expect(page.css("details").text).not_to include("my newer reasons")
+        expect(response.body).to include("my newer reasons")
+      end
+
+      it "opens a named submission and collapses the rest" do
+        get event_public_registration_path(event, person_id: person.id, form_submission_id: older.id)
+
+        page = Nokogiri::HTML(response.body)
+        expect(response.body).to include("Other submissions")
+        expect(page.at_css("details#form-submission-#{newer.id}").text).to include("my newer reasons")
+        expect(page.css("details").text).not_to include("my older reasons")
+      end
+    end
+
+    it "shows no other submissions when there is only one" do
       get event_public_registration_path(event, person_id: person.id)
 
-      expect(response).to have_http_status(:success)
-      expect(response.body).to include("my newer reasons")
-      expect(response.body).not_to include("my older reasons")
+      expect(response.body).not_to include("Earlier submissions")
     end
 
     it "renders header and field-label HTML unescaped on the response page" do

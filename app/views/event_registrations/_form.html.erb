@@ -44,7 +44,7 @@
           while it differs from what's stored). A colored icon inside the select
           echoes the status color. ---- %>
       <% event_form_ids = f.object.event.form_ids %>
-      <% submissions = event_form_ids.any? ? FormSubmission.where(event_id: f.object.event.id, person_id: f.object.registrant_id).joins(:form).where(form_id: event_form_ids).order(Arel.sql("forms.name")).pluck(Arel.sql("forms.name"), :created_at) : [] %>
+      <% submissions = event_form_ids.any? ? FormSubmission.where(event_id: f.object.event.id, person_id: f.object.registrant_id).joins(:form).where(form_id: event_form_ids).order(:created_at).pluck(:id, Arel.sql("forms.name"), :created_at) : [] %>
       <% status_icon_colors = {
            "registered"            => "text-blue-600",
            "attended"              => "text-green-600",
@@ -187,14 +187,16 @@
             <% end %>
           <% end %>
 
-          <% submissions.each_with_index do |(form_name, ts), i| %>
-            <%= link_to event_registrant_submissions_path(f.object.event, person_id: f.object.registrant_id),
+          <% submissions.each do |submission_id, form_name, ts| %>
+            <%= link_to event_registrant_submissions_path(f.object.event, person_id: f.object.registrant_id,
+                          return_to: "event_registration", event_registration_id: f.object.id,
+                          registration_return_to: params[:return_to].presence, anchor: "form-submission-#{submission_id}"),
                         class: "group inline-flex items-center gap-1.5 font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
                         target: "_blank",
-                        title: "#{form_name} — submitted #{ts.strftime('%b %-d, %Y')}",
+                        title: "View #{form_name} — submitted #{ts.strftime('%b %-d, %Y at %l:%M %P')}",
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-file-lines"></i>
-              View form submission<%= " ##{i + 1}" if submissions.size > 1 %>
+              <%= form_name %> · <%= ts.strftime("%b %-d, %Y") %>
               <i class="fa-solid fa-arrow-up-right-from-square text-3xs text-gray-400"></i>
             <% end %>
           <% end %>

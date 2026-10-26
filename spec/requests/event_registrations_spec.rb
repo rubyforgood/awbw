@@ -23,6 +23,19 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response).to have_http_status(:success)
       end
 
+      it "links a registrant's submissions from one icon, counting them when there's more than one" do
+        form = create(:form)
+        create(:event_form, :registration, event: event, form: form)
+        2.times { create(:form_submission, person: regular_user.person, form: form, event: event) }
+
+        get event_registrations_path
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(event, person_id: regular_user.person.id, return_to: "index")}']")
+        expect(link).to be_present
+        expect(link["title"]).to eq("2 form submissions")
+        expect(link.text.strip).to eq("2")
+      end
+
       it "links to the selected event's dashboard when one is filtered" do
         event.update!(abbreviation: "TAC261")
         get event_registrations_path(event_id: event.id)
@@ -476,6 +489,46 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("Over-allocated")
         expect(response.body).to include("$4 over")
         expect(response.body).to include("text-red-700")
+      end
+
+      context "when the registrant submitted the registration form more than once" do
+        let(:reg_form) { create(:form, name: "Reg form") }
+        let!(:first_submission) { create(:form_submission, person: regular_user.person, form: reg_form, event: event, created_at: Time.zone.local(2026, 9, 1, 10)) }
+        let!(:second_submission) { create(:form_submission, person: regular_user.person, form: reg_form, event: event, created_at: Time.zone.local(2026, 10, 2, 10)) }
+
+        before { create(:event_form, :registration, event: event, form: reg_form) }
+
+        def record_change(submission)
+          create(:ahoy_event, name: "update.organization", properties: {
+            "resource_type" => "Organization", "resource_id" => create(:organization).id,
+            "form_submission_id" => submission.id,
+            "changes" => { "website_url" => { "before" => "old.com", "after" => "new.com" } }
+          })
+        end
+
+        it "labels each submission link with its form and date, jumping to that submission" do
+          get edit_event_registration_path(existing_registration, return_to: "roster")
+
+          expect(response.body).to include("Reg form · Sep 1, 2026").and include("Reg form · Oct 2, 2026")
+          [ first_submission, second_submission ].each do |submission|
+            expect(response.body).to include(CGI.escapeHTML(event_registrant_submissions_path(event, person_id: regular_user.person.id,
+              return_to: "event_registration", event_registration_id: existing_registration.id,
+              registration_return_to: "roster", anchor: "form-submission-#{submission.id}")))
+          end
+          expect(response.body).not_to include("View form submission #")
+        end
+
+        it "shows what each registration submission changed" do
+          record_change(first_submission)
+          record_change(second_submission)
+
+          get edit_event_registration_path(existing_registration)
+
+          expect(response.body).to include(CGI.escapeHTML(changes_form_submission_path(first_submission, return_to: "event_registration", event_registration_id: existing_registration.id)))
+          expect(response.body).to include(CGI.escapeHTML(changes_form_submission_path(second_submission, return_to: "event_registration", event_registration_id: existing_registration.id)))
+          expect(response.body).to include("What this registration&#39;s form changed (Sep 1, 2026)")
+            .and include("What this registration&#39;s form changed (Oct 2, 2026)")
+        end
       end
 
       it "renders each linked-organization chip as a new-tab link to the org profile" do
@@ -1602,7 +1655,7 @@ RSpec.describe "EventRegistrations", type: :request do
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).to include(event_registrant_submissions_path(event, person_id: existing_registration.registrant_id))
-          expect(response.body).to include("form_submission_id=#{submission.id}")
+          expect(response.body).to include("#form-submission-#{submission.id}")
         end
 
         it "lists each registration-form submission with its own view link" do
@@ -1619,8 +1672,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(response.body).to include("First Org")
           expect(response.body).to include("Second Org")
-          expect(response.body).to include("form_submission_id=#{sub1.id}")
-          expect(response.body).to include("form_submission_id=#{sub2.id}")
+          expect(response.body).to include("#form-submission-#{sub1.id}")
+          expect(response.body).to include("#form-submission-#{sub2.id}")
         end
 
         it "shows a Create and link row for each distinct submitted org not in the database" do

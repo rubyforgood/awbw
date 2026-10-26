@@ -40,6 +40,47 @@ RSpec.describe "Events::FormSubmissions", type: :request do
         expect(response.body).not_to include(changes_form_submission_path(submission))
       end
 
+      describe "back link" do
+        let!(:registration) { create(:event_registration, event: event, registrant: person) }
+
+        it "defaults to the registrants page" do
+          get event_registrant_submissions_path(event, person_id: person.id)
+
+          expect(response.body).to include("Back to registrants")
+          expect(response.body).to include("href=\"#{registrants_event_path(event)}\"")
+        end
+
+        it "returns to the registrant's row on the registrants page" do
+          get event_registrant_submissions_path(event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)
+
+          expect(response.body).to include("Back to registrants")
+          expect(response.body).to include("registrant-row-#{registration.id}")
+        end
+
+        it "returns to the edit registration page, keeping its own return_to" do
+          get event_registrant_submissions_path(event, person_id: person.id, return_to: "event_registration",
+            event_registration_id: registration.id, registration_return_to: "roster")
+
+          expect(response.body).to include("Back to registration")
+          expect(response.body).to include(edit_event_registration_path(registration, return_to: "roster"))
+        end
+
+        it "returns to the event registrations index" do
+          get event_registrant_submissions_path(event, person_id: person.id, return_to: "index")
+
+          expect(response.body).to include("Back to registrations")
+          expect(response.body).to include("href=\"#{event_registrations_path}\"")
+        end
+
+        it "returns to the linked-organizations page, keeping its own return_to" do
+          get event_registrant_submissions_path(event, person_id: person.id, return_to: "link_organization",
+            event_registration_id: registration.id, link_org_return_to: "registrants")
+
+          expect(response.body).to include("Back to linked organizations")
+          expect(response.body).to include(link_organization_event_registration_path(registration, return_to: "registrants"))
+        end
+      end
+
       it "returns 404 when person does not exist" do
         get event_registrant_submissions_path(event, person_id: 999999)
         expect(response).to have_http_status(:not_found)

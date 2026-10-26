@@ -62,32 +62,33 @@
     <div class="px-6 sm:px-8 py-7">
       <%= render "forms/header", form: @registration_form, event: @event %>
 
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
-        <% @form_fields.each do |field| %>
-          <% next if field.field_identifier == "confirm_email" %>
-
-          <% if field.group_header? %>
-            <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
-              <h3 class="rich-label flex items-center gap-2.5 text-lg font-semibold text-gray-800">
-                <span class="<%= form_section_bar_class %>"></span><%= form_label_inline_html(field.name) %>
-              </h3>
-            </div>
-          <% else %>
-            <% display_answer_rows(@form_submission, field, @responses[field.id]).each do |label, response| %>
-              <div class="<%= field.grid_span_class %> pb-8">
-                <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(label) %></dt>
-                <dd class="mt-0.5 text-base font-semibold text-gray-900 whitespace-pre-line"><%= render "shared/form_answer_value", field: field, response: response %></dd>
-              </div>
-            <% end %>
-          <% end %>
-        <% end %>
-      </div>
+      <%= render "submission_answers", submission: @form_submission, form_fields: @form_fields %>
 
       <div class="pt-4 border-t border-gray-200 mt-4">
         <p class="text-xs text-gray-500">
           Submitted on <%= @form_submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
         </p>
       </div>
+
+      <% if @other_form_submissions.any? %>
+        <div class="mt-8 space-y-3">
+          <h2 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">
+            <%= @other_form_submissions.first.created_at < @form_submission.created_at ? "Earlier" : "Other" %> submissions
+          </h2>
+          <% @other_form_submissions.each do |submission| %>
+            <details id="form-submission-<%= submission.id %>" class="group rounded-xl border border-gray-200 scroll-mt-24">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-gray-700 select-none [&::-webkit-details-marker]:hidden">
+                Submitted on <%= submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
+                <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+              </summary>
+              <div class="border-t border-gray-100 px-4 pt-4">
+                <%= render "form_submissions/changes_link", submission: submission, return_to: "public_registration", badge: true %>
+                <%= render "submission_answers", submission: submission, form_fields: @form_fields %>
+              </div>
+            </details>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   </div>
 

@@ -124,21 +124,22 @@ module Events
 
       # Scope submissions to this event so a person registered for multiple
       # events that share the same form sees only the answers for this one. A
-      # returning registrant appends a new submission each time, so default to the
-      # most recent — their freshest answers — when none is named.
+      # returning registrant appends a new submission each time, so the most
+      # recent — their freshest answers — opens unless another is named.
       submissions = @registration_form.form_submissions.where(person: person, event: @event)
+        .includes(:form_answers).order(created_at: :desc).to_a
       @form_submission = if params[:form_submission_id].present?
-        submissions.find_by(id: params[:form_submission_id])
+        submissions.find { |submission| submission.id.to_s == params[:form_submission_id].to_s }
       else
-        submissions.order(:created_at).last
+        submissions.first
       end
       unless @form_submission
         redirect_to event_path(@event), alert: "No registration form submission found."
         return
       end
+      @other_form_submissions = submissions - [ @form_submission ]
 
       @form_fields = visible_form_fields
-      @responses = @form_submission.form_answers.index_by(&:form_field_id)
 
       load_scholarship_submission(person)
       load_continuing_education_submission(person)

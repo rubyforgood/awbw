@@ -1,6 +1,20 @@
+<%
+  # Opened from several pages (often in a new tab), so the eyebrow returns to whichever one linked in.
+  back_link = case params[:return_to]
+  when "registrants"
+    { label: "Back to registrants", path: registrants_event_row_path(@event, params[:event_registration_id]) } if params[:event_registration_id].present?
+  when "event_registration"
+    { label: "Back to registration", path: edit_event_registration_path(params[:event_registration_id], return_to: params[:registration_return_to].presence) } if params[:event_registration_id].present?
+  when "index"
+    { label: "Back to registrations", path: event_registrations_path }
+  when "link_organization"
+    { label: "Back to linked organizations", path: link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence) } if params[:event_registration_id].present?
+  end
+  back_link ||= { label: "Back to registrants", path: registrants_event_path(@event) }
+%>
 <div class="mx-auto max-w-5xl px-4">
-  <%= link_to registrants_event_path(@event), class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-    &larr; Back to registrants
+  <%= link_to back_link[:path], class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+    &larr; <%= back_link[:label] %>
   <% end %>
 
   <h1 class="text-primary mt-3 font-display text-lg font-semibold">
