@@ -1,0 +1,10 @@
+name: "Mark organization addresses as work or mailing"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+summary: >-
+  Organization addresses now have an address type, work or mailing, so a mailing address
+  stays a mailing address when the organization is saved. New organization addresses start as
+  work.
+pro_tips:
+  - "Each address header shows its type, so you can spot the mailing one without opening it."

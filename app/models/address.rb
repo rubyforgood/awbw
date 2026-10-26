@@ -28,6 +28,7 @@ class Address < ApplicationRecord
   CONTACT_TYPES = [ nil, "work", "personal", "mailing", UNKNOWN_CONTACT_TYPE ].freeze
   # What a person's own address can be; work addresses live on their organization.
   PERSON_CONTACT_TYPES = %w[personal mailing].freeze
+  ORGANIZATION_TYPES = %w[work mailing].freeze
   # USPS abbreviations for the 50 states, DC, and the US territories the atlas
   # draws — the whitelist behind every "States" breakdown, so international
   # regions (e.g. "ON", "England") are excluded (they belong to the Countries map).

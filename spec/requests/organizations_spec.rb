@@ -271,6 +271,17 @@ RSpec.describe "/organizations", type: :request do
   end
 
   describe "GET /edit" do
+    it "shows a mailing address as mailing" do
+      organization = create(:organization)
+      address = create(:address, addressable: organization, address_type: "mailing")
+
+      get edit_organization_url(organization)
+
+      details = Capybara.string(response.body).find("#address-#{address.id}")
+      expect(details).to have_css("summary", text: "Mailing")
+      expect(details).to have_select("Address type", selected: "Mailing", options: %w[Work Mailing], visible: :all)
+    end
+
     it "lists address phones under the phone editor, numbered by address when there are several" do
       organization = create(:organization)
       create(:address, addressable: organization, phone: "123-123-1234")
@@ -475,6 +486,16 @@ RSpec.describe "/organizations", type: :request do
         organization.reload
         expect(organization.name).to eq("Updated Healing Organization")
         expect(organization.description).to eq("Updated description for testing.")
+      end
+
+      it "keeps an address's mailing type" do
+        organization = Organization.create!(valid_attributes)
+        address = create(:address, addressable: organization, address_type: "work")
+
+        patch organization_url(organization),
+              params: { organization: { addresses_attributes: { "0" => address.slice(:id, :street_address, :city, :zip_code).merge(address_type: "mailing") } } }
+
+        expect(address.reload.address_type).to eq("mailing")
       end
 
       it "redirects to the organization profile" do
