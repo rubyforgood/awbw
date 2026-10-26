@@ -335,6 +335,46 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
     expect(person.affiliations.sole).to have_attributes(organization: umbrella, title: "Board Chair", filemaker_code: "12", start_date: nil)
   end
 
+  describe "notes saying the person is no longer with the organization" do
+    it "ends a job on the day the row was last saved, keeping the note as a comment" do
+      FmPeopleToOrganization.create!(fm_id: "997", data: { "PersonID" => "00006", "OrgID" => "ORG00001", "Notes" => "No longer with organization",
+                                                           "DateEntered" => "2025-11-10 00:00:00", "ModificationTimeStamp" => "2025-11-13 20:25:22" })
+
+      import
+
+      affiliation = person.affiliations.sole
+      expect(affiliation).to have_attributes(end_date: Date.new(2025, 11, 13), inactive: true)
+      expect(affiliation.comments.sole).to have_attributes(topic: "FileMaker import",
+                                                           body: a_string_including("People-to-organizations 997", "No longer with organization",
+                                                                                    "actual end date isn't known", "2025-11-13"))
+    end
+
+    it "ends a personnel row with no project close date, but keeps the close date it has" do
+      FmProject.create!(fm_id: "P0002", data: { "OrgID" => "ORG00001" })
+      create(:organization, filemaker_code: "P0002")
+      personnel("PS0001", Role: "", Notes: "no longer at the school", DateTimeModified: "4/2/2024")
+      personnel("PS0002", ProjectID: "P0002", Notes: "No longer with org", DateTimeModified: "4/2/2024")
+
+      import
+
+      expect(person.affiliations.order(:filemaker_code).pluck(:filemaker_code, :end_date, :inactive))
+        .to eq([ [ "PS0001", Date.new(2019, 6, 30), true ], [ "PS0002", Date.new(2024, 4, 2), true ] ])
+      body = person.affiliations.find_by!(filemaker_code: "PS0001").comments.sole.body
+      expect(body).to include("Personnel PS0001", "no longer at the school")
+      expect(body).not_to include("actual end date")
+    end
+
+    it "leaves an affiliation open when the notes say nothing of the kind" do
+      FmPeopleToOrganization.create!(fm_id: "12", data: { "PersonID" => "00006", "OrgID" => "ORG00001", "Notes" => "Prefers email",
+                                                          "ModificationTimeStamp" => "2025-11-13 20:25:22" })
+
+      import
+
+      expect(person.affiliations.sole).to have_attributes(end_date: nil, inactive: false)
+      expect(Comment.count).to eq(0)
+    end
+  end
+
   describe "the Rolodex card" do
     it "affiliates the person with their organization and points them at its worksite" do
       FmAddress.create!(fm_id: "40", data: { "RolodexID" => "00006", "AddrsLine1" => "1 Main St", "AddrsCity" => "Pasadena", "AddrsState" => "CA" })

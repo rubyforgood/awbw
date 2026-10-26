@@ -25,6 +25,9 @@ module AffiliationServices
   # title is linked rather than duplicated: it takes the row's code and fills its blank
   # dates.
   #
+  # A Personnel or people-to-organizations row whose notes say the person is no longer with
+  # the organization ends its affiliation, and the note comes along as a comment.
+  #
   # None of these is minted from a training, so event_registration_id stays NULL: the
   # reconcile page treats them as hand-entered rows.
   class ImportFromFilemaker
@@ -39,6 +42,7 @@ module AffiliationServices
     # Every Personnel role is a Facilitator, the shape prod's January 2026 conversion gave the
     # old app's roles. Only a role FileMaker names as Leader or Liaison makes a primary contact.
     PRIMARY_ROLES = %w[leader leaders liaison].freeze
+    LEFT_NOTE = /\bno longer (with|at|works|employed)\b/i
     ROLE_COMMENT_TOPIC = "FileMaker import"
     # Stands in where a Personnel row names a project but no person.
     PLACEHOLDER_NAME = { first_name: "AWBW", last_name: "Placeholder" }.freeze
@@ -123,12 +127,16 @@ module AffiliationServices
       return @unstaffed << [ row, organization, label ] if data["PersonID"].blank? || (people.empty? && card&.agency?)
       return record(:skipped, "#{label}: person #{data["PersonID"]} wasn't imported") if people.empty?
 
-      dates = personnel_dates(data, @projects[data["ProjectID"].to_s])
+      left_on = left_on(data)
+      dates = personnel_dates(data, @projects[data["ProjectID"].to_s], left_on:)
       role = data["Role"].to_s.squish
       attributes = dates.merge(primary_contact: primary_contact?(role))
       people.each do |person|
         affiliation = affiliate(person, organization, row, label, title: Affiliation::FACILITATOR_TITLE, attributes:, codes: @personnel_ids, dated: true)
-        note_role(affiliation, row, role) if affiliation && role.present?
+        next unless affiliation
+
+        note_role(affiliation, row, role) if role.present?
+        note_left(affiliation, "Personnel #{row.fm_id}", data["Notes"], left_on) if left_on
       end
     end
 
@@ -205,15 +213,29 @@ module AffiliationServices
     end
 
     # Personnel rows carry no dates of their own: the assignment starts when it was entered
-    # and ends when its project closed. A status that isn't active ends it now, undated.
-    def personnel_dates(data, project)
+    # and ends when its project closed, else when its notes say the person left. A status
+    # that isn't active ends it now, undated.
+    def personnel_dates(data, project, left_on: nil)
       status = data["Status"].to_s.squish
       active = ACTIVE_STATUSES.include?(status.downcase)
       @statuses["#{status.presence || "(blank)"} → #{active ? "active" : "ended"}"] += 1
       start_date = parse_date(data["DateEntered"])
-      end_date = project && (parse_date(project.data["CloseDate"]) || parse_date(project.data["EndDate"]))
+      end_date = (project && (parse_date(project.data["CloseDate"]) || parse_date(project.data["EndDate"]))) || left_on
       end_date = nil if start_date && end_date && end_date < start_date
-      { start_date:, end_date:, inactive: !active }
+      { start_date:, end_date:, inactive: !active || left_on.present? }
+    end
+
+    # FileMaker never recorded when the person left, so it's dated the day staff last saved the
+    # row — the day it was known they were gone.
+    def left_on(data)
+      return unless data["Notes"].to_s.match?(LEFT_NOTE)
+
+      modified_on(data) || Date.current
+    end
+
+    def note_left(affiliation, source, notes, left_on)
+      ended = " The actual end date isn't known; it's set to #{left_on.iso8601}, the day FileMaker last saved this note, since by then they were no longer there." if affiliation.end_date == left_on
+      affiliation.comments.create!(topic: ROLE_COMMENT_TOPIC, body: "FileMaker #{source} notes: \"#{notes.to_s.squish}\".#{ended}")
     end
 
     def import_job(row)
@@ -226,7 +248,12 @@ module AffiliationServices
       return record(:skipped, "#{label}: person wasn't imported") if people.empty?
       return record(:skipped, "#{label}: organization wasn't imported") unless organization
 
-      people.each { |person| affiliate(person, organization, row, label, title: clip(data["Title"].to_s.squish), attributes: {}, codes: @job_ids) }
+      left_on = left_on(data)
+      attributes = left_on ? { end_date: left_on, inactive: true } : {}
+      people.each do |person|
+        affiliation = affiliate(person, organization, row, label, title: clip(data["Title"].to_s.squish), attributes:, codes: @job_ids)
+        note_left(affiliation, "People-to-organizations #{row.fm_id}", data["Notes"], left_on) if affiliation && left_on
+      end
     end
 
     # The Rolodex card names the person's organization and their title there, and lists the
@@ -335,11 +362,10 @@ module AffiliationServices
 
     def create(person, organization, row, label, title:, attributes:, code:)
       data = row.data
-      entered = parse_date(data["DateEntered"])
       affiliation = person.affiliations.build(
         organization:, title:, filemaker_code: code, **attributes,
         inactive_supplied: attributes[:inactive],
-        created_at: entered, updated_at: parse_date(data["DateTimeModified"].presence || data["ModificationTimeStamp"]) || entered,
+        created_at: parse_date(data["DateEntered"]), updated_at: modified_on(data),
         created_by_id: @staff.user_id_for(data["EnteredBy"]) || @import_user_id, updated_by_id: updated_by(data)
       )
       return failed(affiliation, label) unless affiliation.save
@@ -347,6 +373,10 @@ module AffiliationServices
       @affiliations.add(code, affiliation.id) if code
       record(:created, "#{label} → affiliation ##{affiliation.id}#{" (#{title})" if title}")
       affiliation
+    end
+
+    def modified_on(data)
+      parse_date(data["DateTimeModified"].presence || data["ModificationTimeStamp"]) || parse_date(data["DateEntered"])
     end
 
     def updated_by(data)
