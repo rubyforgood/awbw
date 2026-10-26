@@ -207,9 +207,6 @@ application.register("timeframe", TimeframeController)
 import ToggleDetailsController from "./toggle_details_controller"
 application.register("toggle-details", ToggleDetailsController)
 
-import ToggleLockController from "./toggle_lock_controller"
-application.register("toggle-lock", ToggleLockController)
-
 import ToggleUserIconController from "./toggle_user_icon_controller"
 application.register("toggle-user-icon", ToggleUserIconController)
 

@@ -114,24 +114,29 @@ else
     note.(first_facilitator, "Minted from the Foundations training roster.", year.(7) + 2.days)
 
     # ── 6 years ago: first membership year, paid ─────────────────────────────
-    subscription = person.memberships.create!
+    # Reuse an existing uncancelled membership if another seed gave this person
+    # one (e.g. membership.rb's checkout demos), so seed order can't collide.
+    subscription = person.memberships.autorenewal_not_cancelled.first || person.memberships.create!
     subscription.update_columns(created_at: year.(6), updated_at: year.(6))
     track.("create", subscription, year.(6), { resource_title: "Membership" })
 
-    [ 6, 4, 3, 0 ].each_with_index do |years_ago, index|
+    [ 6, 5, 4, 3, 2, 1, 0 ].each_with_index do |years_ago, index|
+      # The first year is created with the membership; renewals are minted a renewal
+      # window before the year they cover.
+      minted_at = index.zero? ? year.(years_ago) : year.(years_ago) - Membership.renewal_window_days
       invoice = subscription.membership_invoices.create!(
         start_date: year.(years_ago), cost_cents: Membership.annual_cost_cents
       )
-      invoice.update_columns(created_at: year.(years_ago), updated_at: year.(years_ago))
+      invoice.update_columns(created_at: minted_at, updated_at: minted_at)
 
       # MembershipInvoice isn't one of the person's tracked resources, so the renewal
       # shows as an update to the membership itself.
       unless index.zero?
-        track.("update", subscription, year.(years_ago),
+        track.("update", subscription, minted_at,
                { resource_title: "Membership" }.merge(changed.({ "membership_invoices" => [ index, index + 1 ] })))
       end
 
-      next if index == 3 # current year left unpaid so the badge shows something owing
+      next if index == 6 # current year left unpaid so the badge shows something owing
 
       paid_at = year.(years_ago) + (index == 2 ? 70 : 9).days
       payment = CashPayment.create!(
@@ -139,7 +144,8 @@ else
         amount_cents_remaining: Membership.annual_cost_cents, currency: "usd"
       )
       payment.update_columns(created_at: paid_at, updated_at: paid_at)
-      Allocation.create!(source: payment, allocatable: invoice, amount: Membership.annual_cost_cents)
+      allocation = Allocation.create!(source: payment, allocatable: invoice, amount: Membership.annual_cost_cents)
+      allocation.update_columns(created_at: paid_at)
       track.("create", payment, paid_at, { resource_title: "Membership dues #{year.(years_ago).year}" })
     end
 
@@ -172,8 +178,11 @@ else
            "We've reactivated your facilitator affiliation following the training.", year.(2) + 4.days)
 
     # ── 1 year ago onward: edits to the affiliation this seed hangs off ──────
-    track.("create", affiliation, affiliation.start_date.to_time + 10.hours)
-    note.(affiliation, "Joined the #{home_org&.name} roster.", affiliation.start_date.to_time + 10.hours)
+    # The affiliation may carry no start date (imported rows often don't); fall back to
+    # the training that minted it so the timeline still has an anchor.
+    roster_since = affiliation.start_date || year.(7)
+    track.("create", affiliation, roster_since.to_time + 10.hours)
+    note.(affiliation, "Joined the #{home_org&.name} roster.", roster_since.to_time + 10.hours)
 
     track.("update", affiliation, 8.months.ago,
            changed.({ "title" => [ "Facilitator", affiliation.title ] }))
@@ -181,7 +190,7 @@ else
            changed.({ "primary_contact" => [ false, true ] }))
     note.(affiliation, "Now the primary contact for the organization.", 5.months.ago)
     track.("update", affiliation, 2.months.ago,
-           changed.({ "start_date" => [ (affiliation.start_date + 1.month).to_s, affiliation.start_date.to_s ] }))
+           changed.({ "start_date" => [ (roster_since + 1.month).to_s, roster_since.to_s ] }))
     note.(affiliation, "Corrected the start date against the training roster.", 2.months.ago)
     note.(person, "Confirmed the corrected dates by phone.", 6.weeks.ago, topic: "Profile")
 

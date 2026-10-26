@@ -23,7 +23,7 @@ class Membership::EnsureInvoice
   end
 
   def create_invoice
-    return if @membership.cancelled?
+    return if @membership.autorenewal_cancelled?
 
     invoice = invoices.new(
       start_date: @covering,

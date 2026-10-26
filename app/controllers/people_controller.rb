@@ -64,22 +64,13 @@ class PeopleController < ApplicationController
 
   def show
     authorize! @person
-    @person = Person.includes(:avatar_attachment, :contact_methods, :user,
+    @person = Person.includes(:avatar_attachment, :contact_methods, :user, :pay_subscriptions,
                               categorizable_items: { category: :category_type }).find(params[:id]).decorate
     track_view(@person)
-    @membership = membership_for(@person)
-    @membership_autopay = allowed_to?(:own_membership?, @person) && @person.payment_processor.subscribed?
     @pending_change_requests = own_pending_change_requests unless turbo_frame_request?
 
-    if params[:checkout] == "success"
-      flash[:notice] = "Thank you for your donation!"
-    elsif params[:checkout] == "cancelled"
-      flash[:alert] = "Donation was cancelled."
-    elsif params[:membership_checkout] == "success"
-      flash[:notice] = "Your annual membership is set up. Thank you!"
-    elsif params[:membership_checkout] == "cancelled"
-      flash[:alert] = "Membership setup was cancelled."
-    end
+    set_membership
+    set_checkout_flash
 
     # Handle paginated sections for Turbo Frame requests
     if turbo_frame_request?
@@ -250,7 +241,6 @@ class PeopleController < ApplicationController
       affiliations: { organization: [ :logo_attachment, :addresses ] }
     ).find(params[:id]).decorate
     authorize! @person
-    @membership = membership_for(@person)
     set_form_variables
   end
 
@@ -779,10 +769,38 @@ class PeopleController < ApplicationController
     authorized(params.require(:person))
   end
 
-  def membership_for(person)
-    return unless Membership.enabled? && allowed_to?(:show?, person)
+  def set_membership
+    return unless Membership.enabled? && allowed_to?(:own_record?, @person)
 
-    person.memberships.includes(:membership_invoices).order(created_at: :desc).first&.decorate
+    @membership = @person.current_membership&.decorate
+    return unless @membership
+
+    @membership_invoices_due = @membership.object.invoices_due.includes(:allocations).to_a
+    return unless allowed_to?(:manage_subscription?, @membership)
+
+    processor = @person.payment_processor
+    membership_sub = processor&.subscription
+
+    @membership_autopay = membership_sub.present? && processor&.subscribed?
+    @membership_autopay_cancelling = @membership_autopay &&
+                                     membership_sub.canceled? &&
+                                     !membership_sub.ended?
+  end
+
+  def set_checkout_flash
+    if params[:checkout] == "success"
+      flash[:notice] = "Thank you for your donation!"
+    elsif params[:checkout] == "cancelled"
+      flash[:alert] = "Donation was cancelled."
+    elsif params[:membership_subscription_checkout] == "success"
+      flash[:notice] = "Your annual membership is set up. Thank you!"
+    elsif params[:membership_subscription_checkout] == "cancelled"
+      flash[:alert] = "Membership setup was cancelled."
+    elsif params[:membership_invoice_checkout] == "success"
+      flash[:notice] = "Thank you! Your membership payment was received."
+    elsif params[:membership_invoice_checkout] == "cancelled"
+      flash[:alert] = "Payment was cancelled."
+    end
   end
 
   def own_pending_change_requests

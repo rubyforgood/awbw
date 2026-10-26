@@ -1,6 +1,6 @@
 class MembershipInvoicesController < ApplicationController
   before_action :set_membership, only: [ :new, :create ]
-  before_action :set_membership_invoice, only: [ :show, :edit, :update ]
+  before_action :set_membership_invoice, only: [ :show, :destroy ]
 
   def index
     authorize!
@@ -35,21 +35,21 @@ class MembershipInvoicesController < ApplicationController
 
   def show
     authorize! @membership_invoice
-    redirect_to person_memberships_path(@membership_invoice.registrant), status: :see_other
+    @deletion_blocked_reason = @membership_invoice.deletion_blocked_reason
   end
 
-  def edit
+  def destroy
     authorize! @membership_invoice
-  end
+    person = @membership_invoice.person
 
-  def update
-    authorize! @membership_invoice
-
-    if @membership_invoice.update(membership_invoice_params)
-      redirect_to person_memberships_path(@membership_invoice.person),
-        notice: "Membership invoice updated.", status: :see_other
+    if @membership_invoice.deletable?
+      @membership_invoice.destroy!
+      redirect_to person_memberships_path(person),
+        notice: "Membership invoice deleted.", status: :see_other
     else
-      render :edit, status: :unprocessable_content
+      redirect_to person_memberships_path(person),
+        alert: "Cannot delete this invoice because #{@membership_invoice.deletion_blocked_reason}.",
+        status: :see_other
     end
   end
 
@@ -60,7 +60,9 @@ class MembershipInvoicesController < ApplicationController
   end
 
   def set_membership_invoice
-    @membership_invoice = MembershipInvoice.find(params[:id])
+    @membership_invoice = MembershipInvoice
+      .includes(:allocations, membership: :person, created_by: :person, updated_by: :person)
+      .find(params[:id])
   end
 
   def next_start_date
@@ -69,6 +71,6 @@ class MembershipInvoicesController < ApplicationController
   end
 
   def membership_invoice_params
-    params.expect(membership_invoice: [ :start_date, :end_date, :cost_dollars ])
+    params.expect(membership_invoice: [ :start_date, :cost_dollars ])
   end
 end

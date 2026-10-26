@@ -3,6 +3,7 @@ class EventRegistration < ApplicationRecord
   include Registerable
   include Certifiable
   include Communicable
+  include PersonNameSearchable
 
   # Sentinel for the roster's Payment method filter that matches buddy-system
   # registrations (someone_else_will_pay), which isn't an expected_payment_method
@@ -164,14 +165,8 @@ class EventRegistration < ApplicationRecord
   validates :slug, uniqueness: true, allow_nil: true
 
   # Scopes
-  scope :registrant_name, ->(registrant_name) { joins(:registrant).where(
-    "LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name
-    OR LOWER(REPLACE(CONCAT(people.last_name, people.first_name), ' ', '')) LIKE :name
-    OR LOWER(REPLACE(CONCAT(people.legal_first_name, people.last_name), ' ', '')) LIKE :name
-    OR LOWER(REPLACE(CONCAT(people.last_name, people.legal_first_name), ' ', '')) LIKE :name
-    OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
-    OR LOWER(REPLACE(people.legal_first_name, ' ', '')) LIKE :name
-    OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name", name: "%#{registrant_name}%") }
+  def self.person_name_join = :registrant
+  scope :registrant_name, ->(query) { by_person_name(query) }
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }

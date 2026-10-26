@@ -1,0 +1,12 @@
+<% user = membership.person.user %>
+<% locked = user.locked_at.present? %>
+
+<%= form_with url: toggle_lock_status_user_path(user), method: :post do |f| %>
+  <%= f.hidden_field :membership_id, value: membership.id %>
+  <button type="submit"
+          title="<%= locked ? "Click to unlock" : "Click to lock" %>"
+          aria-label="<%= locked ? "Click to unlock" : "Click to lock" %>"
+          class="shrink-0 rounded px-2 py-1 text-xs transition hover:opacity-80 <%= locked ? "border border-red-200 bg-red-50 text-red-700" : "border border-green-200 bg-green-50 text-green-700" %>">
+    <i class="fa-solid <%= locked ? "fa-lock" : "fa-unlock" %>"></i>
+  </button>
+<% end %>

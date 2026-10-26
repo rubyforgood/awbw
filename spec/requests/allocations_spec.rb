@@ -50,7 +50,8 @@ RSpec.describe "Allocations", type: :request do
       expect(response.body).to include("href=\"#{membership_invoice_path(term)}\"")
 
       get membership_invoice_path(term)
-      expect(response).to have_http_status(:see_other)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(term.decorate.period_range)
     end
   end
 

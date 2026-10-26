@@ -53,9 +53,9 @@ class PersonDecorator < ApplicationDecorator
 
   def uncancelled_membership_count
     if memberships.loaded?
-      memberships.count { |membership| membership.cancelled_at.nil? }
+      memberships.count { |membership| membership.autorenewal_cancelled_at.nil? }
     else
-      memberships.not_cancelled.count
+      memberships.autorenewal_not_cancelled.count
     end
   end
 

@@ -15,7 +15,7 @@ class Person < ApplicationRecord
   has_many :organizations, through: :affiliations
   has_many :professional_licenses, dependent: :destroy
   has_many :profile_change_requests, dependent: :destroy
-  has_many :memberships, dependent: :destroy
+  has_many :memberships
   has_many :membership_invoices, through: :memberships
   has_many :communal_reports, through: :organizations, source: :reports
   has_many :windows_types, through: :organizations
@@ -82,6 +82,7 @@ class Person < ApplicationRecord
   end
 
   before_validation :normalize_names
+  before_destroy :destroy_memberships, prepend: true
 
   # Unicode-aware, plus the zero-width characters [[:space:]] skips; pasted addresses carry both.
   EMAIL_WHITESPACE = /[[:space:]\u200B-\u200D\u2060\uFEFF]/
@@ -407,27 +408,6 @@ class Person < ApplicationRecord
     when "sector_leader" then sector_leaders
     else all
     end }
-  # People whose membership/current invoice is in the given state.
-  scope :membership_active, -> { where(id: Membership.not_cancelled.select(:person_id)) }
-  scope :membership_inactive, -> {
-    where(id: Membership.select(:person_id))
-      .where.not(id: Membership.not_cancelled.select(:person_id)) }
-  scope :membership_paid, -> {
-    where(id: MembershipInvoice.active_on.paid_in_full.joins(:membership).select("memberships.person_id")) }
-  scope :membership_due, -> {
-    where(id: MembershipInvoice.active_on.not_paid_in_full.paid_or_within_grace
-      .joins(:membership).select("memberships.person_id")) }
-  scope :membership_overdue, -> {
-    where(id: MembershipInvoice.active_on.overdue.joins(:membership).select("memberships.person_id")) }
-  scope :by_membership_status, ->(status) {
-    case status
-    when "active" then membership_active
-    when "inactive" then membership_inactive
-    when "paid" then membership_paid
-    when "due" then membership_due
-    when "overdue" then membership_overdue
-    else all
-    end }
 
   ROLE_FILTER_OPTIONS = [
     [ "Blog contributors", "blog_contributor" ],
@@ -436,14 +416,6 @@ class Person < ApplicationRecord
     [ "Workshop authors", "workshop_author" ],
     [ "Workshop log authors", "workshop_log_author" ],
     [ "Workshop variation authors", "workshop_variation_author" ]
-  ].freeze
-
-  MEMBERSHIP_STATUS_FILTER_OPTIONS = [
-    [ "Active", "active" ],
-    [ "Inactive", "inactive" ],
-    [ "Paid", "paid" ],
-    [ "Due", "due" ],
-    [ "Overdue", "overdue" ]
   ].freeze
 
   FACILITATOR_STATUS_FILTER_OPTIONS = [
@@ -459,7 +431,6 @@ class Person < ApplicationRecord
     results = results.shared_contact_search(params[:shared_contact_info]) if params[:shared_contact_info].present?
     results = results.by_role(params[:role]) if params[:role].present?
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?
-    results = results.by_membership_status(params[:membership_status]) if params[:membership_status].present?
     results = results.subscribed_to_topic(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
     results = results.with_sector_ids(params[:sector_ids]) if params[:sector_ids].present?
     results = results.shared_sector_ids(params[:shared_sector_ids]) if params[:shared_sector_ids].present?
@@ -481,10 +452,6 @@ class Person < ApplicationRecord
   # role or a lapsed/upcoming facilitator is not published (admin-only).
   def published?
     profile_is_searchable? && affiliations.any? { |a| a.facilitator? && a.active? }
-  end
-
-  def membership_current?(as_of: Date.current)
-    membership_invoices.active_on(as_of).paid_or_within_grace(as_of).exists?
   end
 
   def sector_list
@@ -601,6 +568,16 @@ class Person < ApplicationRecord
     facilitator_affiliations = affiliations.select(&:facilitator?)
     active = facilitator_affiliations.select(&:active?).max_by(&:updated_at)
     (active || facilitator_affiliations.max_by(&:updated_at))&.organization
+  end
+
+  #  subscription's membership_id, by date: active, soonest upcoming, then
+  # the most recent one, so an overdue or ended member still resolves.
+  def current_membership
+    live_ids = pay_subscriptions.active.filter_map { |subscription| subscription.metadata&.dig("membership_id")&.to_i }
+    memberships.find { |membership| live_ids.include?(membership.id) } ||
+      memberships.find(&:active?) ||
+      memberships.select(&:upcoming?).min_by(&:start_date) ||
+      memberships.max_by { |membership| membership.end_date || Date.new(0) }
   end
 
   # Facilitator-training events ("TACs") this person registered for and
@@ -740,6 +717,13 @@ class Person < ApplicationRecord
     self.last_name = Person.normalize_name(last_name)
     self.legal_first_name = Person.normalize_name(legal_first_name).presence
     self.legal_first_name = nil unless legal_first_name.nil? || legal_first_name_differs?(legal_first_name)
+  end
+
+  def destroy_memberships
+    memberships.each do |membership|
+      membership.skip_deletion_guard = true
+      membership.destroy!
+    end
   end
 
   def unique_name_and_email_combination

@@ -9,8 +9,8 @@
   <div class="flex items-center gap-2">
     <%= render "membership_invoices/status_pill", invoice: invoice, linked: local_assigns.fetch(:linked, false) %>
 
-    <% if local_assigns.fetch(:editable, false) %>
-      <%= link_to "Edit", edit_membership_invoice_path(invoice.object), class: button_classes(:secondary_outline, size: :sm) %>
+    <% if local_assigns.fetch(:viewable, false) %>
+      <%= link_to "View", membership_invoice_path(invoice.object), class: button_classes(:secondary_outline, size: :sm) %>
     <% end %>
   </div>
 </li>
