@@ -118,6 +118,16 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#profile_email_login?" do
+    it "is true when the profile email is the login email" do
+      expect(create(:person).decorate.profile_email_login?).to be(true)
+    end
+
+    it "is false without a user account" do
+      expect(create(:person, user: nil, email: "record@example.com").decorate.profile_email_login?).to be(false)
+    end
+  end
+
   describe "#profile_email_label" do
     it "marks the login email as the user account" do
       expect(create(:person).decorate.profile_email_label).to eq("primary · user account")

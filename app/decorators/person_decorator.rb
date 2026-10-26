@@ -102,8 +102,12 @@ class PersonDecorator < ApplicationDecorator
     user&.email.presence || object.email_on_file
   end
 
+  def profile_email_login?
+    user&.email.present?
+  end
+
   def profile_email_label
-    user&.email.present? ? "primary · user account" : "primary"
+    profile_email_login? ? "primary · user account" : "primary"
   end
 
   def email_2_label

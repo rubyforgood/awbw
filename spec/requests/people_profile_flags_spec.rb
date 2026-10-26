@@ -256,6 +256,18 @@ RSpec.describe "Person profile flag visibility", type: :request do
         get person_path(person)
         expect(response.body).to include(email)
       end
+
+      it "tags the login email as the user account for admins" do
+        sign_in admin
+        get person_path(person)
+        expect(Capybara.string(response.body)).to have_css("span[title='Login email (admin only)']", text: "user account")
+      end
+
+      it "leaves the user account tag off for other viewers" do
+        sign_in other_user
+        get person_path(person)
+        expect(response.body).not_to include("Login email (admin only)")
+      end
     end
 
     context "with a pending email change" do
