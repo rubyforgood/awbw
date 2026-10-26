@@ -50,7 +50,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     expect(address.reload.filemaker_code).to eq("1")
   end
 
-  it "brings in an address with no street, and keeps one the archive calls postal as mailing" do
+  it "brings in an address with no street, and makes the one the archive calls postal its invoice address" do
     fm_organization("ORG00001")
     FmAddress.create!(fm_id: "1", data: { "OrgID" => "ORG00001", "AddrsCity" => "Fresno", "AddrsState" => "CA" })
     FmAddress.create!(fm_id: "2", data: { "OrgID" => "ORG00001", "AddrsLine1" => "PO Box 9", "AddrsCity" => "Reno",
@@ -58,8 +58,8 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
     import
 
-    expect(Organization.sole.addresses.order(:filemaker_code).pluck(:street_address, :city, :address_type))
-      .to eq([ [ "", "Fresno", "work" ], [ "PO Box 9", "Reno", "mailing" ] ])
+    expect(Organization.sole.addresses.order(:filemaker_code).pluck(:street_address, :city, :address_type, :invoice_address))
+      .to eq([ [ "", "Fresno", "work", false ], [ "PO Box 9", "Reno", "work", true ] ])
   end
 
   it "doesn't add a street-less address in a city the organization already has an address in" do
@@ -83,6 +83,19 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
       expect(Organization.sole.addresses.sole).to have_attributes(city: "Pasadena", state: "CA", country: "United States",
                                                                   locality: "LA County", la_service_planning_area: 3)
+    end
+
+    it "fills a project with no city onto the organization's primary address" do
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001", State: "CA", County: "Los Angeles", Locality: "LA City", SPA: "4")
+      FmAddress.create!(fm_id: "1", data: { "OrgID" => "ORG00001", "AddrsLine1" => "1 Main St", "AddrsCity" => "Los Angeles",
+                                            "AddrsState" => "CA" })
+
+      result = import
+
+      expect(Organization.sole.addresses.sole).to have_attributes(street_address: "1 Main St", locality: "LA City",
+                                                                  la_service_planning_area: 4)
+      expect(result.unplaced).to be_empty
     end
 
     it "lists a project whose place has no city or state to be saved with" do
@@ -165,6 +178,14 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
       import
 
       expect(Organization.sole.contact_methods.order(:filemaker_code).pluck(:contact_type)).to eq(%w[work personal])
+    end
+
+    it "lists the phone types it can't read" do
+      fm_organization("ORG00001")
+      phone("10", "555-0101", PhoneType: "Fax")
+      phone("11", "555-0102", PhoneType: "Fax")
+
+      expect(import.unmatched_phone_types).to eq("Fax" => 2)
     end
 
     it "adds the code to a phone the organization already has, keeping its primary" do

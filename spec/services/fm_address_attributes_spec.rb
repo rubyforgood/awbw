@@ -15,10 +15,9 @@ RSpec.describe FmAddressAttributes do
     )
   end
 
-  it "types an organization's address as mailing when the archive says so, else work" do
-    expect(builder.call(row.merge("AddrsType" => "Postal"), organization: true)).to include(address_type: "mailing")
-    expect(builder.call(row, organization: true)).to include(address_type: "work")
-    expect(builder.call(row.merge("AddrsType" => nil), organization: true)).to include(address_type: "work")
+  it "types an organization's address as work, marking the one the archive calls mailing as its invoice address" do
+    expect(builder.call(row.merge("AddrsType" => "Postal"), organization: true)).to include(address_type: "work", invoice_address: true)
+    expect(builder.call(row, organization: true)).to include(address_type: "work", invoice_address: false)
   end
 
   it "reads the county and a missing ZIP from the archive's ZIP table" do

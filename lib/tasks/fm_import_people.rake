@@ -75,8 +75,14 @@ namespace :fm do
       import.unmatched_addresses.each do |field, values|
         next if values.empty?
 
-        say.("\nAddress #{field} values nothing translates (#{field == :country ? 'left blank' : 'kept as typed'}):")
+        outcome = { country: "left blank", state: "kept as typed", address_type: "left unknown" }.fetch(field)
+        say.("\nAddress #{field.to_s.humanize(capitalize: false)} values nothing translates (#{outcome}):")
         values.sort_by { |value, count| [ -count, value ] }.each { |value, count| say.("  #{count.to_s.rjust(5)}  #{value}") }
+      end
+
+      if import.unmatched_phone_types.any?
+        say.("\nPhone types nothing translates (left unknown):")
+        import.unmatched_phone_types.sort_by { |name, count| [ -count, name ] }.each { |name, count| say.("  #{count.to_s.rjust(5)}  #{name}") }
       end
 
       if import.unmatched_staff.any?

@@ -131,18 +131,20 @@ Constraints already decided elsewhere:
   `NameMatcher`) and `Title` become a job affiliation there — the field `FmRolodex::PORTAL_FIELDS`
   already mapped to `affiliations.title`. No code: the card's ID is the person's.
 - **Work addresses:** the Rolodex `WorksiteAddrsID` address, any address typed as work (Work,
-  Organization, Program, Corporate Office, District Office — ADR-0009's `CONTACT_TYPES`), and
+  Home/Work, Organization, Program, Corporate Office, District Office — ADR-0009's
+  `CONTACT_TYPES`), and
   every address on an agency's card become an `Address` on the organization, and the
   person's affiliations there that name no address point at it
   (`affiliations.organization_address_id`), the worksite first. The organization is the one
   FileMaker filed the address under (its `OrgID`), else the card's, else the person's only
   one. A work address with no organization to land on stays with the person, typed work.
-  The people pass already filed the few typed Organization/Program/Corporate/District Office
-  on a person's card (26 in prod) on the person; this pass adds them to the organization too
-  and leaves the person's copy (decided 2026-10-25).
-- **An organization's address is typed Work, or Mailing** when FileMaker says Mailing or
-  Postal. The organization address form offers just those two, so a save keeps it
-  (decided 2026-10-25).
+  The people pass already filed the few typed Home/Work/Organization/Program/Corporate/District
+  Office on a person's card (38 in prod) on the person; this pass adds them to the organization
+  too and leaves the person's copy (decided 2026-10-25).
+- **An organization's address is always Work.** One FileMaker calls Mailing or Postal becomes
+  the organization's invoice address (`invoice_address`) instead. The organization address
+  form saves Work; a person's address form offers Personal (the default) or Mailing, since
+  work addresses live on the organization (decided 2026-10-25).
 - **Locality and districts come from the project, not derived.** `fm_projects` is the one
   place FileMaker records a `Locality`, and its vocabulary is where `Address::LOCALITIES`
   came from — so a project's `Locality`, `District`, `SPA` and `LASupervisorialDistrict`
@@ -154,9 +156,12 @@ Constraints already decided elsewhere:
   - **A project with no State but a California Locality** (LA City, LA County, Orange County,
     Northern/Central/Southern CA) is placed in CA, United States: those localities exist only
     in California (122 projects in prod, decided 2026-10-25).
-  - **A project with no City, or no State and no California Locality**, can't become an
-    address, so its locality and districts are listed in the run's report ("Projects whose
-    place couldn't be saved") for staff to fix by hand.
+  - **A project with no City** fills blanks on the organization's primary address. A
+    placeholder city ("Unknown") was rejected: it would read as a real city in maps, filters
+    and dedupe.
+  - **One still with nowhere to land** (no City and no address on the organization, or no
+    State and no California Locality) is listed in the run's report ("Projects whose place
+    couldn't be saved") for staff to fix by hand.
 - **Addresses are built by `FmAddressAttributes`** (ADR-0009), as the Rolodex pass does, so
   state, country, type and locality are stored as the dropdowns offer; a project's city/state
   goes through `AddressTranslation` the same way. A row with a city and state but no street

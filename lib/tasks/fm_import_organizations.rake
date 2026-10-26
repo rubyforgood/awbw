@@ -92,7 +92,10 @@ namespace :fm do
           "Personnel Status values and how they were read" => import.try(:statuses),
           "Personnel roles" => import.try(:roles),
           "Address countries nothing translates (left blank)" => import.try(:unmatched_addresses)&.fetch(:country, nil),
-          "Address states nothing translates (kept as typed)" => import.try(:unmatched_addresses)&.fetch(:state, nil)
+          "Address states nothing translates (kept as typed)" => import.try(:unmatched_addresses)&.fetch(:state, nil),
+          "Address types nothing translates (a person's left unknown; an organization's are work)" =>
+            import.try(:unmatched_addresses)&.fetch(:address_type, nil),
+          "Phone types nothing translates (left unknown)" => import.try(:unmatched_phone_types)
         }
         tallies.each do |heading, counts|
           next if counts.blank?

@@ -582,12 +582,13 @@ RSpec.describe PersonServices::ImportFromRolodex do
     rolodex("00033", EMail: "ada@example.com", PrimaryAddrsID: "A5", PrimaryPhoneID: "P2")
     rolodex("00034", FirstName: "Grace", EMail: "grace@example.com", PrimaryPhoneID: "P3")
 
-    results
+    import = described_class.new.call
 
     mailing = Person.find_by!(filemaker_code: "00033")
     expect(mailing.addresses.sole.address_type).to eq("mailing")
     expect(mailing.contact_methods.sole.contact_type).to eq("unknown")
     expect(Person.find_by!(filemaker_code: "00034").contact_methods.sole.contact_type).to eq("personal")
+    expect(import.unmatched_phone_types).to eq("Mailing" => 1)
   end
 
   it "types an address and phone the archive left blank as unknown" do

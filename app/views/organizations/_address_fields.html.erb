@@ -22,16 +22,10 @@
 
   <div class="border-t border-yellow-200 p-3">
     <!-- LOCATION + DISTRICT + LOCALITY -->
+    <%# Organization addresses are always "work" — the type designation only matters
+        for Person addresses — so persist it with a hidden field rather than a selector. %>
+    <%= f.hidden_field :address_type, value: "work" %>
     <div class="grid grid-cols-1 gap-x-4 md:grid-cols-3">
-      <%= f.input :address_type,
-                  label: "Type",
-                  as: :select,
-                  collection: Address::ORGANIZATION_CONTACT_TYPES.map { |type| [ type.humanize, type ] },
-                  selected: f.object.address_type.presence_in(Address::ORGANIZATION_CONTACT_TYPES) || "work",
-                  include_blank: false,
-                  input_html: {
-                    class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
-                  } %>
       <div class="flex items-center gap-6">
         <%= f.input :primary,
                     as: :boolean,

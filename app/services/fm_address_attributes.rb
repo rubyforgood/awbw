@@ -21,7 +21,7 @@ class FmAddressAttributes
 
   def unmatched = @translation.unmatched
 
-  # An organization's address is its mailing address when the archive says so, else its work one.
+  # An organization's address is always work; the one the archive calls mailing is its invoice address.
   def call(fields, organization: false)
     street = [ street_line(fields), fields["AddrsLine2"] ].filter_map { |line| line.to_s.strip.presence }.join(", ")
     city = clip(fields["AddrsCity"].to_s.strip)
@@ -36,7 +36,7 @@ class FmAddressAttributes
       country: clip(fields["AddrsCountry"]),
       county: county(fields),
       address_type: fields["AddrsType"]
-    ).then { |attributes| organization ? attributes.merge(address_type: organization_type(attributes[:address_type])) : attributes }
+    ).then { |attributes| organization ? organization_address(attributes) : attributes }
   end
 
   # An address holding just a city and state — where the archive records a place (a
@@ -48,8 +48,8 @@ class FmAddressAttributes
 
   private
 
-  def organization_type(type)
-    type.presence_in(Address::ORGANIZATION_CONTACT_TYPES) || "work"
+  def organization_address(attributes)
+    attributes.merge(address_type: "work", invoice_address: attributes[:address_type] == "mailing")
   end
 
   # The house number has its own field, sometimes already repeated at the front of

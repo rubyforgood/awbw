@@ -61,7 +61,7 @@ module PersonServices
     ADDITIONAL_TAG_FIELDS = %w[OtherServiceArea Settings LifeExperiences].freeze
     PRIMARY_TAG_LABELS = { tag_sectors: "Primary sector", tag_age_groups: "Primary age group" }.freeze
 
-    attr_reader :results, :differences, :invalid_emails
+    attr_reader :results, :differences, :invalid_emails, :unmatched_phone_types
 
     def initialize(scope: FmRolodex.all, relink: false, progress: nil, run: nil)
       @scope = scope
@@ -71,6 +71,7 @@ module PersonServices
       @results = OUTCOMES.index_with { [] }
       @differences = []
       @invalid_emails = []
+      @unmatched_phone_types = Hash.new(0)
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
@@ -430,8 +431,13 @@ module PersonServices
       number = clip(phone.data["PhoneNumber"])
       return if number.blank?
 
-      { kind: "phone", value: number, contact_type: contact_type(phone.data["PhoneType"], allowed: ContactMethod::CONTACT_TYPES),
-        filemaker_code: phone.fm_id }
+      { kind: "phone", value: number, contact_type: phone_type(phone.data["PhoneType"]), filemaker_code: phone.fm_id }
+    end
+
+    def phone_type(value)
+      found = contact_type(value, allowed: ContactMethod::CONTACT_TYPES)
+      @unmatched_phone_types[value.to_s.strip] += 1 if found.nil? && value.to_s.strip.present?
+      found
     end
 
     def ids(people)
