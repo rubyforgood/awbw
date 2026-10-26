@@ -277,6 +277,9 @@ presentation in those partials, not forked per page.
   `?form_submission_id=`), the rest collapsed in `<details id="form-submission-<id>">`.
 - **A registrant can have several registration submissions per event** (re-registering
   appends one). Views list or count them all — never silently take `.first`/`.last`.
+  Count and list them by **sitting** (`FormSubmissionSittings`): a registration plus the
+  scholarship/CE forms sent with it is one; each registration counts on its own, even
+  seconds apart; a form sent alone later is its own.
 - **Admin submission views** (both `page_bg admin-only`; both carry the admin-only "What this
   submission changed" bar when `FormSubmissionChanges#edited?`):
   - `form_submissions#show` — top-level `/form_submissions/:id` (admin-or-slug).

@@ -217,7 +217,7 @@
     </div>
 
     <% event_form_ids = @event.registration_form_ids %>
-    <% form_submissions = event_form_ids.any? ? FormSubmission.where(event_id: @event.id, person_id: @event_registrations.map(&:registrant_id)).joins(:form).where(form_id: event_form_ids).pluck(:person_id, :created_at, Arel.sql("forms.name"), :role).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name, role| [ name, ts, role ] } } : {} %>
+    <% form_submissions = event_form_ids.any? ? FormSubmissionSittings.for_events(@event.id, @event_registrations.map(&:registrant_id)).select { |_, sittings| sittings.registered? }.transform_keys(&:first) : {} %>
     <% scholarship_form = @event.scholarship_form %>
     <% scholarship_submitter_ids = scholarship_form ? FormSubmission.where(event_id: @event.id, form_id: scholarship_form.id, role: "scholarship", person_id: @event_registrations.map(&:registrant_id)).joins(:form_answers).distinct.pluck(:person_id).to_set : Set.new %>
     <%# Completion of each callout form, keyed [person_id, form_id] → submitted_at. %>
@@ -340,17 +340,16 @@
                     <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
                     <% if event_form_ids.any? %>
                       <span class="inline-flex w-4 justify-center">
-                        <% if (submissions = form_submissions[person.id]) %>
-                          <% tooltip_parts = submissions.map { |name, ts, _role| "#{name} — Submitted #{ts.strftime('%B %d, %Y at %l:%M %P')}" } %>
-                          <% sittings = FormSubmission.sitting_count(submissions.map { |_name, ts, role| [ role, ts ] }) %>
+                        <% if (sittings = form_submissions[person.id]) %>
+                          <% tooltip_parts = sittings.groups.map { |group| "#{group.map(&:form_name).join(" + ")} — Submitted #{group.first.created_at.strftime('%B %d, %Y at %l:%M %P')}" } %>
                           <% tooltip_parts << "Scholarship requested" if registration.scholarship_requested? %>
                           <%= link_to event_registrant_submissions_path(@event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id),
                                       class: "relative text-blue-600 hover:text-blue-800",
                                       title: tooltip_parts.join("\n"),
                                       data: { turbo_frame: "_top" } do %>
                             <i class="fa-regular fa-file-lines"></i>
-                            <% if sittings > 1 %>
-                              <span class="text-3xs absolute -top-1.5 -right-2 rounded-full bg-blue-600 px-1 leading-tight font-semibold text-white" title="Submitted <%= sittings %> times"><%= sittings %></span>
+                            <% if sittings.count > 1 %>
+                              <span class="text-3xs absolute -top-1.5 -right-2 rounded-full bg-blue-600 px-1 leading-tight font-semibold text-white"><%= sittings.count %></span>
                             <% end %>
                           <% end %>
                         <% end %>

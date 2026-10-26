@@ -20,6 +20,20 @@ RSpec.describe "Events::FormSubmissions", type: :request do
         expect(response.body).to include(form.name)
       end
 
+      it "groups a registration with the forms sent alongside it, apart from a later standalone submission" do
+        submission.update!(role: "registration", created_at: Time.zone.local(2026, 9, 1, 10))
+        scholarship = create(:form_submission, person: person, form: create(:form), event: event, role: "scholarship", created_at: Time.zone.local(2026, 9, 1, 10, 0, 2))
+        later_ce = create(:form_submission, person: person, form: create(:form), event: event, role: "continuing_education", created_at: Time.zone.local(2026, 10, 1, 10))
+
+        get event_registrant_submissions_path(event, person_id: person.id)
+
+        sittings = Nokogiri::HTML(response.body).css("section").map { |section| section.css("[id^='form-submission-']").map { |node| node["id"] } }
+        expect(sittings).to eq([
+          [ "form-submission-#{submission.id}", "form-submission-#{scholarship.id}" ],
+          [ "form-submission-#{later_ce.id}" ]
+        ])
+      end
+
       it "links a submission to its changes audit once it has overwritten a value" do
         org = create(:organization)
         create(:ahoy_event, name: "update.organization", properties: {

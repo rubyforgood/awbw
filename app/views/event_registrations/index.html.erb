@@ -55,9 +55,7 @@
 
                 <% event_ids = @event_registrations.map(&:event_id).uniq %>
                 <% registrant_ids = @event_registrations.map(&:registrant_id).uniq %>
-                <% submission_sittings = FormSubmission.where(event_id: event_ids, person_id: registrant_ids).pluck(:person_id, :event_id, :role, :created_at)
-                     .group_by { |row| row.first(2) }
-                     .transform_values { |rows| FormSubmission.sitting_count(rows.map { |_, _, role, ts| [ role, ts ] }) } %>
+                <% submission_sittings = FormSubmissionSittings.for_events(event_ids, registrant_ids).select { |_, sittings| sittings.registered? } %>
                 <% events_with_forms = EventForm.where(event_id: event_ids).distinct.pluck(:event_id).to_set %>
                 <% allocation_sums = Allocation.where(allocatable_type: EventRegistration.polymorphic_name, allocatable_id: @event_registrations.map(&:id)).group(:allocatable_id).sum(:amount) %>
                 <% over_allocation_cents = @event_registrations.each_with_object({}) do |registration, memo|
@@ -75,13 +73,13 @@
                             <i class="fa-solid fa-clipboard-list text-2xs shrink-0 <%= DomainTheme.text_class_for(:event_registrations) %>"></i>
                             <span class="truncate font-semibold <%= DomainTheme.text_class_for(:event_registrations) %>"><%= person_name(event_registration.registrant) %></span>
                           <% end %>
-                          <% if (sittings = submission_sittings[[ event_registration.registrant_id, event_registration.event_id ]]) %>
+                          <% if (sitting_count = submission_sittings[[ event_registration.registrant_id, event_registration.event_id ]]&.count) %>
                             <%= link_to event_registrant_submissions_path(event_registration.event, person_id: event_registration.registrant_id, return_to: "index"),
                                         class: "relative shrink-0 text-green-600 hover:text-green-800",
-                                        title: sittings > 1 ? "Submitted #{sittings} times" : "Completed registration form" do %>
+                                        title: sitting_count > 1 ? "Submitted #{sitting_count} times" : "Completed registration form" do %>
                               <i class="fa-solid fa-file-lines"></i>
-                              <% if sittings > 1 %>
-                                <span class="text-3xs absolute -top-1.5 -right-2 rounded-full bg-green-600 px-1 leading-tight font-semibold text-white"><%= sittings %></span>
+                              <% if sitting_count > 1 %>
+                                <span class="text-3xs absolute -top-1.5 -right-2 rounded-full bg-green-600 px-1 leading-tight font-semibold text-white"><%= sitting_count %></span>
                               <% end %>
                             <% end %>
                           <% elsif events_with_forms.include?(event_registration.event_id) %>

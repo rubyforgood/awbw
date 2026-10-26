@@ -27,6 +27,7 @@ RSpec.describe "EventRegistrations", type: :request do
         form = create(:form)
         scholarship_form = create(:form)
         create(:event_form, :registration, event: event, form: form)
+        create(:event_form, :scholarship, event: event, form: scholarship_form)
         first_sitting = Time.zone.local(2026, 9, 1, 10)
         create(:form_submission, person: regular_user.person, form: form, event: event, role: "registration", created_at: first_sitting)
         create(:form_submission, person: regular_user.person, form: scholarship_form, event: event, role: "scholarship", created_at: first_sitting + 1.second)
@@ -497,8 +498,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
       context "when the registrant submitted the registration form more than once" do
         let(:reg_form) { create(:form, name: "Reg form") }
-        let!(:first_submission) { create(:form_submission, person: regular_user.person, form: reg_form, event: event, created_at: Time.zone.local(2026, 9, 1, 10)) }
-        let!(:second_submission) { create(:form_submission, person: regular_user.person, form: reg_form, event: event, created_at: Time.zone.local(2026, 10, 2, 10)) }
+        let!(:first_submission) { create(:form_submission, person: regular_user.person, form: reg_form, event: event, role: "registration", created_at: Time.zone.local(2026, 9, 1, 10)) }
+        let!(:second_submission) { create(:form_submission, person: regular_user.person, form: reg_form, event: event, role: "registration", created_at: Time.zone.local(2026, 10, 2, 10)) }
 
         before { create(:event_form, :registration, event: event, form: reg_form) }
 
@@ -520,6 +521,17 @@ RSpec.describe "EventRegistrations", type: :request do
               registration_return_to: "roster", anchor: "form-submission-#{submission.id}")))
           end
           expect(response.body).not_to include("View form submission #")
+        end
+
+        it "links a registration and the scholarship form sent with it as one bundle" do
+          scholarship_form = create(:form, name: "Scholarship form")
+          create(:event_form, :scholarship, event: event, form: scholarship_form)
+          create(:form_submission, person: regular_user.person, form: scholarship_form, event: event, role: "scholarship", created_at: first_submission.created_at + 2.seconds)
+
+          get edit_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Reg form + 1 more · Sep 1, 2026").and include("Reg form · Oct 2, 2026")
+          expect(response.body).not_to include("Scholarship form · ")
         end
 
         it "shows what each registration submission changed" do

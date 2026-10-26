@@ -2375,8 +2375,12 @@ RSpec.describe "Events", type: :request do
         create(:event_form, event: event, form: reg_form, role: "registration")
         submitted_at = Time.zone.local(2026, 9, 1, 10)
         create(:form_submission, person: person, form: reg_form, event: event, role: "registration", created_at: submitted_at)
-        create(:form_submission, person: person, form: create(:form), event: event, role: "scholarship", created_at: submitted_at + 1.second)
-        create(:form_submission, person: person, form: create(:form), event: event, role: "continuing_education", created_at: submitted_at + 2.seconds)
+        scholarship_form = create(:form)
+        ce_form = create(:form)
+        create(:event_form, event: event, form: scholarship_form, role: "scholarship")
+        create(:event_form, event: event, form: ce_form, role: "continuing_education")
+        create(:form_submission, person: person, form: scholarship_form, event: event, role: "scholarship", created_at: submitted_at + 1.second)
+        create(:form_submission, person: person, form: ce_form, event: event, role: "continuing_education", created_at: submitted_at + 2.seconds)
 
         get registrants_event_path(event)
 
