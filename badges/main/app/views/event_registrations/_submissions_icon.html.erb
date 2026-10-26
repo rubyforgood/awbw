@@ -1,0 +1,12 @@
+<%# The form icon linking to a registrant's submissions page, badged with how many times they submitted. locals: sittings (FormSubmissionSittings), path, scholarship_requested (optional) %>
+<% tooltip_parts = sittings.groups.map { |group| "#{group.map(&:form_name).join(" + ")} — Submitted #{group.first.created_at.strftime('%B %d, %Y at %l:%M %P')}" } %>
+<% tooltip_parts << "Scholarship requested" if local_assigns[:scholarship_requested] %>
+<%= link_to path,
+            class: "relative shrink-0 text-blue-600 hover:text-blue-800",
+            title: tooltip_parts.join("\n"),
+            data: { turbo_frame: "_top" } do %>
+  <i class="fa-regular fa-file-lines"></i>
+  <% if sittings.count > 1 %>
+    <span class="text-3xs absolute -top-1.5 -right-2 rounded-full bg-blue-600 px-1 leading-tight font-semibold text-white"><%= sittings.count %></span>
+  <% end %>
+<% end %>

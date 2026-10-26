@@ -13,9 +13,11 @@ class ScholarshipApplication
   # recorded against another form's copy of a standard question are still found.
   IDENTIFIERS = FormBuilderService::SECTION_FIELD_IDENTIFIERS[:scholarship].freeze
 
-  def initialize(event:, person:)
+  # Pass submissions to read only those (e.g. one sitting's), rather than every one for the event.
+  def initialize(event:, person:, submissions: nil)
     @event = event
     @person = person
+    @submissions = submissions
   end
 
   # The scholarship questions in display order: every field on a dedicated

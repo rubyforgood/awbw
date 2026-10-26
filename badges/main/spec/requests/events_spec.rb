@@ -2360,6 +2360,35 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('text-blue-600')
       end
 
+      it "links the icon to the submissions page with a badge counting each registration, even seconds apart" do
+        create(:event_form, event: event, form: reg_form, role: "registration")
+        2.times { |i| create(:form_submission, person: person, form: reg_form, event: event, role: "registration", created_at: Time.zone.local(2026, 9, 1, 10) + i.seconds) }
+
+        get registrants_event_path(event)
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)}']")
+        expect(link).to be_present
+        expect(link.text.strip).to eq("2")
+      end
+
+      it "counts a registration submitted with its scholarship and CE forms once, with no badge" do
+        create(:event_form, event: event, form: reg_form, role: "registration")
+        submitted_at = Time.zone.local(2026, 9, 1, 10)
+        create(:form_submission, person: person, form: reg_form, event: event, role: "registration", created_at: submitted_at)
+        scholarship_form = create(:form)
+        ce_form = create(:form)
+        create(:event_form, event: event, form: scholarship_form, role: "scholarship")
+        create(:event_form, event: event, form: ce_form, role: "continuing_education")
+        create(:form_submission, person: person, form: scholarship_form, event: event, role: "scholarship", created_at: submitted_at + 1.second)
+        create(:form_submission, person: person, form: ce_form, event: event, role: "continuing_education", created_at: submitted_at + 2.seconds)
+
+        get registrants_event_path(event)
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)}']")
+        expect(link).to be_present
+        expect(link.text.strip).to be_empty
+      end
+
       it "reserves an empty slot (no icon) when person has not submitted, keeping later icons aligned" do
         create(:event_form, event: event, form: reg_form, role: "registration")
 

@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "public") %>
 
-<% reg = @form_submission.person.event_registrations.find_by(event: @event) %>
+<% reg = @person.event_registrations.find_by(event: @event) %>
 <%# Viewed from the admin Registrants roster (same-tab nav): return to that
     registrant's row, not the public ticket. Falls back to ticket/event. %>
 <% if params[:return_to] == "registrants" && reg && allowed_to?(:index?, EventRegistration) %>
@@ -29,71 +29,52 @@
     <% if reg && allowed_to?(:index?, EventRegistration) %>
       <%# Admin's counterpart to this public view — jump back to the event-scoped
           submission page this page's "View public version" link came from. %>
-      <%= link_to "Admin view", event_registrant_submissions_path(@event, person_id: @form_submission.person_id), class: "ml-auto admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <%= link_to "Admin view", event_registrant_submissions_path(@event, person_id: @person.id), class: "ml-auto admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
       <%= link_to "Edit registration", edit_event_registration_path(reg), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% end %>
   </div>
 </div>
 
 <div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
+  <% if (registration_submission = @sitting.registration) %>
+    <%# Admin-only audit banner — sits above the registrant-facing card so it
+        stands out to admins as an overlay, not part of what the registrant sees. %>
+    <%= render "form_submissions/changes_link", submission: registration_submission, return_to: "public_registration", badge: true %>
 
-  <%# Admin-only audit banner — sits above the registrant-facing card so it
-      stands out to admins as an overlay, not part of what the registrant sees. %>
-  <%= render "form_submissions/changes_link", submission: @form_submission, return_to: "public_registration", badge: true %>
+    <%# ---- FORM RESPONSES CARD ---- %>
+    <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
 
-  <%# ---- FORM RESPONSES CARD ---- %>
-  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
-
-    <%# Card Header %>
-    <%= render accent_strip_partial %>
-    <div class="bg-primary text-white px-6 sm:px-8 py-5">
-      <div class="flex items-center gap-5">
-        <div class="shrink-0">
-          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
+      <%# Card Header %>
+      <%= render accent_strip_partial %>
+      <div class="bg-primary text-white px-6 sm:px-8 py-5">
+        <div class="flex items-center gap-5">
+          <div class="shrink-0">
+            <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
+          </div>
+          <div class="flex-1">
+            <h1 class="text-xl font-semibold tracking-wide leading-tight">Your form responses</h1>
+            <p class="text-sm text-blue-200"><%= @event.title %></p>
+          </div>
         </div>
-        <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight">Your form responses</h1>
-          <p class="text-sm text-blue-200"><%= @event.title %></p>
+      </div>
+
+      <%# Card Body %>
+      <div class="px-6 sm:px-8 py-7">
+        <%= render "forms/header", form: @registration_form, event: @event %>
+
+        <%= render "submission_answers", submission: registration_submission, form_fields: @form_fields %>
+
+        <div class="pt-4 border-t border-gray-200 mt-4">
+          <p class="text-xs text-gray-500">
+            Submitted on <%= registration_submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
+          </p>
         </div>
       </div>
     </div>
+  <% end %>
 
-    <%# Card Body %>
-    <div class="px-6 sm:px-8 py-7">
-      <%= render "forms/header", form: @registration_form, event: @event %>
-
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
-        <% @form_fields.each do |field| %>
-          <% next if field.field_identifier == "confirm_email" %>
-
-          <% if field.group_header? %>
-            <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
-              <h3 class="rich-label flex items-center gap-2.5 text-lg font-semibold text-gray-800">
-                <span class="<%= form_section_bar_class %>"></span><%= form_label_inline_html(field.name) %>
-              </h3>
-            </div>
-          <% else %>
-            <% display_answer_rows(@form_submission, field, @responses[field.id]).each do |label, response| %>
-              <div class="<%= field.grid_span_class %> pb-8">
-                <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(label) %></dt>
-                <dd class="mt-0.5 text-base font-semibold text-gray-900 whitespace-pre-line"><%= render "shared/form_answer_value", field: field, response: response %></dd>
-              </div>
-            <% end %>
-          <% end %>
-        <% end %>
-      </div>
-
-      <div class="pt-4 border-t border-gray-200 mt-4">
-        <p class="text-xs text-gray-500">
-          Submitted on <%= @form_submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <%# ---- SCHOLARSHIP APPLICATION CARD — only when the registrant filled out the
-      separate scholarship form (its own role: "scholarship" submission). ---- %>
-  <% if @scholarship_submission %>
+  <%# ---- SCHOLARSHIP APPLICATION CARD — the scholarship answers sent in this sitting. ---- %>
+  <% if (scholarship = @sitting.scholarship) %>
     <div id="scholarship-application" class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden mt-8 scroll-mt-24">
 
       <%# Card Header %>
@@ -112,39 +93,20 @@
       <div class="px-6 sm:px-8 py-7">
         <%= render "forms/header", form: @scholarship_form, event: @event %>
 
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
-          <% @scholarship_fields.each do |field| %>
-            <% next if field.name.to_s.strip.casecmp?(@scholarship_form.display_name.to_s.strip) %>
-
-            <% if field.group_header? %>
-              <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
-                <h3 class="rich-label flex items-center gap-2.5 text-lg font-semibold text-gray-800">
-                  <span class="<%= form_section_bar_class %>"></span><%= form_label_inline_html(field.name) %>
-                </h3>
-              </div>
-            <% else %>
-              <% response = @scholarship_responses[field.id] %>
-              <div class="<%= field.grid_span_class %> pb-8">
-                <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(display_question_label(field, response)) %></dt>
-                <dd class="mt-0.5 text-base font-semibold text-gray-900 whitespace-pre-line"><%= render "shared/form_answer_value", field: field, response: response %></dd>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
+        <%= render "submission_answers", submission: scholarship.submission, form_fields: @scholarship_fields,
+                   responses: scholarship.responses, skip_name: @scholarship_form.display_name %>
 
         <div class="pt-4 border-t border-gray-200 mt-4">
           <p class="text-xs text-gray-500">
-            Submitted on <%= @scholarship_submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
+            Submitted on <%= scholarship.submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
           </p>
         </div>
       </div>
     </div>
   <% end %>
 
-  <%# ---- CONTINUING EDUCATION CARD — only when the registrant filled out the
-      separate continuing_education form (its own role: "continuing_education"
-      submission). ---- %>
-  <% if @continuing_education_submission %>
+  <%# ---- CONTINUING EDUCATION CARD — the CE answers sent in this sitting. ---- %>
+  <% if (continuing_education = @sitting.continuing_education) %>
     <div id="continuing-education" class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden mt-8 scroll-mt-24">
 
       <%# Card Header %>
@@ -163,32 +125,41 @@
       <div class="px-6 sm:px-8 py-7">
         <%= render "forms/header", form: @continuing_education_form, event: @event %>
 
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
-          <% @continuing_education_fields.each do |field| %>
-            <% next if field.name.to_s.strip.casecmp?(@continuing_education_form.display_name.to_s.strip) %>
-
-            <% if field.group_header? %>
-              <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
-                <h3 class="rich-label flex items-center gap-2.5 text-lg font-semibold text-gray-800">
-                  <span class="<%= form_section_bar_class %>"></span><%= form_label_inline_html(field.name) %>
-                </h3>
-              </div>
-            <% else %>
-              <% response = @continuing_education_responses[field.id] %>
-              <div class="<%= field.grid_span_class %> pb-8">
-                <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(display_question_label(field, response)) %></dt>
-                <dd class="mt-0.5 text-base font-semibold text-gray-900 whitespace-pre-line"><%= render "shared/form_answer_value", field: field, response: response %></dd>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
+        <%= render "submission_answers", submission: continuing_education.submission, form_fields: @continuing_education_fields,
+                   responses: continuing_education.responses, skip_name: @continuing_education_form.display_name %>
 
         <div class="pt-4 border-t border-gray-200 mt-4">
           <p class="text-xs text-gray-500">
-            Submitted on <%= @continuing_education_submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
+            Submitted on <%= continuing_education.submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
           </p>
         </div>
       </div>
     </div>
+  <% end %>
+
+  <% if (bulk_payment = @sitting.bulk_payment) %>
+    <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden mt-8 px-6 sm:px-8 py-7">
+      <h2 class="text-xl font-semibold text-gray-800"><%= bulk_payment.form.name %></h2>
+      <%= render "form_submissions/submission", submission: bulk_payment %>
+    </div>
+  <% end %>
+
+  <% if @other_sittings.any? %>
+    <section class="mt-10 space-y-3">
+      <h2 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">
+        <%= @other_sittings.first.created_at < @sitting.created_at ? "Earlier" : "Other" %> submissions
+      </h2>
+      <% @other_sittings.each do |sitting| %>
+        <details id="form-submission-<%= sitting.submissions.first.id %>" class="group rounded-xl border border-gray-200 bg-white scroll-mt-24">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-gray-700 select-none [&::-webkit-details-marker]:hidden">
+            <span><%= sitting.form_names %> — Submitted on <%= sitting.created_at.strftime("%B %d, %Y at %l:%M %P") %></span>
+            <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <div class="border-t border-gray-100 px-4 pt-4 pb-4">
+            <%= render "sitting_details", sitting: sitting %>
+          </div>
+        </details>
+      <% end %>
+    </section>
   <% end %>
 </div>

@@ -20,6 +20,20 @@ RSpec.describe "Events::FormSubmissions", type: :request do
         expect(response.body).to include(form.name)
       end
 
+      it "groups a registration with the forms sent alongside it, apart from a later standalone submission" do
+        submission.update!(role: "registration", created_at: Time.zone.local(2026, 9, 1, 10))
+        scholarship = create(:form_submission, person: person, form: create(:form), event: event, role: "scholarship", created_at: Time.zone.local(2026, 9, 1, 10, 0, 2))
+        later_ce = create(:form_submission, person: person, form: create(:form), event: event, role: "continuing_education", created_at: Time.zone.local(2026, 10, 1, 10))
+
+        get event_registrant_submissions_path(event, person_id: person.id)
+
+        sittings = Nokogiri::HTML(response.body).css("section").map { |section| section.css("[id^='form-submission-']").map { |node| node["id"] } }
+        expect(sittings).to eq([
+          [ "form-submission-#{submission.id}", "form-submission-#{scholarship.id}" ],
+          [ "form-submission-#{later_ce.id}" ]
+        ])
+      end
+
       it "links a submission to its changes audit once it has overwritten a value" do
         org = create(:organization)
         create(:ahoy_event, name: "update.organization", properties: {
@@ -38,6 +52,47 @@ RSpec.describe "Events::FormSubmissions", type: :request do
         get event_registrant_submissions_path(event, person_id: person.id)
 
         expect(response.body).not_to include(changes_form_submission_path(submission))
+      end
+
+      describe "back link" do
+        let!(:registration) { create(:event_registration, event: event, registrant: person) }
+
+        it "defaults to the registrants page" do
+          get event_registrant_submissions_path(event, person_id: person.id)
+
+          expect(response.body).to include("Back to registrants")
+          expect(response.body).to include("href=\"#{registrants_event_path(event)}\"")
+        end
+
+        it "returns to the registrant's row on the registrants page" do
+          get event_registrant_submissions_path(event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)
+
+          expect(response.body).to include("Back to registrants")
+          expect(response.body).to include("registrant-row-#{registration.id}")
+        end
+
+        it "returns to the edit registration page, keeping its own return_to" do
+          get event_registrant_submissions_path(event, person_id: person.id, return_to: "event_registration",
+            event_registration_id: registration.id, registration_return_to: "roster")
+
+          expect(response.body).to include("Back to registration")
+          expect(response.body).to include(edit_event_registration_path(registration, return_to: "roster"))
+        end
+
+        it "returns to the event registrations index" do
+          get event_registrant_submissions_path(event, person_id: person.id, return_to: "index")
+
+          expect(response.body).to include("Back to registrations")
+          expect(response.body).to include("href=\"#{event_registrations_path}\"")
+        end
+
+        it "returns to the linked-organizations page, keeping its own return_to" do
+          get event_registrant_submissions_path(event, person_id: person.id, return_to: "link_organization",
+            event_registration_id: registration.id, link_org_return_to: "registrants")
+
+          expect(response.body).to include("Back to linked organizations")
+          expect(response.body).to include(link_organization_event_registration_path(registration, return_to: "registrants"))
+        end
       end
 
       it "returns 404 when person does not exist" do
