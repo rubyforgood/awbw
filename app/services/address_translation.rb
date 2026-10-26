@@ -14,7 +14,7 @@ class AddressTranslation
     "home/eve" => "personal", "cell/personal" => "personal",
     "work" => "work", "home/work" => "work", "business" => "work", "professional" => "work", "work/day" => "work", "office" => "work",
     "work phone" => "work", "business line" => "work", "organization" => "work", "program" => "work",
-    "corporate" => "work", "corporate office" => "work", "district office" => "work",
+    "corporate" => "work", "corporate office" => "work", "district office" => "work", "workshop site" => "work",
     "mailing" => "mailing", "postal" => "mailing"
   }.freeze
 

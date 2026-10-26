@@ -130,7 +130,7 @@ RSpec.describe AddressTranslation do
       {
         "Home" => "personal", "cell" => "personal", "Home/Eve" => "personal", "Cell/Personal" => "personal",
         "Work" => "work", "Home/Work" => "work", "Business" => "work", "Work/Day" => "work", "Office" => "work", "Organization" => "work",
-        "Program" => "work", "Corporate Office" => "work", "District Office" => "work",
+        "Program" => "work", "Corporate Office" => "work", "District Office" => "work", "Workshop Site" => "work",
         "Mailing" => "mailing", "Postal" => "mailing"
       }.each do |typed, type|
         expect(translation.address_type(typed)).to eq(type)
