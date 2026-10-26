@@ -22,11 +22,6 @@ module EventRegistrationServices
     CE_LICENSE_ISSUING_COUNTRY_IDENTIFIER = "ce_license_issuing_country".freeze
     CE_LICENSE_EXPIRES_ON_IDENTIFIER = "ce_license_expires_on".freeze
 
-    CE_LICENSE_IDENTIFIERS = [
-      CE_LICENSE_NUMBER_IDENTIFIER, CE_LICENSE_KIND_IDENTIFIER, CE_LICENSE_ISSUING_STATE_IDENTIFIER,
-      CE_LICENSE_ISSUING_COUNTRY_IDENTIFIER, CE_LICENSE_EXPIRES_ON_IDENTIFIER
-    ].freeze
-
     # Well-known field_identifier of the "Additional forms" multi-select question.
     # Checking "Invoice" / "W-9" toggles the registration's invoice_requested /
     # w9_requested flags, which the digital ticket reads to surface those downloads.
@@ -391,15 +386,9 @@ module EventRegistrationServices
         field = @continuing_education_form.form_fields.find_by(id: field_id)
         next unless field
         next if field.group_header?
-        next if keep_license_answer?(submission, field, raw_value)
 
         submission.persist_answer(field, raw_value)
       end
-    end
-
-    # A reapplication that leaves a license answer blank hasn't supplied it, so the one on file stays.
-    def keep_license_answer?(submission, field, raw_value)
-      raw_value.blank? && !submission.previously_new_record? && field.field_identifier.in?(CE_LICENSE_IDENTIFIERS)
     end
 
     def send_notifications(event_registration)

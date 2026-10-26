@@ -267,7 +267,7 @@ module Events
       ce_form = @event.continuing_education_form
       return unless ce_form
 
-      submission = ce_form.form_submissions.where(person: person, event: @event, role: "continuing_education").order(:created_at).last
+      submission = ce_form.form_submissions.find_by(person: person, event: @event, role: "continuing_education")
       return unless submission
 
       @continuing_education_submission = submission

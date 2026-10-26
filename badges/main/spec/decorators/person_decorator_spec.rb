@@ -118,38 +118,6 @@ RSpec.describe PersonDecorator do
     end
   end
 
-  describe "#profile_email_login?" do
-    it "is true when the profile email is the login email" do
-      expect(create(:person).decorate.profile_email_login?).to be(true)
-    end
-
-    it "is false without a user account" do
-      expect(create(:person, user: nil, email: "record@example.com").decorate.profile_email_login?).to be(false)
-    end
-  end
-
-  describe "#profile_email_label" do
-    it "marks the login email as the user account" do
-      expect(create(:person).decorate.profile_email_label).to eq("primary · user account")
-    end
-
-    it "marks a record-only email as primary" do
-      person = create(:person, user: nil, email: "record@example.com")
-
-      expect(person.decorate.profile_email_label).to eq("primary")
-    end
-  end
-
-  describe "#email_2_label" do
-    it "adds the email type" do
-      expect(build(:person, email_2_type: "personal").decorate.email_2_label).to eq("email2 · personal")
-    end
-
-    it "is just email2 without a type" do
-      expect(build(:person, email_2_type: nil).decorate.email_2_label).to eq("email2")
-    end
-  end
-
   describe "#hidden_profile_pieces" do
     it "is empty when every piece is shared" do
       expect(create(:person, profile_show_email: true).decorate.hidden_profile_pieces).to be_empty

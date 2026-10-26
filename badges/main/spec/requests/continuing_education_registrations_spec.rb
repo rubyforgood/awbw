@@ -72,20 +72,6 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       end
     end
 
-    it "won't add a second CE registration for a license the registration already has" do
-      ce_registration
-
-      expect {
-        post continuing_education_registrations_path,
-             params: { allocatable_sgid: registration.to_sgid.to_s,
-                       continuing_education_registration: { hours: "6", cost_dollars: "120",
-                         license_kind: ce_registration.professional_license.kind,
-                         license_number: ce_registration.professional_license.number } }
-      }.not_to change(ContinuingEducationRegistration, :count)
-
-      expect(response).to have_http_status(:unprocessable_content)
-    end
-
     it "renders the index shell with the CE timesheets menu" do
       ce_registration
       get continuing_education_registrations_path

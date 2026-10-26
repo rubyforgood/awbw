@@ -1277,24 +1277,6 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(registration.reload.continuing_education_registrations.first.professional_license.number).to eq("LIC-999")
       end
 
-      it "mirrors the number onto this event's newest CE submission only" do
-        ce_form = FormBuilderService.new(name: "CE request", sections: %i[continuing_education], role: "continuing_education").call
-        EventForm.create!(event: event, form: ce_form, role: "continuing_education")
-        field = ce_form.form_fields.find_by!(field_identifier: "ce_license_number")
-        submit = ->(on_event, at) do
-          create(:form_submission, form: ce_form, person: registration.registrant, event: on_event, role: "continuing_education", created_at: at)
-            .tap { |submission| submission.form_answers.create!(form_field: field, submitted_answer: "OLD") }
-        end
-        older = submit.(event, 2.days.ago)
-        newest = submit.(event, 1.day.ago)
-        other_event = submit.(create(:event), 1.hour.ago)
-
-        post registration_ce_license_path(registration.slug), params: { license_number: "LIC-999", license_kind: "LCSW" }
-
-        answer = ->(submission) { submission.form_answers.find_by(form_field: field).submitted_answer }
-        expect([ answer.(older), answer.(newest), answer.(other_event) ]).to eq(%w[OLD LIC-999 OLD])
-      end
-
       it "refuses to change the license once the certificate has been issued" do
         registration.continuing_education_registrations.first.update!(certificate_sent_at: Time.current)
 

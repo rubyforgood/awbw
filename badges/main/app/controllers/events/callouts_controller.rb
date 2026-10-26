@@ -608,11 +608,8 @@ module Events
     def record_ce_license_answer(number)
       form = @event.continuing_education_form
       field = form&.form_fields&.find_by(field_identifier: "ce_license_number")
-      return unless field
-
-      submission = form.form_submissions.where(person: @event_registration.registrant, event_id: @event_registration.event_id, role: "continuing_education")
-        .order(:created_at).last
-      return unless submission
+      submission = form&.form_submissions&.find_by(person: @event_registration.registrant, role: "continuing_education")
+      return unless field && submission
 
       answer = submission.form_answers.find_or_initialize_by(form_field: field)
       answer.update!(submitted_answer: number.to_s, question_name_when_answered: field.name)
