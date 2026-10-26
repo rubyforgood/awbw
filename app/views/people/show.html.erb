@@ -134,8 +134,14 @@
         <% end %>
         <!-- Phone + social -->
         <div class="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm md:justify-start">
-          <% if @person.profile_phone.present? && @person.profile_show_phone? %>
-            <%= render "people/profile_pieces/phone_chip", person: @person %>
+          <% if @person.profile_phone.present? %>
+            <% if @person.profile_show_phone? %>
+              <%= render "people/profile_pieces/phone_chip", person: @person %>
+            <% elsif allowed_to?(:manage?, Person) %>
+              <span class="<%= admin_only_chip_class %>" title="Phone (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= link_to @person.profile_phone, tel_href(@person.profile_phone), class: "hover:text-primary" %> <span class="text-2xs text-blue-700 uppercase">(primary)</span>
+              </span>
+            <% end %>
           <% end %>
           <% if @person.social_media? && @person.profile_show_social_media? %>
             <%= render "people/social_media_buttons", person: @person %>

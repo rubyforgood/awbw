@@ -168,6 +168,25 @@ RSpec.describe "Person profile flag visibility", type: :request do
     end
   end
 
+  describe "#profile_show_phone" do
+    context "when false" do
+      before { person.update!(profile_show_phone: false) }
+
+      it "shows the phone to an admin in the header as an admin-only chip" do
+        sign_in admin
+        get person_path(person)
+        chip = Capybara.string(response.body).find("span[title='Phone (admin only)']")
+        expect(chip).to have_text("555-123-4567 (primary)")
+      end
+
+      it "leaves the admin-only header chip off the owner's view" do
+        sign_in owner_user
+        get person_path(person)
+        expect(response.body).not_to include("Phone (admin only)")
+      end
+    end
+  end
+
   describe "#profile_show_email" do
     let(:email) { person.user.email }
 
