@@ -185,7 +185,12 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
       "County Government Agency" => [ "Government agency", nil ],
       "Govt agency" => [ "Government agency", nil ],
       "Other" => [ "Other", nil ],
-      "School" => [ "Other", "School" ]
+      # Every word the four types can't hold keeps itself as the description, so nothing the
+      # archive said is lost: these are the ones production holds.
+      "School" => [ "Other", "School" ],
+      "Educational Institution" => [ "Other", "Educational Institution" ],
+      "Individual" => [ "Other", "Individual" ],
+      "Grassroots" => [ "Other", "Grassroots" ]
     }.each do |fm_type, (type, other)|
       it "reads #{fm_type.inspect} as #{type}#{" (#{other})" if other}" do
         fm_organization("ORG00001", OrgType: fm_type)
