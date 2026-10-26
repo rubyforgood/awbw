@@ -86,6 +86,11 @@ namespace :fm do
           import.differences.each { |difference| say.("  #{difference}") }
         end
 
+        if import.try(:code_mismatches).present?
+          say.("\nCodes already on an organization FileMaker names differently — kept there, imported as their own (#{import.code_mismatches.size}, also a comment on it):")
+          import.code_mismatches.each { |line| say.("  #{line}") }
+        end
+
         if import.try(:nested).present?
           say.("\nNested under their FileMaker parent (ParentID) (#{import.nested.size}):")
           import.nested.each { |line| say.("  #{line}") }

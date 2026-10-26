@@ -34,6 +34,12 @@ module OrganizationServices
   #     when the card names no contact person whose email it would be)
   #   * the organization a Rolodex card names, for someone staffing a project that wasn't
   #     imported, created by name when nothing answers to it
+  #
+  # A code counts only on an organization answering to the FileMaker name of some code it
+  # carries (FilemakerNames) — a merged organization answers to every code it gathered. When
+  # no organization carrying the code does, it stays where it is and the row lands on the
+  # organization its name finds or a new one, which takes the code too; each is listed in
+  # #code_mismatches and left as a comment on the organization that already carried it.
   class ImportFromFilemaker
     include FilemakerValues
 
@@ -57,7 +63,7 @@ module OrganizationServices
     COMMENT_SOURCES = { FmOrganization => "FileMaker organization", FmProject => "FileMaker project",
                         FmRolodex => "FileMaker Rolodex agency" }.freeze
 
-    attr_reader :results, :differences, :unmatched_types, :unmatched_phone_types, :nested, :unplaced
+    attr_reader :results, :differences, :unmatched_types, :unmatched_phone_types, :nested, :unplaced, :code_mismatches
 
     def unmatched_addresses = @address_attributes.unmatched
     def unmatched_staff = @staff.unmatched
@@ -70,6 +76,7 @@ module OrganizationServices
       @differences = []
       @nested = []
       @unplaced = []
+      @code_mismatches = []
       @unmatched_types = Hash.new(0)
       @unmatched_phone_types = Hash.new(0)
       @staff = StaffTranslation.new
@@ -84,6 +91,7 @@ module OrganizationServices
       @organization_ids = FmOrganization.pluck(:fm_id).to_set
       projects = FmProject.all.to_a
       @projects = projects.index_by(&:fm_id)
+      @names = FilemakerNames.new(projects:)
       @project_ids = @projects.keys.to_set
       @addresses = FmAddress.all.group_by { |address| address.data["OrgID"].to_s }
       @phones = FmPhoneNumber.all.group_by { |phone| phone.data["OrgID"].to_s }
@@ -96,6 +104,7 @@ module OrganizationServices
       merged, live = projects.partition { |project| merged_into(project) }
       by_organization = live.group_by { |project| project.data["OrgID"].to_s }
       @duplicates = []
+      @mismatches = {}
       read = 0
       wanted_scope(FmOrganization.all).find_in_batches(batch_size: BATCH_SIZE) do |batch|
         import_batch(batch) { |organization| import_organization(organization, by_organization.delete(organization.fm_id) || []) }
@@ -108,6 +117,7 @@ module OrganizationServices
       import_batch(merged) { |project| fold_merged(project) }
       import_batch(agency_cards.select { |rolodex| wanted?(rolodex.fm_id) }) { |rolodex| import_agency(rolodex) }
       import_batch(unplaced_staff_cards) { |rolodex| import_card_organization(rolodex) }
+      import_batch(@mismatches.keys) { |code| note_mismatch(nil, code) }
       self
     end
 
@@ -156,11 +166,11 @@ module OrganizationServices
         return import_projects(nil, projects)
       end
 
-      umbrella = coded(fm_organization.fm_id) || named(name, @organization_ids)
+      umbrella = coded_as(fm_organization.fm_id, name) || named(fm_organization, name, @organization_ids)
       return import_single_program(fm_organization, projects.sole, umbrella, label) if projects.one?
 
       umbrella ||= Organization.new(name: unique_name(name, fm_organization.fm_id))
-      return unless save(umbrella, fm_organization, label, organization_attributes(data))
+      return unless note_mismatch(save(umbrella, fm_organization, label, organization_attributes(data)), fm_organization.fm_id)
 
       import_projects(umbrella, projects)
     end
@@ -168,9 +178,9 @@ module OrganizationServices
     # One organization running one program is a single place, so it stays one portal
     # organization carrying both codes — unless the portal already keeps them apart.
     def import_single_program(fm_organization, project, umbrella, label)
-      program = coded(project.fm_id) || named(project_name(project), @project_ids)
+      program = coded_as(project.fm_id, project_name(project)) || named(project, project_name(project), @project_ids)
       if umbrella && program && umbrella != program
-        return unless save(umbrella, fm_organization, label, organization_attributes(fm_organization.data))
+        return unless note_mismatch(save(umbrella, fm_organization, label, organization_attributes(fm_organization.data)), fm_organization.fm_id)
 
         return import_projects(umbrella, [ project ])
       end
@@ -179,7 +189,9 @@ module OrganizationServices
       organization_side = organization_attributes(fm_organization.data)
       attributes = organization_side.merge(project_attributes(project.data)) { |_key, mine, theirs| mine.presence || theirs }
       attributes.merge!(organization_side.slice(*TYPE_FIELDS)) if organization_side[:organization_type]
-      save(organization, fm_organization, "#{label} + #{project.fm_id}", attributes, also: project)
+      saved = save(organization, fm_organization, "#{label} + #{project.fm_id}", attributes, also: project)
+      note_mismatch(saved, fm_organization.fm_id)
+      note_mismatch(saved, project.fm_id)
     end
 
     def import_projects(umbrella, projects)
@@ -188,9 +200,9 @@ module OrganizationServices
         label = "#{project.fm_id} #{name}".squish
         next record(:skipped, "#{label}: no name") if name.blank?
 
-        program = coded(project.fm_id) || named(name, @project_ids) || Organization.new(name: unique_name(name, project.fm_id))
+        program = coded_as(project.fm_id, name) || named(project, name, @project_ids) || Organization.new(name: unique_name(name, project.fm_id))
         nest(program, umbrella, label) if umbrella && program != umbrella
-        save(program, project, label, project_attributes(project.data))
+        note_mismatch(save(program, project, label, project_attributes(project.data)), project.fm_id)
       end
     end
 
@@ -351,21 +363,59 @@ module OrganizationServices
       data["FirstName"].present? && data["LastName"].present?
     end
 
+    # Of the organizations carrying the code, the one FileMaker means.
     def coded(code)
       code = code.to_s.strip
       return if code.blank?
 
       ids = @codes.ids(code)
-      Organization.find_by(id: ids.first) if ids.any?
+      return Organization.find_by(id: ids.first) if ids.size < 2
+
+      @names.pick(Organization.where(id: ids).order(:id).to_a)
     end
 
-    # The organization by exact name, unless it already carries another code from the same
-    # archive table — then it's a namesake of a different FileMaker record.
-    def named(name, table_ids)
+    # The organization carrying the code that answers to its FileMaker name. When none does,
+    # the code stays on them and the row finds or makes its own organization.
+    def coded_as(code, name)
+      carriers = Organization.where(id: @codes.ids(code)).order(:id).to_a
+      return if carriers.empty?
+
+      match = carriers.find { |organization| @names.answers?(organization) }
+      @mismatches[code] = [ carriers, name ] unless match
+      match
+    end
+
+    # Notes, once the row's own organization is saved, each organization that already carried
+    # its code under another name — on the report and as a comment there.
+    def note_mismatch(organization, code)
+      carriers, name = @mismatches.delete(code)
+      return organization unless carriers
+
+      onto = organization ? "##{organization.id}" : "no organization — it failed to save"
+      carriers.each do |carrier|
+        Comment.create!(commentable: carrier,
+                        body: "FileMaker #{code} is “#{name}”, which isn't this organization's name, so the import brought it " \
+                              "in as #{onto}. This organization keeps #{code}.")
+        @code_mismatches << "#{code} “#{name}”: kept on ##{carrier.id} “#{carrier.name}”, imported as #{onto}"
+      end
+      organization
+    end
+
+    # The organization by exact name. One already carrying another code from the same archive
+    # table is a namesake of a different FileMaker record — unless they share a city.
+    def named(row, name, table_ids)
       return if name.blank?
 
       organization = Organization.find_by(name:)
-      organization unless organization&.filemaker_codes&.any? { |code| table_ids.include?(code) }
+      return organization unless organization&.filemaker_codes&.any? { |code| table_ids.include?(code) }
+
+      organization if shares_city?(organization, row)
+    end
+
+    def shares_city?(organization, row)
+      cities = [ row.data["City"], *@addresses.fetch(row.fm_id, []).map { |address| address.data["AddrsCity"] } ]
+               .filter_map { |city| AddressNormalizer.city(city).presence }
+      cities.any? && organization.addresses.any? { |address| cities.include?(AddressNormalizer.city(address.city)) }
     end
 
     # Organization names are unique, so a FileMaker record whose name a namesake already
@@ -374,16 +424,8 @@ module OrganizationServices
       Organization.exists?(name:) ? clip("#{name} (#{code})") : name
     end
 
-    def organization_name(fm_organization)
-      name = clip(fm_organization.data["OrgName"].to_s.squish)
-      return name unless RETIRED_RENAMED.include?(fm_organization.fm_id)
-
-      clip("#{name.gsub(RETIRED_MARKER, "").squish} (#{fm_organization.fm_id})")
-    end
-
-    def project_name(project)
-      clip(project.data["ProjectName"].to_s.squish)
-    end
+    def organization_name(fm_organization) = @names.organization_name(fm_organization)
+    def project_name(project) = @names.project_name(project)
 
     def organization_attributes(data)
       {
