@@ -16,7 +16,6 @@ class Address < ApplicationRecord
   UNKNOWN_LOCALITY = "Unknown"
   LOCALITIES = [ LA_CITY, LA_COUNTY, "Southern CA", "Northern CA",
                 "Central CA", ORANGE_COUNTY, OUTSIDE_CA, OUTSIDE_USA, UNKNOWN_LOCALITY ]
-  CALIFORNIA_LOCALITIES = LOCALITIES - [ OUTSIDE_CA, OUTSIDE_USA, UNKNOWN_LOCALITY ]
   # The one spelling of the US the country dropdown carries, so a value compared or
   # copied against it matches the option rather than rendering the select blank.
   DEFAULT_COUNTRY = "United States"
@@ -26,8 +25,6 @@ class Address < ApplicationRecord
   ENTERED_FIELDS = %w[city street_address zip_code].freeze
   UNKNOWN_CONTACT_TYPE = "unknown"
   CONTACT_TYPES = [ nil, "work", "personal", "mailing", UNKNOWN_CONTACT_TYPE ].freeze
-  # What a person's own address can be; work addresses live on their organization.
-  PERSON_CONTACT_TYPES = %w[personal mailing].freeze
   # USPS abbreviations for the 50 states, DC, and the US territories the atlas
   # draws — the whitelist behind every "States" breakdown, so international
   # regions (e.g. "ON", "England") are excluded (they belong to the Countries map).

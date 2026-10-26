@@ -61,7 +61,7 @@ module PersonServices
     ADDITIONAL_TAG_FIELDS = %w[OtherServiceArea Settings LifeExperiences].freeze
     PRIMARY_TAG_LABELS = { tag_sectors: "Primary sector", tag_age_groups: "Primary age group" }.freeze
 
-    attr_reader :results, :differences, :invalid_emails, :unmatched_phone_types
+    attr_reader :results, :differences, :invalid_emails
 
     def initialize(scope: FmRolodex.all, relink: false, progress: nil, run: nil)
       @scope = scope
@@ -71,7 +71,6 @@ module PersonServices
       @results = OUTCOMES.index_with { [] }
       @differences = []
       @invalid_emails = []
-      @unmatched_phone_types = Hash.new(0)
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
@@ -397,23 +396,21 @@ module PersonServices
     def build_addresses(person, rolodex)
       attributes = rolodex.addresses.reject { |address| rolodex.organization_address?(address) }
                           .filter_map { |address| @address_attributes.call(address.data)&.merge(filemaker_code: address.fm_id) }
-      attach(person.addresses, attributes) { |address| FmAddressAttributes.held(person.addresses, address) }
+      attach(person.addresses, attributes) { |address| address_key(address[:street_address], address[:city]) }
     end
 
     def build_phones(person, rolodex)
       attributes = rolodex.phone_numbers.filter_map { |phone| phone_attributes(phone) }
-      attach(person.contact_methods, attributes) do |phone|
-        person.contact_methods.find { |held| phone_key(held.value) == phone_key(phone[:value]) }
-      end
+      attach(person.contact_methods, attributes) { |phone| phone_key(phone[:value]) }
     end
 
     # Each archive row lands on one record carrying its code: the one the person already
-    # holds for it (the block finds it), or a new one — the first of which is primary when
-    # the person has none.
+    # holds for it (the same address or number), or a new one — the first of which is
+    # primary when the person has none.
     def attach(association, attributes)
       has_primary = association.any?(&:primary?)
       attributes.each do |attrs|
-        held = yield(attrs)
+        held = association.find { |record| yield(record) == yield(attrs) }
         if held
           held.filemaker_code = held.class.join_filemaker_codes(held.filemaker_code, attrs[:filemaker_code])
         else
@@ -421,6 +418,10 @@ module PersonServices
           has_primary = true
         end
       end
+    end
+
+    def address_key(street, city)
+      [ AddressNormalizer.street(street), AddressNormalizer.city(city) ]
     end
 
     def phone_key(value)
@@ -431,13 +432,8 @@ module PersonServices
       number = clip(phone.data["PhoneNumber"])
       return if number.blank?
 
-      { kind: "phone", value: number, contact_type: phone_type(phone.data["PhoneType"]), filemaker_code: phone.fm_id }
-    end
-
-    def phone_type(value)
-      found = contact_type(value, allowed: ContactMethod::CONTACT_TYPES)
-      @unmatched_phone_types[value.to_s.strip] += 1 if found.nil? && value.to_s.strip.present?
-      found
+      { kind: "phone", value: number, contact_type: contact_type(phone.data["PhoneType"], allowed: ContactMethod::CONTACT_TYPES),
+        filemaker_code: phone.fm_id }
     end
 
     def ids(people)

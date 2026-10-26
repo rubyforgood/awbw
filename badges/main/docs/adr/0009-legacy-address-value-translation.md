@@ -41,13 +41,7 @@ since a state is required and regions outside the US are legitimate.
   neither, on a US or country-less address, is reported.
 - **Address type** → the archive's and forms' words ("Home", "cell", "Business") as the
   types we store, via one `CONTACT_TYPES` table (the Rolodex import reads phone and email
-  types from it too). Its entries come from FileMaker's `AddrsType` and `PhoneType` values in
-  prod (profiled 2026-10-25): FileMaker's own phone picklist "Work/Day" and "Home/Eve"
-  (20,881 phones), and the address words that name a workplace (Home/Work, Organization,
-  Program, Corporate Office, District Office) or post (Postal). A precedence ("Preferred",
-  "Main"), a person's name, or "Fax" stays unknown, and each import's report lists the
-  address and phone types nothing read. An organization's address is always work, and one
-  the archive calls mailing is its invoice address (ADR-0008).
+  types from it too).
 - **Locality** → `AddressLocality` on the translated state and country.
 
 ### Where it runs

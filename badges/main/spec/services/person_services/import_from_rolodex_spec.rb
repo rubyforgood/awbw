@@ -454,19 +454,6 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.find_by!(filemaker_code: "00061").addresses.sole.filemaker_code).to eq("A22, A23")
   end
 
-  it "folds a street-less row into an address in its city, and brings one in for a new city" do
-    FmAddress.create!(fm_id: "A24", data: { "RolodexID" => "00062", "AddrsLine1" => "1 Main St",
-                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
-    FmAddress.create!(fm_id: "A25", data: { "RolodexID" => "00062", "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
-    FmAddress.create!(fm_id: "A26", data: { "RolodexID" => "00062", "AddrsCity" => "Fresno", "AddrsState" => "CA" })
-    rolodex("00062", EMail: "ada@example.com")
-
-    results
-
-    expect(Person.find_by!(filemaker_code: "00062").addresses.order(:id).pluck(:street_address, :city, :filemaker_code))
-      .to eq([ [ "1 Main St", "Los Angeles", "A24, A25" ], [ "", "Fresno", "A26" ] ])
-  end
-
   it "reads the address and phone tables once, not once per row" do
     3.times do |i|
       FmAddress.create!(fm_id: "A8#{i}", data: { "RolodexID" => "0008#{i}", "AddrsLine1" => "#{i} Main St",
@@ -582,13 +569,12 @@ RSpec.describe PersonServices::ImportFromRolodex do
     rolodex("00033", EMail: "ada@example.com", PrimaryAddrsID: "A5", PrimaryPhoneID: "P2")
     rolodex("00034", FirstName: "Grace", EMail: "grace@example.com", PrimaryPhoneID: "P3")
 
-    import = described_class.new.call
+    results
 
     mailing = Person.find_by!(filemaker_code: "00033")
     expect(mailing.addresses.sole.address_type).to eq("mailing")
     expect(mailing.contact_methods.sole.contact_type).to eq("unknown")
     expect(Person.find_by!(filemaker_code: "00034").contact_methods.sole.contact_type).to eq("personal")
-    expect(import.unmatched_phone_types).to eq("Mailing" => 1)
   end
 
   it "types an address and phone the archive left blank as unknown" do

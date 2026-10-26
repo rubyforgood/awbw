@@ -15,9 +15,8 @@ RSpec.describe FmAddressAttributes do
     )
   end
 
-  it "types an organization's address as work, marking the one the archive calls mailing as its invoice address" do
-    expect(builder.call(row.merge("AddrsType" => "Postal"), organization: true)).to include(address_type: "work", invoice_address: true)
-    expect(builder.call(row, organization: true)).to include(address_type: "work", invoice_address: false)
+  it "takes the address type the caller gives over the row's" do
+    expect(builder.call(row, address_type: "work")).to include(address_type: "work")
   end
 
   it "reads the county and a missing ZIP from the archive's ZIP table" do
@@ -32,28 +31,10 @@ RSpec.describe FmAddressAttributes do
     expect(builder.call(row.merge("AddrsState" => "BC", "AddrsCountry" => nil))).to include(state: "BC", country: "Canada")
   end
 
-  it "builds a row with no street from its city and state" do
-    expect(builder.call(row.merge("AddrsLine1" => "", "StreetNo" => "", "AddrsLine2" => "")))
-      .to include(street_address: "", city: "Los Angeles", state: "CA")
-  end
-
-  it "skips a row with no city or state" do
+  it "skips a row with no street, city, or state" do
+    expect(builder.call(row.merge("AddrsLine1" => "", "StreetNo" => "", "AddrsLine2" => ""))).to be_nil
     expect(builder.call(row.merge("AddrsCity" => " "))).to be_nil
     expect(builder.call(row.merge("AddrsState" => nil))).to be_nil
-  end
-
-  describe ".held" do
-    let(:held) { build(:address, street_address: "1234 Main Street", city: "Los Angeles") }
-
-    it "finds the address on file for the same street in the same city" do
-      expect(described_class.held([ held ], street_address: "1234 Main St", city: "los angeles")).to eq(held)
-      expect(described_class.held([ held ], street_address: "9 Elm St", city: "Los Angeles")).to be_nil
-    end
-
-    it "takes any address in the city for a row with no street" do
-      expect(described_class.held([ held ], street_address: "", city: "Los Angeles")).to eq(held)
-      expect(described_class.held([ held ], street_address: "", city: "Pasadena")).to be_nil
-    end
   end
 
   describe "#place" do

@@ -352,7 +352,7 @@ module AffiliationServices
     # person as their own work address.
     def place_work_addresses(rolodex, people, organization, work, label)
       work.sort_by { |address| address.fm_id == rolodex.data["WorksiteAddrsID"] ? 0 : 1 }.each do |fm_address|
-        attributes = @address_attributes.call(fm_address.data, organization: true)&.merge(filemaker_code: fm_address.fm_id)
+        attributes = @address_attributes.call(fm_address.data, address_type: "work")&.merge(filemaker_code: fm_address.fm_id)
         next unless attributes
 
         people.each do |person|
@@ -375,7 +375,7 @@ module AffiliationServices
     end
 
     def organization_address(organization, attributes, label)
-      held = FmAddressAttributes.held(organization.addresses, attributes)
+      held = held_address(organization, attributes)
       return organization.addresses.create(attributes.merge(primary: organization.addresses.where(primary: true).none?)) unless held
 
       add_code(held, attributes[:filemaker_code], label)
@@ -383,7 +383,7 @@ module AffiliationServices
     end
 
     def keep_with_person(person, attributes, label)
-      held = FmAddressAttributes.held(person.addresses, attributes)
+      held = held_address(person, attributes)
       return add_code(held, attributes[:filemaker_code], label) if held
 
       address = person.addresses.create(attributes.merge(primary: person.addresses.where(primary: true).none?))
@@ -392,9 +392,18 @@ module AffiliationServices
       record(:created, "#{label} → work address ##{address.id} kept on person ##{person.id}, no organization to place it on")
     end
 
+    def held_address(addressable, attributes)
+      key = address_key(attributes[:street_address], attributes[:city])
+      addressable.addresses.find { |address| address_key(address.street_address, address.city) == key }
+    end
+
     # An address already on file takes the archive row's code rather than a copy.
     def add_code(address, code, label)
       address.update(filemaker_code: Address.join_filemaker_codes(address.filemaker_code, code)) || failed(address, label)
+    end
+
+    def address_key(street, city)
+      [ AddressNormalizer.street(street), AddressNormalizer.city(city) ]
     end
 
     def organization_for(code)

@@ -2,21 +2,16 @@
 # LMS registration sheet, the portal's own answers from before the dropdowns — into what the
 # portal's address dropdowns store (ADR-0009). Translation is by lookup table, never guessed:
 # a country nothing answers to is cleared so every stored country is a dropdown one, and
-# counted in #unmatched with the state and type values it can't read.
+# counted in #unmatched with the state values it can't read.
 #
 # Built once per run and reused, so an import's report can list everything it couldn't place.
 class AddressTranslation
   UNITED_STATES = Address::DEFAULT_COUNTRY
 
   # The words the archive and the forms use for a kind of address, phone, or email.
-  CONTACT_TYPES = {
-    "home" => "personal", "personal" => "personal", "cell" => "personal", "mobile" => "personal",
-    "home/eve" => "personal", "cell/personal" => "personal",
-    "work" => "work", "home/work" => "work", "business" => "work", "professional" => "work", "work/day" => "work", "office" => "work",
-    "work phone" => "work", "business line" => "work", "organization" => "work", "program" => "work",
-    "corporate" => "work", "corporate office" => "work", "district office" => "work",
-    "mailing" => "mailing", "postal" => "mailing"
-  }.freeze
+  CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "cell" => "personal",
+                    "mobile" => "personal", "work" => "work", "business" => "work",
+                    "professional" => "work", "mailing" => "mailing" }.freeze
 
   # Spellings found in our data that the countries gem doesn't read, by ISO code. A US city
   # or county typed as the country is the US; the outlying islands aren't on the dropdown.
@@ -90,10 +85,7 @@ class AddressTranslation
   end
 
   def address_type(value)
-    text = value.to_s.strip
-    found = CONTACT_TYPES[text.downcase].presence_in(Address::CONTACT_TYPES)
-    @unmatched[:address_type][text] += 1 if found.nil? && text.present?
-    found
+    CONTACT_TYPES[value.to_s.strip.downcase].presence_in(Address::CONTACT_TYPES)
   end
 
   def locality(city:, state:, country:, county: nil)

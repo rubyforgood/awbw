@@ -51,7 +51,7 @@ module OrganizationServices
     COMMENT_SOURCES = { FmOrganization => "FileMaker organization", FmProject => "FileMaker project",
                         FmRolodex => "FileMaker Rolodex agency" }.freeze
 
-    attr_reader :results, :differences, :unmatched_types, :unmatched_phone_types, :nested, :unplaced
+    attr_reader :results, :differences, :unmatched_types, :nested
 
     def unmatched_addresses = @address_attributes.unmatched
 
@@ -61,9 +61,7 @@ module OrganizationServices
       @results = OUTCOMES.index_with { [] }
       @differences = []
       @nested = []
-      @unplaced = []
       @unmatched_types = Hash.new(0)
-      @unmatched_phone_types = Hash.new(0)
       @staff = StaffTranslation.new
       @import_user_id = Setting.import_user&.id
       @address_attributes = FmAddressAttributes.new
@@ -179,7 +177,7 @@ module OrganizationServices
       kept = fill(organization, attributes)
       stamp(organization, row.data)
       add_addresses(organization, @addresses.fetch(row.fm_id, []))
-      rows.select { |source| source.is_a?(FmProject) }.each { |project| place_project(organization, project) }
+      rows.select { |source| source.is_a?(FmProject) }.each { |project| place_project(organization, project.data) }
       add_phones(organization, @phones.fetch(row.fm_id, []))
       fill_email(organization, @emails.fetch(row.fm_id, []).map { |email| email.data["EmailAddress"] })
       return failed(organization, label) unless organization.save
@@ -399,10 +397,10 @@ module OrganizationServices
     # archive row's code and the others are added; the first becomes its primary when it has none.
     def add_addresses(organization, fm_addresses)
       fm_addresses.each do |fm_address|
-        attributes = @address_attributes.call(fm_address.data, organization: true)
+        attributes = @address_attributes.call(fm_address.data, address_type: "work")
         next if attributes.nil?
 
-        held = FmAddressAttributes.held(organization.addresses, attributes)
+        held = held_address(organization, attributes)
         next held.filemaker_code = Address.join_filemaker_codes(held.filemaker_code, fm_address.fm_id) if held
 
         primary = organization.addresses.none? { |address| address.primary? && !address.marked_for_destruction? }
@@ -410,29 +408,27 @@ module OrganizationServices
       end
     end
 
+    def held_address(organization, attributes)
+      key = address_key(attributes[:street_address], attributes[:city])
+      organization.addresses.find { |address| address_key(address.street_address, address.city) == key }
+    end
+
+    def address_key(street, city)
+      [ AddressNormalizer.street(street), AddressNormalizer.city(city) ]
+    end
+
     # FileMaker records a project's locality and districts, which the portal keeps on an
-    # address — so they land on the program's address in the project's city (its primary
-    # address when the project names no city), or on a new one holding just the city when
-    # the program has no address there yet. A California locality places a project left
-    # without a state; one with nowhere to land is listed in #unplaced.
-    def place_project(organization, project)
-      data = project.data
+    # address — so they land on the program's address in the project's city, or on a new
+    # one holding just the city when the program has no address there yet.
+    def place_project(organization, data)
       city = clip(data["City"].to_s.squish)
       state = clip(data["State"].to_s.squish)
-      geography = project_geography(data)
-      address = if city.present?
-        organization.addresses.find { |held| AddressNormalizer.city(held.city) == AddressNormalizer.city(city) }
-      else
-        organization.addresses.find(&:primary?) || organization.addresses.first
-      end
-      return fill_geography(address, geography) if address
-      if city.blank?
-        note_unplaced(project, "no city", geography) if geography.any?
-        return
-      end
+      return if city.blank?
 
-      state = "CA" if state.blank? && Address::CALIFORNIA_LOCALITIES.include?(geography[:locality])
-      return note_unplaced(project, "#{city}, no state", geography) if state.blank?
+      geography = project_geography(data)
+      address = organization.addresses.find { |held| AddressNormalizer.city(held.city) == AddressNormalizer.city(city) }
+      return fill_geography(address, geography) if address
+      return if state.blank?
 
       primary = organization.addresses.none?(&:primary?)
       place = @address_attributes.place(city:, state:, county: geography[:county])
@@ -458,11 +454,6 @@ module OrganizationServices
       end
     end
 
-    def note_unplaced(project, missing, geography)
-      found = geography.map { |attribute, value| "#{Address.human_attribute_name(attribute)} #{value}" }
-      @unplaced << "#{project.fm_id} #{project_name(project)}: #{missing}#{" (#{found.join(", ")})" if found.any?}"
-    end
-
     def district_number(value)
       value.to_s[/\d+/]&.to_i
     end
@@ -479,7 +470,7 @@ module OrganizationServices
 
         organization.contact_methods.build(
           kind: "phone", value: number, filemaker_code: phone.fm_id,
-          contact_type: phone_type(phone.data["PhoneType"]),
+          contact_type: contact_type(phone.data["PhoneType"], allowed: ContactMethod::CONTACT_TYPES),
           primary: organization.contact_methods.none?(&:primary?)
         )
       end
@@ -487,12 +478,6 @@ module OrganizationServices
 
     def phone_key(value)
       value.to_s.gsub(/\D/, "").presence
-    end
-
-    def phone_type(value)
-      found = contact_type(value, allowed: ContactMethod::CONTACT_TYPES)
-      @unmatched_phone_types[value.to_s.strip] += 1 if found.nil? && value.to_s.strip.present?
-      found
     end
 
     def fill_email(organization, values)
