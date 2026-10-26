@@ -1,0 +1,5 @@
+<% if chip.is_a?(OtherResponse) %>
+  <%= render "people/other_sector_responses", responses: [ chip ], curatable: allowed_to?(:curate?, OtherResponse), return_to: "person_show" %>
+<% else %>
+  <%= render "sectors/tagging_label", sector: chip.sector, is_primary: chip.is_primary?, display_leader: true, is_leader: chip.is_leader %>
+<% end %>

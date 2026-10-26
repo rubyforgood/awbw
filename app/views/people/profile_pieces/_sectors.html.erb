@@ -1,20 +1,28 @@
 <%# One combined list: the primary sector leads as a darker-green starred chip,
     then additional sectors alphabetically and any free-text "Other" responses.
     "Other" is never a real sector tag (captured as an OtherResponse), so a stray
-    legacy tagging is dropped. %>
+    legacy tagging is dropped. Past `visible_limit` chips, the rest fold behind a
+    "Show N more" toggle (never for a single leftover chip). %>
+<% visible_limit ||= 3 %>
 <% sectorable_items = person.sectorable_items.includes(:sector).reject { |si| si.sector&.name == Sector::OTHER_SECTOR_NAME }.sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
-<% other_sectors = person.other_sector_responses %>
-<% if sectorable_items.any? || other_sectors.any? %>
+<% chips = sectorable_items + person.other_sector_responses.to_a %>
+<% if chips.any? %>
+  <% visible_limit = chips.size if chips.size <= visible_limit + 1 %>
+  <% hidden_chips = chips.drop(visible_limit) %>
   <div class="flex flex-wrap gap-2">
-    <% sectorable_items.each do |si| %>
-      <%= render "sectors/tagging_label",
-                   sector: si.sector,
-                   is_primary: si.is_primary?,
-                   display_leader: true,
-                   is_leader: si.is_leader %>
-    <% end %>
-    <%= render "people/other_sector_responses", responses: other_sectors, curatable: allowed_to?(:curate?, OtherResponse), return_to: "person_show" %>
+    <%= render partial: "people/profile_pieces/sector_chip", collection: chips.first(visible_limit), as: :chip %>
   </div>
+  <% if hidden_chips.any? %>
+    <details class="group mt-2">
+      <summary class="cursor-pointer list-none text-sm font-medium text-gray-500 hover:text-gray-800">
+        <span class="group-open:hidden">Show <%= hidden_chips.size %> more <i class="fa-solid fa-chevron-down ml-1 text-xs" aria-hidden="true"></i></span>
+        <span class="hidden group-open:inline">Show fewer <i class="fa-solid fa-chevron-up ml-1 text-xs" aria-hidden="true"></i></span>
+      </summary>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <%= render partial: "people/profile_pieces/sector_chip", collection: hidden_chips, as: :chip %>
+      </div>
+    </details>
+  <% end %>
 <% else %>
   <p class="text-gray-500 italic">None selected.</p>
 <% end %>
