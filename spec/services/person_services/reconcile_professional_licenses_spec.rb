@@ -47,6 +47,26 @@ RSpec.describe PersonServices::ReconcileProfessionalLicenses do
     expect(person.professional_licenses.reload.pluck(:kind)).to contain_exactly("LMFT", "LCSW")
   end
 
+  it "folds a placeholder with no type into the person's only real license" do
+    real = license(number: "LIC-A")
+    placeholder = license(number: nil, kind: nil)
+
+    described_class.new(person).call
+
+    expect(person.professional_licenses.reload.pluck(:id)).to eq([ real.id ])
+    expect(ProfessionalLicense.exists?(placeholder.id)).to be false
+  end
+
+  it "keeps a placeholder with no type when the person holds more than one real license" do
+    license(number: "LIC-A")
+    license(number: "LIC-B", kind: "LCSW")
+    license(number: nil, kind: nil)
+
+    described_class.new(person).call
+
+    expect(person.professional_licenses.reload.count).to eq(3)
+  end
+
   it "moves the placeholder's CE registrations onto the survivor" do
     real = license(number: "LIC-A")
     placeholder = license(number: nil)

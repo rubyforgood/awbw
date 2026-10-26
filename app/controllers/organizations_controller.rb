@@ -277,6 +277,7 @@ class OrganizationsController < ApplicationController
       after_merge: ->(keep) {
         AddressDeduper.new(keep, primary_signature: @keeper_primary_address_signature).call
         ContactMethodDeduper.new(keep, primary_signatures: @keeper_primary_contact_signatures).call
+        AffiliationDeduper.new(keep).call
       },
       belongs_to_options: -> {
         {

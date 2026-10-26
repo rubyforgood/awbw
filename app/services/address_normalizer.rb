@@ -1,5 +1,5 @@
 # Comparison keys for address parts, so spellings of one place match: "123 North
-# Main Street, Suite 4" and "123 N. Main St #4", "Saint Louis" and "St. Louis",
+# Main Street, Suite 4" and "123 N. Main St #4", "27th St W" and "27 Street West", "Saint Louis" and "St. Louis",
 # "California" and "CA", "90001-1234" and "90001", "United States" and "USA".
 # Only for matching — the stored address keeps whatever spelling it was saved with.
 module AddressNormalizer
@@ -50,7 +50,7 @@ module AddressNormalizer
     tokens = tokens.each_with_index.map do |token, index|
       next "#" if UNIT_WORDS.include?(token) && index.positive?
 
-      STREET_WORDS.fetch(token, token)
+      STREET_WORDS.fetch(token, token).sub(/\A(\d+)(?:st|nd|rd|th)\z/, "\\1")
     end
     tokens.chunk_while { |a, b| a == "#" && b == "#" }.map(&:first).join(" ")
   end

@@ -1,0 +1,12 @@
+name: "Merging people and organizations cleans up more duplicates"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2874
+summary: >-
+  Merging two people or two organizations now also folds the copies the merge used
+  to leave behind: the same affiliation twice, the same phone number typed two ways,
+  and the same street written with or without "th".
+pro_tips:
+  - "Merging two registrations for the same event now also combines a CE signup that was still waiting on a license number with the one that has it."
+  - "A phone number matches on its digits, so 555 400-1000 and +1 (555) 400-1000 become one."

@@ -445,6 +445,7 @@ class PeopleController < ApplicationController
       #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
       #   * duplicate addresses / contact methods (merge identical ones into one,
       #     keeping a single primary — the survivor's own, else the deleted person's);
+      #   * identical affiliations (same org, title, dates, and status → one);
       #   * a survivor gaining a login (adopt the primary login's email as primary).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
@@ -458,6 +459,7 @@ class PeopleController < ApplicationController
           primary_signature: @keeper_primary_address_signature).call
         ContactMethodDeduper.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
+        AffiliationDeduper.new(keep).call
         sync_primary_login_email(keep)
       },
       record_partial: "people/dedupe_record"
