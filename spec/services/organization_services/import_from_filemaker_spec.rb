@@ -425,6 +425,20 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     expect(import.differences.sole).to include("##{existing.id}")
   end
 
+  it "matches a namesake carrying another code from the same table when they share a city" do
+    taken = create(:organization, name: "Harbor House Art Program", filemaker_code: "P0009")
+    create(:address, addressable: taken, city: "St. Louis", state: "MO")
+    project("P0009", nil, ProjectName: "Harbor House Art Program")
+    fm_organization("ORG00001", OrgName: "Harbor House")
+    project("P0001", "ORG00001", ProjectName: "Harbor House Art Program", City: "Saint Louis", State: "MO")
+    project("P0004", "ORG00001", ProjectName: "Harbor House Youth")
+
+    import
+
+    expect(taken.reload.filemaker_code).to eq("P0001, P0009")
+    expect(Organization.where("name LIKE ?", "Harbor House Art Program%")).to eq([ taken ])
+  end
+
   it "matches by exact name only an organization with no code from the same table" do
     taken = create(:organization, name: "Harbor House Art Program", filemaker_code: "P0009")
     project("P0009", nil, ProjectName: "Harbor House Art Program")

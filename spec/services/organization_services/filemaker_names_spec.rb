@@ -44,6 +44,12 @@ RSpec.describe OrganizationServices::FilemakerNames do
       expect(answers?("Valley Services", "ORG00001, ORG00002")).to be(true)
     end
 
+    it "accepts any name on a code staff confirmed is the same place" do
+      stub_const("FilemakerValues::SAME_PLACE_CODES", %w[ORG00001])
+
+      expect(answers?("Sunrise Clinic", "ORG00001")).to be(true)
+    end
+
     it "rejects a name none of its codes go by" do
       expect(answers?("Sunrise Clinic", "ORG00001")).to be(false)
       expect(answers?("Sunrise Clinic", "7")).to be(false)

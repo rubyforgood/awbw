@@ -74,7 +74,12 @@ Constraints already decided elsewhere:
     trailing audience word (Women's, Children's, Combined…), a namesake's "(code)", and extra
     words when one name holds every telling word of the other, and accepting a project's
     organization name for a single program. On prod's 1,522 code-carrying orgs whose name
-    differs from FileMaker's, that leaves 31 for review. A merged org
+    differs from FileMaker's, that left 31; staff confirmed 16 as the same place (typos,
+    acronyms, rebrands), listed with retired-but-carried P2156 in
+    `FilemakerValues::SAME_PLACE_CODES`, which answer whatever the name.
+  - **An exact-name namesake sharing a city is the same org** (decided 2026-10-26): an org
+    with the row's exact name that already carries another code from the same table is a
+    namesake, unless it and the row share a city — then it takes this code too. A merged org
     answers to one of its names, so it keeps matching every code. Otherwise the org keeps its
     code and name, and the row lands on the org its name finds or a new one, which carries the
     code too — noted as a comment on the org that had it and a line in the report. Every later

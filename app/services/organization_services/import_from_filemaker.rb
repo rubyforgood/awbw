@@ -166,7 +166,7 @@ module OrganizationServices
         return import_projects(nil, projects)
       end
 
-      umbrella = coded_as(fm_organization.fm_id, name) || named(name, @organization_ids)
+      umbrella = coded_as(fm_organization.fm_id, name) || named(fm_organization, name, @organization_ids)
       return import_single_program(fm_organization, projects.sole, umbrella, label) if projects.one?
 
       umbrella ||= Organization.new(name: unique_name(name, fm_organization.fm_id))
@@ -178,7 +178,7 @@ module OrganizationServices
     # One organization running one program is a single place, so it stays one portal
     # organization carrying both codes — unless the portal already keeps them apart.
     def import_single_program(fm_organization, project, umbrella, label)
-      program = coded_as(project.fm_id, project_name(project)) || named(project_name(project), @project_ids)
+      program = coded_as(project.fm_id, project_name(project)) || named(project, project_name(project), @project_ids)
       if umbrella && program && umbrella != program
         return unless note_mismatch(save(umbrella, fm_organization, label, organization_attributes(fm_organization.data)), fm_organization.fm_id)
 
@@ -200,7 +200,7 @@ module OrganizationServices
         label = "#{project.fm_id} #{name}".squish
         next record(:skipped, "#{label}: no name") if name.blank?
 
-        program = coded_as(project.fm_id, name) || named(name, @project_ids) || Organization.new(name: unique_name(name, project.fm_id))
+        program = coded_as(project.fm_id, name) || named(project, name, @project_ids) || Organization.new(name: unique_name(name, project.fm_id))
         nest(program, umbrella, label) if umbrella && program != umbrella
         note_mismatch(save(program, project, label, project_attributes(project.data)), project.fm_id)
       end
@@ -401,13 +401,21 @@ module OrganizationServices
       organization
     end
 
-    # The organization by exact name, unless it already carries another code from the same
-    # archive table — then it's a namesake of a different FileMaker record.
-    def named(name, table_ids)
+    # The organization by exact name. One already carrying another code from the same archive
+    # table is a namesake of a different FileMaker record — unless they share a city.
+    def named(row, name, table_ids)
       return if name.blank?
 
       organization = Organization.find_by(name:)
-      organization unless organization&.filemaker_codes&.any? { |code| table_ids.include?(code) }
+      return organization unless organization&.filemaker_codes&.any? { |code| table_ids.include?(code) }
+
+      organization if shares_city?(organization, row)
+    end
+
+    def shares_city?(organization, row)
+      cities = [ row.data["City"], *@addresses.fetch(row.fm_id, []).map { |address| address.data["AddrsCity"] } ]
+               .filter_map { |city| AddressNormalizer.city(city).presence }
+      cities.any? && organization.addresses.any? { |address| cities.include?(AddressNormalizer.city(address.city)) }
     end
 
     # Organization names are unique, so a FileMaker record whose name a namesake already

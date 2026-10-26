@@ -5,7 +5,7 @@ module OrganizationServices
   # audience word (the old app's "Women's", "Children's", "Combined"), the "(code)" a namesake
   # takes, and extra words on either side don't count, and a single program may go by its
   # organization's name — so an organization merged from several keeps answering to every
-  # code it gathered.
+  # code it gathered. A code in SAME_PLACE_CODES answers whatever the name.
   class FilemakerNames
     include FilemakerValues
 
@@ -24,6 +24,8 @@ module OrganizationServices
 
     def answers?(organization)
       codes = organization.filemaker_codes
+      return true if codes.any? { |code| same_place_code?(code) }
+
       portal = bare_name(organization.name, codes)
       codes.flat_map { |code| names_for(code) }.compact_blank.any? { |name| same_place?(portal, bare_name(name, codes)) }
     end
