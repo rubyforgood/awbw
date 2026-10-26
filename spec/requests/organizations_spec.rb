@@ -102,6 +102,24 @@ RSpec.describe "/organizations", type: :request do
       expect(response.body).not_to include("13-17")
     end
 
+    it "shows a hidden email to admins as an admin-only chip" do
+      organization = Organization.create!(valid_attributes.merge(email: "hello@example.org", profile_show_email: false))
+
+      get organization_url(organization)
+      chip = Capybara.string(response.body).find("span[title='Email (admin only)']")
+      expect(chip).to have_text("hello@example.org")
+    end
+
+    it "keeps a hidden email off the profile for non-admins" do
+      organization = Organization.create!(valid_attributes.merge(email: "hello@example.org", profile_show_email: false))
+      create(:affiliation, organization: organization, person: create(:person))
+      sign_in user
+
+      get organization_url(organization)
+      expect(response).to be_successful
+      expect(response.body).not_to include("hello@example.org")
+    end
+
     it "renders successfully with workshop logs" do
       organization = Organization.create!(valid_attributes)
       workshop_log = create(:workshop_log, organization: organization, created_by: admin)

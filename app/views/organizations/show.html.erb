@@ -84,6 +84,10 @@
             <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
               <i class="fa-solid fa-envelope text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i> <%= mail_to @organization.email, @organization.email, class: "hover:text-primary" %>
             </span>
+          <% elsif @organization.email.present? && allowed_to?(:manage?, Organization) %>
+            <span class="<%= admin_only_chip_class %>" title="Email (admin only)">
+              <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= mail_to @organization.email, @organization.email, class: "hover:text-primary" %>
+            </span>
           <% end %>
           <% if @organization.profile_show_phone? %>
             <% phone = @organization.phone_number %>

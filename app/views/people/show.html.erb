@@ -125,6 +125,12 @@
           <% end %>
           <%# Admin-only contact extras that have no public profile home. %>
           <% if allowed_to?(:manage?, Person) %>
+            <% if @person.profile_email.present? && !@person.profile_show_email? %>
+              <% primary_email_type = @person.email_type.presence || @person.user&.email_type %>
+              <span class="<%= admin_only_chip_class %>" title="Primary email (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <!--email_off--><%= mail_to @person.profile_email, @person.profile_email, class: "hover:text-primary" %><!--email_on--><% if primary_email_type.present? %> <span class="text-2xs text-blue-700 uppercase">(<%= primary_email_type %>)</span><% end %>
+              </span>
+            <% end %>
             <% if @person.email_2.present? %>
               <span class="<%= admin_only_chip_class %>" title="Secondary email (admin only)">
                 <i class="fa-solid fa-lock text-xs text-blue-700"></i> <!--email_off--><%= mail_to @person.email_2, @person.email_2, class: "hover:text-primary" %><!--email_on--><% if @person.email_2_type.present? %> <span class="text-2xs text-blue-700 uppercase">(<%= @person.email_2_type %>)</span><% end %>
