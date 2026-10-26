@@ -7,13 +7,16 @@ class FormSubmissionSittings
   EVENT_FORM_JOIN = "INNER JOIN event_forms ON event_forms.form_id = form_submissions.form_id " \
                     "AND event_forms.event_id = form_submissions.event_id".freeze
 
+  COUNTED_ROLES = (EventForm::ROLES - %w[bulk_payment]).freeze
+
   Entry = Data.define(:id, :form_name, :role, :created_at)
 
   # Sittings keyed by [person_id, event_id], over each event's own linked forms, in one query.
   # Roles come from the event's form link, so older submissions saved without a role still bundle.
+  # Bulk payments are left out: they pay for other people, not the payer's own registration.
   def self.for_events(event_ids, person_ids)
     FormSubmission.joins(EVENT_FORM_JOIN).joins(:form)
-      .where(event_id: event_ids, person_id: person_ids).distinct
+      .where(event_id: event_ids, person_id: person_ids, event_forms: { role: COUNTED_ROLES }).distinct
       .pluck(:person_id, :event_id, :id, Arel.sql("forms.name"), Arel.sql("event_forms.role"), :created_at)
       .group_by { |row| row.first(2) }
       .transform_values { |rows| new(rows.map { |_, _, id, form_name, role, created_at| Entry.new(id:, form_name:, role:, created_at:) }) }

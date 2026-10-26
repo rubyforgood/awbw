@@ -830,6 +830,35 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       end
     end
 
+    context "when the registrant also paid for others with the bulk payment form" do
+      let(:bulk_form) { create(:form, name: "Group payment form") }
+      let!(:bulk_payment) do
+        attendees_field = create(:form_field, form: bulk_form, field_identifier: "bulk_payment_attendees", name: "Attendees")
+        create(:form_submission, person: person, form: bulk_form, event: event, role: "bulk_payment", created_at: 1.day.from_now).tap do |submission|
+          submission.form_answers.create!(form_field: attendees_field,
+            submitted_answer: [ { first_name: "Avery", last_name: "Attendee", email: "avery@example.com" } ].to_json)
+        end
+      end
+
+      it "lists the bulk payment among their other submissions, with its attendees and ticket" do
+        get event_public_registration_path(event, person_id: person.id)
+
+        collapsed = Nokogiri::HTML(response.body).at_css("details#form-submission-#{bulk_payment.id}")
+        expect(collapsed).to be_present
+        expect(collapsed.at_css("summary").text).to include("Group payment form — Submitted on")
+        expect(collapsed.text).to include("Avery").and include("avery@example.com")
+        expect(collapsed.to_html).to include(bulk_payment_ticket_path(bulk_payment.slug))
+      end
+
+      it "leaves out another person's bulk payment" do
+        bulk_payment.update!(person: create(:person))
+
+        get event_public_registration_path(event, person_id: person.id)
+
+        expect(response.body).not_to include("form-submission-#{bulk_payment.id}")
+      end
+    end
+
     it "shows no other submissions when there is only one" do
       get event_public_registration_path(event, person_id: person.id)
 

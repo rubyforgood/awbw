@@ -236,6 +236,18 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("fa-regular fa-file-lines")
         end
 
+        it "shows the gray icon for a payer whose only submission is a bulk payment" do
+          create(:event_form, event: event, form: reg_form, role: "registration")
+          bulk_form = create(:form)
+          create(:event_form, event: event, form: bulk_form, role: "bulk_payment")
+          create(:form_submission, person: person, form: bulk_form, event: event, role: "bulk_payment")
+
+          get event_registrations_path
+
+          expect(response.body).to include("No registration form submitted")
+          expect(response.body).not_to include(event_registrant_submissions_path(event, person_id: person.id, return_to: "index"))
+        end
+
         it "does not show any form icon when event has no forms" do
           get event_registrations_path
 

@@ -67,6 +67,15 @@ RSpec.describe FormSubmissionSittings do
       expect(sittings).to be_registered
     end
 
+    it "leaves out bulk payments, which pay for other people" do
+      create(:form_submission, person: person, event: event, form: reg_form, created_at: start)
+      bulk_form = create(:form)
+      create(:event_form, event: event, form: bulk_form, role: "bulk_payment")
+      create(:form_submission, person: person, event: event, form: bulk_form, role: "bulk_payment", created_at: start + 3.days)
+
+      expect(described_class.for_events(event.id, person.id)[[ person.id, event.id ]].count).to eq(1)
+    end
+
     it "ignores forms the event doesn't link, like callout surveys" do
       create(:form_submission, person: person, event: event, form: reg_form, created_at: start)
       create(:form_submission, person: person, event: event, form: create(:form), role: "day_1_survey", created_at: start + 3.days)

@@ -77,13 +77,21 @@
           </h2>
           <% @other_form_submissions.each do |submission| %>
             <details id="form-submission-<%= submission.id %>" class="group rounded-xl border border-gray-200 scroll-mt-24">
+              <% bulk_payment = submission.bulk_payment? %>
               <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-gray-700 select-none [&::-webkit-details-marker]:hidden">
-                Submitted on <%= submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
+                <span><%= "#{submission.form.name} — " if bulk_payment %>Submitted on <%= submission.created_at.strftime("%B %d, %Y at %l:%M %P") %></span>
                 <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
               </summary>
-              <div class="border-t border-gray-100 px-4 pt-4">
+              <div class="border-t border-gray-100 px-4 pt-4 pb-4">
                 <%= render "form_submissions/changes_link", submission: submission, return_to: "public_registration", badge: true %>
-                <%= render "submission_answers", submission: submission, form_fields: @form_fields %>
+                <% if bulk_payment %>
+                  <% if submission.slug.present? %>
+                    <%= link_to "View bulk payment ticket", bulk_payment_ticket_path(submission.slug), class: "text-sm font-medium text-blue-700 hover:text-blue-900 hover:underline" %>
+                  <% end %>
+                  <%= render "form_submissions/submission", submission: submission %>
+                <% else %>
+                  <%= render "submission_answers", submission: submission, form_fields: @form_fields %>
+                <% end %>
               </div>
             </details>
           <% end %>

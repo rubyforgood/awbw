@@ -137,7 +137,8 @@ module Events
         redirect_to event_path(@event), alert: "No registration form submission found."
         return
       end
-      @other_form_submissions = submissions - [ @form_submission ]
+      bulk_payments = @event.form_submissions.where(person: person, role: "bulk_payment").includes(:form, :person, :form_answers)
+      @other_form_submissions = (submissions - [ @form_submission ] + bulk_payments).sort_by(&:created_at).reverse
 
       @form_fields = visible_form_fields
 
