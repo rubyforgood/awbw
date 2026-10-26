@@ -1,12 +1,13 @@
-name: "A double-submitted registration no longer creates two CE registrations"
+name: "Reapplying keeps one CE registration and saves each application's CE answers"
 area: registration
 display_status: admin_facing
 released_on: 2026-10-26
-summary: >-
-  When someone who is already registered submits the form twice at once and asks
-  for CE credit, they get one CE registration and one license, not two.
-pro_tips:
-  - "Every submission is still kept, so you can see each time they applied."
-  - "Applying again later also keeps one event registration and one CE registration."
-action_path: "/events"
 pr_number: 2876
+summary: >-
+  However many times someone applies, even with a double-submit, they keep one
+  event registration, one CE registration, and one license. Each application now
+  saves its own CE answers, so an earlier license number is no longer overwritten.
+pro_tips:
+  - "The ticket shows the newest CE answers; every application's answers are listed on the registrant's submissions page."
+  - "Updating the license from the CE callout writes it onto the newest CE answers for that event."
+action_path: "/events"

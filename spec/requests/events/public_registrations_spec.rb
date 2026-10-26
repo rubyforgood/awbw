@@ -1360,6 +1360,25 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(ProfessionalLicense.count).to eq(1)
     end
 
+    it "keeps each application's CE answers in its own CE submission" do
+      apply
+      apply(license_number: "99999")
+
+      submissions = FormSubmission.where(role: "continuing_education", event: event).order(:created_at)
+      license_answers = submissions.map { |submission| submission.form_answers.find_by(form_field_id: ce_fid("ce_license_number")).submitted_answer }
+      expect(license_answers).to eq(%w[42111 99999])
+    end
+
+    it "shows the newest CE answers on the ticket" do
+      apply
+      apply(license_number: "99999")
+
+      get event_public_registration_path(event, reg: EventRegistration.sole.slug)
+
+      expect(response.body).to include("99999")
+      expect(response.body).not_to include("42111")
+    end
+
     context "when the registrant is signed in" do
       let(:user) { create(:user, :with_person) }
 

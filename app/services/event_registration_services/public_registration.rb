@@ -376,11 +376,9 @@ module EventRegistrationServices
     def save_continuing_education_submission(person)
       return unless @continuing_education_form && @continuing_education_params.present?
 
-      submission = FormSubmission.find_or_create_by!(
+      submission = FormSubmission.create!(
         person: person, form: @continuing_education_form, role: "continuing_education", event: @event
-      ) do |record|
-        record.event = @event
-      end
+      )
 
       @continuing_education_params.each do |field_id, raw_value|
         field = @continuing_education_form.form_fields.find_by(id: field_id)
