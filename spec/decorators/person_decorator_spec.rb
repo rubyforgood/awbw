@@ -130,6 +130,16 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#email_2_label" do
+    it "adds the email type" do
+      expect(build(:person, email_2_type: "personal").decorate.email_2_label).to eq("email2 · personal")
+    end
+
+    it "is just email2 without a type" do
+      expect(build(:person, email_2_type: nil).decorate.email_2_label).to eq("email2")
+    end
+  end
+
   describe "#hidden_profile_pieces" do
     it "is empty when every piece is shared" do
       expect(create(:person, profile_show_email: true).decorate.hidden_profile_pieces).to be_empty

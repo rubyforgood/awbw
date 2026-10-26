@@ -106,6 +106,10 @@ class PersonDecorator < ApplicationDecorator
     user&.email.present? ? "primary · user account" : "primary"
   end
 
+  def email_2_label
+    [ "email2", email_2_type.presence ].compact.join(" · ")
+  end
+
   def profile_phone
     phone_number.presence || user&.phone.presence
   end
