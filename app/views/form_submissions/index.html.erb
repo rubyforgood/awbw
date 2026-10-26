@@ -66,7 +66,7 @@
         <div>
           <%= f.label :role, "Role", class: search_label_class %>
           <%= f.select :role,
-                options_for_select(@roles.map { |role| [ role.humanize, role ] }, params[:role]),
+                options_for_select(@roles.map { |role| [ Form.role_label(role), role ] }, params[:role]),
                 { include_blank: "All roles" },
                 class: search_field_class(extra: "search-select-placeholder") %>
         </div>

@@ -130,10 +130,8 @@ module FormsHelper
     }.compact
   end
 
-  # Human-readable role for a form: "Registration", "Bulk Payment", etc.,
-  # falling back to "General" when no role is set.
   def form_role_label(form)
-    form.role.presence&.titleize || "General"
+    Form.role_label(form.role.presence || "general")
   end
 
   OTHER_RESPONSES_PHRASE = "Other responses review queue"

@@ -45,7 +45,7 @@
                   <%= submission.form&.display_name %>
                 <% end %>
               </td>
-              <td class="px-4 py-3" data-column-toggle-col="role"><%= submission.role&.humanize %></td>
+              <td class="px-4 py-3" data-column-toggle-col="role"><%= Form.role_label(submission.role) %></td>
               <td class="px-4 py-3" data-column-toggle-col="event">
                 <% if submission.resolved_event %>
                   <% event = submission.resolved_event %>

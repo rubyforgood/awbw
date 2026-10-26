@@ -33,9 +33,9 @@
                   <option value="general" <%= "selected" if params[:role].blank? || params[:role] == "general" %>>General</option>
                   <option value="registration" <%= "selected" if params[:role] == "registration" %>>Registration</option>
                   <option value="reinstatement" <%= "selected" if params[:role] == "reinstatement" %>>Reinstatement</option>
-                  <option value="scholarship" <%= "selected" if params[:role] == "scholarship" %>>Scholarship</option>
-                  <option value="bulk_payment" <%= "selected" if params[:role] == "bulk_payment" %>>Bulk Payment</option>
-                  <option value="continuing_education" <%= "selected" if params[:role] == "continuing_education" %>>Continuing Education</option>
+                  <option value="scholarship" <%= "selected" if params[:role] == "scholarship" %>>Scholarship application</option>
+                  <option value="bulk_payment" <%= "selected" if params[:role] == "bulk_payment" %>>Bulk payment</option>
+                  <option value="continuing_education" <%= "selected" if params[:role] == "continuing_education" %>>Continuing education registration</option>
                 </select>
               </div>
             </div>

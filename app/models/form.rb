@@ -21,9 +21,9 @@ class Form < ApplicationRecord
     [ "General", "general" ],
     [ "Registration", "registration" ],
     [ "Reinstatement", "reinstatement" ],
-    [ "Scholarship", "scholarship" ],
-    [ "Bulk Payment", "bulk_payment" ],
-    [ "Continuing Education", "continuing_education" ],
+    [ "Scholarship application", "scholarship" ],
+    [ "Bulk payment", "bulk_payment" ],
+    [ "Continuing education registration", "continuing_education" ],
     [ "Day 1 survey", "day_1_survey" ],
     [ "Day 2 survey", "day_2_survey" ],
     [ "Post-event survey", "post_event_survey" ],
@@ -89,8 +89,12 @@ class Form < ApplicationRecord
     standalone.where(role: SURVEY_ROLES).group(:role).minimum(:id).values
   end
 
+  def self.role_label(role)
+    ROLE_OPTIONS.rassoc(role)&.first || role.to_s.humanize
+  end
+
   def self.survey_header(role)
-    SURVEY_HEADERS.fetch(role) { ROLE_OPTIONS.rassoc(role)&.first || role.to_s.humanize }
+    SURVEY_HEADERS.fetch(role) { role_label(role) }
   end
 
   def survey_role?
