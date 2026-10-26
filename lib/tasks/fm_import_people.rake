@@ -25,6 +25,9 @@ namespace :fm do
     unless Setting.import_user
       abort "No import user chosen — pick one on /admin/settings (Imports); it's credited as created_by/updated_by when FileMaker names no staffer we can resolve."
     end
+    unless StaffAlias.exists?
+      abort "No staff aliases recorded — run bin/rails data:load_staff_aliases FILE=… first, or every person is credited to the import user."
+    end
 
     dry_run = ENV["DRY_RUN"] != "false"
     verbose = ENV["VERBOSE"] == "true"

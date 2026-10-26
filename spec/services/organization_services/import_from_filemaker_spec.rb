@@ -15,6 +15,46 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     described_class.new.call
   end
 
+  describe "the staff FileMaker stamped on a row" do
+    it "reports a staff name no alias answers to, and resolves the ones that do" do
+      user = create(:user)
+      create(:staff_alias, name: "Dana Whitfield", user:)
+      fm_organization("ORG00030", CreatedBy: "Dana Whitfield", ModifiedBy: "Nobody Recorded")
+
+      import = described_class.new.call
+
+      expect(Organization.sole.created_by_id).to eq(user.id)
+      expect(import.unmatched_staff).to eq({ "Nobody Recorded" => 1 })
+    end
+  end
+
+  describe "FM_IDS naming the rows to read" do
+    before do
+      fm_organization("ORG00040", OrgName: "First Org")
+      project("P0040", "ORG00040", ProjectName: "First Program")
+      fm_organization("ORG00041", OrgName: "Second Org")
+      project("P0041", "ORG00041", ProjectName: "Second Program")
+    end
+
+    it "reads only the named organization, and brings its project with it" do
+      described_class.new(fm_ids: [ "ORG00040" ]).call
+
+      expect(Organization.pluck(:filemaker_code)).to eq([ "ORG00040, P0040" ])
+    end
+
+    it "brings a named project's organization in with it" do
+      described_class.new(fm_ids: [ "P0041" ]).call
+
+      expect(Organization.pluck(:filemaker_code)).to eq([ "ORG00041, P0041" ])
+    end
+
+    it "reads every row when nothing is named" do
+      described_class.new.call
+
+      expect(Organization.pluck(:filemaker_code)).to contain_exactly("ORG00040, P0040", "ORG00041, P0041")
+    end
+  end
+
   it "keeps an organization with one project as one organization carrying both codes" do
     fm_organization("ORG00001", Website: "harbor.example.org", Mission: "Shelter for all", OrgType: "Nonprofit")
     project("P0001", "ORG00001", City: "Pasadena", State: "CA", County: "Los Angeles", Locality: "la county",
