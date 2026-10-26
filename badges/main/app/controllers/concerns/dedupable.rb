@@ -141,7 +141,7 @@ module Dedupable
     end
 
     label = mc.model_name.human.pluralize
-    redirect_to dedupe_return&.dig(:path) || url_for(action: :index),
+    redirect_to dedupe_return&.dig(:path) || url_for(action: :dedupe_index),
       notice: "#{label} merged successfully. '#{dedupe_record_label(config, record_to_delete)}' was merged into '#{dedupe_record_label(config, record_to_keep)}'."
   rescue ActionPolicy::Unauthorized
     raise

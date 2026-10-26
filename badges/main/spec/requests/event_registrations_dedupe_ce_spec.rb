@@ -34,7 +34,7 @@ RSpec.describe "Event registration dedupe — continuing education", type: :requ
   it "leaves the keeper with a single valid CE registration" do
     merge!
 
-    expect(response).to redirect_to(event_registrations_path)
+    expect(response).to redirect_to(dedupe_index_event_registrations_path)
     ce_records = keep_reg.reload.continuing_education_registrations
     expect(ce_records.count).to eq(1)
     survivor = ce_records.first
