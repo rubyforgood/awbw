@@ -19,7 +19,7 @@ RSpec.describe "Dedupe — affiliations", type: :request do
 
     post dedupe_perform_people_path, params: { person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id }
 
-    expect(response).to redirect_to(people_path)
+    expect(response).to redirect_to(dedupe_index_people_path)
     expect(keep.reload.affiliations.count).to eq(1)
   end
 
