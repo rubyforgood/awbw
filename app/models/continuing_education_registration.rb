@@ -73,13 +73,17 @@ class ContinuingEducationRegistration < ApplicationRecord
   # expiry from an earlier event — only the values given here are written, since a
   # blank one means "not supplied", never "clear what's on file".
   def self.enroll!(event_registration:, number: nil, kind: nil, issuing_state: nil, issuing_country: nil, expires_on: nil)
-    existing = event_registration.continuing_education_registrations.first
-    return existing if existing
+    transaction do
+      # Serializes a double-submit; the locking read sees a CE the other request just committed.
+      EventRegistration.lock.find(event_registration.id)
+      existing = event_registration.continuing_education_registrations.lock.first
+      next existing if existing
 
-    license = ProfessionalLicense.find_or_create_for(person: event_registration.registrant, number: number, kind: kind)
-    attributes = { issuing_state: issuing_state, issuing_country: issuing_country, expires_on: expires_on }.compact
-    license.update!(attributes) if attributes.any?
-    event_registration.continuing_education_registrations.create!(professional_license: license)
+      license = ProfessionalLicense.find_or_create_for(person: event_registration.registrant, number: number, kind: kind)
+      attributes = { issuing_state: issuing_state, issuing_country: issuing_country, expires_on: expires_on }.compact
+      license.update!(attributes) if attributes.any?
+      event_registration.continuing_education_registrations.create!(professional_license: license)
+    end
   end
 
   def self.parse_iso_date(value)

@@ -1,0 +1,11 @@
+name: "A double-submitted registration no longer creates two CE registrations"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-26
+summary: >-
+  When someone who is already registered submits the form twice at once and asks
+  for CE credit, they get one CE registration and one license, not two.
+pro_tips:
+  - "Every submission is still kept, so you can see each time they applied."
+  - "Applying again later also keeps one event registration and one CE registration."
+action_path: "/events"

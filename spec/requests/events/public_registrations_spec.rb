@@ -1288,4 +1288,90 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Professional credentials")
     end
   end
+  describe "POST create submitted several times with the scholarship and CE forms on" do
+    let(:scholarship_form) { create(:form, role: "scholarship") }
+    let!(:scholarship_need) do
+      create(:form_field, form: scholarship_form, answer_type: :free_form_input_paragraph,
+             name: "Describe your need", required: false)
+    end
+    let(:ce_form) do
+      FormBuilderService.new(name: "CE request", sections: %i[continuing_education], role: "continuing_education").call
+    end
+
+    %w[first_name last_name primary_email].each do |identifier|
+      let!("#{identifier}_field".to_sym) do
+        create(:form_field, form: form, field_identifier: identifier, name: identifier.humanize, required: false)
+      end
+    end
+
+    before do
+      EventForm.create!(event: event, form: scholarship_form, role: "scholarship")
+      EventForm.create!(event: event, form: ce_form, role: "continuing_education")
+    end
+
+    def ce_fid(key)
+      ce_form.form_fields.find_by!(field_identifier: key).id.to_s
+    end
+
+    def apply(ce_answer: "Yes", license_number: "42111", email: "cy@example.com")
+      post event_public_registration_path(event),
+           params: {
+             scholarship_requested: "true",
+             public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
+               essay_field.id.to_s => "this answer has plenty of words",
+               first_name_field.id.to_s => "Cy",
+               last_name_field.id.to_s => "Reed",
+               primary_email_field.id.to_s => email,
+               scholarship_need.id.to_s => "Our training budget was cut",
+               ce_fid("ce_credit_interest") => ce_answer,
+               ce_fid("ce_license_number") => license_number,
+               ce_fid("ce_license_kind") => "LCSW"
+             } }
+           }
+    end
+
+    it "keeps one event registration, CE registration, and license, and a registration submission per application" do
+      3.times { apply }
+
+      expect(Person.count).to eq(1)
+      expect(EventRegistration.count).to eq(1)
+      expect(ContinuingEducationRegistration.count).to eq(1)
+      expect(ProfessionalLicense.count).to eq(1)
+      expect(FormSubmission.where(role: "registration").count).to eq(3)
+    end
+
+    it "keeps one CE registration when a reapplication gives a different license number or email casing" do
+      apply
+      apply(license_number: "99999", email: " CY@Example.com ")
+
+      expect(EventRegistration.count).to eq(1)
+      expect(ContinuingEducationRegistration.count).to eq(1)
+      expect(ProfessionalLicense.count).to eq(1)
+    end
+
+    it "adds the CE registration to the existing event registration when only the reapplication asks for CE" do
+      apply(ce_answer: "No")
+      expect(ContinuingEducationRegistration.count).to eq(0)
+
+      2.times { apply }
+
+      expect(EventRegistration.count).to eq(1)
+      expect(ContinuingEducationRegistration.count).to eq(1)
+      expect(ProfessionalLicense.count).to eq(1)
+    end
+
+    context "when the registrant is signed in" do
+      let(:user) { create(:user, :with_person) }
+
+      before { sign_in user }
+
+      it "keeps one event registration, CE registration, and license" do
+        3.times { apply }
+
+        expect(EventRegistration.count).to eq(1)
+        expect(ContinuingEducationRegistration.count).to eq(1)
+        expect(ProfessionalLicense.count).to eq(1)
+      end
+    end
+  end
 end
