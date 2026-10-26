@@ -325,6 +325,17 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
       end
     end
 
+    it "lands at the organization FileMaker means when two carry the project's code" do
+      FmProject.find_by!(fm_id: "P0001").update!(data: { "OrgID" => "ORG00001", "ProjectName" => "Harbor Art" })
+      program.update!(name: "Sunrise Clinic")
+      harbor = create(:organization, name: "Harbor Art", filemaker_code: "P0001")
+      personnel("PS0001")
+
+      import
+
+      expect(person.affiliations.sole.organization).to eq(harbor)
+    end
+
     it "skips a row whose person or project wasn't imported" do
       personnel("PS0001", PersonID: "99999")
       personnel("PS0002", ProjectID: "P9999")

@@ -136,21 +136,21 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
   end
 
   describe "an organization carrying the code under a different name" do
-    it "moves the code to a new organization, leaving the other its name and a comment" do
-      elsewhere = create(:organization, name: "Sunrise Clinic", filemaker_code: "ORG00001, 7")
+    it "leaves the code where it is and makes a new organization with it, noting both" do
+      elsewhere = create(:organization, name: "Sunrise Clinic", filemaker_code: "7, ORG00001")
       fm_organization("ORG00001")
 
       import = described_class.new.call
 
       harbor = Organization.find_by!(name: "Harbor House")
       expect(harbor.filemaker_code).to eq("ORG00001")
-      expect(elsewhere.reload).to have_attributes(name: "Sunrise Clinic", filemaker_code: "7")
-      expect(elsewhere.comments.sole.body).to include("ORG00001", "Harbor House", "##{harbor.id}")
-      expect(import.code_moves.sole).to include("ORG00001", "##{elsewhere.id}", "Sunrise Clinic", "##{harbor.id}")
+      expect(elsewhere.reload).to have_attributes(name: "Sunrise Clinic", filemaker_code: "7, ORG00001")
+      expect(elsewhere.comments.sole.body).to include("ORG00001", "Harbor House", "##{harbor.id}", "keeps ORG00001")
+      expect(import.code_mismatches.sole).to include("ORG00001", "##{elsewhere.id}", "Sunrise Clinic", "##{harbor.id}")
       expect(import.results[:created]).to include(a_string_including("ORG00001"))
     end
 
-    it "moves a project's code too" do
+    it "does the same for a project's code" do
       fm_organization("ORG00001")
       project("P0001", "ORG00001")
       project("P0002", "ORG00001", ProjectName: "Harbor Teen Program")
@@ -158,15 +158,27 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
       import
 
-      expect(elsewhere.reload.filemaker_code).to be_nil
-      expect(Organization.find_by!(filemaker_code: "P0002").name).to eq("Harbor Teen Program")
+      expect(elsewhere.reload.filemaker_code).to eq("P0002")
+      expect(Organization.find_by!(name: "Harbor Teen Program").filemaker_code).to eq("P0002")
+    end
+
+    it "finds the organization it made, not the namesake of the code, on a rerun and for a later step" do
+      elsewhere = create(:organization, name: "Sunrise Clinic", filemaker_code: "ORG00011")
+      fm_organization("ORG00010", OrgName: "Valley Services")
+      fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG00010")
+      import
+
+      expect { expect(import.code_mismatches).to be_empty }.not_to change(Organization, :count)
+      fresno = Organization.find_by!(name: "Valley Services Fresno")
+      expect(fresno.parent.name).to eq("Valley Services")
+      expect(elsewhere.reload.parent).to be_nil
     end
 
     it "keeps the code on a name that differs only in case, punctuation or a legal suffix" do
       existing = create(:organization, name: "harbor house, inc.", filemaker_code: "ORG00001")
       fm_organization("ORG00001")
 
-      expect { expect(import.code_moves).to be_empty }.not_to change(Organization, :count)
+      expect { expect(import.code_mismatches).to be_empty }.not_to change(Organization, :count)
       expect(existing.reload.filemaker_code).to eq("ORG00001")
     end
 
