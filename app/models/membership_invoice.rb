@@ -141,7 +141,7 @@ class MembershipInvoice < ApplicationRecord
   end
 
   def enqueue_subscription_price_sync
-    SyncMembershipSubscriptionPriceJob.perform_later(id)
+    SyncMembershipSubscriptionPriceJob.perform_later(membership_id)
   end
 
   def sync_membership_dates

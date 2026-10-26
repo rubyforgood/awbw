@@ -248,7 +248,19 @@ RSpec.describe "MembershipInvoices", type: :request do
           post membership_membership_invoices_path(subscription), params: {
             membership_invoice: { start_date: (Date.current + 1.year).to_s, cost_dollars: "25" }
           }
-        }.to have_enqueued_job(SyncMembershipSubscriptionPriceJob)
+        }.to have_enqueued_job(SyncMembershipSubscriptionPriceJob).with(subscription.id)
+      end
+
+      it "hands the job the membership the invoice belongs to" do
+        allow(Membership::SyncSubscriptionPrice).to receive(:call)
+
+        perform_enqueued_jobs do
+          post membership_membership_invoices_path(subscription), params: {
+            membership_invoice: { start_date: (Date.current + 1.year).to_s, cost_dollars: "25" }
+          }
+        end
+
+        expect(Membership::SyncSubscriptionPrice).to have_received(:call).with(membership: subscription)
       end
 
       it "doesn't sync a year that starts today" do
