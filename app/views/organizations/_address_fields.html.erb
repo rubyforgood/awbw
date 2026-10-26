@@ -7,9 +7,6 @@
                          { "ring-2 ring-inset ring-yellow-500": highlighted } ] do %>
   <summary class="flex cursor-pointer list-none items-center justify-between gap-2 bg-yellow-50 p-3 [&::-webkit-details-marker]:hidden">
     <div class="flex items-center gap-2 text-lg font-semibold text-gray-800">
-      <% if f.object.persisted? && (type_label = f.object.decorate.address_type_label) %>
-        <span class="rounded-full bg-yellow-200 px-2 py-0.5 text-xs font-medium text-yellow-900"><%= type_label %></span>
-      <% end %>
       <% numbered = f.object.addressable&.addresses&.size.to_i > 1 %>
       <% if f.object.persisted? %>
         <span><%= "Address ##{f.index.to_i + 1}: " if numbered %><%= f.object.name %></span>
@@ -25,12 +22,10 @@
 
   <div class="border-t border-yellow-200 p-3">
     <!-- LOCATION + DISTRICT + LOCALITY -->
+    <%# Organization addresses are always "work" — the type designation only matters
+        for Person addresses — so persist it with a hidden field rather than a selector. %>
+    <%= f.hidden_field :address_type, value: "work" %>
     <div class="grid grid-cols-1 gap-x-4 md:grid-cols-3">
-      <%= f.input :address_type,
-                  as: :select,
-                  collection: Address::ORGANIZATION_TYPES.map { |type| [ type.humanize, type ] },
-                  selected: f.object.address_type.presence_in(Address::ORGANIZATION_TYPES) || "work",
-                  include_blank: false %>
       <div class="flex items-center gap-6">
         <%= f.input :primary,
                     as: :boolean,
@@ -49,8 +44,8 @@
       <div class="flex items-center gap-6">
         <%= f.input :invoice_address,
                     as: :boolean,
-                    label: "Invoice address",
-                    hint: "Bill-to address on invoices and receipts",
+                    label: "Mailing / invoice address",
+                    hint: "Where mail goes, and the bill-to on invoices and receipts",
                     input_html: {
                       class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
                     } %>

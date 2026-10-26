@@ -1,0 +1,10 @@
+name: "Mailing addresses are the invoice address"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+summary: >-
+  An address typed Mailing is now marked as the invoice address, so invoices and receipts
+  go to it. On organizations, whose addresses are always work, the checkbox is now called
+  "Mailing / invoice address".
+pro_tips:
+  - "Changing a person's address away from Mailing takes the invoice mark off it."
