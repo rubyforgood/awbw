@@ -1,4 +1,3 @@
 <%= turbo_frame_tag :memberships_results do %>
-  <%= render "memberships/filters", status: @status_filter %>
   <%= render "memberships/results", memberships: @memberships, status: @status_filter %>
 <% end %>

@@ -120,8 +120,6 @@ class Membership < ApplicationRecord
     next_billing_invoice&.start_date
   end
 
-  # Invoices that still owe money (comped and paid ones excluded), newest first —
-  # what the profile card lists.
   def invoices_due
     membership_invoices.not_paid_in_full
   end

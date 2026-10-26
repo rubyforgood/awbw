@@ -64,6 +64,10 @@ RSpec.describe Setting do
     end
 
     it "degrades to the built-in defaults with nothing configured" do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("ANNUAL_MEMBERSHIP_CENTS", anything).and_return("10000")
+      allow(ENV).to receive(:fetch).with("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", anything).and_return("30")
+
       expect(described_class.organization_name).to eq("A Window Between Worlds")
       expect(described_class.invoice_prefix).to eq("INV")
       expect(described_class.annual_membership_cents).to eq(10000)
