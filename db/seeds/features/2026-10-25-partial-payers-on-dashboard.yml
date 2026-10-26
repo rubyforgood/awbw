@@ -1,0 +1,12 @@
+name: "Partial payers listed under Paid on the event dashboard"
+area: events
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2873
+summary: >-
+  On an event dashboard's registration fee and CE fee cards, someone who has paid
+  part of what they owe now also appears under Paid, tagged "partial", so the names
+  add up to the Paid amount.
+pro_tips:
+  - "The Paid count still means paid in full; \"+ 1 partial\" beside it counts the partial payers."
+  - "A partial payer is also listed under Due with what they still owe."
