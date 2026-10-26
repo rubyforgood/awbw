@@ -39,6 +39,16 @@ RSpec.describe PersonServices::UndoRolodexImport do
     expect(undo.results[:deleted]).to include("Person ##{created.id}")
   end
 
+  it "tags the activity it logs with the run it reversed" do
+    created = Person.find_by!(filemaker_code: "00300")
+
+    described_class.new(run: "run-1").call
+
+    destroyed = Ahoy::Event.where(name: "destroy.person", resource_id: created.id).sole
+    expect(destroyed.properties).to include("undone_run" => "run-1")
+    expect(destroyed.properties).not_to have_key("import_run")
+  end
+
   it "keeps a created person someone has edited since" do
     created = Person.find_by!(filemaker_code: "00300")
     travel 1.minute
