@@ -737,6 +737,10 @@ RSpec.describe EventDashboard do
       expect(dashboard.unpaid_registrants).to contain_exactly(unpaid_person)
     end
 
+    it "lists registrants who paid part of their cost but still owe" do
+      expect(dashboard.partially_paid_registrants).to contain_exactly(unpaid_person)
+    end
+
     it "reports all scholarships as allocated" do
       expect(dashboard.scholarship_total_cents).to eq(20_000)
     end
@@ -837,6 +841,10 @@ RSpec.describe EventDashboard do
     it "lists the registrants behind each CE bucket" do
       expect(dashboard.cont_ed_paid_registrants).to contain_exactly(paid_person)
       expect(dashboard.cont_ed_unpaid_registrants).to contain_exactly(partial_person, unpaid_person)
+    end
+
+    it "lists registrants who paid part of their CE but still owe" do
+      expect(dashboard.cont_ed_partially_paid_registrants).to contain_exactly(partial_person)
     end
 
     it "maps each registrant to their CE paid / due amounts, reconciling with the totals" do

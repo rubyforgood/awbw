@@ -2999,6 +2999,20 @@ RSpec.describe "Events", type: :request do
         expect(page).to have_link(href: registrants_event_path(event, ce_status: "registered"), visible: :all)
       end
 
+      it "lists a partial CE payer under Paid, tagged partial, so the names add up to the paid amount" do
+        partial_payer = create(:person, first_name: "Partia", last_name: "Payer")
+        partial_reg = create(:event_registration, event: event, registrant: partial_payer, status: "registered")
+        ce = create(:continuing_education_registration, event_registration: partial_reg, cost_cents: 24_000)
+        create(:allocation, source: create(:payment, amount_cents: 12_000, amount_cents_remaining: 12_000),
+                            allocatable: ce, amount: 12_000)
+
+        get dashboard_event_path(event)
+
+        paid_row = Capybara.string(response.body).find("details[class~='group/row']", text: /Paid\s+\+ 1 partial\s+\$120/, visible: :all)
+        expect(paid_row).to have_text(:all, "Partia Payer")
+        expect(paid_row).to have_text(:all, "partial")
+      end
+
       it "shows a program status badge next to each organization, hovering to explain it" do
         get dashboard_event_path(event)
 
