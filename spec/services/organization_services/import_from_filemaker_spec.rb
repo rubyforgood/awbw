@@ -124,7 +124,9 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
       "County Government Agency" => [ "Government agency", nil ],
       "Govt agency" => [ "Government agency", nil ],
       "Other" => [ "Other", nil ],
-      "School" => [ "Other", "School" ]
+      "School" => [ "Educational institution", nil ],
+      "Community College" => [ "Educational institution", nil ],
+      "Grassroots" => [ "Other", "Grassroots" ]
     }.each do |fm_type, (type, other)|
       it "reads #{fm_type.inspect} as #{type}#{" (#{other})" if other}" do
         fm_organization("ORG00001", OrgType: fm_type)
@@ -146,7 +148,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
     it "leaves the description off when the portal's type isn't Other" do
       existing = create(:organization, filemaker_code: "ORG00001", organization_type: "For-profit")
-      fm_organization("ORG00001", OrgType: "School")
+      fm_organization("ORG00001", OrgType: "Grassroots")
 
       import
 
