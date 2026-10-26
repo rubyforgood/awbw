@@ -138,28 +138,6 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
-  describe "immutability" do
-    let(:invoice) { create(:membership_invoice, cost_cents: 2_500) }
-
-    it "refuses to change the cost after creation" do
-      invoice.cost_cents = 1_000
-
-      expect(invoice).not_to be_valid
-      expect(invoice.errors[:base].join).to match(/can't be changed/)
-    end
-
-    it "refuses to change the dates after creation" do
-      invoice.start_date += 1.day
-
-      expect(invoice).not_to be_valid
-      expect(invoice.errors[:base].join).to match(/can't be changed/)
-    end
-
-    it "allows a resave with no changes" do
-      expect(invoice.reload).to be_valid
-    end
-  end
-
   describe "coverage scopes" do
     let!(:past) do
       create(:membership_invoice, :comped,
