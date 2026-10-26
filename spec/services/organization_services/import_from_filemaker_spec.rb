@@ -534,6 +534,48 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     expect(Organization.sole.filemaker_code).to eq("ORG00001, P0001, P0005")
   end
 
+  describe "the Rolodex card of someone staffing a project that wasn't imported" do
+    def staff(project_id:, **card)
+      FmRolodex.create!(fm_id: "00006", data: { "FirstName" => "Ada", "LastName" => "Lovelace" }.merge(card.stringify_keys))
+      FmPersonnel.create!(fm_id: "PS0001", data: { "PersonID" => "00006", "ProjectID" => project_id })
+    end
+
+    it "creates the organization the card only names, and reports it" do
+      staff(project_id: "", Organization: "Foothill Family Services")
+
+      results = import.results
+
+      created = Organization.find_by!(name: "Foothill Family Services")
+      expect(results[:created]).to include(a_string_including("00006", "##{created.id}", "Rolodex card"))
+    end
+
+    it "creates nothing when the card's organization is already on file" do
+      create(:organization, name: "Foothill Family Services")
+      staff(project_id: "P0404", Organization: "Foothill Family Services")
+
+      expect { import }.not_to change(Organization, :count)
+    end
+
+    it "creates nothing when the person's project was imported" do
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001")
+      staff(project_id: "P0001", Organization: "Foothill Family Services")
+
+      import
+
+      expect(Organization.where(name: "Foothill Family Services")).to be_empty
+    end
+
+    it "creates no organization for a card naming a retired one" do
+      stub_const("FilemakerValues::RETIRED_RECORDS", %w[ORG00007])
+      staff(project_id: "", OrgID: "ORG00007", Organization: "Foothill Family Services Do Not Use")
+
+      import
+
+      expect(Organization.where("name LIKE ?", "Foothill%")).to be_empty
+    end
+  end
+
   it "reads an agency's own Rolodex card onto its organization" do
     fm_organization("ORG00001")
     FmAddress.create!(fm_id: "7", data: { "RolodexID" => "00090", "AddrsLine1" => "9 Elm St", "AddrsCity" => "Ojai",

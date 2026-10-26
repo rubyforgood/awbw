@@ -1,31 +1,36 @@
 # frozen_string_literal: true
 
 # Bring FileMaker's organizations, projects and the ties between them and people into the
-# portal (ADR-0008). Run after fm:import_people, which makes the people; this pass finds them
-# by their Rolodex code. Three steps, in order:
-#   1. PersonServices::ImportFromRolodex over agency cards only — the contact person an agency
-#      card names, which fm:import_people skipped
-#   2. OrganizationServices::ImportFromFilemaker — organizations, projects (as programs nested
-#      under them), their addresses, phones, emails, and agencies' own Rolodex cards
-#   3. AffiliationServices::ImportFromFilemaker — personnel, people-to-organizations, and each
-#      Rolodex card's organization, title and work addresses
+# portal (ADR-0008), as two runs so each can be checked and reversed on its own:
+#   1. fm:import_organizations — OrganizationServices::ImportFromFilemaker, after
+#      fm:import_people: organizations, projects (as programs nested under them), their
+#      addresses, phones, emails, agencies' own Rolodex cards, and the organization a card
+#      names for someone staffing an unimported project. Creates only organizations.
+#   2. fm:import_affiliations — after the first:
+#      a. PersonServices::ImportFromRolodex over agency cards only — the contact person an
+#         agency card names, which fm:import_people skipped
+#      b. AffiliationServices::ImportFromFilemaker — personnel, people-to-organizations, and
+#         each Rolodex card's organization, title and work addresses
 # Each is idempotent: a row whose code a record already carries is left alone.
 #
 # Dry-run by default. Set DRY_RUN=false to write changes; VERBOSE=true lists every row.
 # A real run commits each batch as it goes, so stopping partway keeps what it finished and
 # the rerun skips it. The full report is also saved as an ActiveStorage blob. Every record a
-# run creates or fills is logged under the run's name, which fm:undo_import reverses:
-# FM_IDS names the archive rows to read, by their own ID — an organization, a project, a
-# personnel record, a people-to-organizations record, or a Rolodex card. An organization and
-# its projects come as a pair either way, since one can't be read without the other. Use it to
-# re-read a handful after recording the staff aliases or fixing the data a row needed:
+# run creates or fills is logged under the run's name, which fm:undo_import reverses. Undo the
+# affiliations run before the organizations run — an organization someone is affiliated with
+# is kept.
+# FM_IDS names the archive rows to read, by their own ID — for organizations, an organization,
+# a project, an agency card or a personnel record (an organization and its projects come as a
+# pair either way, since one can't be read without the other); for affiliations, a personnel
+# record, a people-to-organizations record, or a Rolodex card (an agency card brings in its
+# contact person):
 #   bin/rails fm:import_organizations                 # preview, writes nothing
-#   DRY_RUN=false bin/rails fm:import_organizations   # create + link
+#   DRY_RUN=false bin/rails fm:import_organizations   # create + link organizations
+#   DRY_RUN=false bin/rails fm:import_affiliations    # then the affiliations
 #   FM_IDS=ORG02184,P1630 DRY_RUN=false bin/rails fm:import_organizations   # just these rows
-#   DRY_RUN=false bin/rails fm:undo_import RUN=fm-import-organizations-20261022134055
+#   DRY_RUN=false bin/rails fm:undo_import RUN=fm-import-affiliations-20261022134055
 namespace :fm do
-  desc "Create organizations and affiliations from the FileMaker archive (after fm:import_people). Idempotent. DRY_RUN=false to execute."
-  task import_organizations: :environment do
+  import_from_archive = lambda do |task_name, steps|
     unless Setting.import_user
       abort "No import user chosen — pick one on /admin/settings (Imports); it's credited as created_by/updated_by when FileMaker names no staffer we can resolve."
     end
@@ -36,31 +41,24 @@ namespace :fm do
     dry_run = ENV["DRY_RUN"] != "false"
     verbose = ENV["VERBOSE"] == "true"
     fm_ids = ENV["FM_IDS"].to_s.split(",").map(&:strip).compact_blank
+    slug = "fm-#{task_name.dasherize}"
     report = []
     say = ->(line = "") { puts line; report << line }
     $stdout.sync = true
 
     begin
-      run = "fm-import-organizations-#{Time.current.strftime("%Y%m%d%H%M%S")}"
-      Current.source = "fm_import_organizations"
+      run = "#{slug}-#{Time.current.strftime("%Y%m%d%H%M%S")}"
+      Current.source = "fm_#{task_name}"
       say.("Run #{run}#{" (dry run)" if dry_run}")
-      say.("Reading #{fm_ids.size} named row(s) and the organizations or projects they pair with: #{fm_ids.join(", ")}") if fm_ids.any?
+      say.("Reading #{fm_ids.size} named row(s): #{fm_ids.join(", ")}") if fm_ids.any?
       started = Time.current
-      # The people pass skipped every agency card, so the contact person one names comes in
-      # here — only those cards, leaving everyone fm:import_people already brought over alone.
-      cards = fm_ids.any? ? FmRolodex.agency_cards.where(fm_id: fm_ids) : FmRolodex.agency_cards
-      steps = {
-        "People named on agency cards" => ->(progress) { PersonServices::ImportFromRolodex.new(scope: cards, relink: fm_ids.any?, progress:, run:) },
-        "Organizations and projects" => ->(progress) { OrganizationServices::ImportFromFilemaker.new(fm_ids:, progress:, run:) },
-        "Affiliations and work addresses" => ->(progress) { AffiliationServices::ImportFromFilemaker.new(fm_ids:, progress:, run:) }
-      }
       imports = {}
 
       run_steps = lambda do
         steps.each do |title, build|
           say.("\n#{title}…")
           progress = ->(read) { puts "  #{read} rows read — #{(Time.current - started).round}s" }
-          imports[title] = build.call(progress).call
+          imports[title] = build.call(fm_ids:, progress:, run:).call
         end
       end
 
@@ -130,13 +128,33 @@ namespace :fm do
       begin
         blob = ActiveStorage::Blob.create_and_upload!(
           io: StringIO.new(report.join("\n")), content_type: "text/plain",
-          filename: "fm-import-organizations-#{Time.current.strftime("%Y%m%d-%H%M%S")}#{"-dry-run" if dry_run}.txt"
+          filename: "#{slug}-#{Time.current.strftime("%Y%m%d-%H%M%S")}#{"-dry-run" if dry_run}.txt"
         )
         puts "\nReport saved. Read it back with: bin/rails runner 'puts ActiveStorage::Blob.find(#{blob.id}).download'"
       rescue StandardError => e
         puts "\nCould not save the report (#{e.class}: #{e.message}) — copy the output above."
       end
     end
+  end
+
+  desc "Create organizations from the FileMaker archive (after fm:import_people). Idempotent. DRY_RUN=false to execute."
+  task import_organizations: :environment do
+    import_from_archive.call("import_organizations", {
+      "Organizations and projects" => ->(**options) { OrganizationServices::ImportFromFilemaker.new(**options) }
+    })
+  end
+
+  desc "Create affiliations, and the people agency cards name, from the FileMaker archive (after fm:import_organizations). Idempotent. DRY_RUN=false to execute."
+  task import_affiliations: :environment do
+    import_from_archive.call("import_affiliations", {
+      # The people pass skipped every agency card, so the contact person one names comes in
+      # here — only those cards, leaving everyone fm:import_people already brought over alone.
+      "People named on agency cards" => lambda do |fm_ids:, progress:, run:|
+        cards = fm_ids.any? ? FmRolodex.agency_cards.where(fm_id: fm_ids) : FmRolodex.agency_cards
+        PersonServices::ImportFromRolodex.new(scope: cards, relink: fm_ids.any?, progress:, run:)
+      end,
+      "Affiliations and work addresses" => ->(**options) { AffiliationServices::ImportFromFilemaker.new(**options) }
+    })
   end
 
   desc "Reverse any FileMaker import run (RUN=fm-import-…) from the activity it logged. Dry-run by default; DRY_RUN=false to execute."
