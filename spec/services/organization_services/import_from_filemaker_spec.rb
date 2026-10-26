@@ -213,6 +213,30 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
         .to have_attributes(school: true, organization_type: "501c3/nonprofit", organization_type_other: nil)
     end
 
+    # Every School word production holds sits on a project, not on its organization.
+    it "ticks the flag from the project's word while the organization's type still wins" do
+      fm_organization("ORG00064", OrgName: "Harbor Trust", OrgType: "501c3/Nonprofit")
+      project("P0064", "ORG00064", ProjectName: "Harbor Trust Art Program", AgencyType: "School")
+
+      import
+
+      expect(Organization.sole).to have_attributes(filemaker_code: "ORG00064, P0064", school: true,
+                                                   organization_type: "501c3/nonprofit", organization_type_other: nil)
+    end
+
+    it "ticks the flag on the program when the project is nested under an umbrella" do
+      fm_organization("ORG00065", OrgName: "Umbrella Trust", OrgType: "501c3/Nonprofit")
+      project("P0065", "ORG00065", ProjectName: "First Program", AgencyType: "School")
+      project("P0066", "ORG00065", ProjectName: "Second Program", AgencyType: "For-profit")
+
+      import
+
+      expect(Organization.find_by!(filemaker_code: "P0065")).to have_attributes(school: true, organization_type: "Other",
+                                                                                organization_type_other: "School")
+      expect(Organization.find_by!(filemaker_code: "P0066")).to have_attributes(school: false)
+      expect(Organization.find_by!(filemaker_code: "ORG00065")).to have_attributes(school: false)
+    end
+
     it "leaves the school flag alone for a type word that doesn't name one" do
       fm_organization("ORG00062", OrgType: "Educational Institution")
 

@@ -8,8 +8,7 @@ summary: >-
   School box already ticked, so the Type filter on the organizations page finds it.
 description: >-
   <ul><li>FileMaker had no school box of its own — the only thing that said so was
-  the word in its organization type field, which is where this reads it
-  from.</li><li>The box is independent of the type, the same way the filter is: a
+  the word on the art program's record, which is where this reads it from.</li><li>The box is independent of the type, the same way the filter is: a
   school can be a government agency, a nonprofit, or none of the four. A FileMaker
   type of "501c3/Nonprofit School District" ticks the box and still reads as
   501c3/nonprofit.</li><li>A word the four types can't hold — School, Individual,
