@@ -135,6 +135,27 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce.professional_license.number).to eq("99999")
     end
 
+    it "gives the existing CE record its own license when a new number would change another event's" do
+      earlier = described_class.enroll!(event_registration: create(:event_registration, registrant: person), number: "12345", kind: "LCSW")
+      ce = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+
+      described_class.enroll!(event_registration: registration, number: "99999", kind: "LCSW", issuing_state: "OR")
+
+      expect(earlier.reload.professional_license).to have_attributes(number: "12345", issuing_state: nil)
+      expect(ce.reload.professional_license).to have_attributes(number: "99999", kind: "LCSW", issuing_state: "OR")
+      expect(person.professional_licenses.count).to eq(2)
+    end
+
+    it "keeps sharing the license with another event's CE when the number is unchanged" do
+      earlier = described_class.enroll!(event_registration: create(:event_registration, registrant: person), number: "12345", kind: "LCSW")
+      ce = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+
+      described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW", issuing_state: "OR")
+
+      expect(ce.reload.professional_license).to eq(earlier.reload.professional_license)
+      expect(earlier.professional_license.issuing_state).to eq("OR")
+    end
+
     it "leaves an issued certificate's license as issued" do
       first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
       first.update!(certificate_sent_at: Time.current)

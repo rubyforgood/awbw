@@ -207,9 +207,14 @@ class ContinuingEducationRegistration < ApplicationRecord
     # Locking read: a double-submit's other request may have just created this license.
     license = self.professional_license = ProfessionalLicense.lock.find(professional_license_id)
     details = { issuing_state:, issuing_country:, expires_on: }.compact_blank
-    assign_license(number: number.presence || license.number, kind: kind.presence || license.kind,
-                   issuing_state: license.issuing_state, issuing_country: license.issuing_country,
-                   expires_on: license.expires_on)
+    if number.present? && number != license.number && license_used_by_other_ce?
+      # Another event's CE keeps the license it was given, so the new number gets its own.
+      self.professional_license = ProfessionalLicense.find_or_create_for(person: registrant, number:, kind: kind.presence || license.kind)
+    else
+      assign_license(number: number.presence || license.number, kind: kind.presence || license.kind,
+                     issuing_state: license.issuing_state, issuing_country: license.issuing_country,
+                     expires_on: license.expires_on)
+    end
     professional_license.update!(details) if details.any?
     save! if changed?
   end
@@ -234,6 +239,10 @@ class ContinuingEducationRegistration < ApplicationRecord
     event = event_registration&.event
     self.hours = event.ce_hours_offered if event&.ce_hours_offered && (hours.blank? || hours.zero?)
     self.cost_cents = event.ce_hours_cost_cents if event&.ce_hours_cost_cents && (cost_cents.blank? || cost_cents.zero?)
+  end
+
+  def license_used_by_other_ce?
+    self.class.where(professional_license_id:).where.not(id:).exists?
   end
 
   def license_belongs_to_registrant
