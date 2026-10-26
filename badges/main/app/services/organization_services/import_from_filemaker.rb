@@ -47,6 +47,10 @@ module OrganizationServices
       /govt|government/i => "Government agency",
       /\Aother\z/i => Organization::ORGANIZATION_TYPE_OTHER
     }.freeze
+    # FileMaker kept no school flag of its own, so the word in its type field is the only thing
+    # that says an organization is one. Independent of the type, as the index's filter is: a
+    # school can be a government agency, a nonprofit, or none of the four.
+    SCHOOL_PATTERN = /school/i
     TYPE_FIELDS = %i[organization_type organization_type_other].freeze
     COMMENT_SOURCES = { FmOrganization => "FileMaker organization", FmProject => "FileMaker project",
                         FmRolodex => "FileMaker Rolodex agency" }.freeze
@@ -54,8 +58,10 @@ module OrganizationServices
     attr_reader :results, :differences, :unmatched_types, :unmatched_phone_types, :nested, :unplaced
 
     def unmatched_addresses = @address_attributes.unmatched
+    def unmatched_staff = @staff.unmatched
 
-    def initialize(progress: nil, run: nil)
+    def initialize(fm_ids: nil, progress: nil, run: nil)
+      @fm_ids = fm_ids.presence&.to_set
       @progress = progress
       @run = run
       @results = OUTCOMES.index_with { [] }
@@ -81,21 +87,24 @@ module OrganizationServices
       @phones = FmPhoneNumber.all.group_by { |phone| phone.data["OrgID"].to_s }
       @emails = FmEmailAddress.all.group_by { |email| email.data["OrgID"].to_s }
 
+      @wanted = wanted_codes(projects)
+      projects = projects.select { |project| wanted?(project.fm_id) }
       retired, projects = projects.partition { |project| retired_record?(project.fm_id) }
       retired.each { |project| record(:skipped, "#{project.fm_id} #{project_name(project)}: retired in FileMaker") }
       merged, live = projects.partition { |project| merged_into(project) }
       by_organization = live.group_by { |project| project.data["OrgID"].to_s }
       @duplicates = []
       read = 0
-      FmOrganization.find_in_batches(batch_size: BATCH_SIZE) do |batch|
+      wanted_scope(FmOrganization.all).find_in_batches(batch_size: BATCH_SIZE) do |batch|
         import_batch(batch) { |organization| import_organization(organization, by_organization.delete(organization.fm_id) || []) }
         @progress&.call(read += batch.size)
       end
       import_batch(by_organization.values.flatten) { |project| import_projects(nil, [ project ]) }
       import_batch(@duplicates) { |fm_organization, projects| fold_duplicate(fm_organization, projects) }
-      import_batch(FmOrganization.where("JSON_UNQUOTE(JSON_EXTRACT(data, '$.ParentID')) NOT IN ('', 'null')")) { |child| nest_under_parent(child) }
+      parents = wanted_scope(FmOrganization.where("JSON_UNQUOTE(JSON_EXTRACT(data, '$.ParentID')) NOT IN ('', 'null')"))
+      import_batch(parents) { |child| nest_under_parent(child) }
       import_batch(merged) { |project| fold_merged(project) }
-      import_batch(agency_cards) { |rolodex| import_agency(rolodex) }
+      import_batch(agency_cards.select { |rolodex| wanted?(rolodex.fm_id) }) { |rolodex| import_agency(rolodex) }
       self
     end
 
@@ -104,6 +113,26 @@ module OrganizationServices
     # Each batch commits on its own, so a run that stops partway keeps what it finished.
     # Its activity events, tagged with the run, commit with it — UndoRolodexImport reads them.
     # Untouched, so an address added to an organization doesn't stamp it as edited now.
+    # FM_IDS names the archive rows to read. An organization can't be imported apart from its
+    # projects — one project makes it a single program, several make it an umbrella — so a named
+    # organization brings its projects and a named project brings its organization.
+    def wanted_codes(projects)
+      return unless @fm_ids
+
+      named = projects.select { |project| @fm_ids.include?(project.fm_id) }
+      @fm_ids +
+        named.map { |project| project.data["OrgID"].to_s } +
+        projects.select { |project| @fm_ids.include?(project.data["OrgID"].to_s) }.map(&:fm_id)
+    end
+
+    def wanted?(code)
+      @wanted.nil? || @wanted.include?(code.to_s)
+    end
+
+    def wanted_scope(scope)
+      @wanted ? scope.where(fm_id: @wanted.to_a) : scope
+    end
+
     def import_batch(rows, &import)
       ActiveRecord::Base.transaction(requires_new: true) do
         ActiveRecord::Base.no_touching do
@@ -360,11 +389,12 @@ module OrganizationServices
       value = value.to_s.squish
       return {} if value.blank?
 
+      school = value.match?(SCHOOL_PATTERN) ? { school: true } : {}
       type = ORGANIZATION_TYPE_PATTERNS.find { |pattern, _type| value.match?(pattern) }&.last
-      return { organization_type: type } if type
+      return school.merge(organization_type: type) if type
 
       @unmatched_types[value] += 1
-      { organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: clip(value) }
+      school.merge(organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: clip(value))
     end
 
     # Staff edited both systems, so neither side is newer by rule: a blank takes the
