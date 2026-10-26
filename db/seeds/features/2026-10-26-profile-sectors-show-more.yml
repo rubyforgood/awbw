@@ -1,11 +1,12 @@
-name: "Long sector lists fold behind \"Show more\" on profiles"
+name: "Long sector lists fold behind \"Show all\" on profiles"
 area: people
 display_status: admin_facing
 released_on: 2026-10-26
 pr_number: 2875
 summary: >-
-  A person's profile now shows their primary sector and two others, with a
-  "Show N more" toggle for the rest, so a long list no longer stretches the page.
+  A person's sectors on their profile now fill only the space beside their
+  affiliations, with a "Show all" toggle for the rest, so a long list no longer
+  stretches the page.
 pro_tips:
-  - "The starred primary sector always shows first."
-  - "Free-text \"other\" sector answers fold in with the rest."
+  - "The starred primary sector always shows first, and at least three rows of sectors always show."
+  - "More affiliations means more room, so more sectors show before the fold."

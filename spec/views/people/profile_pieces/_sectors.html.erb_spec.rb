@@ -3,42 +3,43 @@ require "rails_helper"
 RSpec.describe "people/profile_pieces/_sectors", type: :view do
   let(:person) { create(:person) }
 
-  before { allow(view).to receive(:allowed_to?).and_return(false) }
-
-  def add_sectors(count, primary_name: nil)
-    create(:sectorable_item, sectorable: person, sector: create(:sector, :published, name: primary_name), is_primary: true) if primary_name
-    count.times { |i| create(:sectorable_item, sectorable: person, sector: create(:sector, :published, name: "Sector #{i.to_s.rjust(2, "0")}")) }
+  before do
+    allow(view).to receive(:allowed_to?).and_return(false)
+    create(:sectorable_item, sectorable: person, sector: create(:sector, :published, name: "Mental Health"), is_primary: true)
   end
 
-  def render_sectors
-    render partial: "people/profile_pieces/sectors", locals: { person: person }
+  def add_sectors(count)
+    count.times { |i| create(:sectorable_item, sectorable: person, sector: create(:sector, :published, name: "Sector #{i}")) }
+  end
+
+  def render_sectors(**locals)
+    render partial: "people/profile_pieces/sectors", locals: { person: person, **locals }
     Capybara.string(rendered)
   end
 
-  it "shows the primary and two more, folding the rest behind a toggle" do
-    add_sectors(5, primary_name: "Mental Health")
-    page = render_sectors
-    visible = page.find("div.flex-wrap", match: :first)
-    expect(visible).to have_link("Mental Health")
-    expect(visible).to have_link("Sector 00")
-    expect(visible).to have_link("Sector 01")
-    expect(visible).not_to have_link("Sector 02")
-    expect(page).to have_css("details summary", text: "Show 3 more")
-    expect(page.find("details")).to have_link("Sector 04", visible: :hidden)
+  it "caps a long list to the column height behind a show-all toggle when filling height" do
+    add_sectors(4)
+    page = render_sectors(fill_height: true)
+    expect(page).to have_css("input[type=checkbox]#sectors_show_all_person_#{person.id}", visible: :all)
+    expect(page).to have_css("label[for=sectors_show_all_person_#{person.id}]", text: "Show all 5")
+    expect(page).to have_link("Sector 3")
   end
 
-  it "shows every chip without a toggle when only one would be folded" do
-    add_sectors(3, primary_name: "Mental Health")
-    page = render_sectors
-    expect(page).to have_link("Sector 02")
-    expect(page).not_to have_css("details")
-  end
-
-  it "folds free-text other responses behind the toggle too" do
-    add_sectors(3, primary_name: "Mental Health")
+  it "counts free-text other responses in the show-all total" do
+    add_sectors(3)
     create(:other_response, owner: person, text: "Equine therapy")
+    expect(render_sectors(fill_height: true)).to have_css("label", text: "Show all 5")
+  end
+
+  it "skips the toggle for three chips or fewer" do
+    add_sectors(2)
+    expect(render_sectors(fill_height: true)).not_to have_css("input[type=checkbox]", visible: :all)
+  end
+
+  it "lists every chip without a toggle when not filling height" do
+    add_sectors(10)
     page = render_sectors
-    expect(page).to have_css("details summary", text: "Show 2 more")
-    expect(page.find("details")).to have_text(:all, "Equine therapy")
+    expect(page).to have_link("Sector 9")
+    expect(page).not_to have_css("input[type=checkbox]", visible: :all)
   end
 end

@@ -1,28 +1,30 @@
 <%# One combined list: the primary sector leads as a darker-green starred chip,
     then additional sectors alphabetically and any free-text "Other" responses.
     "Other" is never a real sector tag (captured as an OtherResponse), so a stray
-    legacy tagging is dropped. Past `visible_limit` chips, the rest fold behind a
-    "Show N more" toggle (never for a single leftover chip). %>
-<% visible_limit ||= 3 %>
+    legacy tagging is dropped. With `fill_height`, the list fills its parent's
+    height (at least three chip rows) and a "Show all" checkbox lifts the cap —
+    CSS can't detect overflow, so the toggle shows whenever there are over three chips. %>
+<% fill_height = local_assigns.fetch(:fill_height, false) %>
 <% sectorable_items = person.sectorable_items.includes(:sector).reject { |si| si.sector&.name == Sector::OTHER_SECTOR_NAME }.sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
 <% chips = sectorable_items + person.other_sector_responses.to_a %>
-<% if chips.any? %>
-  <% visible_limit = chips.size if chips.size <= visible_limit + 1 %>
-  <% hidden_chips = chips.drop(visible_limit) %>
-  <div class="flex flex-wrap gap-2">
-    <%= render partial: "people/profile_pieces/sector_chip", collection: chips.first(visible_limit), as: :chip %>
-  </div>
-  <% if hidden_chips.any? %>
-    <details class="group mt-2">
-      <summary class="cursor-pointer list-none text-sm font-medium text-gray-500 hover:text-gray-800">
-        <span class="group-open:hidden">Show <%= hidden_chips.size %> more <i class="fa-solid fa-chevron-down ml-1 text-xs" aria-hidden="true"></i></span>
-        <span class="hidden group-open:inline">Show fewer <i class="fa-solid fa-chevron-up ml-1 text-xs" aria-hidden="true"></i></span>
-      </summary>
-      <div class="mt-2 flex flex-wrap gap-2">
-        <%= render partial: "people/profile_pieces/sector_chip", collection: hidden_chips, as: :chip %>
-      </div>
-    </details>
-  <% end %>
-<% else %>
+<% if chips.empty? %>
   <p class="text-gray-500 italic">None selected.</p>
+<% elsif fill_height && chips.size > 3 %>
+  <% toggle_id = dom_id(person, :sectors_show_all) %>
+  <div class="flex flex-1 flex-col">
+    <input type="checkbox" id="<%= toggle_id %>" class="peer sr-only">
+    <div class="flex min-h-28 flex-1 flex-wrap content-start gap-2 overflow-hidden [mask-image:linear-gradient(to_bottom,black_calc(100%-1.5rem),transparent)] [contain:size] peer-checked:overflow-visible peer-checked:[mask-image:none] peer-checked:[contain:none]">
+      <%= render partial: "people/profile_pieces/sector_chip", collection: chips, as: :chip %>
+    </div>
+    <label for="<%= toggle_id %>" class="mt-2 inline-flex cursor-pointer items-center self-start text-sm font-medium text-gray-500 peer-checked:hidden peer-focus-visible:underline hover:text-gray-800">
+      Show all <%= chips.size %> <i class="fa-solid fa-chevron-down ml-1 text-xs" aria-hidden="true"></i>
+    </label>
+    <label for="<%= toggle_id %>" class="mt-2 hidden cursor-pointer items-center self-start text-sm font-medium text-gray-500 peer-checked:inline-flex peer-focus-visible:underline hover:text-gray-800">
+      Show fewer <i class="fa-solid fa-chevron-up ml-1 text-xs" aria-hidden="true"></i>
+    </label>
+  </div>
+<% else %>
+  <div class="flex flex-wrap gap-2">
+    <%= render partial: "people/profile_pieces/sector_chip", collection: chips, as: :chip %>
+  </div>
 <% end %>
