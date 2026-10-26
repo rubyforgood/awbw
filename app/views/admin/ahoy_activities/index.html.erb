@@ -2,12 +2,17 @@
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
 
       <div class="mb-2 flex flex-wrap items-center gap-y-2">
-        <%# Scoped to a person (from their edit page's Activity card, or the filter) —
-            return to that person, not the generic Admin default. %>
+        <%# Scoped to a person or organization (from their edit page's Activity card, or
+            the filter) — return to that record, not the generic Admin default. %>
         <% if @person %>
           <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
             <i class="fas fa-arrow-left"></i>
             <span><%= truncate(person_name(@person), length: 30) %></span>
+          <% end %>
+        <% elsif @organization %>
+          <%= link_to edit_organization_path(@organization), class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+            <i class="fas fa-arrow-left"></i>
+            <span><%= truncate(@organization.name, length: 30) %></span>
           <% end %>
         <% elsif allowed_to?(:index?, with: Admin::HomePolicy) %>
           <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
@@ -27,6 +32,8 @@
           <h1 class="text-primary font-display text-3xl">
             <% if @person %>
               <%= tag.span(@person.full_name, title: @person.preferred_email) %>'s activity
+            <% elsif @organization %>
+              <%= @organization.name %>'s activity
             <% else %>
               <%= scoped ? "Filtered activity" : "Everyone's activity" %>
             <% end %>
@@ -41,6 +48,12 @@
             <%= link_to person_path(@person), class: button_classes(:primary_outline) do %>
               <i class="fa-solid fa-user"></i>
               <%= @person.first_name %>'s profile
+            <% end %>
+          <% end %>
+          <% if @organization %>
+            <%= link_to organization_path(@organization), class: button_classes(:primary_outline) do %>
+              <i class="fa-solid fa-building"></i>
+              Profile
             <% end %>
           <% end %>
           <% if scoped %>
@@ -155,7 +168,7 @@
 
           <div class="mt-6 flex items-center gap-3 text-sm">
             <span class="text-gray-500">Quick:</span>
-            <% safe_params = params.slice(:event_name, :visit_id, :props, :person_id, :from, :to, :hide_account, :hide_interactions, :hide_communications).to_unsafe_h %>
+            <% safe_params = params.slice(:event_name, :visit_id, :props, :person_id, :organization_id, :from, :to, :hide_account, :hide_interactions, :hide_communications).to_unsafe_h %>
             <%= link_to "24h",
                         url_for(safe_params.merge(from: 1.day.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>

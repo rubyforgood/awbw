@@ -502,6 +502,12 @@ RSpec.describe "/organizations", type: :request do
         expect(organization.reload.high_profile).to be(true)
       end
 
+      it "links the edit page's associated records to the organization's activity" do
+        organization = Organization.create!(valid_attributes)
+        get edit_organization_url(organization)
+        expect(Capybara.string(response.body)).to have_link("Activity", href: /organization_id=#{organization.id}/)
+      end
+
       it "updates the school flag from the edit form's checkbox" do
         organization = Organization.create!(valid_attributes)
         get edit_organization_url(organization)

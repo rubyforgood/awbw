@@ -102,4 +102,8 @@ module OrganizationHelper
       label_tag + logo + text_block
     end
   end
+
+  def organization_activity_path(organization)
+    admin_activities_events_path(organization_id: organization, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1")
+  end
 end
