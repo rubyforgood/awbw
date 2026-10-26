@@ -2,6 +2,7 @@ name: "Organization activity includes its associated records"
 area: people
 display_status: admin_facing
 released_on: 2026-10-25
+pr_number: 2868
 summary: >-
   An organization's activity timeline now also shows changes to its affiliations, contact info,
   comments, event registrations, stories, story ideas, community news, workshop logs, reports,
