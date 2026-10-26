@@ -124,6 +124,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
       "County Government Agency" => [ "Government agency", nil ],
       "Govt agency" => [ "Government agency", nil ],
       "Other" => [ "Other", nil ],
+      "Educational Institution" => [ "Educational institution", nil ],
       "School" => [ "Educational institution", nil ],
       "Community College" => [ "Educational institution", nil ],
       "Grassroots" => [ "Other", "Grassroots" ]
