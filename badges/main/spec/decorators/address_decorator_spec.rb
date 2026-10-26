@@ -11,6 +11,22 @@ RSpec.describe AddressDecorator do
     end
   end
 
+  describe "person type choices" do
+    it "offers personal or mailing, starting a new address as personal" do
+      address = build(:address, address_type: nil).decorate
+
+      expect(address.person_type_options).to eq([ [ "Personal", "personal" ], [ "Mailing", "mailing" ] ])
+      expect(address.person_type_selected).to eq("personal")
+    end
+
+    it "keeps the type an address already holds as a choice, so saving doesn't change it" do
+      address = build(:address, address_type: "work").decorate
+
+      expect(address.person_type_options.map(&:last)).to eq(%w[personal mailing work])
+      expect(address.person_type_selected).to eq("work")
+    end
+  end
+
   describe "#picker_label" do
     let(:organization) { create(:organization) }
 

@@ -1,0 +1,13 @@
+name: "Person addresses default to Personal, and more FileMaker types read on import"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2864
+summary: >-
+  A new address on a person now starts as Personal, and the type choices are Personal or Mailing, since
+  work addresses belong on the organization. The FileMaker import reads more of FileMaker's address and
+  phone types, and brings in addresses that have a city and state but no street.
+pro_tips:
+  - "FileMaker phones typed Work/Day or Home/Eve now come in as work or personal."
+  - "A FileMaker organization address marked Mailing or Postal comes in as a work address checked as the invoice address."
+  - "The import report lists any address or phone type it couldn't read, and any project it couldn't place, for fixing by hand."
