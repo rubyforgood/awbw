@@ -46,10 +46,8 @@ module AffiliationServices
     attr_reader :results, :statuses, :roles
 
     def unmatched_addresses = @address_attributes.unmatched
-    def unmatched_staff = @staff.unmatched
 
-    def initialize(fm_ids: nil, progress: nil, run: nil)
-      @fm_ids = fm_ids.presence&.to_set
+    def initialize(progress: nil, run: nil)
       @progress = progress
       @run = run
       @results = OUTCOMES.index_with { [] }
@@ -74,22 +72,16 @@ module AffiliationServices
       @unstaffed = []
       @read = 0
 
-      each_batch(named(FmPersonnel.all)) { |row| import_personnel(row) }
-      each_batch(named(FmPeopleToOrganization.all)) { |row| import_job(row) }
+      each_batch(FmPersonnel.all) { |row| import_personnel(row) }
+      each_batch(FmPeopleToOrganization.all) { |row| import_job(row) }
       addresses = FmRolodex.contact_index(FmAddress)
       phones = FmRolodex.contact_index(FmPhoneNumber)
-      each_batch(named(FmRolodex.all)) { |rolodex| import_rolodex(rolodex.preload_contacts(addresses:, phone_numbers: phones)) }
+      each_batch(FmRolodex.all) { |rolodex| import_rolodex(rolodex.preload_contacts(addresses:, phone_numbers: phones)) }
       in_batch(@unstaffed) { |row, organization, label| import_unstaffed(row, organization, label) }
       self
     end
 
     private
-
-    # FM_IDS names the archive rows to read, by their own ID — a personnel record, a
-    # people-to-organizations record, or a Rolodex card.
-    def named(scope)
-      @fm_ids ? scope.where(fm_id: @fm_ids.to_a) : scope
-    end
 
     # Each batch commits on its own, so a run that stops partway keeps what it finished.
     # Its activity events, tagged with the run, commit with it — UndoRolodexImport reads them.

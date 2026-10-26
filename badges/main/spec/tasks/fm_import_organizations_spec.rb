@@ -16,10 +16,9 @@ RSpec.describe "fm:import_organizations" do
     FmPersonnel.create!(fm_id: "PS0001", data: { "PersonID" => "00200", "ProjectID" => "P0001", "Role" => "Leader", "Status" => "Active" })
   end
 
-  def run_task(dry_run: true, task: "fm:import_organizations", run: nil, fm_ids: nil)
+  def run_task(dry_run: true, task: "fm:import_organizations", run: nil)
     ENV["DRY_RUN"] = dry_run ? "true" : "false"
     ENV["RUN"] = run
-    ENV["FM_IDS"] = fm_ids
     output = StringIO.new
     original_stdout = $stdout
     $stdout = output
@@ -33,7 +32,6 @@ RSpec.describe "fm:import_organizations" do
     $stdout = original_stdout
     ENV.delete("DRY_RUN")
     ENV.delete("RUN")
-    ENV.delete("FM_IDS")
   end
 
   it "stops before reading a row when no import user is chosen" do
@@ -41,35 +39,14 @@ RSpec.describe "fm:import_organizations" do
     expect(Organization.count).to eq(0)
   end
 
-  it "stops before reading a row when no staff alias is recorded" do
-    Setting.create!(import_user: create(:user))
-
-    expect { run_task(dry_run: false) }.to raise_error(/aborted: No staff aliases recorded/)
-    expect(Organization.count).to eq(0)
-  end
-
   context "with an import user chosen" do
-    before do
-      Setting.create!(import_user: create(:user))
-      create(:staff_alias)
-    end
+    before { Setting.create!(import_user: create(:user)) }
 
     it "rolls a dry run back and saves its report" do
       expect { run_task }.to change(ActiveStorage::Blob, :count).by(1)
 
       expect(Organization.count).to eq(0)
       expect(ActiveStorage::Blob.last.download).to include("Organizations and projects", "Affiliations and work addresses", "DRY RUN")
-    end
-
-    it "reads only the rows FM_IDS names, and says so" do
-      FmOrganization.create!(fm_id: "ORG00002", data: { "OrgName" => "Sunrise House" })
-
-      output = run_task(dry_run: false, fm_ids: "ORG00001")
-
-      expect(output).to include("Reading 1 named row(s)", "ORG00001")
-      expect(Organization.pluck(:filemaker_code)).to eq([ "ORG00001, P0001" ])
-      # The personnel row isn't named, so the affiliations step leaves it for a full run.
-      expect(person.affiliations).to be_empty
     end
 
     it "makes the organization, then the affiliation, on a real run" do

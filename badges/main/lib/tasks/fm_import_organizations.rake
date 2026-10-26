@@ -15,13 +15,8 @@
 # A real run commits each batch as it goes, so stopping partway keeps what it finished and
 # the rerun skips it. The full report is also saved as an ActiveStorage blob. Every record a
 # run creates or fills is logged under the run's name, which fm:undo_import reverses:
-# FM_IDS names the archive rows to read, by their own ID — an organization, a project, a
-# personnel record, a people-to-organizations record, or a Rolodex card. An organization and
-# its projects come as a pair either way, since one can't be read without the other. Use it to
-# re-read a handful after recording the staff aliases or fixing the data a row needed:
 #   bin/rails fm:import_organizations                 # preview, writes nothing
 #   DRY_RUN=false bin/rails fm:import_organizations   # create + link
-#   FM_IDS=ORG02184,P1630 DRY_RUN=false bin/rails fm:import_organizations   # just these rows
 #   DRY_RUN=false bin/rails fm:undo_import RUN=fm-import-organizations-20261022134055
 namespace :fm do
   desc "Create organizations and affiliations from the FileMaker archive (after fm:import_people). Idempotent. DRY_RUN=false to execute."
@@ -29,13 +24,9 @@ namespace :fm do
     unless Setting.import_user
       abort "No import user chosen — pick one on /admin/settings (Imports); it's credited as created_by/updated_by when FileMaker names no staffer we can resolve."
     end
-    unless StaffAlias.exists?
-      abort "No staff aliases recorded — run bin/rails data:load_staff_aliases FILE=… first, or every record is credited to the import user."
-    end
 
     dry_run = ENV["DRY_RUN"] != "false"
     verbose = ENV["VERBOSE"] == "true"
-    fm_ids = ENV["FM_IDS"].to_s.split(",").map(&:strip).compact_blank
     report = []
     say = ->(line = "") { puts line; report << line }
     $stdout.sync = true
@@ -44,15 +35,13 @@ namespace :fm do
       run = "fm-import-organizations-#{Time.current.strftime("%Y%m%d%H%M%S")}"
       Current.source = "fm_import_organizations"
       say.("Run #{run}#{" (dry run)" if dry_run}")
-      say.("Reading #{fm_ids.size} named row(s) and the organizations or projects they pair with: #{fm_ids.join(", ")}") if fm_ids.any?
       started = Time.current
       # The people pass skipped every agency card, so the contact person one names comes in
       # here — only those cards, leaving everyone fm:import_people already brought over alone.
-      cards = fm_ids.any? ? FmRolodex.agency_cards.where(fm_id: fm_ids) : FmRolodex.agency_cards
       steps = {
-        "People named on agency cards" => ->(progress) { PersonServices::ImportFromRolodex.new(scope: cards, relink: fm_ids.any?, progress:, run:) },
-        "Organizations and projects" => ->(progress) { OrganizationServices::ImportFromFilemaker.new(fm_ids:, progress:, run:) },
-        "Affiliations and work addresses" => ->(progress) { AffiliationServices::ImportFromFilemaker.new(fm_ids:, progress:, run:) }
+        "People named on agency cards" => ->(progress) { PersonServices::ImportFromRolodex.new(scope: FmRolodex.agency_cards, progress:, run:) },
+        "Organizations and projects" => ->(progress) { OrganizationServices::ImportFromFilemaker.new(progress:, run:) },
+        "Affiliations and work addresses" => ->(progress) { AffiliationServices::ImportFromFilemaker.new(progress:, run:) }
       }
       imports = {}
 
@@ -100,7 +89,6 @@ namespace :fm do
 
         tallies = {
           "Organization types read as Other, kept as its description" => import.try(:unmatched_types),
-          "Staff names no alias answers to (credited to the import user; record them with data:load_staff_aliases)" => import.try(:unmatched_staff),
           "Personnel Status values and how they were read" => import.try(:statuses),
           "Personnel roles" => import.try(:roles),
           "Address countries nothing translates (left blank)" => import.try(:unmatched_addresses)&.fetch(:country, nil),

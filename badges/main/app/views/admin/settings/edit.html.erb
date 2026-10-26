@@ -128,8 +128,8 @@
                   selected: import_user&.id,
                   prompt: "Search users",
                   label: "Import user",
-                  hint: "Shown as created by / updated by on imported records nobody else is credited for. It doesn't need to be able to sign in.",
-                  input_html: { data: { controller: "remote-select", remote_select_model_value: SearchController::USER_ANY_STATUS_MODEL } } %>
+                  hint: "Shown as created by / updated by on imported records nobody else is credited for",
+                  input_html: { data: { controller: "remote-select", remote_select_model_value: "user" } } %>
     </section>
 
     <section class="rounded-xl border border-gray-200 bg-white p-6">

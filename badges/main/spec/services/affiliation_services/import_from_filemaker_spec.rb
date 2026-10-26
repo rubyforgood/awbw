@@ -22,39 +22,6 @@ RSpec.describe AffiliationServices::ImportFromFilemaker do
     described_class.new.call
   end
 
-  describe "the staff FileMaker stamped on a row" do
-    it "reports a staff name no alias answers to, and resolves the ones that do" do
-      user = create(:user)
-      create(:staff_alias, name: "Dana Whitfield", user:)
-      personnel("PS0030", EnteredBy: "Dana Whitfield", ModifiedBy: "Nobody Recorded")
-
-      import = described_class.new.call
-
-      expect(person.affiliations.sole.created_by_id).to eq(user.id)
-      expect(import.unmatched_staff).to eq({ "Nobody Recorded" => 1 })
-    end
-  end
-
-  describe "FM_IDS naming the rows to read" do
-    it "reads only the named personnel row" do
-      personnel("PS0040")
-      personnel("PS0041", ProjectID: "P0001")
-
-      described_class.new(fm_ids: [ "PS0040" ]).call
-
-      expect(person.affiliations.pluck(:filemaker_code)).to eq([ "PS0040" ])
-    end
-
-    it "reads every row when nothing is named" do
-      personnel("PS0040")
-      personnel("PS0041", Role: "Assistant")
-
-      described_class.new.call
-
-      expect(person.affiliations.pluck(:filemaker_code)).to contain_exactly("PS0040", "PS0041")
-    end
-  end
-
   describe "personnel" do
     it "makes a Leader a primary-contact Facilitator dated from entry to the project's close" do
       personnel("PS0001")

@@ -49,7 +49,6 @@ RSpec.describe "fm:import_people" do
   context "with tag aliases recorded" do
     before do
       create(:tag_alias)
-      create(:staff_alias)
       Setting.create!(import_user: create(:user))
     end
 
