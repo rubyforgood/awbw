@@ -9,3 +9,4 @@ pro_tips:
   - "Every submission is still kept, so you can see each time they applied."
   - "Applying again later also keeps one event registration and one CE registration."
 action_path: "/events"
+pr_number: 2876
