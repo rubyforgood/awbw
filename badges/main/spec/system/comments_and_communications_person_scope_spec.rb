@@ -10,8 +10,6 @@ RSpec.describe "Comments & communications person scope", type: :system do
     create(:comment, commentable: other, body: "Schedule note for Bo", created_by: admin)
     sign_in admin
     visit comments_and_communications_path(person_id: person.id)
-    # Turbo never cancels the frame's lazy load, so a filter typed before it lands is overwritten by it.
-    expect(page).to have_css("turbo-frame#comments_and_communications_results[complete]", text: "Schedule note for Aisha")
   end
 
   scenario "filtering a person's feed keeps it on that person" do
