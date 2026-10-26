@@ -31,6 +31,26 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg.errors[:professional_license]).to include("must belong to the registrant")
     end
 
+    describe "one CE registration per license on a registration" do
+      let(:registration) { create(:event_registration) }
+      let(:license) { create(:professional_license, person: registration.registrant) }
+
+      before { create(:continuing_education_registration, event_registration: registration, professional_license: license) }
+
+      it "rejects a second CE registration for the same license" do
+        duplicate = build(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+        expect(duplicate).not_to be_valid
+        expect(duplicate.errors[:professional_license]).to include("already has CE on this registration")
+      end
+
+      it "allows CE for another of the registrant's licenses" do
+        second_license = create(:professional_license, person: registration.registrant, kind: "LMFT", number: "77777")
+
+        expect(build(:continuing_education_registration, event_registration: registration, professional_license: second_license)).to be_valid
+      end
+    end
+
     describe "cost_not_below_allocations" do
       it "allows setting cost above allocations" do
         ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
@@ -100,6 +120,51 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW", issuing_state: "OR")
 
       expect(license.reload).to have_attributes(issuing_state: "OR", expires_on: Date.new(2027, 1, 1))
+    end
+
+    context "when a double-submit enrolls the same registration twice at once" do
+      # Each thread needs its own committed transaction, so this group can't run inside the example's.
+      self.use_transactional_tests = false
+
+      around do |example|
+        connection = ActiveRecord::Base.connection
+        tables = connection.tables.select { |table| connection.column_exists?(table, :id) }
+        baseline = tables.index_with { |table| connection.select_value("SELECT MAX(id) FROM #{connection.quote_table_name(table)}").to_i }
+        example.run
+      ensure
+        connection.disable_referential_integrity do
+          baseline.each { |table, max_id| connection.execute("DELETE FROM #{connection.quote_table_name(table)} WHERE id > #{max_id}") }
+        end
+      end
+
+      it "creates one CE registration and one license" do
+        arrived = Queue.new
+        release = Queue.new
+        allow(ProfessionalLicense).to receive(:find_or_create_for).and_wrap_original do |original, **args|
+          arrived << true
+          release.pop(timeout: 1)
+          original.call(**args)
+        end
+
+        registration_id = registration.id
+        submissions = 2.times.map do
+          Thread.new do
+            ActiveRecord::Base.connection_pool.with_connection do
+              ActiveRecord::Base.transaction do
+                fresh = EventRegistration.find(registration_id)
+                fresh.event.title
+                described_class.enroll!(event_registration: fresh, number: "12345", kind: "LCSW")
+              end
+            end
+          end
+        end
+        2.times { arrived.pop(timeout: 1) }
+        2.times { release << true }
+        submissions.each(&:join)
+
+        expect(registration.continuing_education_registrations.count).to eq(1)
+        expect(person.professional_licenses.count).to eq(1)
+      end
     end
   end
 

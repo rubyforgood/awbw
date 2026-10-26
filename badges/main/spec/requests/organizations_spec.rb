@@ -102,6 +102,32 @@ RSpec.describe "/organizations", type: :request do
       expect(response.body).not_to include("13-17")
     end
 
+    context "with contact info hidden from the profile" do
+      let(:organization) do
+        Organization.create!(valid_attributes.merge(
+          email: "hello@example.org", website_url: "https://example.org/hidden",
+          profile_show_email: false, profile_show_phone: false, profile_show_website: false
+        )).tap { |org| create(:contact_method, contactable: org, value: "555-867-5309") }
+      end
+
+      { "Email" => "hello@example.org", "Phone" => "555-867-5309", "Website" => "https://example.org/hidden" }.each do |label, value|
+        it "shows the hidden #{label.downcase} to admins as an admin-only chip" do
+          get organization_url(organization)
+          chip = Capybara.string(response.body).find("span[title='#{label} (admin only)']")
+          expect(chip).to have_text(value)
+        end
+      end
+
+      it "keeps it off the profile for non-admins" do
+        create(:affiliation, organization: organization, person: create(:person))
+        sign_in user
+
+        get organization_url(organization)
+        expect(response).to be_successful
+        expect(response.body).not_to include("hello@example.org", "555-867-5309", "example.org/hidden")
+      end
+    end
+
     it "renders successfully with workshop logs" do
       organization = Organization.create!(valid_attributes)
       workshop_log = create(:workshop_log, organization: organization, created_by: admin)

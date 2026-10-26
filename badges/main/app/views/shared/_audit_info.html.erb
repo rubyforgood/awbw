@@ -10,23 +10,6 @@
 
 <div class="mt-6 flex justify-end border-t border-gray-200 pt-4">
   <div class="space-y-1 text-right text-xs text-gray-500">
-    <% if resource.created_at.present? %>
-      <div>
-        <span class="font-medium">Created:</span>
-        <%= resource.created_at.strftime("%b %d, %Y at %-l:%M %p") %>
-        <% if created_by_user %>
-          by <%= user_link(created_by_user) %>
-        <% end %>
-        <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-          <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
-                      class: "ml-1 text-indigo-600 hover:underline",
-                      title: "View creation activity in Ahoy" do %>
-            <i class="fas fa-chart-line"></i>
-          <% end %>
-        <% end %>
-      </div>
-    <% end %>
-
     <% if resource.updated_at.present? && resource.updated_at != resource.created_at %>
       <div>
         <span class="font-medium">Last updated:</span>
@@ -38,6 +21,23 @@
           <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
                       class: "ml-1 text-indigo-600 hover:underline",
                       title: "View update activity in Ahoy" do %>
+            <i class="fas fa-chart-line"></i>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if resource.created_at.present? %>
+      <div>
+        <span class="font-medium">Created:</span>
+        <%= resource.created_at.strftime("%b %d, %Y at %-l:%M %p") %>
+        <% if created_by_user %>
+          by <%= user_link(created_by_user) %>
+        <% end %>
+        <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+          <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
+                      class: "ml-1 text-indigo-600 hover:underline",
+                      title: "View creation activity in Ahoy" do %>
             <i class="fas fa-chart-line"></i>
           <% end %>
         <% end %>
