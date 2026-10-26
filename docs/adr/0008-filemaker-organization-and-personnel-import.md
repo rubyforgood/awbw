@@ -17,7 +17,7 @@ people agency cards name, then organizations and projects
 | `fm_organizations` | 7,240 | An umbrella organization or agency (`OrgID`, `ParentID`) | An `Organization`, parent of its programs — or, with exactly one project, the same org as that program | `ORG…` on the org |
 | `fm_projects` | 2,007 | One art program run at an organization (`ProjectID`, `OrgID`) | An `Organization` (the program) nested under its organization; `Locality` and districts onto its address | `P…` on the org |
 | `fm_personnels` | 9,037 | A person assigned to a project, with role and status (`PersonID`, `ProjectID`) | A Facilitator `Affiliation` at the project's org, plus a comment naming the FileMaker role | `PS…` on the affiliation |
-| `fm_people_to_organizations` | 1,128 | A person's job at an organization, with title (`PersonID`, `OrgID`) | A job `Affiliation` with that title, undated | `RecordID` on the affiliation |
+| `fm_people_to_organizations` | 1,128 | A person's job at an organization, with title (`PersonID`, `OrgID`) | A job `Affiliation` with that title, undated unless its notes say the person left | `RecordID` on the affiliation |
 | `fm_rolodexes` | 39,795 | A person's card (`OrgID`, `Organization`, `Title`, `WorksiteAddrsID`), or an agency's own card (`isAgency__c`) | A person's card: a job `Affiliation` at its organization, and its work addresses on that org. An agency's card: fills the org's website, mission, email and addresses; its contact person becomes a `Person` | None — the card's ID is the person's, from the people pass |
 | `fm_addresses` | 28,556 | An address under a card (`RolodexID`), an organization (`OrgID`), or both | An `Address` on the org, always Work (Mailing/Postal becomes its invoice address); the people pass already took the personal ones | `AddrsID` on the address |
 | `fm_phone_numbers` | 34,040 | A phone under a card, an organization, or both | A phone `ContactMethod` on the org | `PhoneID` on the phone |
@@ -143,11 +143,16 @@ Constraints already decided elsewhere:
     "Active" (1,774) stays open; Inactive (7,220), Pending, Suspended, blank, and values
     typed over each other ("ActiveInactive") end it now, undated (`inactive`). The run tallies
     every Status and Role value and how it was read.
+  - **"No longer with" notes:** a Personnel or people-to-organizations row whose `Notes` say
+    the person is no longer with (or at, works, employed) the organization ends its
+    affiliation (`inactive`) on the day the row was last saved — when staff knew they were
+    gone; FileMaker never recorded the real date. A project close date still wins. The note
+    becomes a comment on the affiliation, saying the actual end date isn't known.
   - An existing same-title affiliation at that org is linked (takes the code, fills blank
     dates) unless it already records another Personnel row — a second stint stays its own row.
 - **People-to-organizations → job affiliation:** an `fm_people_to_organizations` row becomes
   an `Affiliation` to the org carrying its `OrgID` code with its `Title`, carrying `RecordID`
-  as its code. Undated, per ADR-0003 D1.
+  as its code. Undated, per ADR-0003 D1, unless its notes say the person left (above).
 - **The Rolodex card → job affiliation:** the card's `OrgID` (or its typed `Organization`, via
   `NameMatcher`) and `Title` become a job affiliation there — the field `FmRolodex::PORTAL_FIELDS`
   already mapped to `affiliations.title`. No code: the card's ID is the person's.
