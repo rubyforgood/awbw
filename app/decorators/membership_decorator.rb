@@ -58,6 +58,6 @@ class MembershipDecorator < ApplicationDecorator
   def stripe_badge
     return STRIPE_BADGES[:past_due] if stripe_past_due?
 
-    STRIPE_BADGES[:active] if stripe_active?
+    STRIPE_BADGES[:active] if stripe_active? && !stripe_subscription.canceled?
   end
 end

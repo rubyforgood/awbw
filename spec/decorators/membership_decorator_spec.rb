@@ -57,11 +57,11 @@ RSpec.describe MembershipDecorator, type: :decorator do
       expect(badge[:classes]).to include("green")
     end
 
-    it "is green for a subscription set to cancel at the period's end" do
+    it "is nil for a subscription set to cancel at the period's end" do
       membership = create(:membership)
       create_stripe_subscription(membership, ends_at: 1.month.from_now)
 
-      expect(membership.decorate.stripe_badge[:label]).to eq("Stripe active")
+      expect(membership.decorate.stripe_badge).to be_nil
     end
 
     it "is amber while a payment is past due" do
