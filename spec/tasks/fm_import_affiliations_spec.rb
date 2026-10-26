@@ -52,7 +52,7 @@ RSpec.describe "fm:import_affiliations" do
       expect { run_task }.to change(ActiveStorage::Blob, :count).by(1)
 
       expect(Affiliation.count).to eq(0)
-      expect(ActiveStorage::Blob.last.download).to include("Affiliations and work addresses", "DRY RUN")
+      expect(ActiveStorage::Blob.last.download).to include("People named on agency cards", "Affiliations and work addresses", "DRY RUN")
     end
 
     it "affiliates the person with the organization the organizations import made" do
@@ -69,6 +69,19 @@ RSpec.describe "fm:import_affiliations" do
 
       expect(output).to include("Reading 1 named row(s)", "PS0001")
       expect(person.affiliations.pluck(:filemaker_code)).to eq([ "PS0001" ])
+    end
+
+    it "brings in the person an agency card names, which the people import skipped, and affiliates them there" do
+      clinic = create(:organization, name: "Harbor Clinic")
+      FmRolodex.create!(fm_id: "00301", data: { "isAgency__c" => "1", "Organization" => "Harbor Clinic", "Title" => "Director",
+                                                "FirstName" => "Grace", "LastName" => "Hopper", "EMail" => "grace@harbor.example.org" })
+      FmRolodex.create!(fm_id: "00302", data: { "FirstName" => "Ada", "LastName" => "Lovelace" })
+
+      run_task(dry_run: false)
+
+      contact = Person.find_by!(filemaker_code: "00301")
+      expect(contact.affiliations.sole).to have_attributes(organization: clinic, title: "Director")
+      expect(Person.where(filemaker_code: "00302")).to be_empty
     end
 
     it "affiliates the person an agency card names with its agency, at the work address the organizations import placed" do

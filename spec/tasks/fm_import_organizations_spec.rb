@@ -58,7 +58,7 @@ RSpec.describe "fm:import_organizations" do
       expect { run_task }.to change(ActiveStorage::Blob, :count).by(1)
 
       expect(Organization.count).to eq(0)
-      expect(ActiveStorage::Blob.last.download).to include("People named on agency cards", "Organizations and projects", "DRY RUN")
+      expect(ActiveStorage::Blob.last.download).to include("Organizations and projects", "DRY RUN")
       expect(ActiveStorage::Blob.last.download).not_to include("Affiliations and work addresses")
     end
 
@@ -88,26 +88,20 @@ RSpec.describe "fm:import_organizations" do
       expect(Organization.find_by!(name: "Elm Street Clinic").addresses.sole).to have_attributes(street_address: "9 Elm St", address_type: "work")
     end
 
-    it "brings in the person an agency card names, which the people import skipped, without affiliating them" do
+    it "creates only organizations, leaving the person an agency card names to fm:import_affiliations" do
       FmRolodex.create!(fm_id: "00301", data: { "isAgency__c" => "1", "Organization" => "Harbor Clinic", "Title" => "Director",
-                                                "FirstName" => "Grace", "LastName" => "Hopper", "EMail" => "grace@harbor.example.org" })
-      FmRolodex.create!(fm_id: "00302", data: { "FirstName" => "Ada", "LastName" => "Lovelace" })
+                                                "FirstName" => "Grace", "LastName" => "Hopper" })
 
-      run_task(dry_run: false)
-
-      expect(Person.find_by!(filemaker_code: "00301").affiliations).to be_empty
-      expect(Person.where(filemaker_code: "00302")).to be_empty
+      expect { run_task(dry_run: false) }.not_to change(Person, :count)
+      expect(Organization.find_by(name: "Harbor Clinic")).to be_present
     end
 
     it "names the run so fm:undo_import can reverse it" do
-      FmRolodex.create!(fm_id: "00301", data: { "isAgency__c" => "1", "Organization" => "Harbor Clinic",
-                                                "FirstName" => "Grace", "LastName" => "Hopper" })
       run = run_task(dry_run: false)[/ RUN=(fm-import-organizations-\d+)/, 1]
 
       run_task(task: "fm:undo_import", run:, dry_run: false)
 
       expect(Organization.count).to eq(0)
-      expect(Person.where.not(id: person.id)).to be_empty
     end
   end
 end
