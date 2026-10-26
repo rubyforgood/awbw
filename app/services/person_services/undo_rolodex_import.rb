@@ -1,5 +1,5 @@
 module PersonServices
-  # Reverses one FileMaker import run (fm:import_people, fm:import_organizations) from the
+  # Reverses one FileMaker import run (fm:import_people, fm:import_organizations, fm:import_affiliations) from the
   # activity events it logged under it (`import_run`). Newest first, so a record's addresses,
   # tags, comments and affiliations go before the record. A record created by the run is deleted, and a field the run filled goes back to
   # its value before the run — unless someone has changed it since, which is kept and reported.

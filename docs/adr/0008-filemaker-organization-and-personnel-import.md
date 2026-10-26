@@ -6,10 +6,10 @@
 
 ## TL;DR
 
-`fm:import_organizations` runs after `fm:import_people` (#2630) in three steps — the contact
-people agency cards name, then organizations and projects
-(`OrganizationServices::ImportFromFilemaker`), then affiliations and work addresses
-(`AffiliationServices::ImportFromFilemaker`). Row counts are production's, profiled
+Two runs after `fm:import_people` (#2630), each reversible on its own: `fm:import_organizations`
+makes organizations and projects (`OrganizationServices::ImportFromFilemaker`), then
+`fm:import_affiliations` brings in the contact people agency cards name and makes affiliations
+and work addresses (`AffiliationServices::ImportFromFilemaker`). Row counts are production's, profiled
 2026-10-12 (ADR-0005).
 
 | Archive table | Rows | What a row is | Becomes | Code it leaves |
@@ -59,8 +59,9 @@ Constraints already decided elsewhere:
 - **Order:** people (#2630) → organizations → projects → affiliations. Each pass finds the
   records the previous one created by `filemaker_code`, so each is idempotent on its own.
   `fm:import_organizations` runs organizations + projects
-  (`OrganizationServices::ImportFromFilemaker`), then affiliations
-  (`AffiliationServices::ImportFromFilemaker`).
+  (`OrganizationServices::ImportFromFilemaker`); `fm:import_affiliations` runs affiliations
+  (`AffiliationServices::ImportFromFilemaker`) as its own run, so either can be checked and
+  undone apart — affiliations first, since an organization someone is affiliated with is kept.
 - **Organizations and projects:** an `fm_projects` row becomes (or links to) an app
   `Organization`; its `fm_organizations` row becomes (or links to) that org's parent.
   Match an existing org by any shared `filemaker_code` first, then by exact name; append
@@ -101,7 +102,7 @@ Constraints already decided elsewhere:
   matches, created when nothing does); its email too, unless the card names a contact
   person, whose email it then is. A card naming a contact person also becomes that person,
   and every address on it stays with the org. `fm:import_people` skipped every agency card,
-  so `fm:import_organizations` runs the Rolodex import over agency cards alone as its first
+  so `fm:import_affiliations` runs the Rolodex import over agency cards alone as its first
   step — the people already imported and cleaned up are left as they are.
 - **Personnel → facilitator affiliation:** an `fm_personnels` row becomes an `Affiliation`
   between the person (by Rolodex code) and the project's org, carrying `PrsnlRecID` as its
