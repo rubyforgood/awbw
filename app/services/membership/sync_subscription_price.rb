@@ -44,7 +44,6 @@ class Membership::SyncSubscriptionPrice
     ).items.data.first
   end
 
-  # Stripe prices are immutable, so each amount change adds one on the same product.
   def price_data(item, target)
     {
       currency: item.price.currency,

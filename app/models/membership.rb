@@ -26,7 +26,6 @@ class Membership < ApplicationRecord
 
   accepts_nested_attributes_for :membership_invoices
 
-  # Pay owns the subscription's state; this scopes it to this membership's own sub.
   delegate :active?, :past_due?, to: :stripe_subscription, prefix: :stripe, allow_nil: true
 
   # When nil, charge standard cost. A value is an override
@@ -98,13 +97,10 @@ class Membership < ApplicationRecord
     membership_invoices.find { |invoice| invoice.active_on?(Date.current) } || membership_invoices.first
   end
 
-  # The earliest invoice starting after today — the year the next charge lands in.
   def next_future_invoice
     membership_invoices.where("start_date > ?", Date.current).order(:start_date).first
   end
 
-  # The earliest future invoice that still needs money. Comped and prepaid years are
-  # skipped so the next charge lands on a year that can absorb it.
   def next_billing_invoice
     membership_invoices
       .where("start_date > ?", Date.current)
@@ -118,9 +114,6 @@ class Membership < ApplicationRecord
     next_future_invoice&.cost_cents || cost_cents || Membership.annual_cost_cents
   end
 
-  # The day the next automatic charge should land: the day after paid coverage ends
-  # (which fills a gap), the next billed year when nothing covers today, or nil when
-  # the membership has lapsed.
   def next_billing_start_date
     return end_date + 1.day if end_date.present? && covered_on?(Date.current)
 
@@ -136,8 +129,7 @@ class Membership < ApplicationRecord
   def stripe_subscription
     return if person.blank?
 
-    person.pay_customers.flat_map(&:subscriptions)
-      .find { |sub| sub.metadata&.dig("membership_id").to_i == id }
+    person.pay_subscriptions.find { |sub| sub.metadata&.dig("membership_id").to_i == id }
   end
 
   def deletable?

@@ -7,7 +7,7 @@ class MembershipsController < ApplicationController
 
     if turbo_frame_request?
       scope = Membership.all
-        .includes(person: [ :user, { pay_customers: :subscriptions } ], membership_invoices: :allocations)
+        .includes(person: [ :user, :pay_subscriptions ], membership_invoices: :allocations)
         .by_person_name(params[:person_name])
       scope = scope.public_send(@status_filter) unless @status_filter == "all"
       @memberships = scope.order(start_date: :desc).paginate(page: params[:page], per_page: 25)

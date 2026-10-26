@@ -54,8 +54,6 @@ module Memberships
       )
     end
 
-    # The charge fires when the next year begins, never at checkout, so the anniversary
-    # stays on a coverage boundary. A lapsed membership has nothing to anchor to.
     def billing_cycle_anchor(start)
       return if start.blank? || start <= Date.current
 

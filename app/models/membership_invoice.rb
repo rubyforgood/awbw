@@ -32,7 +32,6 @@ class MembershipInvoice < ApplicationRecord
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :end_date_not_before_start_date
   validate :no_overlapping_invoice_for_person
-  validate :terms_cannot_change, on: :update
 
   def self.chargeable
     arel_table[:cost_cents].gt(0)
@@ -127,14 +126,6 @@ class MembershipInvoice < ApplicationRecord
   end
 
   private
-
-  def terms_cannot_change
-    return if cost_cents == cost_cents_in_database &&
-      start_date == start_date_in_database &&
-      end_date == end_date_in_database
-
-    errors.add(:base, "A membership invoice can't be changed once it's created — delete it and add a new one")
-  end
 
   def next_billing_year?
     Membership.enabled? && start_date.present? && start_date > Date.current
