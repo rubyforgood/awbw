@@ -15,6 +15,67 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     described_class.new.call
   end
 
+  describe "the staff FileMaker stamped on a row" do
+    it "reports a staff name no alias answers to, and resolves the ones that do" do
+      user = create(:user)
+      create(:staff_alias, name: "Dana Whitfield", user:)
+      fm_organization("ORG00030", CreatedBy: "Dana Whitfield", ModifiedBy: "Nobody Recorded")
+
+      import = described_class.new.call
+
+      expect(Organization.sole.created_by_id).to eq(user.id)
+      expect(import.unmatched_staff).to eq({ "Nobody Recorded" => 1 })
+    end
+  end
+
+  describe "a project Locality the portal doesn't offer" do
+    it "works the locality out from the address instead of storing the archive's word" do
+      fm_organization("ORG00050", OrgName: "Shelter")
+      project("P0050", "ORG00050", City: "Riverside", State: "CA", County: "Riverside",
+                                   Locality: "Riverside County, CA")
+
+      described_class.new.call
+
+      expect(Organization.sole.addresses.sole).to have_attributes(city: "Riverside", locality: "Southern CA")
+    end
+
+    it "keeps the archive's word when it is one the portal offers" do
+      fm_organization("ORG00051", OrgName: "Haven")
+      project("P0051", "ORG00051", City: "Markleeville", State: "CA", County: "Alpine", Locality: "northern ca")
+
+      described_class.new.call
+
+      expect(Organization.sole.addresses.sole.locality).to eq("Northern CA")
+    end
+  end
+
+  describe "FM_IDS naming the rows to read" do
+    before do
+      fm_organization("ORG00040", OrgName: "First Org")
+      project("P0040", "ORG00040", ProjectName: "First Program")
+      fm_organization("ORG00041", OrgName: "Second Org")
+      project("P0041", "ORG00041", ProjectName: "Second Program")
+    end
+
+    it "reads only the named organization, and brings its project with it" do
+      described_class.new(fm_ids: [ "ORG00040" ]).call
+
+      expect(Organization.pluck(:filemaker_code)).to eq([ "ORG00040, P0040" ])
+    end
+
+    it "brings a named project's organization in with it" do
+      described_class.new(fm_ids: [ "P0041" ]).call
+
+      expect(Organization.pluck(:filemaker_code)).to eq([ "ORG00041, P0041" ])
+    end
+
+    it "reads every row when nothing is named" do
+      described_class.new.call
+
+      expect(Organization.pluck(:filemaker_code)).to contain_exactly("ORG00040, P0040", "ORG00041, P0041")
+    end
+  end
+
   it "keeps an organization with one project as one organization carrying both codes" do
     fm_organization("ORG00001", Website: "harbor.example.org", Mission: "Shelter for all", OrgType: "Nonprofit")
     project("P0001", "ORG00001", City: "Pasadena", State: "CA", County: "Los Angeles", Locality: "la county",
@@ -124,7 +185,12 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
       "County Government Agency" => [ "Government agency", nil ],
       "Govt agency" => [ "Government agency", nil ],
       "Other" => [ "Other", nil ],
-      "School" => [ "Other", "School" ]
+      # Every word the four types can't hold keeps itself as the description, so nothing the
+      # archive said is lost: these are the ones production holds.
+      "School" => [ "Other", "School" ],
+      "Educational Institution" => [ "Other", "Educational Institution" ],
+      "Individual" => [ "Other", "Individual" ],
+      "Grassroots" => [ "Other", "Grassroots" ]
     }.each do |fm_type, (type, other)|
       it "reads #{fm_type.inspect} as #{type}#{" (#{other})" if other}" do
         fm_organization("ORG00001", OrgType: fm_type)
@@ -133,6 +199,59 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
         expect(Organization.sole).to have_attributes(organization_type: type, organization_type_other: other)
       end
+    end
+
+    it "ticks the school flag for a type word naming one, whatever type it reads as" do
+      fm_organization("ORG00060", OrgName: "Lincoln High", OrgType: "School")
+      fm_organization("ORG00061", OrgName: "Charter Trust", OrgType: "501c3/Nonprofit School District")
+
+      import
+
+      expect(Organization.find_by!(filemaker_code: "ORG00060"))
+        .to have_attributes(school: true, organization_type: "Other", organization_type_other: "School")
+      expect(Organization.find_by!(filemaker_code: "ORG00061"))
+        .to have_attributes(school: true, organization_type: "501c3/nonprofit", organization_type_other: nil)
+    end
+
+    # Every School word production holds sits on a project, not on its organization.
+    it "ticks the flag from the project's word while the organization's type still wins" do
+      fm_organization("ORG00064", OrgName: "Harbor Trust", OrgType: "501c3/Nonprofit")
+      project("P0064", "ORG00064", ProjectName: "Harbor Trust Art Program", AgencyType: "School")
+
+      import
+
+      expect(Organization.sole).to have_attributes(filemaker_code: "ORG00064, P0064", school: true,
+                                                   organization_type: "501c3/nonprofit", organization_type_other: nil)
+    end
+
+    it "ticks the flag on the program when the project is nested under an umbrella" do
+      fm_organization("ORG00065", OrgName: "Umbrella Trust", OrgType: "501c3/Nonprofit")
+      project("P0065", "ORG00065", ProjectName: "First Program", AgencyType: "School")
+      project("P0066", "ORG00065", ProjectName: "Second Program", AgencyType: "For-profit")
+
+      import
+
+      expect(Organization.find_by!(filemaker_code: "P0065")).to have_attributes(school: true, organization_type: "Other",
+                                                                                organization_type_other: "School")
+      expect(Organization.find_by!(filemaker_code: "P0066")).to have_attributes(school: false)
+      expect(Organization.find_by!(filemaker_code: "ORG00065")).to have_attributes(school: false)
+    end
+
+    it "leaves the school flag alone for a type word that doesn't name one" do
+      fm_organization("ORG00062", OrgType: "Educational Institution")
+
+      import
+
+      expect(Organization.sole).to have_attributes(school: false, organization_type_other: "Educational Institution")
+    end
+
+    it "keeps a school flag an organization already carries" do
+      existing = create(:organization, name: "Harbor House", school: true)
+      fm_organization("ORG00063", OrgName: "Harbor House", OrgType: "501c3/Nonprofit")
+
+      import
+
+      expect(existing.reload).to have_attributes(school: true, organization_type: "501c3/nonprofit")
     end
 
     it "takes the organization's type over its single project's" do
