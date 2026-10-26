@@ -169,18 +169,18 @@
             <% end %>
           </div>
         <% end %>
-        <!-- Sectors + Age ranges (two columns; age ranges is the thinner column) -->
+        <!-- Sectors + Age ranges (two columns; age ranges is the thinner column; sectors fill the affiliations' height) -->
         <% primary_age_groups = @person.primary_age_groups.to_a %>
         <% additional_age_groups = @person.additional_age_groups.to_a %>
         <% show_sectors = @person.profile_show_sectors? %>
         <% show_age = @person.profile_show_age_ranges? && (primary_age_groups.any? || additional_age_groups.any?) %>
         <% if show_sectors || show_age %>
-          <div class="md:col-span-2">
-            <div class="flex items-start gap-4">
+          <div class="flex flex-col md:col-span-2">
+            <div class="flex flex-1 gap-4">
               <% if show_sectors %>
-                <div class="min-w-0 flex-1">
+                <div class="flex min-w-0 flex-1 flex-col">
                   <h2 class="mb-3 font-display text-2xl text-gray-900">Sectors</h2>
-                  <%= render "people/profile_pieces/sectors", person: @person %>
+                  <%= render "people/profile_pieces/sectors", person: @person, fill_height: true %>
                 </div>
               <% end %>
               <% if show_age %>
