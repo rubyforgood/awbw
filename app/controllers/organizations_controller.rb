@@ -190,12 +190,8 @@ class OrganizationsController < ApplicationController
   end
 
   def set_index_variables
-    @sector_options = Sector.published.order(:name).pluck(:name)
-    @age_group_options = Category.joins(:category_type)
-                                 .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
-                                 .published
-                                 .order(:position, :name)
-                                 .pluck(:name)
+    @sector_options = Sector.published.excluding_other.order(:name).pluck(:name, :id)
+    @age_group_options = Category.age_ranges.published.ordered_by_position_and_name.map { |category| [ category.decorate.age_group_label, category.id ] }
   end
 
   def populations_served

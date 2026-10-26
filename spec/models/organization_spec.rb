@@ -272,6 +272,10 @@ RSpec.describe Organization do
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
+
+    it "matches either city when a prefixed search lists alternatives" do
+      expect(Organization.search_contact("city: los angeles--new york")).to contain_exactly(org_la, org_ny)
+    end
   end
 
   describe '.search_by_params' do
@@ -303,6 +307,22 @@ RSpec.describe Organization do
                city: "Los Angeles", state: "CA", zip_code: "90001", locality: "LA City")
         results = Organization.search_by_params(address: "123 Main St, Los Angeles, CA")
         expect(results).to include(active_org)
+      end
+    end
+
+    context "with organization type filter" do
+      let!(:school) { create(:organization, organization_type: "Educational institution") }
+      let!(:agency) { create(:organization, organization_type: "Government agency") }
+      let!(:legacy_other) { create(:organization, organization_type: "Other (please specify below)") }
+      let!(:untyped) { create(:organization, organization_type: nil) }
+
+      it "matches any of the chosen types" do
+        results = Organization.search_by_params(organization_types: [ "Educational institution", "Government agency" ])
+        expect(results).to contain_exactly(school, agency)
+      end
+
+      it "counts unlisted legacy values as Other" do
+        expect(Organization.search_by_params(organization_types: [ "Other" ])).to contain_exactly(legacy_other)
       end
     end
 
@@ -394,11 +414,11 @@ RSpec.describe Organization do
     end
 
     it "matches a sector through an active facilitator's primary or additional tag" do
-      expect(Organization.search_by_params(sector_name: "Housing")).to contain_exactly(primary_person_org, additional_person_org)
+      expect(Organization.search_by_params(sector_ids: [ sector.id ])).to contain_exactly(primary_person_org, additional_person_org)
     end
 
     it "matches an age group through an active facilitator's primary or additional tag" do
-      expect(Organization.search_by_params(age_group_name: "13-17")).to contain_exactly(primary_person_org, additional_person_org)
+      expect(Organization.search_by_params(age_range_ids: [ teen.id ])).to contain_exactly(primary_person_org, additional_person_org)
     end
   end
 

@@ -1,0 +1,12 @@
+name: "Pick several sectors, age groups, or types on the organizations page"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2866
+summary: >-
+  The organizations page's Sector and Age group filters now take several choices at once, like the
+  people page, and a new Type filter narrows by organization type. An organization shows up if it
+  matches any of your choices.
+pro_tips:
+  - "Address takes the same prefixes as the people page's contact info — try city: helsinki--warsaw. Hover the info icon for the full list."
+  - "Picking Other under Type also finds organizations with older, no-longer-listed types."
