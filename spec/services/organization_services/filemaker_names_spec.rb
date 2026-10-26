@@ -7,6 +7,7 @@ RSpec.describe OrganizationServices::FilemakerNames do
     FmOrganization.create!(fm_id: "ORG00001", data: { "OrgName" => "Harbor House" })
     FmProject.create!(fm_id: "P0001", data: { "OrgID" => "ORG00001", "ProjectName" => "Harbor Art" })
     FmOrganization.create!(fm_id: "ORG00002", data: { "OrgName" => "Valley Services" })
+    FmOrganization.create!(fm_id: "ORG00003", data: { "OrgName" => "Harbor Women’s Center" })
   end
 
   def answers?(name, code)
@@ -17,6 +18,21 @@ RSpec.describe OrganizationServices::FilemakerNames do
     it "accepts a name differing only in case, punctuation, a legal suffix or the namesake's code" do
       expect(answers?("harbor house, inc.", "ORG00001")).to be(true)
       expect(answers?("Harbor House (ORG00001)", "ORG00001")).to be(true)
+    end
+
+    it "reads a mis-encoded apostrophe as one" do
+      expect(answers?("Harbor Womenís Center", "ORG00003")).to be(true)
+    end
+
+    it "accepts the old app's trailing audience word" do
+      expect(answers?("Harbor Art Women's", "P0001")).to be(true)
+      expect(answers?("Harbor Art Combined", "P0001")).to be(true)
+    end
+
+    it "accepts a name holding every telling word of the other, or held within it" do
+      expect(answers?("Harbor House - Outreach Children's", "ORG00001")).to be(true)
+      expect(answers?("The Valley Services Shelter", "ORG00002")).to be(true)
+      expect(answers?("Valley", "ORG00002")).to be(false)
     end
 
     it "lets a project go by its organization's name, and an organization by its project's" do

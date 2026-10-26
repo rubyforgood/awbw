@@ -70,8 +70,11 @@ Constraints already decided elsewhere:
   the code on a match, as the Rolodex pass does for people.
   - **A code on a differently named org stays there, and the row gets its own org**
     (decided 2026-10-26): a code match counts only when the org answers to the FileMaker name
-    of some code it carries — ignoring case, punctuation, a legal suffix and a namesake's
-    "(code)", and accepting a project's organization name for a single program. A merged org
+    of some code it carries — ignoring case, punctuation, a legal suffix, the old app's
+    trailing audience word (Women's, Children's, Combined…), a namesake's "(code)", and extra
+    words when one name holds every telling word of the other, and accepting a project's
+    organization name for a single program. On prod's 1,522 code-carrying orgs whose name
+    differs from FileMaker's, that leaves 31 for review. A merged org
     answers to one of its names, so it keeps matching every code. Otherwise the org keeps its
     code and name, and the row lands on the org its name finds or a new one, which carries the
     code too — noted as a comment on the org that had it and a line in the report. Every later
