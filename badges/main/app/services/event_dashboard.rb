@@ -453,6 +453,12 @@ class EventDashboard
     @unpaid_registrants ||= people_sorted(registrants_for(billable_registration_ids - paid_registration_ids))
   end
 
+  # Registrants still owing who have paid some of it — listed under Paid as well so
+  # the Paid names add up to the Paid amount.
+  def partially_paid_registrants
+    @partially_paid_registrants ||= unpaid_registrants.select { |person| registration_paid_by_registrant[person.id].positive? }
+  end
+
   # --- Continuing-education fees ---------------------------------------------
   # CE is billed per ContinuingEducationRegistration (its own cost_cents),
   # separate from the registration fee. These mirror the registration-fee
@@ -493,6 +499,10 @@ class EventDashboard
 
   def cont_ed_unpaid_registrants
     @cont_ed_unpaid_registrants ||= people_sorted(ce_unpaid_registrant_ids)
+  end
+
+  def cont_ed_partially_paid_registrants
+    @cont_ed_partially_paid_registrants ||= cont_ed_unpaid_registrants.select { |person| cont_ed_paid_by_registrant[person.id].positive? }
   end
 
   # Per-registrant CE cash collected / still owed, keyed by Person id — the
