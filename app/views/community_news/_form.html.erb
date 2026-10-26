@@ -48,6 +48,7 @@
                 required: false,
                 collection: @organizations,
                 selected: f.object.organization_id,
+                include_blank: "Select an organization",
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
 
     <%# Optional on the model, so the form has to allow no author — the credit then
