@@ -1,7 +1,9 @@
-<% responses = submission.form_answers.index_by(&:form_field_id) %>
+<%# locals: submission, form_fields, responses (defaults to the submission's own), skip_name (a field echoing the form's title) %>
+<% responses = local_assigns[:responses] || submission.form_answers.index_by(&:form_field_id) %>
 <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
   <% form_fields.each do |field| %>
     <% next if field.field_identifier == "confirm_email" %>
+    <% next if local_assigns[:skip_name] && field.name.to_s.strip.casecmp?(skip_name.to_s.strip) %>
 
     <% if field.group_header? %>
       <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">

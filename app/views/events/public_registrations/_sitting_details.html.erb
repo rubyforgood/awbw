@@ -1,0 +1,35 @@
+<%# Everything one collapsed sitting sent: its registration, scholarship, CE, and bulk payment answers. %>
+<div class="space-y-6">
+  <% if sitting.registration %>
+    <div>
+      <%= render "form_submissions/changes_link", submission: sitting.registration, return_to: "public_registration", badge: true %>
+      <%= render "submission_answers", submission: sitting.registration, form_fields: @form_fields %>
+    </div>
+  <% end %>
+
+  <% if (scholarship = sitting.scholarship) %>
+    <div>
+      <h3 class="mb-4 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-800">Scholarship application</h3>
+      <%= render "submission_answers", submission: scholarship.submission, form_fields: @scholarship_fields,
+                 responses: scholarship.responses, skip_name: @scholarship_form.display_name %>
+    </div>
+  <% end %>
+
+  <% if (continuing_education = sitting.continuing_education) %>
+    <div>
+      <h3 class="mb-4 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-800">Continuing education</h3>
+      <%= render "submission_answers", submission: continuing_education.submission, form_fields: @continuing_education_fields,
+                 responses: continuing_education.responses, skip_name: @continuing_education_form.display_name %>
+    </div>
+  <% end %>
+
+  <% if (bulk_payment = sitting.bulk_payment) %>
+    <div>
+      <%= render "form_submissions/changes_link", submission: bulk_payment, return_to: "public_registration", badge: true %>
+      <% if bulk_payment.slug.present? %>
+        <%= link_to "View bulk payment ticket", bulk_payment_ticket_path(bulk_payment.slug), class: "text-sm font-medium text-blue-700 hover:text-blue-900 hover:underline" %>
+      <% end %>
+      <%= render "form_submissions/submission", submission: bulk_payment %>
+    </div>
+  <% end %>
+</div>

@@ -13,5 +13,6 @@ pro_tips:
   - "A small number on the form icon (registrants and event registrations pages) is how many times the person submitted."
   - "Each submission link on the edit registration page names the form and date, and jumps straight to that submission."
   - "The submissions page groups each registration with the forms sent alongside it."
+  - "On the form responses page, each application shows its own scholarship and CE answers, so earlier answers stay visible under that application."
   - "A registrant who also paid for others sees that bulk payment, with its attendees, under their other submissions."
   - "The submissions page's back link returns to whichever page you opened it from."

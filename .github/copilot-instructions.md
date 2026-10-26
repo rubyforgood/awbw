@@ -263,12 +263,13 @@ presentation in those partials, not forked per page.
   `page_bg "public"`), accessed publicly via `?reg=<registration_slug>` (the unguessable
   ticket token) or, for admins, `?person_id=` (gated by `person_form_submission?`). When
   someone says "public form display," this is what they mean — **not** the admin `show`.
-  It shows every registration submission for the event: the newest open (or the one named by
-  `?form_submission_id=`), the rest collapsed in `<details id="form-submission-<id>">`.
+  It shows each **sitting** with exactly what was sent in it (`RegistrationResponses`): the
+  newest registration's sitting open as cards (registration, scholarship, CE), or the one named
+  by `?form_submission_id=`; the rest collapsed in `<details id="form-submission-<id>">`.
 - **A registrant can have several registration submissions per event** (re-registering
   appends one). Views list or count them all — never silently take `.first`/`.last`.
   Count and list them by **sitting** (`FormSubmissionSittings`): a registration plus the
-  scholarship/CE forms sent with it is one; each registration counts on its own, even
+  scholarship/CE forms saved right after it is one; each registration counts on its own, even
   seconds apart; a form sent alone later is its own. Bulk payments stay out of counts,
   tooltips, and edit links (they pay for other people), but a payer who is also a
   registrant sees theirs among the collapsed submissions on their form-responses page.

@@ -18,7 +18,16 @@ RSpec.describe FormSubmissionSittings do
     expect(sittings.count).to eq(1)
   end
 
-  it "keeps every registration its own sitting, even seconds apart, joining extras to the nearest" do
+  it "joins each double-submitted application's forms to the registration saved just before them" do
+    first = entry(1, "registration", start)
+    first_ce = entry(2, "continuing_education", start + 0.15)
+    second = entry(3, "registration", start + 0.2)
+    second_ce = entry(4, "continuing_education", start + 0.3)
+
+    expect(described_class.new([ second_ce, second, first_ce, first ]).groups).to eq([ [ first, first_ce ], [ second, second_ce ] ])
+  end
+
+  it "keeps every registration its own sitting, even seconds apart" do
     first = entry(1, "registration", start)
     second = entry(2, "registration", start + 5.seconds)
     scholarship = entry(3, "scholarship", start + 6.seconds)

@@ -833,6 +833,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     context "when the registrant also paid for others with the bulk payment form" do
       let(:bulk_form) { create(:form, name: "Group payment form") }
       let!(:bulk_payment) do
+        EventForm.create!(event: event, form: bulk_form, role: "bulk_payment")
         attendees_field = create(:form_field, form: bulk_form, field_identifier: "bulk_payment_attendees", name: "Attendees")
         create(:form_submission, person: person, form: bulk_form, event: event, role: "bulk_payment", created_at: 1.day.from_now).tap do |submission|
           submission.form_answers.create!(form_field: attendees_field,
@@ -1451,13 +1452,15 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(ContinuingEducationRegistration.sole.professional_license).to eq(ProfessionalLicense.sole)
     end
 
-    it "shows the license answer on file on the ticket when a reapplication leaves it blank" do
+    it "shows the license answer in the application that sent it when a reapplication leaves it blank" do
       apply
       apply(license_number: "", license_kind: "")
 
       get event_public_registration_path(event, reg: EventRegistration.sole.slug)
 
-      expect(response.body).to include("42111")
+      page = Nokogiri::HTML(response.body)
+      expect(page.at_css("#continuing-education").text).not_to include("42111")
+      expect(page.at_css("details").text).to include("42111")
     end
 
     it "leaves the license alone once the CE certificate is issued" do
@@ -1469,15 +1472,20 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(ContinuingEducationRegistration.sole.professional_license.number).to eq("42111")
     end
 
-    it "shows the newest CE and scholarship answers on the ticket" do
+    it "shows each application's CE and scholarship answers with the registration they came in with" do
       apply
       apply(license_number: "99999", need: "Our grant ended")
 
       get event_public_registration_path(event, reg: EventRegistration.sole.slug)
 
-      expect(response.body).to include("99999", "Our grant ended")
-      expect(response.body).not_to include("42111")
-      expect(response.body).not_to include("Our training budget was cut")
+      page = Nokogiri::HTML(response.body)
+      expect(page.at_css("#continuing-education").text).to include("99999")
+      expect(page.at_css("#continuing-education").text).not_to include("42111")
+      expect(page.at_css("#scholarship-application").text).to include("Our grant ended")
+      expect(page.at_css("#scholarship-application").text).not_to include("Our training budget was cut")
+      earlier = page.at_css("details")
+      expect(earlier.at_css("summary").text).to include("+")
+      expect(earlier.text).to include("42111", "Our training budget was cut")
     end
 
     context "when the registrant is signed in" do

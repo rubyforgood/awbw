@@ -122,28 +122,27 @@ module Events
         return
       end
 
-      # Scope submissions to this event so a person registered for multiple
-      # events that share the same form sees only the answers for this one. A
-      # returning registrant appends a new submission each time, so the most
-      # recent — their freshest answers — opens unless another is named.
-      submissions = @registration_form.form_submissions.where(person: person, event: @event)
-        .includes(:form_answers).order(created_at: :desc).to_a
-      @form_submission = if params[:form_submission_id].present?
-        submissions.find { |submission| submission.id.to_s == params[:form_submission_id].to_s }
+      # Scope to this event so a person registered for multiple events that share
+      # a form sees only this one's answers. Each application is its own sitting;
+      # the newest registration opens unless another submission is named.
+      sittings = RegistrationResponses.new(event: @event, person: person).sittings
+      @sitting = if params[:form_submission_id].present?
+        sittings.find { |sitting| sitting.includes_submission?(params[:form_submission_id]) }
       else
-        submissions.first
+        sittings.find(&:registration)
       end
-      unless @form_submission
+      unless @sitting
         redirect_to event_path(@event), alert: "No registration form submission found."
         return
       end
-      bulk_payments = @event.form_submissions.where(person: person, role: "bulk_payment").includes(:form, :person, :form_answers)
-      @other_form_submissions = (submissions - [ @form_submission ] + bulk_payments).sort_by(&:created_at).reverse
+      @other_sittings = sittings - [ @sitting ]
+      @person = person
 
       @form_fields = visible_form_fields
-
-      load_scholarship_submission(person)
-      load_continuing_education_submission(person)
+      @scholarship_form = @event.scholarship_form
+      @scholarship_fields = @scholarship_form&.form_fields&.reorder(position: :asc)
+      @continuing_education_form = @event.continuing_education_form
+      @continuing_education_fields = @continuing_education_form&.form_fields&.reorder(position: :asc)
 
       @event = @event.decorate
     end
@@ -243,48 +242,6 @@ module Events
 
     def registration_form
       @event.registration_form
-    end
-
-    # Surface the dedicated scholarship form's application in its own card on the
-    # view-submission page when the registrant filled it out. Answers are gathered
-    # by field identifier (they may live on the scholarship submission or on the
-    # registration submission), so a registrant who answered the questions while
-    # registering still sees them. Only set when answers are on file, so plain
-    # registrations render nothing. Embedded-section scholarship questions need no
-    # separate card — they already render inline with the registration answers.
-    def load_scholarship_submission(person)
-      scholarship_form = @event.scholarship_form
-      return unless scholarship_form
-
-      application = ScholarshipApplication.new(event: @event, person: person)
-      return unless application.answered?
-
-      @scholarship_submission = application.submission
-      @scholarship_form = scholarship_form
-      @scholarship_fields = scholarship_form.form_fields.reorder(position: :asc)
-      @scholarship_responses = application.answers_by_field_id
-    end
-
-    def load_continuing_education_submission(person)
-      ce_form = @event.continuing_education_form
-      return unless ce_form
-
-      submissions = ce_form.form_submissions.where(person: person, event: @event, role: "continuing_education")
-        .reorder(created_at: :desc, id: :desc)
-      submission = submissions.first
-      return unless submission
-
-      @continuing_education_submission = submission
-      @continuing_education_form = ce_form
-      @continuing_education_fields = ce_form.form_fields.reorder(position: :asc)
-      @continuing_education_responses = newest_answers_by_field_id(submissions)
-    end
-
-    # A reapplication leaves blank what it didn't supply, so each question shows its newest non-blank answer.
-    def newest_answers_by_field_id(submissions)
-      FormAnswer.where(form_submission: submissions).where.not(submitted_answer: [ nil, "" ])
-        .joins(:form_submission).reorder(FormSubmission.arel_table[:created_at].desc, FormSubmission.arel_table[:id].desc)
-        .each_with_object({}) { |answer, by_field_id| by_field_id[answer.form_field_id] ||= answer }
     end
 
     def scholarship_mode?
