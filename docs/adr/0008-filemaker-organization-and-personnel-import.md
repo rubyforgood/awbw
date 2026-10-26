@@ -140,7 +140,8 @@ Constraints already decided elsewhere:
   one. A work address with no organization to land on stays with the person, typed work.
   The people pass already filed the few typed Home/Work/Organization/Program/Corporate/District
   Office on a person's card (38 in prod) on the person; this pass adds them to the organization
-  too and leaves the person's copy (decided 2026-10-25).
+  too and leaves the person's copy (decided 2026-10-25), which ADR-0010's one-time move then
+  removes.
 - **An organization's address is always Work.** One FileMaker calls Mailing or Postal becomes
   the organization's invoice address (`invoice_address`) instead. The organization address
   form saves Work; a person's address form offers Personal (the default) or Mailing, since
