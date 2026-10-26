@@ -1,0 +1,7 @@
+name: "Organization placeholder on community news"
+area: content
+display_status: admin_facing
+released_on: 2026-10-25
+summary: >-
+  The community news organization picker now reads "Select an organization" instead of showing
+  an empty box. Organization is optional, so you can leave it on the placeholder.
