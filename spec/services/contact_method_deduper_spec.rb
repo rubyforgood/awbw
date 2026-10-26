@@ -34,6 +34,16 @@ RSpec.describe ContactMethodDeduper do
     expect(person.contact_methods.reload.pluck(:id)).to eq([ keep.id ])
   end
 
+  it "merges numbers that differ only in formatting" do
+    keep = contact_method(value: "5554001000")
+    contact_method(value: "555 400-1000")
+    contact_method(value: "+1 (555) 400-1000")
+
+    described_class.new(person).call
+
+    expect(person.contact_methods.reload.pluck(:id)).to eq([ keep.id ])
+  end
+
   it "keeps contact methods that differ in value or kind" do
     contact_method(value: "555-1000")
     contact_method(value: "555-2000")

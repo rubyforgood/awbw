@@ -1,7 +1,7 @@
 # After a person or organization merge, the generic merge moves both records' contact
 # methods onto the keeper wholesale (contact_methods have no unique index), leaving
 # identical duplicates and possibly two primary phones of the same kind. Merge contact
-# methods that share the same kind + value into one, then settle a single primary per
+# methods that share the same kind + number (formatting aside) into one, then settle a single primary per
 # kind: the keeper's own pre-merge primary, or the deleted record's when the keeper had
 # none. Runs in the people and organizations dedupers' after_merge.
 class ContactMethodDeduper
@@ -16,10 +16,19 @@ class ContactMethodDeduper
 
     IDENTITY_COLUMNS.map do |column|
       value = contact_method.public_send(column).to_s.strip.downcase
+      next comparable_number(value) if column == "value"
       # A row written before an untyped number said so holds a blank, so unknown and
       # blank have to read alike or an otherwise identical pair won't fold.
       value == ContactMethod::UNKNOWN_CONTACT_TYPE && column == "contact_type" ? "" : value
     end
+  end
+
+  # Every kind is a phone number, so compare digits: "555 400-1000" and
+  # "+1 (555) 400-1000" are one number.
+  def self.comparable_number(value)
+    digits = value.gsub(/\D/, "")
+    digits = digits.delete_prefix("1") if digits.length == 11
+    digits.presence || value
   end
 
   # One preserved-primary signature per kind, read before the merge while the two
