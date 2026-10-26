@@ -70,16 +70,17 @@ class ContinuingEducationRegistration < ApplicationRecord
 
   # Enrolls a registration in CE against the registrant's license for the given
   # number and kind (a placeholder license when none was given); hours and cost come
-  # from the event. Returns the registration's existing CE record when it has one.
-  # A license is matched by number + kind, so it may already carry a state and
-  # expiry from an earlier event — only the values given here are written, since a
-  # blank one means "not supplied", never "clear what's on file".
+  # from the event. A registration that already has CE keeps that one record, with
+  # its license updated from these values. A license is matched by number + kind, so
+  # it may already carry a state and expiry from an earlier event — only the values
+  # given here are written, since a blank one means "not supplied", never "clear
+  # what's on file".
   def self.enroll!(event_registration:, number: nil, kind: nil, issuing_state: nil, issuing_country: nil, expires_on: nil)
     transaction do
       # Serializes a double-submit; the locking read sees a CE the other request just committed.
       EventRegistration.lock.find(event_registration.id)
       existing = event_registration.continuing_education_registrations.lock.first
-      next existing if existing
+      next existing.tap { |ce| ce.refresh_license!(number:, kind:, issuing_state:, issuing_country:, expires_on:) } if existing
 
       license = ProfessionalLicense.find_or_create_for(person: event_registration.registrant, number: number, kind: kind)
       attributes = { issuing_state: issuing_state, issuing_country: issuing_country, expires_on: expires_on }.compact
@@ -195,6 +196,22 @@ class ContinuingEducationRegistration < ApplicationRecord
       target.update!(number: number, kind: kind, issuing_state: issuing_state, issuing_country: issuing_country, expires_on: expires_on)
       self.professional_license = target
     end
+  end
+
+  # A reapplication's license answers, each blank one keeping what's on file. An
+  # issued certificate's license stays the credential it was issued under.
+  def refresh_license!(number: nil, kind: nil, issuing_state: nil, issuing_country: nil, expires_on: nil)
+    return if certificate_sent_at.present?
+
+    kind, number = ProfessionalLicense.split_kind_from_number(kind:, number:)
+    # Locking read: a double-submit's other request may have just created this license.
+    license = self.professional_license = ProfessionalLicense.lock.find(professional_license_id)
+    details = { issuing_state:, issuing_country:, expires_on: }.compact_blank
+    assign_license(number: number.presence || license.number, kind: kind.presence || license.kind,
+                   issuing_state: license.issuing_state, issuing_country: license.issuing_country,
+                   expires_on: license.expires_on)
+    professional_license.update!(details) if details.any?
+    save! if changed?
   end
 
   # Human-readable payment status, mirroring EventRegistration#payment_status_label.

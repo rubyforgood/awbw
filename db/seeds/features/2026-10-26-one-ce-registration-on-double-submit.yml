@@ -5,11 +5,9 @@ released_on: 2026-10-26
 pr_number: 2876
 summary: >-
   However many times someone applies, even with a double-submit, they keep one
-  event registration, one CE registration, and one license. Their CE answers are
-  updated in place, and each changed or cleared answer shows in the activity log.
+  event registration, one CE registration, and one license.
 pro_tips:
   - "Every registration form submission is still kept, so you can see each time they applied."
-  - "Leaving the license number, type, state, or expiry blank when reapplying keeps what they entered before."
   - "A registration can hold CE for several licenses, but not two CE registrations for the same license."
   - "Updating the license from the CE callout writes it onto that event's CE answers, never another event's."
 action_path: "/events"

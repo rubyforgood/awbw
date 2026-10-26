@@ -1313,7 +1313,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       ce_form.form_fields.find_by!(field_identifier: key).id.to_s
     end
 
-    def apply(ce_answer: "Yes", license_number: "42111", email: "cy@example.com")
+    def apply(ce_answer: "Yes", license_number: "42111", license_kind: "LCSW", email: "cy@example.com", need: "Our training budget was cut")
       post event_public_registration_path(event),
            params: {
              scholarship_requested: "true",
@@ -1322,31 +1322,37 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
                first_name_field.id.to_s => "Cy",
                last_name_field.id.to_s => "Reed",
                primary_email_field.id.to_s => email,
-               scholarship_need.id.to_s => "Our training budget was cut",
+               scholarship_need.id.to_s => need,
                ce_fid("ce_credit_interest") => ce_answer,
                ce_fid("ce_license_number") => license_number,
-               ce_fid("ce_license_kind") => "LCSW"
+               ce_fid("ce_license_kind") => license_kind
              } }
            }
     end
 
-    it "keeps one event registration, CE registration, and license, and a registration submission per application" do
+    def answer_in(submission, field_id)
+      submission.form_answers.find_by(form_field_id: field_id)&.submitted_answer
+    end
+
+    it "keeps one event registration, CE registration, and license, and every submission of each form" do
       3.times { apply }
 
       expect(Person.count).to eq(1)
       expect(EventRegistration.count).to eq(1)
       expect(ContinuingEducationRegistration.count).to eq(1)
       expect(ProfessionalLicense.count).to eq(1)
-      expect(FormSubmission.where(role: "registration").count).to eq(3)
+      expect(FormSubmission.where(event: event).group(:role).count)
+        .to eq("registration" => 3, "scholarship" => 3, "continuing_education" => 3)
     end
 
-    it "keeps one CE registration when a reapplication gives a different license number or email casing" do
+    it "updates the one CE registration's license when a reapplication gives a different number or email casing" do
       apply
-      apply(license_number: "99999", email: " CY@Example.com ")
+      apply(license_number: "99999", email: "CY@Example.com")
 
+      expect(response).to redirect_to(registration_ticket_path(EventRegistration.sole.slug))
       expect(EventRegistration.count).to eq(1)
-      expect(ContinuingEducationRegistration.count).to eq(1)
-      expect(ProfessionalLicense.count).to eq(1)
+      expect(ProfessionalLicense.sole).to have_attributes(number: "99999", kind: "LCSW")
+      expect(ContinuingEducationRegistration.sole.professional_license).to eq(ProfessionalLicense.sole)
     end
 
     it "adds the CE registration to the existing event registration when only the reapplication asks for CE" do
@@ -1360,47 +1366,42 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(ProfessionalLicense.count).to eq(1)
     end
 
-    it "updates the one CE submission in place and logs the answer it replaces" do
+    it "keeps each application's CE and scholarship answers in its own submission" do
       apply
-      events = []
-      allow(Analytics::LifecycleBuffer).to receive(:push).and_wrap_original { |push, event| events << event && push.call(event) }
+      apply(license_number: "99999", need: "Our grant ended")
+
+      ce_submissions = FormSubmission.where(role: "continuing_education", event: event).order(:created_at, :id)
+      expect(ce_submissions.map { |submission| answer_in(submission, ce_fid("ce_license_number")) }).to eq(%w[42111 99999])
+      scholarship_submissions = FormSubmission.where(role: "scholarship", event: event).order(:created_at, :id)
+      expect(scholarship_submissions.map { |submission| answer_in(submission, scholarship_need.id) })
+        .to eq([ "Our training budget was cut", "Our grant ended" ])
+    end
+
+    it "keeps the license on file when a reapplication leaves its answers blank" do
+      apply
+      apply(license_number: "", license_kind: "")
+
+      expect(ContinuingEducationRegistration.sole.professional_license).to have_attributes(number: "42111", kind: "LCSW")
+    end
+
+    it "leaves the license alone once the CE certificate is issued" do
+      apply
+      ContinuingEducationRegistration.sole.update!(certificate_sent_at: Time.current)
 
       apply(license_number: "99999")
 
-      expect(FormSubmission.where(role: "continuing_education", event: event).count).to eq(1)
-      update = events.find { |event| event[:name] == "update.form_answer" }
-      expect(update.dig(:properties, :changes)).to eq("submitted_answer" => { before: "42111", after: "99999" })
+      expect(ContinuingEducationRegistration.sole.professional_license.number).to eq("42111")
     end
 
-    it "keeps the license answers on file when a reapplication leaves them blank" do
+    it "shows the newest CE and scholarship answers on the ticket" do
       apply
-      post event_public_registration_path(event),
-           params: {
-             scholarship_requested: "true",
-             public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
-               essay_field.id.to_s => "this answer has plenty of words",
-               first_name_field.id.to_s => "Cy",
-               last_name_field.id.to_s => "Reed",
-               primary_email_field.id.to_s => "cy@example.com",
-               ce_fid("ce_credit_interest") => "Yes",
-               ce_fid("ce_license_number") => "",
-               ce_fid("ce_license_kind") => ""
-             } }
-           }
-
-      answers = FormSubmission.find_by!(role: "continuing_education", event: event).form_answers
-      expect(answers.find_by(form_field_id: ce_fid("ce_license_number")).submitted_answer).to eq("42111")
-      expect(answers.find_by(form_field_id: ce_fid("ce_license_kind")).submitted_answer).to eq("LCSW")
-    end
-
-    it "shows the newest CE answers on the ticket" do
-      apply
-      apply(license_number: "99999")
+      apply(license_number: "99999", need: "Our grant ended")
 
       get event_public_registration_path(event, reg: EventRegistration.sole.slug)
 
-      expect(response.body).to include("99999")
+      expect(response.body).to include("99999", "Our grant ended")
       expect(response.body).not_to include("42111")
+      expect(response.body).not_to include("Our training budget was cut")
     end
 
     context "when the registrant is signed in" do

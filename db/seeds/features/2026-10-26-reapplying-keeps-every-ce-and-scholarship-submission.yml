@@ -1,0 +1,13 @@
+name: "Reapplying updates the CE license and keeps every CE and scholarship submission"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-26
+summary: >-
+  When someone applies again, their one CE registration picks up the license details
+  they just gave. Each application's CE and scholarship answers are saved as their
+  own submission, so earlier answers are never overwritten.
+pro_tips:
+  - "The ticket and scholarship pages show the newest answers."
+  - "Leaving the license number, type, state, or expiry blank when reapplying keeps what's on file."
+  - "Once the CE certificate is issued, reapplying won't change its license."
+action_path: "/events"

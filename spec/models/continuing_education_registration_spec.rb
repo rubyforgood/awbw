@@ -99,11 +99,39 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce.hours).to eq(6)
     end
 
-    it "returns the registration's existing CE record untouched" do
-      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+    it "updates the registration's existing CE record with the license it's given" do
+      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW", issuing_state: "CA")
 
-      expect(described_class.enroll!(event_registration: registration, number: "99999", kind: "LMFT")).to eq(first)
+      expect(described_class.enroll!(event_registration: registration, number: "99999", kind: "LMFT", issuing_state: "OR")).to eq(first)
       expect(registration.continuing_education_registrations.count).to eq(1)
+      expect(first.reload.professional_license).to have_attributes(number: "99999", kind: "LMFT", issuing_state: "OR")
+    end
+
+    it "keeps the existing CE record's license details that aren't supplied again" do
+      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW", expires_on: Date.new(2027, 1, 1))
+
+      described_class.enroll!(event_registration: registration, issuing_state: "OR")
+
+      expect(first.reload.professional_license).to have_attributes(number: "12345", kind: "LCSW", issuing_state: "OR", expires_on: Date.new(2027, 1, 1))
+    end
+
+    it "moves the existing CE record onto the registrant's other license when the number matches it" do
+      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+      other = create(:professional_license, person: person, number: "77777", kind: "LMFT")
+
+      described_class.enroll!(event_registration: registration, number: "77777", kind: "LMFT", expires_on: Date.new(2028, 1, 1))
+
+      expect(first.reload.professional_license).to eq(other)
+      expect(other.reload.expires_on).to eq(Date.new(2028, 1, 1))
+    end
+
+    it "leaves an issued certificate's license as issued" do
+      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+      first.update!(certificate_sent_at: Time.current)
+
+      described_class.enroll!(event_registration: registration, number: "99999", kind: "LCSW")
+
+      expect(first.reload.professional_license.number).to eq("12345")
     end
 
     it "fills a license's blank state and expiry" do
