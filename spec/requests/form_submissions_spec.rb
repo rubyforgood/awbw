@@ -331,16 +331,16 @@ RSpec.describe "FormSubmissions", type: :request do
       end
 
       it "filters agreement submissions across forms with the scenario filter" do
-        job_change = create(:form_submission, form: create(:form, role: "new_job"))
+        reinstatement = create(:form_submission, form: create(:form, role: "reinstatement"))
         on_demand = create(:form_submission, role: "public", form: create(:form, role: "registration"))
         plain = create(:form_submission)
 
         get form_submissions_path(scenario: "any"), headers: frame_headers
-        expect(response.body).to include(form_submission_path(job_change), form_submission_path(on_demand))
+        expect(response.body).to include(form_submission_path(reinstatement), form_submission_path(on_demand))
         expect(response.body).not_to include(form_submission_path(plain))
 
-        get form_submissions_path(scenario: "new_job"), headers: frame_headers
-        expect(response.body).to include(form_submission_path(job_change))
+        get form_submissions_path(scenario: "reinstatement"), headers: frame_headers
+        expect(response.body).to include(form_submission_path(reinstatement))
         expect(response.body).not_to include(form_submission_path(on_demand))
       end
 
@@ -458,7 +458,7 @@ RSpec.describe "FormSubmissions", type: :request do
       # calendar date and the submission-derived dates don't drift by a day.
       before { travel_to Time.current.midday }
 
-      let(:form) { create(:form, role: "new_job", name: "Collaboration agreement (new job)") }
+      let(:form) { create(:form, role: "reinstatement", name: "Collaboration agreement (reinstatement)") }
       let(:person) { create(:person, user: nil) }
       let(:submission) { create(:form_submission, form: form, person: person) }
 
@@ -477,7 +477,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
         get form_submission_path(submission)
 
-        expect(response.body).to include("New job agreement")
+        expect(response.body).to include("Reinstatement agreement", "Returning facilitator")
         expect(response.body).to include("New Org")
         expect(response.body).to include("Old Org")
         expect(response.body).to include(new_user_path(person_id: person.id))
@@ -486,44 +486,10 @@ RSpec.describe "FormSubmissions", type: :request do
                                           form_submission_id: submission.id, anchor: "affiliations"))
         )
       end
-
-      it "offers a one-click End (dated to the submission) for an active affiliation on a job change" do
-        affiliation = create(:affiliation, person: person, organization: create(:organization, name: "Old Org"))
-
-        get form_submission_path(submission)
-
-        expect(response.body).to include(
-          CGI.escapeHTML(end_affiliation_path(affiliation, form_submission_id: submission.id,
-                                              end_date: (submission.created_at.to_date - 1.day).iso8601))
-        )
-      end
-
-      it "offers the End button for a not-yet-started affiliation too" do
-        affiliation = create(:affiliation, person: person, start_date: 1.month.from_now,
-                             organization: create(:organization, name: "Old Org"))
-
-        get form_submission_path(submission)
-
-        expect(response.body).to include(
-          CGI.escapeHTML(end_affiliation_path(affiliation, form_submission_id: submission.id,
-                                              end_date: (submission.created_at.to_date - 1.day).iso8601))
-        )
-      end
-
-      it "offers no End button outside the new-job scenario" do
-        reinstatement = create(:form_submission, person: person,
-                               form: create(:form, role: "reinstatement"))
-        affiliation = create(:affiliation, person: person, organization: create(:organization))
-
-        get form_submission_path(reinstatement)
-
-        expect(response.body).to include("Returning facilitator")
-        expect(response.body).not_to include(end_affiliation_path(affiliation))
-      end
     end
 
     context "organization linking for a submission" do
-      let(:form) { create(:form, role: "new_job", name: "Collaboration agreement (new job)") }
+      let(:form) { create(:form, role: "reinstatement", name: "Collaboration agreement (reinstatement)") }
       let(:person) { create(:person, user: nil) }
       let(:submission) { create(:form_submission, form: form, person: person) }
 
@@ -608,7 +574,7 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(flash[:alert]).to be_present
         end
 
-        it "creates the job and Facilitator affiliations, both dated to the submission (new job)" do
+        it "creates the job affiliation and a Facilitator affiliation dated to the submission" do
           add_answer("organization_name", "Harbor Family Shelter")
           add_answer("organization_position", "Counselor")
           organization = create(:organization, name: "Harbor Family Shelter")
@@ -616,8 +582,7 @@ RSpec.describe "FormSubmissions", type: :request do
           post select_organization_form_submission_path(submission, organization_id: organization.id)
 
           titles = person.affiliations.where(organization: organization).pluck(:title, :start_date)
-          expect(titles).to contain_exactly([ "Counselor", submission.created_at.to_date ],
-                                            [ "Facilitator", submission.created_at.to_date ])
+          expect(titles).to contain_exactly([ "Counselor", nil ], [ "Facilitator", submission.created_at.to_date ])
           expect(response).to redirect_to(link_organization_form_submission_path(submission))
         end
 
@@ -633,24 +598,6 @@ RSpec.describe "FormSubmissions", type: :request do
           written = tracked.select { |name, _| name.in?(%w[update.organization create.affiliation]) }
           expect(written.map(&:first)).to include("update.organization", "create.affiliation")
           expect(written.map { |_name, props| props[:form_submission_id] }.uniq).to eq([ submission.id ])
-        end
-
-        it "ends the old org's affiliations when linking a job change, and flags them on the panel" do
-          add_answer("organization_name", "Harbor Family Shelter")
-          organization = create(:organization, name: "Harbor Family Shelter")
-          old_facilitator = create(:affiliation, person: person, title: "Facilitator",
-                                   organization: create(:organization, name: "Old Org"))
-
-          post select_organization_form_submission_path(submission, organization_id: organization.id)
-
-          expect(old_facilitator.reload.end_date).to eq(submission.created_at.to_date - 1.day)
-          expect(person.affiliations.where(organization: organization).pluck(:title)).to include("Facilitator")
-          expect(flash[:notice]).to include("Ended by this agreement", "Old Org")
-          expect(submission.reload.scenario_ended_affiliation_ids).to eq([ old_facilitator.id ])
-
-          get form_submission_path(submission)
-          expect(response.body).to include("Ended by this agreement")
-          expect(response.body).to include(edit_affiliation_path(old_facilitator))
         end
 
         it "creates only the job affiliation for a form without an agreement role" do
@@ -691,6 +638,59 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(organization.reload.website_url).to eq("https://harbor.example.org")
           expect(organization.organization_type).to eq("School")
           expect(flash[:warning]).to include("differ")
+        end
+      end
+
+      context "for an event registration submission" do
+        let(:form) { create(:form, role: "registration", name: "Facilitator Training Registration") }
+        let(:training) { create(:event, :published, facilitator_training: true, start_date: Time.find_zone(Event::PROGRAM_ZONE).local(2026, 9, 12, 10)) }
+        let(:submission) { create(:form_submission, form: form, person: person, role: "registration", event: training) }
+        let!(:registration) { create(:event_registration, event: training, registrant: person) }
+
+        before do
+          add_answer("organization_name", "Acme Inc")
+          add_answer("organization_position", "SELS")
+        end
+
+        it "adds the Facilitator affiliation a facilitator training confers, dated to the training" do
+          organization = create(:organization, name: "Acme Inc")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(person.affiliations.where(organization: organization).pluck(:title, :start_date))
+            .to contain_exactly([ "SELS", nil ], [ "Facilitator", Date.new(2026, 9, 12) ])
+        end
+
+        it "links the org to the registration, pinned to the submission" do
+          organization = create(:organization, name: "Acme Inc")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          link = registration.event_registration_organizations.sole
+          expect(link.organization).to eq(organization)
+          expect(link.form_submission).to eq(submission)
+        end
+
+        it "adds only the job affiliation for an event that isn't a facilitator training" do
+          training.update!(facilitator_training: false)
+          organization = create(:organization, name: "Acme Inc")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "SELS" ])
+        end
+
+        it "names the registration and both affiliations on the editor" do
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("Links it to their #{training.title} registration")
+          expect(response.body).to include("Adds a Facilitator affiliation there")
+        end
+
+        it "shows no agreement processing panel" do
+          get form_submission_path(submission)
+
+          expect(response.body).not_to include("Processing")
         end
       end
 
@@ -789,30 +789,6 @@ RSpec.describe "FormSubmissions", type: :request do
           }.not_to change(Organization, :count)
 
           expect(flash[:alert]).to include("No submitted organization name")
-        end
-      end
-
-      describe "linking a close-program submission" do
-        let(:form) { create(:form, role: "close_program", name: "Close Program") }
-
-        it "ends the person's affiliations at the linked org instead of creating any, and flags them" do
-          add_answer("organization_name", "Sunset Youth Services")
-          add_answer("close_effective_date", "2026-06-30")
-          add_answer("close_reason", "Funding ended.")
-          add_answer("close_leaving_job", "Yes")
-          organization = create(:organization, name: "Sunset Youth Services")
-          facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
-          job = create(:affiliation, person: person, organization: organization, title: "Program Director")
-
-          expect {
-            post select_organization_form_submission_path(submission, organization_id: organization.id)
-          }.not_to change { person.affiliations.count }
-
-          expect(facilitator.reload.end_date).to eq(Date.new(2026, 6, 30))
-          expect(job.reload.end_date).to eq(Date.new(2026, 6, 30))
-          expect(facilitator.comments.last.topic).to eq("Program closure")
-          expect(submission.reload.scenario_ended_affiliation_ids).to contain_exactly(facilitator.id, job.id)
-          expect(flash[:notice]).to include("Ended")
         end
       end
 
@@ -919,7 +895,7 @@ RSpec.describe "FormSubmissions", type: :request do
         get changes_form_submission_path(submission, return_to: "event_registrant_submissions")
 
         expect(response.body).to include("Back to submissions")
-        expect(response.body).to include(event_registrant_submissions_path(submission.resolved_event, person_id: submission.person_id))
+        expect(response.body).to include(event_registrant_submissions_path(submission.resolved_event, person_id: submission.person_id, anchor: "form-submission-#{submission.id}"))
       end
     end
 

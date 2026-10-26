@@ -1,0 +1,3 @@
+<%= turbo_stream.replace dom_id(@staff_tagging, :note_hint) do %>
+  <%= render "shared/index_note_hint", record: @staff_tagging, comment: @staff_tagging.comments.reload.first %>
+<% end %>

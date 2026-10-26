@@ -10,7 +10,7 @@ source of truth across the board: staff edited records in both FileMaker and the
 portal, so for some data the portal is right and for some FileMaker is. The raw
 export lives in the read-only `fm_*` archive tables (one per FileMaker table, keyed
 by `fm_id`, every other field in a `data` JSON column; see `lib/tasks/fm_import.rake`).
-Six app tables carry a `filemaker_code` column, read as a comma-separated set of
+Eight app tables carry a `filemaker_code` column, read as a comma-separated set of
 codes (`FilemakerCoded`). The code is an archive `fm_id`, but nothing recorded *which*
 archive table each column's codes belong to. The dev seed (`db/seeds/dev/fm_archive.rb`)
 had to choose, so this records the choice.
@@ -25,10 +25,12 @@ drive the archive pages' links.
 |---|---|---|---|
 | `people.filemaker_code` | `fm_rolodexes` | `ID`, e.g. `00006` | `filemaker_code_links` on person edit + admin details |
 | `organizations.filemaker_code` | `fm_projects`, then `fm_organizations` | `ProjectID`, e.g. `P2775`; `OrgID`, e.g. `ORG07206` | `filemaker_code_links` on org form; `filemaker_project_links` / `filemaker_organization_links` on org edit |
-| `affiliations.filemaker_code` | `fm_projects`, then `fm_personnels` | `ProjectID`, e.g. `P2775`; rarely `PrsnlRecID`, e.g. `PS9999` | `filemaker_code_links` on affiliation edit |
+| `affiliations.filemaker_code` | `fm_projects`, then `fm_personnels`, then `fm_people_to_organizations` | `ProjectID`, e.g. `P2775`; `PrsnlRecID`, e.g. `PS9999`, and `RecordID`, e.g. `112`, from the ADR-0008 import | `filemaker_code_links` on affiliation edit |
 | `payments.filemaker_code` | `fm_payments` | `RecordID`, e.g. `D29186` | `filemaker_code_hint` on payment edit |
 | `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | `filemaker_code_hint` on workshop form |
 | `resources.filemaker_code` | none | `RecordID` of the source quotation, e.g. `Q10215` | resource form (editable, no archive link) |
+| `addresses.filemaker_code` | `fm_addresses` | `AddrsID`, e.g. `1234` | `fm_archives#show` links back to the address's person or org |
+| `contact_methods.filemaker_code` | `fm_phone_numbers` | `PhoneID`, e.g. `5678` | `fm_archives#show` links back to the phone's person or org |
 
 - **Organization → Project, or → Organization.** An app `Organization` is usually one
   art program site, which is a FileMaker *Project*. FileMaker's own Organization row is
@@ -64,7 +66,7 @@ when a new export lands.
 | Archive table | FileMaker key | Id pattern | Range in prod | Rows | Portal column |
 |---|---|---|---|---|---|
 | `fm_activities` | `ActivityLogID` | 5 digits | `00011`–`30061` | 29,185 |  |
-| `fm_addresses` | `AddrsID` | 1–5 digits, unpadded | `1`–`30808` | 28,556 |  |
+| `fm_addresses` | `AddrsID` | 1–5 digits, unpadded | `1`–`30808` | 28,556 | `addresses` |
 | `fm_allocations` | `AllocRecID` | 4 digits | `0001`–`3508` | 3,098 |  |
 | `fm_ancillary_data` | `RecordID` | 1–3 digits, unpadded | `1`–`559` | 556 |  |
 | `fm_art_purchases` | `PurchaseID` | 4 digits | `0001`–`0226` | 226 |  |
@@ -95,7 +97,7 @@ when a new export lands.
 | `fm_payments` | `RecordID` | `D` + 5 digits | `D00001`–`D29263` | 27,220 | `payments` |
 | `fm_people_to_organizations` | `RecordID` | 1–4 digits, unpadded | `1`–`1128` | 1,128 |  |
 | `fm_personnels` | `PrsnlRecID` | `PS` + 4–5 digits | `PS0028`–`PS10667` | 9,037 | `affiliations` |
-| `fm_phone_numbers` | `PhoneID` | 2–5 digits, unpadded | `22`–`35946` | 34,040 |  |
+| `fm_phone_numbers` | `PhoneID` | 2–5 digits, unpadded | `22`–`35946` | 34,040 | `contact_methods` |
 | `fm_postal_codes` | `Zipcode` | 5-digit ZIP | `00501`–`99950` | 41,685 |  |
 | `fm_program_sponsorships` | `RecordID` | `PSP` + 4 digits | `PSP0035`–`PSP0901` | 608 |  |
 | `fm_projects` | `ProjectID` | `P` + 4 digits | `P0001`–`P2806` | 2,007 | `organizations` |

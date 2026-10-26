@@ -6,9 +6,9 @@ class FeaturesController < ApplicationController
   def index
     authorize! Feature
     scope = authorized_scope(Feature.all)
-    @total = scope.count
 
     if turbo_frame_request?
+      @total = scope.count
       @features = filtered_features(scope).decorate
       @sorted_by_logged = sorted_by_logged?
       render :features_results
@@ -27,7 +27,7 @@ class FeaturesController < ApplicationController
   end
 
   def new
-    @feature = Feature.new(display_status: "user_facing", released_on: Date.current)
+    @feature = Feature.new(display_status: Feature::ADMIN_ONLY_STATUS, released_on: Date.current)
     authorize! @feature
   end
 

@@ -1,7 +1,7 @@
 module PersonServices
-  # Reverses one fm:import_people run from the activity events ImportFromRolodex logged under
-  # it (`import_run`). Newest first, so a person's addresses, tags and comments go before the
-  # person. A record created by the run is deleted, and a field the run filled goes back to
+  # Reverses one FileMaker import run (fm:import_people, fm:import_organizations, fm:import_affiliations) from the
+  # activity events it logged under it (`import_run`). Newest first, so a record's addresses,
+  # tags, comments and affiliations go before the record. A record created by the run is deleted, and a field the run filled goes back to
   # its value before the run — unless someone has changed it since, which is kept and reported.
   class UndoRolodexImport
     OUTCOMES = %i[deleted reverted kept gone].freeze
@@ -14,12 +14,15 @@ module PersonServices
     end
 
     # Untouched, so deleting a person's address doesn't make the person look edited since.
+    # Tagged with the run it reversed, so its own activity can be found as exactly as the run's.
     def call
       ActiveRecord::Base.no_touching do
-        events.each do |event|
-          case event.name
-          when /\Acreate\./ then undo_create(event)
-          when /\Aupdate\./ then undo_update(event)
+        Analytics::LifecycleBuffer.tagging(undone_run: @run) do
+          events.each do |event|
+            case event.name
+            when /\Acreate\./ then undo_create(event)
+            when /\Aupdate\./ then undo_update(event)
+            end
           end
         end
       end

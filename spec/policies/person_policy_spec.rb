@@ -7,7 +7,7 @@ RSpec.describe PersonPolicy, type: :policy do
 
   let(:searchable_person) { build_stubbed(:person, profile_is_searchable: true, user: build_stubbed(:user)) }
   let(:non_searchable_person) { build_stubbed(:person, profile_is_searchable: false, user: build_stubbed(:user)) }
-  let(:owned_person) { build_stubbed(:person, user: owner_user) }
+  let(:owned_person) { build_stubbed(:person, user: owner_user).tap { |person| owner_user.person_id = person.id } }
 
   def policy_for(record: nil, user:)
     described_class.new(record, user: user)
@@ -106,6 +106,38 @@ RSpec.describe PersonPolicy, type: :policy do
       subject { policy_for(record: searchable_person, user: nil) }
 
       it { is_expected.not_to be_allowed_to(:own_record?) }
+    end
+  end
+
+  describe "#own_profile?" do
+    context "with owner" do
+      subject { policy_for(record: owned_person, user: owner_user) }
+
+      it { is_expected.to be_allowed_to(:own_profile?) }
+    end
+
+    context "with an older login of the same person" do
+      subject { policy_for(record: owned_person, user: build_stubbed(:user, person_id: owned_person.id)) }
+
+      it { is_expected.to be_allowed_to(:own_profile?) }
+    end
+
+    context "with admin user looking at someone else" do
+      subject { policy_for(record: owned_person, user: admin_user) }
+
+      it { is_expected.not_to be_allowed_to(:own_profile?) }
+    end
+
+    context "with a regular user who is not the owner" do
+      subject { policy_for(record: searchable_person, user: regular_user) }
+
+      it { is_expected.not_to be_allowed_to(:own_profile?) }
+    end
+
+    context "with no user" do
+      subject { policy_for(record: searchable_person, user: nil) }
+
+      it { is_expected.not_to be_allowed_to(:own_profile?) }
     end
   end
 
@@ -382,7 +414,8 @@ RSpec.describe PersonPolicy, type: :policy do
   describe "params_filter(:index)" do
     let(:filters) do
       ActionController::Parameters.new(
-        contact_info: "ada", role: "story_authors", staff_tag_ids: [ "1" ],
+        name_email: "ada", contact_info: "555-0142",
+        role: "story_authors", staff_tag_ids: [ "1" ],
         topic_subscription_type_id: [ "2" ], facilitator_status: "active",
         sector_ids: [ "4" ], age_range_ids: [ "5" ],
         organization_name: "Acme", organization_id: "3"
@@ -406,6 +439,13 @@ RSpec.describe PersonPolicy, type: :policy do
 
     it "drops the admin-only filters for a visitor" do
       expect(index_filters_for(nil).keys).to contain_exactly(*shared_filter_keys)
+    end
+
+    it "drops the work location filter for a regular user" do
+      filters = ActionController::Parameters.new(work_location: "city: reno")
+      scoped = policy_for(record: Person, user: regular_user)
+        .apply_scope(filters, type: :action_controller_params, name: :index)
+      expect(scoped.keys).not_to include("work_location")
     end
 
     it "narrows a non-admin's contact-info search to shared contact info" do

@@ -55,7 +55,7 @@
 
                 <% event_ids = @event_registrations.map(&:event_id).uniq %>
                 <% registrant_ids = @event_registrations.map(&:registrant_id).uniq %>
-                <% submitted_pairs = FormSubmission.where(event_id: event_ids, person_id: registrant_ids).pluck(:person_id, :event_id).to_set %>
+                <% submission_sittings = FormSubmissionSittings.for_events(event_ids, registrant_ids).select { |_, sittings| sittings.registered? } %>
                 <% events_with_forms = EventForm.where(event_id: event_ids).distinct.pluck(:event_id).to_set %>
                 <% allocation_sums = Allocation.where(allocatable_type: EventRegistration.polymorphic_name, allocatable_id: @event_registrations.map(&:id)).group(:allocatable_id).sum(:amount) %>
                 <% over_allocation_cents = @event_registrations.each_with_object({}) do |registration, memo|
@@ -73,8 +73,11 @@
                             <i class="fa-solid fa-clipboard-list text-2xs shrink-0 <%= DomainTheme.text_class_for(:event_registrations) %>"></i>
                             <span class="truncate font-semibold <%= DomainTheme.text_class_for(:event_registrations) %>"><%= person_name(event_registration.registrant) %></span>
                           <% end %>
-                          <% if submitted_pairs.include?([ event_registration.registrant_id, event_registration.event_id ]) %>
-                            <i class="fa-solid fa-file-lines shrink-0 text-green-600" title="Completed registration form"></i>
+                          <% if (sittings = submission_sittings[[ event_registration.registrant_id, event_registration.event_id ]]) %>
+                            <%= render "submissions_icon",
+                                       sittings: sittings,
+                                       path: event_registrant_submissions_path(event_registration.event, person_id: event_registration.registrant_id, return_to: "index"),
+                                       scholarship_requested: event_registration.scholarship_requested? %>
                           <% elsif events_with_forms.include?(event_registration.event_id) %>
                             <i class="fa-regular fa-file-lines shrink-0 text-gray-300" title="No registration form submitted"></i>
                           <% end %>

@@ -18,9 +18,9 @@ module Dedupable
   end
 
   def dedupe_index
-    authorize! :dedupe, to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
+    authorize! mc, to: :dedupe?
 
     @possible_duplicate_groups = dedupe_candidate_groups(config)
     @dedupe = build_dedupe_vars(config)
@@ -29,9 +29,9 @@ module Dedupable
   end
 
   def dedupe_preview
-    authorize! :dedupe, to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
+    authorize! mc, to: :dedupe?
     mn = mc.model_name.singular
 
     if params["#{mn}_to_delete_id"].blank? || params["#{mn}_to_keep_id"].blank?
@@ -66,9 +66,9 @@ module Dedupable
   end
 
   def dedupe_update_keep
-    authorize! :dedupe, to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
+    authorize! mc, to: :dedupe?
     mn = mc.model_name.singular
 
     record = mc.find(params[:id])
@@ -84,9 +84,9 @@ module Dedupable
   end
 
   def dedupe_perform
-    authorize! :dedupe, to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
+    authorize! mc, to: :dedupe?
     mn = mc.model_name.singular
 
     record_to_delete = mc.find(params["#{mn}_to_delete_id"])
@@ -141,7 +141,7 @@ module Dedupable
     end
 
     label = mc.model_name.human.pluralize
-    redirect_to dedupe_return&.dig(:path) || url_for(action: :index),
+    redirect_to dedupe_return&.dig(:path) || url_for(action: :dedupe_index),
       notice: "#{label} merged successfully. '#{dedupe_record_label(config, record_to_delete)}' was merged into '#{dedupe_record_label(config, record_to_keep)}'."
   rescue ActionPolicy::Unauthorized
     raise

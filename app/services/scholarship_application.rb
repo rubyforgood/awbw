@@ -13,9 +13,11 @@ class ScholarshipApplication
   # recorded against another form's copy of a standard question are still found.
   IDENTIFIERS = FormBuilderService::SECTION_FIELD_IDENTIFIERS[:scholarship].freeze
 
-  def initialize(event:, person:)
+  # Pass submissions to read only those (e.g. one sitting's), rather than every one for the event.
+  def initialize(event:, person:, submissions: nil)
     @event = event
     @person = person
+    @submissions = submissions
   end
 
   # The scholarship questions in display order: every field on a dedicated
@@ -84,11 +86,13 @@ class ScholarshipApplication
   # The person's non-blank answers — across every submission they made for the
   # event's forms — that belong to a scholarship question, matched by the field
   # itself or, to bridge an answer captured on another form's copy of the same
-  # question, by its identifier. Deduplicated to one answer per question.
+  # question, by its identifier. Deduplicated to the newest application's answer per question.
   def answers
     @answers ||= FormAnswer
       .where(form_submission: submissions)
       .where.not(submitted_answer: [ nil, "" ])
+      .joins(:form_submission)
+      .order(FormSubmission.arel_table[:created_at].desc, FormSubmission.arel_table[:id].desc)
       .includes(:form_field, :form_submission)
       .select { |answer| scholarship_answer?(answer.form_field) }
       .group_by { |answer| answer.form_field.field_identifier.presence || "field-#{answer.form_field_id}" }

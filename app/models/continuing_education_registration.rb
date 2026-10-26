@@ -25,7 +25,8 @@ class ContinuingEducationRegistration < ApplicationRecord
   # them from params and routes them through #assign_license; declared here so the
   # form builder can bind to them (SimpleForm reads the object when a field's
   # value is nil, e.g. a blank expiry on a placeholder license).
-  attr_accessor :license_kind, :license_number, :license_issuing_state, :license_expires_on
+  attr_accessor :license_kind, :license_number, :license_issuing_state, :license_issuing_state_outside_usa,
+                :license_issuing_country, :license_expires_on
 
   # Set when the transfer flow creates the destination record with a deliberately
   # snapshotted hours/cost (including a $0 cost), so #default_from_event doesn't
@@ -37,6 +38,8 @@ class ContinuingEducationRegistration < ApplicationRecord
   validates :hours, numericality: { greater_than_or_equal_to: 0 }
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :license_belongs_to_registrant
+  # Create-only: merges move CE rows across first and fold the duplicates afterward.
+  validates :professional_license, uniqueness: { scope: :event_registration_id, message: "already has CE on this registration" }, on: :create
   validate :cost_not_below_allocations, on: :update
 
   scope :for_event, ->(event_id) { joins(:event_registration).where(event_registrations: { event_id: event_id }) }
@@ -67,18 +70,23 @@ class ContinuingEducationRegistration < ApplicationRecord
 
   # Enrolls a registration in CE against the registrant's license for the given
   # number and kind (a placeholder license when none was given); hours and cost come
-  # from the event. Returns the registration's existing CE record when it has one.
-  # A license is matched by number + kind, so it may already carry a state and
-  # expiry from an earlier event — only the values given here are written, since a
-  # blank one means "not supplied", never "clear what's on file".
-  def self.enroll!(event_registration:, number: nil, kind: nil, issuing_state: nil, expires_on: nil)
-    existing = event_registration.continuing_education_registrations.first
-    return existing if existing
+  # from the event. A registration that already has CE keeps that one record, with
+  # its license updated from these values. A license is matched by number + kind, so
+  # it may already carry a state and expiry from an earlier event — only the values
+  # given here are written, since a blank one means "not supplied", never "clear
+  # what's on file".
+  def self.enroll!(event_registration:, number: nil, kind: nil, issuing_state: nil, issuing_country: nil, expires_on: nil)
+    transaction do
+      # Serializes a double-submit; the locking read sees a CE the other request just committed.
+      EventRegistration.lock.find(event_registration.id)
+      existing = event_registration.continuing_education_registrations.lock.first
+      next existing.tap { |ce| ce.refresh_license!(number:, kind:, issuing_state:, issuing_country:, expires_on:) } if existing
 
-    license = ProfessionalLicense.find_or_create_for(person: event_registration.registrant, number: number, kind: kind)
-    attributes = { issuing_state: issuing_state, expires_on: expires_on }.compact
-    license.update!(attributes) if attributes.any?
-    event_registration.continuing_education_registrations.create!(professional_license: license)
+      license = ProfessionalLicense.find_or_create_for(person: event_registration.registrant, number: number, kind: kind)
+      attributes = { issuing_state: issuing_state, issuing_country: issuing_country, expires_on: expires_on }.compact
+      license.update!(attributes) if attributes.any?
+      event_registration.continuing_education_registrations.create!(professional_license: license)
+    end
   end
 
   def self.parse_iso_date(value)
@@ -160,10 +168,11 @@ class ContinuingEducationRegistration < ApplicationRecord
   # wins, to avoid duplicating or colliding on the unique (person, number) index.
   # Does not save the registration itself — callers persist it alongside their other
   # changes.
-  def assign_license(number:, kind:, issuing_state: nil, expires_on: nil, license_id: nil)
+  def assign_license(number:, kind:, issuing_state: nil, issuing_country: nil, expires_on: nil, license_id: nil)
     number = number.to_s.strip.presence
     kind = kind.to_s.strip.presence
     issuing_state = issuing_state.to_s.strip.presence
+    issuing_country = issuing_country.presence
     expires_on = expires_on.presence
     current = professional_license
     person = event_registration.registrant
@@ -171,7 +180,7 @@ class ContinuingEducationRegistration < ApplicationRecord
     if license_id.present? && license_id != "new"
       picked = person.professional_licenses.find_by(id: license_id)
       if picked
-        picked.update!(number: number, kind: kind, issuing_state: issuing_state, expires_on: expires_on)
+        picked.update!(number: number, kind: kind, issuing_state: issuing_state, issuing_country: issuing_country, expires_on: expires_on)
         self.professional_license = picked
         return
       end
@@ -184,9 +193,30 @@ class ContinuingEducationRegistration < ApplicationRecord
       self.professional_license = match
     else
       target = license_id == "new" ? person.professional_licenses.new : current
-      target.update!(number: number, kind: kind, issuing_state: issuing_state, expires_on: expires_on)
+      target.update!(number: number, kind: kind, issuing_state: issuing_state, issuing_country: issuing_country, expires_on: expires_on)
       self.professional_license = target
     end
+  end
+
+  # A reapplication's license answers, each blank one keeping what's on file. An
+  # issued certificate's license stays the credential it was issued under.
+  def refresh_license!(number: nil, kind: nil, issuing_state: nil, issuing_country: nil, expires_on: nil)
+    return if certificate_sent_at.present?
+
+    kind, number = ProfessionalLicense.split_kind_from_number(kind:, number:)
+    # Locking read: a double-submit's other request may have just created this license.
+    license = self.professional_license = ProfessionalLicense.lock.find(professional_license_id)
+    details = { issuing_state:, issuing_country:, expires_on: }.compact_blank
+    if number.present? && number != license.number && license_used_by_other_ce?
+      # Another event's CE keeps the license it was given, so the new number gets its own.
+      self.professional_license = ProfessionalLicense.find_or_create_for(person: registrant, number:, kind: kind.presence || license.kind)
+    else
+      assign_license(number: number.presence || license.number, kind: kind.presence || license.kind,
+                     issuing_state: license.issuing_state, issuing_country: license.issuing_country,
+                     expires_on: license.expires_on)
+    end
+    professional_license.update!(details) if details.any?
+    save! if changed?
   end
 
   # Human-readable payment status, mirroring EventRegistration#payment_status_label.
@@ -209,6 +239,10 @@ class ContinuingEducationRegistration < ApplicationRecord
     event = event_registration&.event
     self.hours = event.ce_hours_offered if event&.ce_hours_offered && (hours.blank? || hours.zero?)
     self.cost_cents = event.ce_hours_cost_cents if event&.ce_hours_cost_cents && (cost_cents.blank? || cost_cents.zero?)
+  end
+
+  def license_used_by_other_ce?
+    self.class.where(professional_license_id:).where.not(id:).exists?
   end
 
   def license_belongs_to_registrant

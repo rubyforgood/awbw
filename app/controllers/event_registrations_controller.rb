@@ -60,10 +60,7 @@ class EventRegistrationsController < ApplicationController
   def edit
     authorize! @event_registration
     set_form_variables
-    registration_form = @event_registration.event&.registration_form
-    @form_submission = registration_form && @event_registration.registrant.form_submissions
-      .where(form: registration_form, event: @event_registration.event)
-      .order(:created_at).first
+    set_registration_form_submissions
 
     if @event_registration.checkout_session_id.present? &&
        @event_registration.payment_unresolved.nil? &&
@@ -144,6 +141,7 @@ class EventRegistrationsController < ApplicationController
         format.turbo_stream { head :unprocessable_content }
         format.html do
           set_form_variables
+          set_registration_form_submissions
           render :edit, status: :unprocessable_content
         end
       end
@@ -509,6 +507,13 @@ class EventRegistrationsController < ApplicationController
 
   private
 
+  def set_registration_form_submissions
+    registration_form = @event_registration.event&.registration_form
+    @form_submissions = registration_form ? @event_registration.registrant.form_submissions
+      .where(form: registration_form, event: @event_registration.event)
+      .order(:created_at) : FormSubmission.none
+  end
+
   def dedupe_config
     # Opened from an event's registrants page (bulk actions) → scope the suggested
     # duplicates to that event and return the eyebrow there; opened from the global
@@ -685,8 +690,8 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
-  # Each registration-form submission with the org name and position the registrant
-  # entered on it: [{ submission:, org_name:, position: }], oldest first. Memoized:
+  # Each of this event's registration-form submissions' FormSubmission#org_entry, oldest
+  # first — events can share a form, so another event's submissions are left out. Memoized:
   # the linking actions ask for these entries half a dozen times per request
   # (profile, address, position, then again to build the notice).
   def registration_submission_entries(registration)
@@ -698,39 +703,11 @@ class EventRegistrationsController < ApplicationController
     form = registration.event.registration_form
     return [] unless form
 
-    organization_identifiers = %w[
-      organization_name organization_position organization_website organization_type
-      organization_street organization_city organization_state organization_zip organization_country
-    ]
-    field_ids = form.form_fields
-      .where(field_identifier: organization_identifiers)
-      .pluck(:field_identifier, :id).to_h
-
     entries = registration.registrant.form_submissions
-      .where(form: form)
+      .where(form: form, event: registration.event)
       .order(:created_at)
-      .includes(:form_answers)
-      .map do |submission|
-        answers = submission.form_answers.index_by(&:form_field_id)
-        answer = ->(identifier) do
-          id = field_ids[identifier]
-          id && answers[id]&.submitted_answer
-        end
-        {
-          submission: submission,
-          org_name: answer.call("organization_name"),
-          position: answer.call("organization_position"),
-          website: answer.call("organization_website"),
-          organization_type: answer.call("organization_type"),
-          address: {
-            street_address: answer.call("organization_street"),
-            city: answer.call("organization_city"),
-            state: answer.call("organization_state"),
-            zip_code: answer.call("organization_zip"),
-            country: answer.call("organization_country")
-          }
-        }
-      end
+      .includes(form_answers: :form_field)
+      .map(&:org_entry)
 
     # Attach the matching DB org (if any) for each submitted name, so the view can
     # show its city/state next to the answer. Batched to avoid a query per entry.
@@ -813,12 +790,7 @@ class EventRegistrationsController < ApplicationController
     entry = submission_entry_for(@event_registration, organization, linked_count: linked_count)
     return [] unless entry
 
-    OrganizationServices::ProfileDiff.call(
-      organization: organization,
-      website: entry[:website],
-      organization_type: entry[:organization_type],
-      address: entry[:address] || {}
-    )
+    OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: entry)
   end
 
   # Link the org to the registration, fill what it's missing from the submission
@@ -838,7 +810,7 @@ class EventRegistrationsController < ApplicationController
       person: @event_registration.registrant,
       organization: organization,
       entry: entry,
-      scenario: event_linking_scenario(@event_registration.event),
+      scenario: @event_registration.event.linking_scenario,
       training_date: @event_registration.event.start_date,
       event_registration: @event_registration
     )
@@ -859,15 +831,5 @@ class EventRegistrationsController < ApplicationController
     warning = result.warning(organization: organization)
     flash[:warning] = warning if warning
     result.notice(organization: organization, verb: verb)
-  end
-
-  # Which linking scenario this registration's event maps to (ADR-0002 D2): an
-  # on-demand facilitator training shares the agreement path's "on_demand"
-  # scenario, a scheduled one is "facilitator_training", and anything else
-  # confers no Facilitator affiliation. Event scenarios never end-date.
-  def event_linking_scenario(event)
-    return "non_facilitator_training" unless event.facilitator_training
-
-    event.on_demand ? "on_demand" : "facilitator_training"
   end
 end

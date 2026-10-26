@@ -36,7 +36,7 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     it "merges successfully instead of erroring on the destroy" do
       merge!(keep: keep, delete: delete_rec)
 
-      expect(response).to redirect_to(people_path)
+      expect(response).to redirect_to(dedupe_index_people_path)
       follow_redirect!
       expect(response.body).to include("merged successfully")
       expect(response.body).not_to include("Error merging")

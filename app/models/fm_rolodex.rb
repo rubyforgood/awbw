@@ -225,6 +225,24 @@ class FmRolodex < ApplicationRecord
     @addresses ||= contact_records(FmAddress, primary_ids: address_ids)
   end
 
+  # Cards flagged as an agency's, narrowed in SQL; #agency? reads the flag exactly.
+  scope :agency_cards, -> { where("JSON_UNQUOTE(JSON_EXTRACT(data, '$.isAgency__c')) NOT IN ('', '0', 'n', 'no', 'false', 'null')") }
+
+  # The row is an agency's own contact card, sometimes naming the person to reach there.
+  def agency?
+    FilemakerValues.flag?(data["isAgency__c"])
+  end
+
+  def work_address?(address)
+    address.fm_id == data["WorksiteAddrsID"] ||
+      FilemakerValues.contact_type(address.data["AddrsType"], allowed: Address::CONTACT_TYPES) == "work"
+  end
+
+  # Where the person works rather than lives — every address on an agency's card is the agency's.
+  def organization_address?(address)
+    agency? || work_address?(address)
+  end
+
   def job_affiliations
     @job_affiliations ||= FmPeopleToOrganization.find_by_data("PersonID", fm_id).order(:fm_id).to_a
   end

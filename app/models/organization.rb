@@ -15,6 +15,8 @@ class Organization < ApplicationRecord
   belongs_to :parent, class_name: "Organization", optional: true, inverse_of: :children
   has_many :children, class_name: "Organization", foreign_key: :parent_id, inverse_of: :parent, dependent: :nullify
   has_many :addresses, as: :addressable, dependent: :destroy
+  has_many :active_addresses, -> { active }, as: :addressable, class_name: "Address", inverse_of: :addressable
+  has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
   has_many :invoices, as: :invoicee, dependent: :restrict_with_error
@@ -24,6 +26,12 @@ class Organization < ApplicationRecord
   has_many :people, through: :affiliations
   has_many :users, through: :people
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # Its primary active phone, else any active one, else a phone an active address holds.
+  def phone_number
+    phones = contact_methods.select { |method| method.phone? && !method.inactive? }
+    (phones.find(&:primary?) || phones.first)&.value || addresses.reject(&:inactive?).filter_map(&:phone).first
+  end
 
   # An organization is its own correspondent — there is no person behind it.
   def communications_email
@@ -57,6 +65,9 @@ class Organization < ApplicationRecord
   # so an unmatched select can't silently save as the first option.
   ORGANIZATION_TYPE_OTHER = "Other"
   ORGANIZATION_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", ORGANIZATION_TYPE_OTHER ].freeze
+  # The index's Type filter also offers School, which matches the school flag whatever the type.
+  SCHOOL_TYPE_FILTER = "School"
+  ORGANIZATION_TYPE_FILTER_OPTIONS = (ORGANIZATION_TYPES - [ ORGANIZATION_TYPE_OTHER ] + [ SCHOOL_TYPE_FILTER, ORGANIZATION_TYPE_OTHER ]).freeze
 
   # Validations
   validates :logo,
@@ -69,12 +80,14 @@ class Organization < ApplicationRecord
   validates :tax_id, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :mission_vision_values, length: { maximum: 255 }
+  # Admin bypass stays on Current.user until #2833 moves it to a controller-set flag (models never call policies).
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
   validate :parent_is_not_self_or_descendant, if: :parent_id_changed?
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
-                                reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
+                                reject_if: proc { |attrs| Address.unfilled_attributes?(attrs) }
+  accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
@@ -85,6 +98,9 @@ class Organization < ApplicationRecord
     attributes :name
   end
 
+  include ContactSearchable
+  searches_contact :active_addresses
+
   # Scopes
   # See TagFilterable, Trendable, WindowsTypeFilterable
   # An org is active because someone is affiliated there, not because the legacy
@@ -92,31 +108,6 @@ class Organization < ApplicationRecord
   scope :active, -> { where(id: Affiliation.active.select(:organization_id)) }
   scope :name_like, ->(name) { where("organizations.name LIKE ?", "%#{sanitize_sql_like(name)}%") }
   scope :with_active_facilitators, -> { where(id: Affiliation.active.facilitators.select(:organization_id)) }
-  scope :address, ->(address) do
-    return all if address.blank?
-    terms = address.to_s.strip.split(/[\s,]+/).reject(&:blank?)
-    return all if terms.empty?
-
-    scope = joins(:addresses)
-    terms.each do |term|
-      wildcard = "%#{sanitize_sql_like(term)}%"
-      scope = scope.where(<<~SQL.squish, wildcard: wildcard)
-        addresses.street_address LIKE :wildcard OR
-        addresses.city LIKE :wildcard OR
-        addresses.state LIKE :wildcard OR
-        addresses.county LIKE :wildcard OR
-        addresses.country LIKE :wildcard OR
-        addresses.district LIKE :wildcard OR
-        addresses.locality LIKE :wildcard OR
-        addresses.phone LIKE :wildcard OR
-        addresses.zip_code LIKE :wildcard OR
-        CAST(addresses.la_city_council_district AS CHAR) LIKE :wildcard OR
-        CAST(addresses.la_service_planning_area AS CHAR) LIKE :wildcard OR
-        CAST(addresses.la_supervisorial_district AS CHAR) LIKE :wildcard
-      SQL
-    end
-    scope.distinct
-  end
   # Off facilitator affiliations only, never the legacy organization_status, so the
   # filter and the status chip can't disagree (ADR-0001 D3).
   scope :program_status, ->(bucket) {
@@ -159,6 +150,32 @@ class Organization < ApplicationRecord
                 .group(:organization_id)
                 .having("COUNT(DISTINCT LOWER(sectors.name)) = ?", parsed.size)
                 .select(:organization_id))
+  }
+
+  # The index's multiselects match ANY chosen value, like the people index.
+  scope :with_sector_ids, ->(ids) {
+    ids = Array(ids).compact_blank
+    next all if ids.empty?
+
+    where(id: Organization.active_facilitator_sector_tags.where(sectorable_items: { sector_id: ids }).select(:organization_id))
+  }
+
+  scope :with_age_range_ids, ->(ids) {
+    ids = Array(ids).compact_blank
+    next all if ids.empty?
+
+    where(id: Organization.active_facilitator_age_group_tags.where(categorizable_items: { category_id: ids }).select(:organization_id))
+  }
+
+  # "Other" also matches unlisted legacy values, which the decorator displays as Other.
+  scope :with_organization_types, ->(types) {
+    types = Array(types).compact_blank
+    next all if types.empty?
+
+    matches = where(organization_type: types - [ SCHOOL_TYPE_FILTER ])
+    matches = matches.or(where.not(organization_type: ORGANIZATION_TYPES + [ "" ])) if types.include?(ORGANIZATION_TYPE_OTHER)
+    matches = matches.or(where(school: true)) if types.include?(SCHOOL_TYPE_FILTER)
+    matches
   }
 
   scope :category_names_all, ->(names) {
@@ -225,9 +242,12 @@ class Organization < ApplicationRecord
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
     organizations = organizations.search(params[:query]) if params[:query].present?
-    organizations = organizations.sector_names_all(params[:sector_names_all].presence || params[:sector_name])
-    organizations = organizations.category_names_all(params[:category_names_all].presence || params[:age_group_name])
-    organizations = organizations.address(params[:address]) if params[:address].present?
+    organizations = organizations.sector_names_all(params[:sector_names_all])
+    organizations = organizations.category_names_all(params[:category_names_all])
+    organizations = organizations.with_sector_ids(params[:sector_ids])
+    organizations = organizations.with_age_range_ids(params[:age_range_ids])
+    organizations = organizations.with_organization_types(params[:organization_types])
+    organizations = organizations.search_contact(params[:address]) if params[:address].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
     organizations = organizations.program_status(params[:program_status]) if params[:program_status].present?
     organizations

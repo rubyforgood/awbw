@@ -35,6 +35,18 @@ RSpec.describe "/features", type: :request do
         expect(response.body).not_to include("Sync latest updates")
         expect(response.body).not_to include("New feature")
       end
+
+      it "leaves the feature count to the results frame" do
+        counts = []
+        subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+          counts << payload[:sql] if payload[:sql].match?(/SELECT COUNT\(.*FROM `features`/)
+        end
+        get features_path
+        ActiveSupport::Notifications.unsubscribe(subscriber)
+
+        expect(response).to have_http_status(:ok)
+        expect(counts).to be_empty
+      end
     end
 
     context "as an admin" do
@@ -222,6 +234,21 @@ RSpec.describe "/features", type: :request do
         get feature_path(with_pr)
         expect(response.body).not_to include("View the pull request")
       end
+    end
+  end
+
+  describe "GET /features/new" do
+    it "defaults the audience to admin-facing" do
+      sign_in admin
+      get new_feature_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to match(/<option selected="selected" value="admin_facing">/)
+    end
+
+    it "explains that non-admin audiences are release announcements" do
+      sign_in admin
+      get new_feature_path
+      expect(response.body).to include("release announcement for a big feature")
     end
   end
 

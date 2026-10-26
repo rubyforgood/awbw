@@ -1,0 +1,10 @@
+name: "Merging returns you to the deduper"
+area: people
+display_status: admin_facing
+released_on: 2026-10-26
+action_path: "/people/dedupe_index"
+summary: >-
+  After you merge two records, you land back on that deduper's list of possible duplicates, so you
+  can move straight on to the next pair.
+pro_tips:
+  - "Merges started from a person's profile or edit page still return you to that page."

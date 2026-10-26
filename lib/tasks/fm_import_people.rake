@@ -25,6 +25,9 @@ namespace :fm do
     unless Setting.import_user
       abort "No import user chosen — pick one on /admin/settings (Imports); it's credited as created_by/updated_by when FileMaker names no staffer we can resolve."
     end
+    unless StaffAlias.exists?
+      abort "No staff aliases recorded — run bin/rails data:load_staff_aliases FILE=… first, or every person is credited to the import user."
+    end
 
     dry_run = ENV["DRY_RUN"] != "false"
     verbose = ENV["VERBOSE"] == "true"
@@ -72,6 +75,19 @@ namespace :fm do
         import.unmatched_tags.sort_by { |name, count| [ -count, name ] }.each { |name, count| say.("  #{count.to_s.rjust(5)}  #{name}") }
       end
 
+      import.unmatched_addresses.each do |field, values|
+        next if values.empty?
+
+        outcome = { country: "left blank", state: "kept as typed", address_type: "left unknown" }.fetch(field)
+        say.("\nAddress #{field.to_s.humanize(capitalize: false)} values nothing translates (#{outcome}):")
+        values.sort_by { |value, count| [ -count, value ] }.each { |value, count| say.("  #{count.to_s.rjust(5)}  #{value}") }
+      end
+
+      if import.unmatched_phone_types.any?
+        say.("\nPhone types nothing translates (left unknown):")
+        import.unmatched_phone_types.sort_by { |name, count| [ -count, name ] }.each { |name, count| say.("  #{count.to_s.rjust(5)}  #{name}") }
+      end
+
       if import.unmatched_staff.any?
         say.("\nStaff names no portal user answers to (record them with data:load_staff_aliases):")
         import.unmatched_staff.sort_by { |name, count| [ -count, name ] }.each { |name, count| say.("  #{count.to_s.rjust(5)}  #{name}") }
@@ -100,7 +116,7 @@ namespace :fm do
 
   desc "Reverse one fm:import_people run (RUN=fm-import-people-…) from the activity it logged. Dry-run by default; DRY_RUN=false to execute."
   task undo_import_people: :environment do
-    run = ENV["RUN"].presence || abort("Name the run to reverse: RUN=fm-import-people-… (the import prints it).")
+    run = ENV["RUN"].presence || abort("Name the run to reverse: RUN=fm-import-… (the import prints it).")
     dry_run = ENV["DRY_RUN"] != "false"
     Current.source = "fm_undo_import_people"
     undo = nil

@@ -33,11 +33,12 @@
         <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Professional licenses</h3>
         <div class="space-y-2">
           <% licenses.each do |license| %>
-            <% badge = license.decorate.expiry_badge %>
+            <% license = license.decorate %>
+            <% badge = license.expiry_badge %>
             <div class="flex flex-wrap items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2">
               <span class="font-medium text-gray-900"><%= license.name %></span>
-              <% if license.issuing_state.present? %>
-                <span class="text-sm text-gray-500"><%= license.issuing_state %></span>
+              <% if license.issuing_place.present? %>
+                <span class="text-sm text-gray-500"><%= license.issuing_place %></span>
               <% end %>
               <%= render "shared/badge", label: badge.label, classes: badge.classes, icon: badge.icon %>
             </div>

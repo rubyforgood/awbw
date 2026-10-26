@@ -1,0 +1,13 @@
+name: "Reapplying keeps one CE registration, and changed CE answers are logged"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-26
+pr_number: 2876
+summary: >-
+  However many times someone applies, even with a double-submit, they keep one
+  event registration, one CE registration, and one license.
+pro_tips:
+  - "Every registration form submission is still kept, so you can see each time they applied."
+  - "A registration can hold CE for several licenses, but not two CE registrations for the same license."
+  - "Updating the license from the CE callout writes it onto that event's CE answers, never another event's."
+action_path: "/events"

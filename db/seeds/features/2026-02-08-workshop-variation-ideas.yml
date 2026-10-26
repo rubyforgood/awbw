@@ -1,0 +1,9 @@
+name: "Workshop variation ideas"
+area: content
+display_status: admin_facing
+released_on: 2026-02-08
+action_path: "/workshop_variation_ideas"
+pr_number: 871
+summary: >-
+  Facilitators submit ideas for workshop variations, promotable into published
+  variations.

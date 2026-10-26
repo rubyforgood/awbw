@@ -306,6 +306,31 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(name.name).to eq("span")
       end
 
+      it "scopes to an organization's history, titled with its name and returning to its edit page" do
+        org = create(:organization, name: "Harbor House")
+        other = create(:organization)
+        create(:ahoy_event, name: "update.organization", visit: visit_for_admin, user: admin,
+                            resource_type: "Organization", resource_id: org.id, time: 1.hour.ago,
+                            properties: { "resource_title" => "harbor_update_marker" })
+        create(:ahoy_event, name: "update.organization", visit: visit_for_admin, user: admin,
+                            resource_type: "Organization", resource_id: other.id, time: 1.hour.ago,
+                            properties: { "resource_title" => "other_org_marker" })
+        story = create(:story, organization: org)
+        create(:ahoy_event, name: "update.story", visit: visit_for_admin, user: admin,
+                            resource_type: "Story", resource_id: story.id, time: 1.hour.ago,
+                            properties: { "resource_title" => "harbor_story_marker" })
+
+        get index_path, params: { organization_id: org.id, time_period: "all_time" }
+        doc = Nokogiri::HTML(response.body)
+        expect(doc.at_css("h1").text.strip).to eq("Harbor House's activity")
+        expect(doc.css("a").map { |a| a["href"] }).to include(edit_organization_path(org))
+        expect(response.body).to match(/<input[^>]*type="hidden"[^>]*name="organization_id"[^>]*value="#{org.id}"/)
+
+        get index_path, params: { organization_id: org.id, time_period: "all_time" }, headers: frame_headers
+        expect(response.body).to include("harbor_update_marker", "harbor_story_marker")
+        expect(response.body).not_to include("other_org_marker")
+      end
+
       it "clears a person-scoped page back to the unscoped feed with a full-page load" do
         person = create(:person)
 

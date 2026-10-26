@@ -66,6 +66,8 @@ en:
     attributes:
       community_news:
         rhino_body: "Body / Description"
+      event/registration_ticket_callouts/registration_ticket_callout_forms:
+        form: "CE hours evaluation"
       form_field:
         name: "Question text"
       grant:

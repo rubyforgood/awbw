@@ -194,7 +194,8 @@ module Events
       end
 
       ce_registration.assign_license(number: params[:license_number], kind: params[:license_kind],
-                                     issuing_state: params[:license_issuing_state], expires_on: params[:license_expires_on])
+                                     issuing_state: OutsideUsaState.pick(params[:license_issuing_state], params[:license_issuing_state_outside_usa]),
+                                     issuing_country: params[:license_issuing_country], expires_on: params[:license_expires_on])
       ce_registration.save!
       # assign_license already normalized the number; mirror the saved value rather
       # than re-stripping the raw param.
@@ -456,7 +457,7 @@ module Events
     end
 
     def callout_form_params
-      params.dig(:callout_form, :form_fields)&.to_unsafe_h || {}
+      OutsideUsaState.form_field_answers(params, :callout_form)
     end
 
     # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of
@@ -607,8 +608,11 @@ module Events
     def record_ce_license_answer(number)
       form = @event.continuing_education_form
       field = form&.form_fields&.find_by(field_identifier: "ce_license_number")
-      submission = form&.form_submissions&.find_by(person: @event_registration.registrant, role: "continuing_education")
-      return unless field && submission
+      return unless field
+
+      submission = form.form_submissions.where(person: @event_registration.registrant, event_id: @event_registration.event_id, role: "continuing_education")
+        .order(:created_at).last
+      return unless submission
 
       answer = submission.form_answers.find_or_initialize_by(form_field: field)
       answer.update!(submitted_answer: number.to_s, question_name_when_answered: field.name)

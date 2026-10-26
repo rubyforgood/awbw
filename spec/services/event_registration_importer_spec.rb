@@ -526,6 +526,40 @@ RSpec.describe EventRegistrationImporter do
         expect(person.pronouns).to eq("they/them")
       end
 
+      it "saves an address the sheet gives no ZIP for" do
+        import_rows(%w[FirstName LastName EMail Street City State], [ "Pat", "Example", "pat@example.org", "2 Oak Ave", "Springfield", "IL" ])
+
+        expect(Person.find_by(email: "pat@example.org").addresses.sole).to have_attributes(street_address: "2 Oak Ave", zip_code: "")
+      end
+
+      it "saves an address the sheet gives no street for" do
+        import_rows(%w[FirstName LastName EMail City State Zip], [ "Pat", "Example", "pat@example.org", "Springfield", "IL", "62701" ])
+
+        expect(Person.find_by(email: "pat@example.org").addresses.sole).to have_attributes(street_address: "", zip_code: "62701")
+      end
+
+      it "stores the sheet's state, country, and address type as the dropdowns do" do
+        import_rows(%w[FirstName LastName EMail Street City State Zip Country AddressType],
+                    [ "Pat", "Example", "pat@example.org", "2 Oak Ave", "Fresno", "California", "93701", "USA", "Home" ])
+
+        expect(Person.find_by(email: "pat@example.org").addresses.sole)
+          .to have_attributes(state: "CA", country: "United States", address_type: "personal")
+      end
+
+      it "leaves a country it can't place blank and reports it with any unreadable state" do
+        result = import_rows(%w[FirstName LastName EMail Street City State Zip Country],
+                             [ "Pat", "Example", "pat@example.org", "1 Main St", "Kenmore", "Kenmore", "98028", "Narnia" ])
+
+        expect(Person.find_by(email: "pat@example.org").addresses.sole.country).to be_nil
+        expect(result.untranslated_addresses).to eq(country: { "Narnia" => 1 }, state: { "Kenmore" => 1 })
+      end
+
+      it "reads a missing country from the sheet's state" do
+        import_rows(%w[FirstName LastName EMail Street City State Zip], [ "Pat", "Example", "pat@example.org", "1 King St", "Toronto", "ON", "M5H" ])
+
+        expect(Person.find_by(email: "pat@example.org").addresses.sole).to have_attributes(state: "ON", country: "Canada")
+      end
+
       it "names a new person by the sheet's nickname and keeps the first name as their legal first name" do
         import_rows(%w[FirstName Nickname LastName EMail], [ "Robert", "Bob", "Example", "bob@example.org" ])
         person = Person.find_by(email: "bob@example.org")

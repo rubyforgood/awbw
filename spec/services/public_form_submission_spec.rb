@@ -324,7 +324,7 @@ RSpec.describe PublicFormSubmission do
     end
 
     it "records the form answer behind an agreement's org-type 'Other'" do
-      form.update!(role: "new_job")
+      form.update!(role: "reinstatement")
 
       result = described_class.call(form: form, form_params: org_params(org_type_field.id.to_s => "Other: Mobile clinic"))
 
@@ -349,8 +349,8 @@ RSpec.describe PublicFormSubmission do
     context "on an agreement form" do
       let!(:other_org) { create(:organization, name: "Old Place") }
 
-      it "runs the new-job scenario: start-dated job + facilitator affiliations, other orgs ended" do
-        form.update!(role: "new_job")
+      it "runs the reinstatement scenario: a Facilitator affiliation dated to the submission, other orgs untouched" do
+        form.update!(role: "reinstatement")
         person = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
         old_affiliation = create(:affiliation, person: person, organization: other_org, title: "Facilitator")
 
@@ -358,11 +358,9 @@ RSpec.describe PublicFormSubmission do
         submission_date = result.form_submission.created_at.to_date
 
         affiliations = person.reload.affiliations.where(organization: org)
-        expect(affiliations.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
-        # A new job demonstrably starts with the agreement, so both are dated to it.
-        expect(affiliations.pluck(:start_date).uniq).to eq([ submission_date ])
-        expect(old_affiliation.reload.end_date).to eq(submission_date - 1.day)
-        expect(result.form_submission.scenario_ended_affiliation_ids).to include(old_affiliation.id)
+        expect(affiliations.pluck(:title, :start_date))
+          .to contain_exactly([ "Counselor", nil ], [ "Facilitator", submission_date ])
+        expect(old_affiliation.reload.end_date).to be_nil
       end
 
       it "confers the facilitator affiliation on an on-demand agreement" do
@@ -377,7 +375,7 @@ RSpec.describe PublicFormSubmission do
       # Fill-blanks, not latest-wins: an agreement runs the admin linking core, so
       # a curated value is kept and reported as a conflict on the linking page.
       it "does not overwrite the organization's curated profile" do
-        form.update!(role: "new_job")
+        form.update!(role: "reinstatement")
         org.update!(website_url: "https://curated.example")
 
         described_class.call(form: form, form_params: org_params)
@@ -533,60 +531,5 @@ RSpec.describe PublicFormSubmission do
     response = result.person.other_responses.sole
     expect([ response.field_identifier, response.text, response.kind ])
       .to eq([ "additional_sectors", "Equine therapy", "sector" ])
-  end
-
-  describe "close-program processing" do
-    let(:form) { create(:form, slug: "close-program", published: true, role: "close_program") }
-    let!(:org_field) { create(:form_field, form: form, name: "Organization name", field_identifier: "organization_name") }
-    let!(:date_field) { create(:form_field, form: form, name: "As of what date?", field_identifier: "close_effective_date") }
-    let!(:reason_field) { create(:form_field, form: form, name: "Why?", field_identifier: "close_reason") }
-    let!(:leaving_field) { create(:form_field, form: form, name: "Leaving your job?", field_identifier: "close_leaving_job") }
-
-    let(:organization) { create(:organization, name: "Sunset Youth Services") }
-
-    def close_params(org_name: "Sunset Youth Services", date: "2026-06-30", reason: "Funding ended.", leaving: "No")
-      {
-        first_name_field.id.to_s => "Casey",
-        last_name_field.id.to_s => "Closing",
-        email_field.id.to_s => "casey@example.com",
-        org_field.id.to_s => org_name,
-        date_field.id.to_s => date,
-        reason_field.id.to_s => reason,
-        leaving_field.id.to_s => leaving
-      }
-    end
-
-    it "end-dates the person's facilitator affiliation at the exact-match org and links it" do
-      person = create(:person, user: nil, first_name: "Casey", last_name: "Closing", email: "casey@example.com")
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
-
-      result = described_class.call(form: form, form_params: close_params)
-
-      expect(facilitator.reload.end_date).to eq(Date.new(2026, 6, 30))
-      expect(facilitator.comments.last.topic).to eq("Program closure")
-      expect(result.form_submission.linked_organization_ids).to include(organization.id)
-      expect(result.form_submission.scenario_ended_affiliation_ids).to include(facilitator.id)
-    end
-
-    it "also ends the job affiliation when they say they're leaving" do
-      person = create(:person, user: nil, first_name: "Casey", last_name: "Closing", email: "casey@example.com")
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
-      job = create(:affiliation, person: person, organization: organization, title: "Program Director")
-
-      described_class.call(form: form, form_params: close_params(leaving: "Yes"))
-
-      expect(facilitator.reload.end_date).to eq(Date.new(2026, 6, 30))
-      expect(job.reload.end_date).to eq(Date.new(2026, 6, 30))
-    end
-
-    it "does not auto-process when the org name has no exact match — it waits for the panel" do
-      person = create(:person, user: nil, first_name: "Casey", last_name: "Closing", email: "casey@example.com")
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
-
-      result = described_class.call(form: form, form_params: close_params(org_name: "Sunset Youth"))
-
-      expect(facilitator.reload.end_date).to be_nil
-      expect(result.form_submission.linked_organization_ids).to be_empty
-    end
   end
 end

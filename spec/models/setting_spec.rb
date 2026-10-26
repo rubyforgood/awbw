@@ -147,6 +147,28 @@ RSpec.describe Setting do
     end
   end
 
+  describe ".default_address_country" do
+    let(:organization) { create(:organization) }
+
+    it "reads the return address's country" do
+      Setting.create!(organization: organization, return_address: create(:address, addressable: organization, country: "Canada"))
+
+      expect(described_class.default_address_country).to eq("Canada")
+    end
+
+    it "reads a US spelling as the United States option" do
+      Setting.create!(organization: organization, return_address: create(:address, addressable: organization, country: "USA"))
+
+      expect(described_class.default_address_country).to eq("United States")
+    end
+
+    it "falls back to the United States without a return address" do
+      Setting.create!(organization: organization)
+
+      expect(described_class.default_address_country).to eq("United States")
+    end
+  end
+
   describe ".organization_phone" do
     let(:organization) { create(:organization) }
 

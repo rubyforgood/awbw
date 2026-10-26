@@ -1,6 +1,6 @@
 name: "Printable stories and news"
 area: stories
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-02-04
 action_path: "/stories/1"
 pr_number: 738

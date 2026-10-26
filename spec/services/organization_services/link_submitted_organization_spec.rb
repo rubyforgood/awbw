@@ -77,19 +77,6 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
       expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "Facilitator" ])
     end
 
-    it "on a new job, ends the other orgs' affiliations and starts both new ones on the submission date" do
-      old_org = create(:organization, name: "Old Org")
-      old_facilitator = create(:affiliation, person: person, organization: old_org, title: "Facilitator")
-
-      described_class.call(person: person, organization: organization, entry: entry,
-                           training_date: Date.new(2026, 8, 14),
-                           scenario: "new_job")
-
-      expect(old_facilitator.reload.end_date).to eq(Date.new(2026, 8, 13))
-      expect(person.affiliations.where(organization: organization).pluck(:title, :start_date))
-        .to contain_exactly([ "Counselor", Date.new(2026, 8, 14) ], [ "Facilitator", Date.new(2026, 8, 14) ])
-    end
-
     it "on a reinstatement, creates a fresh Facilitator affiliation dated to the submission when the old one ended" do
       ended = create(:affiliation, person: person, organization: organization, title: "Facilitator",
                      start_date: Date.new(2022, 3, 1), end_date: Date.new(2024, 6, 30))
@@ -124,6 +111,55 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
 
       expect(person.affiliations.where(organization: organization).pluck(:organization_address_id).uniq)
         .to eq([ address.id ])
+    end
+
+    context "when the submitted address has no country" do
+      let(:address_answers) { { street_address: "1 Main St", city: "Fresno", state: "CA", zip_code: "93701", country: "" } }
+
+      it "creates the org address in the United States" do
+        result = described_class.call(person: person, organization: organization,
+                                      entry: entry.merge(address: address_answers), scenario: "on_demand")
+
+        expect(result.address.country).to eq(Address::DEFAULT_COUNTRY)
+      end
+
+      it "fills a blank country on the org's matching address" do
+        existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Fresno",
+                                    state: "CA", zip_code: "93701", country: nil)
+
+        described_class.call(person: person, organization: organization,
+                             entry: entry.merge(address: address_answers), scenario: "on_demand")
+
+        expect(existing.reload.country).to eq(Address::DEFAULT_COUNTRY)
+      end
+
+      it "keeps a country already on the org's matching address" do
+        existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Fresno",
+                                    state: "CA", zip_code: "93701", country: "Mexico")
+
+        described_class.call(person: person, organization: organization,
+                             entry: entry.merge(address: address_answers), scenario: "on_demand")
+
+        expect(existing.reload.country).to eq("Mexico")
+      end
+    end
+
+    it "leaves the country blank for a state no US state answers to, placing it Outside USA" do
+      address_answers = { street_address: "1 King St", city: "Toronto", state: "ON", zip_code: "M5H", country: "" }
+
+      result = described_class.call(person: person, organization: organization,
+                                    entry: entry.merge(address: address_answers), scenario: "on_demand")
+
+      expect(result.address).to have_attributes(country: nil, locality: Address::OUTSIDE_USA)
+    end
+
+    it "keeps a submitted country" do
+      address_answers = { street_address: "1 King St", city: "Toronto", state: "ON", zip_code: "M5H", country: "Canada" }
+
+      result = described_class.call(person: person, organization: organization,
+                                    entry: entry.merge(address: address_answers), scenario: "on_demand")
+
+      expect(result.address.country).to eq("Canada")
     end
   end
 end

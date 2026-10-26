@@ -44,7 +44,6 @@ class ProfileChangeRequestPolicy < ApplicationPolicy
   private
 
   def owner?
-    return false unless authenticated?
-    record.person&.user == user
+    authenticated? && user.person_id.present? && user.person_id == record.person_id
   end
 end

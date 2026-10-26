@@ -90,11 +90,11 @@ RSpec.describe EventDashboard do
       # person1 → Adults; person2 → Adults + Teens; cancelled → Children (ignored).
       create(:event_form, event: event, form: registration_form, role: "registration")
       create(:form_answer, form_field: age_group_field, submitted_answer: age_group1.id.to_s,
-                           form_submission: create(:form_submission, person: person1, form: registration_form))
+                           form_submission: create(:form_submission, person: person1, form: registration_form, event: event))
       create(:form_answer, form_field: age_group_field, submitted_answer: "#{age_group1.id}, #{age_group2.id}",
-                           form_submission: create(:form_submission, person: person2, form: registration_form))
+                           form_submission: create(:form_submission, person: person2, form: registration_form, event: event))
       create(:form_answer, form_field: age_group_field, submitted_answer: age_group_excluded.id.to_s,
-                           form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
+                           form_submission: create(:form_submission, person: cancelled_person, form: registration_form, event: event))
 
       # Additional age group(s) served, captured as "additional_age_groups" answers.
       # person1 → Adults + Teens (Adults dupes the primary answer, so it dedupes);
@@ -102,9 +102,9 @@ RSpec.describe EventDashboard do
       # additional) differ from the primary-only breakdown.
       create(:form_answer, form_field: additional_age_groups_field,
                            submitted_answer: "#{age_group1.id}, #{age_group2.id}",
-                           form_submission: create(:form_submission, person: person1, form: registration_form))
+                           form_submission: create(:form_submission, person: person1, form: registration_form, event: event))
       create(:form_answer, form_field: additional_age_groups_field, submitted_answer: age_group1.id.to_s,
-                           form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
+                           form_submission: create(:form_submission, person: cancelled_person, form: registration_form, event: event))
 
       # States from active registrant addresses; inactive address excluded.
       create(:address, addressable: person1, state: "CA", county: "Los Angeles")
@@ -331,6 +331,14 @@ RSpec.describe EventDashboard do
         expect(map[sector1.id]).to contain_exactly(person1.id)
         expect(map[sector2.id]).to contain_exactly(person2.id)
       end
+
+      it "ignores a primary sector named on the shared form for a different event" do
+        primary_field = registration_form.form_fields.find_by!(field_identifier: "primary_sector")
+        create(:form_answer, form_field: primary_field, submitted_answer: sector2.id.to_s,
+                             form_submission: create(:form_submission, person: person1, form: registration_form, event: create(:event)))
+
+        expect(dashboard.primary_sector_registrant_ids_by_sector[sector2.id]).to contain_exactly(person2.id)
+      end
     end
 
     describe "life experiences" do
@@ -370,6 +378,13 @@ RSpec.describe EventDashboard do
         map = dashboard.age_group_registrant_ids_by_category
         expect(map[age_group1.id]).to contain_exactly(person1.id, person2.id)
         expect(map[age_group2.id]).to contain_exactly(person2.id)
+      end
+
+      it "ignores a registrant's answer on the shared form for a different event" do
+        create(:form_answer, form_field: age_group_field, submitted_answer: age_group2.id.to_s,
+                             form_submission: create(:form_submission, person: person1, form: registration_form, event: create(:event)))
+
+        expect(dashboard.age_group_registrant_ids_by_category[age_group2.id]).to contain_exactly(person2.id)
       end
     end
 
@@ -438,37 +453,36 @@ RSpec.describe EventDashboard do
       end
     end
 
-    describe "states" do
-      it "returns unique states from active registrants' active addresses" do
+    describe "work locations" do
+      before do
+        reg1.event_registration_organizations.create!(organization: org_a)
+        reg2.event_registration_organizations.create!(organization: org_c)
+        cancelled_reg = event.event_registrations.find_by(registrant: cancelled_person)
+        cancelled_reg.event_registration_organizations.create!(organization: org_excluded)
+        create(:address, addressable: org_a, city: "Oakland", state: "OR", country: "United States")
+        chosen = create(:address, addressable: org_a, city: "Fresno", state: "CA", county: "Fresno", country: "United States")
+        person1.affiliations.find_by(organization: org_a).update!(organization_address: chosen, event_registration: reg1)
+        create(:address, addressable: org_c, city: "Albany", state: "NY", county: "Albany", country: "Mexico")
+        create(:address, addressable: org_excluded, city: "Miami", state: "FL", country: "Canada")
+      end
+
+      it "reads states from the affiliation's chosen org address, else the org's oldest" do
         expect(dashboard.states).to eq(%w[CA NY])
-      end
-
-      it "counts distinct registrants per state" do
         expect(dashboard.state_counts).to eq("CA" => 1, "NY" => 1)
+        expect(dashboard.state_registrant_ids_by_state).to eq("CA" => [ person1.id ], "NY" => [ person2.id ])
       end
 
-      it "returns the registrant ids that have a state on file" do
-        expect(dashboard.state_registrant_ids).to contain_exactly(person1.id, person2.id)
-      end
-    end
-
-    describe "counties" do
-      it "returns unique [ state, county ] pairs from active registrants' active addresses" do
-        expect(dashboard.counties).to eq([ [ "CA", "Los Angeles" ], [ "NY", "Kings" ] ])
-      end
-    end
-
-    describe "countries" do
-      it "returns the registrant ids that have a country on file, excluding inactive and cancelled" do
+      it "reads countries from the same work addresses, excluding cancelled registrations" do
+        expect(dashboard.country_counts).to eq("United States" => 1, "Mexico" => 1)
         expect(dashboard.country_registrant_ids).to contain_exactly(person1.id, person2.id)
       end
 
-      it "counts only active registrants' active addresses" do
-        expect(dashboard.country_counts.values.sum).to eq(2)
+      it "groups registrants by work city" do
+        expect(dashboard.registrant_city_breakdown.rows.map(&:city)).to contain_exactly("Fresno, CA", "Albany, NY")
       end
 
-      it "maps each country to its registrant ids" do
-        expect(dashboard.country_registrant_ids_by_country.values.flatten).to contain_exactly(person1.id, person2.id)
+      it "lists the [ state, county ] pairs registrants work in" do
+        expect(dashboard.counties).to eq([ [ "CA", "Fresno" ], [ "NY", "Albany" ] ])
       end
     end
 
@@ -738,6 +752,10 @@ RSpec.describe EventDashboard do
       expect(dashboard.unpaid_registrants).to contain_exactly(unpaid_person)
     end
 
+    it "lists registrants who paid part of their cost but still owe" do
+      expect(dashboard.partially_paid_registrants).to contain_exactly(unpaid_person)
+    end
+
     it "reports all scholarships as allocated" do
       expect(dashboard.scholarship_total_cents).to eq(20_000)
     end
@@ -838,6 +856,10 @@ RSpec.describe EventDashboard do
     it "lists the registrants behind each CE bucket" do
       expect(dashboard.cont_ed_paid_registrants).to contain_exactly(paid_person)
       expect(dashboard.cont_ed_unpaid_registrants).to contain_exactly(partial_person, unpaid_person)
+    end
+
+    it "lists registrants who paid part of their CE but still owe" do
+      expect(dashboard.cont_ed_partially_paid_registrants).to contain_exactly(partial_person)
     end
 
     it "maps each registrant to their CE paid / due amounts, reconciling with the totals" do

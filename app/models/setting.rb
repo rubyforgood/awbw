@@ -101,6 +101,14 @@ class Setting < ApplicationRecord
   end
   private_class_method :app_organization_phone
 
+  # The country a new address starts in: the return address's, else the US.
+  def self.default_address_country
+    country = stored_association(:return_address)&.country.presence
+    return Address::DEFAULT_COUNTRY if country.nil? || AddressNormalizer.country(country) == AddressNormalizer::US_COUNTRY
+
+    country
+  end
+
   # The return address printed in the invoice and receipt header: the address the
   # row points at, else the app organization's flagged invoice address.
   def self.organization_address_lines

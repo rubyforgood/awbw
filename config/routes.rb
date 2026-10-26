@@ -56,9 +56,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get "/",                         to: "home#index" # admin home page
-    get "home/data_health_count",    to: "home#data_health_count", as: "home_data_health_count"
-    get "home/author_credit_count",  to: "home#author_credit_count", as: "home_author_credit_count"
-    get "home/unsynced_features_count", to: "home#unsynced_features_count", as: "home_unsynced_features_count"
+    get "home/action_buttons",       to: "home#action_buttons", as: "home_action_buttons"
     get "activities/events",         to: "ahoy_activities#index", as: "activities_events"
     get "activities/events/:id",    to: "ahoy_activities#show", as: "activities_event"
     get "activities/visits",         to: "ahoy_activities#visits", as: "activities_visits"
@@ -389,11 +387,7 @@ Rails.application.routes.draw do
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
-  resources :affiliations, only: [ :edit, :update, :destroy ] do
-    member do
-      post :end, to: "affiliations#end_affiliation"
-    end
-  end
+  resources :affiliations, only: [ :edit, :update, :destroy ]
   resources :quotes
 
   resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }

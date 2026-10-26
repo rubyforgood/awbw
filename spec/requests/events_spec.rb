@@ -1407,6 +1407,18 @@ RSpec.describe "Events", type: :request do
         expect(callout.reload.forms).to eq([ form ])
       end
 
+      it "won't link a form that isn't anonymous as the CE hours evaluation" do
+        callout = create(:registration_ticket_callout, event:, builtin_key: "ce_hours")
+        form = create(:form, name: "CE eval")
+        patch event_path(event), params: { event: {
+          registration_ticket_callouts_attributes: { "0" => { id: callout.id,
+            registration_ticket_callout_forms_attributes: { "0" => { form_id: form.id } } } }
+        } }
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("CE hours evaluation (CE eval) must have anonymous responses turned on")
+        expect(callout.reload.forms).to be_empty
+      end
+
       it "adds event staff via nested attributes" do
         person = create(:person)
         patch event_path(event), params: { event: {
@@ -1767,18 +1779,79 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Any status")
       end
 
-      it "narrows the roster by city" do
+      # The roster keyword box speaks the grammar every other box does
+      # (ContactSearchable): words AND, "--" is either.
+      it "narrows the roster by either of two keywords" do
+        amy = create(:person, first_name: "Amykeyword", last_name: "One")
+        aisha = create(:person, first_name: "Aishakeyword", last_name: "Two")
+        sam = create(:person, first_name: "Samkeyword", last_name: "Three")
+        [ amy, aisha, sam ].each { |registrant| create(:event_registration, event: event, registrant: registrant) }
+
+        get registrants_event_path(event, keyword: "amykeyword--aishakeyword")
+
+        expect(response.body).to include("Amykeyword", "Aishakeyword")
+        expect(response.body).not_to include("Samkeyword")
+      end
+
+      it "makes every word in a roster keyword match, in any order" do
+        match = create(:person, first_name: "Amykeyword", last_name: "Joneskeyword")
+        half = create(:person, first_name: "Amykeyword", last_name: "Daviskeyword")
+        [ match, half ].each { |registrant| create(:event_registration, event: event, registrant: registrant) }
+
+        get registrants_event_path(event, keyword: "joneskeyword amykeyword")
+
+        expect(response.body).to include("Joneskeyword")
+        expect(response.body).not_to include("Daviskeyword")
+      end
+
+      it "ANDs the words inside each roster alternative and ORs the alternatives" do
+        amy = create(:person, first_name: "Amykeyword", last_name: "Joneskeyword")
+        mary = create(:person, first_name: "Marykeyword", last_name: "Daviskeyword")
+        mixed = create(:person, first_name: "Amykeyword", last_name: "Daviskeyword")
+        [ amy, mary, mixed ].each { |registrant| create(:event_registration, event: event, registrant: registrant) }
+
+        get registrants_event_path(event, keyword: "amykeyword joneskeyword--marykeyword daviskeyword")
+
+        expect(response.body).to include("Joneskeyword", "Marykeyword")
+        expect(response.body).not_to include("Amykeyword Daviskeyword")
+      end
+
+      it "narrows the roster by work city" do
         here = create(:person, first_name: "Cityful", last_name: "Local")
-        create(:address, addressable: here, city: "Santa Monica")
         there = create(:person, first_name: "Faraway", last_name: "Person")
-        create(:address, addressable: there, city: "Portland")
+        create(:address, addressable: there, city: "Santa Monica")
+        here_org = create(:organization)
+        create(:address, addressable: here_org, city: "Santa Monica")
         create(:event_registration, event: event, registrant: here)
+        create(:affiliation, person: here, organization: here_org)
+        there_org = create(:organization)
+        create(:address, addressable: there_org, city: "Portland")
         create(:event_registration, event: event, registrant: there)
+        create(:affiliation, person: there, organization: there_org)
 
         get registrants_event_path(event, city: "santa")
 
         expect(response.body).to include("Cityful")
         expect(response.body).not_to include("Faraway")
+      end
+
+      # The City and State controls sit in the same filter form, so they have to
+      # describe one address — otherwise a registrant working in two states matches
+      # a city from one and the state from the other.
+      it "matches the roster's city and state filters against the same work address" do
+        person = create(:person, first_name: "Bistate", last_name: "Worker")
+        registration = create(:event_registration, event: event, registrant: person)
+        [ %w[Portland OR], %w[Seattle WA] ].each do |city, state|
+          organization = create(:organization)
+          create(:address, addressable: organization, city: city, state: state)
+          create(:affiliation, person: registration.registrant, organization: organization)
+        end
+
+        get registrants_event_path(event, city: "Seattle", state: "WA")
+        expect(response.body).to include("Bistate")
+
+        get registrants_event_path(event, city: "Seattle", state: "OR")
+        expect(response.body).not_to include("Bistate")
       end
 
       it "does not crash on the new funder / comment-text / submission filters" do
@@ -2007,7 +2080,7 @@ RSpec.describe "Events", type: :request do
         field = registration_form.form_fields.find_by(field_identifier: "organization_name") ||
           create(:form_field, form: registration_form, field_identifier: "organization_name")
         create(:event_form, :registration, event: event, form: registration_form) unless event.registration_form
-        submission = create(:form_submission, person: person, form: registration_form)
+        submission = create(:form_submission, person: person, form: registration_form, event: event)
         create(:form_answer, form_submission: submission, form_field: field, submitted_answer: name)
       end
 
@@ -2030,6 +2103,16 @@ RSpec.describe "Events", type: :request do
       end
 
       it "shows a 'None' chip when a registrant has no linked org and submitted nothing" do
+        get registrants_event_path(event)
+
+        expect(org_cell_text).to include("None")
+        expect(org_cell_text).not_to include("Pending")
+      end
+
+      it "ignores an org name submitted for another event on the shared registration form" do
+        submit_organization_name("Some Unlisted Org")
+        FormSubmission.where(person: person).update(event: create(:event))
+
         get registrants_event_path(event)
 
         expect(org_cell_text).to include("None")
@@ -2275,6 +2358,35 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include('fa-regular fa-file-lines')
         expect(response.body).to include('text-blue-600')
+      end
+
+      it "links the icon to the submissions page with a badge counting each registration, even seconds apart" do
+        create(:event_form, event: event, form: reg_form, role: "registration")
+        2.times { |i| create(:form_submission, person: person, form: reg_form, event: event, role: "registration", created_at: Time.zone.local(2026, 9, 1, 10) + i.seconds) }
+
+        get registrants_event_path(event)
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)}']")
+        expect(link).to be_present
+        expect(link.text.strip).to eq("2")
+      end
+
+      it "counts a registration submitted with its scholarship and CE forms once, with no badge" do
+        create(:event_form, event: event, form: reg_form, role: "registration")
+        submitted_at = Time.zone.local(2026, 9, 1, 10)
+        create(:form_submission, person: person, form: reg_form, event: event, role: "registration", created_at: submitted_at)
+        scholarship_form = create(:form)
+        ce_form = create(:form)
+        create(:event_form, event: event, form: scholarship_form, role: "scholarship")
+        create(:event_form, event: event, form: ce_form, role: "continuing_education")
+        create(:form_submission, person: person, form: scholarship_form, event: event, role: "scholarship", created_at: submitted_at + 1.second)
+        create(:form_submission, person: person, form: ce_form, event: event, role: "continuing_education", created_at: submitted_at + 2.seconds)
+
+        get registrants_event_path(event)
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)}']")
+        expect(link).to be_present
+        expect(link.text.strip).to be_empty
       end
 
       it "reserves an empty slot (no icon) when person has not submitted, keeping later icons aligned" do
@@ -2565,9 +2677,11 @@ RSpec.describe "Events", type: :request do
     let!(:ca_kings_reg) { create(:event_registration, event: event, registrant: ca_kings_person) }
 
     before do
-      create(:address, addressable: ca_person, state: "CA", county: "Los Angeles")
-      create(:address, addressable: ny_person, state: "NY", county: "Kings")
-      create(:address, addressable: ca_kings_person, state: "CA", county: "Kings")
+      { ca_reg => [ "CA", "Los Angeles" ], ny_reg => [ "NY", "Kings" ], ca_kings_reg => [ "CA", "Kings" ] }.each do |registration, (state, county)|
+        organization = create(:organization)
+        create(:address, addressable: organization, state:, county:)
+        create(:affiliation, person: registration.registrant, organization:)
+      end
       sign_in admin
     end
 
@@ -2924,6 +3038,20 @@ RSpec.describe "Events", type: :request do
         expect(page).to have_link(href: registrants_event_path(event, ce_status: "registered"), visible: :all)
       end
 
+      it "lists a partial CE payer under Paid, tagged partial, so the names add up to the paid amount" do
+        partial_payer = create(:person, first_name: "Partia", last_name: "Payer")
+        partial_reg = create(:event_registration, event: event, registrant: partial_payer, status: "registered")
+        ce = create(:continuing_education_registration, event_registration: partial_reg, cost_cents: 24_000)
+        create(:allocation, source: create(:payment, amount_cents: 12_000, amount_cents_remaining: 12_000),
+                            allocatable: ce, amount: 12_000)
+
+        get dashboard_event_path(event)
+
+        paid_row = Capybara.string(response.body).find("details[class~='group/row']", text: /Paid\s+\+ 1 partial\s+\$120/, visible: :all)
+        expect(paid_row).to have_text(:all, "Partia Payer")
+        expect(paid_row).to have_text(:all, "partial")
+      end
+
       it "shows a program status badge next to each organization, hovering to explain it" do
         get dashboard_event_path(event)
 
@@ -3184,7 +3312,7 @@ RSpec.describe "Events", type: :request do
         it "shows each registrant's Primary sector and Primary age group in the roster" do
           registration_form = create(:form, name: "Registration")
           create(:event_form, event: owned_event, form: registration_form, role: "registration")
-          submission = create(:form_submission, person: person, form: registration_form)
+          submission = create(:form_submission, person: person, form: registration_form, event: owned_event)
 
           sector = create(:sector, name: "Sexual Assault")
           sector_field = create(:form_field, form: registration_form, field_identifier: "primary_sector")
@@ -3359,8 +3487,9 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Hospice care")
         end
 
-        it "shows a countries breakdown from registrant addresses" do
-          create(:address, addressable: person, state: "CA", country: "Canada", inactive: false)
+        it "shows a countries breakdown from the org a registrant registered under" do
+          create(:address, addressable: organization, state: "ON", country: "Canada", inactive: false)
+          registration.event_registration_organizations.create!(organization: organization)
 
           get roster_event_path(owned_event), headers: charts_headers
 
@@ -3379,7 +3508,8 @@ RSpec.describe "Events", type: :request do
         end
 
         it "renders the states breakdown as a US choropleth map fed by per-state counts" do
-          create(:address, addressable: person, state: "CA", inactive: false)
+          create(:address, addressable: organization, state: "CA", inactive: false)
+          registration.event_registration_organizations.create!(organization: organization)
 
           get roster_event_path(owned_event), headers: charts_headers
 
@@ -3417,10 +3547,10 @@ RSpec.describe "Events", type: :request do
           expect(response.body).not_to include("Only scholarship orgs")
         end
 
-        it "groups registrants by the city of the org linked on their registration" do
+        it "groups registrants by the city they work in" do
           city_org = create(:organization, name: "City Org")
           create(:address, addressable: city_org, city: "Los Angeles", state: "CA", inactive: false)
-          create(:event_registration_organization, event_registration: registration, organization: city_org)
+          create(:affiliation, person: person, organization: city_org)
           scholarship = create(:scholarship, recipient: person, amount_cents: 500)
           create(:allocation, source: scholarship, allocatable: registration, amount: 500)
 
@@ -3441,7 +3571,7 @@ RSpec.describe "Events", type: :request do
           create(:event_form, event: owned_event, form: registration_form, role: "registration")
           age_range = create(:category_type, name: "AgeRange")
           adults = create(:category, name: "Adults", category_type: age_range)
-          submission = create(:form_submission, person: person, form: registration_form)
+          submission = create(:form_submission, person: person, form: registration_form, event: owned_event)
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: adults.id.to_s)
 
           get roster_event_path(owned_event), headers: charts_headers
@@ -3462,7 +3592,7 @@ RSpec.describe "Events", type: :request do
                                               answer_type: :multi_select_checkbox)
           additional_field = create(:form_field, form: registration_form, field_identifier: "additional_age_groups",
                                                  answer_type: :multi_select_checkbox)
-          submission = create(:form_submission, person: person, form: registration_form)
+          submission = create(:form_submission, person: person, form: registration_form, event: owned_event)
           create(:form_answer, form_submission: submission, form_field: primary_field, submitted_answer: adults.id.to_s)
           create(:form_answer, form_submission: submission, form_field: additional_field, submitted_answer: teens.id.to_s)
 
@@ -3638,11 +3768,10 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Billed to original event")
       end
 
-      it "shows a recipient city breakdown, grouped by the registration-linked org, in the lazy charts frame" do
+      it "shows a recipient city breakdown, grouped by where they work, in the lazy charts frame" do
         org = create(:organization, name: "Reach Org")
         create(:address, addressable: org, city: "Richmond", state: "CA", inactive: false)
-        registration = EventRegistration.find_by!(registrant: applicant, event: event)
-        create(:event_registration_organization, event_registration: registration, organization: org)
+        create(:affiliation, person: applicant, organization: org)
 
         get recipients_event_path(event), headers: { "Turbo-Frame" => "recipients_charts" }
 

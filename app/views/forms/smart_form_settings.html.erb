@@ -74,6 +74,25 @@
 
       <section class="rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="px-5 py-3 bg-gray-100 border-b border-gray-300">
+          <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Endings that change how a question is asked</h2>
+        </div>
+        <div class="px-5 py-4">
+          <p class="text-sm text-gray-600 mb-3">Any smart field with one of these endings, listed above or not.</p>
+          <dl class="divide-y divide-gray-100">
+            <% SmartFormFields::ENDINGS.each do |ending, effect| %>
+              <div class="py-3 sm:flex sm:gap-6">
+                <dt class="sm:w-72 sm:shrink-0">
+                  <code class="inline-block rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800"><%= ending %></code>
+                </dt>
+                <dd class="mt-1 sm:mt-0 text-sm text-gray-700"><%= effect %></dd>
+              </div>
+            <% end %>
+          </dl>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-3 bg-gray-100 border-b border-gray-300">
           <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Smart fields that do nothing extra</h2>
         </div>
         <div class="px-5 py-4">
@@ -103,7 +122,7 @@
       </section>
 
       <p class="text-xs text-gray-500">
-        A smart field not listed here does nothing — the answer is stored on the submission and no record is updated.
+        A smart field not listed here, and without one of the endings above, does nothing — the answer is stored on the submission and no record is updated.
         Changing a smart field on a live form changes where future answers go; answers already submitted stay as they are.
       </p>
     </div>

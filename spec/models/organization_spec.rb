@@ -13,6 +13,26 @@ RSpec.describe Organization do
     it { should have_many(:users).through(:people) }
     it { should have_many(:reports) }
     it { should have_many(:workshop_logs) }
+    it { should have_many(:contact_methods).dependent(:destroy) }
+  end
+
+  describe "#phone_number" do
+    let(:organization) { create(:organization) }
+
+    it "prefers the primary active phone" do
+      organization.contact_methods.create!(kind: "phone", value: "555-0001")
+      organization.contact_methods.create!(kind: "phone", value: "555-0002", primary: true)
+      organization.contact_methods.create!(kind: "phone", value: "555-0003", primary: true, inactive: true)
+
+      expect(organization.reload.phone_number).to eq("555-0002")
+    end
+
+    it "falls back to a phone an active address holds" do
+      create(:address, addressable: organization, phone: "555-0004", inactive: true)
+      create(:address, addressable: organization, phone: "555-0005")
+
+      expect(organization.reload.phone_number).to eq("555-0005")
+    end
   end
 
   describe 'validations' do
@@ -172,7 +192,7 @@ RSpec.describe Organization do
     end
   end
 
-  describe '.address' do
+  describe '.search_contact' do
     let!(:status) { create(:organization_status, name: "Active") }
 
     let!(:org_la) do
@@ -194,42 +214,42 @@ RSpec.describe Organization do
     let!(:org_no_address) { create(:organization, name: "No Address Org", organization_status: status) }
 
     it 'returns all organizations when address is blank' do
-      expect(Organization.address("")).to include(org_la, org_ny, org_no_address)
-      expect(Organization.address(nil)).to include(org_la, org_ny, org_no_address)
+      expect(Organization.search_contact("")).to include(org_la, org_ny, org_no_address)
+      expect(Organization.search_contact(nil)).to include(org_la, org_ny, org_no_address)
     end
 
     it 'finds organization by city name' do
-      results = Organization.address("Los Angeles")
+      results = Organization.search_contact("Los Angeles")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny, org_no_address)
     end
 
     it 'finds organization by zip code' do
-      results = Organization.address("90001")
+      results = Organization.search_contact("90001")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
 
     it 'finds organization by state abbreviation' do
-      results = Organization.address("CA")
+      results = Organization.search_contact("CA")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
 
     it 'finds organization by partial street address' do
-      results = Organization.address("123 Main")
+      results = Organization.search_contact("123 Main")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
 
     it 'finds organization by full address with commas' do
-      results = Organization.address("123 Main St, Los Angeles, CA 90001")
+      results = Organization.search_contact("123 Main St, Los Angeles, CA 90001")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
 
     it 'finds organization by city and state' do
-      results = Organization.address("Los Angeles, CA")
+      results = Organization.search_contact("Los Angeles, CA")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
     end
@@ -237,20 +257,24 @@ RSpec.describe Organization do
     it 'does not return duplicates when org has multiple matching addresses' do
       create(:address, addressable: org_la, street_address: "789 Oak Ave",
              city: "Los Angeles", state: "CA", zip_code: "90002", locality: "LA City")
-      results = Organization.address("Los Angeles")
+      results = Organization.search_contact("Los Angeles")
       expect(results.to_a.count { |o| o.id == org_la.id }).to eq(1)
     end
 
     it 'does not return organizations without addresses' do
-      results = Organization.address("Los Angeles")
+      results = Organization.search_contact("Los Angeles")
       expect(results).not_to include(org_no_address)
     end
 
     it 'finds organization by phone number' do
       org_la.addresses.first.update!(phone: "213-555-1234")
-      results = Organization.address("213-555-1234")
+      results = Organization.search_contact("213-555-1234")
       expect(results).to include(org_la)
       expect(results).not_to include(org_ny)
+    end
+
+    it "matches either city when a prefixed search lists alternatives" do
+      expect(Organization.search_contact("city: los angeles--new york")).to contain_exactly(org_la, org_ny)
     end
   end
 
@@ -283,6 +307,28 @@ RSpec.describe Organization do
                city: "Los Angeles", state: "CA", zip_code: "90001", locality: "LA City")
         results = Organization.search_by_params(address: "123 Main St, Los Angeles, CA")
         expect(results).to include(active_org)
+      end
+    end
+
+    context "with organization type filter" do
+      let!(:company) { create(:organization, organization_type: "For-profit") }
+      let!(:agency) { create(:organization, organization_type: "Government agency") }
+      let!(:legacy_other) { create(:organization, organization_type: "Other (please specify below)") }
+      let!(:untyped) { create(:organization, organization_type: nil) }
+
+      it "matches any of the chosen types" do
+        results = Organization.search_by_params(organization_types: [ "For-profit", "Government agency" ])
+        expect(results).to contain_exactly(company, agency)
+      end
+
+      it "matches School on the school flag, whatever the type" do
+        school = create(:organization, organization_type: "Government agency", school: true)
+        expect(Organization.search_by_params(organization_types: [ "School" ])).to contain_exactly(school)
+        expect(Organization.search_by_params(organization_types: [ "For-profit", "School" ])).to contain_exactly(company, school)
+      end
+
+      it "counts unlisted legacy values as Other" do
+        expect(Organization.search_by_params(organization_types: [ "Other" ])).to contain_exactly(legacy_other)
       end
     end
 
@@ -374,11 +420,11 @@ RSpec.describe Organization do
     end
 
     it "matches a sector through an active facilitator's primary or additional tag" do
-      expect(Organization.search_by_params(sector_name: "Housing")).to contain_exactly(primary_person_org, additional_person_org)
+      expect(Organization.search_by_params(sector_ids: [ sector.id ])).to contain_exactly(primary_person_org, additional_person_org)
     end
 
     it "matches an age group through an active facilitator's primary or additional tag" do
-      expect(Organization.search_by_params(age_group_name: "13-17")).to contain_exactly(primary_person_org, additional_person_org)
+      expect(Organization.search_by_params(age_range_ids: [ teen.id ])).to contain_exactly(primary_person_org, additional_person_org)
     end
   end
 

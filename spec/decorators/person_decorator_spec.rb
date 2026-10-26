@@ -1,6 +1,47 @@
 require "rails_helper"
 
 RSpec.describe PersonDecorator do
+  describe "#address_phones" do
+    it "numbers address phones by position, leaving out ones already listed as phones" do
+      person = create(:person)
+      create(:address, addressable: person, phone: "(123) 123-1234")
+      create(:address, addressable: person, phone: "123-332-1234")
+      create(:contact_method, contactable: person, value: "123.123.1234")
+
+      expect(person.reload.decorate.address_phones).to eq([ [ 2, "123-332-1234" ] ])
+    end
+  end
+
+  describe "#work_address_phones" do
+    it "pairs each linked work address phone with its organization, leaving out ones already listed" do
+      person = create(:person)
+      sunrise = create(:organization, name: "Sunrise Center")
+      harbor = create(:organization, name: "Harbor House")
+      create(:affiliation, person: person, organization: sunrise,
+                           organization_address: create(:address, addressable: sunrise, phone: "123-123-1444"))
+      create(:affiliation, person: person, organization: harbor,
+                           organization_address: create(:address, addressable: harbor, phone: "123-123-1233"))
+      create(:contact_method, contactable: person, value: "(123) 123-1233")
+
+      expect(person.decorate.work_address_phones).to eq([ [ "Sunrise Center", "123-123-1444" ] ])
+    end
+  end
+
+  describe "#work_address_affiliations" do
+    it "lists active affiliations linked to an org address, once per address" do
+      person = create(:person)
+      organization = create(:organization)
+      address = create(:address, addressable: organization)
+      linked = create(:affiliation, person: person, organization: organization, organization_address: address)
+      create(:affiliation, person: person, organization: organization, organization_address: address, title: "Director")
+      create(:affiliation, person: person, organization: create(:organization), title: "Volunteer")
+      create(:affiliation, person: person, organization: organization, organization_address: create(:address, addressable: organization),
+                           title: "Counselor", start_date: 3.years.ago.to_date, end_date: 1.year.ago.to_date)
+
+      expect(person.decorate.work_address_affiliations).to eq([ linked ])
+    end
+  end
+
   describe ".email_with_type" do
     it "abbreviates a work or personal email and leaves an unknown one bare" do
       expect(described_class.email_with_type("ada@example.com", "work")).to eq("ada@example.com (w)")
@@ -74,6 +115,38 @@ RSpec.describe PersonDecorator do
       person = create(:person, user: nil, email: PlaceholderEmail.first)
 
       expect(person.decorate.profile_email).to be_nil
+    end
+  end
+
+  describe "#profile_email_login?" do
+    it "is true when the profile email is the login email" do
+      expect(create(:person).decorate.profile_email_login?).to be(true)
+    end
+
+    it "is false without a user account" do
+      expect(create(:person, user: nil, email: "record@example.com").decorate.profile_email_login?).to be(false)
+    end
+  end
+
+  describe "#profile_email_label" do
+    it "marks the login email as the user account" do
+      expect(create(:person).decorate.profile_email_label).to eq("primary · user account")
+    end
+
+    it "marks a record-only email as primary" do
+      person = create(:person, user: nil, email: "record@example.com")
+
+      expect(person.decorate.profile_email_label).to eq("primary")
+    end
+  end
+
+  describe "#email_2_label" do
+    it "adds the email type" do
+      expect(build(:person, email_2_type: "personal").decorate.email_2_label).to eq("email2 · personal")
+    end
+
+    it "is just email2 without a type" do
+      expect(build(:person, email_2_type: nil).decorate.email_2_label).to eq("email2")
     end
   end
 

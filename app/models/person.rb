@@ -25,6 +25,9 @@ class Person < ApplicationRecord
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :active_phones, -> { phone.where(inactive: false) }, as: :contactable, class_name: "ContactMethod"
+  # Searching someone up reads their live addresses only: a retired one is still
+  # the right place to SHOW them (Address::STANDING) but a wrong place to find them.
+  has_many :active_addresses, -> { active }, as: :addressable, class_name: "Address", inverse_of: :addressable
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
@@ -157,7 +160,7 @@ class Person < ApplicationRecord
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
-                                reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
+                                reject_if: proc { |attrs| Address.unfilled_attributes?(attrs) }
   accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
@@ -182,7 +185,7 @@ class Person < ApplicationRecord
   # A blank row (number + kind + state + expiry all empty) is ignored rather than
   # creating an empty license.
   accepts_nested_attributes_for :professional_licenses, allow_destroy: true,
-    reject_if: proc { |attrs| attrs.slice("number", "kind", "issuing_state", "expires_on").values.all?(&:blank?) }
+    reject_if: proc { |attrs| attrs.slice("number", "kind", "issuing_state", "issuing_state_outside_usa", "issuing_country", "expires_on").values.all?(&:blank?) }
 
   # Search Cop
   include SearchCop
@@ -209,6 +212,33 @@ class Person < ApplicationRecord
     options :all, type: :text, default: true, default_operator: :or
   end
 
+  search_scope :search_name_email do
+    attributes :first_name, :legal_first_name, :last_name, :email, :email_2
+    attributes all: [ :first_name, :legal_first_name, :last_name, :email, :email_2 ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
+  search_scope :search_contact do
+    scope { left_joins(:contact_methods, :addresses) }
+    attributes phone:   "contact_methods.value"
+    attributes street:  "addresses.street_address"
+    attributes city:    "addresses.city"
+    attributes state:   "addresses.state"
+    attributes zip:     "addresses.zip_code"
+    attributes county:  "addresses.county"
+    attributes country: "addresses.country"
+    attributes all: [ "contact_methods.value",
+                      "addresses.street_address", "addresses.city", "addresses.state",
+                      "addresses.zip_code", "addresses.county", "addresses.country" ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
+  # Alongside `search_contact` above, not in place of it: the people index keeps
+  # the box it has. This one answers the attendees page, over live addresses and
+  # with the wider prefix set.
+  include ContactSearchable
+  searches_contact :contact_methods, :active_addresses, as: :search_location
+
   FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
   LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
 
@@ -216,7 +246,6 @@ class Person < ApplicationRecord
     (people.first_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden))
     OR (people.last_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden))
     OR (people.profile_show_email AND (people.email LIKE :pattern OR users.email LIKE :pattern))
-    OR (people.profile_show_phone AND (users.phone LIKE :pattern OR contact_methods.value LIKE :pattern))
   SQL
 
   # Spaces and periods are dropped on both sides so an initialled name ("Cathy S.") finds itself.
@@ -249,7 +278,7 @@ class Person < ApplicationRecord
   def self.shared_contact_search(query)
     terms = query.scan(SEARCH_TERM_PATTERN).map { |groups| groups.compact.first }.compact_blank
     terms.reduce(all) do |relation, term|
-      matches = unscoped.left_joins(:user, :active_phones).where(
+      matches = unscoped.left_joins(:user).where(
         SHARED_CONTACT_MATCH_SQL,
         pattern: "%#{sanitize_sql_like(term)}%",
         first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES,
@@ -399,7 +428,6 @@ class Person < ApplicationRecord
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
-    results = results.search(params[:contact_info]) if params[:contact_info].present?
     results = results.shared_contact_search(params[:shared_contact_info]) if params[:shared_contact_info].present?
     results = results.by_role(params[:role]) if params[:role].present?
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?

@@ -1,0 +1,11 @@
+name: "Linking an org from an event registration submission matches the roster"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+action_path: "/form_submissions"
+pr_number: 2849
+summary: >-
+  Linking an organization from a registration form submission now does what
+  linking it from the event's registrants page does: a facilitator training
+  adds the Facilitator affiliation (dated to the training), and the org is
+  linked onto the person's registration too.

@@ -51,6 +51,19 @@ RSpec.describe "/organizations", type: :request do
       expect(response).to be_successful
       expect(response.body).to include("13-17")
     end
+
+    it "captions each card with its type for admins only" do
+      organization = Organization.create!(valid_attributes.merge(organization_type: "For-profit", school: true))
+      create(:affiliation, organization: organization, person: create(:person))
+
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
+      expect(response.body).to include("For-profit · School")
+
+      sign_in user
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
+      expect(response.body).to include(organization.name)
+      expect(response.body).not_to include("For-profit · School")
+    end
   end
 
   describe "GET /show" do
@@ -87,6 +100,32 @@ RSpec.describe "/organizations", type: :request do
       organization.update!(profile_show_age_ranges: false)
       get organization_url(organization)
       expect(response.body).not_to include("13-17")
+    end
+
+    context "with contact info hidden from the profile" do
+      let(:organization) do
+        Organization.create!(valid_attributes.merge(
+          email: "hello@example.org", website_url: "https://example.org/hidden",
+          profile_show_email: false, profile_show_phone: false, profile_show_website: false
+        )).tap { |org| create(:contact_method, contactable: org, value: "555-867-5309") }
+      end
+
+      { "Email" => "hello@example.org", "Phone" => "555-867-5309", "Website" => "https://example.org/hidden" }.each do |label, value|
+        it "shows the hidden #{label.downcase} to admins as an admin-only chip" do
+          get organization_url(organization)
+          chip = Capybara.string(response.body).find("span[title='#{label} (admin only)']")
+          expect(chip).to have_text(value)
+        end
+      end
+
+      it "keeps it off the profile for non-admins" do
+        create(:affiliation, organization: organization, person: create(:person))
+        sign_in user
+
+        get organization_url(organization)
+        expect(response).to be_successful
+        expect(response.body).not_to include("hello@example.org", "555-867-5309", "example.org/hidden")
+      end
     end
 
     it "renders successfully with workshop logs" do
@@ -207,7 +246,7 @@ RSpec.describe "/organizations", type: :request do
       page = Capybara.string(response.body)
       %w[Alpha Bravo Charlie].each { |name| expect(page).to have_content(name) }
       expect(page).not_to have_content("Direct Sector 1")
-      expect(page).to have_content("Not editable here")
+      expect(page).to have_content("Sectors and age groups aren't editable here")
       expect(page).not_to have_css("[name*='sectorable_items_attributes']")
       expect(page).not_to have_css("[name='organization[category_ids][]']")
     end
@@ -262,9 +301,76 @@ RSpec.describe "/organizations", type: :request do
       get new_organization_url
       expect(response).to be_successful
     end
+
+    it "focuses the name field" do
+      get new_organization_url
+
+      expect(Capybara.string(response.body)).to have_css("textarea#organization_name[autofocus]")
+    end
   end
 
   describe "GET /edit" do
+    it "lists address phones under the phone editor, numbered by address when there are several" do
+      organization = create(:organization)
+      create(:address, addressable: organization, phone: "123-123-1234")
+      create(:address, addressable: organization, phone: "123-332-1234")
+
+      get edit_organization_url(organization)
+
+      phones = Capybara.string(response.body).find("#phones")
+      expect(phones).to have_text("On addresses")
+      expect(phones).to have_css("li", text: "1. 123-123-1234")
+      expect(phones).to have_css("li", text: "2. 123-332-1234")
+    end
+
+    it "edits the organization's own phone numbers beside them" do
+      organization = create(:organization)
+      organization.contact_methods.create!(kind: "phone", value: "555-0100")
+
+      get edit_organization_url(organization)
+
+      phones = Capybara.string(response.body).find("#phones")
+      expect(phones).to have_field(with: "555-0100")
+      expect(phones).to have_link("➕ Add phone")
+    end
+
+    it "leaves focus alone so in-page links keep their scroll position" do
+      get edit_organization_url(create(:organization))
+
+      expect(Capybara.string(response.body)).not_to have_css("textarea#organization_name[autofocus]")
+    end
+
+    it "opens and rings the address a person's work-address link points at, with a way back" do
+      organization = create(:organization)
+      address = create(:address, addressable: organization)
+      other = create(:address, addressable: organization)
+      person = create(:person)
+
+      get edit_organization_url(organization, highlight_address: address.id, return_to: "person_edit", person_id: person.id)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css("details#address-#{address.id}[open].ring-yellow-500")
+      expect(page).not_to have_css("details#address-#{other.id}[open]")
+      expect(page).to have_link("Edit person", href: edit_person_path(person, anchor: "addresses"))
+    end
+
+    it "shows each address's phone on its collapsed header" do
+      organization = create(:organization)
+      create(:address, addressable: organization, phone: "123-123-1234")
+
+      get edit_organization_url(organization)
+
+      expect(Capybara.string(response.body)).to have_css("#addresses summary", text: "123-123-1234")
+    end
+
+    it "opens the other-type box when the org is typed Other" do
+      organization = create(:organization, organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: "Equine therapy")
+
+      get edit_organization_url(organization)
+
+      expect(Capybara.string(response.body)).to have_css("details[open] summary", text: "Other type?")
+    end
+
     it "renders a successful response" do
       organization = Organization.create!(valid_attributes)
       get edit_organization_url(organization)
@@ -420,6 +526,29 @@ RSpec.describe "/organizations", type: :request do
         organization = Organization.create!(valid_attributes)
         patch organization_url(organization), params: { organization: { high_profile: "1" } }
         expect(organization.reload.high_profile).to be(true)
+      end
+
+      it "links the edit page's associated records to the organization's activity" do
+        organization = Organization.create!(valid_attributes)
+        get edit_organization_url(organization)
+        expect(Capybara.string(response.body)).to have_link("Activity", href: /organization_id=#{organization.id}/)
+      end
+
+      it "updates the school flag from the edit form's checkbox" do
+        organization = Organization.create!(valid_attributes)
+        get edit_organization_url(organization)
+        expect(Capybara.string(response.body)).to have_field("School", type: "checkbox", checked: false)
+
+        patch organization_url(organization), params: { organization: { school: "1" } }
+        expect(organization.reload.school).to be(true)
+      end
+
+      it "saves the organization's phones" do
+        organization = Organization.create!(valid_attributes)
+        patch organization_url(organization), params: { organization: { contact_methods_attributes: {
+          "0" => { kind: "phone", contact_type: "work", value: "555-0100", primary: "1" }
+        } } }
+        expect(organization.contact_methods.sole).to have_attributes(value: "555-0100", contact_type: "work", primary: true)
       end
 
       it "nests the organization under a parent" do

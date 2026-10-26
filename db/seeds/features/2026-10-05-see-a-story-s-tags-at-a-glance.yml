@@ -1,6 +1,6 @@
 name: "See a story's tags at a glance"
 area: stories
-display_status: public_facing
+display_status: admin_facing
 released_on: 2026-10-05
 summary: >-
   Story pages now show a story's sectors and audience categories as colored tag

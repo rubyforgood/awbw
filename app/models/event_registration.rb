@@ -215,27 +215,15 @@ class EventRegistration < ApplicationRecord
     end
     scope
   }
-  scope :registrant_state, ->(state) {
-    joins(registrant: :addresses)
-      .where(addresses: { inactive: false, state: state })
-      .distinct
-  }
-  # Accepts "STATE|County" (from the manage filter) to scope to a county within
-  # a specific state, or a bare county name for backward compatibility.
-  scope :registrant_county, ->(value) {
-    state, county = value.to_s.include?("|") ? value.split("|", 2) : [ nil, value.to_s ]
-    next none if county.blank?
-    conditions = { inactive: false, county: county }
-    conditions[:state] = state if state.present?
-    joins(registrant: :addresses).where(addresses: conditions).distinct
-  }
-  scope :registrant_city, ->(term) {
-    return all if term.blank?
-    like = "%#{sanitize_sql_like(term.downcase.strip)}%"
-    joins(registrant: :addresses)
-      .where("LOWER(addresses.city) LIKE ?", like)
-      .where(addresses: { inactive: false })
-      .distinct
+  # Where the registrant is on `on` (the event's start date) — work, else home
+  # (PersonLocations). Takes any of its LOCATION_FIELDS, and they arrive together
+  # in one call so they test the same location row: a registrant working in two
+  # states would otherwise match a city from one and the state from the other.
+  scope :located_in, ->(on: nil, **filters) {
+    resolved = PersonLocations.filters_from(**filters)
+    next none if resolved.nil?
+    next all if resolved.empty?
+    where(registrant_id: PersonLocations.new(all.select(:registrant_id), on:).matching(**resolved).map(&:registrant_id))
   }
   scope :registrant_sector, ->(sector_id) {
     joins(registrant: :sectorable_items)
@@ -502,7 +490,7 @@ class EventRegistration < ApplicationRecord
     return nil unless field
 
     FormAnswer.joins(:form_submission)
-      .where(form_field_id: field.id, form_submissions: { form_id: form.id })
+      .where(form_field_id: field.id, form_submissions: { event_id: event.id, form_id: form.id })
       .where.not(submitted_answer: [ nil, "" ])
       .select(Arel.sql("form_submissions.person_id"))
   end
@@ -518,26 +506,34 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  KEYWORD_MATCH_SQL = <<~SQL.freeze
+    LOWER(people.first_name) LIKE :term
+    OR LOWER(people.legal_first_name) LIKE :term
+    OR LOWER(people.last_name) LIKE :term
+    OR LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :term
+    OR LOWER(CONCAT(people.legal_first_name, ' ', people.last_name)) LIKE :term
+    OR LOWER(users.email) LIKE :term
+    OR LOWER(people.email) LIKE :term
+    OR LOWER(contact_methods.value) LIKE :term
+    OR LOWER(addresses.city) LIKE :term
+    OR LOWER(addresses.phone) LIKE :term
+    OR LOWER(organizations.name) LIKE :term
+  SQL
+  # The grammar every search box in the app shares (ContactSearchable): the words
+  # inside an alternative all have to match, and "amy--aisha" keeps either. Each
+  # word asks the whole OR block above, so "jones amy" finds Amy Jones the same as
+  # "amy jones" — the CONCAT rows are what used to carry that, for one word order.
   scope :keyword, ->(term) {
-    return none if term.blank?
+    alternatives = ContactSearchable.alternatives(term).map { |value| value.split(/\s+/) }
+    next none if alternatives.empty?
 
-    sanitized = "%#{sanitize_sql_like(term.downcase.strip)}%"
-    left_joins(registrant: [ :user, :contact_methods, :addresses, { affiliations: [ :organization ] } ])
+    joined = left_joins(registrant: [ :user, :contact_methods, :addresses, { affiliations: [ :organization ] } ])
       .left_joins(registrant: { affiliations: { organization: :addresses } })
-      .where(
-        "LOWER(people.first_name) LIKE :term
-        OR LOWER(people.legal_first_name) LIKE :term
-        OR LOWER(people.last_name) LIKE :term
-        OR LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :term
-        OR LOWER(CONCAT(people.legal_first_name, ' ', people.last_name)) LIKE :term
-        OR LOWER(users.email) LIKE :term
-        OR LOWER(people.email) LIKE :term
-        OR LOWER(contact_methods.value) LIKE :term
-        OR LOWER(addresses.city) LIKE :term
-        OR LOWER(addresses.phone) LIKE :term
-        OR LOWER(organizations.name) LIKE :term",
-        term: sanitized
-      )
+    alternatives
+      .map { |words|
+        words.reduce(joined) { |scope, word| scope.where(KEYWORD_MATCH_SQL, term: "%#{sanitize_sql_like(word.downcase)}%") }
+      }
+      .reduce(:or)
       .distinct
   }
 

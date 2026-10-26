@@ -26,12 +26,21 @@ class PeopleController < ApplicationController
         affiliations: :organization,
         event_registrations: :event,
         categorizable_items: { category: :category_type }
-      ).references(:user))
+      ))
       filters = authorized_scope(params, as: :index).to_unsafe_h
+      name_email = filters.delete(:name_email)
+      contact_info = filters.delete(:contact_info)
+      work_location = filters.delete(:work_location)
       filtered = base_scope.search_by_params(filters)
-                           .order(:first_name, :last_name)
-      @count_display = count_display(filtered.count)
-      @people = filtered.paginate(page: params[:page], per_page: per_page)
+      filtered = filtered.search_name_email(name_email)
+      filtered = filtered.search_contact(contact_info)
+      filtered = filtered.distinct if contact_info.present?
+      filtered = located_by_work_location(filtered, work_location) if work_location.present?
+      filtered = filtered.order(:first_name, :last_name)
+
+      total = filtered.count
+      @count_display = count_display(total)
+      @people = filtered.paginate(page: params[:page], per_page: per_page, total_entries: total)
 
       render :people_results
     else
@@ -41,7 +50,15 @@ class PeopleController < ApplicationController
 
   def email_addresses
     authorize! Person, to: :manage?
-    people = authorized_scope(Person.includes(:user)).search_by_params(params.to_unsafe_h)
+    filters = params.to_unsafe_h
+    name_email = filters.delete(:name_email)
+    contact_info = filters.delete(:contact_info)
+    work_location = filters.delete(:work_location)
+    people = Person.includes(:user).search_by_params(filters)
+    people = people.search_name_email(name_email)
+    people = people.search_contact(contact_info)
+    people = people.distinct if contact_info.present?
+    people = located_by_work_location(people, work_location) if work_location.present?
     @email_addresses = people.filter_map { |person| person.preferred_email.presence }.uniq.sort
   end
 
@@ -89,7 +106,7 @@ class PeopleController < ApplicationController
         # (cancelled, no-show, transferred-out), flagged with their status; everyone
         # else sees only active ones.
         registrations = @person.event_registrations.includes(:event).order("events.start_date DESC").references(:events)
-        registrations = registrations.active unless viewing_own_or_admin?
+        registrations = registrations.active unless allowed_to?(:own_record?, @person)
         @event_registrations = registrations.paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
       when "workshop_ideas"
@@ -356,6 +373,12 @@ class PeopleController < ApplicationController
 
   private
 
+  def located_by_work_location(people, query)
+    filters = PersonLocations.filters_from(**PersonLocations.parse_query(query))
+    return people.none if filters.nil?
+    people.where(id: PersonLocations.new(people.select(:id)).matching(**filters).map(&:registrant_id))
+  end
+
   def dedupe_config
     {
       model_class: Person,
@@ -396,7 +419,7 @@ class PeopleController < ApplicationController
           delete.age_range_categorizable_items.find_by(is_primary: true)&.category_id
         @keeper_default_pay_customer_id = keep.pay_customers.active.find_by(default: true)&.id
         @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
-        @keeper_primary_contact_signatures = PersonServices::ReconcileContactMethods.primary_signatures(keep, delete)
+        @keeper_primary_contact_signatures = ContactMethodDeduper.primary_signatures(keep, delete)
         @primary_login_id = primary_login(keep, delete)&.id
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
@@ -412,6 +435,7 @@ class PeopleController < ApplicationController
       #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
       #   * duplicate addresses / contact methods (merge identical ones into one,
       #     keeping a single primary — the survivor's own, else the deleted person's);
+      #   * identical affiliations (same org, title, dates, and status → one);
       #   * a survivor gaining a login (adopt the primary login's email as primary).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
@@ -423,8 +447,9 @@ class PeopleController < ApplicationController
           preferred_customer_id: @keeper_default_pay_customer_id).call
         AddressDeduper.new(keep,
           primary_signature: @keeper_primary_address_signature).call
-        PersonServices::ReconcileContactMethods.new(keep,
+        ContactMethodDeduper.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
+        AffiliationDeduper.new(keep).call
         sync_primary_login_email(keep)
       },
       record_partial: "people/dedupe_record"
@@ -530,15 +555,9 @@ class PeopleController < ApplicationController
   # Showing anonymous content to anyone but the person and admins would tie an
   # "Anonymous" credit back to a name.
   def visible_authored_content(scope)
-    return scope if viewing_own_or_admin?
+    return scope if allowed_to?(:own_record?, @person)
     return scope.none if @person.anonymous_contributions?
     scope.credited_openly
-  end
-
-  # The profile's own person, or an admin — the audience allowed to see private/
-  # reconciled-away content that's hidden from other profile viewers.
-  def viewing_own_or_admin?
-    allowed_to?(:manage?, Person) || current_user&.person_id == @person.id
   end
 
   def set_person

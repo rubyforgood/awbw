@@ -128,8 +128,8 @@
                   selected: import_user&.id,
                   prompt: "Search users",
                   label: "Import user",
-                  hint: "Shown as created by / updated by on imported records nobody else is credited for",
-                  input_html: { data: { controller: "remote-select", remote_select_model_value: "user" } } %>
+                  hint: "Shown as created by / updated by on imported records nobody else is credited for. It doesn't need to be able to sign in.",
+                  input_html: { data: { controller: "remote-select", remote_select_model_value: SearchController::USER_ANY_STATUS_MODEL } } %>
     </section>
 
     <section class="rounded-xl border border-gray-200 bg-white p-6">
@@ -183,6 +183,15 @@
                   hint: "How many days before a membership term ends its renewal invoice is generated" %>
     </section>
 
-    <%= f.button :submit, "Save settings", class: button_classes(:primary) %>
+    <div class="action-buttons flex justify-center gap-3">
+      <%= f.button :submit, "Save settings", class: button_classes(:primary) %>
+    </div>
+  <% end %>
+
+  <% if (revision = DeployedRevision.current) %>
+    <p class="mt-10 text-right text-xs text-gray-300">
+      <%= link_to "build #{revision.short_sha}", revision.compare_url,
+                  target: "_blank", rel: "noopener", class: "hover:text-gray-500" %>
+    </p>
   <% end %>
 </div>

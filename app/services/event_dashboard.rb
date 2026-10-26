@@ -147,14 +147,12 @@ class EventDashboard
     recognized_scholarships.map(&:recipient_id).uniq.size
   end
 
-  # This event's registrants grouped by the city of the organization linked on
-  # their registration, with the scholarship-recipient count per city — the
-  # shared "Registrants by city" breakdown on the background and recipients
-  # pages. Fed already-plucked data so the rollup runs in memory.
+  # This event's registrants grouped by their location's city, with the
+  # scholarship-recipient count per city — the shared "Registrants by city"
+  # breakdown on the background and recipients pages.
   def registrant_city_breakdown
     @registrant_city_breakdown ||= RegistrantCityBreakdown.new(
-      org_registrant_pairs: registration_org_registrant_pairs,
-      city_by_org: city_by_organization,
+      city_registrant_pairs: locations.rows.map { |row| [ row.city_label, row.registrant_id ] },
       scholarship_recipient_ids: scholarships.distinct.pluck(:recipient_id)
     )
   end
@@ -455,6 +453,12 @@ class EventDashboard
     @unpaid_registrants ||= people_sorted(registrants_for(billable_registration_ids - paid_registration_ids))
   end
 
+  # Registrants still owing who have paid some of it — listed under Paid as well so
+  # the Paid names add up to the Paid amount.
+  def partially_paid_registrants
+    @partially_paid_registrants ||= unpaid_registrants.select { |person| registration_paid_by_registrant[person.id].positive? }
+  end
+
   # --- Continuing-education fees ---------------------------------------------
   # CE is billed per ContinuingEducationRegistration (its own cost_cents),
   # separate from the registration fee. These mirror the registration-fee
@@ -495,6 +499,10 @@ class EventDashboard
 
   def cont_ed_unpaid_registrants
     @cont_ed_unpaid_registrants ||= people_sorted(ce_unpaid_registrant_ids)
+  end
+
+  def cont_ed_partially_paid_registrants
+    @cont_ed_partially_paid_registrants ||= cont_ed_unpaid_registrants.select { |person| cont_ed_paid_by_registrant[person.id].positive? }
   end
 
   # Per-registrant CE cash collected / still owed, keyed by Person id — the
@@ -852,52 +860,34 @@ class EventDashboard
       .sort_by { |label, count| [ -count, label ] }
   end
 
-  # US states only — international registrants' regions (e.g. provinces) are
-  # excluded so the States breakdown reflects domestic residents.
+  # The US states registrants are in on the event date — work, else home (PersonLocations).
   def states
-    @states ||= us_state_addresses.distinct.pluck(:state).sort
+    @states ||= state_registrant_ids_by_state.keys.sort
   end
 
-  # Distinct US-resident registrant count per state.
   def state_counts
-    @state_counts ||= us_state_addresses.group(:state).distinct.count(:addressable_id)
+    @state_counts ||= state_registrant_ids_by_state.transform_values(&:size)
   end
 
-  # Registrant ids that have at least one active US address with a state on file —
-  # i.e. the people behind the states count.
   def state_registrant_ids
-    @state_registrant_ids ||= us_state_addresses.distinct.pluck(:addressable_id)
+    @state_registrant_ids ||= state_registrant_ids_by_state.values.flatten.uniq
   end
 
+  def state_registrant_ids_by_state
+    locations.registrant_ids_by_state
+  end
+
+  # The countries registrants are in (PersonLocations).
   def countries
-    @countries ||= Address
-      .active
-      .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where.not(country: [ nil, "" ])
-      .distinct
-      .pluck(:country)
-      .sort
+    @countries ||= country_registrant_ids_by_country.keys.sort
   end
 
-  # Distinct registrant count per country.
   def country_counts
-    @country_counts ||= Address
-      .active
-      .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where.not(country: [ nil, "" ])
-      .group(:country)
-      .distinct
-      .count(:addressable_id)
+    @country_counts ||= country_registrant_ids_by_country.transform_values(&:size)
   end
 
-  # Registrant ids that have at least one active address with a country on file.
   def country_registrant_ids
-    @country_registrant_ids ||= Address
-      .active
-      .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where.not(country: [ nil, "" ])
-      .distinct
-      .pluck(:addressable_id)
+    @country_registrant_ids ||= country_registrant_ids_by_country.values.flatten.uniq
   end
 
   # School districts across active registrants' affiliation organization addresses
@@ -916,17 +906,8 @@ class EventDashboard
     @school_district_registrant_ids ||= affiliation_district_pairs.map(&:last).uniq
   end
 
-  # Registrant ids per country, keyed by country name — the people behind each
-  # country row, for drilling into the matching registrant list.
   def country_registrant_ids_by_country
-    @country_registrant_ids_by_country ||= Address
-      .active
-      .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where.not(country: [ nil, "" ])
-      .distinct
-      .pluck(:country, :addressable_id)
-      .group_by(&:first)
-      .transform_values { |rows| rows.map(&:last).uniq }
+    locations.registrant_ids_by(:country)
   end
 
   # Registrant ids per school district, for the breakdown's per-row drill-in. A
@@ -939,19 +920,10 @@ class EventDashboard
       .transform_values(&:to_a)
   end
 
-  # Distinct [ state, county ] pairs across active registrants' active addresses,
-  # sorted by state then county. Pairing in the state lets the manage filter
-  # disambiguate same-named counties across states (e.g. "CA - Warren" vs
-  # "NY - Warren").
+  # [ state, county ] pairs registrants are in. Pairing in the state lets the
+  # manage filter disambiguate same-named counties ("CA - Warren" vs "NY - Warren").
   def counties
-    @counties ||= Address
-      .active
-      .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where.not(county: [ nil, "" ])
-      .where.not(state: [ nil, "" ])
-      .distinct
-      .pluck(:state, :county)
-      .sort
+    locations.counties
   end
 
   # Life experiences captured at registration: StoryPopulation categories tagged
@@ -985,13 +957,8 @@ class EventDashboard
 
   private
 
-  # Active registrant addresses whose state is a recognized US state/territory —
-  # the source for every States figure (count card, choropleth, and drill-in).
-  def us_state_addresses
-    Address
-      .active
-      .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where("UPPER(addresses.state) IN (?)", Address::US_STATE_ABBREVIATIONS)
+  def locations
+    @locations ||= PersonLocations.new(active_registrations.select(:registrant_id), on: reference_date)
   end
 
   # [ [ district, registrant_id ], ... ] from the affiliations linked to this event's
@@ -1339,32 +1306,6 @@ class EventDashboard
     @self_funded_grant_ids ||= Grant.self_funded_ids
   end
 
-  # [ [ organization_id, registrant_id ], ... ] from the organizations linked on
-  # each active registration (the registration-time snapshot only, not later
-  # affiliations) — the basis for grouping registrants by their org's city.
-  def registration_org_registrant_pairs
-    @registration_org_registrant_pairs ||= EventRegistrationOrganization
-      .joins(:event_registration)
-      .where(event_registration_id: active_registration_ids)
-      .pluck(:organization_id, "event_registrations.registrant_id")
-  end
-
-  # "City, State" per linked organization, from its first active address (mirrors
-  # Organization#program_location). Orgs with no active address are absent, so
-  # their registrants fall into the breakdown's Unknown bucket.
-  def city_by_organization
-    org_ids = registration_org_registrant_pairs.map(&:first).uniq
-    Address.active
-      .where(addressable_type: "Organization", addressable_id: org_ids)
-      .order(:id)
-      .pluck(:addressable_id, :city, :state)
-      .each_with_object({}) do |(org_id, city, state), map|
-        next if map.key?(org_id)
-        label = [ city, state ].compact_blank.join(", ").presence
-        map[org_id] = label if label
-      end
-  end
-
   def paid_registration_ids
     @paid_registration_ids ||= billable_registration_ids.select do |id|
       allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i
@@ -1450,7 +1391,7 @@ class EventDashboard
     FormAnswer
       .where(form_field_id: field_ids)
       .joins(:form_submission)
-      .where(form_submissions: { person_id: registrant_ids })
+      .where(form_submissions: { event_id: event.id, person_id: registrant_ids })
       .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
       .flat_map do |person_id, submitted_answer|
         submitted_answer.to_s.split(",").map(&:strip)
@@ -1506,7 +1447,7 @@ class EventDashboard
     FormAnswer
       .where(form_field_id: field.id)
       .joins(:form_submission)
-      .where(form_submissions: { person_id: registrant_ids })
+      .where(form_submissions: { event_id: event.id, person_id: registrant_ids })
       .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
       .flat_map do |person_id, submitted_answer|
         submitted_answer.to_s.split(",").map(&:strip)

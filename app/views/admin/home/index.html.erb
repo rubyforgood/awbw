@@ -152,33 +152,9 @@
 
         <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm md:flex-1">
           Actions
-          <div class="mt-3 flex flex-wrap gap-2">
-            <%= link_to profile_change_requests_path, class: button_classes(:primary_outline) do %>
-              <i class="fa-solid fa-user-pen"></i> Changes requested
-              <%= render "count_badge", count: @pending_change_requests_count %>
-            <% end %>
-            <%= link_to admin_data_health_path, class: button_classes(:primary_outline) do %>
-              <i class="fa-solid fa-heart-pulse"></i> Data health
-              <%= turbo_frame_tag :data_health_count, src: admin_home_data_health_count_path, loading: :lazy %>
-            <% end %>
-            <% if allowed_to?(:import?, EventRegistration) %>
-              <%= link_to new_event_registration_import_path(return_to: "admin_home"), class: button_classes(:primary_outline) do %>
-                <i class="fa-solid fa-upload"></i> Import registrants
-              <% end %>
-            <% end %>
-            <%= link_to author_credit_divergences_path, class: button_classes(:primary_outline) do %>
-              <i class="fa-solid fa-pen-nib"></i> Author credit divergences
-              <%= turbo_frame_tag :author_credit_count, src: admin_home_author_credit_count_path, loading: :lazy %>
-            <% end %>
-            <% if allowed_to?(:create?, Feature) %>
-              <%= button_to import_features_path,
-                            class: button_classes(:primary_outline),
-                            form: { data: { turbo_confirm: "Add any newly-shipped features and fill in missing details? Your existing edits are kept." } } do %>
-                <i class="fa-solid fa-arrows-rotate"></i> Sync features &amp; tips
-                <%= turbo_frame_tag :unsynced_features_count, src: admin_home_unsynced_features_count_path, loading: :lazy %>
-              <% end %>
-            <% end %>
-          </div>
+          <%= turbo_frame_tag :action_buttons, src: admin_home_action_buttons_path, target: "_top" do %>
+            <%= render "action_buttons" %>
+          <% end %>
         </div>
       </div>
 

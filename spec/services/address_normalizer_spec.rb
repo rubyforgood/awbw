@@ -18,6 +18,11 @@ RSpec.describe AddressNormalizer do
       expect(described_class.street("400 First Avenue")).to eq(described_class.street("400 1st Ave"))
     end
 
+    it "matches a numbered street with or without its ordinal suffix" do
+      expect(described_class.street("100 27 st west")).to eq(described_class.street("100 27th St W"))
+      expect(described_class.street("100 27th St W")).not_to eq(described_class.street("100 28th St W"))
+    end
+
     it "matches post office box spellings" do
       expect(described_class.street("Post Office Box 12")).to eq(described_class.street("P.O. Box 12"))
     end

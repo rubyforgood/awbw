@@ -1,5 +1,9 @@
 class ProfessionalLicense < ApplicationRecord
+  include OutsideUsaTypeable
+
   has_paper_trail
+
+  typed_outside_usa :issuing_state
 
   belongs_to :person
   belongs_to :created_by, class_name: "User", optional: true
@@ -13,6 +17,12 @@ class ProfessionalLicense < ApplicationRecord
   # whether those registrations carry payments. prepend so this runs before the
   # dependent: :destroy cascade below clears those registrations.
   before_destroy :prevent_destroy_with_ce, prepend: true
+  before_validation :default_issuing_country
+  before_validation :split_kind_out_of_number
+
+  # California BBS license types, recognized when typed in front of the number ("LMFT 42111").
+  TYPED_KINDS = %w[LMFT LCSW LPCC LEP AMFT ACSW APCC].freeze
+  TYPED_KIND_PATTERN = /\A(#{TYPED_KINDS.join("|")})(?=[\s#:.\-\d])[\s#:.\-]*(\S.*)\z/i
 
   # A license is identified by its kind + number, so the same number under two
   # different kinds is allowed; only a duplicate (kind, number) pair is rejected.
@@ -21,8 +31,20 @@ class ProfessionalLicense < ApplicationRecord
   scope :of_kind, ->(kind) { where(kind: kind) }
   scope :expired, -> { where.not(expires_on: nil).where("expires_on < ?", Date.current) }
   scope :not_expired, -> { where("expires_on IS NULL OR expires_on >= ?", Date.current) }
+  # Issued in, or held by someone with a live address in, a state or province (a US
+  # state by name or code), a country, or a city starting with the text.
+  scope :located_in, ->(place) {
+    place = place.to_s.strip
+    state = AddressTranslation.new.state(place, country: nil)
+    holders = Address.active.where(addressable_type: "Person")
+      .where("addresses.state = :state OR addresses.country = :place OR addresses.city LIKE :city",
+             state:, place:, city: "#{sanitize_sql_like(place)}%")
+      .select(:addressable_id)
+    where("professional_licenses.issuing_state = :state OR professional_licenses.issuing_country = :place", state:, place:)
+      .or(where(person_id: holders))
+  }
 
-  # Drives the admin index filters (registrant, kind, expiry status). The
+  # Drives the admin index filters (registrant, kind, location, expiry status). The
   # registrant filter is a free-text search over the holder's name (incl. legal
   # first name) and email, reusing Person's remote-search columns.
   def self.search_by_params(params)
@@ -31,6 +53,7 @@ class ProfessionalLicense < ApplicationRecord
       results = results.where(person: Person.remote_search(params[:person_query]).reorder(nil))
     end
     results = results.of_kind(params[:kind]) if params[:kind].present?
+    results = results.located_in(params[:location]) if params[:location].present?
     results = results.expired if params[:expired] == "yes"
     results = results.not_expired if params[:expired] == "no"
     results
@@ -41,7 +64,17 @@ class ProfessionalLicense < ApplicationRecord
   # the person's single placeholder license (both nil) rather than spawning
   # duplicate placeholders.
   def self.find_or_create_for(person:, number: nil, kind: nil)
+    kind, number = split_kind_from_number(kind: kind, number: number)
     find_or_create_by(person: person, number: number.presence, kind: kind.presence)
+  end
+
+  # [kind, number], with a known license type typed in front of the number moved
+  # into the kind. Left as given when the kind is already set.
+  def self.split_kind_from_number(kind:, number:)
+    return [ kind, number ] if kind.present?
+
+    match = number.to_s.strip.match(TYPED_KIND_PATTERN)
+    match ? [ match[1].upcase, match[2] ] : [ kind, number ]
   end
 
   # Completeness: have we recorded the actual license number yet?
@@ -73,6 +106,15 @@ class ProfessionalLicense < ApplicationRecord
   end
 
   private
+
+  # A US state is a US license; the country only means something beside a state outside the USA.
+  def default_issuing_country
+    self.issuing_country = Address::DEFAULT_COUNTRY if issuing_state.in?(Address::US_STATE_ABBREVIATIONS)
+  end
+
+  def split_kind_out_of_number
+    self.kind, self.number = self.class.split_kind_from_number(kind: kind, number: number)
+  end
 
   def prevent_destroy_with_ce
     return if removable?

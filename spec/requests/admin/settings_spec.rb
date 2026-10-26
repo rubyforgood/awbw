@@ -89,6 +89,36 @@ RSpec.describe "Admin::Settings", type: :request do
       expect(options.find { |option| option["selected"] }.text).to include("imports@example.com")
     end
 
+    it "links the deployed build to what's merged on GitHub since" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("GIT_SHA").and_return("a1b2c3d4e5f6")
+      sign_in admin
+
+      get admin_settings_path
+
+      expect(response.body).to include("build a1b2c3d")
+      expect(response.body).to include("/rubyforgood/awbw/compare/a1b2c3d4e5f6...main")
+    end
+
+    it "shows no build link when the deployed commit is unknown" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("GIT_SHA").and_return(nil)
+      sign_in admin
+
+      get admin_settings_path
+
+      expect(response.body).not_to include("/compare/")
+    end
+
+    it "searches every login for the import user, inactive ones included" do
+      sign_in admin
+
+      get admin_settings_path
+
+      picker = Nokogiri::HTML(response.body).at_css("select[name='setting[import_user_id]']")
+      expect(picker["data-remote-select-model-value"]).to eq(SearchController::USER_ANY_STATUS_MODEL)
+    end
+
     it "is denied to a non-admin" do
       sign_in create(:user)
 

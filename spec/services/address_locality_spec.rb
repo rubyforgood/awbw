@@ -26,13 +26,28 @@ RSpec.describe AddressLocality do
     expect(locality(city: "Los Angeles", state: "CA", country: "Mexico")).to eq("Outside USA")
   end
 
-  it "leaves a California county the Northern/Central/Southern line hasn't settled unknown" do
-    expect(locality(city: "Fresno", state: "CA", county: "Fresno")).to eq("Unknown")
-    expect(locality(city: "Oakland", state: "CA")).to eq("Unknown")
+  it "reads a City of Los Angeles neighborhood as LA City" do
+    expect(locality(city: "Van Nuys", state: "CA")).to eq("LA City")
+    expect(locality(city: "San Pedro", state: "CA", county: "Los Angeles")).to eq("LA City")
   end
 
-  it "leaves a state no US state answers to unknown, since a typo and a foreign region read alike" do
-    expect(locality(city: "Toronto", state: "ON")).to eq("Unknown")
+  it "reads another California county by the region FileMaker projects place it in" do
+    expect(locality(city: "Fresno", state: "CA", county: "Fresno")).to eq("Central CA")
+    expect(locality(city: "Oakland", state: "CA", county: "Alameda County")).to eq("Northern CA")
+    expect(locality(city: "San Diego", state: "CA", county: "San Diego")).to eq("Southern CA")
+  end
+
+  it "leaves a California address unknown when its county is missing or unplaced" do
+    expect(locality(city: "Oakland", state: "CA")).to eq("Unknown")
+    expect(locality(city: "Markleeville", state: "CA", county: "Alpine")).to eq("Unknown")
+  end
+
+  it "reads a state no US state answers to, with no country, as Outside USA" do
+    expect(locality(city: "Toronto", state: "ON")).to eq("Outside USA")
+  end
+
+  it "leaves a US address whose state no US state answers to unknown" do
+    expect(locality(city: "Nowhere", state: "Narnia", country: "United States")).to eq("Unknown")
     expect(locality(city: "Nowhere", state: "")).to eq("Unknown")
   end
 
@@ -40,7 +55,9 @@ RSpec.describe AddressLocality do
     answers = [
       locality(city: "Los Angeles", state: "CA"), locality(city: "Pasadena", state: "CA", county: "Los Angeles"),
       locality(city: "Santa Ana", state: "CA", county: "Orange"), locality(city: "Cambridge", state: "MA"),
-      locality(city: "Toronto", state: "ON", country: "Canada"), locality(city: "Fresno", state: "CA")
+      locality(city: "Toronto", state: "ON", country: "Canada"), locality(city: "Fresno", state: "CA"),
+      locality(city: "Fresno", state: "CA", county: "Fresno"), locality(city: "Oakland", state: "CA", county: "Alameda"),
+      locality(city: "San Diego", state: "CA", county: "San Diego")
     ]
 
     expect(answers.uniq).to all(be_in(Address::LOCALITIES))

@@ -1,151 +1,169 @@
 <%# Persisted addresses start collapsed to a single-line header; new/blank ones
     stay expanded so their fields are ready to fill in. Native <details>/<summary>
     toggles the editable fields on click — no JavaScript needed. %>
-<details class="nested-fields group mb-4 rounded-lg border border-gray-200 bg-white p-6"<%= " open".html_safe unless f.object.persisted? %>>
-  <summary class="flex cursor-pointer list-none items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
-    <div class="text-lg font-semibold text-gray-800">
-      Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %>
+<% highlighted = f.object.persisted? && params[:highlight_address].to_s == f.object.id.to_s %>
+<%= tag.details id: ("address-#{f.object.id}" if f.object.persisted?), open: !f.object.persisted? || highlighted,
+                class: [ "nested-fields group mb-3 scroll-mt-48 overflow-hidden rounded-lg border border-yellow-200 bg-white",
+                         { "ring-2 ring-inset ring-yellow-500": highlighted } ] do %>
+  <summary class="flex cursor-pointer list-none items-center justify-between gap-2 bg-yellow-50 p-3 [&::-webkit-details-marker]:hidden">
+    <div class="flex items-center gap-2 text-lg font-semibold text-gray-800">
+      <% numbered = f.object.addressable&.addresses&.size.to_i > 1 %>
+      <% if f.object.persisted? %>
+        <span><%= "Address ##{f.index.to_i + 1}: " if numbered %><%= f.object.name %></span>
+      <% else %>
+        <span>Address</span>
+      <% end %>
+      <% if f.object.persisted? && f.object.phone.present? %>
+        <span class="text-sm font-normal text-gray-600"><i class="fa-solid fa-phone text-xs text-gray-400" aria-hidden="true"></i> <%= f.object.phone %></span>
+      <% end %>
     </div>
     <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open:rotate-180"></i>
   </summary>
 
-  <hr class="my-6 border-gray-200">
+  <div class="border-t border-yellow-200 p-3">
+    <!-- LOCATION + DISTRICT + LOCALITY -->
+    <%# Organization addresses are always "work" — the type designation only matters
+        for Person addresses — so persist it with a hidden field rather than a selector. %>
+    <%= f.hidden_field :address_type, value: "work" %>
+    <div class="grid grid-cols-1 gap-x-4 md:grid-cols-3">
+      <div class="flex items-center gap-6">
+        <%= f.input :primary,
+                    as: :boolean,
+                    label: "Primary",
+                    input_html: {
+                      checked: f.object.new_record? || f.object.primary?,
+                      class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
+                    } %>
+        <%= f.input :inactive,
+                    as: :boolean,
+                    label: "Inactive",
+                    input_html: {
+                      class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
+                    } %>
+      </div>
+      <div class="flex items-center gap-6">
+        <%= f.input :invoice_address,
+                    as: :boolean,
+                    label: "Mailing / invoice address",
+                    hint: "Where mail goes, and the bill-to on invoices and receipts",
+                    input_html: {
+                      class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
+                    } %>
+      </div>
+    </div>
 
-  <!-- LOCATION + DISTRICT + LOCALITY -->
-  <%# Organization addresses are always "work" — the type designation only matters
-      for Person addresses — so persist it with a hidden field rather than a selector. %>
-  <%= f.hidden_field :address_type, value: "work" %>
-  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-    <div class="flex items-center gap-6">
-      <%= f.input :primary,
-                  as: :boolean,
-                  label: "Primary",
+
+    <!-- LA-SPECIFIC FIELDS -->
+    <div class="grid grid-cols-1 gap-x-4 md:grid-cols-4">
+      <%= f.input :locality,
+                  label: "Locality",
+                  as: :select,
+                  collection: Address::LOCALITIES,
+                  include_blank: true,
+                  selected: f.object.decorate.default_locality,
                   input_html: {
-                    checked: f.object.new_record? || f.object.primary?,
-                    class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
+                    class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                   } %>
-      <%= f.input :inactive,
-                  as: :boolean,
-                  label: "Inactive",
+      <%= f.input :la_city_council_district,
+                  label: "LA City Council District",
+                  as: :select,
+                  collection: (1..15).to_a,
+                  selected: f.object.la_city_council_district,
+                  include_blank: true,
                   input_html: {
-                    class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
+                    min: 1, max: 15,
+                    value:  f.object.la_city_council_district,
+                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+      <%= f.input :la_supervisorial_district,
+                  label: "LA Supervisorial District",
+                  as: :select,
+                  collection: (1..5).to_a,
+                  selected: f.object.la_supervisorial_district,
+                  include_blank: true,
+                  input_html: {
+                    min: 1, max: 5,
+                    value:  f.object.la_supervisorial_district,
+                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+      <%= f.input :la_service_planning_area,
+                  label: "LA Service Planning Area",
+                  as: :select,
+                  collection: (1..8).to_a,
+                  selected: f.object.la_service_planning_area,
+                  include_blank: true,
+                  input_html: {
+                    min: 1, max: 8,
+                    value:  f.object.la_service_planning_area,
+                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+    </div>
+
+    <!-- ADDRESS BLOCK -->
+    <div class="grid grid-cols-1 gap-x-4 md:grid-cols-4">
+      <%= f.input :street_address,
+                  label: "Street Address",
+                  as: :text,
+                  input_html: {
+                    rows: 1,
+                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  } %>
+
+      <%= f.input :city,
+                  label: "City",
+                  as: :text,
+                  input_html: {
+                    rows: 1,
+                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  } %>
+
+      <%= render "addresses/state_field", f: f %>
+      <%= f.input :zip_code,
+                  label: "ZIP Code",
+                  as: :text,
+                  input_html: {
+                    rows: 1,
+                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  } %>
+
+
+    </div>
+
+    <div class="grid grid-cols-1 gap-x-4 md:grid-cols-4">
+      <%= f.input :district,
+                  label: "School district",
+                  as: :text,
+                  input_html: {
+                    rows: 1,
+                    class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  } %>
+      <%= f.input :county,
+                  label: "County",
+                  as: :text,
+                  input_html: {
+                    rows: 1,
+                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  } %>
+
+      <%= f.input :country,
+                  label: "Country",
+                  as: :select,
+                  collection: GeographyHelper::COUNTRIES,
+                  selected: f.object.decorate.default_country,
+                  include_blank: "Select a country",
+                  hint: "Not listed? Pick the closest one or leave this blank.",
+                  input_html: {
+                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  } %>
+      <%= f.input :phone,
+                  label: "Phone",
+                  as: :text,
+                  input_html: {
+                    rows: 1,
+                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
     </div>
-    <div class="flex items-center gap-6">
-      <%= f.input :invoice_address,
-                  as: :boolean,
-                  label: "Invoice address",
-                  hint: "Bill-to address on invoices and receipts",
-                  input_html: {
-                    class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
-                  } %>
-    </div>
+
+    <!-- Remove button -->
+    <%= link_to_remove_association "Remove",
+                                   f,
+                                   class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
   </div>
-
-
-  <!-- LA-SPECIFIC FIELDS -->
-  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-    <%= f.input :locality,
-                label: "Locality",
-                as: :select,
-                collection: Address::LOCALITIES,
-                include_blank: true,
-                selected: f.object.locality,
-                input_html: {
-                  value: f.object.locality,
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                } %>
-    <%= f.input :la_city_council_district,
-                label: "LA City Council District",
-                as: :select,
-                collection: (1..15).to_a,
-                selected: f.object.la_city_council_district,
-                include_blank: true,
-                input_html: {
-                  min: 1, max: 15,
-                  value:  f.object.la_city_council_district,
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
-    <%= f.input :la_supervisorial_district,
-                label: "LA Supervisorial District",
-                as: :select,
-                collection: (1..5).to_a,
-                selected: f.object.la_supervisorial_district,
-                include_blank: true,
-                input_html: {
-                  min: 1, max: 5,
-                  value:  f.object.la_supervisorial_district,
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
-    <%= f.input :la_service_planning_area,
-                label: "LA Service Planning Area",
-                as: :select,
-                collection: (1..8).to_a,
-                selected: f.object.la_service_planning_area,
-                include_blank: true,
-                input_html: {
-                  min: 1, max: 8,
-                  value:  f.object.la_service_planning_area,
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
-  </div>
-
-  <!-- ADDRESS BLOCK -->
-  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-    <%= f.input :street_address,
-                label: "Street Address",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-
-    <%= f.input :city,
-                label: "City",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-
-    <%= f.input :state,
-                label: "State",
-                as: :select,
-                collection: state_select_options(f.object.state),
-                include_blank: true,
-                selected: f.object.state,
-                input_html: {
-                  value: f.object.state,
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-    <%= f.input :zip_code,
-                label: "ZIP Code",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-
-
-  </div>
-
-  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-    <%= f.input :district,
-                label: "School district",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                } %>
-    <%= f.input :county,
-                label: "County",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-
-    <%= f.input :country,
-                label: "Country",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-    <%= f.input :phone,
-                label: "Phone",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
-  </div>
-
-  <!-- Remove button -->
-  <%= link_to_remove_association "Remove",
-                                 f,
-                                 class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
-</details>
+<% end %>

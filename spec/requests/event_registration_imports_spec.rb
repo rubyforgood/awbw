@@ -128,6 +128,32 @@ RSpec.describe "Event registration imports", type: :request do
     end
   end
 
+  describe "address values the dropdowns don't offer" do
+    before { sign_in admin }
+
+    let(:sheet) do
+      "FirstName,LastName,EMail,Organization,Street,City,State,Zip,Country\n" \
+        "Pat,Example,pat@example.org,Sample Org,1 Main St,Kenmore,Kenmore,98028,Narnia\n"
+    end
+
+    it "lists them on the preview" do
+      file = Rack::Test::UploadedFile.new(StringIO.new(sheet), "text/csv", original_filename: "registrants.csv")
+
+      post event_registration_import_path, params: { event_id: event.id, file: }
+
+      expect(response.body).to include("Address values the dropdowns don't offer")
+      expect(response.body).to include("Country (left blank): “Narnia”", "State (kept as typed): “Kenmore”")
+    end
+
+    it "counts them in the notice after importing" do
+      blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new(sheet), filename: "registrants.csv", content_type: "text/csv")
+
+      post confirm_event_registration_import_path, params: { signed_id: blob.signed_id, event_id: event.id }
+
+      expect(flash[:notice]).to include("2 address values the dropdowns don't offer (country left blank, state kept)")
+    end
+  end
+
   describe "POST /event_registrations/import/confirm" do
     before { sign_in admin }
 

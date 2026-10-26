@@ -24,13 +24,13 @@ RSpec.describe Form do
   describe ".agreement_forms (agreement scenarios by role)" do
     it "returns publicly fillable forms with an agreement role" do
       on_demand = create(:form, role: "registration", slug: "collab", published: true)
-      new_job = create(:form, role: "new_job", slug: "collab-new-job", published: true)
+      reinstatement = create(:form, role: "reinstatement", slug: "collab-reinstatement", published: true)
 
-      expect(Form.agreement_forms).to contain_exactly(on_demand, new_job)
+      expect(Form.agreement_forms).to contain_exactly(on_demand, reinstatement)
     end
 
     it "excludes unpublished, event-connected, and non-agreement-role forms" do
-      create(:form, role: "new_job", slug: "draft", published: false)
+      create(:form, role: "reinstatement", slug: "draft", published: false)
       create(:form, role: "scholarship", slug: "scholarship", published: true)
       connected = create(:form, role: "registration", slug: "event-reg")
       create(:event_form, form: connected)
@@ -154,6 +154,36 @@ RSpec.describe Form do
 
         expect(form).not_to be_valid
         expect(form.errors[:anonymous]).to be_present
+      end
+    end
+
+    describe "on the CE hours callout" do
+      let(:form) { create(:form, anonymous: true) }
+
+      before do
+        create(:form_field, form:, name: "How was it?")
+        create(:registration_ticket_callout, builtin_key: "ce_hours", form:)
+      end
+
+      it "can't be turned off" do
+        form.anonymous = false
+
+        expect(form).not_to be_valid
+        expect(form.errors[:anonymous]).to include("must stay on for a CE hours evaluation")
+      end
+
+      it "can't gain a name or email question" do
+        form.assign_attributes(form_fields_attributes: [ { name: "Email", field_identifier: "primary_email" } ])
+
+        expect(form).not_to be_valid
+        expect(form.errors[:base]).to include("A CE hours evaluation can't ask for a name or email")
+      end
+
+      it "can drop a name or email question it already asks" do
+        email = form.form_fields.create!(name: "Email", field_identifier: "primary_email", answer_type: :free_form_input_one_line)
+        form.reload.assign_attributes(form_fields_attributes: [ { id: email.id, _destroy: "1" } ])
+
+        expect(form).to be_valid
       end
     end
   end

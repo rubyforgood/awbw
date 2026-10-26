@@ -1,6 +1,6 @@
 name: "Filter index pages by author or person name"
 area: content
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-08-22
 pr_number: 2311
 summary: >-

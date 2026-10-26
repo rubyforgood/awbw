@@ -31,6 +31,26 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg.errors[:professional_license]).to include("must belong to the registrant")
     end
 
+    describe "one CE registration per license on a registration" do
+      let(:registration) { create(:event_registration) }
+      let(:license) { create(:professional_license, person: registration.registrant) }
+
+      before { create(:continuing_education_registration, event_registration: registration, professional_license: license) }
+
+      it "rejects a second CE registration for the same license" do
+        duplicate = build(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+        expect(duplicate).not_to be_valid
+        expect(duplicate.errors[:professional_license]).to include("already has CE on this registration")
+      end
+
+      it "allows CE for another of the registrant's licenses" do
+        second_license = create(:professional_license, person: registration.registrant, kind: "LMFT", number: "77777")
+
+        expect(build(:continuing_education_registration, event_registration: registration, professional_license: second_license)).to be_valid
+      end
+    end
+
     describe "cost_not_below_allocations" do
       it "allows setting cost above allocations" do
         ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
@@ -79,11 +99,70 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce.hours).to eq(6)
     end
 
-    it "returns the registration's existing CE record untouched" do
-      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+    it "updates the registration's existing CE record with the license it's given" do
+      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW", issuing_state: "CA")
 
-      expect(described_class.enroll!(event_registration: registration, number: "99999", kind: "LMFT")).to eq(first)
+      expect(described_class.enroll!(event_registration: registration, number: "99999", kind: "LMFT", issuing_state: "OR")).to eq(first)
       expect(registration.continuing_education_registrations.count).to eq(1)
+      expect(first.reload.professional_license).to have_attributes(number: "99999", kind: "LMFT", issuing_state: "OR")
+    end
+
+    it "keeps the existing CE record's license details that aren't supplied again" do
+      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW", expires_on: Date.new(2027, 1, 1))
+
+      described_class.enroll!(event_registration: registration, issuing_state: "OR")
+
+      expect(first.reload.professional_license).to have_attributes(number: "12345", kind: "LCSW", issuing_state: "OR", expires_on: Date.new(2027, 1, 1))
+    end
+
+    it "moves the existing CE record onto the registrant's other license when the number matches it" do
+      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+      other = create(:professional_license, person: person, number: "77777", kind: "LMFT")
+
+      described_class.enroll!(event_registration: registration, number: "77777", kind: "LMFT", expires_on: Date.new(2028, 1, 1))
+
+      expect(first.reload.professional_license).to eq(other)
+      expect(other.reload.expires_on).to eq(Date.new(2028, 1, 1))
+    end
+
+    it "adds a second license when a new event's registration gives a new number" do
+      earlier = described_class.enroll!(event_registration: create(:event_registration, registrant: person), number: "12345", kind: "LCSW")
+
+      ce = described_class.enroll!(event_registration: registration, number: "99999", kind: "LCSW")
+
+      expect(person.professional_licenses.pluck(:number)).to contain_exactly("12345", "99999")
+      expect(earlier.reload.professional_license.number).to eq("12345")
+      expect(ce.professional_license.number).to eq("99999")
+    end
+
+    it "gives the existing CE record its own license when a new number would change another event's" do
+      earlier = described_class.enroll!(event_registration: create(:event_registration, registrant: person), number: "12345", kind: "LCSW")
+      ce = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+
+      described_class.enroll!(event_registration: registration, number: "99999", kind: "LCSW", issuing_state: "OR")
+
+      expect(earlier.reload.professional_license).to have_attributes(number: "12345", issuing_state: nil)
+      expect(ce.reload.professional_license).to have_attributes(number: "99999", kind: "LCSW", issuing_state: "OR")
+      expect(person.professional_licenses.count).to eq(2)
+    end
+
+    it "keeps sharing the license with another event's CE when the number is unchanged" do
+      earlier = described_class.enroll!(event_registration: create(:event_registration, registrant: person), number: "12345", kind: "LCSW")
+      ce = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+
+      described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW", issuing_state: "OR")
+
+      expect(ce.reload.professional_license).to eq(earlier.reload.professional_license)
+      expect(earlier.professional_license.issuing_state).to eq("OR")
+    end
+
+    it "leaves an issued certificate's license as issued" do
+      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+      first.update!(certificate_sent_at: Time.current)
+
+      described_class.enroll!(event_registration: registration, number: "99999", kind: "LCSW")
+
+      expect(first.reload.professional_license.number).to eq("12345")
     end
 
     it "fills a license's blank state and expiry" do
@@ -100,6 +179,51 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW", issuing_state: "OR")
 
       expect(license.reload).to have_attributes(issuing_state: "OR", expires_on: Date.new(2027, 1, 1))
+    end
+
+    context "when a double-submit enrolls the same registration twice at once" do
+      # Each thread needs its own committed transaction, so this group can't run inside the example's.
+      self.use_transactional_tests = false
+
+      around do |example|
+        connection = ActiveRecord::Base.connection
+        tables = connection.tables.select { |table| connection.column_exists?(table, :id) }
+        baseline = tables.index_with { |table| connection.select_value("SELECT MAX(id) FROM #{connection.quote_table_name(table)}").to_i }
+        example.run
+      ensure
+        connection.disable_referential_integrity do
+          baseline.each { |table, max_id| connection.execute("DELETE FROM #{connection.quote_table_name(table)} WHERE id > #{max_id}") }
+        end
+      end
+
+      it "creates one CE registration and one license" do
+        arrived = Queue.new
+        release = Queue.new
+        allow(ProfessionalLicense).to receive(:find_or_create_for).and_wrap_original do |original, **args|
+          arrived << true
+          release.pop(timeout: 1)
+          original.call(**args)
+        end
+
+        registration_id = registration.id
+        submissions = 2.times.map do
+          Thread.new do
+            ActiveRecord::Base.connection_pool.with_connection do
+              ActiveRecord::Base.transaction do
+                fresh = EventRegistration.find(registration_id)
+                fresh.event.title
+                described_class.enroll!(event_registration: fresh, number: "12345", kind: "LCSW")
+              end
+            end
+          end
+        end
+        2.times { arrived.pop(timeout: 1) }
+        2.times { release << true }
+        submissions.each(&:join)
+
+        expect(registration.continuing_education_registrations.count).to eq(1)
+        expect(person.professional_licenses.count).to eq(1)
+      end
     end
   end
 
@@ -189,7 +313,7 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
 
     it "requires the CE callout's post-training form to be completed once one is set" do
       event = create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago)
-      form = create(:form, name: "CE Evaluation")
+      form = create(:form, name: "CE Evaluation", anonymous: true)
       required_field = create(:form_field, form:, required: true)
       callout = create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE hours", form:)
 

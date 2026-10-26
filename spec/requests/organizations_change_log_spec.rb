@@ -21,6 +21,26 @@ RSpec.describe "Organizations change log", type: :request do
     expect(response.body).to include("Housing")
   end
 
+  it "lists an address merged away from the org, labeled as an address" do
+    organization = create(:organization)
+    create(
+      :ahoy_event,
+      name: "destroy.address",
+      resource_type: "Address",
+      resource_id: 9_401,
+      properties: {
+        resource_type: "Address", resource_id: 9_401,
+        attributes: { addressable_type: "Organization", addressable_id: organization.id, city: "Springfield" }
+      }
+    )
+
+    get edit_organization_path(organization)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Springfield")
+    expect(response.body).to match(/>\s*Address\s*</)
+  end
+
   # The referenced records load in one batch per type, so a longer log costs no
   # more queries than a short one.
   it "does not query per reference as the change log grows" do

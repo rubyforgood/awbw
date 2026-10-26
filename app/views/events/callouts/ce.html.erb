@@ -158,7 +158,7 @@
 
             <div class="flex items-baseline gap-2">
               <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Issuing state</dt>
-              <dd class="font-medium text-gray-900"><%= license_issuing_state.presence || "—" %></dd>
+              <dd class="font-medium text-gray-900"><%= license&.decorate&.issuing_place.presence || "—" %></dd>
             </div>
 
             <div class="flex items-baseline gap-2">
@@ -193,7 +193,7 @@
               </div>
 
               <div>
-                <label class="block text-xs font-medium tracking-wide text-gray-400 uppercase" for="license_issuing_state">Issuing state <span class="font-normal text-gray-400 normal-case">(optional)</span></label>
+                <label class="block text-xs font-medium tracking-wide text-gray-400 uppercase" for="license_issuing_state">Issuing state / territory <span class="font-normal text-gray-400 normal-case">(optional)</span></label>
 
                 <%#
                   US states dropdown, matching the public registration form's state field.
@@ -204,14 +204,25 @@
                 <select
                   name="license_issuing_state"
                   id="license_issuing_state"
-                  class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm <%= license_issuing_state.present? ? "text-gray-900" : "text-gray-400" %> shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none"
+                  class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm <%= us_state?(license_issuing_state) ? "text-gray-900" : "text-gray-400" %> shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none"
                 >
-                  <option value="">Select a state</option>
+                  <option value="">Select a state or territory</option>
 
                   <% us_states.each do |name, abbr| %>
                     <option value="<%= abbr %>" <%= "selected" if license_issuing_state == abbr %>><%= name %> (<%= abbr %>)</option>
                   <% end %>
                 </select>
+
+                <%= render layout: "shared/outside_usa", locals: { open: license&.decorate&.outside_usa? } do %>
+                  <%= form.text_field :license_issuing_state_outside_usa, id: "license_issuing_state_outside_usa",
+                        value: (license_issuing_state if outside_usa_state?(license_issuing_state)),
+                        placeholder: "Province / State", aria: { label: "Province or state" },
+                        class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+                  <%= form.select :license_issuing_country, GeographyHelper::COUNTRIES,
+                        { selected: license&.issuing_country, include_blank: "Select a country" },
+                        id: "license_issuing_country", aria: { label: "Country" },
+                        class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm #{license&.issuing_country.present? ? "text-gray-900" : "text-gray-400"} shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+                <% end %>
               </div>
 
               <div>

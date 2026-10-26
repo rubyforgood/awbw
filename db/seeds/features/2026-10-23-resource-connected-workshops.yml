@@ -1,6 +1,6 @@
 name: "See a resource's workshops"
 area: content
-display_status: user_facing
+display_status: admin_facing
 released_on: 2026-10-23
 action_path: "/resources"
 summary: >-

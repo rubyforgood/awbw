@@ -1,0 +1,12 @@
+name: "Deleted records stay in a person's history"
+area: people
+display_status: admin_facing
+released_on: 2026-10-21
+pr_number: 2718
+summary: >-
+  A person's history now keeps records that were deleted, like an affiliation,
+  registration, payment, address, or user account, along with everything logged
+  about them before they were removed.
+pro_tips:
+  - "Records that hung off a deleted one come along too, like a deleted registration's CE add-on and its payments."
+  - "A person's comments page lists deleted comments in a read-only section at the bottom."

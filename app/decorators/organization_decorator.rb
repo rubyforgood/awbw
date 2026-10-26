@@ -46,6 +46,17 @@ class OrganizationDecorator < ApplicationDecorator
                   class: "inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full border text-xs font-semibold #{self.class.program_status_classes(status)}")
   end
 
+  def self.organization_type_options
+    Organization::ORGANIZATION_TYPES.map do |type|
+      [ type == Organization::ORGANIZATION_TYPE_OTHER ? "Other (specify below)" : type, type ]
+    end
+  end
+
+  # Each phone numbered by its address's position on the edit form.
+  def address_phones
+    object.addresses.each_with_index.filter_map { |address, index| [ index + 1, address.phone ] if address.phone.present? }
+  end
+
   # The stored organization_type, folding any value no longer offered (e.g. the
   # legacy "Other (please specify below)") into "Other" so the select can't
   # silently reclassify the org — see ORGANIZATION_TYPES. Blank stays blank.
@@ -54,6 +65,13 @@ class OrganizationDecorator < ApplicationDecorator
     return object.organization_type if Organization::ORGANIZATION_TYPES.include?(object.organization_type)
 
     Organization::ORGANIZATION_TYPE_OTHER
+  end
+
+  # The type as a short caption: an Other type shows its description, and a school says so.
+  def organization_type_caption
+    type = organization_type_option
+    type = object.organization_type_other if type == Organization::ORGANIZATION_TYPE_OTHER && object.organization_type_other.present?
+    [ type, ("School" if object.school?) ].compact_blank.join(" · ").presence
   end
 
   # Star marking a high-profile organization, shown next to the org name on list

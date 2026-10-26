@@ -164,7 +164,7 @@ RSpec.describe "Dedupable concern", type: :request do
             category_to_keep_id: keep.id
           }
 
-          expect(response).to redirect_to(categories_path)
+          expect(response).to redirect_to(dedupe_index_categories_path)
           follow_redirect!
           expect(response.body).to include("merged successfully")
         end
@@ -298,7 +298,7 @@ RSpec.describe "Dedupable concern", type: :request do
           }
         }.to change(Sector, :count).by(-1)
 
-        expect(response).to redirect_to(sectors_path)
+        expect(response).to redirect_to(dedupe_index_sectors_path)
         expect(SectorableItem.where(sector_id: keep.id).count).to eq(1)
       end
     end
@@ -381,7 +381,7 @@ RSpec.describe "Dedupable concern", type: :request do
           }
         }.to change(Organization, :count).by(-1)
 
-        expect(response).to redirect_to(organizations_path)
+        expect(response).to redirect_to(dedupe_index_organizations_path)
         expect(Organization.exists?(delete_rec.id)).to be false
         expect(report.reload.organization_id).to eq(keep.id)
       end
@@ -415,6 +415,20 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(Organization.exists?(delete_rec.id)).to be true
       end
 
+      it "moves the duplicate's phones onto the keeper, folding a shared number into one" do
+        keep.contact_methods.create!(kind: "phone", value: "555-0100", primary: true, filemaker_code: "10")
+        delete_rec.contact_methods.create!(kind: "phone", value: "555-0100", primary: true, filemaker_code: "11")
+        delete_rec.contact_methods.create!(kind: "phone", value: "555-0199")
+
+        post dedupe_perform_organizations_path, params: {
+          organization_to_delete_id: delete_rec.id,
+          organization_to_keep_id: keep.id
+        }
+
+        expect(keep.contact_methods.order(:id).pluck(:value, :primary, :filemaker_code))
+          .to eq([ [ "555-0100", true, "10, 11" ], [ "555-0199", false, nil ] ])
+      end
+
       it "combines both organizations' FileMaker codes onto the keeper" do
         keep.update!(filemaker_code: "FM-100")
         delete_rec.update!(filemaker_code: "FM-273")
@@ -439,7 +453,7 @@ RSpec.describe "Dedupable concern", type: :request do
           }
         }.to change(Organization, :count).by(-1)
 
-        expect(response).to redirect_to(organizations_path)
+        expect(response).to redirect_to(dedupe_index_organizations_path)
         expect(keep.reload).to have_attributes(name: "Canonical Org", organization_status_id: nil)
       end
 
@@ -451,7 +465,7 @@ RSpec.describe "Dedupable concern", type: :request do
           organization_to_keep_id: keep.id
         }
 
-        expect(response).to redirect_to(organizations_path)
+        expect(response).to redirect_to(dedupe_index_organizations_path)
         follow_redirect!
         expect(response.body).to include("merged successfully")
         expect(invoice.reload.invoicee).to eq(keep)
@@ -611,7 +625,7 @@ RSpec.describe "Dedupable concern", type: :request do
           }
         }.to change(Person, :count).by(-1)
 
-        expect(response).to redirect_to(people_path)
+        expect(response).to redirect_to(dedupe_index_people_path)
         expect(Person.exists?(delete_rec.id)).to be false
         expect(affiliation.reload.person_id).to eq(keep.id)
       end
@@ -711,7 +725,7 @@ RSpec.describe "Dedupable concern", type: :request do
           person_to_keep_id: keep.id
         }
 
-        expect(response).to redirect_to(people_path)
+        expect(response).to redirect_to(dedupe_index_people_path)
         follow_redirect!
         expect(response.body).to include("merged successfully")
         expect(invoice.reload.invoicee).to eq(keep)
@@ -1116,7 +1130,7 @@ RSpec.describe "Dedupable concern", type: :request do
           }
         }.to change(Workshop, :count).by(-1)
 
-        expect(response).to redirect_to(workshops_path)
+        expect(response).to redirect_to(dedupe_index_workshops_path)
         expect(Workshop.exists?(delete_rec.id)).to be false
         expect(log.reload.workshop_id).to eq(keep.id)
       end
@@ -1234,7 +1248,7 @@ RSpec.describe "Dedupable concern", type: :request do
           }
         }.to change(EventRegistration, :count).by(-1)
 
-        expect(response).to redirect_to(event_registrations_path)
+        expect(response).to redirect_to(dedupe_index_event_registrations_path)
         expect(EventRegistration.exists?(delete_rec.id)).to be false
         expect(time_entry.reload.event_registration_id).to eq(keep.id)
       end
@@ -1368,7 +1382,7 @@ RSpec.describe "Dedupable concern", type: :request do
           post dedupe_perform_users_path, params: { user_to_delete_id: delete_rec.id, user_to_keep_id: keep.id }
         }.to change(User, :count).by(-1)
 
-        expect(response).to redirect_to(users_path)
+        expect(response).to redirect_to(dedupe_index_users_path)
         expect(bookmark.reload.user_id).to eq(keep.id)
         expect(grant.reload.created_by_id).to eq(keep.id)
         expect(event.reload.user_id).to eq(keep.id)

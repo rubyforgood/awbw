@@ -92,7 +92,7 @@ class SmartFormFields
                "organization's address when it has exactly one; with several addresses the address is " \
                "left blank for an admin to set. When it doesn't match, nothing is written and " \
                "an admin resolves it on the submission's Link organization page. Agreement forms " \
-               "(on-demand, new job, reinstatement, close program) go a step further: an unambiguous " \
+               "(on-demand, reinstatement) go a step further: an unambiguous " \
                "name match is processed on arrival exactly as if an admin had linked it by hand.",
       fields: [
         [ "organization_name", "Organization name", "Looked up against existing organizations by name, ignoring capitalization. A match is linked to the submission; no match — or two organizations answering to the same name — leaves it unlinked for an admin to resolve." ],
@@ -167,20 +167,8 @@ class SmartFormFields
         [ "ce_license_number", "License number", "Finds or creates the registrant's professional license. Left blank, a placeholder license is created so the CE registration still has something to hang on." ],
         [ "ce_license_kind", "License type", "Sets the license type, e.g. LCSW." ],
         [ "ce_license_issuing_state", "License issuing state", "Sets the state that issued the license." ],
+        [ "ce_license_issuing_country", "License issuing country", "Sets the country that issued the license. Asked inside the issuing state's \"Not on list?\" box." ],
         [ "ce_license_expires_on", "License expiry", "Sets the license expiry date." ]
-      ]
-    },
-    {
-      key: :close_program,
-      title: "Closing a program",
-      summary: "Answered on a Close program form. Its submission ends the person's affiliations at the " \
-               "organization named above rather than creating them: an exact organization-name match is " \
-               "processed automatically, and anything else waits for an admin to link the organization on " \
-               "the submission's processing page.",
-      fields: [
-        [ "close_effective_date", "Program closing date", "The date the program closes. The person's Facilitator affiliation at the named organization is end-dated to this date." ],
-        [ "close_reason", "Reason for closing", "Recorded as a comment on each affiliation that's ended, so the reason stays with the record." ],
-        [ "close_leaving_job", "Are you also leaving your job?", "Answering yes also end-dates the person's job affiliation at that organization; otherwise only the Facilitator affiliation is ended." ]
       ]
     },
     {
@@ -204,6 +192,13 @@ class SmartFormFields
     scholarship_eligibility scholarship_contribution impact_description
     implementation_plan additional_comments
     event_rating most_valuable improvement_suggestions
+  ].freeze
+
+  # Endings that change how a question is asked, whatever comes before them.
+  ENDINGS = [
+    [ "…_state", "Asked as a US state / territory dropdown with a \"Not on list?\" box for typing any other province or state." ],
+    [ "…_country", "Asked as a country dropdown. When the form also asks the matching …_state question " \
+                   "(mailing_state with mailing_country, say), it moves inside that question's \"Not on list?\" box." ]
   ].freeze
 
   # Per-identifier note rendered under an answer-only chip, for values surfaced in

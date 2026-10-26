@@ -12,21 +12,18 @@ class Form < ApplicationRecord
   # Form roles whose standalone public submissions are agreement intake
   # scenarios with affiliation processing (ADR-0002): a standalone
   # registration-role form is the on-demand agreement (the registration flow,
-  # timestamped at submission), new_job / reinstatement carry their own
-  # reconciliation rules, and close_program end-dates the person's affiliations
-  # at the named organization (deactivation, the mirror of the others). Drives
-  # the person-page "send link" panel and the submissions index scenario filter.
-  AGREEMENT_ROLES = %w[registration new_job reinstatement close_program].freeze
+  # timestamped at submission) and reinstatement re-confers a lapsed
+  # facilitator's affiliation. Drives the person-page "send link" panel and the
+  # submissions index scenario filter.
+  AGREEMENT_ROLES = %w[registration reinstatement].freeze
 
   ROLE_OPTIONS = [
     [ "General", "general" ],
     [ "Registration", "registration" ],
-    [ "New job", "new_job" ],
     [ "Reinstatement", "reinstatement" ],
     [ "Scholarship", "scholarship" ],
     [ "Bulk Payment", "bulk_payment" ],
     [ "Continuing Education", "continuing_education" ],
-    [ "Close program", "close_program" ],
     [ "Day 1 survey", "day_1_survey" ],
     [ "Day 2 survey", "day_2_survey" ],
     [ "Post-event survey", "post_event_survey" ],
@@ -44,6 +41,8 @@ class Form < ApplicationRecord
   IDENTITY_IDENTIFIERS = %w[first_name last_name primary_email].freeze
   # Optional on an anonymous form, however they're flagged.
   ANONYMOUS_OPTIONAL_IDENTIFIERS = (IDENTITY_IDENTIFIERS + %w[confirm_email]).freeze
+  # Every name or email question; a form on an anonymous-only callout can't ask any of them.
+  NAMING_IDENTIFIERS = (ANONYMOUS_OPTIONAL_IDENTIFIERS + %w[legal_first_name secondary_email]).freeze
 
   belongs_to :owner, polymorphic: true, optional: true
   has_many :form_fields, dependent: :destroy, inverse_of: :form
@@ -51,6 +50,8 @@ class Form < ApplicationRecord
   has_many :user_forms
   has_many :form_submissions
   has_many :form_completions, dependent: :destroy
+  has_many :registration_ticket_callout_forms
+  has_many :registration_ticket_callouts, through: :registration_ticket_callout_forms
   has_many :reports, as: :owner
   # has_many through
   has_many :events, through: :event_forms
@@ -63,6 +64,7 @@ class Form < ApplicationRecord
   scope :owned, -> { standalone.invert_where }
   scope :published, -> { where(published: true) }
   scope :not_event_connected, -> { where.missing(:event_forms) }
+  scope :with_role, ->(role) { where(role: role == "general" ? [ "general", nil, "" ] : role) }
   # The publicly fillable agreement forms — the ones the person-page panel
   # offers to send a link for.
   scope :agreement_forms, -> { standalone.published.not_event_connected.where(role: AGREEMENT_ROLES).where.not(slug: nil) }
@@ -75,6 +77,7 @@ class Form < ApplicationRecord
     message: "may only contain lowercase letters, numbers, and hyphens" }, allow_blank: true
   validate :published_form_has_slug
   validate :anonymous_allowed_for_role
+  validate :stays_anonymous_on_anonymous_callout
   validate :event_form_not_published
 
   # The oldest form keeps the default, so a fresh copy never changes what new events deliver.
@@ -151,6 +154,15 @@ class Form < ApplicationRecord
     field.required? || (requires_identity? && field.field_identifier.in?(IDENTITY_IDENTIFIERS))
   end
 
+  # Delivered on a callout whose responses must stay anonymous (the CE hours evaluation).
+  def on_anonymous_callout?
+    persisted? && registration_ticket_callouts.anonymous_responses.exists?
+  end
+
+  def naming_fields
+    form_fields.reject(&:marked_for_destruction?).select { |field| field.field_identifier.in?(NAMING_IDENTIFIERS) }
+  end
+
   private
 
   # Blank stays nil (never ""), so the unique index tolerates the many forms with
@@ -166,6 +178,13 @@ class Form < ApplicationRecord
     return unless anonymous? && role.in?(IDENTIFIED_ROLES)
 
     errors.add(:anonymous, "can't be turned on for a #{Form.survey_header(role).downcase} form, which is processed against a person")
+  end
+
+  def stays_anonymous_on_anonymous_callout
+    return unless on_anonymous_callout?
+
+    errors.add(:anonymous, "must stay on for a CE hours evaluation") unless anonymous?
+    errors.add(:base, "A CE hours evaluation can't ask for a name or email") if naming_fields.any?
   end
 
   def published_form_has_slug

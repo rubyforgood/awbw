@@ -143,17 +143,17 @@ RSpec.describe FeatureCatalog do
     end
   end
 
-  describe "#missing_count" do
+  describe "#recent_missing?" do
     let(:seed_dir) { Pathname(Dir.mktmpdir("features_seed")) }
 
     before do
-      %w[One Two].each do |label|
-        seed_dir.join("2026-08-01-seed-#{label.downcase}.yml").write(<<~YAML)
+      %w[One Two Three].each_with_index do |label, index|
+        seed_dir.join("2026-08-0#{index + 1}-seed-#{label.downcase}.yml").write(<<~YAML)
           name: "Seed feature #{label}"
           area: events
           display_status: user_facing
           summary: "Seeded."
-          released_on: 2026-08-01
+          released_on: 2026-08-0#{index + 1}
         YAML
       end
     end
@@ -162,16 +162,25 @@ RSpec.describe FeatureCatalog do
 
     subject(:catalog) { described_class.new(dir: seed_dir) }
 
-    it "counts seeds with no feature of that name yet, ignoring case" do
+    it "is true while a recent seed has no feature of that name yet, ignoring case" do
       create(:feature, name: "seed feature one")
+      create(:feature, name: "seed feature two")
 
-      expect(catalog.missing_count).to eq(1)
+      expect(catalog.recent_missing?).to be(true)
     end
 
-    it "is zero once everything is synced" do
+    it "is false once everything is synced" do
       catalog.import!
 
-      expect(catalog.missing_count).to eq(0)
+      expect(catalog.recent_missing?).to be(false)
+    end
+
+    it "looks only at the newest seeds" do
+      create(:feature, name: "Seed feature Two")
+      create(:feature, name: "Seed feature Three")
+
+      expect(catalog.recent_missing?(limit: 2)).to be(false)
+      expect(catalog.recent_missing?(limit: 3)).to be(true)
     end
   end
 

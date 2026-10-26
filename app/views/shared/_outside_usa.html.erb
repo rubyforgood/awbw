@@ -1,0 +1,6 @@
+<%# locals: (open:, data: {}) %>
+<%# Reveals the inputs a state outside the USA needs. Pass open: when the saved value
+    is one the US-state dropdown can't show. %>
+<%= render layout: "shared/hint_details", locals: { summary: "Not on list?", open: open, data: data } do %>
+  <%= yield %>
+<% end %>

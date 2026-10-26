@@ -39,6 +39,9 @@ class RegistrationTicketCallout < ApplicationRecord
   # transferred-out registrant no longer needs, so the ticket hides those. (#1944)
   FINANCIAL_RECORD_BUILTIN_KEYS = %w[ payment scholarship ce_hours certificate ].freeze
 
+  # Built-ins whose delivered forms (the CE hours evaluation) must never name the respondent.
+  ANONYMOUS_BUILTIN_KEYS = %w[ ce_hours ].freeze
+
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
   # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
@@ -97,6 +100,7 @@ class RegistrationTicketCallout < ApplicationRecord
   scope :visible, -> { where(hidden: false) }
   scope :builtin, -> { where.not(builtin_key: nil) }
   scope :custom, -> { where(builtin_key: nil) }
+  scope :anonymous_responses, -> { where(builtin_key: ANONYMOUS_BUILTIN_KEYS) }
 
   # Reset flagged rows to their template after the save that set the flag. The
   # flag is cleared first so the reset's own update doesn't recurse.
@@ -148,6 +152,10 @@ class RegistrationTicketCallout < ApplicationRecord
   # (no builtin_key) are participation content, so they read as non-record. (#1944)
   def financial_record?
     builtin_key.in?(FINANCIAL_RECORD_BUILTIN_KEYS)
+  end
+
+  def anonymous_responses?
+    builtin_key.in?(ANONYMOUS_BUILTIN_KEYS)
   end
 
   # Whether the row carries the inline CE config fields (hours offered / cost).

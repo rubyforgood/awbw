@@ -72,12 +72,41 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       end
     end
 
+    it "won't add a second CE registration for a license the registration already has" do
+      ce_registration
+
+      expect {
+        post continuing_education_registrations_path,
+             params: { allocatable_sgid: registration.to_sgid.to_s,
+                       continuing_education_registration: { hours: "6", cost_dollars: "120",
+                         license_kind: ce_registration.professional_license.kind,
+                         license_number: ce_registration.professional_license.number } }
+      }.not_to change(ContinuingEducationRegistration, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
     it "renders the index shell with the CE timesheets menu" do
       ce_registration
       get continuing_education_registrations_path
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("CE registrations")
       expect(response.body).to include("CE timesheets")
+    end
+
+    # The shell's Event dropdown legitimately queries the table for its options,
+    # so match the totals and the row fetch rather than every CE query.
+    it "runs no totals or row fetch on the index shell" do
+      ce_registration
+      queries = []
+      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+        queries << payload[:sql] if payload[:sql]&.match?(/SUM\(|SELECT `continuing_education_registrations`\.\*/)
+      end
+      get continuing_education_registrations_path
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+
+      expect(response).to have_http_status(:ok)
+      expect(queries).to be_empty
     end
 
     it "renders the results turbo frame with only the matching event's registrations" do

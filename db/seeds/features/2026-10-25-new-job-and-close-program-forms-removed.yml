@@ -1,0 +1,13 @@
+name: "New job and close program forms removed"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+action_path: "/forms"
+pr_number: 2848
+summary: >-
+  The "New job" and "Close program" form roles are gone. The agreement forms
+  are now the on-demand registration and the reinstatement agreement; job
+  changes and program closures come in as profile change requests.
+pro_tips:
+  - Linking an organization from a submission never ends anyone's
+    affiliations. To end one, edit the person's affiliations.

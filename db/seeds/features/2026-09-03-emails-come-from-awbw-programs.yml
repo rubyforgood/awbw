@@ -1,0 +1,8 @@
+name: "Emails come from \"AWBW Programs\""
+area: communications
+display_status: admin_facing
+released_on: 2026-09-03
+pr_number: 2483
+summary: >-
+  Portal emails now show "AWBW Programs" as the sender name. The sending address is
+  unchanged.

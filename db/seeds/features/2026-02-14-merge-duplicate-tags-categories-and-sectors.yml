@@ -1,0 +1,9 @@
+name: "Merge duplicate tags, categories, and sectors"
+area: content
+display_status: admin_facing
+released_on: 2026-02-14
+action_path: "/categories/dedupe_index"
+pr_number: 989
+summary: >-
+  Tools to find and merge duplicate categories and sectors, keeping the taxonomy
+  clean.

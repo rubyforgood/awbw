@@ -7,12 +7,13 @@ module Admin
     # admins' own actions matter, so it defaults to including them.
     DEFAULT_AUDIENCES = %w[visitors users].freeze
     EVENTS_DEFAULT_AUDIENCES = %w[visitors users staff].freeze
-    SCOPING_PARAMS = %i[person_id user_id resource_type resource_id].freeze
+    SCOPING_PARAMS = %i[person_id organization_id user_id resource_type resource_id].freeze
 
     def index
       authorize! :ahoy_activity, to: :index?
 
       @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
+      @organization = Organization.find_by(id: params[:organization_id]) if params[:organization_id].present?
 
       # The full page renders only the header, filters, and an empty results frame;
       # the frame's src request (turbo_frame_request?) loads the filtered rows.
@@ -105,6 +106,8 @@ module Admin
       if params[:resource_id].present?
         scope = scope.where(resource_id: params[:resource_id])
       end
+
+      scope = scope.where(id: Analytics::OrganizationActivityEvents.new(@organization).relation.select(:id)) if @organization
 
       # Filter to a person's full history: the person, their user, and every
       # associated record (see Analytics::PersonActivityEvents).

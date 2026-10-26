@@ -20,11 +20,11 @@ class PersonPolicy < ApplicationPolicy
   # behind the same admin gate the :index params_filter enforces.
   ADMIN_ONLY_FILTERS = %i[
     role facilitator_status
-    staff_tag_ids topic_subscription_type_id
+    staff_tag_ids topic_subscription_type_id contact_info work_location
   ].freeze
 
   SHARED_ONLY_FILTERS = {
-    contact_info: :shared_contact_info,
+    name_email: :shared_contact_info,
     sector_ids: :shared_sector_ids,
     age_range_ids: :shared_age_range_ids,
     organization_name: :shared_organization_name,
@@ -46,6 +46,10 @@ class PersonPolicy < ApplicationPolicy
 
   def own_record?
     admin? || owner?
+  end
+
+  def own_profile?
+    owner?
   end
 
   def workshop_logs?
@@ -155,6 +159,7 @@ class PersonPolicy < ApplicationPolicy
         :street_address,
         :city,
         :state,
+        :state_outside_usa,
         :zip_code,
         :country,
         :county,
@@ -213,7 +218,7 @@ class PersonPolicy < ApplicationPolicy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES,
-      professional_licenses_attributes: [ :id, :number, :kind, :issuing_state, :expires_on, :_destroy ]
+      professional_licenses_attributes: [ :id, :number, :kind, :issuing_state, :issuing_state_outside_usa, :issuing_country, :expires_on, :_destroy ]
     )
     next permitted if admin?
 
@@ -236,8 +241,7 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def owner?
-    return false unless authenticated?
-    record.user == user
+    authenticated? && user.person_id.present? && user.person_id == record.id
   end
 
   def has_associated_data?

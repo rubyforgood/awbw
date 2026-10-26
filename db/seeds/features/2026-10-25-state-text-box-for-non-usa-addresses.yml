@@ -1,0 +1,13 @@
+name: "Type the state or province on non-USA addresses"
+area: people
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2843
+summary: >-
+  On person and organization address forms, a non-USA address shows State as a
+  text box so a province like AB can be entered. A new address starts with the
+  country, state, and locality of the saved one.
+pro_tips:
+  - "With nothing saved, a new address starts in the country of the return address in Settings."
+  - "A blank locality starts on whatever the address itself settles — Outside USA, Outside CA, LA City, LA County, or Orange County — and stays blank when it can't be worked out."
+  - "On a US address, admins can add ?admin=true to the end of the edit page's web address to type any state."

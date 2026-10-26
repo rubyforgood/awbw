@@ -31,7 +31,7 @@ RSpec.describe AttendeesActiveFilters do
   it "labels the literal-value drill-ins" do
     expect(chips_for(country: "Canada").first[:label]).to eq("Country: Canada")
     expect(chips_for(school_district: "PPS").first[:label]).to eq("School district: PPS")
-    expect(chips_for(org_city: "Austin, TX").first[:label]).to eq("Org city: Austin, TX")
+    expect(chips_for(org_city: "Austin, TX").first[:label]).to eq("City: Austin, TX")
   end
 
   # Scholarship and CE status each have their own visible select on the index, so

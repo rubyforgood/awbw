@@ -1,0 +1,8 @@
+name: "Events can't end before they start"
+area: events
+display_status: admin_facing
+released_on: 2026-08-24
+pr_number: 2370
+summary: >-
+  Saving an event with an end date before its start date now shows an error. Events
+  that start and end on the same day still save.

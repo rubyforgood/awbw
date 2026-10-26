@@ -90,6 +90,12 @@ RSpec.describe "Bookmarks", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "shows their own bookmarks heading even when another user_id is passed" do
+      get personal_bookmarks_path, params: { user_id: other_user.id }
+      expect(response.body).to include("My")
+      expect(response.body).not_to include(ERB::Util.html_escape("#{other_user.full_name}'s"))
+    end
+
     it "includes WorkshopVariationIdea in bookmark type dropdown" do
       get personal_bookmarks_path
       expect(response.body).to include("value=\"WorkshopVariationIdea\"")
@@ -245,6 +251,11 @@ RSpec.describe "Bookmarks", type: :request do
 
   context "as an admin" do
     before { sign_in admin }
+
+    it "shows another user's name on their personal bookmarks" do
+      get personal_bookmarks_path, params: { user_id: other_user.id }
+      expect(response.body).to include(ERB::Util.html_escape("#{other_user.full_name}'s"))
+    end
 
     it "can access global index" do
       get bookmarks_path

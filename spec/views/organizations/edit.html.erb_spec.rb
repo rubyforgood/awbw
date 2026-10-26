@@ -35,6 +35,13 @@ RSpec.describe "organizations/edit", type: :view do
     end
   end
 
+  it "renders the address country as a dropdown, preselecting the stored country" do
+    create(:address, addressable: organization, country: "Canada")
+    render
+
+    assert_select "select[name*=?] option[selected]", "[country]", text: "Canada"
+  end
+
   describe "status select visibility" do
     before(:each) { assign(:organization_statuses, OrganizationStatus.all) }
 

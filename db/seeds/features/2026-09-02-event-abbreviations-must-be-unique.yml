@@ -1,0 +1,8 @@
+name: "Event abbreviations must be unique"
+area: events
+display_status: admin_facing
+released_on: 2026-09-02
+pr_number: 2495
+summary: >-
+  Two events can't share the same abbreviation, so a short code like TOS205 always
+  points to one event. Leaving it blank is still fine.

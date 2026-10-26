@@ -1,0 +1,9 @@
+name: "Link story ideas to workshops"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-03
+pr_number: 2586
+action_path: "/story_ideas"
+summary: >-
+  A story idea can reference any number of workshops, picked from the curriculum or
+  typed in, and promoting it to a story carries the links over.

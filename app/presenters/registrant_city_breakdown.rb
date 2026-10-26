@@ -1,24 +1,21 @@
-# Groups an event's registrants by the city of the organization linked on their
-# registration, counting distinct registrants and scholarship recipients per
-# city. Powers the shared "Registrants by city" breakdown on the event
+# Groups an event's registrants by their location's city (PersonLocations),
+# counting distinct registrants and scholarship recipients per city. Powers the shared "Registrants by city" breakdown on the event
 # background dashboard and the scholarship-recipients page. Pure/in-memory so
 # EventDashboard feeds it already-plucked data (see [[event_dashboard]]).
 #
-# A registrant linked to orgs in two cities counts under each; the "Unknown"
-# bucket (a linked org with no city on file) always sorts last.
+# A registrant working in two cities counts under each; the "Unknown"
+# bucket (an address with no city) always sorts last.
 class RegistrantCityBreakdown
   UNKNOWN_LABEL = "Unknown".freeze
 
   Row = Struct.new(:city, :registrant_count, :scholarship_count, :registrant_ids, :scholarship_recipient_ids, keyword_init: true)
 
-  # org_registrant_pairs:       [ [ organization_id, person_id ], ... ], one per
-  #                             organization linked on a registration.
-  # city_by_org:                { organization_id => "City, State" }; a missing
-  #                             entry means that org has no city ⇒ Unknown.
+  # city_registrant_pairs:      [ [ "City, State", person_id ], ... ], one per
+  #                             organization linked on a registration; a nil
+  #                             city ⇒ Unknown.
   # scholarship_recipient_ids:  person ids awarded a scholarship this event.
-  def initialize(org_registrant_pairs:, city_by_org:, scholarship_recipient_ids:)
-    @org_registrant_pairs = org_registrant_pairs
-    @city_by_org = city_by_org
+  def initialize(city_registrant_pairs:, scholarship_recipient_ids:)
+    @city_registrant_pairs = city_registrant_pairs
     @scholarship_recipient_ids = scholarship_recipient_ids.to_set
   end
 
@@ -49,9 +46,8 @@ class RegistrantCityBreakdown
   private
 
   def registrant_ids_by_city
-    @registrant_ids_by_city ||= @org_registrant_pairs.each_with_object(Hash.new { |h, k| h[k] = Set.new }) do |(org_id, person_id), map|
-      city = @city_by_org[org_id].presence || UNKNOWN_LABEL
-      map[city] << person_id
+    @registrant_ids_by_city ||= @city_registrant_pairs.each_with_object(Hash.new { |h, k| h[k] = Set.new }) do |(city, person_id), map|
+      map[city.presence || UNKNOWN_LABEL] << person_id
     end
   end
 end

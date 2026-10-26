@@ -1,3 +1,1 @@
-<% if count.to_i.positive? %>
-  <%= tag.span number_with_delimiter(count), class: "bg-primary ms-1 rounded-full px-2 py-0.5 text-xs text-white ring-1 ring-white", title: local_assigns[:title] %>
-<% end %>
+<%= render "badge", text: (number_with_delimiter(count) if count.to_i.positive?), title: local_assigns[:title] %>

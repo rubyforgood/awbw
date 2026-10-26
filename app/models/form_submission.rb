@@ -131,22 +131,30 @@ class FormSubmission < ApplicationRecord
   # OrganizationServices::LinkSubmittedOrganization reads them. Shared by the
   # admin linking editor and the auto-processing a public submission runs.
   def org_entry
-    answers = answers_by_identifier
+    self.class.org_entry_from(answers_by_identifier).merge(submission: self)
+  end
+
+  ORG_ENTRY_FIELDS = {
+    org_name: FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER,
+    position: FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER,
+    website: "organization_website",
+    organization_type: "organization_type"
+  }.freeze
+  ORG_ADDRESS_FIELDS = {
+    street_address: "organization_street",
+    city: "organization_city",
+    state: "organization_state",
+    zip_code: "organization_zip",
+    country: "organization_country"
+  }.freeze
+  ORG_ENTRY_FIELD_IDENTIFIERS = (ORG_ENTRY_FIELDS.values + ORG_ADDRESS_FIELDS.values).freeze
+
+  # The same org entry from a bare field_identifier => answer hash, for callers
+  # holding answers that aren't saved on a submission (the spreadsheet importer,
+  # a public form mid-submit).
+  def self.org_entry_from(answers)
     read = ->(identifier) { answers[identifier].presence }
-    {
-      submission: self,
-      org_name: read.call(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER),
-      position: read.call(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER),
-      website: read.call("organization_website"),
-      organization_type: read.call("organization_type"),
-      address: {
-        street_address: read.call("organization_street"),
-        city: read.call("organization_city"),
-        state: read.call("organization_state"),
-        zip_code: read.call("organization_zip"),
-        country: read.call("organization_country")
-      }
-    }
+    ORG_ENTRY_FIELDS.transform_values(&read).merge(address: ORG_ADDRESS_FIELDS.transform_values(&read))
   end
 
   # The registration-org row a submission is pinned to — the link public
@@ -200,21 +208,19 @@ class FormSubmission < ApplicationRecord
   # with the admin-facing label for the panel chip and index filter.
   LINKING_SCENARIOS = {
     "on_demand" => "On-demand agreement",
-    "new_job" => "New job agreement",
-    "reinstatement" => "Reinstatement agreement",
-    "close_program" => "Program closure"
+    "reinstatement" => "Reinstatement agreement"
   }.freeze
 
   # Agreement-scenario submissions — a specific scenario, or "any" for all of
   # them at once. On-demand is a standalone public submission to a
-  # registration-role form; new_job/reinstatement/close_program are form roles.
+  # registration-role form; reinstatement is a form role.
   scope :scenario, ->(value) {
     scoped = joins(:form)
     on_demand = scoped.where(role: "public", forms: { role: "registration" })
     case value
     when "on_demand" then on_demand
-    when "new_job", "reinstatement", "close_program" then scoped.where(forms: { role: value })
-    when "any" then scoped.where(forms: { role: %w[new_job reinstatement close_program] }).or(on_demand)
+    when "reinstatement" then scoped.where(forms: { role: value })
+    when "any" then scoped.where(forms: { role: "reinstatement" }).or(on_demand)
     else all
     end
   }
@@ -346,17 +352,36 @@ class FormSubmission < ApplicationRecord
   # on-demand agreement. Nil for everything else — no agreement processing.
   def linking_scenario
     case form.role
-    when "new_job", "reinstatement", "close_program" then form.role
+    when "reinstatement" then form.role
     when "registration" then "on_demand" if role == "public"
     end
   end
 
-  # The on-demand training registration this agreement minted (PublicFormSubmission
-  # stamps the event), so linking the org here also links it on the roster.
-  def on_demand_registration
-    return unless linking_scenario == "on_demand" && event_id && person_id
+  # What linking an org from this submission's editor does: the agreement
+  # scenario, else — for an event registration — the same scenario the event's
+  # registrants editor applies.
+  def link_scenario
+    linking_scenario || (event.linking_scenario if event_registration_submission?)
+  end
+
+  # The registration linking here also links the org onto: the on-demand
+  # training registration an agreement minted (PublicFormSubmission stamps the
+  # event), or the registration an event registration submission was made for.
+  def event_registration_for_link
+    return unless linking_scenario == "on_demand" || event_registration_submission?
+    return unless event_id && person_id
 
     EventRegistration.find_by(event_id: event_id, registrant_id: person_id)
+  end
+
+  # The date a conferred Facilitator affiliation starts: the training's start
+  # for an event registration, else the submission date.
+  def link_training_date
+    (event.starts_on if event_registration_submission?) || created_at.to_date
+  end
+
+  def event_registration_submission?
+    role == "registration" && event.present?
   end
 
   def agreement_scenario?
@@ -381,21 +406,6 @@ class FormSubmission < ApplicationRecord
 
   def linked_organizations
     Organization.where(id: linked_organization_ids)
-  end
-
-  # Affiliations the agreement scenario end-dated when an admin linked the
-  # submitted organization — flagged on the processing panel so a wrongly-ended
-  # one (e.g. a multi-org facilitator changing only one job) can be corrected.
-
-  def scenario_ended_affiliation_ids
-    (metadata || {}).fetch("scenario_ended_affiliation_ids", [])
-  end
-
-  def record_scenario_ended!(affiliation_ids)
-    return if affiliation_ids.empty?
-
-    ids = scenario_ended_affiliation_ids | affiliation_ids.map(&:to_i)
-    update!(metadata: (metadata || {}).merge("scenario_ended_affiliation_ids" => ids))
   end
 
   # --- Linked registrations (bulk payment designations) ---

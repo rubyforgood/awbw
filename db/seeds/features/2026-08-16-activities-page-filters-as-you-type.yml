@@ -1,0 +1,10 @@
+name: "Activities page filters as you type"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-16
+pr_number: 2229
+action_path: "/admin/activities/events"
+summary: >-
+  The admin Activities page applies filters as soon as you change them, with no
+  Filter button, and a Clear filters link resets them. Event-name search ignores
+  punctuation and word order.

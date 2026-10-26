@@ -190,12 +190,8 @@ class OrganizationsController < ApplicationController
   end
 
   def set_index_variables
-    @sector_options = Sector.published.order(:name).pluck(:name)
-    @age_group_options = Category.joins(:category_type)
-                                 .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
-                                 .published
-                                 .order(:position, :name)
-                                 .pluck(:name)
+    @sector_options = Sector.published.excluding_other.order(:name).pluck(:name, :id)
+    @age_group_options = Category.age_ranges.published.ordered_by_position_and_name.map { |category| [ category.decorate.age_group_label, category.id ] }
   end
 
   def populations_served
@@ -207,7 +203,7 @@ class OrganizationsController < ApplicationController
 
   def set_organization
     @organization = Organization.includes(
-      :organization_status, :windows_type, :addresses,
+      :organization_status, :windows_type, :addresses, :contact_methods,
       :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
       affiliations: { person: [ :user, :affiliations, *Organization::PEOPLE_TAGGINGS ] }
@@ -218,7 +214,7 @@ class OrganizationsController < ApplicationController
   def organization_params
     params.require(:organization).permit(
       :name, :description, :start_date, :end_date, :mission_vision_values,
-      :organization_type, :organization_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
+      :organization_type, :organization_type_other, :school, :filemaker_code, :logo, :notes, :email, :website_url,
       :organization_status_id, :location_id, :windows_type_id, :high_profile, :parent_id,
       :tax_id,
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,
@@ -238,6 +234,7 @@ class OrganizationsController < ApplicationController
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES,
+      contact_methods_attributes: [ :id, :kind, :contact_type, :value, :primary, :inactive, :_destroy ],
       addresses_attributes: [
         :id,
         :address_type,
@@ -248,6 +245,7 @@ class OrganizationsController < ApplicationController
         :street_address,
         :city,
         :state,
+        :state_outside_usa,
         :zip_code,
         :county,
         :country,
@@ -274,9 +272,12 @@ class OrganizationsController < ApplicationController
       merge_keeper: ->(keep, delete) {
         keep.filemaker_code = Organization.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
         @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
+        @keeper_primary_contact_signatures = ContactMethodDeduper.primary_signatures(keep, delete)
       },
       after_merge: ->(keep) {
         AddressDeduper.new(keep, primary_signature: @keeper_primary_address_signature).call
+        ContactMethodDeduper.new(keep, primary_signatures: @keeper_primary_contact_signatures).call
+        AffiliationDeduper.new(keep).call
       },
       belongs_to_options: -> {
         {

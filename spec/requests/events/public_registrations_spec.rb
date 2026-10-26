@@ -314,6 +314,25 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("add or update them later")
     end
 
+    it "renders the country question as a country dropdown" do
+      create(:form_field, form: form, field_identifier: "mailing_country", name: "Country", required: false)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Select a country")
+      expect(response.body).to include('<option value="United States"')
+    end
+
+    it "keeps a submitted country selected when the form re-renders" do
+      country = create(:form_field, form: form, field_identifier: "mailing_country", name: "Country", required: false)
+
+      post event_public_registration_path(event),
+           params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: { essay_field.id.to_s => "too few", country.id.to_s => "Canada" } } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to match(/<option value="Canada"\s+selected>/)
+    end
+
     it "renders a structured details panel from known event data when enabled" do
       pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
       start_date = 2.weeks.from_now.in_time_zone(pacific).change(hour: 9)
@@ -774,18 +793,77 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
 
     # A returning registrant appends a new submission each time, so the default
-    # view (no form_submission_id) must land on their freshest answers.
-    it "defaults to the most recently created submission when the registrant re-registered" do
-      older = FormSubmission.find_by(person: person, form: form)
-      older.form_answers.create!(form_field: essay_field, submitted_answer: "my older reasons")
-      newer = create(:form_submission, person: person, form: form, event: event)
-      newer.form_answers.create!(form_field: essay_field, submitted_answer: "my newer reasons")
+    # view (no form_submission_id) opens their freshest answers.
+    context "when the registrant re-registered" do
+      let!(:older) do
+        FormSubmission.find_by(person: person, form: form).tap do |submission|
+          submission.update!(created_at: Time.zone.local(2026, 9, 1, 10))
+          submission.form_answers.create!(form_field: essay_field, submitted_answer: "my older reasons")
+        end
+      end
+      let!(:newer) do
+        create(:form_submission, person: person, form: form, event: event, created_at: Time.zone.local(2026, 10, 2, 10)).tap do |submission|
+          submission.form_answers.create!(form_field: essay_field, submitted_answer: "my newer reasons")
+        end
+      end
 
+      it "opens the newest submission and collapses the earlier ones" do
+        get event_public_registration_path(event, person_id: person.id)
+
+        page = Nokogiri::HTML(response.body)
+        collapsed = page.at_css("details#form-submission-#{older.id}")
+        expect(response.body).to include("Earlier submissions")
+        expect(collapsed).to be_present
+        expect(collapsed["open"]).to be_nil
+        expect(collapsed.text).to include("my older reasons").and include("September 01, 2026")
+        expect(page.css("details").text).not_to include("my newer reasons")
+        expect(response.body).to include("my newer reasons")
+      end
+
+      it "opens a named submission and collapses the rest" do
+        get event_public_registration_path(event, person_id: person.id, form_submission_id: older.id)
+
+        page = Nokogiri::HTML(response.body)
+        expect(response.body).to include("Other submissions")
+        expect(page.at_css("details#form-submission-#{newer.id}").text).to include("my newer reasons")
+        expect(page.css("details").text).not_to include("my older reasons")
+      end
+    end
+
+    context "when the registrant also paid for others with the bulk payment form" do
+      let(:bulk_form) { create(:form, name: "Group payment form") }
+      let!(:bulk_payment) do
+        EventForm.create!(event: event, form: bulk_form, role: "bulk_payment")
+        attendees_field = create(:form_field, form: bulk_form, field_identifier: "bulk_payment_attendees", name: "Attendees")
+        create(:form_submission, person: person, form: bulk_form, event: event, role: "bulk_payment", created_at: 1.day.from_now).tap do |submission|
+          submission.form_answers.create!(form_field: attendees_field,
+            submitted_answer: [ { first_name: "Avery", last_name: "Attendee", email: "avery@example.com" } ].to_json)
+        end
+      end
+
+      it "lists the bulk payment among their other submissions, with its attendees and ticket" do
+        get event_public_registration_path(event, person_id: person.id)
+
+        collapsed = Nokogiri::HTML(response.body).at_css("details#form-submission-#{bulk_payment.id}")
+        expect(collapsed).to be_present
+        expect(collapsed.at_css("summary").text).to include("Group payment form — Submitted on")
+        expect(collapsed.text).to include("Avery").and include("avery@example.com")
+        expect(collapsed.to_html).to include(bulk_payment_ticket_path(bulk_payment.slug))
+      end
+
+      it "leaves out another person's bulk payment" do
+        bulk_payment.update!(person: create(:person))
+
+        get event_public_registration_path(event, person_id: person.id)
+
+        expect(response.body).not_to include("form-submission-#{bulk_payment.id}")
+      end
+    end
+
+    it "shows no other submissions when there is only one" do
       get event_public_registration_path(event, person_id: person.id)
 
-      expect(response).to have_http_status(:success)
-      expect(response.body).to include("my newer reasons")
-      expect(response.body).not_to include("my older reasons")
+      expect(response.body).not_to include("Earlier submissions")
     end
 
     it "renders header and field-label HTML unescaped on the response page" do
@@ -1267,6 +1345,161 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       get new_event_public_registration_path(event)
 
       expect(response.body).to include("Professional credentials")
+    end
+  end
+  describe "POST create submitted several times with the scholarship and CE forms on" do
+    let(:scholarship_form) { create(:form, role: "scholarship") }
+    let!(:scholarship_need) do
+      create(:form_field, form: scholarship_form, answer_type: :free_form_input_paragraph,
+             name: "Describe your need", required: false)
+    end
+    let(:ce_form) do
+      FormBuilderService.new(name: "CE request", sections: %i[continuing_education], role: "continuing_education").call
+    end
+
+    %w[first_name last_name primary_email].each do |identifier|
+      let!("#{identifier}_field".to_sym) do
+        create(:form_field, form: form, field_identifier: identifier, name: identifier.humanize, required: false)
+      end
+    end
+
+    before do
+      EventForm.create!(event: event, form: scholarship_form, role: "scholarship")
+      EventForm.create!(event: event, form: ce_form, role: "continuing_education")
+    end
+
+    def ce_fid(key)
+      ce_form.form_fields.find_by!(field_identifier: key).id.to_s
+    end
+
+    def apply(ce_answer: "Yes", license_number: "42111", license_kind: "LCSW", email: "cy@example.com", need: "Our training budget was cut")
+      post event_public_registration_path(event),
+           params: {
+             scholarship_requested: "true",
+             public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
+               essay_field.id.to_s => "this answer has plenty of words",
+               first_name_field.id.to_s => "Cy",
+               last_name_field.id.to_s => "Reed",
+               primary_email_field.id.to_s => email,
+               scholarship_need.id.to_s => need,
+               ce_fid("ce_credit_interest") => ce_answer,
+               ce_fid("ce_license_number") => license_number,
+               ce_fid("ce_license_kind") => license_kind
+             } }
+           }
+    end
+
+    def answer_in(submission, field_id)
+      submission.form_answers.find_by(form_field_id: field_id)&.submitted_answer
+    end
+
+    it "keeps one event registration, CE registration, and license, and every submission of each form" do
+      3.times { apply }
+
+      expect(Person.count).to eq(1)
+      expect(EventRegistration.count).to eq(1)
+      expect(ContinuingEducationRegistration.count).to eq(1)
+      expect(ProfessionalLicense.count).to eq(1)
+      expect(FormSubmission.where(event: event).group(:role).count)
+        .to eq("registration" => 3, "scholarship" => 3, "continuing_education" => 3)
+    end
+
+    it "updates the one CE registration's license when a reapplication gives a different number or email casing" do
+      apply
+      apply(license_number: "99999", email: "CY@Example.com")
+
+      expect(response).to redirect_to(registration_ticket_path(EventRegistration.sole.slug))
+      expect(EventRegistration.count).to eq(1)
+      expect(ProfessionalLicense.sole).to have_attributes(number: "99999", kind: "LCSW")
+      expect(ContinuingEducationRegistration.sole.professional_license).to eq(ProfessionalLicense.sole)
+    end
+
+    it "adds the CE registration to the existing event registration when only the reapplication asks for CE" do
+      apply(ce_answer: "No")
+      expect(ContinuingEducationRegistration.count).to eq(0)
+
+      2.times { apply }
+
+      expect(EventRegistration.count).to eq(1)
+      expect(ContinuingEducationRegistration.count).to eq(1)
+      expect(ProfessionalLicense.count).to eq(1)
+    end
+
+    it "keeps each application's CE and scholarship answers in its own submission" do
+      apply
+      apply(license_number: "99999", need: "Our grant ended")
+
+      ce_submissions = FormSubmission.where(role: "continuing_education", event: event).order(:created_at, :id)
+      expect(ce_submissions.map { |submission| answer_in(submission, ce_fid("ce_license_number")) }).to eq(%w[42111 99999])
+      scholarship_submissions = FormSubmission.where(role: "scholarship", event: event).order(:created_at, :id)
+      expect(scholarship_submissions.map { |submission| answer_in(submission, scholarship_need.id) })
+        .to eq([ "Our training budget was cut", "Our grant ended" ])
+    end
+
+    it "keeps the license on file when a reapplication leaves its answers blank" do
+      apply
+      apply(license_number: "", license_kind: "")
+
+      expect(ContinuingEducationRegistration.sole.professional_license).to have_attributes(number: "42111", kind: "LCSW")
+    end
+
+    it "fills in the placeholder license when a reapplication supplies the number left blank before" do
+      apply(license_number: "", license_kind: "")
+      apply
+
+      expect(ContinuingEducationRegistration.count).to eq(1)
+      expect(ProfessionalLicense.sole).to have_attributes(number: "42111", kind: "LCSW")
+      expect(ContinuingEducationRegistration.sole.professional_license).to eq(ProfessionalLicense.sole)
+    end
+
+    it "shows the license answer in the application that sent it when a reapplication leaves it blank" do
+      apply
+      apply(license_number: "", license_kind: "")
+
+      get event_public_registration_path(event, reg: EventRegistration.sole.slug)
+
+      page = Nokogiri::HTML(response.body)
+      expect(page.at_css("#continuing-education").text).not_to include("42111")
+      expect(page.at_css("details").text).to include("42111")
+    end
+
+    it "leaves the license alone once the CE certificate is issued" do
+      apply
+      ContinuingEducationRegistration.sole.update!(certificate_sent_at: Time.current)
+
+      apply(license_number: "99999")
+
+      expect(ContinuingEducationRegistration.sole.professional_license.number).to eq("42111")
+    end
+
+    it "shows each application's CE and scholarship answers with the registration they came in with" do
+      apply
+      apply(license_number: "99999", need: "Our grant ended")
+
+      get event_public_registration_path(event, reg: EventRegistration.sole.slug)
+
+      page = Nokogiri::HTML(response.body)
+      expect(page.at_css("#continuing-education").text).to include("99999")
+      expect(page.at_css("#continuing-education").text).not_to include("42111")
+      expect(page.at_css("#scholarship-application").text).to include("Our grant ended")
+      expect(page.at_css("#scholarship-application").text).not_to include("Our training budget was cut")
+      earlier = page.at_css("details")
+      expect(earlier.at_css("summary").text).to include("+")
+      expect(earlier.text).to include("42111", "Our training budget was cut")
+    end
+
+    context "when the registrant is signed in" do
+      let(:user) { create(:user, :with_person) }
+
+      before { sign_in user }
+
+      it "keeps one event registration, CE registration, and license" do
+        3.times { apply }
+
+        expect(EventRegistration.count).to eq(1)
+        expect(ContinuingEducationRegistration.count).to eq(1)
+        expect(ProfessionalLicense.count).to eq(1)
+      end
     end
   end
 end

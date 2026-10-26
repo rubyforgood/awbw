@@ -141,6 +141,11 @@ RSpec.describe "Public form submissions", type: :system do
       expect(page).not_to have_selector("##{pr_dom_id(reg_field('first_name'))}")
       expect(page).not_to have_selector("##{pr_dom_id(reg_field('mailing_city'))}")
 
+      # The mailing state is on file, so its paired country question — which would
+      # otherwise sit inside that state's "Not on list?" box — is asked on its own.
+      expect(page).not_to have_selector("##{pr_dom_id(reg_field('mailing_state'))}")
+      select_pr reg_field("mailing_country"), "Canada"
+
       select_pr reg_field("primary_sector"), "Education"
       check_pr_box reg_field("additional_sectors"), sector_dv.id.to_s
       select_pr reg_field("primary_age_group"), "Teens (13-17)"
@@ -159,6 +164,7 @@ RSpec.describe "Public form submissions", type: :system do
 
       answers = answers_by_identifier(registration_form.form_submissions.find_by!(person: logged_in_person))
       expect(answers).to include(
+        "mailing_country" => "Canada",
         "primary_sector" => sector_education.id.to_s,
         "additional_sectors" => sector_dv.id.to_s,
         "primary_age_group" => age_teens.id.to_s,
@@ -395,7 +401,6 @@ RSpec.describe "Public form submissions", type: :system do
     fill_pr_text reg_field("mailing_city"), with: "Los Angeles"
     select_pr reg_field("mailing_state"), "California (CA)"
     fill_pr_text reg_field("mailing_zip"), with: "90001"
-    fill_pr_text reg_field("mailing_country"), with: "United States"
     fill_pr_text reg_field("phone"), with: "555-123-4567"
     choose_pr_radio reg_field("phone_type"), "Work"
 
@@ -407,7 +412,6 @@ RSpec.describe "Public form submissions", type: :system do
     fill_pr_text reg_field("organization_city"), with: "Pasadena"
     select_pr reg_field("organization_state"), "California (CA)"
     fill_pr_text reg_field("organization_zip"), with: "91101"
-    fill_pr_text reg_field("organization_country"), with: "United States"
 
     select_pr reg_field("primary_sector"), "Education"
     check_pr_box reg_field("additional_sectors"), sector_mental_health.id.to_s

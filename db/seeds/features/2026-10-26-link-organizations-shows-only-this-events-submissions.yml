@@ -1,0 +1,11 @@
+name: "Event pages read only this event's registration answers"
+area: people
+display_status: admin_facing
+released_on: 2026-10-26
+summary: >-
+  When two events share a registration form, each event now reads only the
+  answers given for it — on the link organizations page, the registrants
+  page's Pending/None organization chip and filter, and the roster's sector
+  and age group breakdowns.
+pro_tips:
+  - "Linking an org on one event no longer marks the person's other event's submission as linked."

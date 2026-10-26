@@ -127,7 +127,7 @@ module ProfileChangeRequests
         city: @request.proposed_city,
         state: @request.proposed_state,
         zip_code: @request.proposed_zip_code.to_s,
-        locality: AddressLocality.for(city: @request.proposed_city, state: @request.proposed_state),
+        **AddressDefaults.for(city: @request.proposed_city, state: @request.proposed_state, zip_code: @request.proposed_zip_code),
         address_type: "work",
         primary: organization.addresses.active.where(primary: true).none?
       )

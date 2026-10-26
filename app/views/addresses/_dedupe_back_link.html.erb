@@ -1,4 +1,4 @@
-<% if params[:return_to] == "address_dedupe" && current_user&.super_user? %>
+<% if params[:return_to] == "address_dedupe" && allowed_to?(:dedupe?, Address) %>
   <div class="mb-3">
     <%= link_to dedupe_index_addresses_path(anchor: params[:anchor_id].presence), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to dedupe addresses

@@ -46,4 +46,10 @@ RSpec.describe "community_news/new", type: :view do
       assert_select "select[name=?]", "community_news[organization_id]"
     end
   end
+
+  it "offers a labeled blank organization option since organization is optional" do
+    render
+
+    assert_select "select[name=?] option[value='']", "community_news[organization_id]", text: "Select an organization"
+  end
 end

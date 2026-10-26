@@ -62,6 +62,14 @@ RSpec.describe "Events attendees", type: :request do
         expect(response.body).to include(dashboard_event_path(owned_training))
       end
 
+      # The prefixed contact box reaches a person's own address, so it stays behind
+      # the same super-admin gate it sits behind on the people index.
+      it "does not offer the contact-info search" do
+        get attendees_events_url(event_id: owned_training.id)
+        expect(response.body).to include('name="name_email"')
+        expect(response.body).not_to include('name="contact_info"')
+      end
+
       it "forbids an event they do not own" do
         get attendees_events_url(event_id: recent_training.id)
         expect(response).to redirect_to(root_path)
@@ -288,9 +296,26 @@ RSpec.describe "Events attendees", type: :request do
         it "filters by name search" do
           create(:event_registration, event: recent_training, registrant: create(:person, first_name: "Katherine", last_name: "Johnson"), status: "attended")
 
-          get attendees_events_url(contact_info: "Lovelace"), headers: frame_headers
+          get attendees_events_url(name_email: "Lovelace"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Katherine Johnson")
+        end
+
+        # The same prefixed box as the people index, over the person's own contact
+        # record — so "city: boise" here means where Ada lives, not where she works.
+        it "filters by the prefixed contact search" do
+          create(:address, addressable: attendee, city: "Boise", state: "ID", county: "Ada", inactive: false)
+          other = create(:person, first_name: "Katherine", last_name: "Johnson")
+          create(:address, addressable: other, city: "Portland", state: "OR", inactive: false)
+          create(:event_registration, event: recent_training, registrant: other, status: "attended")
+
+          get attendees_events_url(contact_info: "city: boise"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Katherine Johnson")
+
+          get attendees_events_url(contact_info: "state: OR"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+          expect(response.body).to include("Katherine Johnson")
         end
 
         it "shows the Program status and Affiliation status columns" do
@@ -341,12 +366,20 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).to include("Online Search")
         end
 
-        it "filters by a breakdown drill-in (country)" do
-          create(:address, addressable: attendee, country: "Canada", inactive: false)
+        it "filters by work country and state (via their active affiliations)" do
+          org = create(:organization, name: "Toronto Org")
+          create(:address, addressable: org, state: "ON", country: "Canada", inactive: false)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
           other = create(:person, first_name: "Zed", last_name: "Zulu")
+          create(:address, addressable: other, state: "OR", country: "Mexico", inactive: false)
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
 
           get attendees_events_url(country: "Canada"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Zed Zulu")
+
+          org.addresses.first.update!(state: "WA", country: "United States")
+          get attendees_events_url(state: "WA"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Zed Zulu")
         end
@@ -373,13 +406,13 @@ RSpec.describe "Events attendees", type: :request do
         it "renders the cities breakdown and filters by an org-city drill-in" do
           org = create(:organization, name: "Wellness Org")
           create(:address, addressable: org, city: "Austin", state: "TX", inactive: false)
-          attendee_registration.event_registration_organizations.create!(organization: org)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
 
           other = create(:person, first_name: "Zed", last_name: "Zulu")
           other_registration = create(:event_registration, event: recent_training, registrant: other, status: "attended")
           other_org = create(:organization, name: "Other Org")
           create(:address, addressable: other_org, city: "Reno", state: "NV", inactive: false)
-          other_registration.event_registration_organizations.create!(organization: other_org)
+          create(:affiliation, person: other_registration.registrant, organization: other_org)
 
           # An org with no address falls into the non-clickable "Unknown" bucket —
           # this used to raise a UrlGenerationError (nil event) on the index.
@@ -403,7 +436,7 @@ RSpec.describe "Events attendees", type: :request do
           # that raised a nil-event UrlGenerationError).
           org = create(:organization, name: "Wellness Org")
           create(:address, addressable: org, city: "Austin", state: "TX", inactive: false)
-          attendee_registration.event_registration_organizations.create!(organization: org)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
           award = create(:scholarship, recipient: attendee, amount_cents: 1_000, grant: create(:grant))
           create(:allocation, source: award, allocatable: attendee_registration, amount: 1_000)
 
@@ -540,28 +573,126 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).to include("Ada Lovelace")
         end
 
-        it "filters by address data (city) without requiring a registration to carry it" do
-          create(:address, addressable: attendee, city: "Portland", state: "OR", inactive: false)
+        it "filters by work city, not the person's own address" do
+          org = create(:organization)
+          create(:address, addressable: org, city: "Portland", state: "OR", inactive: false)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
           other = create(:person, first_name: "Cara", last_name: "Coast")
-          create(:event_registration, event: recent_training, registrant: other, status: "attended")
-          create(:address, addressable: other, city: "Seattle", state: "WA", inactive: false)
+          other_registration = create(:event_registration, event: recent_training, registrant: other, status: "attended")
+          create(:address, addressable: other, city: "Portland", state: "OR", inactive: false)
+          other_org = create(:organization)
+          create(:address, addressable: other_org, city: "Seattle", state: "WA", inactive: false)
+          create(:affiliation, person: other_registration.registrant, organization: other_org)
 
           get attendees_events_url(city: "portland"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Cara Coast")
         end
 
-        # City and state have to describe one address, the way the roster's shared
-        # join does — otherwise someone with homes in two states matches a city from
-        # one and a state from the other.
-        it "matches city and state against the same address" do
-          create(:address, addressable: attendee, city: "Portland", state: "OR", inactive: false)
-          create(:address, addressable: attendee, city: "Seattle", state: "WA", inactive: false)
+        # Every location filter has to describe one address — otherwise someone
+        # working in two places matches a city from one and the state, county or
+        # country from the other.
+        it "matches city, state, county and country against the same work address" do
+          [ [ "Portland", "OR", "Multnomah", "United States" ], [ "Vancouver", "BC", "Greater Vancouver", "Canada" ] ].each do |city, state, county, country|
+            org = create(:organization)
+            create(:address, addressable: org, city:, state:, county:, country:, inactive: false)
+            create(:affiliation, person: attendee_registration.registrant, organization: org)
+          end
 
-          get attendees_events_url(city: "Seattle", state: "WA"), headers: frame_headers
+          get attendees_events_url(city: "Vancouver", state: "BC"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
 
-          get attendees_events_url(city: "Seattle", state: "OR"), headers: frame_headers
+          get attendees_events_url(city: "Vancouver", state: "OR"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+
+          get attendees_events_url(city: "Vancouver", county: "OR::Multnomah"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+
+          get attendees_events_url(city: "Vancouver", country: "United States"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
+        # `type:` rides on the same joined address as the other prefixes, which is
+        # how you search a personal city alone rather than any address's city.
+        it "narrows the contact search to one kind of address with type:" do
+          create(:address, addressable: attendee, city: "Homecity", address_type: "personal", inactive: false)
+          create(:address, addressable: attendee, city: "Deskcity", address_type: "work", inactive: false)
+
+          get attendees_events_url(contact_info: "type: personal city: Homecity"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+
+          get attendees_events_url(contact_info: "type: work city: Homecity"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
+        # Retired addresses place someone on the map (Address::STANDING) but should
+        # not be how you find them — the sticky note with their old address would
+        # otherwise be the one thing that works.
+        it "does not match a retired address" do
+          create(:address, addressable: attendee, city: "Oldcity", inactive: true)
+
+          get attendees_events_url(contact_info: "city: Oldcity"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
+        # Words AND inside an alternative, alternatives OR across. Each side is
+        # parenthesised on the way into SearchCop to get that — unparenthesised the
+        # `or` binds to the last word alone and the query matches nobody. (Oregon is
+        # spelled `state: OR` here for the same reason: a bare `or` is the operator.)
+        it "ANDs the words inside each -- alternative and ORs the alternatives" do
+          create(:address, addressable: attendee, city: "Austin", state: "TX", inactive: false)
+          other = create(:person, first_name: "Katherine", last_name: "Johnson")
+          create(:address, addressable: other, city: "Seattle", state: "WA", inactive: false)
+          create(:event_registration, event: recent_training, registrant: other, status: "attended")
+          neither = create(:person, first_name: "Grace", last_name: "Hopper")
+          create(:address, addressable: neither, city: "Austin", state: "WA", inactive: false)
+          create(:event_registration, event: recent_training, registrant: neither, status: "attended")
+
+          get attendees_events_url(contact_info: "austin tx--seattle wa"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace", "Katherine Johnson")
+          expect(response.body).not_to include("Grace Hopper")
+        end
+
+        # One box, prefixed like the contact box above it, so every part still has
+        # to describe the same work address.
+        it "filters by the prefixed Where they work box" do
+          org = create(:organization)
+          create(:address, addressable: org, city: "Austin", state: "TX", county: "Travis",
+                 zip_code: "78701", locality: Address::OUTSIDE_CA, inactive: false)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
+          other = create(:person, first_name: "Katherine", last_name: "Johnson")
+          other_registration = create(:event_registration, event: recent_training, registrant: other, status: "attended")
+          other_org = create(:organization)
+          create(:address, addressable: other_org, city: "Portland", state: "OR", county: "Multnomah", inactive: false)
+          create(:affiliation, person: other, organization: other_org)
+
+          get attendees_events_url(work_location: "city: austin"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Katherine Johnson")
+
+          get attendees_events_url(work_location: 'locality: "Outside CA" zip: 78701'), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+
+          get attendees_events_url(work_location: "city: austin county: Multnomah"), headers: frame_headers
+          expect(response.body).not_to include("Ada Lovelace")
+        end
+
+        it "lets the State dropdown win over the same field typed in the box" do
+          org = create(:organization)
+          create(:address, addressable: org, city: "Austin", state: "TX", inactive: false)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
+
+          get attendees_events_url(work_location: "state: OR city: austin", state: "TX"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+        end
+
+        it "matches nobody when the State dropdown contradicts the county's own state" do
+          org = create(:organization)
+          create(:address, addressable: org, city: "Portland", state: "OR", county: "Multnomah", inactive: false)
+          create(:affiliation, person: attendee_registration.registrant, organization: org)
+
+          get attendees_events_url(state: "OR", county: "WA::King"), headers: frame_headers
+          expect(response).to have_http_status(:ok)
           expect(response.body).not_to include("Ada Lovelace")
         end
 
@@ -621,8 +752,11 @@ RSpec.describe "Events attendees", type: :request do
           EventsController::ATTENDEE_REGISTRATION_FILTERS.each_key do |param|
             expect(page).to have_selector("##{param}", visible: :all), "no control for #{param}"
           end
-          expect(page).to have_selector("#city", visible: :all)
+          expect(page).to have_selector("#work_location", visible: :all)
           expect(page).to have_selector("#topic_subscription option[value='#{topic.id}']", visible: :all)
+          # city lost its own box to the prefixed work_location one, so it rides as
+          # a chip param instead — still sent, still removable, never silent.
+          expect(AttendeesActiveFilters::CHIP_PARAMS).to include("city")
         end
 
         it "keeps the registration-level filter selections" do

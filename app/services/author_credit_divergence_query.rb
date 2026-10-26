@@ -67,6 +67,11 @@ class AuthorCreditDivergenceQuery
     )
   end
 
+  # Whether any section has a row, in SQL so even an empty worklist never loads a record.
+  def any?
+    authorable_models.any? { |model| unauthored_divergences(model).exists? || preference_divergences(model).exists? }
+  end
+
   private
 
   attr_reader :person_id, :type, :preference, :include_reconciled
@@ -99,6 +104,49 @@ class AuthorCreditDivergenceQuery
     end
 
     group_by_person(records)
+  end
+
+  # SQL twin of AuthorCreditable#author_credit_diverged? plus build_group's person rules.
+  def preference_divergences(model)
+    table = model.table_name
+    scope = model.where.not(author_credit_preference: nil)
+      .joins("INNER JOIN #{Person.table_name} authors ON authors.id = #{table}.author_id")
+      .where("TRIM(#{table}.author_credit_preference) <> ''")
+      .where("#{table}.author_credit_preference <> CASE WHEN authors.anonymous_contributions THEN 'anonymous' " \
+             "ELSE COALESCE(NULLIF(TRIM(authors.display_name_preference), ''), 'full_name') END")
+    scope = scope.where(author_credit_preference: preference) if preference
+    counted_people(scope, :authors)
+  end
+
+  # Every author-less record lands in exactly one of legacy, creator, or unattributed;
+  # only the creator section survives a preference or person filter.
+  def unauthored_divergences(model)
+    scope = model.where(author_id: nil).joins(
+      "LEFT JOIN #{User.table_name} creators ON creators.id = #{model.table_name}.created_by_id " \
+      "LEFT JOIN #{Person.table_name} creator_people ON creator_people.id = creators.person_id"
+    )
+    legacy = legacy_name_present(model)
+    creator_fallback = counted_people(scope, :creator_people)
+    if preference || person_id
+      return legacy ? creator_fallback.where.not(legacy) : creator_fallback
+    end
+
+    unattributed_or_creator = scope.where(creator_people: { id: nil }).or(creator_fallback)
+    legacy ? unattributed_or_creator.or(scope.where(legacy)) : unattributed_or_creator
+  end
+
+  def legacy_name_present(model)
+    model.legacy_author_name_columns.map do |qualified_column|
+      table, column = qualified_column.split(".")
+      Arel::Nodes::NamedFunction.new("COALESCE", [ Arel::Table.new(table)[column], Arel::Nodes.build_quoted("") ])
+        .matches_regexp("[^[:space:]]")
+    end.reduce(:or)
+  end
+
+  def counted_people(scope, person_alias)
+    scope = scope.where.not(person_alias => { id: nil })
+    scope = scope.where(person_alias => { id: person_id.to_i }) if person_id.present?
+    include_reconciled ? scope : scope.where(person_alias => { author_credit_reconciled_at: nil })
   end
 
   # No credited person here, which is the whole problem — so no person filter.

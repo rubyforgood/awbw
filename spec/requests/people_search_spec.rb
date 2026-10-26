@@ -15,6 +15,11 @@ RSpec.describe "People search", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "shows the admin-only contact info filter" do
+      get people_path
+      expect(response.body).to include('name="contact_info"')
+    end
+
     it "breaks the person profile button out of the results frame" do
       get people_path, headers: turbo_headers
       expect_frame_breakout(response.body, person_path(person_alice))
@@ -27,8 +32,8 @@ RSpec.describe "People search", type: :request do
       expect(response.body).to include("Bob")
     end
 
-    it "filters by contact_info" do
-      get people_path, params: { contact_info: "Alice" }, headers: turbo_headers
+    it "filters by name_email" do
+      get people_path, params: { name_email: "Alice" }, headers: turbo_headers
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Alice")
       expect(response.body).not_to include("Bob")
@@ -162,6 +167,7 @@ RSpec.describe "People search", type: :request do
       get people_path
       expect(response.body).not_to include("Admin-only filters")
       expect(response.body).not_to include("staff_tag_ids")
+      expect(response.body).not_to include('name="contact_info"')
     end
 
     it "ignores a staff tag filter passed by URL" do
@@ -181,7 +187,7 @@ RSpec.describe "People search", type: :request do
     end
 
     it "still applies the filters the bar does offer them" do
-      get people_path, params: { contact_info: "Markedone" }, headers: turbo_headers
+      get people_path, params: { name_email: "Markedone" }, headers: turbo_headers
 
       expect(response.body).to include("Markedone")
       expect(response.body).not_to include("Plainone")
@@ -189,7 +195,7 @@ RSpec.describe "People search", type: :request do
 
     describe "contact info search" do
       def search(term)
-        get people_path, params: { contact_info: term }, headers: turbo_headers
+        get people_path, params: { name_email: term }, headers: turbo_headers
         response.body
       end
 
@@ -218,21 +224,11 @@ RSpec.describe "People search", type: :request do
         expect(search("Hiddenway")).not_to include("Markedone")
       end
 
-      it "matches a shared phone" do
+      it "ignores a contact details filter passed by URL" do
         marked.update!(profile_show_phone: true)
         create(:contact_method, contactable: marked, value: "555-0142")
-        expect(search("555-0142")).to include("Markedone")
-      end
-
-      it "skips a phone the person hides" do
-        marked.update!(profile_show_phone: false)
-        create(:contact_method, contactable: marked, value: "555-0142")
-        expect(search("555-0142")).not_to include("Markedone")
-      end
-
-      it "skips an inactive phone" do
-        create(:contact_method, contactable: marked, value: "555-0142", inactive: true)
-        expect(search("555-0142")).not_to include("Markedone")
+        get people_path, params: { contact_info: "555-0142" }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
       end
 
       %w[first_name_last_initial first_name_only].each do |preference|
@@ -344,6 +340,11 @@ RSpec.describe "People search", type: :request do
     let!(:person) { create(:person, first_name: "Hiddenfacts", profile_show_email: false, profile_show_phone: false) }
 
     def search(term)
+      get people_path, params: { name_email: term }, headers: turbo_headers
+      response.body
+    end
+
+    def search_contact_details(term)
       get people_path, params: { contact_info: term }, headers: turbo_headers
       response.body
     end
@@ -363,19 +364,19 @@ RSpec.describe "People search", type: :request do
       expect(search("Legalname")).to include("Hiddenfacts")
     end
 
-    it "matches addresses" do
-      create(:address, addressable: person, street_address: "123 Hiddenway")
-      expect(search("Hiddenway")).to include("Hiddenfacts")
-    end
-
-    it "matches a phone the person hides" do
+    it "matches a contact method via the contact info filter" do
       create(:contact_method, contactable: person, value: "555-0142")
-      expect(search("555-0142")).to include("Hiddenfacts")
+      expect(search_contact_details("555-0142")).to include("Hiddenfacts")
     end
 
-    it "matches an inactive phone" do
+    it "matches an inactive contact method via the contact info filter" do
       create(:contact_method, contactable: person, value: "555-0142", inactive: true)
-      expect(search("555-0142")).to include("Hiddenfacts")
+      expect(search_contact_details("555-0142")).to include("Hiddenfacts")
+    end
+
+    it "matches an address via the contact info filter" do
+      create(:address, addressable: person, street_address: "123 Hiddenway")
+      expect(search_contact_details("Hiddenway")).to include("Hiddenfacts")
     end
 
     %w[first_name_last_initial first_name_only].each do |preference|
@@ -516,6 +517,68 @@ RSpec.describe "People search", type: :request do
       get people_path, params: { organization_id: org.id }
       page = Capybara.string(response.body)
       expect(page).to have_css("input[type=hidden][name=organization_id][value='#{org.id}']", visible: :all)
+    end
+  end
+
+  describe "GET /people (turbo frame) work location filter" do
+    let(:organization) { create(:organization) }
+    let!(:worker) { create(:person, first_name: "Renoworker") }
+    let!(:homebody) { create(:person, first_name: "Boisehome") }
+    let!(:unplaced) { create(:person, first_name: "Noaddress") }
+
+    before do
+      create(:address, addressable: organization, city: "Reno", state: "NV")
+      create(:affiliation, person: worker, organization: organization)
+      create(:address, addressable: homebody, city: "Boise", state: "ID")
+    end
+
+    def search_work_location(query, **params)
+      get people_path, params: { work_location: query, **params }, headers: turbo_headers
+      response
+    end
+
+    it "renders the results frame" do
+      expect(search_work_location("state: NV")).to have_http_status(:ok)
+      expect(response.body).to include('id="people_results"')
+    end
+
+    it "narrows to people located by their work address" do
+      body = search_work_location("city: reno").body
+      expect(body).to include("Renoworker")
+      expect(body).not_to include("Boisehome", "Noaddress")
+    end
+
+    it "falls back to the person's own address" do
+      body = search_work_location("state: ID").body
+      expect(body).to include("Boisehome")
+      expect(body).not_to include("Renoworker", "Noaddress")
+    end
+
+    it "matches a bare term against any location field" do
+      expect(search_work_location("boise").body).to include("Boisehome")
+    end
+
+    it "matches nobody when the county contradicts the state" do
+      body = search_work_location("state: NV county: \"CA::Los Angeles\"").body
+      expect(body).not_to include("Renoworker", "Boisehome")
+    end
+
+    it "keeps the filter on the page links" do
+      other = create(:person, first_name: "Renocolleague")
+      create(:affiliation, person: other, organization: organization)
+
+      body = search_work_location("city: reno", number_of_items_per_page: 1).body
+      expect(body).to include("work_location=city")
+    end
+
+    it "is ignored for a non-admin" do
+      sign_in create(:user)
+      [ worker, homebody ].each do |person|
+        person.update!(profile_is_searchable: true)
+        create(:affiliation, person: person, title: "Facilitator", start_date: 1.year.ago, inactive: false)
+      end
+
+      expect(search_work_location("city: reno").body).to include("Renoworker", "Boisehome")
     end
   end
 end

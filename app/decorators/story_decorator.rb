@@ -55,7 +55,7 @@ class StoryDecorator < ApplicationDecorator
   end
 
   def windows_audience_chip
-    return unless windows_type && h.current_user&.super_user?
+    return unless windows_type && h.allowed_to?(:manage?, Story)
 
     h.tag.span(class: "admin-only inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-900",
                title: "Windows audience (admin only)") do
@@ -75,7 +75,7 @@ class StoryDecorator < ApplicationDecorator
 
   def viewable_tags(tags)
     tags = tags.compact
-    h.current_user&.super_user? ? tags : tags.select(&:published?)
+    h.allowed_to?(:manage?, Story) ? tags : tags.select(&:published?)
   end
 
   def workshop_references
