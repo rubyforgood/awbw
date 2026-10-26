@@ -267,13 +267,22 @@ module Events
       ce_form = @event.continuing_education_form
       return unless ce_form
 
-      submission = ce_form.form_submissions.where(person: person, event: @event, role: "continuing_education").order(:created_at).last
+      submissions = ce_form.form_submissions.where(person: person, event: @event, role: "continuing_education")
+        .reorder(created_at: :desc, id: :desc)
+      submission = submissions.first
       return unless submission
 
       @continuing_education_submission = submission
       @continuing_education_form = ce_form
       @continuing_education_fields = ce_form.form_fields.reorder(position: :asc)
-      @continuing_education_responses = submission.form_answers.index_by(&:form_field_id)
+      @continuing_education_responses = newest_answers_by_field_id(submissions)
+    end
+
+    # A reapplication leaves blank what it didn't supply, so each question shows its newest non-blank answer.
+    def newest_answers_by_field_id(submissions)
+      FormAnswer.where(form_submission: submissions).where.not(submitted_answer: [ nil, "" ])
+        .joins(:form_submission).reorder(FormSubmission.arel_table[:created_at].desc, FormSubmission.arel_table[:id].desc)
+        .each_with_object({}) { |answer, by_field_id| by_field_id[answer.form_field_id] ||= answer }
     end
 
     def scholarship_mode?

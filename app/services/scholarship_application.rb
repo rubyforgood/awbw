@@ -84,11 +84,13 @@ class ScholarshipApplication
   # The person's non-blank answers — across every submission they made for the
   # event's forms — that belong to a scholarship question, matched by the field
   # itself or, to bridge an answer captured on another form's copy of the same
-  # question, by its identifier. Deduplicated to one answer per question.
+  # question, by its identifier. Deduplicated to the newest application's answer per question.
   def answers
     @answers ||= FormAnswer
       .where(form_submission: submissions)
       .where.not(submitted_answer: [ nil, "" ])
+      .joins(:form_submission)
+      .order(FormSubmission.arel_table[:created_at].desc, FormSubmission.arel_table[:id].desc)
       .includes(:form_field, :form_submission)
       .select { |answer| scholarship_answer?(answer.form_field) }
       .group_by { |answer| answer.form_field.field_identifier.presence || "field-#{answer.form_field_id}" }
