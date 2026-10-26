@@ -1,40 +1,31 @@
 <div class="mb-4">
   <%= form_with url: organizations_path, method: :get,
-    data: { controller: "collection", turbo_frame: "organizations_results" },
+    data: { controller: "collection searchable-checkbox", turbo_frame: "organizations_results" },
     autocomplete: "off",
-    class: "flex flex-wrap items-end gap-3" do %>
-    <%= render "shared/filter_text", param: :query, label: "Name",
-          field_class: search_field_class(extra: "w-64"), wrapper_class: nil %>
-    <div>
-      <%= label_tag :sector_name, "Sector", class: "text-sm font-medium text-gray-700 mb-1 block" %>
-      <%= select_tag :sector_name,
-                     options_for_select((@sector_options || []).map { |name| [ name, name ] }, params[:sector_name]),
-                     include_blank: "All sectors",
-                     class: "w-44 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-    </div>
-    <div>
-      <%= label_tag :age_group_name, "Age group", class: "text-sm font-medium text-gray-700 mb-1 block" %>
-      <%= select_tag :age_group_name,
-                     options_for_select((@age_group_options || []).map { |name| [ name, name ] }, params[:age_group_name]),
-                     include_blank: "All age groups",
-                     class: "w-40 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-    </div>
-    <%= render "shared/filter_text", param: :address, label: "Address",
-          field_class: search_field_class(extra: "w-64"), wrapper_class: nil %>
+    class: "flex flex-col gap-3 md:flex-row md:items-end" do %>
+    <%= render "shared/filter_text", param: :query, label: "Name", wrapper_class: "w-full md:flex-1" %>
+    <%= render "shared/filter_multiselect", param: :sector_ids, label: "Sector",
+          options: @sector_options || [],
+          selected: Array(params[:sector_ids]).map(&:to_i), placeholder: "Any sector",
+          wrapper_class: "w-full md:flex-1" %>
+    <%= render "shared/filter_multiselect", param: :age_range_ids, label: "Age group",
+          options: @age_group_options || [],
+          selected: Array(params[:age_range_ids]).map(&:to_i), placeholder: "Any age group",
+          wrapper_class: "w-full md:flex-1" %>
+    <%= render "shared/filter_multiselect", param: :organization_types, label: "Type",
+          options: Organization::ORGANIZATION_TYPE_FILTER_OPTIONS,
+          selected: Array(params[:organization_types]), placeholder: "Any type",
+          wrapper_class: "w-full md:flex-1" %>
+    <%= render "shared/filter_text", param: :address, label: "Address", submit: true,
+          tooltip: ContactSearchable::CONTACT_SEARCH_HINT, wrapper_class: "w-full md:flex-1" %>
 
     <% if allowed_to?(:manage?, Organization) %>
-      <div class="admin-only bg-blue-100">
-        <%= label_tag :program_status, "Program status", class: "text-sm font-medium text-gray-700 mb-1 block" %>
-        <%= select_tag :program_status,
-                       options_for_select(Organization::PROGRAM_STATUS_FILTER_OPTIONS, params[:program_status]),
-                       include_blank: "Any status",
-                       class: "w-44 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-                                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-      </div>
+      <%= render "shared/filter_select", param: :program_status, label: "Program status",
+            options: Organization::PROGRAM_STATUS_FILTER_OPTIONS, selected: params[:program_status],
+            blank: "Any status", field_class: search_field_class,
+            wrapper_class: "admin-only w-full bg-blue-100 md:w-40" %>
     <% end %>
 
-    <%= render "shared/search_clear", url: organizations_path %>
+    <%= render "shared/search_clear", url: organizations_path, label: "Clear" %>
   <% end %>
 </div>

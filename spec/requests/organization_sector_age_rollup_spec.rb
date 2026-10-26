@@ -62,22 +62,27 @@ RSpec.describe "Organization sector and age-group roll-up", type: :request do
     end
 
     it "matches a sector any active facilitator holds, primary or additional" do
-      expect(org_names_for(sector_name: "Housing")).to contain_exactly("Harbor House")
-      expect(org_names_for(sector_name: "Legal")).to contain_exactly("Harbor House", "Beacon Center")
-      expect(org_names_for(sector_name: "Veterans")).to contain_exactly("Harbor House")
-      expect(org_names_for(sector_name: "Education")).to contain_exactly("Harbor House")
+      expect(org_names_for(sector_ids: [ sectors.fetch("Housing").id ])).to contain_exactly("Harbor House")
+      expect(org_names_for(sector_ids: [ sectors.fetch("Legal").id ])).to contain_exactly("Harbor House", "Beacon Center")
+      expect(org_names_for(sector_ids: [ sectors.fetch("Veterans").id ])).to contain_exactly("Harbor House")
+      expect(org_names_for(sector_ids: [ sectors.fetch("Education").id ])).to contain_exactly("Harbor House")
     end
 
     it "ignores sectors held only by non-facilitators or ended affiliations" do
-      expect(org_names_for(sector_name: "Arts")).to be_empty
-      expect(org_names_for(sector_name: "Mental health")).to be_empty
+      expect(org_names_for(sector_ids: [ sectors.fetch("Arts").id ])).to be_empty
+      expect(org_names_for(sector_ids: [ sectors.fetch("Mental health").id ])).to be_empty
+    end
+
+    it "matches any of several chosen sectors or age groups" do
+      expect(org_names_for(sector_ids: [ sectors.fetch("Housing").id, sectors.fetch("Legal").id ])).to contain_exactly("Harbor House", "Beacon Center")
+      expect(org_names_for(age_range_ids: [ ages.fetch("Children").id, ages.fetch("Teens").id ])).to contain_exactly("Harbor House", "Beacon Center")
     end
 
     it "matches an age group any active facilitator holds, primary or additional" do
-      expect(org_names_for(age_group_name: "Teens")).to contain_exactly("Harbor House", "Beacon Center")
-      expect(org_names_for(age_group_name: "Adults")).to contain_exactly("Harbor House")
-      expect(org_names_for(age_group_name: "Children")).to contain_exactly("Harbor House")
-      expect(org_names_for(age_group_name: "Elders")).to be_empty
+      expect(org_names_for(age_range_ids: [ ages.fetch("Teens").id ])).to contain_exactly("Harbor House", "Beacon Center")
+      expect(org_names_for(age_range_ids: [ ages.fetch("Adults").id ])).to contain_exactly("Harbor House")
+      expect(org_names_for(age_range_ids: [ ages.fetch("Children").id ])).to contain_exactly("Harbor House")
+      expect(org_names_for(age_range_ids: [ ages.fetch("Elders").id ])).to be_empty
     end
   end
 

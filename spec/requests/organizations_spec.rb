@@ -51,6 +51,19 @@ RSpec.describe "/organizations", type: :request do
       expect(response).to be_successful
       expect(response.body).to include("13-17")
     end
+
+    it "captions each card with its type for admins only" do
+      organization = Organization.create!(valid_attributes.merge(organization_type: "For-profit", school: true))
+      create(:affiliation, organization: organization, person: create(:person))
+
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
+      expect(response.body).to include("For-profit · School")
+
+      sign_in user
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
+      expect(response.body).to include(organization.name)
+      expect(response.body).not_to include("For-profit · School")
+    end
   end
 
   describe "GET /show" do
@@ -487,6 +500,21 @@ RSpec.describe "/organizations", type: :request do
         organization = Organization.create!(valid_attributes)
         patch organization_url(organization), params: { organization: { high_profile: "1" } }
         expect(organization.reload.high_profile).to be(true)
+      end
+
+      it "links the edit page's associated records to the organization's activity" do
+        organization = Organization.create!(valid_attributes)
+        get edit_organization_url(organization)
+        expect(Capybara.string(response.body)).to have_link("Activity", href: /organization_id=#{organization.id}/)
+      end
+
+      it "updates the school flag from the edit form's checkbox" do
+        organization = Organization.create!(valid_attributes)
+        get edit_organization_url(organization)
+        expect(Capybara.string(response.body)).to have_field("School", type: "checkbox", checked: false)
+
+        patch organization_url(organization), params: { organization: { school: "1" } }
+        expect(organization.reload.school).to be(true)
       end
 
       it "saves the organization's phones" do

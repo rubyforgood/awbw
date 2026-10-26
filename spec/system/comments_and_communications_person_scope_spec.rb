@@ -13,6 +13,8 @@ RSpec.describe "Comments & communications person scope", type: :system do
   end
 
   scenario "filtering a person's feed keeps it on that person" do
+    # Typing while the lazy first load is still in flight races it for the frame.
+    expect(page).to have_css("turbo-frame#comments_and_communications_results[complete]", text: "Schedule note for Aisha")
     fill_in "query", with: "Schedule"
 
     expect(page).to have_css("turbo-frame#comments_and_communications_results[src*='query=Schedule'][complete]")
