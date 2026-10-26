@@ -1384,6 +1384,24 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(ContinuingEducationRegistration.sole.professional_license).to have_attributes(number: "42111", kind: "LCSW")
     end
 
+    it "fills in the placeholder license when a reapplication supplies the number left blank before" do
+      apply(license_number: "", license_kind: "")
+      apply
+
+      expect(ContinuingEducationRegistration.count).to eq(1)
+      expect(ProfessionalLicense.sole).to have_attributes(number: "42111", kind: "LCSW")
+      expect(ContinuingEducationRegistration.sole.professional_license).to eq(ProfessionalLicense.sole)
+    end
+
+    it "shows the license answer on file on the ticket when a reapplication leaves it blank" do
+      apply
+      apply(license_number: "", license_kind: "")
+
+      get event_public_registration_path(event, reg: EventRegistration.sole.slug)
+
+      expect(response.body).to include("42111")
+    end
+
     it "leaves the license alone once the CE certificate is issued" do
       apply
       ContinuingEducationRegistration.sole.update!(certificate_sent_at: Time.current)
