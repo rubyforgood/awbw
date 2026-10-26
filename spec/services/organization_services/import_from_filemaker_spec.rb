@@ -99,7 +99,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
   end
 
   it "adds the archive row's code to an address the organization already has" do
-    existing = create(:organization, filemaker_code: "ORG00001")
+    existing = create(:organization, name: "Harbor House", filemaker_code: "ORG00001")
     address = create(:address, addressable: existing, street_address: "1 Main St", city: "Pasadena", state: "CA")
     fm_organization("ORG00001")
     FmAddress.create!(fm_id: "1", data: { "OrgID" => "ORG00001", "AddrsLine1" => "1 Main Street", "AddrsCity" => "Pasadena",
@@ -124,7 +124,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
   end
 
   it "doesn't add a street-less address in a city the organization already has an address in" do
-    existing = create(:organization, filemaker_code: "ORG00001")
+    existing = create(:organization, name: "Harbor House", filemaker_code: "ORG00001")
     address = create(:address, addressable: existing, street_address: "1 Main St", city: "Fresno", state: "CA")
     fm_organization("ORG00001")
     FmAddress.create!(fm_id: "1", data: { "OrgID" => "ORG00001", "AddrsCity" => "Fresno", "AddrsState" => "CA" })
@@ -133,6 +133,68 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
     expect(existing.addresses.sole).to eq(address)
     expect(address.reload.filemaker_code).to eq("1")
+  end
+
+  describe "an organization carrying the code under a different name" do
+    it "moves the code to a new organization, leaving the other its name and a comment" do
+      elsewhere = create(:organization, name: "Sunrise Clinic", filemaker_code: "ORG00001, 7")
+      fm_organization("ORG00001")
+
+      import = described_class.new.call
+
+      harbor = Organization.find_by!(name: "Harbor House")
+      expect(harbor.filemaker_code).to eq("ORG00001")
+      expect(elsewhere.reload).to have_attributes(name: "Sunrise Clinic", filemaker_code: "7")
+      expect(elsewhere.comments.sole.body).to include("ORG00001", "Harbor House", "##{harbor.id}")
+      expect(import.code_moves.sole).to include("ORG00001", "##{elsewhere.id}", "Sunrise Clinic", "##{harbor.id}")
+      expect(import.results[:created]).to include(a_string_including("ORG00001"))
+    end
+
+    it "moves a project's code too" do
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001")
+      project("P0002", "ORG00001", ProjectName: "Harbor Teen Program")
+      elsewhere = create(:organization, name: "Sunrise Clinic", filemaker_code: "P0002")
+
+      import
+
+      expect(elsewhere.reload.filemaker_code).to be_nil
+      expect(Organization.find_by!(filemaker_code: "P0002").name).to eq("Harbor Teen Program")
+    end
+
+    it "keeps the code on a name that differs only in case, punctuation or a legal suffix" do
+      existing = create(:organization, name: "harbor house, inc.", filemaker_code: "ORG00001")
+      fm_organization("ORG00001")
+
+      expect { expect(import.code_moves).to be_empty }.not_to change(Organization, :count)
+      expect(existing.reload.filemaker_code).to eq("ORG00001")
+    end
+
+    it "keeps the code on an organization the import named apart from a namesake" do
+      existing = create(:organization, name: "Harbor House (ORG00001)", filemaker_code: "ORG00001")
+      fm_organization("ORG00001")
+
+      expect { import }.not_to change(Organization, :count)
+      expect(existing.reload.filemaker_code).to eq("ORG00001")
+    end
+
+    it "keeps every code on an organization merged from several, when it answers to any of their names" do
+      merged = create(:organization, name: "Valley Services", filemaker_code: "ORG00010, ORG00011")
+      fm_organization("ORG00010", OrgName: "Valley Services")
+      fm_organization("ORG00011", OrgName: "Valley Services Fresno")
+
+      expect { import }.not_to change(Organization, :count)
+      expect(merged.reload.filemaker_code).to eq("ORG00010, ORG00011")
+    end
+
+    it "keeps a single program's code on an organization named after its FileMaker organization" do
+      existing = create(:organization, name: "Harbor House", filemaker_code: "P0001")
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001")
+
+      expect { import }.not_to change(Organization, :count)
+      expect(existing.reload.filemaker_code).to eq("ORG00001, P0001")
+    end
   end
 
   describe "project places" do
@@ -264,7 +326,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     end
 
     it "leaves the description off when the portal's type isn't Other" do
-      existing = create(:organization, filemaker_code: "ORG00001", organization_type: "For-profit")
+      existing = create(:organization, name: "Harbor House", filemaker_code: "ORG00001", organization_type: "For-profit")
       fm_organization("ORG00001", OrgType: "School")
 
       import
@@ -308,7 +370,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     end
 
     it "adds the code to a phone the organization already has, keeping its primary" do
-      existing = create(:organization, filemaker_code: "ORG00001")
+      existing = create(:organization, name: "Harbor House", filemaker_code: "ORG00001")
       held = existing.contact_methods.create!(kind: "phone", value: "(555) 0100", primary: true)
       fm_organization("ORG00001")
       phone("10", "555-0100")
@@ -353,7 +415,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
   it "matches by exact name only an organization with no code from the same table" do
     taken = create(:organization, name: "Harbor House Art Program", filemaker_code: "P0009")
-    project("P0009", nil, ProjectName: "Somewhere else")
+    project("P0009", nil, ProjectName: "Harbor House Art Program")
     fm_organization("ORG00001", OrgName: "Harbor House")
     project("P0001", "ORG00001", ProjectName: "Harbor House Art Program")
     project("P0004", "ORG00001", ProjectName: "Harbor House Youth")
@@ -386,7 +448,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
     it "keeps a parent the portal already set, noting FileMaker's" do
       elsewhere = create(:organization)
-      child = create(:organization, filemaker_code: "ORG00011", parent: elsewhere)
+      child = create(:organization, name: "Valley Services Fresno", filemaker_code: "ORG00011", parent: elsewhere)
       fm_organization("ORG00010", OrgName: "Valley Services")
       fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG00010")
 
@@ -397,7 +459,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     end
 
     it "leaves an organization alone that is the same portal organization as its parent" do
-      both = create(:organization, filemaker_code: "ORG00010, ORG00011")
+      both = create(:organization, name: "Valley Services", filemaker_code: "ORG00010, ORG00011")
       fm_organization("ORG00010", OrgName: "Valley Services")
       fm_organization("ORG00011", OrgName: "Valley Services Fresno", ParentID: "ORG00010")
 

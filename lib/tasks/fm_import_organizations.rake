@@ -86,6 +86,11 @@ namespace :fm do
           import.differences.each { |difference| say.("  #{difference}") }
         end
 
+        if import.try(:code_moves).present?
+          say.("\nCodes moved off an organization FileMaker names differently, portal name kept (#{import.code_moves.size}, also a comment on it):")
+          import.code_moves.each { |line| say.("  #{line}") }
+        end
+
         if import.try(:nested).present?
           say.("\nNested under their FileMaker parent (ParentID) (#{import.nested.size}):")
           import.nested.each { |line| say.("  #{line}") }

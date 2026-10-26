@@ -27,4 +27,8 @@ class FilemakerCodeIndex
     code = @model.strip_filemaker_code(code)
     @ids[code] |= [ id ] if code.present?
   end
+
+  def remove(code, id)
+    @ids[@model.strip_filemaker_code(code)].delete(id)
+  end
 end

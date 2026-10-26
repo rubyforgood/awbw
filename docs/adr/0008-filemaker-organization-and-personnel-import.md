@@ -68,6 +68,12 @@ Constraints already decided elsewhere:
   `Organization`; its `fm_organizations` row becomes (or links to) that org's parent.
   Match an existing org by any shared `filemaker_code` first, then by exact name; append
   the code on a match, as the Rolodex pass does for people.
+  - **A code on a differently named org moves off it** (decided 2026-10-26): a code match
+    counts only when the org answers to the FileMaker name of some code it carries — ignoring
+    case, punctuation, a legal suffix and a namesake's "(code)", and accepting a project's
+    organization name for a single program. A merged org answers to one of its names, so it
+    keeps every code. Otherwise the code moves to the org the row's name finds, or a new one;
+    the portal name stays, and the move is a comment on that org and a line in the report.
   - **An organization with exactly one project is one org**, carrying both codes — a parent
     with a single child would be the same place twice. Only an organization with several
     projects (or none) gets its own org with the programs nested under it. When the portal

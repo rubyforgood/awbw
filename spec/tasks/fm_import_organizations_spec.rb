@@ -96,6 +96,20 @@ RSpec.describe "fm:import_organizations" do
       expect(Organization.find_by(name: "Harbor Clinic")).to be_present
     end
 
+    it "reports a code moved off an organization FileMaker names differently, and undoes the move" do
+      elsewhere = create(:organization, name: "Sunrise Clinic", filemaker_code: "ORG00001")
+
+      output = run_task(dry_run: false)
+
+      expect(output).to include("Codes moved off an organization FileMaker names differently", "was on ##{elsewhere.id} “Sunrise Clinic”")
+      expect(elsewhere.reload.filemaker_code).to be_nil
+
+      run_task(task: "fm:undo_import", run: output[/ RUN=(fm-import-organizations-\d+)/, 1], dry_run: false)
+
+      expect(elsewhere.reload).to have_attributes(filemaker_code: "ORG00001", comments: [])
+      expect(Organization.all).to eq([ elsewhere ])
+    end
+
     it "names the run so fm:undo_import can reverse it" do
       run = run_task(dry_run: false)[/ RUN=(fm-import-organizations-\d+)/, 1]
 
