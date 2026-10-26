@@ -22,11 +22,6 @@ module EventRegistrationServices
     CE_LICENSE_ISSUING_COUNTRY_IDENTIFIER = "ce_license_issuing_country".freeze
     CE_LICENSE_EXPIRES_ON_IDENTIFIER = "ce_license_expires_on".freeze
 
-    CE_LICENSE_IDENTIFIERS = [
-      CE_LICENSE_NUMBER_IDENTIFIER, CE_LICENSE_KIND_IDENTIFIER, CE_LICENSE_ISSUING_STATE_IDENTIFIER,
-      CE_LICENSE_ISSUING_COUNTRY_IDENTIFIER, CE_LICENSE_EXPIRES_ON_IDENTIFIER
-    ].freeze
-
     # Well-known field_identifier of the "Additional forms" multi-select question.
     # Checking "Invoice" / "W-9" toggles the registration's invoice_requested /
     # w9_requested flags, which the digital ticket reads to surface those downloads.
@@ -258,8 +253,8 @@ module EventRegistrationServices
 
     # Create the registrant's CE registration when they opt in, against a license
     # found-or-created from the license-number answer (a placeholder license when
-    # none was given). Hours come from the event via the model. No-op when they
-    # didn't opt in or a CE registration already exists for this registration.
+    # none was given). Hours come from the event via the model. A registration that
+    # already has CE keeps it, with its license updated from these answers.
     def create_ce_registration(event_registration)
       return unless ce_credit_requested?
 
@@ -356,15 +351,11 @@ module EventRegistrationServices
 
     # Persist the answers to the separate scholarship form (when one is asked and a
     # scholarship was requested) as its own role: "scholarship" submission tied to
-    # the event, mirroring how the registration submission is saved above.
+    # the event — one per application, like the registration submission above.
     def save_scholarship_submission(person)
       return unless @scholarship_requested && @scholarship_form && @scholarship_params.present?
 
-      submission = FormSubmission.find_or_create_by!(
-        person: person, form: @scholarship_form, role: "scholarship", event: @event
-      ) do |record|
-        record.event = @event
-      end
+      submission = FormSubmission.create!(person: person, form: @scholarship_form, role: "scholarship", event: @event)
 
       @scholarship_params.each do |field_id, raw_value|
         field = @scholarship_form.form_fields.find_by(id: field_id)
@@ -381,25 +372,17 @@ module EventRegistrationServices
     def save_continuing_education_submission(person)
       return unless @continuing_education_form && @continuing_education_params.present?
 
-      submission = FormSubmission.find_or_create_by!(
+      submission = FormSubmission.create!(
         person: person, form: @continuing_education_form, role: "continuing_education", event: @event
-      ) do |record|
-        record.event = @event
-      end
+      )
 
       @continuing_education_params.each do |field_id, raw_value|
         field = @continuing_education_form.form_fields.find_by(id: field_id)
         next unless field
         next if field.group_header?
-        next if keep_license_answer?(submission, field, raw_value)
 
         submission.persist_answer(field, raw_value)
       end
-    end
-
-    # A reapplication that leaves a license answer blank hasn't supplied it, so the one on file stays.
-    def keep_license_answer?(submission, field, raw_value)
-      raw_value.blank? && !submission.previously_new_record? && field.field_identifier.in?(CE_LICENSE_IDENTIFIERS)
     end
 
     def send_notifications(event_registration)
