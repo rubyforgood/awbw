@@ -28,6 +28,27 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     end
   end
 
+  describe "a project Locality the portal doesn't offer" do
+    it "works the locality out from the address instead of storing the archive's word" do
+      fm_organization("ORG00050", OrgName: "Shelter")
+      project("P0050", "ORG00050", City: "Riverside", State: "CA", County: "Riverside",
+                                   Locality: "Riverside County, CA")
+
+      described_class.new.call
+
+      expect(Organization.sole.addresses.sole).to have_attributes(city: "Riverside", locality: "Southern CA")
+    end
+
+    it "keeps the archive's word when it is one the portal offers" do
+      fm_organization("ORG00051", OrgName: "Haven")
+      project("P0051", "ORG00051", City: "Markleeville", State: "CA", County: "Alpine", Locality: "northern ca")
+
+      described_class.new.call
+
+      expect(Organization.sole.addresses.sole.locality).to eq("Northern CA")
+    end
+  end
+
   describe "FM_IDS naming the rows to read" do
     before do
       fm_organization("ORG00040", OrgName: "First Org")
