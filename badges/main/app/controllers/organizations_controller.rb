@@ -190,12 +190,8 @@ class OrganizationsController < ApplicationController
   end
 
   def set_index_variables
-    @sector_options = Sector.published.order(:name).pluck(:name)
-    @age_group_options = Category.joins(:category_type)
-                                 .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
-                                 .published
-                                 .order(:position, :name)
-                                 .pluck(:name)
+    @sector_options = Sector.published.excluding_other.order(:name).pluck(:name, :id)
+    @age_group_options = Category.age_ranges.published.ordered_by_position_and_name.map { |category| [ category.decorate.age_group_label, category.id ] }
   end
 
   def populations_served
@@ -218,7 +214,7 @@ class OrganizationsController < ApplicationController
   def organization_params
     params.require(:organization).permit(
       :name, :description, :start_date, :end_date, :mission_vision_values,
-      :organization_type, :organization_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
+      :organization_type, :organization_type_other, :school, :filemaker_code, :logo, :notes, :email, :website_url,
       :organization_status_id, :location_id, :windows_type_id, :high_profile, :parent_id,
       :tax_id,
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,

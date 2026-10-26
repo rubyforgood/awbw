@@ -50,6 +50,70 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     expect(address.reload.filemaker_code).to eq("1")
   end
 
+  it "brings in an address with no street, and makes the one the archive calls postal its invoice address" do
+    fm_organization("ORG00001")
+    FmAddress.create!(fm_id: "1", data: { "OrgID" => "ORG00001", "AddrsCity" => "Fresno", "AddrsState" => "CA" })
+    FmAddress.create!(fm_id: "2", data: { "OrgID" => "ORG00001", "AddrsLine1" => "PO Box 9", "AddrsCity" => "Reno",
+                                          "AddrsState" => "NV", "AddrsType" => "Postal" })
+
+    import
+
+    expect(Organization.sole.addresses.order(:filemaker_code).pluck(:street_address, :city, :address_type, :invoice_address))
+      .to eq([ [ "", "Fresno", "work", false ], [ "PO Box 9", "Reno", "work", true ] ])
+  end
+
+  it "doesn't add a street-less address in a city the organization already has an address in" do
+    existing = create(:organization, filemaker_code: "ORG00001")
+    address = create(:address, addressable: existing, street_address: "1 Main St", city: "Fresno", state: "CA")
+    fm_organization("ORG00001")
+    FmAddress.create!(fm_id: "1", data: { "OrgID" => "ORG00001", "AddrsCity" => "Fresno", "AddrsState" => "CA" })
+
+    import
+
+    expect(existing.addresses.sole).to eq(address)
+    expect(address.reload.filemaker_code).to eq("1")
+  end
+
+  describe "project places" do
+    it "reads a project with no state but a California locality as in California" do
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001", City: "Pasadena", Locality: "LA County", SPA: "3")
+
+      import
+
+      expect(Organization.sole.addresses.sole).to have_attributes(city: "Pasadena", state: "CA", country: "United States",
+                                                                  locality: "LA County", la_service_planning_area: 3)
+    end
+
+    it "fills a project with no city onto the organization's primary address" do
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001", State: "CA", County: "Los Angeles", Locality: "LA City", SPA: "4")
+      FmAddress.create!(fm_id: "1", data: { "OrgID" => "ORG00001", "AddrsLine1" => "1 Main St", "AddrsCity" => "Los Angeles",
+                                            "AddrsState" => "CA" })
+
+      result = import
+
+      expect(Organization.sole.addresses.sole).to have_attributes(street_address: "1 Main St", locality: "LA City",
+                                                                  la_service_planning_area: 4)
+      expect(result.unplaced).to be_empty
+    end
+
+    it "lists a project whose place has no city or state to be saved with" do
+      fm_organization("ORG00002", OrgName: "Valley Services")
+      project("P0002", "ORG00002", ProjectName: "Tokyo Program", City: "Tokyo", Locality: "Outside USA")
+      project("P0003", "ORG00002", ProjectName: "Roaming Program", State: "CA", Locality: "LA City", SPA: "4")
+      project("P0004", "ORG00002", ProjectName: "Blank Program")
+
+      result = import
+
+      expect(Organization.find_by!(name: "Tokyo Program").addresses).to be_empty
+      expect(result.unplaced).to contain_exactly(
+        "P0002 Tokyo Program: Tokyo, no state (Locality Outside USA)",
+        "P0003 Roaming Program: no city (Locality LA City, La service planning area 4)"
+      )
+    end
+  end
+
   describe "organization type" do
     {
       "501c3/Nonprofit" => [ "501c3/nonprofit", nil ],
@@ -104,6 +168,24 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
       expect(Organization.sole.contact_methods.order(:id).pluck(:value, :contact_type, :primary, :filemaker_code))
         .to eq([ [ "555-0101", "work", true, "10" ], [ "555-0102", "unknown", false, "11" ] ])
+    end
+
+    it "reads FileMaker's Work/Day and Home/Eve phone types" do
+      fm_organization("ORG00001")
+      phone("10", "555-0101", PhoneType: "Work/Day")
+      phone("11", "555-0102", PhoneType: "Home/Eve")
+
+      import
+
+      expect(Organization.sole.contact_methods.order(:filemaker_code).pluck(:contact_type)).to eq(%w[work personal])
+    end
+
+    it "lists the phone types it can't read" do
+      fm_organization("ORG00001")
+      phone("10", "555-0101", PhoneType: "Fax")
+      phone("11", "555-0102", PhoneType: "Fax")
+
+      expect(import.unmatched_phone_types).to eq("Fax" => 2)
     end
 
     it "adds the code to a phone the organization already has, keeping its primary" do

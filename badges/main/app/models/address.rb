@@ -16,6 +16,7 @@ class Address < ApplicationRecord
   UNKNOWN_LOCALITY = "Unknown"
   LOCALITIES = [ LA_CITY, LA_COUNTY, "Southern CA", "Northern CA",
                 "Central CA", ORANGE_COUNTY, OUTSIDE_CA, OUTSIDE_USA, UNKNOWN_LOCALITY ]
+  CALIFORNIA_LOCALITIES = LOCALITIES - [ OUTSIDE_CA, OUTSIDE_USA, UNKNOWN_LOCALITY ]
   # The one spelling of the US the country dropdown carries, so a value compared or
   # copied against it matches the option rather than rendering the select blank.
   DEFAULT_COUNTRY = "United States"
@@ -24,7 +25,10 @@ class Address < ApplicationRecord
   # whether anyone touched it.
   ENTERED_FIELDS = %w[city street_address zip_code].freeze
   UNKNOWN_CONTACT_TYPE = "unknown"
-  CONTACT_TYPES = [ nil, "work", "personal", "mailing", UNKNOWN_CONTACT_TYPE ].freeze
+  MAILING_CONTACT_TYPE = "mailing"
+  CONTACT_TYPES = [ nil, "work", "personal", MAILING_CONTACT_TYPE, UNKNOWN_CONTACT_TYPE ].freeze
+  # What a person's own address can be; work addresses live on their organization.
+  PERSON_CONTACT_TYPES = %w[personal mailing].freeze
   # USPS abbreviations for the 50 states, DC, and the US territories the atlas
   # draws — the whitelist behind every "States" breakdown, so international
   # regions (e.g. "ON", "England") are excluded (they belong to the Countries map).
@@ -43,6 +47,7 @@ class Address < ApplicationRecord
   has_many :affiliations, foreign_key: :organization_address_id, dependent: :nullify, inverse_of: :organization_address
 
   before_validation :type_as_unknown
+  before_validation :mark_mailing_for_invoices
   normalizes :street_address, :city, :zip_code, :district, :county, :phone,
              with: ->(value) { value.lines.map(&:strip).compact_blank.join("\n") }
 
@@ -134,5 +139,12 @@ class Address < ApplicationRecord
   # before this keep their blank until something saves them.
   def type_as_unknown
     self.address_type = UNKNOWN_CONTACT_TYPE if address_type.blank?
+  end
+
+  # Mail goes to the mailing address, so it's the bill-to; only a change to or from mailing touches the flag.
+  def mark_mailing_for_invoices
+    return unless address_type_changed? && [ address_type, address_type_was ].include?(MAILING_CONTACT_TYPE)
+
+    self.invoice_address = address_type == MAILING_CONTACT_TYPE
   end
 end

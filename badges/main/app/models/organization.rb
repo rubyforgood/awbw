@@ -65,6 +65,9 @@ class Organization < ApplicationRecord
   # so an unmatched select can't silently save as the first option.
   ORGANIZATION_TYPE_OTHER = "Other"
   ORGANIZATION_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", ORGANIZATION_TYPE_OTHER ].freeze
+  # The index's Type filter also offers School, which matches the school flag whatever the type.
+  SCHOOL_TYPE_FILTER = "School"
+  ORGANIZATION_TYPE_FILTER_OPTIONS = (ORGANIZATION_TYPES - [ ORGANIZATION_TYPE_OTHER ] + [ SCHOOL_TYPE_FILTER, ORGANIZATION_TYPE_OTHER ]).freeze
 
   # Validations
   validates :logo,
@@ -149,6 +152,32 @@ class Organization < ApplicationRecord
                 .select(:organization_id))
   }
 
+  # The index's multiselects match ANY chosen value, like the people index.
+  scope :with_sector_ids, ->(ids) {
+    ids = Array(ids).compact_blank
+    next all if ids.empty?
+
+    where(id: Organization.active_facilitator_sector_tags.where(sectorable_items: { sector_id: ids }).select(:organization_id))
+  }
+
+  scope :with_age_range_ids, ->(ids) {
+    ids = Array(ids).compact_blank
+    next all if ids.empty?
+
+    where(id: Organization.active_facilitator_age_group_tags.where(categorizable_items: { category_id: ids }).select(:organization_id))
+  }
+
+  # "Other" also matches unlisted legacy values, which the decorator displays as Other.
+  scope :with_organization_types, ->(types) {
+    types = Array(types).compact_blank
+    next all if types.empty?
+
+    matches = where(organization_type: types - [ SCHOOL_TYPE_FILTER ])
+    matches = matches.or(where.not(organization_type: ORGANIZATION_TYPES + [ "" ])) if types.include?(ORGANIZATION_TYPE_OTHER)
+    matches = matches.or(where(school: true)) if types.include?(SCHOOL_TYPE_FILTER)
+    matches
+  }
+
   scope :category_names_all, ->(names) {
     parsed = TagFilterable.parse_names(names)
     next all if parsed.empty?
@@ -213,8 +242,11 @@ class Organization < ApplicationRecord
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
     organizations = organizations.search(params[:query]) if params[:query].present?
-    organizations = organizations.sector_names_all(params[:sector_names_all].presence || params[:sector_name])
-    organizations = organizations.category_names_all(params[:category_names_all].presence || params[:age_group_name])
+    organizations = organizations.sector_names_all(params[:sector_names_all])
+    organizations = organizations.category_names_all(params[:category_names_all])
+    organizations = organizations.with_sector_ids(params[:sector_ids])
+    organizations = organizations.with_age_range_ids(params[:age_range_ids])
+    organizations = organizations.with_organization_types(params[:organization_types])
     organizations = organizations.search_contact(params[:address]) if params[:address].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
     organizations = organizations.program_status(params[:program_status]) if params[:program_status].present?

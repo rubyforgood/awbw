@@ -175,6 +175,28 @@ RSpec.describe Address, type: :model do
 
       expect(organization.addresses.for_invoices).to be_empty
     end
+
+    it "marks a mailing address for invoices" do
+      address = create(:address, addressable: create(:person), address_type: "mailing")
+
+      expect(address).to be_invoice_address
+    end
+
+    it "unmarks an address that stops being mailing" do
+      address = create(:address, addressable: create(:person), address_type: "mailing")
+
+      address.update!(address_type: "personal")
+
+      expect(address).not_to be_invoice_address
+    end
+
+    it "leaves the flag alone when the type stays put" do
+      address = create(:address, addressable: organization, address_type: "work", invoice_address: true)
+
+      address.update!(city: "Missoula")
+
+      expect(address).to be_invoice_address
+    end
   end
 
   describe ".ranked_for_owner" do

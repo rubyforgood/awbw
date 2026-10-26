@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_25_200004) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_011551) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1497,6 +1497,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_200004) do
     t.string "website_url"
     t.integer "windows_type_id"
     t.string "tax_id"
+    t.boolean "school", default: false, null: false
     t.index ["created_by_id"], name: "index_organizations_on_created_by_id"
     t.index ["location_id"], name: "index_organizations_on_location_id"
     t.index ["name"], name: "index_organizations_on_name", unique: true

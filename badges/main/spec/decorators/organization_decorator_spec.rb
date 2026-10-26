@@ -8,6 +8,19 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
+  describe "#organization_type_caption" do
+    it "shows the type, adding School when flagged" do
+      expect(build(:organization, organization_type: "For-profit").decorate.organization_type_caption).to eq("For-profit")
+      expect(build(:organization, organization_type: "For-profit", school: true).decorate.organization_type_caption).to eq("For-profit · School")
+      expect(build(:organization, organization_type: nil, school: true).decorate.organization_type_caption).to eq("School")
+    end
+
+    it "shows an Other type's description, and nothing when there's no type" do
+      expect(build(:organization, organization_type: "Other", organization_type_other: "Grassroots").decorate.organization_type_caption).to eq("Grassroots")
+      expect(build(:organization, organization_type: nil).decorate.organization_type_caption).to be_nil
+    end
+  end
+
   describe "#address_phones" do
     it "numbers each phone by its address's position, skipping addresses without one" do
       organization = create(:organization)
