@@ -21,11 +21,12 @@ RSpec.describe "Membership subscription checkouts", type: :request do
     allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
   end
 
-  def create_active_subscription
+  def create_active_subscription(membership)
     customer = Pay::Customer.create!(owner: person, processor: "stripe",
       processor_id: "cus_test", default: true)
-    Pay::Subscription.create!(customer: customer, name: "default",
-      processor_id: "sub_test", processor_plan: "membership", status: "active", quantity: 1)
+    Pay::Stripe::Subscription.create!(customer: customer, name: "default",
+      processor_id: "sub_test", processor_plan: "membership", status: "active", quantity: 1,
+      metadata: { "membership_id" => membership.id })
   end
 
   it "requires a signed-in user" do
@@ -58,13 +59,28 @@ RSpec.describe "Membership subscription checkouts", type: :request do
   end
 
   it "refuses a second subscription when one is already active" do
-    create(:membership, person: person)
-    create_active_subscription
+    membership = create(:membership, person: person)
+    create_active_subscription(membership)
     sign_in user
 
     post memberships_subscription_checkouts_path
 
     expect(response).to redirect_to(person_path(person))
+    expect(checkout_args).to be_empty
+  end
+
+  it "refuses setup until the year that was paid directly has begun" do
+    membership = create(:membership, person: person, start_date: nil, end_date: nil)
+    invoice = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: Date.current + 1.day, end_date: Date.current + 1.year)
+    create(:allocation, source: create(:payment, amount_cents: 2_500),
+      allocatable: invoice, amount: 2_500)
+    sign_in user
+
+    post memberships_subscription_checkouts_path
+
+    expect(response).to redirect_to(person_path(person))
+    expect(flash[:alert]).to match(/closer to your renewal date/)
     expect(checkout_args).to be_empty
   end
 

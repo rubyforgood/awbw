@@ -192,6 +192,27 @@ RSpec.describe Membership, type: :model do
       expect(membership.next_billing_start_date).to eq(upcoming.start_date)
     end
 
+    it "is the day after a paid year that has not begun yet" do
+      membership = create(:membership, start_date: nil, end_date: nil)
+      invoice = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current + 1.day, end_date: Date.current + 1.year)
+      create(:allocation, source: create(:payment, amount_cents: 2_500),
+        allocatable: invoice, amount: 2_500)
+
+      expect(membership.reload.next_billing_start_date).to eq(invoice.end_date + 1.day)
+    end
+
+    it "is the day after paid coverage ends however far ahead the paid year starts" do
+      membership = create(:membership, start_date: nil, end_date: nil)
+      invoice = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current + 30.days, end_date: Date.current + 30.days + 1.year - 1.day)
+      create(:allocation, source: create(:payment, amount_cents: 2_500),
+        allocatable: invoice, amount: 2_500)
+
+      expect(membership.reload.next_billing_start_date).to eq(invoice.end_date + 1.day)
+    end
+
+
     it "is nil when the membership has lapsed with nothing ahead" do
       create(:membership_invoice, membership: membership, cost_cents: 2_500,
         start_date: Date.current - 2.years, end_date: Date.current - 1.year - 1.day)
@@ -220,6 +241,32 @@ RSpec.describe Membership, type: :model do
         start_date: covered.end_date + 1.day, end_date: covered.end_date + 1.year)
 
       expect(membership.next_billing_invoice).to be_nil
+    end
+  end
+
+  describe "#autopay_window_open?" do
+    it "is open once the paid year has begun" do
+      membership = create(:membership, start_date: nil, end_date: nil)
+      invoice = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current - 1.month, end_date: Date.current + 11.months)
+      create(:allocation, source: create(:payment, amount_cents: 2_500),
+        allocatable: invoice, amount: 2_500)
+
+      expect(membership.reload.autopay_window_open?).to be(true)
+    end
+
+    it "is shut while the paid year is still ahead" do
+      membership = create(:membership, start_date: nil, end_date: nil)
+      invoice = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current + 1.day, end_date: Date.current + 1.year)
+      create(:allocation, source: create(:payment, amount_cents: 2_500),
+        allocatable: invoice, amount: 2_500)
+
+      expect(membership.reload.autopay_window_open?).to be(false)
+    end
+
+    it "is open when nothing is paid ahead" do
+      expect(create(:membership).autopay_window_open?).to be(true)
     end
   end
 

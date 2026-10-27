@@ -57,6 +57,10 @@
           <p class="text-sm text-gray-700">Contact us to rejoin your membership.</p>
         <% elsif membership&.autorenewal_cancelled? %>
           <p class="text-sm text-gray-700">Contact us to renew your membership.</p>
+        <% elsif !membership.autopay_window_open? %>
+          <p class="text-sm text-gray-700">
+            <span class="font-medium">Automatic renewal can be set up closer to your renewal date</span> — this year was paid directly, so there's nothing to charge until then.
+          </p>
         <% else %>
           <p class="mb-3 text-sm text-gray-700">Set up your membership to renew automatically each year at <%= dollars_from_cents(membership&.cost_cents || Membership.annual_cost_cents) %>.</p>
           <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>

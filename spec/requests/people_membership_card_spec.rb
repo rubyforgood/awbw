@@ -117,4 +117,19 @@ RSpec.describe "Person profile membership card", type: :request do
 
     expect(response.body).not_to include('name="invoice_id"')
   end
+
+  it "defers automatic renewal setup until a directly paid year has begun" do
+    membership = create(:membership, person: person, start_date: nil, end_date: nil)
+    invoice = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: Date.current + 1.day, end_date: Date.current + 1.year)
+    create(:allocation, source: create(:payment, amount_cents: 2_500),
+      allocatable: invoice, amount: 2_500)
+    sign_in user
+
+    get person_path(person)
+
+    expect(response.body).to include("closer to your renewal date")
+    expect(response.body).to include("paid directly")
+    expect(response.body).not_to include("Set up automatic renewal")
+  end
 end

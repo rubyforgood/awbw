@@ -15,6 +15,11 @@ module Memberships
           status: :see_other)
       end
 
+      unless membership.autopay_window_open?
+        return redirect_to(person_path(person),
+          alert: "Automatic renewal can be set up closer to your renewal date.", status: :see_other)
+      end
+
       person.set_payment_processor :stripe
 
       if membership.stripe_subscription&.active?

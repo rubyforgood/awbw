@@ -122,9 +122,15 @@ class Membership < ApplicationRecord
   end
 
   def next_billing_start_date
-    return end_date + 1.day if end_date.present? && covered_on?(Date.current)
+    paid_through = membership_invoices.paid_in_full.maximum(:end_date)
+    return paid_through + 1.day if paid_through.present? && paid_through >= Date.current
 
     next_billing_invoice&.start_date
+  end
+
+  def autopay_window_open?
+    start = next_billing_start_date
+    start.nil? || start <= Date.current + INVOICE_PERIOD
   end
 
   def invoices_due
