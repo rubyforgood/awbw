@@ -498,6 +498,9 @@ class Person < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
+  # pay gem falls back to person.name without this. `name` returns display preference which we do not want
+  def pay_customer_name = full_name
+
   # Distinct professional-license types (e.g. "LMFT, LCSW"), shown as a credential
   # suffix after the person's name on their profile (replaces the old free-text
   # credentials field). Nil when no licensed types are on file.
@@ -576,7 +579,7 @@ class Person < ApplicationRecord
     live_ids = pay_subscriptions.active.filter_map { |subscription| subscription.metadata&.dig("membership_id")&.to_i }
     memberships.find { |membership| live_ids.include?(membership.id) } ||
       memberships.find(&:active?) ||
-      memberships.select(&:upcoming?).min_by(&:start_date) ||
+      memberships.select(&:upcoming?).min_by(&:upcoming_start_date) ||
       memberships.max_by { |membership| membership.end_date || Date.new(0) }
   end
 

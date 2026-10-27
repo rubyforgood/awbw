@@ -377,11 +377,16 @@ Rails.application.routes.draw do
     resources :membership_invoices, only: [ :new, :create ]
   end
 
-  resources :membership_invoices, only: [ :index, :show, :destroy ]
+  resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ] do
+    get :receipt, on: :member
+  end
 
   namespace :memberships do
     resources :subscription_checkouts, only: [ :create ]
     resources :invoice_checkouts, only: [ :create ]
+    resources :public_invoices, only: :show, param: :token do
+      resource :checkout, only: [ :create ], module: :public_invoices
+    end
     resources :billing_portals, only: [ :create ]
   end
 

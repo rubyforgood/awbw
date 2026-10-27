@@ -1,0 +1,8 @@
+<% content_for(:page_title, "Receipt #{@receipt.number} — #{@membership_invoice.person.full_name}") %>
+<% content_for(:page_bg_class, "admin-or-owner") %>
+
+<%= render "shared/print_actions", back_path: membership_invoice_path(@membership_invoice), back_label: "Back to invoice" %>
+
+<div class="px-4 py-6 sm:px-8 print:p-0">
+  <%= render "membership_invoices/receipt", receipt: @receipt %>
+</div>

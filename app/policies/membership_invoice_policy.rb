@@ -1,5 +1,11 @@
 class MembershipInvoicePolicy < ApplicationPolicy
+  alias_rule :receipt?, to: :show?
+
   def manage? = admin? && Membership.enabled?
+
+  def show? = Membership.enabled? && (manage? || owner?)
+
+  def show_public? = Membership.enabled?
 
   def pay? = Membership.enabled? && owner?
 

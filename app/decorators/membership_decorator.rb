@@ -19,7 +19,13 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def coverage_label
+    return "Membership starts:" if upcoming?
+
     active? ? "Membership good through:" : "Membership ended:"
+  end
+
+  def coverage_date
+    upcoming? ? (start_date || upcoming_start_date) : end_date
   end
 
   def status_label
@@ -50,8 +56,7 @@ class MembershipDecorator < ApplicationDecorator
   def period_label
     return if start_date.blank? || end_date.blank?
 
-    end_str = end_date >= Date.current ? "present" : end_date.strftime("%b %-d, %Y")
-    "#{start_date.strftime("%b %-d, %Y")} – #{end_str}"
+    "#{start_date.strftime("%b %-d, %Y")} – #{end_date.strftime("%b %-d, %Y")}"
   end
 
   # This membership's Stripe autopay, or nil when there is no subscription to collect from.

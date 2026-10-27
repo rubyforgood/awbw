@@ -1,0 +1,19 @@
+<% content_for(:page_title, "Invoice #{@invoice.number} — #{@membership_invoice.person.full_name}") %>
+<% content_for(:page_bg_class, "public") %>
+
+<div class="px-4 py-6 sm:px-8 print:p-0">
+  <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
+    <% if @membership_invoice.remaining_cost.positive? %>
+      <% unless @payment_received %>
+        <%= button_to "Pay now", memberships_public_invoice_checkout_path(@token),
+              class: button_classes(:primary), data: { turbo: false } %>
+      <% end %>
+    <% else %>
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-green-600 bg-green-50 px-3 py-1 text-sm font-semibold tracking-wide text-green-700 uppercase">
+        <i class="fa-solid fa-circle-check"></i> Paid in full
+      </span>
+    <% end %>
+  </div>
+
+  <%= render "shared/printable_invoice", invoice: @invoice %>
+</div>

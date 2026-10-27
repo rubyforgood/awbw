@@ -778,13 +778,12 @@ class PeopleController < ApplicationController
     @membership_invoices_due = @membership.object.invoices_due.includes(:allocations).to_a
     return unless allowed_to?(:manage_subscription?, @membership)
 
-    processor = @person.payment_processor
-    membership_sub = processor&.subscription
+    subscription = @membership.stripe_subscription
 
-    @membership_autopay = membership_sub.present? && processor&.subscribed?
+    @membership_autopay = subscription.present? && subscription.active?
     @membership_autopay_cancelling = @membership_autopay &&
-                                     membership_sub.canceled? &&
-                                     !membership_sub.ended?
+                                     subscription.canceled? &&
+                                     !subscription.ended?
   end
 
   def set_checkout_flash
