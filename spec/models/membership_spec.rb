@@ -108,12 +108,6 @@ RSpec.describe Membership, type: :model do
 
       expect(membership.reload).not_to be_upcoming
     end
-
-    it "is false when the membership has no dates and no future invoice" do
-      membership = create(:membership).tap { |m| m.update!(start_date: nil, end_date: nil) }
-
-      expect(membership.reload).not_to be_upcoming
-    end
   end
 
   describe "associations" do

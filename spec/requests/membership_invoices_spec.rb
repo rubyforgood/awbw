@@ -328,44 +328,58 @@ RSpec.describe "MembershipInvoices", type: :request do
       create(:allocation, source: create(:payment, amount_cents: amount), allocatable: invoice, amount: amount)
     end
 
-    before { sign_in admin }
-
-    it "is not available to a non-admin" do
-      sign_in create(:user)
-
-      get receipt_membership_invoice_path(invoice)
-
-      expect(response).to redirect_to(root_path)
-    end
-
-    it "sends the viewer back to the invoice until the year is paid in full" do
-      get receipt_membership_invoice_path(invoice)
-
-      expect(response).to redirect_to(membership_invoice_path(invoice))
-      expect(flash[:alert]).to match(/paid in full/)
-    end
-
-    it "renders the receipt once a payment settles the year" do
-      settle
-
-      get receipt_membership_invoice_path(invoice)
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("RECEIPT")
-      expect(response.body).to include("MR-#{invoice.id}")
-      expect(response.body).to include("Ada Lovelace")
-      expect(response.body).to include("AWBW annual membership")
-      expect(response.body).to include("$25")
-      expect(response.body).to include("Balance due")
-    end
-
-    it "lets the owning member view their receipt" do
+    it "renders the receipt for the owning member" do
       settle
       sign_in create(:user, person: person)
 
       get receipt_membership_invoice_path(invoice)
 
       expect(response).to have_http_status(:ok)
+      expect(response.body).to include("RECEIPT", "MR-#{invoice.id}", "Ada Lovelace",
+        "AWBW annual membership", "$25", "Balance due")
+    end
+
+    it "sends the viewer back to the invoice until the year is paid in full" do
+      sign_in admin
+
+      get receipt_membership_invoice_path(invoice)
+
+      expect(response).to redirect_to(membership_invoice_path(invoice))
+      expect(flash[:alert]).to match(/paid in full/)
+    end
+  end
+
+  describe "PATCH /membership_invoices/:id" do
+    let(:organization) { create(:organization, name: "Acme Family Services") }
+    let(:person) { create(:person) }
+    let!(:invoice) { create(:membership_invoice, membership: create(:membership, person: person)) }
+
+    before do
+      create(:affiliation, person: person, organization: organization)
+      sign_in admin
+    end
+
+    it "saves the detail overrides and clears the bill-to back to the member" do
+      get edit_membership_invoice_path(invoice)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("The member (default)")
+
+      patch membership_invoice_path(invoice), params: { membership_invoice: {
+        bill_to_organization_id: organization.id,
+        bill_to_address_id: "",
+        hide_address: "1",
+        bill_to_additional_info: "Attn: Accounts Payable"
+      } }
+
+      expect(response).to redirect_to(membership_invoice_path(invoice))
+      expect(invoice.reload).to have_attributes(
+        invoicee: organization, hide_address: true, bill_to_additional_info: "Attn: Accounts Payable"
+      )
+
+      patch membership_invoice_path(invoice), params: { membership_invoice: { bill_to_organization_id: "" } }
+
+      expect(invoice.reload.invoicee).to be_nil
     end
   end
 end

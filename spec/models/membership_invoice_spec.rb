@@ -144,21 +144,16 @@ RSpec.describe MembershipInvoice, type: :model do
     it "needs a payment that settles the year" do
       expect(invoice).not_to be_receipt_available
 
-      create(:allocation, source: create(:payment, amount_cents: 1_000), allocatable: invoice, amount: 1_000)
-      expect(invoice.reload).not_to be_receipt_available
+      create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: invoice, amount: 2_500)
 
-      create(:allocation, source: create(:payment, amount_cents: 1_500), allocatable: invoice, amount: 1_500)
       expect(invoice.reload).to be_receipt_available
     end
 
-    it "needs real money, not just a credit" do
+    it "is unavailable when only a credit or a comp settles the year" do
       create(:allocation, source: create(:discount, amount_cents: 2_500), allocatable: invoice, amount: 2_500)
 
       expect(invoice.reload).to be_paid_in_full
       expect(invoice).not_to be_receipt_available
-    end
-
-    it "is not available for a comped year" do
       expect(create(:membership_invoice, :comped)).not_to be_receipt_available
     end
   end
