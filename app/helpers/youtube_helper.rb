@@ -18,6 +18,14 @@ module YoutubeHelper
     "https://www.youtube.com/embed/#{ERB::Util.url_encode(video_id)}?#{BACKGROUND_PLAYER_PARAMS.merge(playlist: video_id).to_query}"
   end
 
+  # hqdefault exists for every video; the sharper maxresdefault is missing on some.
+  def youtube_thumbnail_url(url)
+    video_id = youtube_video_id(url)
+    return unless video_id
+
+    "https://i.ytimg.com/vi/#{ERB::Util.url_encode(video_id)}/hqdefault.jpg"
+  end
+
   def youtube_video_id(url)
     return if url.blank?
 

@@ -46,4 +46,14 @@ RSpec.describe YoutubeHelper, type: :helper do
       expect(helper.youtube_background_embed_url("https://www.youtube.com/@awbworg")).to be_nil
     end
   end
+
+  describe "#youtube_thumbnail_url" do
+    it "points at the video's YouTube thumbnail" do
+      expect(helper.youtube_thumbnail_url("https://youtu.be/abc123")).to eq("https://i.ytimg.com/vi/abc123/hqdefault.jpg")
+    end
+
+    it "is nil without a video id" do
+      expect(helper.youtube_thumbnail_url("https://www.youtube.com/@awbworg")).to be_nil
+    end
+  end
 end
