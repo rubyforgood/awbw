@@ -13,6 +13,7 @@ module OrganizationServices
     include FilemakerValues
 
     OUTCOMES = %i[merged kept_apart renamed failed].freeze
+    LISTED_OUTCOMES = OUTCOMES
     FILLED_FIELDS = %w[
       email website_url description mission_vision_values notes tax_id organization_type
       organization_type_other organization_status_id windows_type_id location_id parent_id
