@@ -17,8 +17,7 @@ class InvoicePresenter
   def total_cents = invoice.total_cents
   def number = invoice.number
   def date = invoice.date
-  def invoicee_id = invoicee&.id
-  def client_id = invoicee_id
+  def client_id = invoicee&.id
   def reference = nil
 
   def issuer = @issuer ||= InvoiceIssuer.current

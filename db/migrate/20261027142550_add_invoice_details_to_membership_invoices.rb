@@ -7,17 +7,9 @@ class AddInvoiceDetailsToMembershipInvoices < ActiveRecord::Migration[8.1]
     add_column :membership_invoices, :hide_address, :boolean unless column_exists?(:membership_invoices, :hide_address)
     add_column :membership_invoices, :bill_to_additional_info, :text unless column_exists?(:membership_invoices, :bill_to_additional_info)
     add_column :membership_invoices, :attention_person_id, :bigint unless column_exists?(:membership_invoices, :attention_person_id)
-
-    add_index :membership_invoices, [ :invoicee_type, :invoicee_id ], name: "index_membership_invoices_on_invoicee" unless index_exists?(:membership_invoices, [ :invoicee_type, :invoicee_id ])
-    add_index :membership_invoices, :bill_to_address_id unless index_exists?(:membership_invoices, :bill_to_address_id)
-    add_index :membership_invoices, :attention_person_id unless index_exists?(:membership_invoices, :attention_person_id)
   end
 
   def down
-    remove_index :membership_invoices, name: "index_membership_invoices_on_invoicee", if_exists: true
-    remove_index :membership_invoices, :bill_to_address_id, if_exists: true
-    remove_index :membership_invoices, :attention_person_id, if_exists: true
-
     remove_column :membership_invoices, :invoicee_type, if_exists: true
     remove_column :membership_invoices, :invoicee_id, if_exists: true
     remove_column :membership_invoices, :bill_to_address_id, if_exists: true

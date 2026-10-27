@@ -15,16 +15,16 @@ class MembershipInvoicePresenter
 
   def person = invoice.person
   def number = "M-#{invoice.id}"
-  def date = invoice.created_at&.to_date
+  def date = invoice.created_at.to_date
   def reference = nil
-  def client_id = person&.id
+  def client_id = person.id
 
   def invoicee = invoice.invoicee || person
 
   def bill_to_name
     return if invoice.hide_invoicee?
 
-    (invoicee.respond_to?(:full_name) ? invoicee.full_name : invoicee&.name)
+    invoicee.respond_to?(:full_name) ? invoicee.full_name : invoicee.name
   end
 
   def bill_to_address_lines

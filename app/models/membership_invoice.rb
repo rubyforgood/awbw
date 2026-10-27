@@ -101,7 +101,7 @@ class MembershipInvoice < ApplicationRecord
   end
 
   def inherit_invoice_details
-    return if membership.blank? || !new_record?
+    return if membership.blank?
 
     previous = membership.membership_invoices.reorder(start_date: :desc, id: :desc).first
     return unless previous
