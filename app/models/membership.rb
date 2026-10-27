@@ -137,6 +137,14 @@ class Membership < ApplicationRecord
     person.pay_subscriptions.find { |sub| sub.metadata&.dig("membership_id").to_i == id }
   end
 
+  def cancel_autopay!
+    subscription = stripe_subscription
+    return false if subscription.blank? || subscription.ended?
+
+    subscription.cancel_now!
+    true
+  end
+
   def deletable?
     deletion_blocked_reason.nil?
   end

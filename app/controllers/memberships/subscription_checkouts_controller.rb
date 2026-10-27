@@ -17,7 +17,7 @@ module Memberships
 
       person.set_payment_processor :stripe
 
-      if person.pay_subscriptions.active.exists?
+      if membership.stripe_subscription&.active?
         return redirect_to(person_path(person), alert: "Automatic renewal is already set up for this membership.", status: :see_other)
       end
 

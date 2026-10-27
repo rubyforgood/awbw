@@ -15,6 +15,9 @@ module Memberships
         cancel_url: person_url(person, membership_invoice_checkout: "cancelled")
       )
       redirect_to session.url, allow_other_host: true, status: :see_other
+    rescue Membership::InvoiceCheckout::AutopayUnresolved
+      redirect_to person_path(person),
+        alert: "This invoice can't be paid online right now. Please contact us.", status: :see_other
     rescue Stripe::StripeError => e
       redirect_to person_path(person), alert: "Could not reach Stripe: #{e.message}", status: :see_other
     end

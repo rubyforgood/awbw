@@ -8,7 +8,7 @@ RSpec.describe "Person profile membership card", type: :request do
 
   def subscribe_to(membership)
     customer = Pay::Customer.create!(owner: person, processor: "stripe", processor_id: "cus_test", default: true)
-    Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_test",
+    Pay::Stripe::Subscription.create!(customer: customer, name: "default", processor_id: "sub_test",
       processor_plan: "membership", status: "active", quantity: 1,
       metadata: { "membership_id" => membership.id })
   end
