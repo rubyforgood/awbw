@@ -27,6 +27,9 @@ application.register("asset-picker", AssetPickerController)
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
 
+import BackgroundVideoController from "./background_video_controller"
+application.register("background-video", BackgroundVideoController)
+
 import CalloutPreviewController from "./callout_preview_controller"
 application.register("callout-preview", CalloutPreviewController)
 

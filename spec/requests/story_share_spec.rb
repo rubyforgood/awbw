@@ -813,6 +813,18 @@ RSpec.describe "/story_share", type: :request do
       hero = Capybara.string(response.body).find("section", text: "Stories of healing")
       expect(hero).to have_css(player)
       expect(hero).to have_css(".motion-reduce\\:hidden #{player}")
+      expect(hero).to have_css("button[aria-label='Pause videos and slideshows'][data-action='background-video#toggle']")
+    end
+
+    it "lets visitors pause the home carousel's videos and slideshow" do
+      create(:story, :published, :publicly_visible, title: "Photo story", story_share_carousel_position: 1)
+
+      get story_shares_path
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css("[data-controller='background-video'][data-background-video-carousel-outlet]")
+      expect(page.find("[data-controller='carousel']")).to have_css("button[aria-label='Pause videos and slideshows']")
+      expect(page.find("section", text: "Stories of healing")).to have_no_css("button[aria-label='Pause videos and slideshows']")
     end
 
     it "shows a video story's YouTube thumbnail and play badge in related stories" do

@@ -7,6 +7,8 @@
             title="<%= story.title %> video"
             class="absolute top-1/2 left-1/2 h-[max(100cqh,56.25cqw)] w-[max(100cqw,177.78cqh)] -translate-x-1/2 -translate-y-1/2"
             allow="autoplay; encrypted-media; picture-in-picture"
+            data-background-video-target="player"
+            data-action="load->background-video#playerLoaded"
             tabindex="-1" aria-hidden="true"></iframe>
   </div>
 <% end %>

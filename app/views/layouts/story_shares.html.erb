@@ -30,7 +30,9 @@
   </head>
 
   <body class="stories share_portal flex min-h-screen flex-col overflow-x-hidden bg-white">
-    <div class="w-full min-w-0 flex-grow" id="main">
+    <div class="w-full min-w-0 flex-grow" id="main"
+         data-controller="background-video"
+         data-background-video-carousel-outlet="[data-controller~='carousel']">
       <div class="sticky top-0 left-0 z-50 w-full print:hidden" id="share-portal-header">
         <!-- Story Share Portal Navbar -->
         <%= render "shared/story_shares_navbar" %>

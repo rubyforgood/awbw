@@ -1,5 +1,5 @@
 module YoutubeHelper
-  BACKGROUND_PLAYER_PARAMS = { autoplay: 1, mute: 1, loop: 1, controls: 0, playsinline: 1, disablekb: 1, rel: 0 }.freeze
+  BACKGROUND_PLAYER_PARAMS = { autoplay: 1, mute: 1, loop: 1, controls: 0, playsinline: 1, disablekb: 1, rel: 0, enablejsapi: 1 }.freeze
 
   # js_api lets the page send the player commands (e.g. pause) via postMessage.
   def youtube_embed_url(url, js_api: false)

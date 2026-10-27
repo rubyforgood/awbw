@@ -32,7 +32,8 @@ RSpec.describe YoutubeHelper, type: :helper do
 
       expect("#{uri.host}#{uri.path}").to eq("www.youtube.com/embed/abc123")
       expect(Rack::Utils.parse_query(uri.query)).to include(
-        "autoplay" => "1", "mute" => "1", "loop" => "1", "playlist" => "abc123", "controls" => "0", "playsinline" => "1"
+        "autoplay" => "1", "mute" => "1", "loop" => "1", "playlist" => "abc123", "controls" => "0", "playsinline" => "1",
+        "enablejsapi" => "1"
       )
     end
 

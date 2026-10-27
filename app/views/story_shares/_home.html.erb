@@ -5,6 +5,7 @@
   <% if hero_story %>
     <%= image_tag hero_story.display_image, alt: "", loading: "eager", class: "absolute inset-0 h-full w-full object-cover" %>
     <%= render "story_shares/banner_video", story: hero_story %>
+    <%= render "story_shares/motion_toggle", position_class: "right-4 bottom-4 motion-reduce:hidden" if youtube_video_id(hero_story.youtube_url) %>
   <% end %>
   <div class="from-brand-navy-950/95 via-brand-navy-900/85 to-brand-purple-900/75 absolute inset-0 bg-gradient-to-r"></div>
   <div class="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
@@ -58,6 +59,7 @@
           <% end %>
         </div>
 
+        <%= render "story_shares/motion_toggle", position_class: "top-4 right-4" %>
         <button aria-label="Previous story" class="swiper-button-prev-custom text-brand-navy-900 absolute top-1/2 left-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
