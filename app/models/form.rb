@@ -19,15 +19,15 @@ class Form < ApplicationRecord
 
   ROLE_OPTIONS = [
     [ "General", "general" ],
-    [ "Reinstatement", "reinstatement" ],
-    [ "Bulk payment", "bulk_payment" ],
     [ "Registration", "registration" ],
     [ "Continuing education application", "continuing_education" ],
     [ "Scholarship application", "scholarship" ],
     [ "Day 1 survey", "day_1_survey" ],
     [ "Day 2 survey", "day_2_survey" ],
     [ "Post-event survey", "post_event_survey" ],
-    [ "Post-training recipients survey", "recipient_survey" ]
+    [ "Post-training recipients survey", "recipient_survey" ],
+    [ "Reinstatement", "reinstatement" ],
+    [ "Bulk payment", "bulk_payment" ]
   ].freeze
 
   # Survey roles label the forms the built-in callouts deliver (see .survey).
