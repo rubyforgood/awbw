@@ -664,7 +664,7 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
     end
   end
 
-  it "reads an agency's own Rolodex card onto its organization" do
+  it "reads an agency's own Rolodex card onto its organization, which takes the card's code" do
     fm_organization("ORG00001")
     FmAddress.create!(fm_id: "7", data: { "RolodexID" => "00090", "AddrsLine1" => "9 Elm St", "AddrsCity" => "Ojai",
                                           "AddrsState" => "CA", "AddrsType" => "Home" })
@@ -676,10 +676,54 @@ RSpec.describe OrganizationServices::ImportFromFilemaker do
 
     import
 
-    harbor = Organization.find_by!(filemaker_code: "ORG00001")
-    expect(harbor).to have_attributes(website_url: "harbor.example.org", email: nil)
+    harbor = Organization.find_by!(name: "Harbor House")
+    expect(harbor).to have_attributes(website_url: "harbor.example.org", email: nil, filemaker_code: "00090, ORG00001")
     expect(harbor.addresses.sole).to have_attributes(street_address: "9 Elm St", address_type: "work")
-    expect(Organization.find_by!(name: "Elm Street Clinic")).to have_attributes(email: "hello@elm.example.org", filemaker_code: nil)
+    expect(Organization.find_by!(name: "Elm Street Clinic")).to have_attributes(email: "hello@elm.example.org", filemaker_code: "00091")
+  end
+
+  it "finds an agency's organization by the card's code on a rerun, whatever it's been renamed to" do
+    FmRolodex.create!(fm_id: "00091", data: { "isAgency__c" => "1", "Organization" => "Elm Street Clinic" })
+    import
+    Organization.find_by!(filemaker_code: "00091").update!(name: "Elm Street Health")
+
+    expect { expect(import.results[:already_imported]).to include(a_string_including("00091")) }.not_to change(Organization, :count)
+  end
+
+  describe "several projects of one FileMaker organization sharing a name" do
+    it "brings them in as one organization carrying every code" do
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001", ProjectName: "Harbor Shelter")
+      project("P0002", "ORG00001", ProjectName: "Harbor Shelter")
+      project("P0003", "ORG00001", ProjectName: "Harbor Outreach")
+
+      import
+
+      expect(Organization.find_by!(name: "Harbor Shelter").filemaker_code).to eq("P0001, P0002")
+      expect(Organization.where("name LIKE ?", "Harbor Shelter%").count).to eq(1)
+    end
+
+    it "makes a single program of an organization whose projects all share one name" do
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001", ProjectName: "Harbor House")
+      project("P0002", "ORG00001", ProjectName: "Harbor House")
+
+      import
+
+      expect(Organization.sole).to have_attributes(name: "Harbor House", filemaker_code: "ORG00001, P0001, P0002")
+    end
+
+    it "lands a new one on the organization already carrying its namesake's code" do
+      existing = create(:organization, name: "Harbor Shelter", filemaker_code: "P0001")
+      fm_organization("ORG00001")
+      project("P0001", "ORG00001", ProjectName: "Harbor Shelter")
+      project("P0002", "ORG00001", ProjectName: "Harbor Shelter")
+      project("P0003", "ORG00001", ProjectName: "Harbor Outreach")
+
+      import
+
+      expect(existing.reload.filemaker_code).to eq("P0001, P0002")
+    end
   end
 
   it "changes nothing when it runs again" do
