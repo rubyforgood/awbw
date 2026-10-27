@@ -56,8 +56,7 @@ class MembershipDecorator < ApplicationDecorator
   def period_label
     return if start_date.blank? || end_date.blank?
 
-    end_str = end_date >= Date.current ? "present" : end_date.strftime("%b %-d, %Y")
-    "#{start_date.strftime("%b %-d, %Y")} – #{end_str}"
+    "#{start_date.strftime("%b %-d, %Y")} – #{end_date.strftime("%b %-d, %Y")}"
   end
 
   # This membership's Stripe autopay, or nil when there is no subscription to collect from.
