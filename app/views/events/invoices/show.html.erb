@@ -15,7 +15,7 @@
       [ dashboard_event_path(@event), "Back to event" ]
     end
 %>
-<%= render "events/invoices/actions", back_path: back_path, back_label: back_label %>
+<%= render "shared/print_actions", back_path: back_path, back_label: back_label %>
 <div class="px-4 py-6 sm:px-8 print:p-0">
   <%= render "events/invoices/invoice", invoice: @invoice %>
 </div>

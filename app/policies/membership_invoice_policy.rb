@@ -1,6 +1,8 @@
 class MembershipInvoicePolicy < ApplicationPolicy
   def manage? = admin? && Membership.enabled?
 
+  def show? = Membership.enabled? && (manage? || owner?)
+
   def pay? = Membership.enabled? && owner?
 
   private
