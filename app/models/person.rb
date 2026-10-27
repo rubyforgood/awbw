@@ -498,6 +498,7 @@ class Person < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
+  # pay gem falls back to person.name without this. `name` returns display preference which we do not want
   def pay_customer_name = full_name
 
   # Distinct professional-license types (e.g. "LMFT, LCSW"), shown as a credential
