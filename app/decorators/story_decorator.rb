@@ -7,7 +7,7 @@ class StoryDecorator < ApplicationDecorator
     length ? text&.truncate(length) : text
   end
 
-  def default_display_image
+  def display_image
     h.youtube_thumbnail_url(youtube_url) || super
   end
 
