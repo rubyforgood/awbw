@@ -49,6 +49,16 @@ RSpec.describe "Taggings index", type: :request do
       expect(response.body).to include("Youth")
       expect(response.body).to include("Art for Healing")
     end
+
+    it "shows a video story's YouTube thumbnail and play icon" do
+      story = create(:story, :published, title: "Video story", youtube_url: "https://www.youtube.com/watch?v=abc123")
+      create(:sectorable_item, sector: sector_2, sectorable: story)
+
+      get taggings_path(sector_names_all: "Youth")
+
+      card = Capybara.string(response.body).all("div.relative").find { |node| node.has_text?("Video story") && node.has_css?(".fa-play") }
+      expect(card).to have_css("img[src='https://i.ytimg.com/vi/abc123/hqdefault.jpg']")
+    end
   end
 
   describe "filtering by category_names_all" do
