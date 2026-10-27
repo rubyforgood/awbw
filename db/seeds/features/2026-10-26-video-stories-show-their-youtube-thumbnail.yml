@@ -1,0 +1,15 @@
+name: "Video stories show their YouTube thumbnail and a play icon"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-26
+action_path: "/story_share"
+pr_number: 2887
+summary: >-
+  A story with a YouTube link but no uploaded image now shows the video's own
+  YouTube thumbnail on Story Share cards, search results, and tag search. Every
+  video story carries a play icon on its card, and the Story Share home banner
+  plays the top featured story's video muted behind the headline.
+pro_tips:
+  - "Upload an image only if you want something other than YouTube's thumbnail; an uploaded image always wins."
+  - "Don't add a play button to the image itself — the play icon is added for you, so a baked-in one shows twice."
+  - "Visitors who turn on reduced motion in their device settings see the still image instead of the moving video."
