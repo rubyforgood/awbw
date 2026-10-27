@@ -1701,7 +1701,7 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event, format: :csv)
 
         rows = CSV.parse(response.body, headers: true)
-        expect(rows.first["Post-event survey"]).to eq("2026-11-02")
+        expect(rows.first["Attendee survey"]).to eq("2026-11-02")
       end
     end
 
@@ -2833,14 +2833,14 @@ RSpec.describe "Events", type: :request do
       get onboarding_event_path(event)
 
       expect(response.body).to include("Day 1 survey")
-      expect(response.body).to include("Post-event survey")
+      expect(response.body).to include("Attendee survey")
       expect(response.body).to include("Oct 30")
 
       get onboarding_event_path(event, format: :csv)
 
       rows = CSV.parse(response.body, headers: true)
       expect(rows.first["Day 1 survey"]).to eq("2026-10-30")
-      expect(rows.first["Post-event survey"]).to eq("")
+      expect(rows.first["Attendee survey"]).to eq("")
     end
 
     it "fills an anonymous survey column from the registrant's completion" do

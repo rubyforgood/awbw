@@ -131,7 +131,7 @@ module EventsHelper
     end
     columns << { key: "attendance", label: "Event attendance", kind: :attendance, sortable: true, align: "center", toggle: "attendance" }
     survey_roles.each do |role|
-      columns << { key: role, label: Form.survey_header(role), kind: :survey, role: role, sortable: true, align: "center", toggle: role }
+      columns << { key: role, label: Form.role_label(role), kind: :survey, role: role, sortable: true, align: "center", toggle: role }
     end
     columns += [
       { key: "program", label: "Organization", kind: :program, sortable: true, align: "left", toggle: "program" },

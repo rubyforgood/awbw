@@ -6,7 +6,7 @@ RSpec.describe SurveyFormSeeder do
 
     expect(Form.pluck(:name, :role)).to contain_exactly(
       [ "Day 1 Survey", "day_1_survey" ], [ "Day 2 Survey", "day_2_survey" ],
-      [ "Post-Event Survey", "post_event_survey" ], [ "Post-Training Recipients Survey", "recipient_survey" ]
+      [ "Attendee Survey", "post_event_survey" ], [ "Scholarship Survey", "recipient_survey" ]
     )
   end
 
@@ -33,7 +33,7 @@ RSpec.describe SurveyFormSeeder do
 
   it "reports the names it created" do
     expect(described_class.call).to contain_exactly(
-      "Day 1 Survey", "Day 2 Survey", "Post-Event Survey", "Post-Training Recipients Survey"
+      "Day 1 Survey", "Day 2 Survey", "Attendee Survey", "Scholarship Survey"
     )
   end
 

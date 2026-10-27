@@ -1137,7 +1137,7 @@ class EventsController < ApplicationController
   end
 
   def survey_csv_headers
-    @survey_completions.roles.map { |role| Form.survey_header(role) }
+    @survey_completions.roles.map { |role| Form.role_label(role) }
   end
 
   def survey_csv_dates(registration)
