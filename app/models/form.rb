@@ -33,7 +33,7 @@ class Form < ApplicationRecord
       [ "Day 1 survey", "day_1_survey" ],
       [ "Day 2 survey", "day_2_survey" ],
       [ "Post-event survey", "post_event_survey" ],
-      [ "Post-training recipients survey", "recipient_survey" ]
+      [ "Post-training scholarship survey", "recipient_survey" ]
     ]
   ].freeze
   ROLE_OPTIONS = ROLE_GROUPS.flatten(1).freeze

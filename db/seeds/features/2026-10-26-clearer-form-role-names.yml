@@ -5,6 +5,7 @@ released_on: 2026-10-26
 summary: >-
   The scholarship and continuing education form roles now read "Scholarship
   application" and "Continuing education application", so it's clear they're for
-  the forms people fill out to apply, not surveys about those topics.
+  the forms people fill out to apply, not surveys about those topics. The recipients
+  survey role now reads "Post-training scholarship survey".
 pro_tips:
   - "A survey about scholarships or CE should stay a General form (or one of the survey roles)."
