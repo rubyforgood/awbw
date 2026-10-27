@@ -18,8 +18,9 @@
   <!-- Membership -->
   <div class="section-content space-y-4 px-4 py-5 sm:px-6 sm:py-6"
        data-expandable-card-target="body">
-    <% if membership&.end_date %>
-      <p class="text-sm text-gray-700"><%= membership.coverage_label %> <span class="font-medium"><%= membership.end_date.strftime("%b %-d, %Y") %></span></p>
+    <% coverage_date = membership&.coverage_date %>
+    <% if coverage_date %>
+      <p class="text-sm text-gray-700"><%= membership.coverage_label %> <span class="font-medium"><%= coverage_date.strftime("%b %-d, %Y") %></span></p>
     <% end %>
 
     <% invoices_due = local_assigns[:invoices_due] %>

@@ -19,7 +19,13 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def coverage_label
+    return "Membership starts:" if upcoming?
+
     active? ? "Membership good through:" : "Membership ended:"
+  end
+
+  def coverage_date
+    upcoming? ? (start_date || upcoming_start_date) : end_date
   end
 
   def status_label

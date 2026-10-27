@@ -106,6 +106,38 @@ RSpec.describe MembershipDecorator, type: :decorator do
     end
   end
 
+  describe "#coverage_label and #coverage_date" do
+    it "points at the end date while the membership is active" do
+      membership = create(:membership, start_date: Date.current - 1.month, end_date: Date.current + 11.months).decorate
+
+      expect(membership.coverage_label).to eq("Membership good through:")
+      expect(membership.coverage_date).to eq(Date.current + 11.months)
+    end
+
+    it "points at the start date when the membership has not begun" do
+      membership = create(:membership, start_date: Date.current + 1.month, end_date: Date.current + 13.months).decorate
+
+      expect(membership.coverage_label).to eq("Membership starts:")
+      expect(membership.coverage_date).to eq(Date.current + 1.month)
+    end
+
+    it "falls back to the first upcoming invoice when there is no start date" do
+      membership = create(:membership).tap { |m| m.update!(start_date: nil, end_date: nil) }
+      invoice = create(:membership_invoice, membership: membership,
+        start_date: Date.current + 1.month, end_date: Date.current + 1.year)
+
+      expect(membership.reload.decorate.coverage_label).to eq("Membership starts:")
+      expect(membership.decorate.coverage_date).to eq(invoice.start_date)
+    end
+
+    it "points at the end date once the membership has ended" do
+      membership = create(:membership, start_date: Date.current - 2.years, end_date: Date.current - 1.year).decorate
+
+      expect(membership.coverage_label).to eq("Membership ended:")
+      expect(membership.coverage_date).to eq(Date.current - 1.year)
+    end
+  end
+
   describe "#period_label" do
     # period_label reads "present" whenever end_date is still ahead of Date.current,
     # so pin "now" to keep the fixed 2027 end dates on the present side of the fence.
