@@ -17,7 +17,8 @@ module Memberships
       authorize! @membership_invoice, to: :show_public?
 
       unless @membership_invoice.remaining_cost.positive?
-        return redirect_to root_path, notice: "This invoice has already been paid.", status: :see_other
+        return redirect_to memberships_public_invoice_checkout_path(params[:token]),
+          notice: "This invoice has already been paid.", status: :see_other
       end
 
       session = Membership::InvoiceCheckout.call(

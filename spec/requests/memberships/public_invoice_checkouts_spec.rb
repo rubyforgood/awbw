@@ -71,7 +71,7 @@ RSpec.describe "Memberships::PublicInvoiceCheckouts", type: :request do
 
       post memberships_public_invoice_checkout_path(token)
 
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(memberships_public_invoice_checkout_path(token))
       expect(flash[:notice]).to match(/already been paid/)
       expect(checkout_args).to be_empty
     end
