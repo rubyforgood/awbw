@@ -384,8 +384,9 @@ Rails.application.routes.draw do
   namespace :memberships do
     resources :subscription_checkouts, only: [ :create ]
     resources :invoice_checkouts, only: [ :create ]
-    get "public_invoice_checkouts/:token", to: "public_invoice_checkouts#show", as: :public_invoice_checkout
-    post "public_invoice_checkouts/:token", to: "public_invoice_checkouts#create"
+    resources :public_invoices, only: :show, param: :token do
+      resource :checkout, only: [ :create ], module: :public_invoices
+    end
     resources :billing_portals, only: [ :create ]
   end
 
