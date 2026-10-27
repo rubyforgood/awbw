@@ -26,13 +26,13 @@ RSpec.describe EventSurveyCompletions do
       end
 
       it "offers all four on a paid, multi-day live facilitator training" do
-        expect(completions.roles).to eq(%w[day_1_survey day_2_survey post_event_survey recipient_survey])
+        expect(completions.roles).to eq(%w[day_1_survey day_2_survey recipient_survey post_event_survey])
       end
 
       it "drops Day 2 on a one-day training" do
         event.update!(end_date: event.start_date)
 
-        expect(completions.roles).to eq(%w[day_1_survey post_event_survey recipient_survey])
+        expect(completions.roles).to eq(%w[day_1_survey recipient_survey post_event_survey])
       end
 
       it "drops Day 2 on a one-day evening training even for a viewer whose zone puts the end on the next day" do
@@ -41,19 +41,19 @@ RSpec.describe EventSurveyCompletions do
 
         roles = Time.use_zone("Eastern Time (US & Canada)") { described_class.new(Event.find(event.id), [ person.id ]).roles }
 
-        expect(roles).to eq(%w[day_1_survey post_event_survey recipient_survey])
+        expect(roles).to eq(%w[day_1_survey recipient_survey post_event_survey])
       end
 
       it "drops Day 1 and Day 2 on an on-demand training" do
         event.update!(on_demand: true)
 
-        expect(completions.roles).to eq(%w[post_event_survey recipient_survey])
+        expect(completions.roles).to eq(%w[recipient_survey post_event_survey])
       end
 
       it "drops Day 1 and Day 2 on an event that isn't a facilitator training" do
         event.update!(facilitator_training: false)
 
-        expect(completions.roles).to eq(%w[post_event_survey recipient_survey])
+        expect(completions.roles).to eq(%w[recipient_survey post_event_survey])
       end
 
       it "drops the scholarship survey on a free event" do
