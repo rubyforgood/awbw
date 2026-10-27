@@ -115,6 +115,10 @@ RSpec.describe Form do
 
   describe ".survey_header" do
     it "uses the role's dropdown label" do
+      expect(Form.survey_header("day_1_survey")).to eq("Day 1 survey")
+    end
+
+    it "shortens the post-event attendee survey" do
       expect(Form.survey_header("post_event_survey")).to eq("Post-event survey")
     end
 

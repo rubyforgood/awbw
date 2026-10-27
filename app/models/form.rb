@@ -32,7 +32,7 @@ class Form < ApplicationRecord
     [
       [ "Day 1 survey", "day_1_survey" ],
       [ "Day 2 survey", "day_2_survey" ],
-      [ "Post-event survey", "post_event_survey" ],
+      [ "Post-event attendee survey", "post_event_survey" ],
       [ "Post-event scholarship survey", "recipient_survey" ]
     ]
   ].freeze
@@ -40,7 +40,7 @@ class Form < ApplicationRecord
 
   # Survey roles label the forms the built-in callouts deliver (see .survey).
   SURVEY_ROLES = ROLE_OPTIONS.map(&:last).select { |role| role.include?("survey") }.freeze
-  SURVEY_HEADERS = { "recipient_survey" => "Scholarship survey" }.freeze
+  SURVEY_HEADERS = { "post_event_survey" => "Post-event survey", "recipient_survey" => "Scholarship survey" }.freeze
 
   # Roles whose submissions are processed against a Person, so they can't be anonymous.
   IDENTIFIED_ROLES = (AGREEMENT_ROLES + %w[scholarship bulk_payment continuing_education]).freeze
