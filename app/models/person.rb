@@ -498,6 +498,8 @@ class Person < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
+  def pay_customer_name = full_name
+
   # Distinct professional-license types (e.g. "LMFT, LCSW"), shown as a credential
   # suffix after the person's name on their profile (replaces the old free-text
   # credentials field). Nil when no licensed types are on file.
