@@ -51,7 +51,7 @@ RSpec.describe Form do
     end
 
     it "treats every role option naming a survey as a survey role, in dropdown order" do
-      expect(Form::SURVEY_ROLES).to eq(%w[day_1_survey day_2_survey post_event_survey recipient_survey])
+      expect(Form::SURVEY_ROLES).to eq(%w[day_1_survey day_2_survey recipient_survey post_event_survey])
     end
   end
 
@@ -108,26 +108,13 @@ RSpec.describe Form do
       expect(Form.role_label("continuing_education")).to eq("Continuing education application")
     end
 
+    it "names the surveys by who takes them" do
+      expect(Form.role_label("recipient_survey")).to eq("Scholarship survey")
+      expect(Form.role_label("post_event_survey")).to eq("Attendee survey")
+    end
+
     it "humanizes a role outside the dropdown" do
       expect(Form.role_label("public")).to eq("Public")
-    end
-  end
-
-  describe ".survey_header" do
-    it "uses the role's dropdown label" do
-      expect(Form.survey_header("day_1_survey")).to eq("Day 1 survey")
-    end
-
-    it "shortens the post-event attendee survey" do
-      expect(Form.survey_header("post_event_survey")).to eq("Post-event survey")
-    end
-
-    it "calls the recipients survey the scholarship survey" do
-      expect(Form.survey_header("recipient_survey")).to eq("Scholarship survey")
-    end
-
-    it "humanizes a role outside the dropdown" do
-      expect(Form.survey_header("legacy_survey")).to eq("Legacy survey")
     end
   end
 

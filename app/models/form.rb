@@ -32,15 +32,14 @@ class Form < ApplicationRecord
     [
       [ "Day 1 survey", "day_1_survey" ],
       [ "Day 2 survey", "day_2_survey" ],
-      [ "Post-event attendee survey", "post_event_survey" ],
-      [ "Post-event scholarship survey", "recipient_survey" ]
+      [ "Scholarship survey", "recipient_survey" ],
+      [ "Attendee survey", "post_event_survey" ]
     ]
   ].freeze
   ROLE_OPTIONS = ROLE_GROUPS.flatten(1).freeze
 
   # Survey roles label the forms the built-in callouts deliver (see .survey).
   SURVEY_ROLES = ROLE_OPTIONS.map(&:last).select { |role| role.include?("survey") }.freeze
-  SURVEY_HEADERS = { "post_event_survey" => "Post-event survey", "recipient_survey" => "Scholarship survey" }.freeze
 
   # Roles whose submissions are processed against a Person, so they can't be anonymous.
   IDENTIFIED_ROLES = (AGREEMENT_ROLES + %w[scholarship bulk_payment continuing_education]).freeze
@@ -99,10 +98,6 @@ class Form < ApplicationRecord
 
   def self.role_label(role)
     ROLE_OPTIONS.rassoc(role)&.first || role.to_s.humanize
-  end
-
-  def self.survey_header(role)
-    SURVEY_HEADERS.fetch(role) { role_label(role) }
   end
 
   def survey_role?
@@ -189,7 +184,7 @@ class Form < ApplicationRecord
   def anonymous_allowed_for_role
     return unless anonymous? && role.in?(IDENTIFIED_ROLES)
 
-    errors.add(:anonymous, "can't be turned on for a #{Form.survey_header(role).downcase} form, which is processed against a person")
+    errors.add(:anonymous, "can't be turned on for a #{Form.role_label(role).downcase} form, which is processed against a person")
   end
 
   def stays_anonymous_on_anonymous_callout

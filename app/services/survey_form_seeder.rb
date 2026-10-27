@@ -11,8 +11,8 @@ class SurveyFormSeeder
   TEMPLATES = [
     { name: "Day 1 Survey", role: "day_1_survey", sections: %i[day_1_survey content_sharing_preferences] },
     { name: "Day 2 Survey", role: "day_2_survey", sections: %i[day_2_survey content_sharing_preferences] },
-    { name: "Post-Event Survey", role: "post_event_survey", sections: %i[post_event_feedback content_sharing_preferences] },
-    { name: "Post-Training Recipients Survey", role: "recipient_survey", sections: %i[recipient_survey content_sharing_preferences] }
+    { name: "Attendee Survey", role: "post_event_survey", sections: %i[post_event_feedback content_sharing_preferences] },
+    { name: "Scholarship Survey", role: "recipient_survey", sections: %i[recipient_survey content_sharing_preferences] }
   ].freeze
 
   DAY_1_WORKSHOPS = [ "The Touchstone Journey", "Creating A Safer/Braver Place", "The Take A Break, Self-Regulate" ].freeze

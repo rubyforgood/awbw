@@ -289,7 +289,7 @@
               </th>
               <% survey_roles.each_with_index do |role, offset| %>
                 <th class="hidden px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="surveys">
-                  <%= render "shared/sortable_header", label: Form.survey_header(role), index: status_index + 1 + offset %>
+                  <%= render "shared/sortable_header", label: Form.role_label(role), index: status_index + 1 + offset %>
                 </th>
               <% end %>
               <%# Off by default; kept out of the sortable index range (last data column). %>
