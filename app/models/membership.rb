@@ -59,7 +59,14 @@ class Membership < ApplicationRecord
 
   def active? = start_date.present? && start_date <= Date.current && end_date.present? && end_date >= Date.current
 
-  def upcoming? = start_date.present? && start_date > Date.current
+  def upcoming?
+    return true if start_date.present? && start_date > Date.current
+    return false if active?
+
+    membership_invoices.any? { |invoice| invoice.start_date.present? && invoice.start_date > Date.current }
+  end
+
+  def upcoming_start_date = start_date || next_future_invoice&.start_date
 
   def owes? = membership_invoices.any?(&:overdue?)
 

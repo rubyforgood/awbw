@@ -122,6 +122,16 @@ RSpec.describe "Memberships", type: :request do
         expect(response.body).to include("Overdue")
       end
 
+      it "shows an upcoming badge for a membership billed but not yet dated" do
+        subscription = create(:membership, person: person).tap { |m| m.update!(start_date: nil, end_date: nil) }
+        membership_invoice_for(subscription: subscription, start_date: 1.month.from_now.to_date)
+
+        get person_memberships_path(person)
+
+        expect(response.body).to include("Upcoming")
+        expect(response.body).not_to include("Ended")
+      end
+
       it "says so when a subscription has no years" do
         create(:membership, person: person)
 

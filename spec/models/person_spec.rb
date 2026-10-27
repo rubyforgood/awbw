@@ -1203,6 +1203,16 @@ RSpec.describe Person, "#current_membership" do
     expect(person.current_membership).to eq(sooner)
   end
 
+  it "counts a membership billed for a future period as upcoming" do
+    create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current + 2.years, end_date: Date.current + 3.years)
+    billed = create(:membership, person: person).tap { |m| m.update!(start_date: nil, end_date: nil) }
+    create(:membership_invoice, membership: billed,
+      start_date: Date.current + 1.month, end_date: Date.current + 1.year - 1.day)
+
+    expect(person.current_membership).to eq(billed)
+  end
+
   it "falls back to the most recent membership when all have ended" do
     create(:membership, :autorenewal_cancelled, person: person,
       start_date: Date.current - 3.years, end_date: Date.current - 2.years)

@@ -86,6 +86,36 @@ RSpec.describe Membership, type: :model do
     end
   end
 
+  describe "#upcoming?" do
+    it "is true when the start date is in the future" do
+      membership = create(:membership, start_date: Date.current + 1.month, end_date: Date.current + 1.year)
+
+      expect(membership).to be_upcoming
+    end
+
+    it "is true when an invoice starts in the future and the membership has no dates yet" do
+      membership = create(:membership).tap { |m| m.update!(start_date: nil, end_date: nil) }
+      create(:membership_invoice, membership: membership,
+        start_date: Date.current + 1.month, end_date: Date.current + 1.year - 1.day)
+
+      expect(membership.reload).to be_upcoming
+    end
+
+    it "is false while the membership is active, even with a future invoice" do
+      membership = create(:membership)
+      create(:membership_invoice, membership: membership,
+        start_date: Date.current + 1.year, end_date: Date.current + 2.years - 1.day)
+
+      expect(membership.reload).not_to be_upcoming
+    end
+
+    it "is false when the membership has no dates and no future invoice" do
+      membership = create(:membership).tap { |m| m.update!(start_date: nil, end_date: nil) }
+
+      expect(membership.reload).not_to be_upcoming
+    end
+  end
+
   describe "associations" do
     it "is reachable from the person, along with their invoices" do
       subscription = create(:membership)

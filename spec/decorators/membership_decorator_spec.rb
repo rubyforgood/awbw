@@ -95,6 +95,17 @@ RSpec.describe MembershipDecorator, type: :decorator do
     end
   end
 
+  describe "#status_label" do
+    it "reads Upcoming for a membership billed for a future period but not dated yet" do
+      membership = create(:membership).tap { |m| m.update!(start_date: nil, end_date: nil) }
+      create(:membership_invoice, membership: membership,
+        start_date: Date.current + 1.month, end_date: Date.current + 1.year - 1.day)
+
+      expect(membership.reload.decorate.status_label).to eq("Upcoming")
+      expect(membership.decorate.status_classes).to include("blue")
+    end
+  end
+
   describe "#period_label" do
     # period_label reads "present" whenever end_date is still ahead of Date.current,
     # so pin "now" to keep the fixed 2027 end dates on the present side of the fence.

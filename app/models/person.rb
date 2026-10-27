@@ -576,7 +576,7 @@ class Person < ApplicationRecord
     live_ids = pay_subscriptions.active.filter_map { |subscription| subscription.metadata&.dig("membership_id")&.to_i }
     memberships.find { |membership| live_ids.include?(membership.id) } ||
       memberships.find(&:active?) ||
-      memberships.select(&:upcoming?).min_by(&:start_date) ||
+      memberships.select(&:upcoming?).min_by(&:upcoming_start_date) ||
       memberships.max_by { |membership| membership.end_date || Date.new(0) }
   end
 
