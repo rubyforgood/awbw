@@ -2,7 +2,7 @@ class MembershipInvoicesController < ApplicationController
   include AhoyTracking
 
   before_action :set_membership, only: [ :new, :create ]
-  before_action :set_membership_invoice, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_membership_invoice, only: [ :show, :receipt, :edit, :update, :destroy ]
 
   def index
     authorize!
@@ -40,6 +40,17 @@ class MembershipInvoicesController < ApplicationController
     @invoice = MembershipInvoicePresenter.new(@membership_invoice)
     @deletion_blocked_reason = @membership_invoice.deletion_blocked_reason
     track_view("invoices", { membership_invoice_id: @membership_invoice.id })
+  end
+
+  def receipt
+    authorize! @membership_invoice
+
+    unless @membership_invoice.receipt_available?
+      return redirect_to membership_invoice_path(@membership_invoice),
+        alert: "A receipt is available once the invoice is paid in full.", status: :see_other
+    end
+
+    @receipt = MembershipInvoiceReceipt.new(@membership_invoice)
   end
 
   def edit

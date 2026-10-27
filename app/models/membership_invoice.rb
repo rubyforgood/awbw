@@ -100,6 +100,10 @@ class MembershipInvoice < ApplicationRecord
     membership.membership_invoices.where.not(id: id).exists?
   end
 
+  def receipt_available?
+    paid_in_full? && payment_received?
+  end
+
   def inherit_invoice_details
     return if membership.blank?
 

@@ -132,6 +132,17 @@ RSpec.describe "Memberships", type: :request do
         expect(response.body).not_to include("Ended")
       end
 
+      it "links a settled year to its receipt" do
+        subscription = create(:membership, person: person)
+        invoice = membership_invoice_for(subscription: subscription, start_date: 60.days.ago)
+        create(:allocation, source: create(:payment, amount_cents: invoice.cost_cents),
+          allocatable: invoice, amount: invoice.cost_cents)
+
+        get person_memberships_path(person)
+
+        expect(response.body).to include(receipt_membership_invoice_path(invoice))
+      end
+
       it "says so when a subscription has no years" do
         create(:membership, person: person)
 

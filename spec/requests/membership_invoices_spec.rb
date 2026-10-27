@@ -318,4 +318,54 @@ RSpec.describe "MembershipInvoices", type: :request do
       end
     end
   end
+
+  describe "GET /membership_invoices/:id/receipt" do
+    let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
+    let(:membership) { create(:membership, person: person) }
+    let!(:invoice) { create(:membership_invoice, membership: membership, cost_cents: 2_500) }
+
+    def settle(amount: 2_500)
+      create(:allocation, source: create(:payment, amount_cents: amount), allocatable: invoice, amount: amount)
+    end
+
+    before { sign_in admin }
+
+    it "is not available to a non-admin" do
+      sign_in create(:user)
+
+      get receipt_membership_invoice_path(invoice)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "sends the viewer back to the invoice until the year is paid in full" do
+      get receipt_membership_invoice_path(invoice)
+
+      expect(response).to redirect_to(membership_invoice_path(invoice))
+      expect(flash[:alert]).to match(/paid in full/)
+    end
+
+    it "renders the receipt once a payment settles the year" do
+      settle
+
+      get receipt_membership_invoice_path(invoice)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("RECEIPT")
+      expect(response.body).to include("MR-#{invoice.id}")
+      expect(response.body).to include("Ada Lovelace")
+      expect(response.body).to include("AWBW annual membership")
+      expect(response.body).to include("$25")
+      expect(response.body).to include("Balance due")
+    end
+
+    it "lets the owning member view their receipt" do
+      settle
+      sign_in create(:user, person: person)
+
+      get receipt_membership_invoice_path(invoice)
+
+      expect(response).to have_http_status(:ok)
+    end
+  end
 end
