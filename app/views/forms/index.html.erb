@@ -11,7 +11,7 @@
     <% if params[:name].present? %><%= hidden_field_tag :name, params[:name] %><% end %>
     <%= label_tag :role, "Form role", class: "sr-only" %>
     <%= select_tag :role,
-                   options_for_select(Form::ROLE_OPTIONS, params[:role]),
+                   form_role_options(params[:role]),
                    include_blank: "All form roles",
                    class: "rounded-lg border border-gray-300 py-2 pr-8 pl-3 text-sm text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
   <% end %>

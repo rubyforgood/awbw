@@ -17,18 +17,26 @@ class Form < ApplicationRecord
   # submissions index scenario filter.
   AGREEMENT_ROLES = %w[registration reinstatement].freeze
 
-  ROLE_OPTIONS = [
-    [ "General", "general" ],
-    [ "Registration", "registration" ],
-    [ "Continuing education application", "continuing_education" ],
-    [ "Scholarship application", "scholarship" ],
-    [ "Day 1 survey", "day_1_survey" ],
-    [ "Day 2 survey", "day_2_survey" ],
-    [ "Post-event survey", "post_event_survey" ],
-    [ "Post-training recipients survey", "recipient_survey" ],
-    [ "Reinstatement", "reinstatement" ],
-    [ "Bulk payment", "bulk_payment" ]
+  # Dropdowns draw a separator between groups.
+  ROLE_GROUPS = [
+    [ [ "General", "general" ] ],
+    [
+      [ "Registration", "registration" ],
+      [ "Continuing education application", "continuing_education" ],
+      [ "Scholarship application", "scholarship" ]
+    ],
+    [
+      [ "Day 1 survey", "day_1_survey" ],
+      [ "Day 2 survey", "day_2_survey" ],
+      [ "Post-event survey", "post_event_survey" ],
+      [ "Post-training recipients survey", "recipient_survey" ]
+    ],
+    [
+      [ "Reinstatement", "reinstatement" ],
+      [ "Bulk payment", "bulk_payment" ]
+    ]
   ].freeze
+  ROLE_OPTIONS = ROLE_GROUPS.flatten(1).freeze
 
   # Survey roles label the forms the built-in callouts deliver (see .survey).
   SURVEY_ROLES = ROLE_OPTIONS.map(&:last).select { |role| role.include?("survey") }.freeze
