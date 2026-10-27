@@ -23,11 +23,5 @@ RSpec.describe FormsHelper, type: :helper do
       expect(html.scan("<hr>").size).to eq(Form::ROLE_GROUPS.size - 1)
       expect(html).to include('<option selected="selected" value="scholarship">Scholarship application</option>')
     end
-
-    it "drops excluded roles and any group they empty" do
-      html = helper.form_role_options("general", except: Form::SURVEY_ROLES)
-      expect(html).not_to include("survey")
-      expect(html.scan("<hr>").size).to eq(2)
-    end
   end
 end

@@ -30,7 +30,7 @@
                 <label class="mb-1 block text-sm font-medium text-gray-700">Form role</label>
                 <select name="role" data-section-filter-target="select" data-action="section-filter#filter"
                         class="w-full rounded border-gray-300 px-3 py-2 text-sm shadow-sm">
-                  <%= form_role_options(params[:role].presence || "general", except: Form::SURVEY_ROLES) %>
+                  <%= form_role_options(params[:role].presence || "general") %>
                 </select>
               </div>
             </div>

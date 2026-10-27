@@ -134,9 +134,8 @@ module FormsHelper
     Form.role_label(form.role.presence || "general")
   end
 
-  def form_role_options(selected, except: [])
-    groups = Form::ROLE_GROUPS.map { |group| group.reject { |_, role| role.in?(except) } }.compact_blank
-    safe_join(groups.map { |group| options_for_select(group, selected) }, tag.hr)
+  def form_role_options(selected)
+    safe_join(Form::ROLE_GROUPS.map { |group| options_for_select(group, selected) }, tag.hr)
   end
 
   OTHER_RESPONSES_PHRASE = "Other responses review queue"
