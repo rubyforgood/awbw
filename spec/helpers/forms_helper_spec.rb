@@ -9,7 +9,7 @@ RSpec.describe FormsHelper, type: :helper do
 
   describe "#form_role_label" do
     it "uses the role's dropdown label" do
-      expect(helper.form_role_label(build(:form, role: "continuing_education"))).to eq("Continuing education registration")
+      expect(helper.form_role_label(build(:form, role: "continuing_education"))).to eq("Continuing education application")
     end
 
     it "falls back to General when no role is set" do

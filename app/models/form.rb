@@ -23,7 +23,7 @@ class Form < ApplicationRecord
     [ "Reinstatement", "reinstatement" ],
     [ "Scholarship application", "scholarship" ],
     [ "Bulk payment", "bulk_payment" ],
-    [ "Continuing education registration", "continuing_education" ],
+    [ "Continuing education application", "continuing_education" ],
     [ "Day 1 survey", "day_1_survey" ],
     [ "Day 2 survey", "day_2_survey" ],
     [ "Post-event survey", "post_event_survey" ],

@@ -105,7 +105,7 @@ RSpec.describe Form do
   describe ".role_label" do
     it "names the registration-only roles as their submissions" do
       expect(Form.role_label("scholarship")).to eq("Scholarship application")
-      expect(Form.role_label("continuing_education")).to eq("Continuing education registration")
+      expect(Form.role_label("continuing_education")).to eq("Continuing education application")
     end
 
     it "humanizes a role outside the dropdown" do
