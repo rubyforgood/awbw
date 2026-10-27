@@ -51,12 +51,29 @@
         <% end %>
       </dl>
 
+      <% if @membership_invoice.remaining_cost.positive? %>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <span class="text-xs tracking-wide text-gray-500 uppercase">Payment link</span>
+          <% payment_link = memberships_public_invoice_checkout_url(@membership_invoice.signed_id(purpose: MembershipInvoice::PAYMENT_TOKEN_PURPOSE)) %>
+          <%= link_to payment_link, payment_link, class: "text-primary font-mono text-xs break-all hover:underline" %>
+        </div>
+      <% end %>
+
       <% if @deletion_blocked_reason %>
         <p class="mt-3 text-xs text-gray-500">Can't be deleted: <%= @deletion_blocked_reason %>.</p>
       <% end %>
 
       <%= render "shared/audit_info", resource: @membership_invoice %>
     </div>
+  <% end %>
+
+  <% unless admin %>
+    <% if @membership_invoice.remaining_cost.positive? %>
+      <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
+        <%= button_to "Pay now", memberships_invoice_checkouts_path, params: { invoice_id: @membership_invoice.id },
+              class: button_classes(:primary), data: { turbo: false } %>
+      </div>
+    <% end %>
   <% end %>
 
   <%= render "shared/printable_invoice", invoice: @invoice %>

@@ -188,6 +188,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/membership_invoices/receipt.html.erb"    => "admin-or-owner",
     "app/views/membership_invoices/show.html.erb"       => "admin-or-owner",
     "app/views/memberships/index.html.erb" => "admin-only bg-blue-100",
+    "app/views/memberships/public_invoice_checkouts/show.html.erb" => "public",
     "app/views/people/memberships/index.html.erb" => "admin-only bg-blue-100",
     "app/views/people/memberships/new.html.erb"   => "admin-only bg-blue-100",
     "app/views/memberships/edit.html.erb"       => "admin-only bg-blue-100",

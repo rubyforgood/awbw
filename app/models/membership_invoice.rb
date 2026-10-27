@@ -1,6 +1,8 @@
 class MembershipInvoice < ApplicationRecord
   include PersonNameSearchable, Registerable
 
+  PAYMENT_TOKEN_PURPOSE = "membership_invoice_payment".freeze
+
   has_paper_trail
 
   belongs_to :membership

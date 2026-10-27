@@ -38,6 +38,7 @@ RSpec.describe "MembershipInvoices", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(invoice.decorate.period_range)
+      expect(response.body).to include("Payment link", "memberships/public_invoice_checkouts/")
     end
 
     it "offers deleting the invoice" do
