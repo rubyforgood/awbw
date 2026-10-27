@@ -138,6 +138,26 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
+  describe "#receipt_available?" do
+    let(:invoice) { create(:membership_invoice, cost_cents: 2_500) }
+
+    it "needs a payment that settles the year" do
+      expect(invoice).not_to be_receipt_available
+
+      create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: invoice, amount: 2_500)
+
+      expect(invoice.reload).to be_receipt_available
+    end
+
+    it "is unavailable when only a credit or a comp settles the year" do
+      create(:allocation, source: create(:discount, amount_cents: 2_500), allocatable: invoice, amount: 2_500)
+
+      expect(invoice.reload).to be_paid_in_full
+      expect(invoice).not_to be_receipt_available
+      expect(create(:membership_invoice, :comped)).not_to be_receipt_available
+    end
+  end
+
   describe "coverage scopes" do
     let!(:past) do
       create(:membership_invoice, :comped,

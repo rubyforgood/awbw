@@ -333,6 +333,15 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "#pay_customer_name" do
+    it "uses the full name not display preference" do
+      person = build(:person, first_name: "Jane", last_name: "Doe", display_name_preference: "first_name_last_initial")
+
+      expect(person.name).to eq("Jane D.")
+      expect(person.pay_customer_name).to eq("Jane Doe")
+    end
+  end
+
   describe ".displayed_name_like" do
     let!(:full) { create(:person, first_name: "Wilhelmina", last_name: "Thornquist", display_name_preference: "full_name") }
     let!(:initialled) { create(:person, first_name: "Octavia", last_name: "Brambleton", display_name_preference: "first_name_last_initial") }
@@ -1201,6 +1210,16 @@ RSpec.describe Person, "#current_membership" do
       start_date: Date.current + 1.month, end_date: Date.current + 1.year)
 
     expect(person.current_membership).to eq(sooner)
+  end
+
+  it "counts a membership billed for a future period as upcoming" do
+    create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current + 2.years, end_date: Date.current + 3.years)
+    billed = create(:membership, person: person).tap { |m| m.update!(start_date: nil, end_date: nil) }
+    create(:membership_invoice, membership: billed,
+      start_date: Date.current + 1.month, end_date: Date.current + 1.year - 1.day)
+
+    expect(person.current_membership).to eq(billed)
   end
 
   it "falls back to the most recent membership when all have ended" do

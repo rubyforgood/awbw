@@ -59,7 +59,14 @@ class Membership < ApplicationRecord
 
   def active? = start_date.present? && start_date <= Date.current && end_date.present? && end_date >= Date.current
 
-  def upcoming? = start_date.present? && start_date > Date.current
+  def upcoming?
+    return true if start_date.present? && start_date > Date.current
+    return false if active?
+
+    membership_invoices.any? { |invoice| invoice.start_date.present? && invoice.start_date > Date.current }
+  end
+
+  def upcoming_start_date = start_date || next_future_invoice&.start_date
 
   def owes? = membership_invoices.any?(&:overdue?)
 
@@ -115,9 +122,15 @@ class Membership < ApplicationRecord
   end
 
   def next_billing_start_date
-    return end_date + 1.day if end_date.present? && covered_on?(Date.current)
+    paid_through = membership_invoices.paid_in_full.maximum(:end_date)
+    return paid_through + 1.day if paid_through.present? && paid_through >= Date.current
 
     next_billing_invoice&.start_date
+  end
+
+  def autopay_window_open?
+    start = next_billing_start_date
+    start.nil? || start <= Date.current + INVOICE_PERIOD
   end
 
   def invoices_due
@@ -128,6 +141,14 @@ class Membership < ApplicationRecord
     return if person.blank?
 
     person.pay_subscriptions.find { |sub| sub.metadata&.dig("membership_id").to_i == id }
+  end
+
+  def cancel_autopay!
+    subscription = stripe_subscription
+    return false if subscription.blank? || subscription.ended?
+
+    subscription.cancel_now!
+    true
   end
 
   def deletable?

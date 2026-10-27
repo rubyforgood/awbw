@@ -1,12 +1,18 @@
 class MembershipInvoice < ApplicationRecord
   include PersonNameSearchable, Registerable
 
+  PAYMENT_TOKEN_PURPOSE = "membership_invoice_payment".freeze
+
   has_paper_trail
 
   belongs_to :membership
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :allocations, as: :allocatable, dependent: :destroy
+
+  belongs_to :invoicee, polymorphic: true, optional: true
+  belongs_to :bill_to_address, class_name: "Address", optional: true
+  belongs_to :attention_person, class_name: "Person", optional: true
 
   delegate :person, to: :membership
   alias_method :registrant, :person
@@ -24,6 +30,7 @@ class MembershipInvoice < ApplicationRecord
   }
 
   before_validation :derive_end_date, on: :create
+  before_validation :inherit_invoice_details, on: :create
   before_destroy :prevent_destroy_unless_deletable
   after_save :sync_membership_dates, if: :paid_in_full?
   after_commit :enqueue_subscription_price_sync, on: :create, if: :next_billing_year?
@@ -93,6 +100,32 @@ class MembershipInvoice < ApplicationRecord
 
   def other_invoices?
     membership.membership_invoices.where.not(id: id).exists?
+  end
+
+  def receipt_available?
+    paid_in_full? && payment_received?
+  end
+
+  def inherit_invoice_details
+    return if membership.blank?
+
+    previous = membership.membership_invoices.reorder(start_date: :desc, id: :desc).first
+    return unless previous
+
+    self.invoicee ||= previous.invoicee
+    self.bill_to_address ||= previous.bill_to_address
+    self.attention_person ||= previous.attention_person
+    self.hide_invoicee = previous.hide_invoicee if hide_invoicee.nil?
+    self.hide_address = previous.hide_address if hide_address.nil?
+    self.bill_to_additional_info = previous.bill_to_additional_info if bill_to_additional_info.nil?
+  end
+
+  def bill_to_organization_id
+    invoicee.id if invoicee.is_a?(Organization)
+  end
+
+  def bill_to_organization_id=(id)
+    self.invoicee = id.present? ? Organization.find_by(id: id) : nil
   end
 
   def prevent_destroy_unless_deletable

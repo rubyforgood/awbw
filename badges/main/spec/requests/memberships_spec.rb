@@ -89,16 +89,19 @@ RSpec.describe "Memberships", type: :request do
         expect(response.body).to include("No membership yet")
       end
 
-      it "lists every year of a subscription, newest first" do
+      it "lists every year of a subscription, newest first, with a receipt for a settled year" do
         subscription = create(:membership, person: person)
         older = membership_invoice_for(subscription: subscription, cost_cents: 0, start_date: Date.current - 1.year)
         newer = membership_invoice_for(subscription: subscription)
+        create(:allocation, source: create(:payment, amount_cents: newer.cost_cents),
+          allocatable: newer, amount: newer.cost_cents)
 
         get person_memberships_path(person)
 
         body = response.body
         expect(body).to include(newer.decorate.period_range, older.decorate.period_range)
         expect(body.index(newer.decorate.period_range)).to be < body.index(older.decorate.period_range)
+        expect(body).to include(receipt_membership_invoice_path(newer))
       end
 
       it "lists past subscriptions alongside the current one" do

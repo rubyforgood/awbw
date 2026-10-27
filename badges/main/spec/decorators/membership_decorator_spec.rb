@@ -95,33 +95,46 @@ RSpec.describe MembershipDecorator, type: :decorator do
     end
   end
 
-  describe "#period_label" do
-    # period_label reads "present" whenever end_date is still ahead of Date.current,
-    # so pin "now" to keep the fixed 2027 end dates on the present side of the fence.
-    around { |example| travel_to(Time.zone.local(2026, 9, 1, 12)) { example.run } }
+  describe "#status_label" do
+    it "reads Upcoming for a membership billed for a future period but not dated yet" do
+      membership = create(:membership).tap { |m| m.update!(start_date: nil, end_date: nil) }
+      create(:membership_invoice, membership: membership,
+        start_date: Date.current + 1.month, end_date: Date.current + 1.year - 1.day)
 
-    it "shows the date range when current and not autorenewal_cancelled" do
-      membership = create(:membership, start_date: Date.new(2025, 1, 15), end_date: Date.new(2027, 1, 15))
+      expect(membership.reload.decorate.status_label).to eq("Upcoming")
+      expect(membership.decorate.status_classes).to include("blue")
+    end
+  end
 
-      expect(membership.reload.decorate.period_label).to eq("Jan 15, 2025 – present")
+  describe "#coverage_label and #coverage_date" do
+    it "points at the end date while the membership is active" do
+      membership = create(:membership, start_date: Date.current - 1.month, end_date: Date.current + 11.months).decorate
+
+      expect(membership.coverage_label).to eq("Membership good through:")
+      expect(membership.coverage_date).to eq(Date.current + 11.months)
     end
 
-    it "is nil when there are no dates" do
-      membership = build(:membership, start_date: nil, end_date: nil)
+    it "points at the start date when the membership has not begun" do
+      membership = create(:membership, start_date: Date.current + 1.month, end_date: Date.current + 13.months).decorate
 
-      expect(membership.decorate.period_label).to be_nil
+      expect(membership.coverage_label).to eq("Membership starts:")
+      expect(membership.coverage_date).to eq(Date.current + 1.month)
     end
 
-    it "shows the fixed end date when cancelled and expired" do
-      membership = create(:membership, start_date: Date.new(2025, 1, 1), end_date: Date.new(2025, 12, 31), autorenewal_cancelled_at: Time.zone.parse("2026-08-03 12:00"))
+    it "falls back to the first upcoming invoice when there is no start date" do
+      membership = create(:membership).tap { |m| m.update!(start_date: nil, end_date: nil) }
+      invoice = create(:membership_invoice, membership: membership,
+        start_date: Date.current + 1.month, end_date: Date.current + 1.year)
 
-      expect(membership.reload.decorate.period_label).to eq("Jan 1, 2025 – Dec 31, 2025")
+      expect(membership.reload.decorate.coverage_label).to eq("Membership starts:")
+      expect(membership.decorate.coverage_date).to eq(invoice.start_date)
     end
 
-    it "shows present when cancelled but still current" do
-      membership = create(:membership, start_date: Date.new(2025, 1, 1), end_date: Date.new(2027, 1, 1), autorenewal_cancelled_at: Time.zone.parse("2026-08-03 12:00"))
+    it "points at the end date once the membership has ended" do
+      membership = create(:membership, start_date: Date.current - 2.years, end_date: Date.current - 1.year).decorate
 
-      expect(membership.reload.decorate.period_label).to eq("Jan 1, 2025 – present")
+      expect(membership.coverage_label).to eq("Membership ended:")
+      expect(membership.coverage_date).to eq(Date.current - 1.year)
     end
   end
 end

@@ -19,11 +19,12 @@ RSpec.describe "Membership billing portal", type: :request do
     allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
   end
 
-  def create_active_subscription
+  def create_active_subscription(membership)
     customer = Pay::Customer.create!(owner: person, processor: "stripe",
       processor_id: "cus_test", default: true)
-    Pay::Subscription.create!(customer: customer, name: "default",
-      processor_id: "sub_test", processor_plan: "membership", status: "active", quantity: 1)
+    Pay::Stripe::Subscription.create!(customer: customer, name: "default",
+      processor_id: "sub_test", processor_plan: "membership", status: "active", quantity: 1,
+      metadata: { "membership_id" => membership.id })
   end
 
   it "requires a signed-in user" do
@@ -58,8 +59,8 @@ RSpec.describe "Membership billing portal", type: :request do
   end
 
   it "sends someone with an active subscription to the billing portal" do
-    create(:membership, person: person)
-    create_active_subscription
+    membership = create(:membership, person: person)
+    create_active_subscription(membership)
     sign_in user
 
     post memberships_billing_portals_path
@@ -69,8 +70,8 @@ RSpec.describe "Membership billing portal", type: :request do
   end
 
   it "reports an alert when Stripe is unreachable" do
-    create(:membership, person: person)
-    create_active_subscription
+    membership = create(:membership, person: person)
+    create_active_subscription(membership)
     allow(fake_processor).to receive(:billing_portal).and_raise(Stripe::StripeError.new("down"))
     sign_in user
 
