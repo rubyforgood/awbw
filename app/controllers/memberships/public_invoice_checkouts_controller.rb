@@ -1,5 +1,6 @@
 module Memberships
   class PublicInvoiceCheckoutsController < ApplicationController
+    include AhoyTracking
     include SearchEngineHideable
 
     skip_before_action :authenticate_user!
@@ -11,6 +12,7 @@ module Memberships
       flash.now[:notice] = "Thank you! Your payment was received." if params[:paid].present?
       flash.now[:alert] = "Payment was cancelled." if params[:cancelled].present?
       @invoice = MembershipInvoicePresenter.new(@membership_invoice)
+      track_view("invoices", { membership_invoice_id: @membership_invoice.id, via: "public_link" })
     end
 
     def create
