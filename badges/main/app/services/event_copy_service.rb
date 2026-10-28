@@ -1,6 +1,3 @@
-require "base64"
-require "zlib"
-
 # Copies an event and its settings — ticket callouts (with their forms and
 # resources), linked forms, staff, tags, location, rich text, and images — onto a
 # new unpublished event. Every date travels as days relative to the event's start
@@ -10,11 +7,12 @@ require "zlib"
 # The copy goes through a plain-JSON blueprint, so it can also cross environments:
 # `puts EventCopyService.console_script(event)` in one console prints a line to
 # paste into another, where linked records are matched by name/email, not id. That
-# payload also carries each linked form's questions: a form the target lacks is
-# built there, and a form it has gains only the questions and options it's missing,
-# so its id — and every submission already on it — stays put.
+# copy is a simulation, so the event, its callouts, and its forms are all named for
+# the source environment ("FROM PROD: …"; `version: 2` makes a separate "FROM PROD V2: …"
+# set). The forms come along through FormTransferService. Swapping `import` for
+# `compare` in that line lists how the target's form copies differ, changing nothing.
 class EventCopyService
-  BLUEPRINT_VERSION = 1
+  BLUEPRINT_VERSION = 2
   COPY_TITLE_PREFIX = "Copy of ".freeze
   MATCH_MODES = %i[id natural].freeze
   ASSET_TYPES = %w[PrimaryAsset GalleryAsset].freeze
@@ -29,10 +27,8 @@ class EventCopyService
   CALLOUT_COLUMNS = %w[builtin_key callout_type title subtitle description icon_class color_class hidden
                        payment_access_gated ce_payment_access_gated attended_gated].freeze
   RICH_TEXT_FIELDS = %w[rhino_header rhino_description].freeze
-  FORM_COLUMNS = %w[name role header sections anonymous].freeze
-  UNCOPIED_FIELD_COLUMNS = %w[id form_id created_at updated_at created_by_id updated_by_id].freeze
 
-  attr_reader :warnings, :form_changes
+  attr_reader :form_transfer
 
   def self.copy(event, start_on:, title: nil)
     for_event(event).call(start_on: start_on, title: title)
@@ -47,7 +43,7 @@ class EventCopyService
     start_on = event.starts_on
     {
       "version" => BLUEPRINT_VERSION,
-      "source" => { "id" => event.id, "title" => event.title, "start_on" => start_on.iso8601 },
+      "source" => { "id" => event.id, "title" => event.title, "start_on" => start_on.iso8601, "environment" => Rails.env },
       "attributes" => event.attributes.except(*UNCOPIED_COLUMNS, *DATETIME_COLUMNS, *DATE_COLUMNS),
       "dates" => (DATETIME_COLUMNS + DATE_COLUMNS).index_with { |column| offset(event[column], start_on) },
       "rich_text" => RICH_TEXT_FIELDS.index_with { |field| event.public_send(field)&.body&.to_html },
@@ -76,31 +72,33 @@ class EventCopyService
       "assets" => event.assets.where(type: ASSET_TYPES).order(:id).select { |asset| asset.file.attached? }.map do |asset|
         { "type" => asset.type, "title" => asset.title, "blob_id" => asset.file.blob.id, "url" => asset_url(asset) }
       end,
-      "form_definitions" => (form_definitions ? linked_forms(event).index_by(&:id).transform_values { |form| form_definition(form) } : {})
+      "form_definitions" => (form_definitions ? FormTransferService.definitions(linked_forms(event)) : {})
     }.as_json
   end
 
   # One pasteable line for another environment's Rails console.
   def self.console_script(event)
-    payload = Base64.strict_encode64(Zlib.gzip(JSON.generate(blueprint(event, form_definitions: true))))
+    payload = FormTransferService.encode(blueprint(event, form_definitions: true))
     "EventCopyService.import(\"#{payload}\") # copy of event ##{event.id} \"#{event.title}\" (#{event.starts_on})"
   end
 
   # Console entry point for a console_script payload: matches linked records by
   # name/email, prints what it couldn't link, and returns the new event.
-  def self.import(payload, start_on: nil, title: nil)
-    service = new(JSON.parse(Zlib.gunzip(Base64.strict_decode64(payload))), match_by: :natural)
+  def self.import(payload, start_on: nil, title: nil, version: nil)
+    service = new(FormTransferService.decode(payload), match_by: :natural, version:)
     event = service.call(start_on: start_on, title: title)
     puts "Created event ##{event.id} \"#{event.title}\" starting #{event.starts_on} (unpublished)."
-    service.form_changes.each do |form, change|
-      next unless change[:created] || change[:questions].positive? || change[:options].positive?
-
-      verb = change[:created] ? "created" : "added to"
-      counts = "#{change[:questions]} #{"question".pluralize(change[:questions])}, #{change[:options]} answer #{"option".pluralize(change[:options])}"
-      puts "  + #{verb} form ##{form.id} \"#{form.name}\": #{counts}"
-    end
+    service.form_transfer.report_changes
     service.warnings.each { |warning| puts "  ! #{warning}" }
     event
+  end
+
+  # Read-only console check of a console_script payload: whether this environment's
+  # copy of each linked form matches the source's settings and questions.
+  def self.compare(payload, version: nil)
+    blueprint = FormTransferService.decode(payload)
+    FormTransferService.new(blueprint["form_definitions"], source_environment: blueprint.dig("source", "environment"), version:).report_differences
+    nil
   end
 
   def self.offset(value, start_on)
@@ -122,37 +120,27 @@ class EventCopyService
     Form.where(id: form_ids.uniq).includes(form_fields: [ { form_field_answer_options: :answer_option }, { form_field_resources: :resource } ])
   end
 
-  def self.form_definition(form)
-    {
-      "attributes" => form.slice(*FORM_COLUMNS),
-      "fields" => form.form_fields.sort_by { |field| [ field.position.to_i, field.id ] }.map do |field|
-        {
-          "id" => field.id,
-          "attributes" => field.attributes.except(*UNCOPIED_FIELD_COLUMNS),
-          "answer_options" => field.form_field_answer_options.sort_by(&:id).map(&:name),
-          "resources" => field.form_field_resources.map { |link| link.slice("position").merge("resource" => link.resource.slice("id", "title")) }
-        }
-      end
-    }
-  end
-
   def self.asset_url(asset)
     asset.file.url(expires_in: ASSET_URL_TTL)
   rescue ArgumentError
     nil
   end
 
-  private_class_method :offset, :form_ref, :linked_forms, :form_definition, :asset_url
+  private_class_method :offset, :form_ref, :linked_forms, :asset_url
 
-  def initialize(blueprint, match_by: :id)
+  def initialize(blueprint, match_by: :id, version: nil)
     raise ArgumentError, "match_by must be one of #{MATCH_MODES}" unless MATCH_MODES.include?(match_by)
     raise ArgumentError, "unsupported blueprint version #{blueprint["version"]}" unless blueprint["version"] == BLUEPRINT_VERSION
 
     @blueprint = blueprint
     @match_by = match_by
     @warnings = []
-    @form_changes = {}
-    @forms = {}
+    @version = version
+    @form_transfer = FormTransferService.new(blueprint["form_definitions"], source_environment: blueprint.dig("source", "environment"), version:)
+  end
+
+  def warnings
+    @warnings | @form_transfer.warnings
   end
 
   def call(start_on: nil, title: nil)
@@ -177,7 +165,7 @@ class EventCopyService
       .merge(DRAFT_ATTRIBUTES)
       .merge(@blueprint["dates"].transform_values { |offset| shift(offset) })
       .merge(@blueprint["rich_text"].compact)
-      .merge("title" => title.presence || @blueprint["attributes"]["title"], "location" => find_location)
+      .merge("title" => simulated(title.presence || @blueprint["attributes"]["title"]), "location" => find_location)
   end
 
   def shift(offset)
@@ -229,7 +217,7 @@ class EventCopyService
   def copy_callouts(event)
     @blueprint["callouts"].each do |data|
       callout = event.registration_ticket_callouts.create!(
-        data.slice(*CALLOUT_COLUMNS).merge("display_from" => shift(data["display_from"]))
+        data.slice(*CALLOUT_COLUMNS).merge("title" => simulated(data["title"]), "display_from" => shift(data["display_from"]))
       )
       data["forms"].each do |link|
         form = find_form(link["form"])
@@ -280,73 +268,13 @@ class EventCopyService
     end
   end
 
-  # Memoized by source id so a form linked in several places is matched (or
-  # built) once.
   def find_form(ref)
-    @forms.fetch(ref["id"]) do
-      @forms[ref["id"]] = resolve(Form, ref["id"], "Form \"#{ref["name"]}\"") { portable_form(ref) }
-    end
+    resolve(Form, ref["id"], "Form \"#{ref["name"]}\"") { @form_transfer.form_for(ref["id"]) }
   end
 
-  def portable_form(ref)
-    form = matching_form(ref)
-    definition = @blueprint.dig("form_definitions", ref["id"].to_s)
-    return form unless definition
-
-    created = form.nil?
-    form ||= Form.create!(definition["attributes"])
-    @form_changes[form] = { created: created, questions: 0, options: 0 }
-    add_missing_questions(form, definition["fields"])
-    form
-  end
-
-  # The target's default form for the survey role stands in.
-  def matching_form(ref)
-    named = Form.order(:id).find_by(name: ref["name"], role: ref["role"]) || Form.order(:id).find_by(name: ref["name"])
-    return named if named
-
-    Form.survey(ref["role"]) if Form::SURVEY_ROLES.include?(ref["role"])
-  end
-
-  # Additive only: questions already on the form keep their id, wording, and
-  # answers; a question is the same when its field identifier or, failing that,
-  # its wording matches.
-  def add_missing_questions(form, definitions)
-    unmatched = form.form_fields.order(:position, :id).to_a
-    added = []
-    fields = definitions.to_h do |data|
-      field = take_matching_field(unmatched, data["attributes"])
-      unless field
-        field = form.form_fields.create!(data["attributes"].except("parent_id"))
-        added << data
-      end
-      add_missing_options(form, field, data)
-      [ data["id"], field ]
-    end
-    added.each do |data|
-      parent = fields[data["attributes"]["parent_id"]]
-      fields[data["id"]].update!(parent_id: parent.id) if parent
-    end
-    @form_changes[form][:questions] += added.size
-  end
-
-  def take_matching_field(candidates, attributes)
-    identifier = attributes["field_identifier"].presence
-    match = (identifier && candidates.find { |field| field.field_identifier == identifier }) ||
-      candidates.find { |field| field.name == attributes["name"] }
-    candidates.delete(match)
-  end
-
-  def add_missing_options(form, field, data)
-    missing = data["answer_options"] - field.form_field_answer_options.map(&:name)
-    missing.each { |name| field.form_field_answer_options.create!(option_name: name) }
-    @form_changes[form][:options] += missing.size
-    data["resources"].each do |link|
-      resource = find_resource(link["resource"])
-      next if resource.nil? || field.form_field_resources.exists?(resource: resource)
-
-      field.form_field_resources.create!(resource: resource, position: link["position"])
-    end
+  # A cross-environment copy is a simulation, named so it's never taken for the real thing.
+  def simulated(name)
+    @match_by == :natural ? name && FormTransferService.simulated_name(name, @blueprint.dig("source", "environment"), version: @version) : name
   end
 
   def find_resource(ref)
