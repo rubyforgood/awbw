@@ -12,7 +12,8 @@ require "zlib"
 # paste into another, where linked records are matched by name/email, not id. That
 # payload also carries each linked form's questions: a form the target lacks is
 # built there, and a form it has gains only the questions and options it's missing,
-# so its id — and every submission already on it — stays put.
+# so its id — and every submission already on it — stays put. Swapping `import`
+# for `compare` in that line lists how the target's forms differ, changing nothing.
 class EventCopyService
   BLUEPRINT_VERSION = 1
   COPY_TITLE_PREFIX = "Copy of ".freeze
@@ -89,7 +90,7 @@ class EventCopyService
   # Console entry point for a console_script payload: matches linked records by
   # name/email, prints what it couldn't link, and returns the new event.
   def self.import(payload, start_on: nil, title: nil)
-    service = new(JSON.parse(Zlib.gunzip(Base64.strict_decode64(payload))), match_by: :natural)
+    service = new(decode(payload), match_by: :natural)
     event = service.call(start_on: start_on, title: title)
     puts "Created event ##{event.id} \"#{event.title}\" starting #{event.starts_on} (unpublished)."
     service.form_changes.each do |form, change|
@@ -101,6 +102,26 @@ class EventCopyService
     end
     service.warnings.each { |warning| puts "  ! #{warning}" }
     event
+  end
+
+  # Read-only console check of a console_script payload: whether this environment's
+  # copy of each linked form matches the source's settings and questions.
+  def self.compare(payload)
+    new(decode(payload), match_by: :natural).form_differences.each do |name, form, differences|
+      if form.nil?
+        puts "+ Form \"#{name}\" isn't here — import builds it"
+      elsif differences.empty?
+        puts "= Form ##{form.id} \"#{form.name}\" matches"
+      else
+        puts "~ Form ##{form.id} \"#{form.name}\" differs:"
+        differences.each { |difference| puts "    #{difference}" }
+      end
+    end
+    nil
+  end
+
+  def self.decode(payload)
+    JSON.parse(Zlib.gunzip(Base64.strict_decode64(payload)))
   end
 
   def self.offset(value, start_on)
@@ -142,7 +163,7 @@ class EventCopyService
     nil
   end
 
-  private_class_method :offset, :form_ref, :linked_forms, :form_definition, :asset_url
+  private_class_method :decode, :offset, :form_ref, :linked_forms, :form_definition, :asset_url
 
   def initialize(blueprint, match_by: :id)
     raise ArgumentError, "match_by must be one of #{MATCH_MODES}" unless MATCH_MODES.include?(match_by)
@@ -153,6 +174,14 @@ class EventCopyService
     @warnings = []
     @form_changes = {}
     @forms = {}
+  end
+
+  # [source form name, this environment's matching form or nil, its differences] per linked form.
+  def form_differences
+    @blueprint["form_definitions"].values.map do |definition|
+      form = matching_form(definition["attributes"])
+      [ definition["attributes"]["name"], form, form ? FormDefinitionDiff.new(definition, form).differences : [] ]
+    end
   end
 
   def call(start_on: nil, title: nil)
@@ -315,7 +344,7 @@ class EventCopyService
     unmatched = form.form_fields.order(:position, :id).to_a
     added = []
     fields = definitions.to_h do |data|
-      field = take_matching_field(unmatched, data["attributes"])
+      field = FormDefinitionDiff.take_matching_field(unmatched, data["attributes"])
       unless field
         field = form.form_fields.create!(data["attributes"].except("parent_id"))
         added << data
@@ -328,13 +357,6 @@ class EventCopyService
       fields[data["id"]].update!(parent_id: parent.id) if parent
     end
     @form_changes[form][:questions] += added.size
-  end
-
-  def take_matching_field(candidates, attributes)
-    identifier = attributes["field_identifier"].presence
-    match = (identifier && candidates.find { |field| field.field_identifier == identifier }) ||
-      candidates.find { |field| field.name == attributes["name"] }
-    candidates.delete(match)
   end
 
   def add_missing_options(form, field, data)

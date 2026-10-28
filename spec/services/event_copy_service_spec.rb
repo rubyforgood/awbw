@@ -262,6 +262,66 @@ RSpec.describe EventCopyService do
       expect(service.warnings).to include(/Form "Registration" was published/)
     end
 
+    describe ".compare" do
+      def payload(event)
+        described_class.console_script(event)[/import\("([^"]+)"\)/, 1]
+      end
+
+      it "reports a form that matches the source and changes nothing" do
+        form = create(:form, name: "Registration", role: "registration")
+        create(:form_field, form: form, name: "Are you a facilitator?", position: 1)
+        event.event_forms.create!(form: form, role: "registration")
+
+        script = payload(event)
+
+        expect { described_class.compare(script) }.to output("= Form ##{form.id} \"Registration\" matches\n").to_stdout
+        expect { described_class.compare(script) }.not_to change(Form, :count)
+      end
+
+      it "reports a form the target doesn't have" do
+        form = create(:form, name: "Registration", role: "registration")
+        event.event_forms.create!(form: form, role: "registration")
+        script = payload(event)
+        form.update!(name: "Renamed in this environment")
+
+        expect { described_class.compare(script) }
+          .to output("+ Form \"Registration\" isn't here — import builds it\n").to_stdout
+      end
+
+      it "lists differing settings, questions, options, resources, and order" do
+        form = create(:form, name: "CE evaluation", role: "general", anonymous: true)
+        useful = create(:form_field, form: form, name: "How useful was it?", position: 1, field_identifier: "useful", required: true)
+        useful.form_field_answer_options.create!(option_name: "Very")
+        useful.form_field_answer_options.create!(option_name: "Not at all")
+        useful.form_field_resources.create!(resource: create(:resource, title: "Handout"))
+        follow_up = create(:form_field, form: form, name: "Why?", position: 2, parent_id: useful.id)
+        create(:form_field, form: form, name: "Anything else?", position: 3)
+        create(:registration_ticket_callout, event: event, form: form)
+        script = payload(event)
+        form.update!(anonymous: false)
+        useful.update!(name: "Was it useful?", required: false, position: 4)
+        useful.form_field_answer_options.joins(:answer_option).where(answer_options: { name: "Not at all" }).destroy_all
+        useful.form_field_answer_options.create!(option_name: "Somewhat")
+        useful.form_field_resources.destroy_all
+        follow_up.update!(parent_id: nil)
+        form.form_fields.find_by(name: "Anything else?").update!(name: "Comments")
+
+        expect { described_class.compare(script) }.to output(<<~OUTPUT).to_stdout
+          ~ Form ##{form.id} "CE evaluation" differs:
+              anonymous: source true, here false
+              "Was it useful?": name: source "How useful was it?", here "Was it useful?"
+              "Was it useful?": required: source true, here false
+              "Was it useful?": missing options Not at all
+              "Was it useful?": extra options Somewhat
+              "Was it useful?": missing resources Handout
+              "Why?": follows a different question
+              missing question "Anything else?"
+              extra question "Comments"
+              questions are in a different order
+        OUTPUT
+      end
+    end
+
     it "uses the target's form for a survey role rather than building a second one" do
       survey = create(:form, name: "Day 1 evaluation", role: "day_1_survey")
       create(:registration_ticket_callout, event: event, form: survey)
