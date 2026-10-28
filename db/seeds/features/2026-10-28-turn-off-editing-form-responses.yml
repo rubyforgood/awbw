@@ -3,9 +3,9 @@ area: registration
 display_status: admin_facing
 released_on: 2026-10-28
 summary: >-
-  A new form setting, "Let people edit their responses after submitting," decides
-  whether a form opened from a registration ticket shows an Edit responses link
+  A new form setting, "Let registrants edit their responses from their ticket,"
+  decides whether a form on a registration ticket shows an Edit responses link
   once it's sent. It's on by default.
 pro_tips:
-  - "Anonymous responses can never be changed once submitted, whatever this setting says."
+  - "Only ticket forms can be edited. Responses sent from a direct link, and anonymous responses, can't be changed once submitted."
   - "Staff can still edit any submission."
