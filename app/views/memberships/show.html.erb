@@ -38,38 +38,47 @@
         </div>
       </div>
 
-      <% if admin && !membership.locked? %>
-        <div class="flex flex-wrap items-center gap-2">
-          <%= link_to "Edit term", edit_membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
+      <% if admin %>
+        <% if membership.locked? %>
+          <div class="flex flex-wrap items-center gap-2">
+            <%= button_to "Unlock membership", membership_lock_path(membership),
+                  method: :delete, class: button_classes(:secondary_outline, size: :sm),
+                  data: { turbo_confirm: "Unlock this membership? You can then turn renewal back on and issue the next invoice." } %>
+          </div>
+        <% else %>
+          <div class="flex flex-wrap items-center gap-2">
+            <%= link_to "Edit term", edit_membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
 
-          <% if membership.renewal_on? && @next_invoice.blank? %>
-            <%= link_to "Issue next invoice", new_membership_membership_invoice_path(membership),
-                  class: button_classes(:secondary_outline, size: :sm) %>
-          <% end %>
+            <% if membership.renewal_on? && @next_invoice.blank? %>
+              <%= link_to "Issue next invoice", new_membership_membership_invoice_path(membership),
+                    class: button_classes(:secondary_outline, size: :sm) %>
+            <% end %>
 
-          <% if membership.renewal_on? %>
-            <%= button_to "Turn off renewal", membership_renewal_path(membership),
-                  method: :patch, params: { renewal_on: "0" },
-                  class: button_classes(:secondary_outline, size: :sm),
-                  data: { turbo_confirm: "Stop renewing this membership? The current term still stands." } %>
-          <% else %>
-            <%= button_to "Turn on renewal", membership_renewal_path(membership),
-                  method: :patch, params: { renewal_on: "1" },
-                  class: button_classes(:secondary_outline, size: :sm) %>
-          <% end %>
+            <% if membership.renewal_on? %>
+              <%= button_to "Turn off renewal", membership_renewal_path(membership),
+                    method: :patch, params: { renewal_on: "0" },
+                    class: button_classes(:secondary_outline, size: :sm),
+                    data: { turbo_confirm: "Stop renewing this membership? The current term still stands." } %>
+            <% else %>
+              <%= button_to "Turn on renewal", membership_renewal_path(membership),
+                    method: :patch, params: { renewal_on: "1" },
+                    class: button_classes(:secondary_outline, size: :sm) %>
+            <% end %>
 
-          <% if @next_invoice.present? %>
-            <%= button_to "Remove next year", membership_next_year_path(membership),
-                  method: :delete, class: button_classes(:danger_outline, size: :sm),
-                  data: { turbo_confirm: "Remove the unstarted next year and roll the term back?" } %>
-          <% end %>
+            <% if @next_invoice.present? %>
+              <%= button_to "Remove next year", membership_next_year_path(membership),
+                    method: :delete, class: button_classes(:danger_outline, size: :sm),
+                    data: { turbo_confirm: "Remove the unstarted next year and roll the term back?" } %>
+            <% end %>
 
-          <% if membership.deletable? %>
-            <%= button_to "Delete membership", membership_path(membership),
-                  method: :delete, class: button_classes(:danger_outline, size: :sm),
-                  data: { turbo_confirm: "Delete this membership? It has no invoices, so nothing financial is lost." } %>
-          <% end %>
-        </div>
+            <% if membership.deletable? || membership.discardable? %>
+              <% delete_confirm = membership.deletable? ? "Delete this membership? Nothing financial is attached." : "Delete this membership and its only invoice? This cannot be undone." %>
+              <%= button_to "Delete membership", membership_path(membership),
+                    method: :delete, class: button_classes(:danger_outline, size: :sm),
+                    data: { turbo_confirm: delete_confirm } %>
+            <% end %>
+          </div>
+        <% end %>
       <% end %>
     </div>
 

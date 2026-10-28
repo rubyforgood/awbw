@@ -13,6 +13,8 @@ class MembershipPolicy < ApplicationPolicy
   def update? = edit?
   def destroy? = edit?
 
+  def unlock? = manage?
+
   def manage_subscription? = Membership.enabled? && owner?
 
   private

@@ -86,6 +86,23 @@ class Membership < ApplicationRecord
 
   def deletable? = membership_invoices.none?
 
+  def discardable?
+    membership_invoices.one? && discard_blocked_reason.nil?
+  end
+
+  def discard_blocked_reason
+    invoices = membership_invoices.to_a
+    return "it has no invoices" if invoices.empty?
+    return "it has more than one invoice" unless invoices.one?
+
+    invoice = invoices.first
+    return "its invoice has payments or credits applied" unless invoice.allocations.sum(:amount).zero?
+    return "its invoice has a payment in progress" if invoice.payment_in_progress?
+    return "its invoice has a pending charge attempt" if invoice.charge_attempts.pending.exists?
+
+    nil
+  end
+
   def deletion_blocked_reason
     return "it has invoices" if membership_invoices.exists?
 

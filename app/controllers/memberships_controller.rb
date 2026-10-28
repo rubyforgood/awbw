@@ -59,14 +59,13 @@ class MembershipsController < ApplicationController
   def destroy
     authorize! @membership
 
-    if @membership.deletable?
-      @membership.destroy!
+    result = Membership::Discard.call(membership: @membership)
+    if result.success?
       redirect_to person_memberships_path(@person),
         notice: "Membership deleted.", status: :see_other
     else
-      redirect_to person_memberships_path(@person),
-        alert: "Cannot delete this membership because #{@membership.deletion_blocked_reason}.",
-        status: :see_other
+      redirect_to membership_path(@membership),
+        alert: result.errors.to_sentence, status: :see_other
     end
   end
 

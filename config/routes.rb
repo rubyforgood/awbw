@@ -380,6 +380,7 @@ Rails.application.routes.draw do
     resources :membership_invoices, only: [ :new, :create ]
     resource :renewal, only: [ :update ], controller: "memberships/renewals"
     resource :next_year, only: [ :destroy ], controller: "memberships/next_years"
+    resource :lock, only: [ :destroy ], controller: "memberships/locks"
   end
 
   resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ] do
