@@ -235,6 +235,10 @@ Only commit the schema.rb only if you have committed anything that would change 
 
 Try to keep your PRs limited to one particular issue, and don't make changes that are out of scope for that issue. If you notice something that needs attention but is out of scope, please [create a new issue](https://github.com/rubyforgood/awbw/issues/new).
 
+### Match the house UI style
+
+Building or changing UI? Follow the patterns in [docs/design/house-style.md](docs/design/house-style.md) instead of inventing new ones. If you add a pattern worth reusing, document it there.
+
 ### Add a features seed (optional)
 
 - **Optional** — appreciated, but maintainers can add it if you skip it.

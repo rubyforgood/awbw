@@ -190,6 +190,12 @@ point is single-source theming: re-coloring a whole domain is a one-line change 
   multi-color pickers/swatches, and classes a Stimulus controller also toggles (keep ERB and JS in
   sync as literals). Convert only a domain's *own identity* color.
 
+## House UI style
+
+Before building or reshaping UI, read **`docs/design/house-style.md`** — the house patterns to
+match instead of reinventing (e.g. segmented display toggles vs. `column-toggle` slide switches
+for tables). When you add a UI pattern worth reusing, document it there.
+
 ## Sharing repeated Tailwind (avoid `@apply`)
 
 When the same utility string is repeated across many views, **unify it with a Rails view

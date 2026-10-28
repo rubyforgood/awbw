@@ -453,7 +453,7 @@ end
 - `ce_license_picker` — Fill the CE license type/number/state/country/expiry fields from the picked license (or clear them for a new one), opening the "Not on list?" box for a license issued abroad
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
-- `column_toggle` — Toggle table column visibility
+- `column_toggle` — Toggle table column visibility (render `shared/_column_toggle_switch`; see `docs/design/house-style.md`)
 - `panel_toggle` — Independent show/hide toggles pairing each button to the panel at its index (e.g. the training-attendees table/charts panels; revealing a hidden panel loads its lazy Turbo frame)
 - `chart_tooltip_footer` — Appends footer lines to a chartkick stacked tooltip (a summed Total and/or per-x pre-formatted lines), configuring the Chart.js callback that can't be passed through the ERB helper
 - `confirm_email` — Email confirmation UI
@@ -509,6 +509,8 @@ end
 | Font Awesome 7 | Icons |
 
 ### Tailwind Theme
+
+House UI patterns to match (table toggles and more) live in `docs/design/house-style.md`.
 
 Custom tokens defined in the `@theme` block of `app/frontend/stylesheets/application.tailwind.css`:
 - `--color-primary: #063b8d` (dark blue)
