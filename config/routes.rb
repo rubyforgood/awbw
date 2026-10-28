@@ -71,6 +71,7 @@ Rails.application.routes.draw do
     post "data_health/:check/repair", to: "data_health#repair", as: "data_health_repair"
     get "resource_roles",            to: "resource_roles#show", as: "resource_roles"
     patch "resource_roles",          to: "resource_roles#update"
+    get "resource_roles/:slot/preview", to: "resource_roles#preview", as: "resource_role_preview"
     get "certificate_settings",      to: redirect("/admin/resource_roles")
   end
 

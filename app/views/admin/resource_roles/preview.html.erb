@@ -1,0 +1,41 @@
+<% content_for(:page_title, "#{@slot[:label]} preview") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% content_for :head do %>
+  <style>
+    @media print {
+      @page { size: landscape; margin: 0; }
+      .printed-logo { display: none !important; }
+      .certificate, .certificate img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+<% end %>
+
+<div class="mx-auto flex max-w-5xl flex-wrap items-center gap-2 px-4 pt-4 sm:px-8 print:hidden">
+  <%= link_to admin_resource_roles_path(anchor: @slot[:role]), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i> Resource roles
+  <% end %>
+  <button onclick="window.print();"
+          class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
+    <i class="fa-solid fa-file-arrow-down"></i> Download PDF
+  </button>
+</div>
+
+<div class="mx-auto max-w-5xl px-4 pt-2 sm:px-8 print:hidden">
+  <h1 class="text-2xl font-semibold text-gray-900"><%= @slot[:label] %></h1>
+  <p class="mt-1 text-sm text-gray-600">
+    <% if @slot[:resource] %>
+      Sample certificate using “<%= @slot[:resource].title %>”.
+    <% else %>
+      Sample certificate using the built-in design — no frame connected.
+    <% end %>
+  </p>
+</div>
+
+<% full_bleed = @slot[:file].present? || @slot[:role].in?(%w[training_frame on_demand_frame]) %>
+<div class="px-4 py-6 sm:px-8 <%= full_bleed ? "print:p-0" : "print:p-[0.4in]" %>">
+  <%= render @slot[:preview_partial],
+        event: @preview_event, recipient: @preview_recipient,
+        frame_file: @slot[:file], signature_file: @signature_file,
+        license_label: "LMFT 00000", hours_label: 6,
+        facilitator_names: [ "Sample Facilitator" ], issued_on: Date.current %>
+</div>

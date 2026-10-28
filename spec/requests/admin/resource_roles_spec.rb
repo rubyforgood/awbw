@@ -67,6 +67,51 @@ RSpec.describe "Admin::ResourceRoles", type: :request do
 
       expect(response.body).to include("Training frame art")
     end
+
+    it "links each certificate mini-preview to its full-size preview" do
+      get admin_resource_roles_path
+
+      %w[training_frame on_demand_frame ce_frame other_frame].each do |role|
+        expect(response.body).to include(admin_resource_role_preview_path(role))
+      end
+      expect(response.body).not_to include(admin_resource_role_preview_path("training_signatures"))
+    end
+  end
+
+  describe "GET preview" do
+    before { sign_in admin }
+
+    it "renders the full-size certificate with sample content" do
+      get admin_resource_role_preview_path("training_frame")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Facilitator training frame")
+      expect(response.body).to include("Jordan Rivera")
+      expect(response.body).to include("certificate-training-border")
+      expect(response.body).to include(admin_resource_roles_path(anchor: "training_frame"))
+    end
+
+    it "renders the CE certificate with its sample license" do
+      get admin_resource_role_preview_path("ce_frame")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("LMFT 00000")
+    end
+
+    it "includes the signature the certificate prints with" do
+      resource = create(:resource, role: "training_signatures")
+      create(:primary_asset, :with_file, owner: resource)
+
+      get admin_resource_role_preview_path("training_frame")
+
+      expect(response.body).to include(resource.signature_file.filename.to_s)
+    end
+
+    it "redirects for a slot with no certificate" do
+      get admin_resource_role_preview_path("w9")
+
+      expect(response).to redirect_to(admin_resource_roles_path)
+    end
   end
 
   describe "PATCH update" do
@@ -241,6 +286,14 @@ RSpec.describe "Admin::ResourceRoles", type: :request do
       sign_in create(:user)
 
       get admin_resource_roles_path
+
+      expect(response).not_to have_http_status(:ok)
+    end
+
+    it "denies a non-admin the certificate preview" do
+      sign_in create(:user)
+
+      get admin_resource_role_preview_path("training_frame")
 
       expect(response).not_to have_http_status(:ok)
     end

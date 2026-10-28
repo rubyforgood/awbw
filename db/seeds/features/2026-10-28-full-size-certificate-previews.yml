@@ -1,0 +1,10 @@
+name: "Full-size certificate previews on Resource roles"
+area: events
+display_status: admin_facing
+released_on: 2026-10-28
+summary: >-
+  Click any certificate thumbnail on the Resource roles page to open a
+  full-size sample of that certificate, with its frame and signature.
+action_path: "/admin/resource_roles"
+pro_tips:
+  - "Use Download PDF on the preview to check how the certificate prints before registrants see it."
