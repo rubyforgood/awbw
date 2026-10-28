@@ -64,6 +64,16 @@ Constraints already decided elsewhere:
   (`OrganizationServices::ImportFromFilemaker`); `fm:import_affiliations` runs affiliations
   (`AffiliationServices::ImportFromFilemaker`) as its own run, so either can be checked and
   undone apart — affiliations first, since an organization someone is affiliated with is kept.
+- **Same-name organizations merge first** (decided 2026-10-27): `fm:merge_same_named_organizations`
+  runs before the organizations import (and again after) and merges portal orgs sharing a name
+  once the old app's audience word (Combined, Children's, Adult, Women's, Men's), a legal suffix
+  and punctuation are ignored. The one with the most affiliations keeps the rest, the way the
+  admin deduper merges, and drops its audience word unless another org holds that name. Two
+  stay apart only when both have known cities, none shared, and no FileMaker parent in common
+  (a retired duplicate counts as its original). On prod that's 332 groups, about 360 orgs
+  merged away. `fm:undo_import` doesn't reverse merges; the dry-run report and the Blazer
+  preview are the review. Same-name projects under one FileMaker organization come in as one
+  org, and an agency card's org carries the card's ID as a code.
 - **Organizations and projects:** an `fm_projects` row becomes (or links to) an app
   `Organization`; its `fm_organizations` row becomes (or links to) that org's parent.
   Match an existing org by any shared `filemaker_code` first, then by exact name; append
