@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Sort Tailwind utility classes into canonical order with rustywind.
+# Delegates to bin/tw-sort — this wrapper exists for the ai/ workflow.
+set -euo pipefail
+source "$(dirname "$0")/.ruby-env"
+
+exec "$(dirname "$0")/../bin/tw-sort" "$@"

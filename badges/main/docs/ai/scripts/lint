@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Lint Ruby files with Rubocop. Use --fix to auto-correct.
+set -euo pipefail
+source "$(dirname "$0")/.ruby-env"
+if [[ "${1:-}" == "--fix" ]]; then
+  shift
+  bundle exec rubocop -a "$@"
+else
+  bundle exec rubocop "$@"
+fi

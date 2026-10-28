@@ -32,6 +32,8 @@ This is a Rails 8.1.0 application built with:
 
 For detailed setup and development instructions, please see our [CONTRIBUTING.md](CONTRIBUTING.md) guide.
 
+Optional AI tooling (`AGENTS.md`, `CLAUDE.md`, and the `ai/` shortcuts) is opt-in — copy the samples you want from [docs/ai](docs/ai/README.md).
+
 ## Production Maintenance
 
 ### Featured workshops not showing on the home page

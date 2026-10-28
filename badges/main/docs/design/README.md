@@ -13,3 +13,5 @@ Resized to 1600px wide and saved as JPEG (reference only, not shipped in the UI)
   review toolbar visible.
 
 Brand fundamentals live in `app/assets/images/brand/awbw-brand-guide.pdf`.
+
+Reusable UI patterns for the app itself live in [house-style.md](house-style.md).

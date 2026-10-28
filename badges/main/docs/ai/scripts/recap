@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Session recap: triggers the AI to review the conversation and report
+# (1) what was accomplished and (2) unresolved items — dropped threads,
+# unanswered questions, unfinished tasks, and disagreements from either side.
+# This script just prints the trigger word; the agent does the work per CLAUDE.md.
+# Not the /audit design skill, and not ai/security (the security scan).
+echo "recap"
