@@ -1,7 +1,7 @@
 name: "Turn CE timesheets on or off and set when they open and close"
 area: events
 display_status: admin_facing
-released_on: 2026-10-19
+released_on: 2026-10-22
 summary: >-
   Continuing education now has its own section on the event edit page, where you
   can turn registrant CE timesheets on or off and choose when registrants can
@@ -9,4 +9,5 @@ summary: >-
 pro_tips:
   - "Pick when the timesheet opens relative to the event's start, from a week before to a day after. It starts at 30 minutes before."
   - "Set a close date and time to lock registrants' timesheets. Staff can still correct times on the attendance report."
-  - "The same setting decides when sign-in opens on each training day, for example 1 hour before each day's start."
+  - "Registrants can view their timesheet as soon as their CE is paid. This setting only controls when they can edit it."
+  - "The same setting decides when the Sign in button opens on each training day, for example 1 hour before each day's start. It never opens before midnight that day."
