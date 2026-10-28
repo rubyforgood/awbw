@@ -30,8 +30,10 @@ module OrganizationServices
   #     each listed in #nested
   #   * a retired duplicate organization (RETIRED_DUPLICATE_OF) — its code, blanks, addresses,
   #     phones, email and projects — onto the organization it duplicated
-  #   * an agency's own Rolodex card: its website, mission and addresses (and its email,
+  #   * an agency's own Rolodex card: its code, website, mission and addresses (and its email,
   #     when the card names no contact person whose email it would be)
+  #   * an organization's projects sharing a name (FilemakerNames.same_name_key), as one program
+  #     carrying every code — a single program when they're all its projects
   #   * the organization a Rolodex card names, for someone staffing a project that wasn't
   #     imported, created by name when nothing answers to it
   #
@@ -167,7 +169,7 @@ module OrganizationServices
       end
 
       umbrella = coded_as(fm_organization.fm_id, name) || named(fm_organization, name, @organization_ids)
-      return import_single_program(fm_organization, projects.sole, umbrella, label) if projects.one?
+      return import_single_program(fm_organization, coded_first(projects), umbrella, label) if one_program?(projects)
 
       umbrella ||= Organization.new(name: unique_name(name, fm_organization.fm_id))
       return unless note_mismatch(save(umbrella, fm_organization, label, organization_attributes(data)), fm_organization.fm_id)
@@ -175,14 +177,28 @@ module OrganizationServices
       import_projects(umbrella, projects)
     end
 
+    # Projects sharing a name are one program the old app split by audience.
+    def one_program?(projects)
+      return true if projects.one?
+
+      keys = projects.map { |project| FilemakerNames.same_name_key(project_name(project)) }.uniq
+      keys.one? && keys.first.present?
+    end
+
+    # A project whose code an organization already carries goes first, so its namesakes join it.
+    def coded_first(projects)
+      projects.sort_by { |project| @codes.include?(project.fm_id) ? 0 : 1 }
+    end
+
     # One organization running one program is a single place, so it stays one portal
-    # organization carrying both codes — unless the portal already keeps them apart.
-    def import_single_program(fm_organization, project, umbrella, label)
+    # organization carrying every code — unless the portal already keeps them apart.
+    def import_single_program(fm_organization, projects, umbrella, label)
+      project, *namesakes = projects
       program = coded_as(project.fm_id, project_name(project)) || named(project, project_name(project), @project_ids)
       if umbrella && program && umbrella != program
         return unless note_mismatch(save(umbrella, fm_organization, label, organization_attributes(fm_organization.data)), fm_organization.fm_id)
 
-        return import_projects(umbrella, [ project ])
+        return import_projects(umbrella, projects)
       end
 
       organization = umbrella || program || Organization.new(name: unique_name(organization_name(fm_organization), project.fm_id))
@@ -192,17 +208,28 @@ module OrganizationServices
       saved = save(organization, fm_organization, "#{label} + #{project.fm_id}", attributes, also: project)
       note_mismatch(saved, fm_organization.fm_id)
       note_mismatch(saved, project.fm_id)
+      return unless saved
+
+      namesakes.each do |namesake|
+        name = project_name(namesake)
+        note_mismatch(save(coded_as(namesake.fm_id, name) || saved, namesake, "#{namesake.fm_id} #{name}".squish,
+                           project_attributes(namesake.data)), namesake.fm_id)
+      end
     end
 
     def import_projects(umbrella, projects)
-      projects.each do |project|
+      programs = {}
+      coded_first(projects).each do |project|
         name = project_name(project)
         label = "#{project.fm_id} #{name}".squish
         next record(:skipped, "#{label}: no name") if name.blank?
 
-        program = coded_as(project.fm_id, name) || named(project, name, @project_ids) || Organization.new(name: unique_name(name, project.fm_id))
+        key = FilemakerNames.same_name_key(name)
+        program = coded_as(project.fm_id, name) || programs[key] || named(project, name, @project_ids) ||
+                  Organization.new(name: unique_name(name, project.fm_id))
         nest(program, umbrella, label) if umbrella && program != umbrella
-        note_mismatch(save(program, project, label, project_attributes(project.data)), project.fm_id)
+        saved = note_mismatch(save(program, project, label, project_attributes(project.data)), project.fm_id)
+        programs[key] ||= saved if saved
       end
     end
 
@@ -308,11 +335,12 @@ module OrganizationServices
       data = rolodex.data
       name = clip(data["Organization"].to_s.squish)
       label = "#{rolodex.fm_id} #{name}".squish
-      organization = coded(data["OrgID"]) || (@name_matcher.call(name)&.organization if name)
+      organization = coded(rolodex.fm_id) || coded(data["OrgID"]) || (@name_matcher.call(name)&.organization if name)
       return record(:skipped, "#{label}: agency card with no organization named") if organization.nil? && name.blank?
       return record(:skipped, "#{label}: agency card naming #{data["OrgID"]}, retired in FileMaker") if organization.nil? && retired_record?(data["OrgID"])
 
       organization ||= Organization.new(name:)
+      organization.filemaker_code = Organization.join_filemaker_codes(organization.filemaker_code, rolodex.fm_id)
       kept = fill(organization, website_url: clip(data["WebSite"]), mission_vision_values: clip(data["Mission"]))
       stamp(organization, data)
       add_addresses(organization, rolodex.addresses)
@@ -321,6 +349,7 @@ module OrganizationServices
       outcome = agency_outcome(organization)
       return failed(organization, label) unless organization.save
 
+      @codes.add(rolodex.fm_id, organization.id)
       note_differences(organization, rolodex, label, kept) if kept.any?
       record(outcome, "#{label} → ##{organization.id} (agency card)")
     end
