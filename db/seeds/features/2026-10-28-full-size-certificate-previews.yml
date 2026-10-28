@@ -4,7 +4,9 @@ display_status: admin_facing
 released_on: 2026-10-28
 summary: >-
   Click any certificate thumbnail on the Resource roles page to open a
-  full-size sample of that certificate, with its frame and signature.
+  full-size sample of that certificate, with its background and signature.
+  Try a different background or signature there, then save it.
 action_path: "/admin/resource_roles"
 pro_tips:
-  - "Use Download PDF on the preview to check how the certificate prints before registrants see it."
+  - "Picking a background or signature only changes the preview. Nothing changes for registrants until you click Save."
+  - "Use Download PDF on the preview to check how the certificate prints."
