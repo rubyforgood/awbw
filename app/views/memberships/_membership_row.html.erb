@@ -27,7 +27,7 @@
   </div>
 
   <div class="flex items-center gap-2">
-    <%= link_to "Manage membership", person_memberships_path(membership.person),
+    <%= link_to "Manage membership", membership_path(membership),
           data: { turbo_frame: "_top" }, class: button_classes(:secondary_outline, size: :sm) %>
   </div>
 </div>

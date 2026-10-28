@@ -1,7 +1,5 @@
 class MembershipsController < ApplicationController
-  before_action :set_membership, only: %i[
-    edit update destroy issue_next_invoice remove_next_year cancel_renewal resume_renewal
-  ]
+  before_action :set_membership, only: %i[ show edit update destroy ]
 
   def index
     authorize!
@@ -17,6 +15,14 @@ class MembershipsController < ApplicationController
     else
       render :index
     end
+  end
+
+  def show
+    authorize! @membership
+    @membership_invoices = @membership.membership_invoices.includes(:allocations).to_a
+    @next_invoice = @membership.next_invoice
+    @autopay_on = @person.autopay_on?
+    @has_card = @person.payment_processor&.payment_methods&.exists? || false
   end
 
   def edit
@@ -38,12 +44,11 @@ class MembershipsController < ApplicationController
       membership: @membership,
       start_date: start_date,
       end_date: end_date,
-      cost_cents: parse_cents(attrs[:cost_dollars]),
-      renewal_on: @membership.renewal_on?
+      cost_cents: parse_cents(attrs[:cost_dollars])
     )
 
     if result.success?
-      redirect_to person_memberships_path(@person),
+      redirect_to membership_path(@membership),
         notice: "Membership updated.", status: :see_other
     else
       redirect_to edit_membership_path(@membership),
@@ -63,49 +68,6 @@ class MembershipsController < ApplicationController
         alert: "Cannot delete this membership because #{@membership.deletion_blocked_reason}.",
         status: :see_other
     end
-  end
-
-  def issue_next_invoice
-    authorize! @membership, to: :issue_next_invoice?
-
-    result = Membership::Renew.call(membership: @membership, force: true)
-    if result.success?
-      redirect_to person_memberships_path(@person),
-        notice: "Next membership invoice issued.", status: :see_other
-    else
-      redirect_to person_memberships_path(@person),
-        alert: result.errors.to_sentence, status: :see_other
-    end
-  end
-
-  def remove_next_year
-    authorize! @membership, to: :remove_next_year?
-
-    result = Membership::RemoveNextYear.call(membership: @membership)
-    if result.success?
-      redirect_to person_memberships_path(@person),
-        notice: "Next year removed. Renewal is now off.", status: :see_other
-    else
-      redirect_to person_memberships_path(@person),
-        alert: result.errors.to_sentence, status: :see_other
-    end
-  end
-
-  def cancel_renewal
-    authorize! @membership, to: :cancel_renewal?
-
-    @membership.update!(autorenewal_cancelled_at: Time.current)
-    redirect_to person_memberships_path(@person),
-      notice: "Renewal turned off. The current term still stands.", status: :see_other
-  end
-
-  def resume_renewal
-    authorize! @membership, to: :resume_renewal?
-
-    @membership.update!(autorenewal_cancelled_at: nil)
-    redirect_to person_memberships_path(@person),
-      notice: "Renewal turned back on. The next invoice will be issued in the renewal window.",
-      status: :see_other
   end
 
   private

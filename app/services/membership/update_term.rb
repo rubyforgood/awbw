@@ -3,16 +3,15 @@ class Membership::UpdateTerm
     def success? = errors.blank?
   end
 
-  def self.call(membership:, start_date:, end_date:, cost_cents:, renewal_on:)
-    new(membership:, start_date:, end_date:, cost_cents:, renewal_on:).call
+  def self.call(membership:, start_date:, end_date:, cost_cents:)
+    new(membership:, start_date:, end_date:, cost_cents:).call
   end
 
-  def initialize(membership:, start_date:, end_date:, cost_cents:, renewal_on:)
+  def initialize(membership:, start_date:, end_date:, cost_cents:)
     @membership = membership
     @start_date = start_date.to_date
     @end_date = end_date.to_date
     @cost_cents = cost_cents
-    @renewal_on = renewal_on
   end
 
   def call
@@ -33,7 +32,6 @@ class Membership::UpdateTerm
       @membership.start_date = @start_date
       @membership.end_date = @end_date
       @membership.cost_cents = @cost_cents
-      @membership.autorenewal_cancelled = !@renewal_on
       @membership.autorenewal_cancelled_at = Time.current if shortening
       @membership.save!
 

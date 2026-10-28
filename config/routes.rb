@@ -315,6 +315,8 @@ Rails.application.routes.draw do
     resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ], controller: "people/memberships"
     resource :autopay, only: [ :update ], controller: "people/autopay"
+    resource :autopay_setup, only: [ :create ], controller: "people/autopay_setups"
+    resource :billing_portal, only: [ :create ], controller: "people/billing_portals"
   end
   resources :comments_and_communications, only: [ :index ] do
     collection do
@@ -374,31 +376,23 @@ Rails.application.routes.draw do
     post :revert, on: :member
   end
 
-  resources :memberships, only: [ :index, :edit, :update, :destroy ] do
-    member do
-      post :issue_next_invoice
-      post :remove_next_year
-      patch :cancel_renewal
-      patch :resume_renewal
-    end
+  resources :memberships, only: [ :index, :show, :edit, :update, :destroy ] do
+    resources :membership_invoices, only: [ :new, :create ]
+    resource :renewal, only: [ :update ], controller: "memberships/renewals"
+    resource :next_year, only: [ :destroy ], controller: "memberships/next_years"
   end
 
   resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ] do
-    member do
-      get :receipt
-      post :charge
-    end
+    get :receipt, on: :member
+    resource :checkout, only: [ :create ], controller: "membership_invoices/checkouts"
+    resources :charge_attempts, only: [ :create ], controller: "membership_invoices/charge_attempts"
   end
 
   namespace :memberships do
-    resources :invoice_checkouts, only: [ :create ]
-    resources :autopay_setups, only: [ :create ]
     resources :public_invoices, only: :show, param: :token do
       resource :checkout, only: [ :create ], module: :public_invoices
     end
   end
-
-  resource :billing_portal, only: [ :create ], controller: "billing_portals"
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses

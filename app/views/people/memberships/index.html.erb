@@ -38,74 +38,31 @@
   <% if @memberships.none? %>
     <p class="text-gray-500 italic">No membership yet.</p>
   <% else %>
-    <div class="space-y-6">
+    <div class="space-y-4">
       <% @memberships.each do |membership| %>
-        <div class="border-primary/10 rounded-2xl border p-3 sm:p-4">
-          <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <div class="mb-1 flex flex-wrap items-center gap-2">
-                <%= render "memberships/status_badge", membership: membership %>
-                <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes %>
-                <%= render "shared/badge",
-                      label: "Autopay: #{membership.autopay_label(has_card: has_card)}",
-                      classes: membership.autopay_classes(has_card: has_card) %>
-                <% if membership.locked? %>
-                  <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300" %>
-                <% end %>
-              </div>
-
-              <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
-                <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
-                <span class="text-gray-600">Renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
-                <% if membership.period_label.present? %>
-                  <span class="text-gray-600">Term: <span class="font-medium text-gray-800"><%= membership.period_label %></span></span>
-                <% end %>
-              </div>
+        <div class="border-primary/10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4">
+          <div>
+            <div class="mb-1 flex flex-wrap items-center gap-2">
+              <%= render "memberships/status_badge", membership: membership %>
+              <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes %>
+              <%= render "shared/badge",
+                    label: "Autopay: #{membership.autopay_label(has_card: has_card)}",
+                    classes: membership.autopay_classes(has_card: has_card) %>
+              <% if membership.locked? %>
+                <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300" %>
+              <% end %>
             </div>
 
-            <% unless membership.locked? %>
-              <div class="flex flex-wrap items-center gap-2">
-                <%= link_to "Edit term", edit_membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
-
-                <% if membership.renewal_on? && !membership.next_invoice.present? %>
-                  <%= button_to "Issue next invoice", issue_next_invoice_membership_path(membership),
-                        method: :post, class: button_classes(:secondary_outline, size: :sm),
-                        data: { turbo_confirm: "Issue the next year's invoice now?" } %>
-                <% end %>
-
-                <% if membership.renewal_on? %>
-                  <%= button_to "Turn off renewal", cancel_renewal_membership_path(membership),
-                        method: :patch, class: button_classes(:secondary_outline, size: :sm),
-                        data: { turbo_confirm: "Stop renewing this membership? The current term still stands." } %>
-                <% else %>
-                  <%= button_to "Turn on renewal", resume_renewal_membership_path(membership),
-                        method: :patch, class: button_classes(:secondary_outline, size: :sm) %>
-                <% end %>
-
-                <% if membership.next_invoice.present? %>
-                  <%= button_to "Remove next year", remove_next_year_membership_path(membership),
-                        method: :post, class: button_classes(:danger_outline, size: :sm),
-                        data: { turbo_confirm: "Remove the unstarted next year and roll the term back?" } %>
-                <% end %>
-
-                <% if membership.deletable? %>
-                  <%= button_to "Delete membership", membership_path(membership),
-                        method: :delete, class: button_classes(:danger_outline, size: :sm),
-                        data: { turbo_confirm: "Delete this membership? It has no invoices, so nothing financial is lost." } %>
-                <% end %>
-              </div>
-            <% end %>
+            <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
+              <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
+              <span class="text-gray-600">Renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
+              <% if membership.period_label.present? %>
+                <span class="text-gray-600">Term: <span class="font-medium text-gray-800"><%= membership.period_label %></span></span>
+              <% end %>
+            </div>
           </div>
 
-          <% if membership.membership_invoices.empty? %>
-            <p class="text-gray-500 italic">No membership invoices yet.</p>
-          <% else %>
-            <ul class="space-y-2">
-              <% membership.membership_invoices.each do |invoice| %>
-                <%= render "membership_invoices/invoice_row", invoice: invoice, viewable: true, linked: true %>
-              <% end %>
-            </ul>
-          <% end %>
+          <%= link_to "View membership", membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
         </div>
       <% end %>
     </div>

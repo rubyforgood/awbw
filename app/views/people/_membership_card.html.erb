@@ -38,13 +38,12 @@
             <% if allowed_to?(:pay?, invoice) %>
               <div class="flex flex-wrap items-center gap-2">
                 <%= button_to "Pay & renew automatically",
-                      memberships_invoice_checkouts_path,
-                      params: { invoice_id: invoice.id, autopay: "1" },
+                      membership_invoice_checkout_path(invoice),
+                      params: { autopay: "1" },
                       class: button_classes(:primary, size: :sm),
                       data: { turbo: false } %>
                 <%= button_to "Pay once",
-                      memberships_invoice_checkouts_path,
-                      params: { invoice_id: invoice.id },
+                      membership_invoice_checkout_path(invoice),
                       class: button_classes(:secondary_outline, size: :sm),
                       data: { turbo: false } %>
               </div>
@@ -72,7 +71,7 @@
               <%= membership.autorenewal_cancelled? ? "Any invoice already issued will still be charged." : "Your card will be charged when the next invoice is due." %>
             </p>
             <div class="flex flex-wrap items-center gap-2">
-              <%= button_to "Manage card", billing_portal_path,
+              <%= button_to "Manage card", person_billing_portal_path(person),
                     class: button_classes(:secondary_outline, size: :sm), data: { turbo: false } %>
               <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
                     method: :patch, class: button_classes(:secondary_outline, size: :sm),
@@ -84,7 +83,7 @@
               Add a card to keep automatic payments working.
             </p>
             <div class="flex flex-wrap items-center gap-2">
-              <%= button_to "Add a card", billing_portal_path,
+              <%= button_to "Add a card", person_billing_portal_path(person),
                     class: button_classes(:primary, size: :sm), data: { turbo: false } %>
               <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
                     method: :patch, class: button_classes(:secondary_outline, size: :sm) %>
@@ -99,10 +98,10 @@
               <% if has_card %>
                 <%= button_to "Turn on automatic payments", person_autopay_path(person, autopay_on: "1"),
                       method: :patch, class: button_classes(:primary, size: :sm) %>
-                <%= button_to "Manage card", billing_portal_path,
+                <%= button_to "Manage card", person_billing_portal_path(person),
                       class: button_classes(:secondary_outline, size: :sm), data: { turbo: false } %>
               <% else %>
-                <%= button_to "Add a card & renew automatically", memberships_autopay_setups_path,
+                <%= button_to "Add a card & renew automatically", person_autopay_setup_path(person),
                       class: button_classes(:primary, size: :sm), data: { turbo: false } %>
               <% end %>
             </div>

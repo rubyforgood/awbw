@@ -7,11 +7,12 @@
 <% can_charge = allowed_to?(:charge?, @membership_invoice) &&
                 @membership_invoice.remaining_cost.positive? &&
                 @membership_invoice.person.payment_processor&.payment_methods&.exists? %>
+<% next_year = @membership_invoice.id == @membership_invoice.membership.next_invoice&.id %>
 
 <%
   back_path, back_label =
     if admin
-      [ person_memberships_path(@membership_invoice.person), "Membership" ]
+      [ membership_path(@membership_invoice.membership), "Membership" ]
     else
       [ person_path(@membership_invoice.person), "Back to profile" ]
     end
@@ -33,14 +34,20 @@
             <%= link_to "Edit invoice details", edit_membership_invoice_path(@membership_invoice), class: button_classes(:secondary_outline, size: :sm) %>
           <% end %>
           <% if can_charge %>
-            <%= button_to "Charge saved card", charge_membership_invoice_path(@membership_invoice),
+            <%= button_to "Charge saved card", membership_invoice_charge_attempts_path(@membership_invoice),
                   method: :post, class: button_classes(:secondary_outline, size: :sm),
                   data: { turbo_confirm: "Charge the card on file for the remaining balance?" } %>
           <% end %>
           <% if can_delete %>
-            <%= button_to "Delete invoice", membership_invoice_path(@membership_invoice),
-                  method: :delete, class: button_classes(:danger_outline, size: :sm),
-                  data: { turbo_confirm: "Delete this invoice? This cannot be undone." } %>
+            <% if next_year %>
+              <%= button_to "Remove next year", membership_invoice_path(@membership_invoice),
+                    method: :delete, class: button_classes(:danger_outline, size: :sm),
+                    data: { turbo_confirm: "Remove the unstarted next year and turn renewal off?" } %>
+            <% else %>
+              <%= button_to "Delete invoice", membership_invoice_path(@membership_invoice),
+                    method: :delete, class: button_classes(:danger_outline, size: :sm),
+                    data: { turbo_confirm: "Delete this invoice? This cannot be undone." } %>
+            <% end %>
           <% end %>
         </div>
       </div>
@@ -102,14 +109,13 @@
     <% if @membership_invoice.remaining_cost.positive? %>
       <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
         <% if @membership_invoice.person.autopay_on? %>
-          <%= button_to "Pay now", memberships_invoice_checkouts_path, params: { invoice_id: @membership_invoice.id },
+          <%= button_to "Pay now", membership_invoice_checkout_path(@membership_invoice),
                 class: button_classes(:primary), data: { turbo: false } %>
         <% else %>
-          <%= button_to "Pay & renew automatically", memberships_invoice_checkouts_path,
-                params: { invoice_id: @membership_invoice.id, autopay: "1" },
+          <%= button_to "Pay & renew automatically", membership_invoice_checkout_path(@membership_invoice),
+                params: { autopay: "1" },
                 class: button_classes(:primary), data: { turbo: false } %>
-          <%= button_to "Pay once", memberships_invoice_checkouts_path,
-                params: { invoice_id: @membership_invoice.id },
+          <%= button_to "Pay once", membership_invoice_checkout_path(@membership_invoice),
                 class: button_classes(:secondary_outline), data: { turbo: false } %>
         <% end %>
       </div>

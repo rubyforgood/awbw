@@ -34,7 +34,7 @@ module People
       )
 
       if result.success?
-        redirect_to person_memberships_path(@person),
+        redirect_to membership_path(result.membership),
           notice: "Membership created with its first invoice.", status: :see_other
       else
         @membership = result.membership || @person.memberships.new(start_date: start_date)

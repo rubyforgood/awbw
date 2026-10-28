@@ -1,9 +1,10 @@
 class MembershipInvoicesController < ApplicationController
   include AhoyTracking
 
-  before_action :set_membership_invoice, only: %i[ show receipt edit update destroy charge ]
-
   STATUS_FILTERS = %w[all paid partial due overdue].freeze
+
+  before_action :set_membership, only: %i[ new create ]
+  before_action :set_membership_invoice, only: %i[ show receipt edit update destroy ]
 
   def index
     authorize!
@@ -25,6 +26,29 @@ class MembershipInvoicesController < ApplicationController
     @invoice = MembershipInvoicePresenter.new(@membership_invoice)
     @deletion_blocked_reason = @membership_invoice.deletion_blocked_reason
     track_view("invoices", { membership_invoice_id: @membership_invoice.id })
+  end
+
+  def new
+    @membership_invoice = @membership.membership_invoices.new(
+      start_date: next_start_date,
+      end_date: next_start_date + Membership::INVOICE_PERIOD - 1.day,
+      cost_cents: @membership.cost_cents || Membership.annual_cost_cents
+    )
+    authorize! @membership_invoice
+  end
+
+  def create
+    @membership_invoice = @membership.membership_invoices.new
+    authorize! @membership_invoice
+
+    result = Membership::Renew.call(membership: @membership, force: true)
+    if result.success?
+      redirect_to membership_invoice_path(result.invoice),
+        notice: "Next membership invoice issued.", status: :see_other
+    else
+      redirect_to membership_path(@membership),
+        alert: result.errors.to_sentence, status: :see_other
+    end
   end
 
   def receipt
@@ -57,29 +81,25 @@ class MembershipInvoicesController < ApplicationController
 
   def destroy
     authorize! @membership_invoice
-    person = @membership_invoice.person
+    membership = @membership_invoice.membership
 
-    if @membership_invoice.deletable?
+    if @membership_invoice.id == membership.next_invoice&.id
+      result = Membership::RemoveNextYear.call(membership:)
+      if result.success?
+        redirect_to membership_path(membership),
+          notice: "Next year removed. Renewal is now off.", status: :see_other
+      else
+        redirect_to membership_path(membership),
+          alert: result.errors.to_sentence, status: :see_other
+      end
+    elsif @membership_invoice.deletable?
       @membership_invoice.destroy!
-      redirect_to person_memberships_path(person),
+      redirect_to membership_path(membership),
         notice: "Membership invoice deleted.", status: :see_other
     else
-      redirect_to person_memberships_path(person),
+      redirect_to membership_path(membership),
         alert: "Cannot delete this invoice because #{@membership_invoice.deletion_blocked_reason}.",
         status: :see_other
-    end
-  end
-
-  def charge
-    authorize! @membership_invoice, to: :charge?
-
-    result = Membership::Autopay::Charge.call(invoice: @membership_invoice, actor: current_user)
-    if result.success?
-      redirect_to membership_invoice_path(@membership_invoice),
-        notice: "Membership charged.", status: :see_other
-    else
-      redirect_to membership_invoice_path(@membership_invoice),
-        alert: result.errors.to_sentence, status: :see_other
     end
   end
 
@@ -97,6 +117,10 @@ class MembershipInvoicesController < ApplicationController
     when "overdue" then scope.overdue
     else scope
     end
+  end
+
+  def set_membership
+    @membership = Membership.find(params[:membership_id])
   end
 
   def set_membership_invoice
@@ -131,6 +155,10 @@ class MembershipInvoicesController < ApplicationController
         [ "#{owner.respond_to?(:full_name) ? owner.full_name : owner.name} — #{address.decorate.picker_label}", address.id ]
       end
     end
+  end
+
+  def next_start_date
+    @membership.end_date + 1.day
   end
 
   def invoice_details_params

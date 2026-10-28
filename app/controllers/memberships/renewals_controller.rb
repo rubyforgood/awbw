@@ -1,0 +1,22 @@
+module Memberships
+  class RenewalsController < ApplicationController
+    before_action :set_membership
+
+    def update
+      authorize! @membership, to: :update?
+
+      renewal_on = ActiveModel::Type::Boolean.new.cast(params[:renewal_on])
+      @membership.update!(autorenewal_cancelled_at: renewal_on ? nil : Time.current)
+
+      redirect_to membership_path(@membership),
+        notice: renewal_on ? "Renewal turned on." : "Renewal turned off.",
+        status: :see_other
+    end
+
+    private
+
+    def set_membership
+      @membership = Membership.find(params[:membership_id])
+    end
+  end
+end

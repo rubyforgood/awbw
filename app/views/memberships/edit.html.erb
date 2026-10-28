@@ -2,7 +2,7 @@
 
 <div class="border-primary/10 mx-auto max-w-2xl rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
-    <%= link_to person_memberships_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+    <%= link_to membership_path(@membership), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Membership
     <% end %>
   </div>
@@ -38,38 +38,11 @@
 
     <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-6">
       <div class="ml-auto flex items-center gap-3">
-        <%= link_to "Cancel", person_memberships_path(@person), class: button_classes(:secondary_outline) %>
+        <%= link_to "Cancel", membership_path(@membership), class: button_classes(:secondary_outline) %>
         <%= f.button :submit, "Save term", class: button_classes(:primary) %>
       </div>
     </div>
   <% end %>
-
-  <div class="mt-8 border-t border-gray-200 pt-6">
-    <h2 class="mb-3 text-sm font-semibold tracking-wide text-gray-700 uppercase">Renewal</h2>
-    <p class="mb-3 text-sm text-gray-600">
-      Renewal is <span class="font-medium"><%= @membership.renewal_on? ? "on" : "off" %></span>.
-      <% if @membership.next_invoice.present? %>
-        The next year (<%= @membership.next_invoice.decorate.period_range %>) has already been issued.
-      <% end %>
-    </p>
-
-    <div class="flex flex-wrap items-center gap-2">
-      <% if @membership.renewal_on? %>
-        <%= button_to "Turn off renewal", cancel_renewal_membership_path(@membership),
-              method: :patch, class: button_classes(:secondary_outline, size: :sm),
-              data: { turbo_confirm: "Stop renewing this membership? The current term still stands." } %>
-      <% else %>
-        <%= button_to "Turn on renewal", resume_renewal_membership_path(@membership),
-              method: :patch, class: button_classes(:secondary_outline, size: :sm) %>
-      <% end %>
-
-      <% if @membership.next_invoice.present? %>
-        <%= button_to "Remove next year", remove_next_year_membership_path(@membership),
-              method: :post, class: button_classes(:danger_outline, size: :sm),
-              data: { turbo_confirm: "Remove the unstarted next year and roll the term back? This cannot be undone." } %>
-      <% end %>
-    </div>
-  </div>
 
   <%= render "shared/audit_info", resource: @membership %>
   <div class="mt-4 flex justify-end">

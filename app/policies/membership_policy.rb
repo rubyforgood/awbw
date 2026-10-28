@@ -13,11 +13,6 @@ class MembershipPolicy < ApplicationPolicy
   def update? = edit?
   def destroy? = edit?
 
-  def issue_next_invoice? = edit?
-  def remove_next_year? = edit?
-  def cancel_renewal? = edit?
-  def resume_renewal? = edit?
-
   def manage_subscription? = Membership.enabled? && owner?
 
   private
