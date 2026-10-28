@@ -1,3 +1,5 @@
+<!-- Opt-in sample: copy to docs/agents/issue-tracker.md. See docs/ai/README.md. -->
+
 # Issue tracker: GitHub
 
 Issues and PRDs for this repo live as GitHub issues. Use the `gh` CLI for all operations.

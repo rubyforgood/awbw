@@ -57,3 +57,17 @@ storage
 dist/stats.html
 vendor/bundle/
 /tmp/review_notes.txt
+
+# AI / LLM tooling is opt-in: the tracked copies live in docs/ai/ as samples.
+# Copy the ones you want into place locally; these live paths stay untracked.
+# See docs/ai/README.md.
+/AGENTS.md
+/CLAUDE.md
+/CLAUDE.local.md
+/.github/copilot-instructions.md
+/docs/agents/
+/ai/
+/.conductor/
+/bin/conductor-setup
+/bin/conductor-server
+/bin/conductor-archive

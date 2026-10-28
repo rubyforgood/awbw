@@ -88,7 +88,7 @@ Also watch for **scope creep**: unrelated changes bundled into the same diff (a 
 
 ## Check against project conventions
 
-This repo documents its conventions in `CLAUDE.md` and `AGENTS.md` (and mirrors `CLAUDE.md` to `.github/copilot-instructions.md`). Read the relevant parts and flag violations the author would want to fix. Common ones in this codebase:
+This repo documents its conventions in `CLAUDE.md` and `AGENTS.md` (and mirrors `CLAUDE.md` to `.github/copilot-instructions.md`). Those files are opt-in and may not exist in a given clone — when they don't, read the samples in `docs/ai/`. Read the relevant parts and flag violations the author would want to fix. Common ones in this codebase:
 
 - **Money** — display via `dollars_from_cents` / `MoneyFormatter`, never `number_to_currency` or `format("%.2f", …)`; store and compute in integer cents.
 - **New full-page views** — set `content_for(:page_bg_class, "…")` matching the action's policy, and register the view in `spec/views/page_bg_class_alignment_spec.rb`'s `EXPECTED_MAPPINGS`.
@@ -101,14 +101,16 @@ This repo documents its conventions in `CLAUDE.md` and `AGENTS.md` (and mirrors 
 
 ## Related-files completeness
 
-Use the "Related Files" table in `CLAUDE.md`. When the diff changes one side, check whether its companions were updated and flag missing ones:
+Use the "Related Files" table in `CLAUDE.md` (or `docs/ai/CLAUDE.md.sample` when the clone has no live copy). When the diff changes one side, check whether its companions were updated and flag missing ones:
 
 - **Model** → decorator, policy, factory, model spec.
 - **Controller** → policy, request spec, routing spec, views.
 - **View** → system spec, Stimulus controller (if interactive).
 - **Service / decorator / mailer** → matching spec (and mailer preview for new/removed mailers).
-- **New/removed model, concern, service, gem, Stimulus controller, mailer, or rake task** → `AGENTS.md` updated.
-- **`CLAUDE.md` changed** → `.github/copilot-instructions.md` kept in sync.
+- **New/removed model, concern, service, gem, Stimulus controller, mailer, or rake task** → `docs/ai/AGENTS.md.sample` updated.
+- **`docs/ai/CLAUDE.md.sample` changed** → `docs/ai/copilot-instructions.md.sample` kept in sync.
+
+The live `CLAUDE.md` / `AGENTS.md` / `.github/copilot-instructions.md` are gitignored, so only the `docs/ai/*.sample` copies can show up in a diff — that's what to check for. (When you edit these yourself, mirror the change into whichever live files the clone has.)
 
 ## Test discipline
 

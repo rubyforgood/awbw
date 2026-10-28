@@ -1,3 +1,5 @@
+# Opt-in sample: copy to .conductor/settings.toml. See docs/ai/README.md.
+
 "$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
 
 [scripts]

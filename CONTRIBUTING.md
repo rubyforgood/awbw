@@ -154,13 +154,21 @@ A [staging environment](https://awbw-staging-xzek4.ondigitalocean.app/) is also 
 
 [Conductor](https://conductor.build) is an optional macOS platform for running multiple coding agents in parallel, each in its own git worktree. You don't need it to work on this project — it's just one supported way to run isolated workspaces. When used, each workspace gets its own port, database, and session cookie automatically.
 
+The Conductor wiring is opt-in. Copy it into place first:
+
+```bash
+mkdir -p .conductor
+cp docs/ai/conductor/settings.toml.sample .conductor/settings.toml
+cp docs/ai/conductor/bin/conductor-* bin/
+```
+
 The app itself only depends on the generic `WORKSPACE_PORT` environment variable for this isolation. The `bin/conductor-*` scripts derive `WORKSPACE_PORT` from Conductor's `CONDUCTOR_PORT`, but any other system (or a manual setup) can achieve the same result by exporting `WORKSPACE_PORT` itself.
 
 1. Open the project in Conductor — it will run `bin/conductor-setup` to symlink config files and set up a workspace-specific database.
 2. The dev server starts on the port assigned to the workspace.
 3. When a workspace is archived, `bin/conductor-archive` stops the running server.
 
-Configuration lives in `conductor.json` at the project root.
+Configuration lives in `.conductor/settings.toml`.
 
 **Logs:** Rails logs go to `log/development.log` (not the Conductor terminal). Tail them with `tail -f log/development.log`.
 
@@ -227,6 +235,10 @@ Only commit the schema.rb only if you have committed anything that would change 
 
 Try to keep your PRs limited to one particular issue, and don't make changes that are out of scope for that issue. If you notice something that needs attention but is out of scope, please [create a new issue](https://github.com/rubyforgood/awbw/issues/new).
 
+### Match the house UI style
+
+Building or changing UI? Follow the patterns in [docs/design/house-style.md](docs/design/house-style.md) instead of inventing new ones. If you add a pattern worth reusing, document it there.
+
 ### Add a features seed (optional)
 
 - **Optional** — appreciated, but maintainers can add it if you skip it.
@@ -282,9 +294,15 @@ Before submitting a pull request, run all tests and lints. Fix any broken tests 
   end
 ```
 
-#### Quick command shortcuts
+#### Quick command shortcuts (optional)
 
-The `ai/` directory contains shortcut scripts for common tasks:
+The shortcut scripts are opt-in. Copy them into place first:
+
+```bash
+cp -a docs/ai/scripts ai
+```
+
+Then the `ai/` directory contains shortcuts for common tasks:
 
 | Command | What it does |
 |---|---|
@@ -296,3 +314,9 @@ The `ai/` directory contains shortcut scripts for common tasks:
 | `ai/routes -g pattern` | Search Rails routes |
 | `ai/migrate` | Run database migrations |
 | `ai/seed` | Load the full dev sample dataset (`db:seed:dev`) into the workspace DB |
+
+#### AI instruction files (optional)
+
+`AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, and the rest of the
+AI tooling are opt-in and untracked by default. Pick the ones you want from
+[docs/ai](docs/ai/README.md).
