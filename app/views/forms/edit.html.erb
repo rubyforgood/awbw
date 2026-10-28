@@ -118,14 +118,6 @@
           </label>
           <p class="mt-1 text-xs text-gray-500">Responses aren't linked to whoever submits them, even when they're logged in. Name and email questions become optional — only someone who fills in first name, last name, and email is credited. On a ticket callout, staff still see who completed the form, just not which responses are theirs. When off, a public link requires first name, last name, and email.</p>
         </div>
-
-        <div>
-          <label class="flex cursor-pointer items-center gap-2">
-            <%= f.check_box :responses_editable, class: "rounded border-gray-300 #{DomainTheme.text_class_for(:forms, intensity: 600)}" %>
-            <span class="text-sm text-gray-800">Let registrants edit their responses from their ticket</span>
-          </label>
-          <p class="mt-1 text-xs text-gray-500">Only applies to forms on a registration ticket — responses sent from a direct link can't be edited, and neither can anonymous responses. Staff can always edit a submission.</p>
-        </div>
       </div>
     </details>
 

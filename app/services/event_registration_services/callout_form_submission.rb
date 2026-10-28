@@ -21,8 +21,7 @@ module EventRegistrationServices
     # Whether this call edited an existing submission rather than recording a first one.
     def edited? = @edited
 
-    # A form the registrant already completed that can't be changed (anonymous, or
-    # not set to responses_editable); nothing was saved.
+    # An anonymous form the registrant already completed; nothing was saved.
     def already_completed? = @already_completed
 
     # An anonymous submission missing a required answer; nothing was saved.
@@ -47,7 +46,6 @@ module EventRegistrationServices
     def call
       person = @registration.registrant
       return record_anonymously(person) if anonymous?
-      return @already_completed = true if locked_after_submission?(person)
 
       ActiveRecord::Base.transaction do
         @submission = FormSubmission.create_with(role: @form.role).find_or_create_by!(
@@ -106,10 +104,6 @@ module EventRegistrationServices
         end
       end
       @submission
-    end
-
-    def locked_after_submission?(person)
-      !@form.responses_editable? && FormSubmission.exists?(person:, form: @form, event: @registration.event)
     end
 
     def missing_required_answer?

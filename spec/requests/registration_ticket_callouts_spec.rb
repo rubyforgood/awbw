@@ -52,37 +52,6 @@ RSpec.describe "Callout inline form", type: :request do
       follow_redirect!
       expect(response.body).to include("Completed")
       expect(response.body).to include("Loved it")
-      expect(response.body).to include("Edit responses")
-    end
-  end
-
-  describe "a form that doesn't let people edit their responses" do
-    let(:form) { create(:form, name: "Feedback", responses_editable: false) }
-
-    before do
-      post registration_callout_form_submit_path(registration.slug, callout, form),
-           params: { callout_form: { form_fields: { field.id.to_s => "Loved it" } } }
-    end
-
-    it "shows the answers back without an Edit responses link" do
-      get registration_callout_form_path(registration.slug, callout)
-
-      expect(response.body).to include("Loved it")
-      expect(response.body).not_to include("Edit responses")
-    end
-
-    it "keeps the answers read-only when the edit link is opened anyway" do
-      get registration_callout_form_path(registration.slug, callout, edit: form.id)
-
-      expect(response.body).not_to include("callout_form[form_fields][#{field.id}]")
-    end
-
-    it "keeps the first answers when the form is posted again" do
-      post registration_callout_form_submit_path(registration.slug, callout, form),
-           params: { callout_form: { form_fields: { field.id.to_s => "Changed my mind" } } }
-
-      expect(FormSubmission.last.form_answers.find_by(form_field: field).submitted_answer).to eq("Loved it")
-      expect(flash[:notice]).to eq("You've already submitted this form.")
     end
   end
 

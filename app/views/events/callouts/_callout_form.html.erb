@@ -5,7 +5,6 @@
 <% form = callout_form.form %>
 <% anonymously_completed = local_assigns.fetch(:anonymously_completed, false) %>
 <% completed = submission.present? %>
-<% editing &&= form.responses_editable? %>
 <%# Where "Edit responses" returns to — defaults to this callout's page; the
     scholarship page overrides it so its survey edits stay on the scholarship page. %>
 <% edit_url = local_assigns.fetch(:edit_url, registration_callout_form_path(@event_registration.slug, callout, edit: form.id, anchor: "form-#{form.id}")) %>
@@ -57,12 +56,10 @@
             </div>
           <% end %>
         </dl>
-        <% if form.responses_editable? %>
-          <div class="mt-6">
-            <%= link_to "Edit responses", edit_url,
-                  class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
-          </div>
-        <% end %>
+        <div class="mt-6">
+          <%= link_to "Edit responses", edit_url,
+                class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+        </div>
       </div>
     </details>
 
