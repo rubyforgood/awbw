@@ -104,6 +104,19 @@ year = ->(membership, start_date, cost_cents: standard, paid: false, partial: ni
   invoice
 end
 
+join = ->(person, start_date) do
+  result = Membership::Create.call(person:, start_date:)
+  raise result.errors.to_sentence unless result.success?
+
+  membership = result.membership
+  invoice = membership.membership_invoices.sole
+  minted = minted_at.(start_date)
+  membership.update_columns(created_at: start_date.in_time_zone, updated_at: start_date.in_time_zone)
+  invoice.update_columns(created_at: minted, updated_at: minted)
+  pay.(invoice, invoice.cost_cents, on: start_date.in_time_zone + 9.days)
+  membership
+end
+
 autopay = ->(person, card: true) do
   if card
     customer = Pay::Customer.find_or_create_by!(owner: person, processor: "stripe") do |record|
@@ -185,10 +198,7 @@ seed.(email: "rejoiner.member", first: "Rejoiner", last: "Member", label: "Activ
   lapsed.update_columns(created_at: first_year.in_time_zone, updated_at: first_year.in_time_zone)
   year.(lapsed, first_year, cost_cents: 1_500, paid: true)
 
-  rejoined = membership_for.(person, start_date: Date.current - 1.month)
-  rejoined.update_columns(created_at: (Date.current - 1.month).in_time_zone)
-  year.(rejoined, Date.current - 1.month, paid: true)
-  lapsed.update_columns(locked_at: Time.current)
+  join.(person, Date.current - 1.month)
 end
 
 seed.(email: "duplicate.member", first: "Duplicate", last: "Member", label: "Anomaly — two unlocked memberships") do |person|
@@ -249,11 +259,9 @@ seed.(email: "locked.arrears", first: "Locked", last: "Arrears", label: "Current
   old_start = Date.current - 3.years
   old = membership_for.(person, start_date: old_start, renewal_off: true)
   old_paid = year.(old, old_start, paid: true)
-  year.(old, old_paid.end_date + 1.day)
-  old.update_columns(locked_at: Time.current)
+  year.(old, old_paid.end_date + 1.day, cost_cents: standard)
 
-  current = membership_for.(person, start_date: Date.current - 1.month)
-  year.(current, Date.current - 1.month, paid: true)
+  join.(person, Date.current - 1.month)
 end
 
 puts "  #{Membership.count} memberships, #{MembershipInvoice.count} membership invoices"
