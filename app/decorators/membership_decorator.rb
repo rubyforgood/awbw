@@ -46,6 +46,8 @@ class MembershipDecorator < ApplicationDecorator
     "Paid"
   end
 
+  def payment_badge? = !upcoming?
+
   def payment_tooltip
     return "This membership has not started yet." if upcoming?
     return "One or more invoices have an outstanding balance." if owes?

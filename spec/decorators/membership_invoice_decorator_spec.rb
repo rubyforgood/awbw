@@ -11,14 +11,14 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
   end
 
   describe "#status_badge" do
-    it "reads Upcoming · Paid for a paid future invoice" do
+    it "reads Paid for a paid future invoice" do
       badge = invoice(start_date: Date.current + 1.day, paid: 2_500).status_badge
-      expect(badge.label).to eq("Upcoming · Paid")
+      expect(badge.label).to eq("Paid")
       expect(badge.classes).to eq(described_class::BADGE_CLASSES[:green])
     end
 
-    it "reads Upcoming with amount before the year starts" do
-      expect(invoice(start_date: Date.current + 1.day).status_badge.label).to eq("Upcoming · $25")
+    it "reads Not due with amount before the year starts" do
+      expect(invoice(start_date: Date.current + 1.day).status_badge.label).to eq("Not due · $25")
     end
 
     it "reads Paid for a settled year" do
@@ -36,8 +36,8 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
       expect(badge.classes).to eq(described_class::BADGE_CLASSES[:red])
     end
 
-    it "reads Overdue with amount for an invoice after a part payment" do
-      expect(invoice(paid: 1_000, start_date: Date.current).status_badge.label).to eq("Overdue · $15")
+    it "reads Partially paid with amount for an invoice after a part payment" do
+      expect(invoice(paid: 1_000, start_date: Date.current).status_badge.label).to eq("Partially paid · $15")
     end
   end
 

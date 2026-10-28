@@ -46,8 +46,10 @@
           <div>
             <div class="mb-1 flex flex-wrap items-center gap-2">
               <%= render "memberships/status_badge", membership: membership %>
-              <%= render "shared/badge", label: membership.payment_label,
-                    classes: membership.payment_classes, title: membership.payment_tooltip %>
+              <% if membership.payment_badge? %>
+                <%= render "shared/badge", label: membership.payment_label,
+                      classes: membership.payment_classes, title: membership.payment_tooltip %>
+              <% end %>
               <%= render "shared/badge",
                     label: "Autopay: #{membership.autopay_label(has_card: has_card)}",
                     classes: membership.autopay_classes(has_card: has_card),

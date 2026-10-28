@@ -23,8 +23,10 @@
     <% end %>
 
     <div class="flex flex-wrap items-center gap-2">
-      <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes,
-            title: membership.payment_tooltip %>
+      <% if membership.payment_badge? %>
+        <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes,
+              title: membership.payment_tooltip %>
+      <% end %>
       <%= render "shared/badge", label: "Autopay: #{membership.autopay_label(has_card: has_card)}",
             classes: membership.autopay_classes(has_card: has_card),
             title: membership.autopay_tooltip(has_card: has_card) %>
@@ -46,9 +48,7 @@
         <% invoices.each do |invoice| %>
           <div class="flex flex-wrap items-center gap-2">
             <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice, viewable: true %></ul>
-            <% if invoice.upcoming? %>
-              <span class="text-xs text-gray-500">Scheduled for <%= invoice.start_date.strftime("%b %-d, %Y") %></span>
-            <% elsif allowed_to?(:pay?, invoice) %>
+            <% if !invoice.upcoming? && allowed_to?(:pay?, invoice) %>
               <%= button_to "Pay now", membership_invoice_checkout_path(invoice),
                     class: button_classes(:primary, size: :sm),
                     title: "Pays this invoice once. The card is not saved for automatic payments.",
