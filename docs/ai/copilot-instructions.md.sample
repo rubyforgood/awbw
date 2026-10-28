@@ -1,7 +1,7 @@
 <!-- Opt-in sample: copy to .github/copilot-instructions.md. See docs/ai/README.md. -->
 
 # This is a Ruby on Rails application.
-<!-- Keep code style rules in sync with CLAUDE.md -->
+<!-- Keep code style rules in sync with docs/ai/CLAUDE.md.sample (the tracked copy), and with CLAUDE.md if this clone has one -->
 
 For project overview, tech stack, architecture reference (models, controllers, services, testing), and more, read `AGENTS.md`.
 
@@ -24,10 +24,17 @@ If you notice the user repeatedly correcting the same pattern, suggest adding it
 
 | File | Purpose |
 |---|---|
-| `CLAUDE.md` | Coding rules and conventions (this file) |
-| `AGENTS.md` | Architecture reference + project details |
-| `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) |
-| `ai/` | Shell script shortcuts for common dev tasks |
+| `CLAUDE.md` | Coding rules and conventions (this file) — tracked copy: `docs/ai/CLAUDE.md.sample` |
+| `AGENTS.md` | Architecture reference + project details — tracked copy: `docs/ai/AGENTS.md.sample` |
+| `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) — tracked copy: `docs/ai/copilot-instructions.md.sample` |
+| `ai/` | Shell script shortcuts for common dev tasks — tracked copy: `docs/ai/scripts/` |
+
+**Edit the sample, then the live file.** These live paths are gitignored; the only
+tracked copies are the samples in `docs/ai/` (see `docs/ai/README.md`). When a rule
+changes, edit the matching `docs/ai/*.sample` so the change is reviewable and reaches
+other contributors — and if this clone also has the live file (`CLAUDE.md`, `AGENTS.md`,
+`.github/copilot-instructions.md`), make the same edit there so it takes effect now.
+Never update one without the other.
 
 ## Related Files
 
@@ -41,7 +48,7 @@ When changing a model or controller, check whether these related files need upda
 | Service | Service spec |
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
-| Add/remove model, concern, service, or gem | AGENTS.md |
+| Add/remove model, concern, service, or gem | `docs/ai/AGENTS.md.sample` — and the live `AGENTS.md`, if this clone has one |
 | Ship a user-facing feature **or improvement/change** | a new file in `db/seeds/features/` (the Features & tips seeds — see below) |
 
 ## Code Style
@@ -509,7 +516,7 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
   - **5 Inspect 🔬** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
 - Include screenshots for UI changes
 - **On every push**, update the PR title and content to reflect the current diff — preserve any existing images/screenshots in the description
-- **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
+- **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts. Edit the tracked sample in `docs/ai/`, plus the live file if this clone has one
 - **Inline-comment only to flag what matters to the reviewer** — do NOT comment on every push, and don't annotate routine or self-explanatory changes. Add a `gh api` line comment on the diff only when a reviewer genuinely needs something flagged: a non-obvious decision or trade-off, a risky/surprising change, a load-bearing assumption, or something easy to miss. When nothing rises to that bar, post no inline comments
 - **Attribute every AI-authored GitHub comment** — `gh` posts as the authenticated user, so any comment you create (PR review comments, issue/PR comments, replies) MUST be prefixed to identify the AI agent that wrote it. Begin the comment body with `🤖 _From <agent>:_` (e.g. `🤖 _From Claude:_` or `🤖 _From Copilot:_`) followed by the content
 - **Keep GitHub comments short and to the point** — one or two sentences, stating the key insight directly. Skip preamble, restating the code, and hedging; if a comment needs more than a few lines, it usually belongs in the PR description instead

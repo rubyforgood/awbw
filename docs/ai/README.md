@@ -69,5 +69,7 @@ that skill will write it for you.
   [mattpocock/skills](https://github.com/mattpocock/skills) and
   [evilmartians/agent-skills](https://github.com/evilmartians/agent-skills);
   install them from there if you would rather not use the copy in this repo.
-- **Keep samples current.** If you change a local AI file in a way other
-  contributors would benefit from, update the matching sample here.
+- **Keep samples current.** The sample is the tracked copy, so a rule that only
+  lives in your local `CLAUDE.md` is invisible to everyone else. Change a rule in
+  the sample here *and* in your live copy of the file — agents are told to do both
+  (see the "AI Instruction Files" section of `CLAUDE.md.sample`).
