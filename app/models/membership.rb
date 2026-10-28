@@ -49,7 +49,6 @@ class Membership < ApplicationRecord
   def locked? = locked_at.present?
   def renewal_on? = autorenewal_cancelled_at.nil?
   def autorenewal_cancelled? = !renewal_on?
-  def autopay_on? = person&.autopay_on? || false
 
   def autorenewal_cancelled=(value)
     flag = ActiveModel::Type::Boolean.new.cast(value)
@@ -135,7 +134,7 @@ class Membership < ApplicationRecord
         remove_next_year!
       rescue ActiveRecord::RecordNotDestroyed
       end
-      update!(locked_at: Time.current, autorenewal_cancelled_at: autorenewal_cancelled_at || Time.current)
+      update!(locked_at: Time.current, autorenewal_cancelled_at: autorenewal_cancelled_at || Time.current, autopay_on: false)
     end
   end
 

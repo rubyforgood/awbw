@@ -21,7 +21,7 @@ class MembershipsController < ApplicationController
     authorize! @membership
     @membership_invoices = @membership.membership_invoices.includes(:allocations).to_a
     @next_invoice = @membership.next_invoice
-    @autopay_on = @person.autopay_on?
+    @autopay_on = @membership.autopay_on?
     @has_card = @person.payment_processor&.payment_methods&.exists? || false
   end
 

@@ -83,7 +83,9 @@ module PayChargeExtensions
       end
     end
 
-    person.update!(autopay_on: true) if metadata["autopay"] == "true"
+    if metadata["autopay"] == "true"
+      Membership.find_by(id: metadata["membership_id"])&.update!(autopay_on: true)
+    end
   end
 
   def invoice_period_date

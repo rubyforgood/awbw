@@ -63,22 +63,22 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def autopay_label(has_card:)
-    return "On" if person&.autopay_on? && has_card
-    return "Needs card" if person&.autopay_on?
+    return "On" if autopay_on? && has_card
+    return "Needs card" if autopay_on?
 
     "Off"
   end
 
   def autopay_tooltip(has_card:)
-    return "Automatic payments are on and a card is on file." if person&.autopay_on? && has_card
-    return "Automatic payments are on, but no card is available." if person&.autopay_on?
+    return "Automatic payments are on and a card is on file." if autopay_on? && has_card
+    return "Automatic payments are on, but no card is available." if autopay_on?
 
     "Automatic payments are off. Invoices must be paid manually."
   end
 
   def autopay_classes(has_card:)
-    return "bg-green-50 text-green-700 border-green-200" if person&.autopay_on? && has_card
-    return "bg-amber-50 text-amber-700 border-amber-200" if person&.autopay_on?
+    return "bg-green-50 text-green-700 border-green-200" if autopay_on? && has_card
+    return "bg-amber-50 text-amber-700 border-amber-200" if autopay_on?
 
     "bg-gray-50 text-gray-600 border-gray-200"
   end

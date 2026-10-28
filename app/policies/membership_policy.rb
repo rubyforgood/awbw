@@ -4,15 +4,12 @@ class MembershipPolicy < ApplicationPolicy
 
   def manage? = admin? && Membership.enabled?
 
-  def show?
-    return false unless Membership.enabled?
-    return true if manage?
-    return false unless record.is_a?(Membership)
-
-    owner? && !record.locked?
-  end
+  def show? = manage?
 
   def edit? = manage? && !record.locked?
+
+  def enable_autopay? = Membership.enabled? && owner? && !record.locked?
+  def disable_autopay? = manage? || owner?
 
   def manage_subscription? = Membership.enabled? && owner?
 

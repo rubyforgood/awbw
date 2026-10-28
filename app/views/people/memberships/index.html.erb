@@ -20,13 +20,6 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <% if @person.autopay_on? %>
-        <%= button_to "Turn off autopay", person_autopay_path(@person, autopay_on: "0"),
-              method: :patch, class: button_classes(:secondary_outline, size: :sm),
-              title: "Stops automatic card charges for this person. Renewal is unchanged.",
-              data: { turbo_confirm: "Turn off automatic card payments for #{@person.full_name}?" } %>
-      <% end %>
-
       <% if offer_new_membership %>
         <%= link_to new_person_membership_path(@person), class: button_classes(:primary, extra: "inline-flex items-center gap-1.5"),
               title: "Creates a new membership and first invoice. Existing unlocked memberships are locked." do %>
@@ -69,7 +62,15 @@
             </div>
           </div>
 
-          <%= link_to "View membership", membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
+          <div class="flex flex-wrap items-center gap-2">
+            <% if membership.autopay_on? %>
+              <%= button_to "Turn off autopay", membership_autopay_path(membership, autopay_on: "0"),
+                    method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                    title: "Stops automatic card charges for this membership. Renewal is unchanged.",
+                    data: { turbo_confirm: "Turn off automatic card payments for this membership?" } %>
+            <% end %>
+            <%= link_to "View membership", membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
+          </div>
         </div>
       <% end %>
     </div>

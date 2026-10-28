@@ -41,8 +41,7 @@ class MembershipAutopayJob < ApplicationJob
   def due_invoices
     MembershipInvoice
       .joins(membership: :person)
-      .where(memberships: { locked_at: nil })
-      .where(people: { autopay_on: true })
+      .where(memberships: { locked_at: nil, autopay_on: true })
       .merge(MembershipInvoice.not_paid_in_full)
       .where(start_date: (Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS)..Date.current)
       .includes(membership: :person)

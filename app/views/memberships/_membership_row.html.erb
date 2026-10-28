@@ -13,9 +13,9 @@
               classes: membership.payment_classes, title: membership.payment_tooltip %>
       <% end %>
       <%= render "shared/badge",
-            label: membership.person.autopay_on? ? "Autopay on" : "Autopay off",
-            classes: membership.person.autopay_on? ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200",
-            title: membership.person.autopay_on? ? "Automatic payments are enabled for this person." : "Automatic payments are disabled for this person." %>
+            label: membership.autopay_on? ? "Autopay on" : "Autopay off",
+            classes: membership.autopay_on? ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200",
+            title: membership.autopay_on? ? "Automatic payments are enabled for this membership." : "Automatic payments are disabled for this membership." %>
       <% if membership.locked? %>
         <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300",
               title: "Historical membership. Unlock it before editing or issuing new invoices." %>

@@ -768,7 +768,7 @@ class PeopleController < ApplicationController
       .includes(:allocations)
       .order(:start_date)
       .to_a
-    @membership_autopay = @person.autopay_on?
+    @membership_autopay = @membership.autopay_on?
     @membership_card = @person.payment_processor&.payment_methods&.order(default: :desc, id: :desc)&.first
     @membership_has_card = @membership_card.present?
   end
@@ -783,18 +783,18 @@ class PeopleController < ApplicationController
     elsif params[:membership_invoice_checkout] == "cancelled"
       flash[:alert] = "Payment was cancelled."
     elsif params[:autopay_setup] == "success"
-      setup_person_id = session.delete(:autopay_setup_person_id)
-      if setup_person_id.to_i == @person.id && allowed_to?(:enable_autopay?, @person.object)
+      membership = Membership.find_by(id: session.delete(:autopay_setup_membership_id))
+      if membership && membership.person == @person.object && allowed_to?(:enable_autopay?, membership)
         if @person.object.payment_processor&.payment_methods&.exists?
-          @person.object.update(autopay_on: true)
+          membership.update!(autopay_on: true)
           flash[:notice] = "Your card is saved. Automatic payments are on."
         else
           flash[:notice] = "Card setup received. Automatic payments will turn on once the card is confirmed."
         end
       end
     elsif params[:autopay_setup] == "cancelled"
-      session.delete(:autopay_setup_person_id)
-      flash[:alert] = "Card setup was cancelled."
+      had_setup = session.delete(:autopay_setup_membership_id).present?
+      flash[:alert] = "Card setup was cancelled." if had_setup
     end
   end
 

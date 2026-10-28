@@ -11,8 +11,8 @@ RSpec.describe MembershipPolicy, type: :policy do
   end
 
   describe "#show?" do
-    it "allows the member who owns the membership" do
-      expect(policy_for(user: owner)).to be_allowed_to(:show?)
+    it "denies the member who owns the membership" do
+      expect(policy_for(user: owner)).not_to be_allowed_to(:show?)
     end
 
     it "allows an admin" do

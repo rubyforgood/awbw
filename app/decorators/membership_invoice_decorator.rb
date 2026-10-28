@@ -11,8 +11,8 @@ class MembershipInvoiceDecorator < ApplicationDecorator
 
   def status_badge(as_of: Date.current)
     upcoming = start_date > as_of
-    return badge("Paid", "fa-solid fa-circle-check", :green) if upcoming && paid_in_full?
-    return badge("Not due · #{remaining}", "fa-solid fa-hourglass-start", :blue) if upcoming
+    return badge("Upcoming · Paid", "fa-solid fa-circle-check", :green) if upcoming && paid_in_full?
+    return badge("Upcoming · #{remaining}", "fa-solid fa-hourglass-start", :blue) if upcoming
     return badge("Paid", "fa-solid fa-circle-check", :green) if paid_in_full?
     return badge("Partially paid · #{remaining}", "fa-solid fa-circle-half-stroke", :amber) if partially_paid?
 

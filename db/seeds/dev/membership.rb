@@ -117,7 +117,9 @@ join = ->(person, start_date) do
   membership
 end
 
-autopay = ->(person, card: true) do
+autopay = ->(membership, card: true) do
+  person = membership.person
+
   if card
     customer = Pay::Customer.find_or_create_by!(owner: person, processor: "stripe") do |record|
       record.processor_id = "cus_mseed_#{person.id}"
@@ -133,7 +135,7 @@ autopay = ->(person, card: true) do
     end
   end
 
-  person.update!(autopay_on: true)
+  membership.update!(autopay_on: true)
 end
 
 seed = ->(email:, first:, last:, label:, &block) do
@@ -211,20 +213,20 @@ end
 seed.(email: "autopay.active", first: "Autopay", last: "Active", label: "Active — autopay on, card on file") do |person|
   membership = membership_for.(person)
   year.(membership, Date.current - 3.months, paid: true)
-  autopay.(person)
+  autopay.(membership)
 end
 
 seed.(email: "autopay.needs_card", first: "Autopay", last: "Needs card", label: "Active — autopay on, no card, payment due") do |person|
   membership = membership_for.(person)
   invoice = year.(membership, Date.current - 3.months)
-  autopay.(person, card: false)
+  autopay.(membership, card: false)
   attempt.(invoice, status: "needs_card", code: "no_card", message: "No card is on file.", on: 1.day.ago)
 end
 
 seed.(email: "autopay.failed", first: "Autopay", last: "Failed", label: "Active — card declined, payment due") do |person|
   membership = membership_for.(person)
   invoice = year.(membership, Date.current - 3.months)
-  autopay.(person)
+  autopay.(membership)
   attempt.(invoice, status: "failed", code: "card_declined",
     message: "Your card was declined. Try a different card or pay manually.", on: 1.day.ago)
 end
@@ -232,7 +234,7 @@ end
 seed.(email: "autopay.pending", first: "Autopay", last: "Pending", label: "Active — card charge in flight") do |person|
   membership = membership_for.(person)
   invoice = year.(membership, Date.current - 3.months)
-  autopay.(person)
+  autopay.(membership)
   attempt.(invoice, status: "pending", code: "processing", message: "The charge is still processing.", on: 10.minutes.ago)
 end
 

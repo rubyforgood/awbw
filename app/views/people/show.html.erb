@@ -258,7 +258,7 @@
         </div>
       </div>
     <% end %>
-    <% if @membership && allowed_to?(:show?, @membership) %>
+    <% if @membership && allowed_to?(:manage_subscription?, @membership) %>
       <%= render "people/membership_card", person: @person, membership: @membership,
             autopay: @membership_autopay, has_card: @membership_has_card,
             card: @membership_card, invoices: @membership_invoices %>

@@ -18,7 +18,7 @@ RSpec.describe "Membership badges", type: :request do
     get membership_path(membership)
 
     expect(response.body).not_to include("This membership has not started yet.")
-    expect(response.body).to include("Not due · $100")
+    expect(response.body).to include("Upcoming · $100")
   end
 
   it "does not label an upcoming invoice as scheduled on the profile" do
@@ -29,6 +29,6 @@ RSpec.describe "Membership badges", type: :request do
     get person_path(person)
 
     expect(response.body).not_to include("Scheduled for")
-    expect(response.body).to include("Not due · $100")
+    expect(response.body).to include("Upcoming · $100")
   end
 end

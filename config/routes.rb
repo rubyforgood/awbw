@@ -314,8 +314,6 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ], controller: "people/memberships"
-    resource :autopay, only: [ :update ], controller: "people/autopay"
-    resource :autopay_setup, only: [ :create ], controller: "people/autopay_setups"
     resource :billing_portal, only: [ :create ], controller: "people/billing_portals"
   end
   resources :comments_and_communications, only: [ :index ] do
@@ -381,6 +379,8 @@ Rails.application.routes.draw do
     resource :renewal, only: [ :update ], controller: "memberships/renewals"
     resource :next_year, only: [ :destroy ], controller: "memberships/next_years"
     resource :lock, only: [ :destroy ], controller: "memberships/locks"
+    resource :autopay, only: [ :update ], controller: "memberships/autopay"
+    resource :autopay_setup, only: [ :create ], controller: "memberships/autopay_setups"
   end
 
   resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ] do
