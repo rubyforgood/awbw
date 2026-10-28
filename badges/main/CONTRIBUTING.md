@@ -154,7 +154,7 @@ A [staging environment](https://awbw-staging-xzek4.ondigitalocean.app/) is also 
 
 [Conductor](https://conductor.build) is an optional macOS platform for running multiple coding agents in parallel, each in its own git worktree. You don't need it to work on this project — it's just one supported way to run isolated workspaces. When used, each workspace gets its own port, database, and session cookie automatically.
 
-The app itself only depends on the generic `WORKSPACE_PORT` environment variable for this isolation. The `bin/conductor-*` scripts derive `WORKSPACE_PORT` from Conductor's `CONDUCTOR_PORT`, but any other system (or a manual setup) can achieve the same result by exporting `WORKSPACE_PORT` itself.
+The app itself only depends on the generic `WORKSPACE_PORT` environment variable for this isolation. Under Conductor, `config/boot.rb` falls back to Conductor's `CONDUCTOR_PORT` (and the `bin/conductor-*` shell scripts do the same), so a bare `bundle exec rspec` in a workspace still uses that workspace's database. Any other system (or a manual setup) can achieve the same result by exporting `WORKSPACE_PORT` itself.
 
 1. Open the project in Conductor — it will run `bin/conductor-setup` to symlink config files, link any AI files your root checkout has opted into (see [docs/ai](docs/ai/README.md)), and set up a workspace-specific database.
 2. The dev server starts on the port assigned to the workspace.
@@ -288,10 +288,10 @@ Before submitting a pull request, run all tests and lints. Fix any broken tests 
 
 #### Quick command shortcuts (optional)
 
-The shortcut scripts are opt-in. Copy them into place first:
+The shortcut scripts are opt-in. Link them into place first:
 
 ```bash
-cp -a docs/ai/scripts ai
+ln -s docs/ai/scripts ai
 ```
 
 Then the `ai/` directory contains shortcuts for common tasks:

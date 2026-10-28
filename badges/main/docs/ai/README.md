@@ -2,37 +2,41 @@
 
 Contributors use different editors, models, and agent workflows, so none of the
 AI instruction files are committed to their live locations. A fresh clone has
-none of them — this folder holds the samples, and you copy the ones you want.
+none of them — this folder holds the samples, and you link or copy the ones you want.
 Same idea as `.env.sample` → `.env`.
 
 Nothing here is required to build, test, or contribute.
 
 ## Quick start
 
-Copy everything (the maintainer's full setup):
+Link everything (the maintainer's full setup):
 
 ```bash
-cp docs/ai/AGENTS.md.sample AGENTS.md
-cp docs/ai/CLAUDE.md.sample CLAUDE.md
-cp docs/ai/copilot-instructions.md.sample .github/copilot-instructions.md
+ln -s docs/ai/AGENTS.md.sample AGENTS.md
+ln -s docs/ai/CLAUDE.md.sample CLAUDE.md
+ln -s ../docs/ai/copilot-instructions.md.sample .github/copilot-instructions.md
 
-cp -a docs/ai/scripts ai
+ln -s docs/ai/scripts ai
 
 mkdir -p docs/agents
-cp docs/ai/agents/domain.md.sample docs/agents/domain.md
-cp docs/ai/agents/issue-tracker.md.sample docs/agents/issue-tracker.md
+ln -s ../ai/agents/domain.md.sample docs/agents/domain.md
+ln -s ../ai/agents/issue-tracker.md.sample docs/agents/issue-tracker.md
 ```
+
+Symlinks follow the samples as they change. A copy (`cp` instead of `ln -s`)
+is for customizing — it stops getting sample updates, and Conductor workspaces
+carry it over as-is instead of linking the branch's sample.
 
 Just Claude Code:
 
 ```bash
-cp docs/ai/CLAUDE.md.sample CLAUDE.md
+ln -s docs/ai/CLAUDE.md.sample CLAUDE.md
 ```
 
 Just Copilot:
 
 ```bash
-cp docs/ai/copilot-instructions.md.sample .github/copilot-instructions.md
+ln -s ../docs/ai/copilot-instructions.md.sample .github/copilot-instructions.md
 ```
 
 ## What each sample does
