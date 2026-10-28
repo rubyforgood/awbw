@@ -1,8 +1,7 @@
 # Derive the default host from PORT so parallel workspaces each get
 # their own URL automatically. WORKSPACE_PORT identifies a workspace and
-# flows into PORT via the optional bin/conductor-server script. Under
-# Conductor, WORKSPACE_PORT is derived from CONDUCTOR_PORT by the
-# bin/conductor-* scripts (copied from docs/ai/conductor/).
+# flows into PORT via bin/conductor-server. Under Conductor, WORKSPACE_PORT
+# is derived from CONDUCTOR_PORT by the bin/conductor-* scripts.
 #
 # In production, APP_HOST is set explicitly in the environment.
 
