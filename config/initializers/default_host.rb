@@ -1,7 +1,7 @@
 # Derive the default host from PORT so parallel workspaces each get
 # their own URL automatically. WORKSPACE_PORT identifies a workspace and
 # flows into PORT via bin/conductor-server. Under Conductor, WORKSPACE_PORT
-# is derived from CONDUCTOR_PORT by the bin/conductor-* scripts.
+# falls back to CONDUCTOR_PORT (see config/boot.rb).
 #
 # In production, APP_HOST is set explicitly in the environment.
 

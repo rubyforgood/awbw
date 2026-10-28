@@ -80,15 +80,18 @@ link_sample() {
   [ -e "$root_live" ] || return 0
   rm -rf "$live"
   mkdir -p "$(dirname "$live")"
+  case "$live" in
+    */*) up="$(dirname "$live" | sed 's#[^/][^/]*#..#g')/" ;;
+    *) up="" ;;
+  esac
   if same_content "$root_live" "$CONDUCTOR_ROOT_PATH/$sample" || same_content "$root_live" "$sample"; then
-    case "$live" in
-      */*) up="$(dirname "$live" | sed 's#[^/][^/]*#..#g')/" ;;
-      *) up="" ;;
-    esac
     echo "Linking $live -> $up$sample..."
     ln -s "$up$sample" "$live"
   else
-    echo "Copying customized $live from $CONDUCTOR_ROOT_PATH..."
+    # A stale copy of an older sample looks customized too, so say how to fix that.
+    echo "Copying customized $live from $CONDUCTOR_ROOT_PATH (differs from $sample)..."
+    echo "  Not customized on purpose? Re-link it in the root checkout so it tracks the sample:"
+    echo "  rm -rf $root_live && ln -s $up$sample $root_live"
     cp -RL "$root_live" "$live"
   fi
 }
