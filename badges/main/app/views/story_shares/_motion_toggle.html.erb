@@ -1,0 +1,9 @@
+<%# Pauses and resumes every background video and autoplaying carousel on the page (background-video controller).
+    Locals: position_class (absolute placement inside the banner). %>
+<button type="button"
+        class="<%= position_class %> text-brand-navy-900 absolute z-20 flex size-9 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white"
+        aria-label="Pause videos and slideshows"
+        data-background-video-target="toggle"
+        data-action="background-video#toggle">
+  <i class="fa-solid fa-pause text-sm" aria-hidden="true" data-background-video-target="icon"></i>
+</button>

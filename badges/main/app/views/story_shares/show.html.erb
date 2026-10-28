@@ -91,6 +91,7 @@
               <%= render "tag_chips", story: story, compact: true %>
               <%= link_to story_share_path(story), class: "relative block #{StorySharesHelper::STORY_IMAGE_ASPECT} rounded-xl overflow-hidden bg-brand-navy-50" do %>
                 <%= render "assets/fitted_image", file: story.display_image, alt: story.title, loading: "lazy" %>
+                <%= render "story_shares/play_badge", story: story %>
               <% end %>
             </article>
           <% end %>

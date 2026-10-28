@@ -32,6 +32,7 @@
                      link: false,
                      link_to_object: false,
                      file: item.display_image %>
+          <%= render "story_shares/play_badge", story: item, compact: true if item.is_a?(StoryDecorator) %>
 
         <% end %>
       </div>
