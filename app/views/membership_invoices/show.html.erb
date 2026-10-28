@@ -108,15 +108,11 @@
   <% unless admin %>
     <% if @membership_invoice.remaining_cost.positive? %>
       <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
-        <% if @membership_invoice.person.autopay_on? %>
+        <% if @membership_invoice.upcoming? %>
+          <p class="text-sm text-gray-600">Scheduled for <%= @membership_invoice.start_date.strftime("%b %-d, %Y") %>.</p>
+        <% else %>
           <%= button_to "Pay now", membership_invoice_checkout_path(@membership_invoice),
                 class: button_classes(:primary), data: { turbo: false } %>
-        <% else %>
-          <%= button_to "Pay & renew automatically", membership_invoice_checkout_path(@membership_invoice),
-                params: { autopay: "1" },
-                class: button_classes(:primary), data: { turbo: false } %>
-          <%= button_to "Pay once", membership_invoice_checkout_path(@membership_invoice),
-                class: button_classes(:secondary_outline), data: { turbo: false } %>
         <% end %>
       </div>
     <% end %>

@@ -30,23 +30,18 @@
       <% end %>
     </div>
 
+    <% card_label = card&.last4.present? ? "#{card.brand.to_s.titleize.presence || 'Card'} ending #{card.last4}" : nil %>
+
     <% if invoices&.any? %>
       <div class="space-y-2">
         <% invoices.each do |invoice| %>
           <div class="flex flex-wrap items-center gap-2">
             <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice, viewable: true %></ul>
-            <% if allowed_to?(:pay?, invoice) %>
-              <div class="flex flex-wrap items-center gap-2">
-                <%= button_to "Pay & renew automatically",
-                      membership_invoice_checkout_path(invoice),
-                      params: { autopay: "1" },
-                      class: button_classes(:primary, size: :sm),
-                      data: { turbo: false } %>
-                <%= button_to "Pay once",
-                      membership_invoice_checkout_path(invoice),
-                      class: button_classes(:secondary_outline, size: :sm),
-                      data: { turbo: false } %>
-              </div>
+            <% if invoice.upcoming? %>
+              <span class="text-xs text-gray-500">Scheduled for <%= invoice.start_date.strftime("%b %-d, %Y") %></span>
+            <% elsif allowed_to?(:pay?, invoice) %>
+              <%= button_to "Pay now", membership_invoice_checkout_path(invoice),
+                    class: button_classes(:primary, size: :sm), data: { turbo: false } %>
             <% end %>
           </div>
         <% end %>
@@ -65,47 +60,63 @@
             </p>
           <% end %>
 
-          <% if autopay && has_card %>
-            <p class="text-sm text-gray-700">
-              Automatic card payments are on.
-              <%= membership.autorenewal_cancelled? ? "Any invoice already issued will still be charged." : "Your card will be charged when the next invoice is due." %>
-            </p>
-            <div class="flex flex-wrap items-center gap-2">
-              <%= button_to "Manage card", person_billing_portal_path(person),
-                    class: button_classes(:secondary_outline, size: :sm), data: { turbo: false } %>
-              <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
-                    method: :patch, class: button_classes(:secondary_outline, size: :sm),
-                    data: { turbo_confirm: "Turn off automatic card payments? Your membership will still renew, and you'll receive invoices to pay manually." } %>
-            </div>
-          <% elsif autopay %>
-            <p class="text-sm text-gray-700">
-              <span class="font-medium">Automatic card payments are on, but no card is on file.</span>
-              Add a card to keep automatic payments working.
-            </p>
-            <div class="flex flex-wrap items-center gap-2">
-              <%= button_to "Add a card", person_billing_portal_path(person),
-                    class: button_classes(:primary, size: :sm), data: { turbo: false } %>
-              <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
-                    method: :patch, class: button_classes(:secondary_outline, size: :sm) %>
-            </div>
-          <% else %>
-            <p class="text-sm text-gray-700">
-              <span class="font-medium">Automatic card payments are off.</span>
-              <%= membership.autorenewal_cancelled? ? "Any invoice already issued will need to be paid manually." : "Your membership still renews, and you'll receive invoices to pay manually." %>
-              To end your membership, <%= link_to "contact us", contact_us_path, class: "text-primary underline hover:no-underline" %>.
-            </p>
-            <div class="flex flex-wrap items-center gap-2">
-              <% if has_card %>
+          <div class="space-y-2">
+            <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">Automatic payments</p>
+
+            <% if card_label.present? %>
+              <p class="text-xs text-gray-500">Card on file: <%= card_label %></p>
+            <% end %>
+
+            <% if membership.autorenewal_cancelled? %>
+              <% if autopay && has_card %>
+                <p class="text-sm text-gray-700">Automatic payments are on for any invoice already issued.</p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
+                        method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                        data: { turbo_confirm: "Turn off automatic payments for invoices already issued?" } %>
+                </div>
+              <% elsif autopay %>
+                <p class="text-sm text-gray-700">Automatic payments are marked on, but no card is on file. Existing invoices will need to be paid manually.</p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
+                        method: :patch, class: button_classes(:secondary_outline, size: :sm) %>
+                </div>
+              <% else %>
+                <p class="text-sm text-gray-700">Automatic payments are off. Any invoice already issued will need to be paid manually.</p>
+              <% end %>
+            <% elsif autopay && has_card %>
+              <p class="text-sm text-gray-700">Automatic payments are on. We'll charge your saved card when an invoice is due.</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <%= button_to "Manage card", person_billing_portal_path(person),
+                      class: button_classes(:secondary_outline, size: :sm), data: { turbo: false } %>
+                <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
+                      method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                      data: { turbo_confirm: "Turn off automatic card payments? Your membership will still renew, and you'll receive invoices to pay manually." } %>
+              </div>
+            <% elsif autopay %>
+              <p class="text-sm text-gray-700">Automatic payments need a card. Add a card to keep them working.</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <%= button_to "Add a card", person_autopay_setup_path(person),
+                      class: button_classes(:primary, size: :sm), data: { turbo: false } %>
+                <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
+                      method: :patch, class: button_classes(:secondary_outline, size: :sm) %>
+              </div>
+            <% elsif has_card %>
+              <p class="text-sm text-gray-700">Automatic payments are off. You'll pay each invoice manually.</p>
+              <div class="flex flex-wrap items-center gap-2">
                 <%= button_to "Turn on automatic payments", person_autopay_path(person, autopay_on: "1"),
                       method: :patch, class: button_classes(:primary, size: :sm) %>
                 <%= button_to "Manage card", person_billing_portal_path(person),
                       class: button_classes(:secondary_outline, size: :sm), data: { turbo: false } %>
-              <% else %>
-                <%= button_to "Add a card & renew automatically", person_autopay_setup_path(person),
+              </div>
+            <% else %>
+              <p class="text-sm text-gray-700">Automatic payments are off. You'll pay each invoice manually.</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <%= button_to "Add a card & turn on automatic payments", person_autopay_setup_path(person),
                       class: button_classes(:primary, size: :sm), data: { turbo: false } %>
-              <% end %>
-            </div>
-          <% end %>
+              </div>
+            <% end %>
+          </div>
         <% end %>
       </div>
     <% end %>

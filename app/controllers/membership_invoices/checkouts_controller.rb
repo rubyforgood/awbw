@@ -10,16 +10,10 @@ module MembershipInvoices
           alert: "This invoice has no balance to pay.", status: :see_other
       end
 
-      autopay = params[:autopay].to_s == "1"
       session = Membership::InvoiceCheckout.call(
         invoice:,
-        success_url: person_url(
-          person,
-          membership_invoice_checkout: "success",
-          autopay: (autopay ? "1" : nil)
-        ),
+        success_url: person_url(person, membership_invoice_checkout: "success"),
         cancel_url: person_url(person, membership_invoice_checkout: "cancelled"),
-        autopay:
       )
       redirect_to session.url, allow_other_host: true, status: :see_other
     rescue Stripe::StripeError, Pay::Error => e

@@ -18,7 +18,7 @@ module People
 
       @person.update!(autopay_on: enabled)
       redirect_to person_path(@person),
-        notice: enabled ? "Automatic card payments are on." : "Automatic card payments are off.",
+        notice: enabled ? "Automatic payments are on." : "Automatic payments are off.",
         status: :see_other
     end
 

@@ -18,8 +18,7 @@ module Memberships
         session = Membership::InvoiceCheckout.call(
           invoice: @membership_invoice,
           success_url: memberships_public_invoice_url(token, paid: "1"),
-          cancel_url: memberships_public_invoice_url(token, cancelled: "1"),
-          save_card: false
+          cancel_url: memberships_public_invoice_url(token, cancelled: "1")
         )
         redirect_to session.url, allow_other_host: true, status: :see_other
       rescue Stripe::StripeError, Pay::Error => e
