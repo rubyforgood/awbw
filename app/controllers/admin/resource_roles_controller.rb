@@ -14,13 +14,13 @@ module Admin
     SLOTS = {
       "training_frame" => { section: "Certificate artwork", label: "Facilitator training frame",
                             description: "Full-bleed frame for the live facilitator-training certificate. Falls back to the built-in painted border when empty.",
-                            preview_partial: "events/callouts/training_certificate" },
+                            preview_partial: "events/callouts/training_certificate", signature_role: "training_signatures" },
       "on_demand_frame" => { section: "Certificate artwork", label: "On-demand training frame",
                              description: "Full-bleed frame for on-demand (self-paced) facilitator-training certificates. On-demand certificates never show signatures.",
                              preview_partial: "events/callouts/ondemand_certificate" },
       "ce_frame" => { section: "Certificate artwork", label: "CE certificate frame",
                       description: "Full-bleed frame for the CE Confirmation of Attendance certificate. Falls back to the default purple/gold design when empty.",
-                      preview_partial: "events/callouts/ce_confirmation_certificate" },
+                      preview_partial: "events/callouts/ce_confirmation_certificate", signature_role: "ce_signatures" },
       "other_frame" => { section: "Certificate artwork", label: "Other events frame",
                          description: "Full-bleed frame for every non-training event certificate. Falls back to the default purple/gold design when empty.",
                          preview_partial: "events/callouts/completion_certificate" },
@@ -47,10 +47,20 @@ module Admin
     def show
       authorize! :resource_roles
       @sections = SLOTS.map { |role, config| slot_view(role, config) }.group_by { |slot| slot[:section] }
-      # Sample content for the live certificate mini-previews.
-      @preview_event = Event.new(title: "Spring Facilitator Training",
-                                 start_date: Date.new(2026, 3, 2), end_date: Date.new(2026, 3, 4)).decorate
-      @preview_recipient = "Jordan Rivera"
+      set_preview_sample
+    end
+
+    # The full-size certificate for one frame slot, with sample content, its frame,
+    # and the signature it prints with.
+    def preview
+      authorize! :resource_roles
+      role = params[:slot].to_s
+      config = SLOTS[role]
+      return redirect_to(admin_resource_roles_path, alert: "Unknown setting.", status: :see_other) unless config&.dig(:preview_partial)
+
+      @slot = slot_view(role, config)
+      @signature_file = Resource.for_role(config[:signature_role])&.signature_file if config[:signature_role]
+      set_preview_sample
     end
 
     def update
@@ -73,6 +83,12 @@ module Admin
     end
 
     private
+
+    def set_preview_sample
+      @preview_event = Event.new(title: "Spring Facilitator Training",
+                                 start_date: Date.new(2026, 3, 2), end_date: Date.new(2026, 3, 4)).decorate
+      @preview_recipient = "Jordan Rivera"
+    end
 
     # One resource per role: clear whoever holds it (the unique index forbids two),
     # then stamp the chosen one.

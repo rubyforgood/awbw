@@ -7,6 +7,10 @@ module Admin
       admin?
     end
 
+    def preview?
+      admin?
+    end
+
     def update?
       admin?
     end
