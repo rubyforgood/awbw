@@ -233,8 +233,7 @@ module Events
         return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), notice: "You're already signed in."
       end
       unless @event.attendance_sign_in_open?
-        return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"),
-          alert: "Sign-in is only open during the training day."
+        return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), alert: sign_in_closed_alert
       end
 
       entry = @event_registration.event_attendance_time_entries.create!(signed_in_at: Time.current)
@@ -473,6 +472,13 @@ module Events
       return "Your timesheet closed on #{helpers.ce_timesheet_time(@event.ce_timesheet_closes_at)}. Please contact the training staff to change your times." if @event.ce_timesheet_closed?
 
       "Your timesheet opens on #{helpers.ce_timesheet_time(@event.ce_timesheet_opens_at)}."
+    end
+
+    def sign_in_closed_alert
+      opens_at = @event.next_attendance_sign_in_opens_at
+      return "Sign-in is closed for this training." unless opens_at
+
+      "Sign-in opens #{helpers.ce_timesheet_time(opens_at)}."
     end
 
     # A datetime rendered in the app zone as "9:02 AM", for sign-in/out flash notices.
