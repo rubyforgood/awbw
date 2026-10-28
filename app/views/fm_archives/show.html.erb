@@ -6,7 +6,11 @@
         <h1 class="text-primary font-display text-2xl font-semibold"><%= @record.name %></h1>
         <p class="text-sm text-gray-500"><%= @table_label %> &middot; FM ID: <%= @record.fm_id %> &middot; Key: <%= @record.fm_key_name %></p>
       </div>
-      <%= link_to "Back to list", fm_archives_path(table: @table_key), class: button_classes(:primary_outline) %>
+      <% if params[:return_to] == "filemaker_not_imported" %>
+        <%= link_to "Back to not imported", admin_data_health_filemaker_not_imported_path(kind: params[:kind], page: params[:page]), class: button_classes(:primary_outline) %>
+      <% else %>
+        <%= link_to "Back to list", fm_archives_path(table: @table_key), class: button_classes(:primary_outline) %>
+      <% end %>
     </div>
 
     <% if @portal_records.any? %>

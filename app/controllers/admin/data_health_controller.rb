@@ -19,6 +19,17 @@ module Admin
       render :data_health_worklists
     end
 
+    def filemaker_not_imported
+      authorize! :data_health, to: :index?
+
+      @kind = DataHealth::FilemakerNotImported.kind(params[:kind])
+      return unless turbo_frame_request?
+
+      @not_imported = DataHealth::FilemakerNotImported.new
+      @records = @not_imported.page(@kind, params[:page].to_i.clamp(1, Float::INFINITY))
+      render :filemaker_not_imported_results
+    end
+
     def rows
       authorize! :data_health, to: :index?
 

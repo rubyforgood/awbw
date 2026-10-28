@@ -1,0 +1,13 @@
+name: "See which FileMaker records never came over"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-25
+pr_number: 2859
+action_path: "/admin/data_health/filemaker_not_imported"
+summary: >-
+  A new page off Data health lists FileMaker organizations, programs, people,
+  personnel and job affiliations that no portal record carries the code of.
+pro_tips:
+  - "Pick a tab to switch between kinds; each shows how many rows are left."
+  - "Click a row to open it in the FileMaker archive, then use Back to not imported to return to the same page."
+  - "An FM organization counts as imported when a portal organization carries the code of one of its projects."

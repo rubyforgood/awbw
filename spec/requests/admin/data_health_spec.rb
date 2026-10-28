@@ -252,6 +252,44 @@ RSpec.describe "Admin::DataHealth", type: :request do
     end
   end
 
+  describe "GET filemaker_not_imported" do
+    let(:frame_headers) { { "Turbo-Frame" => "filemaker_not_imported_results" } }
+
+    it "renders a skeleton frame without comparing the archive" do
+      sign_in admin
+      expect(DataHealth::FilemakerNotImported).not_to receive(:new)
+
+      get admin_data_health_filemaker_not_imported_path(kind: "people")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("FileMaker records not imported")
+      expect(response.body).to include(CGI.escapeHTML(admin_data_health_filemaker_not_imported_path(kind: "people")))
+    end
+
+    it "lists the selected kind's rows no portal record carries, linked to the archive with a way back" do
+      sign_in admin
+      FmRolodex.create!(fm_id: "00006", data: { "FirstName" => "Ada", "LastName" => "Archer" })
+      FmRolodex.create!(fm_id: "00007", data: { "FirstName" => "Bea", "LastName" => "Baker" })
+      create(:person, filemaker_code: "00006")
+
+      get admin_data_health_filemaker_not_imported_path(kind: "people"), headers: frame_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('id="filemaker_not_imported_results"')
+      expect(response.body).to include("Bea Baker")
+      expect(response.body).not_to include("Ada Archer")
+      expect(response.body).to include(CGI.escapeHTML(fm_archive_path("00007", table: "rolodexes", return_to: "filemaker_not_imported", kind: "people", page: 1)))
+    end
+
+    it "denies a non-admin" do
+      sign_in create(:user)
+
+      get admin_data_health_filemaker_not_imported_path, headers: frame_headers
+
+      expect(response).not_to have_http_status(:ok)
+    end
+  end
+
   describe "POST repair" do
     before { sign_in admin }
 

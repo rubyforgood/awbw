@@ -67,6 +67,7 @@ Rails.application.routes.draw do
     patch "settings",                to: "settings#update"
     get "data_health",               to: "data_health#index", as: "data_health"
     get "data_health/worklists",     to: "data_health#worklists", as: "data_health_worklists"
+    get "data_health/filemaker_not_imported", to: "data_health#filemaker_not_imported", as: "data_health_filemaker_not_imported"
     get "data_health/:check/rows",   to: "data_health#rows", as: "data_health_rows"
     post "data_health/:check/repair", to: "data_health#repair", as: "data_health_repair"
     get "resource_roles",            to: "resource_roles#show", as: "resource_roles"
