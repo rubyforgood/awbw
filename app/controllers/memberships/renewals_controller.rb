@@ -3,7 +3,7 @@ module Memberships
     before_action :set_membership
 
     def update
-      authorize! @membership, to: :update?
+      authorize! @membership
 
       renewal_on = ActiveModel::Type::Boolean.new.cast(params[:renewal_on])
       @membership.update!(autorenewal_cancelled_at: renewal_on ? nil : Time.current)

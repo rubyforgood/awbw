@@ -9,7 +9,8 @@ module PayChargeExtensions
   private
 
   def create_external_processor_payment
-    return if ExternalProcessorPayment.exists?(stripe_charge_id: processor_id)
+    return if processor_id.present? && ExternalProcessorPayment.exists?(stripe_charge_id: processor_id)
+    return if ExternalProcessorPayment.exists?(pay_charge_id: id)
     return unless object["paid"] == true
 
     if (ce_registration_id = metadata["ce_registration_id"])
