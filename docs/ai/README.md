@@ -54,9 +54,10 @@ that skill will write it for you.
 - **Conductor workspaces.** The Conductor wiring (`.conductor/settings.toml`,
   `bin/conductor-*`) is tracked — Conductor reads `settings.toml` from the
   remote default branch, so it can't be opt-in. Opt in once in your root
-  checkout; each new workspace's `bin/conductor-setup` then symlinks the same
-  files to that branch's samples, so an edit to `CLAUDE.md` there lands in
-  `CLAUDE.md.sample` and shows up in the diff.
+  checkout; each new workspace's `bin/conductor-setup` then brings in the same
+  files. Unedited copies become symlinks to that branch's samples, so an edit
+  to `CLAUDE.md` there lands in `CLAUDE.md.sample` and shows up in the diff.
+  Customized copies are copied as-is and stay out of the repo.
 - **Personal overlay.** `CLAUDE.local.md` is auto-loaded by Claude Code and is
   the intended home for personal preferences; it is already gitignored. Keep
   repo-wide rules in `CLAUDE.md` and personal habits in `CLAUDE.local.md`.
