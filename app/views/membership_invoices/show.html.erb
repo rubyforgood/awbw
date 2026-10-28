@@ -24,7 +24,9 @@
           <p class="text-sm text-gray-600">Scheduled for <%= @membership_invoice.start_date.strftime("%b %-d, %Y") %>.</p>
         <% else %>
           <%= button_to "Pay now", membership_invoice_checkout_path(@membership_invoice),
-                class: button_classes(:primary), data: { turbo: false } %>
+                class: button_classes(:primary),
+                title: "Pays this invoice once. The card is not saved for automatic payments.",
+                data: { turbo: false } %>
         <% end %>
       </div>
     <% end %>

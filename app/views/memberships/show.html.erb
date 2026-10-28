@@ -28,12 +28,15 @@
         <h1 class="text-primary mt-1 font-display text-2xl font-bold">Membership</h1>
         <div class="mt-2 flex flex-wrap items-center gap-2">
           <%= render "memberships/status_badge", membership: membership %>
-          <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes %>
+          <%= render "shared/badge", label: membership.payment_label,
+                classes: membership.payment_classes, title: membership.payment_tooltip %>
           <%= render "shared/badge",
                 label: "Autopay: #{membership.autopay_label(has_card: @has_card)}",
-                classes: membership.autopay_classes(has_card: @has_card) %>
+                classes: membership.autopay_classes(has_card: @has_card),
+                title: membership.autopay_tooltip(has_card: @has_card) %>
           <% if membership.locked? %>
-            <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300" %>
+            <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300",
+                  title: "Historical membership. Unlock it before editing or issuing new invoices." %>
           <% end %>
         </div>
       </div>
@@ -43,6 +46,7 @@
           <div class="flex flex-wrap items-center gap-2">
             <%= button_to "Unlock membership", membership_lock_path(membership),
                   method: :delete, class: button_classes(:secondary_outline, size: :sm),
+                  title: "Unlock this membership so you can edit it again. Renewal stays off until you turn it on.",
                   data: { turbo_confirm: "Unlock this membership? You can then turn renewal back on and issue the next invoice." } %>
           </div>
         <% else %>
@@ -51,30 +55,36 @@
 
             <% if membership.renewal_on? && @next_invoice.blank? %>
               <%= link_to "Issue next invoice", new_membership_membership_invoice_path(membership),
-                    class: button_classes(:secondary_outline, size: :sm) %>
+                    class: button_classes(:secondary_outline, size: :sm),
+                    title: "Creates the next year's invoice now. The ending invoice must be paid in full." %>
             <% end %>
 
             <% if membership.renewal_on? %>
               <%= button_to "Turn off renewal", membership_renewal_path(membership),
                     method: :patch, params: { renewal_on: "0" },
                     class: button_classes(:secondary_outline, size: :sm),
+                    title: "Stops future invoices. The current term remains in place.",
                     data: { turbo_confirm: "Stop renewing this membership? The current term still stands." } %>
             <% else %>
               <%= button_to "Turn on renewal", membership_renewal_path(membership),
                     method: :patch, params: { renewal_on: "1" },
-                    class: button_classes(:secondary_outline, size: :sm) %>
+                    class: button_classes(:secondary_outline, size: :sm),
+                    title: "Resumes future invoices. It does not issue an invoice immediately." %>
             <% end %>
 
             <% if @next_invoice.present? %>
               <%= button_to "Remove next year", membership_next_year_path(membership),
                     method: :delete, class: button_classes(:danger_outline, size: :sm),
+                    title: "Deletes the unstarted next invoice, rolls the end date back, and turns renewal off.",
                     data: { turbo_confirm: "Remove the unstarted next year and roll the term back?" } %>
             <% end %>
 
             <% if membership.deletable? || membership.discardable? %>
               <% delete_confirm = membership.deletable? ? "Delete this membership? Nothing financial is attached." : "Delete this membership and its only invoice? This cannot be undone." %>
+              <% delete_tooltip = membership.deletable? ? "Deletes this empty membership." : "Deletes this membership and its only unpaid invoice. Financial history is protected." %>
               <%= button_to "Delete membership", membership_path(membership),
                     method: :delete, class: button_classes(:danger_outline, size: :sm),
+                    title: delete_tooltip,
                     data: { turbo_confirm: delete_confirm } %>
             <% end %>
           </div>
@@ -92,16 +102,25 @@
         <dd class="mt-0.5 font-medium text-gray-800"><%= membership.cost_label %></dd>
       </div>
       <div>
-        <dt class="text-xs tracking-wide text-gray-500 uppercase">Renewal</dt>
+        <dt class="text-xs tracking-wide text-gray-500 uppercase">
+          Renewal
+          <i class="fa-solid fa-circle-info ml-0.5 cursor-help text-[0.65rem] text-gray-400"
+             title="Renewal controls whether future invoices are issued. Autopay only charges invoices that already exist."></i>
+        </dt>
         <dd class="mt-0.5 font-medium text-gray-800"><%= membership.auto_renewal_label %></dd>
       </div>
     </dl>
 
     <% if admin && @autopay_on %>
       <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-4">
-        <span class="text-xs tracking-wide text-gray-500 uppercase">Automatic payments</span>
+        <span class="text-xs tracking-wide text-gray-500 uppercase">
+          Automatic payments
+          <i class="fa-solid fa-circle-info ml-0.5 cursor-help text-[0.65rem] text-gray-400"
+             title="Autopay charges issued invoices automatically. It is separate from membership renewal."></i>
+        </span>
         <%= button_to "Turn off autopay", person_autopay_path(@person, autopay_on: "0"),
               method: :patch, class: button_classes(:secondary_outline, size: :sm),
+              title: "Stops automatic card charges for this person. Renewal is unchanged.",
               data: { turbo_confirm: "Turn off automatic card payments for #{@person.full_name}?" } %>
       </div>
     <% end %>

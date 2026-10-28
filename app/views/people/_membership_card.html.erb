@@ -23,14 +23,23 @@
     <% end %>
 
     <div class="flex flex-wrap items-center gap-2">
-      <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes %>
-      <%= render "shared/badge", label: "Autopay: #{membership.autopay_label(has_card: has_card)}", classes: membership.autopay_classes(has_card: has_card) %>
+      <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes,
+            title: membership.payment_tooltip %>
+      <%= render "shared/badge", label: "Autopay: #{membership.autopay_label(has_card: has_card)}",
+            classes: membership.autopay_classes(has_card: has_card),
+            title: membership.autopay_tooltip(has_card: has_card) %>
       <% if membership.autorenewal_cancelled? %>
-        <%= render "shared/badge", label: "Renewal off", classes: "bg-amber-50 text-amber-700 border-amber-200" %>
+        <%= render "shared/badge", label: "Renewal off", classes: "bg-amber-50 text-amber-700 border-amber-200",
+              title: membership.renewal_tooltip %>
       <% end %>
     </div>
 
     <% card_label = card&.last4.present? ? "#{card.brand.to_s.titleize.presence || 'Card'} ending #{card.last4}" : nil %>
+    <% turn_off_tooltip = "Stops automatic charges. Renewal and already-issued invoices are unchanged." %>
+    <% manage_card_tooltip = "Opens Stripe to update the saved card." %>
+    <% add_card_tooltip = "Opens Stripe to save a card. Automatic payments stay on." %>
+    <% turn_on_tooltip = "Charges future issued invoices automatically. Membership renewal is separate." %>
+    <% add_and_turn_on_tooltip = "Saves a card and turns on automatic payments. Membership renewal is unchanged." %>
 
     <% if invoices&.any? %>
       <div class="space-y-2">
@@ -41,7 +50,9 @@
               <span class="text-xs text-gray-500">Scheduled for <%= invoice.start_date.strftime("%b %-d, %Y") %></span>
             <% elsif allowed_to?(:pay?, invoice) %>
               <%= button_to "Pay now", membership_invoice_checkout_path(invoice),
-                    class: button_classes(:primary, size: :sm), data: { turbo: false } %>
+                    class: button_classes(:primary, size: :sm),
+                    title: "Pays this invoice once. The card is not saved for automatic payments.",
+                    data: { turbo: false } %>
             <% end %>
           </div>
         <% end %>
@@ -61,10 +72,14 @@
           <% end %>
 
           <div class="space-y-2">
-            <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">Automatic payments</p>
+            <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+              Automatic payments
+              <i class="fa-solid fa-circle-info ml-0.5 cursor-help text-[0.65rem] text-gray-400"
+                 title="Autopay charges issued invoices automatically. It is separate from membership renewal."></i>
+            </p>
 
             <% if card_label.present? %>
-              <p class="text-xs text-gray-500">Card on file: <%= card_label %></p>
+              <p class="text-xs text-gray-500" title="The default card used for automatic payments.">Card on file: <%= card_label %></p>
             <% end %>
 
             <% if membership.autorenewal_cancelled? %>
@@ -73,13 +88,15 @@
                 <div class="flex flex-wrap items-center gap-2">
                   <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
                         method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                        title: turn_off_tooltip,
                         data: { turbo_confirm: "Turn off automatic payments for invoices already issued?" } %>
                 </div>
               <% elsif autopay %>
                 <p class="text-sm text-gray-700">Automatic payments are marked on, but no card is on file. Existing invoices will need to be paid manually.</p>
                 <div class="flex flex-wrap items-center gap-2">
                   <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
-                        method: :patch, class: button_classes(:secondary_outline, size: :sm) %>
+                        method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                        title: turn_off_tooltip %>
                 </div>
               <% else %>
                 <p class="text-sm text-gray-700">Automatic payments are off. Any invoice already issued will need to be paid manually.</p>
@@ -88,32 +105,39 @@
               <p class="text-sm text-gray-700">Automatic payments are on. We'll charge your saved card when an invoice is due.</p>
               <div class="flex flex-wrap items-center gap-2">
                 <%= button_to "Manage card", person_billing_portal_path(person),
-                      class: button_classes(:secondary_outline, size: :sm), data: { turbo: false } %>
+                      class: button_classes(:secondary_outline, size: :sm),
+                      title: manage_card_tooltip, data: { turbo: false } %>
                 <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
                       method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                      title: turn_off_tooltip,
                       data: { turbo_confirm: "Turn off automatic card payments? Your membership will still renew, and you'll receive invoices to pay manually." } %>
               </div>
             <% elsif autopay %>
               <p class="text-sm text-gray-700">Automatic payments need a card. Add a card to keep them working.</p>
               <div class="flex flex-wrap items-center gap-2">
                 <%= button_to "Add a card", person_autopay_setup_path(person),
-                      class: button_classes(:primary, size: :sm), data: { turbo: false } %>
+                      class: button_classes(:primary, size: :sm),
+                      title: add_card_tooltip, data: { turbo: false } %>
                 <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
-                      method: :patch, class: button_classes(:secondary_outline, size: :sm) %>
+                      method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                      title: turn_off_tooltip %>
               </div>
             <% elsif has_card %>
               <p class="text-sm text-gray-700">Automatic payments are off. You'll pay each invoice manually.</p>
               <div class="flex flex-wrap items-center gap-2">
                 <%= button_to "Turn on automatic payments", person_autopay_path(person, autopay_on: "1"),
-                      method: :patch, class: button_classes(:primary, size: :sm) %>
+                      method: :patch, class: button_classes(:primary, size: :sm),
+                      title: turn_on_tooltip %>
                 <%= button_to "Manage card", person_billing_portal_path(person),
-                      class: button_classes(:secondary_outline, size: :sm), data: { turbo: false } %>
+                      class: button_classes(:secondary_outline, size: :sm),
+                      title: manage_card_tooltip, data: { turbo: false } %>
               </div>
             <% else %>
               <p class="text-sm text-gray-700">Automatic payments are off. You'll pay each invoice manually.</p>
               <div class="flex flex-wrap items-center gap-2">
                 <%= button_to "Add a card & turn on automatic payments", person_autopay_setup_path(person),
-                      class: button_classes(:primary, size: :sm), data: { turbo: false } %>
+                      class: button_classes(:primary, size: :sm),
+                      title: add_and_turn_on_tooltip, data: { turbo: false } %>
               </div>
             <% end %>
           </div>

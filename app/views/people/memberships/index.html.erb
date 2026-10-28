@@ -23,11 +23,13 @@
       <% if @person.autopay_on? %>
         <%= button_to "Turn off autopay", person_autopay_path(@person, autopay_on: "0"),
               method: :patch, class: button_classes(:secondary_outline, size: :sm),
+              title: "Stops automatic card charges for this person. Renewal is unchanged.",
               data: { turbo_confirm: "Turn off automatic card payments for #{@person.full_name}?" } %>
       <% end %>
 
       <% if offer_new_membership %>
-        <%= link_to new_person_membership_path(@person), class: button_classes(:primary, extra: "inline-flex items-center gap-1.5") do %>
+        <%= link_to new_person_membership_path(@person), class: button_classes(:primary, extra: "inline-flex items-center gap-1.5"),
+              title: "Creates a new membership and first invoice. Existing unlocked memberships are locked." do %>
           <i class="fa-solid fa-plus text-xs"></i>
           New membership
         <% end %>
@@ -44,18 +46,21 @@
           <div>
             <div class="mb-1 flex flex-wrap items-center gap-2">
               <%= render "memberships/status_badge", membership: membership %>
-              <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes %>
+              <%= render "shared/badge", label: membership.payment_label,
+                    classes: membership.payment_classes, title: membership.payment_tooltip %>
               <%= render "shared/badge",
                     label: "Autopay: #{membership.autopay_label(has_card: has_card)}",
-                    classes: membership.autopay_classes(has_card: has_card) %>
+                    classes: membership.autopay_classes(has_card: has_card),
+                    title: membership.autopay_tooltip(has_card: has_card) %>
               <% if membership.locked? %>
-                <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300" %>
+                <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300",
+                      title: "Historical membership. Unlock it before editing or issuing new invoices." %>
               <% end %>
             </div>
 
             <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
               <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
-              <span class="text-gray-600">Renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
+              <span class="text-gray-600" title="<%= membership.renewal_tooltip %>">Renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
               <% if membership.period_label.present? %>
                 <span class="text-gray-600">Term: <span class="font-medium text-gray-800"><%= membership.period_label %></span></span>
               <% end %>

@@ -8,12 +8,15 @@
         <%= membership.person.full_name %>
       <% end %>
       <%= render "memberships/status_badge", membership: membership %>
-      <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes %>
+      <%= render "shared/badge", label: membership.payment_label,
+            classes: membership.payment_classes, title: membership.payment_tooltip %>
       <%= render "shared/badge",
             label: membership.person.autopay_on? ? "Autopay on" : "Autopay off",
-            classes: membership.person.autopay_on? ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200" %>
+            classes: membership.person.autopay_on? ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200",
+            title: membership.person.autopay_on? ? "Automatic payments are enabled for this person." : "Automatic payments are disabled for this person." %>
       <% if membership.locked? %>
-        <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300" %>
+        <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300",
+              title: "Historical membership. Unlock it before editing or issuing new invoices." %>
       <% end %>
     </div>
 
@@ -22,7 +25,7 @@
       <% if membership.period_label.present? %>
         <span><%= membership.period_label %></span>
       <% end %>
-      <span>Renewal <%= membership.auto_renewal_label %></span>
+      <span title="<%= membership.renewal_tooltip %>">Renewal <%= membership.auto_renewal_label %></span>
     </div>
   </div>
 

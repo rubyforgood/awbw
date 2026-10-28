@@ -23,6 +23,14 @@ class MembershipDecorator < ApplicationDecorator
     "Ended"
   end
 
+  def status_tooltip
+    return "Membership starts #{start_date.strftime("%b %-d, %Y")}." if upcoming?
+    return "Renewal is off. Membership ends #{end_date.strftime("%b %-d, %Y")}." if active? && autorenewal_cancelled?
+    return "Current membership covers today." if active?
+
+    "Membership term ended #{end_date.strftime("%b %-d, %Y")}."
+  end
+
   def status_classes
     return "bg-blue-50 text-blue-700 border-blue-200" if upcoming?
     return "bg-amber-50 text-amber-700 border-amber-200" if active? && autorenewal_cancelled?
@@ -36,6 +44,13 @@ class MembershipDecorator < ApplicationDecorator
     return "Balance due" if owes?
 
     "Paid"
+  end
+
+  def payment_tooltip
+    return "This membership has not started yet." if upcoming?
+    return "One or more invoices have an outstanding balance." if owes?
+
+    "No unpaid invoices."
   end
 
   def payment_classes
@@ -52,6 +67,13 @@ class MembershipDecorator < ApplicationDecorator
     "Off"
   end
 
+  def autopay_tooltip(has_card:)
+    return "Automatic payments are on and a card is on file." if person&.autopay_on? && has_card
+    return "Automatic payments are on, but no card is available." if person&.autopay_on?
+
+    "Automatic payments are off. Invoices must be paid manually."
+  end
+
   def autopay_classes(has_card:)
     return "bg-green-50 text-green-700 border-green-200" if person&.autopay_on? && has_card
     return "bg-amber-50 text-amber-700 border-amber-200" if person&.autopay_on?
@@ -61,6 +83,10 @@ class MembershipDecorator < ApplicationDecorator
 
   def auto_renewal_label
     renewal_on? ? "on" : "off"
+  end
+
+  def renewal_tooltip
+    renewal_on? ? "A new invoice is issued each year." : "No new invoices will be issued. Existing invoices remain payable."
   end
 
   def period_label
