@@ -1,0 +1,17 @@
+name: "Copy production events and forms to staging"
+area: events
+display_status: admin_facing
+released_on: 2026-10-28
+pr_number: 2892
+summary: >-
+  Copies of a production event and its forms on staging are now labeled
+  "FROM PROD: ..." so they're never mistaken for the real thing. You can also
+  copy just forms, and check whether staging's copies still match production.
+pro_tips:
+  - Ask a developer to run the copy — it's a line pasted into each environment's
+    console.
+  - Re-copying updates the earlier "FROM PROD" copy instead of making another, and
+    never deletes questions or answers already on it.
+  - >-
+    Need a second, separate simulation? Copy it as version 2 — the event and its
+    forms are labeled "FROM PROD V2: ..." and leave the first copy alone.
