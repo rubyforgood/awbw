@@ -4,7 +4,7 @@ module People
 
     def update
       enabled = ActiveModel::Type::Boolean.new.cast(params[:autopay_on])
-      authorize! @person, to: (enabled ? :enable_autopay? : :disable_autopay?), with: PersonPolicy
+      authorize! @person, to: (enabled ? :enable_autopay? : :disable_autopay?)
 
       unless Membership.enabled?
         return redirect_to person_path(@person), alert: "Memberships are not available right now.",

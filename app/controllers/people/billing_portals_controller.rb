@@ -3,7 +3,7 @@ module People
     before_action :set_person
 
     def create
-      authorize! @person, to: :manage_payment_methods?, with: PersonPolicy
+      authorize! @person, to: :manage_payment_methods?
 
       @person.set_payment_processor :stripe
       session = @person.payment_processor.billing_portal(

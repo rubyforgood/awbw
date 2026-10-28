@@ -1,4 +1,7 @@
 class MembershipPolicy < ApplicationPolicy
+  alias_rule :update?, :destroy?, to: :edit?
+  alias_rule :unlock?, to: :manage?
+
   def manage? = admin? && Membership.enabled?
 
   def show?
@@ -10,10 +13,6 @@ class MembershipPolicy < ApplicationPolicy
   end
 
   def edit? = manage? && !record.locked?
-  def update? = edit?
-  def destroy? = edit?
-
-  def unlock? = manage?
 
   def manage_subscription? = Membership.enabled? && owner?
 

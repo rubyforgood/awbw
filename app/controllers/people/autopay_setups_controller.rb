@@ -3,7 +3,7 @@ module People
     before_action :set_person
 
     def create
-      authorize! @person, to: :enable_autopay?, with: PersonPolicy
+      authorize! @person, to: :enable_autopay?
 
       unless Membership.enabled?
         return redirect_to person_path(@person), alert: "Memberships are not available right now.",

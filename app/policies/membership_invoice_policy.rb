@@ -1,5 +1,8 @@
 class MembershipInvoicePolicy < ApplicationPolicy
   alias_rule :receipt?, to: :show?
+  alias_rule :create?, to: :new?
+  alias_rule :update?, to: :edit?
+  alias_rule :charge?, to: :manage?
 
   def manage? = admin? && Membership.enabled?
 
@@ -10,13 +13,9 @@ class MembershipInvoicePolicy < ApplicationPolicy
   def pay? = Membership.enabled? && owner?
 
   def new? = manage? && !record.membership.locked?
-  def create? = new?
 
   def edit? = manage? && !record.membership.locked? && !record.payment_in_progress?
-  def update? = edit?
   def destroy? = manage? && !record.membership.locked?
-
-  def charge? = manage?
 
   private
 

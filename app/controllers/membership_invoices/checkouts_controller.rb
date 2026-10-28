@@ -2,7 +2,7 @@ module MembershipInvoices
   class CheckoutsController < ApplicationController
     def create
       invoice = MembershipInvoice.find(params[:membership_invoice_id])
-      authorize! invoice, to: :pay?, with: MembershipInvoicePolicy
+      authorize! invoice, to: :pay?
       person = invoice.person
 
       unless invoice.remaining_cost.positive?
