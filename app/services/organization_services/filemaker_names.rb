@@ -11,6 +11,33 @@ module OrganizationServices
 
     AUDIENCE_WORDS = (DuplicateFinder::AUDIENCE_WORDS + %w[womens women mens men teens teen youth]).freeze
     FILLER_WORDS = %w[the of and].freeze
+    # The old app's audience versions of one program. Women, Men and Youth also end real names
+    # ("Safe Place for Youth"), so only their possessives mark a version.
+    VERSION_WORDS = (DuplicateFinder::AUDIENCE_WORDS + %w[womens mens]).freeze
+    TRAILING_AUDIENCE = /[\s,–—-]*\b(?:combined|children[’'í]?s|children|adults?|women[’'í]?s|men[’'í]?s)\s*\z/i
+    TRAILING_CODE = /\s*\((?:ORG|P)\d+\)\z/
+
+    # "ís" is how a mis-encoded "’s" reached some names ("Womenís").
+    def self.words(name, audience: AUDIENCE_WORDS)
+      words = DuplicateFinder.suffixless_name(name.to_s.gsub("&", " and ").gsub(/í(?=s\b)/, "")).split
+      words.pop while words.size > 1 && audience.include?(words.last)
+      words
+    end
+
+    # What one place's names share, whichever audience version or "(code)" a name carries.
+    def self.same_name_key(name)
+      words(name.to_s.sub(TRAILING_CODE, ""), audience: VERSION_WORDS).join(" ")
+    end
+
+    def self.without_audience(name)
+      name = name.to_s.squish
+      loop do
+        shorter = name.sub(TRAILING_AUDIENCE, "")
+        return name if shorter == name || shorter.blank?
+
+        name = shorter
+      end
+    end
 
     def initialize(projects: FmProject.all.to_a)
       @projects = projects.index_by(&:fm_id)
@@ -61,12 +88,7 @@ module OrganizationServices
       fewer.size >= 2 && fewer <= more
     end
 
-    # "ís" is how a mis-encoded "’s" reached some names ("Womenís").
-    def words(name)
-      words = DuplicateFinder.suffixless_name(name.to_s.gsub("&", " and ").gsub(/í(?=s\b)/, "")).split
-      words.pop while words.size > 1 && AUDIENCE_WORDS.include?(words.last)
-      words
-    end
+    def words(name) = self.class.words(name)
 
     def bare_name(name, codes)
       codes.reduce(name.to_s) { |bare, code| bare.delete_suffix(" (#{code})") }

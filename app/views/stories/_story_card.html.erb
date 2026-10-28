@@ -22,7 +22,7 @@
       <p class="line-clamp-3 mt-1 text-sm text-gray-600"><%= story.rhino_body&.plain_text_body&.truncate(250) %></p>
     </div>
     <!-- RIGHT: IMAGE -->
-    <div class="mr-9 h-14 w-24 rounded bg-gray-200">
+    <div class="relative mr-9 h-14 w-24 rounded bg-gray-200">
       <%= render "assets/display_image",
                  resource: story,
                  width: 24, height: 14,
@@ -30,6 +30,7 @@
                  link_to_object: false,
                  file: story.display_image,
                  variant: :gallery %>
+      <%= render "story_shares/play_badge", story: story, compact: true %>
     </div>
   <% end %>
 </div>

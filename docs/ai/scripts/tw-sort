@@ -4,4 +4,5 @@
 set -euo pipefail
 source "$(dirname "$0")/.ruby-env"
 
-exec "$(dirname "$0")/../bin/tw-sort" "$@"
+# Logical cd, so ../ is the repo root even when ai/ is a symlink to docs/ai/scripts.
+exec "$(cd "$(dirname "$0")/.." && pwd)/bin/tw-sort" "$@"

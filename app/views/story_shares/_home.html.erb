@@ -4,6 +4,8 @@
 <section class="relative -mx-2 overflow-hidden sm:-mx-6 lg:-mx-8">
   <% if hero_story %>
     <%= image_tag hero_story.display_image, alt: "", loading: "eager", class: "absolute inset-0 h-full w-full object-cover" %>
+    <%= render "story_shares/banner_video", story: hero_story %>
+    <%= render "story_shares/motion_toggle", position_class: "right-4 bottom-4 motion-reduce:hidden" if youtube_video_id(hero_story.youtube_url) %>
   <% end %>
   <div class="from-brand-navy-950/95 via-brand-navy-900/85 to-brand-purple-900/75 absolute inset-0 bg-gradient-to-r"></div>
   <div class="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
@@ -57,6 +59,7 @@
           <% end %>
         </div>
 
+        <%= render "story_shares/motion_toggle", position_class: "top-4 right-4" %>
         <button aria-label="Previous story" class="swiper-button-prev-custom text-brand-navy-900 absolute top-1/2 left-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
@@ -105,6 +108,7 @@
                        image_class: "transition-transform duration-700 ease-out group-hover:scale-110" %>
             <div class="absolute inset-0 <%= theme[:overlay] %> mix-blend-multiply"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+            <%= render "story_shares/play_badge", story: story %>
             <div class="absolute inset-x-0 bottom-0 p-5">
               <%= render "story_shares/primary_tag_pills", story: story, glass: true, pad: "px-2.5 py-0.5", wrapper_class: "mb-2" %>
               <h3 class="font-display text-xl leading-snug text-white line-clamp-3"><%= story.title %></h3>

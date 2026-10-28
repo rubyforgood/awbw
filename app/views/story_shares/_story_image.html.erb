@@ -9,11 +9,5 @@
   <% if local_assigns.fetch(:pills, true) %>
     <%= render "story_shares/primary_tag_pills", story: story, wrapper_class: "absolute top-3 left-3 right-3" %>
   <% end %>
-  <% if story.youtube_url.present? && !video %>
-    <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-      <span class="flex h-14 w-14 items-center justify-center rounded-full bg-white/70">
-        <i class="fa-solid fa-play ml-1 text-lg text-gray-800"></i>
-      </span>
-    </div>
-  <% end %>
+  <%= render "story_shares/play_badge", story: story unless video %>
 </div>

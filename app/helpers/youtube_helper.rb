@@ -1,5 +1,5 @@
 module YoutubeHelper
-  BACKGROUND_PLAYER_PARAMS = { autoplay: 1, mute: 1, loop: 1, controls: 0, playsinline: 1, disablekb: 1, rel: 0 }.freeze
+  BACKGROUND_PLAYER_PARAMS = { autoplay: 1, mute: 1, loop: 1, controls: 0, playsinline: 1, disablekb: 1, rel: 0, enablejsapi: 1 }.freeze
 
   # js_api lets the page send the player commands (e.g. pause) via postMessage.
   def youtube_embed_url(url, js_api: false)
@@ -16,6 +16,14 @@ module YoutubeHelper
     return unless video_id
 
     "https://www.youtube.com/embed/#{ERB::Util.url_encode(video_id)}?#{BACKGROUND_PLAYER_PARAMS.merge(playlist: video_id).to_query}"
+  end
+
+  # hqdefault exists for every video; the sharper maxresdefault is missing on some.
+  def youtube_thumbnail_url(url)
+    video_id = youtube_video_id(url)
+    return unless video_id
+
+    "https://i.ytimg.com/vi/#{ERB::Util.url_encode(video_id)}/hqdefault.jpg"
   end
 
   def youtube_video_id(url)

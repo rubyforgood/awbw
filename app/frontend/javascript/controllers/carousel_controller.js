@@ -49,6 +49,16 @@ export default class extends Controller {
     this.videoTargets.forEach((video) => video.contentWindow?.postMessage(command, "https://www.youtube.com"))
   }
 
+  setAutoplay(running) {
+    if (!this.optionsValue.autoplay) return
+
+    if (running) {
+      this.swiper.autoplay.start()
+    } else {
+      this.swiper.autoplay.stop()
+    }
+  }
+
   disconnect() {
     if (this.swiper) {
       this.swiper.destroy()

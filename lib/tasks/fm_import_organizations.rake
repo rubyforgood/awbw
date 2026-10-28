@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 
 # Bring FileMaker's organizations, projects and the ties between them and people into the
-# portal (ADR-0008), as two runs so each can be checked and reversed on its own:
+# portal (ADR-0008), as runs that can each be checked and reversed on their own:
+#   0. fm:merge_same_named_organizations — OrganizationServices::MergeSameNamed: one place the
+#      old app split by audience ("… Women's", "… Combined") becomes one organization. Run it
+#      before the import and again after. fm:undo_import doesn't reverse it; its report lists
+#      every merge for review first.
 #   1. fm:import_organizations — OrganizationServices::ImportFromFilemaker, after
 #      fm:import_people: organizations, projects (as programs nested under them), their
 #      addresses, phones, emails, agencies' own Rolodex cards, and the organization a card
@@ -29,8 +33,9 @@
 #   DRY_RUN=false bin/rails fm:import_affiliations    # then the affiliations
 #   FM_IDS=ORG02184,P1630 DRY_RUN=false bin/rails fm:import_organizations   # just these rows
 #   DRY_RUN=false bin/rails fm:undo_import RUN=fm-import-affiliations-20261022134055
+#   DRY_RUN=false bin/rails fm:purge_import_activity RUN=fm-import-affiliations-20261022134055
 namespace :fm do
-  import_from_archive = lambda do |task_name, steps|
+  import_from_archive = lambda do |task_name, steps, undoable: true|
     unless Setting.import_user
       abort "No import user chosen — pick one on /admin/settings (Imports); it's credited as created_by/updated_by when FileMaker names no staffer we can resolve."
     end
@@ -75,7 +80,8 @@ namespace :fm do
       imports.each do |title, import|
         say.("\n== #{title} ==")
         import.results.each do |outcome, messages|
-          next unless (verbose || %i[failed skipped].include?(outcome)) && messages.any?
+          listed = import.class.const_defined?(:LISTED_OUTCOMES) ? import.class::LISTED_OUTCOMES : %i[failed skipped]
+          next unless (verbose || listed.include?(outcome)) && messages.any?
 
           say.("\n#{outcome.to_s.humanize} (#{messages.size}):")
           messages.each { |message| say.("  #{message}") }
@@ -125,7 +131,8 @@ namespace :fm do
 
       say.("\nTook #{(Time.current - started).round}s.")
       say.(dry_run ? "\nDRY RUN — rolled back, nothing written. Set DRY_RUN=false to execute." : "\nDone.")
-      say.("To reverse this run: DRY_RUN=false bin/rails fm:undo_import RUN=#{run}") unless dry_run
+      say.("To reverse this run: DRY_RUN=false bin/rails fm:undo_import RUN=#{run}") if undoable && !dry_run
+      say.("fm:undo_import doesn't reverse merges; the report above lists each one.") unless undoable
     rescue StandardError => e
       say.("\nStopped by #{e.class}: #{e.message}#{" — the batches before this one are saved; rerun to continue." unless dry_run}")
       raise
@@ -140,6 +147,13 @@ namespace :fm do
         puts "\nCould not save the report (#{e.class}: #{e.message}) — copy the output above."
       end
     end
+  end
+
+  desc "Merge organizations that are one place under several names (audience versions, newer twins). Run before and after fm:import_organizations. DRY_RUN=false to execute."
+  task merge_same_named_organizations: :environment do
+    import_from_archive.call("merge_same_named_organizations", {
+      "Same-name organizations" => ->(**options) { OrganizationServices::MergeSameNamed.new(**options) }
+    }, undoable: false)
   end
 
   desc "Create organizations from the FileMaker archive (after fm:import_people). Idempotent. DRY_RUN=false to execute."
@@ -164,4 +178,27 @@ namespace :fm do
 
   desc "Reverse any FileMaker import run (RUN=fm-import-…) from the activity it logged. Dry-run by default; DRY_RUN=false to execute."
   task undo_import: :undo_import_people
+
+  desc "Delete the activity one FileMaker run (RUN=fm-…) and its undo logged. Only once it's been undone, unless FORCE=true. DRY_RUN=false to execute."
+  task purge_import_activity: :environment do
+    run = ENV["RUN"].presence || abort("Name the run whose activity to delete: RUN=fm-… (the run prints it).")
+    dry_run = ENV["DRY_RUN"] != "false"
+    tagged = ->(key) { Ahoy::Event.where("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.#{key}')) = ?", run) }
+    events = tagged.("import_run").or(tagged.("undone_run")).or(tagged.("merge_run"))
+    abort "No activity is tagged with #{run}." if events.none?
+    unless tagged.("undone_run").exists? || ENV["FORCE"] == "true"
+      abort "#{run} hasn't been undone — undo reads this activity, so deleting it leaves the run's records with nothing to reverse them. " \
+            "Undo it first, or set FORCE=true to delete it anyway."
+    end
+
+    puts "Activity tagged with #{run}:"
+    events.group(:name).order(:name).count.each { |name, count| puts "  #{count.to_s.rjust(6)}  #{name}" }
+    total = events.count
+    if dry_run
+      puts "\nDRY RUN — #{total} events would be deleted. Set DRY_RUN=false to execute."
+    else
+      events.delete_all
+      puts "\nDeleted #{total} events."
+    end
+  end
 end

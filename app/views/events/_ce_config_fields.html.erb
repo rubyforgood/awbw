@@ -46,7 +46,7 @@
       <%= f.label :ce_timesheet_opens_offset_minutes, "Timesheet opens for editing", class: "block text-xs font-medium text-gray-600 mb-1" %>
       <%= f.select :ce_timesheet_opens_offset_minutes, Event::CE_TIMESHEET_OPENS_OFFSETS.invert, {},
             class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
-      <p class="mt-1 text-xs text-gray-500">Sign-in opens the same way on each training day, no earlier than midnight.</p>
+      <p class="mt-1 text-xs text-gray-500">Registrants can view their timesheet as soon as their CE is paid. The Sign in button opens this far before each training day's start, but not before midnight that day.</p>
     </div>
     <div>
       <%= f.label :ce_timesheet_closes_at_date, class: "block text-xs font-medium text-gray-600 mb-1" do %>

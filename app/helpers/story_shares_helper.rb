@@ -18,8 +18,6 @@ module StorySharesHelper
 
   STORY_IMAGE_ASPECT = "aspect-[3/2]".freeze
   STORY_BANNER_ASPECT = "aspect-[4/3] sm:aspect-[2/1]".freeze
-  # Zooms a 16:9 player until its letterboxed video covers the banner box at each breakpoint.
-  STORY_BANNER_VIDEO_SCALE = "scale-[1.34] sm:scale-[1.125]".freeze
   STORY_IMAGE_GUIDANCE = "Images look best as landscape photos in a 3:2 shape, at least 1800 × 1200 pixels. " \
     "A recent phone photo taken sideways works well. Tall images show in full on a blurred background. " \
     "Some spots trim the edges, so keep the main subject near the center.".freeze

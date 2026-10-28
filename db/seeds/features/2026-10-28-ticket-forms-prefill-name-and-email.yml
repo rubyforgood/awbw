@@ -1,0 +1,10 @@
+name: "Ticket forms fill in the registrant's name and email"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-28
+summary: >-
+  Forms opened from a registration ticket now fill in the registrant's first
+  name, last name, and email, the same way forms do for someone logged in.
+pro_tips:
+  - "On an anonymous form, the registrant clears their name and email to stay anonymous. Leaving them filled in links the answers to them."
+  - "A form that isn't anonymous still doesn't need name or email questions on a ticket. Answers are saved under the registrant either way."

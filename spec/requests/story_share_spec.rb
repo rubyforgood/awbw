@@ -805,6 +805,41 @@ RSpec.describe "/story_share", type: :request do
       expect(card).to have_no_css("iframe")
     end
 
+    it "plays the top featured story's video muted behind the home hero" do
+      create(:story, :published, :publicly_visible, title: "Video story", youtube_url: video_url, story_share_carousel_position: 1)
+
+      get story_shares_path
+
+      hero = Capybara.string(response.body).find("section", text: "Stories of healing")
+      expect(hero).to have_css(player)
+      expect(hero).to have_css(".motion-reduce\\:hidden #{player}")
+      expect(hero).to have_css("button[aria-label='Pause videos and slideshows'][data-action='background-video#toggle']")
+    end
+
+    it "lets visitors pause the home carousel's videos and slideshow" do
+      create(:story, :published, :publicly_visible, title: "Photo story", story_share_carousel_position: 1)
+
+      get story_shares_path
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css("[data-controller='background-video'][data-background-video-carousel-outlet]")
+      expect(page.find("[data-controller='carousel']")).to have_css("button[aria-label='Pause videos and slideshows']")
+      expect(page.find("section", text: "Stories of healing")).to have_no_css("button[aria-label='Pause videos and slideshows']")
+    end
+
+    it "shows a video story's YouTube thumbnail and play badge in related stories" do
+      sector = create(:sector, :published, name: "Homelessness")
+      story = create(:story, :published, :publicly_visible, title: "Photo story")
+      related = create(:story, :published, :publicly_visible, title: "Related video story", youtube_url: video_url)
+      [ story, related ].each { |s| s.sectorable_items.create!(sector: sector, is_primary: true) }
+
+      get story_share_path(story)
+
+      card = Capybara.string(response.body).find("article", text: "Related video story")
+      expect(card).to have_css("img[src='https://i.ytimg.com/vi/abc123/hqdefault.jpg']")
+      expect(card).to have_css(".fa-play")
+    end
+
     it "falls back to the image when the YouTube link has no video id" do
       story = create(:story, :published, :publicly_visible, title: "Channel link story",
                      youtube_url: "https://www.youtube.com/@awbworg", story_share_carousel_position: 1)

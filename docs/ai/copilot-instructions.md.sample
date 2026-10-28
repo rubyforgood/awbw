@@ -1,5 +1,7 @@
+<!-- Opt-in sample: copy to .github/copilot-instructions.md. See docs/ai/README.md. -->
+
 # This is a Ruby on Rails application.
-<!-- Keep code style rules in sync with CLAUDE.md -->
+<!-- Keep code style rules in sync with docs/ai/CLAUDE.md.sample (the tracked copy), and with CLAUDE.md if this clone has one -->
 
 For project overview, tech stack, architecture reference (models, controllers, services, testing), and more, read `AGENTS.md`.
 
@@ -22,10 +24,17 @@ If you notice the user repeatedly correcting the same pattern, suggest adding it
 
 | File | Purpose |
 |---|---|
-| `CLAUDE.md` | Coding rules and conventions (this file) |
-| `AGENTS.md` | Architecture reference + project details |
-| `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) |
-| `ai/` | Shell script shortcuts for common dev tasks |
+| `CLAUDE.md` | Coding rules and conventions (this file) — tracked copy: `docs/ai/CLAUDE.md.sample` |
+| `AGENTS.md` | Architecture reference + project details — tracked copy: `docs/ai/AGENTS.md.sample` |
+| `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) — tracked copy: `docs/ai/copilot-instructions.md.sample` |
+| `ai/` | Shell script shortcuts for common dev tasks — tracked copy: `docs/ai/scripts/` |
+
+**Edit the sample, then the live file.** These live paths are gitignored; the only
+tracked copies are the samples in `docs/ai/` (see `docs/ai/README.md`). When a rule
+changes, edit the matching `docs/ai/*.sample` so the change is reviewable and reaches
+other contributors — and if this clone also has the live file (`CLAUDE.md`, `AGENTS.md`,
+`.github/copilot-instructions.md`), make the same edit there so it takes effect now.
+Never update one without the other.
 
 ## Related Files
 
@@ -39,7 +48,7 @@ When changing a model or controller, check whether these related files need upda
 | Service | Service spec |
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
-| Add/remove model, concern, service, or gem | AGENTS.md |
+| Add/remove model, concern, service, or gem | `docs/ai/AGENTS.md.sample` — and the live `AGENTS.md`, if this clone has one |
 | Ship a user-facing feature **or improvement/change** | a new file in `db/seeds/features/` (the Features & tips seeds — see below) |
 
 ## Code Style
@@ -181,6 +190,12 @@ point is single-source theming: re-coloring a whole domain is a one-line change 
   multi-color pickers/swatches, and classes a Stimulus controller also toggles (keep ERB and JS in
   sync as literals). Convert only a domain's *own identity* color.
 
+## House UI style
+
+Before building or reshaping UI, read **`docs/design/house-style.md`** — the house patterns to
+match instead of reinventing (e.g. segmented display toggles vs. `column-toggle` slide switches
+for tables). When you add a UI pattern worth reusing, document it there.
+
 ## Sharing repeated Tailwind (avoid `@apply`)
 
 When the same utility string is repeated across many views, **unify it with a Rails view
@@ -252,38 +267,16 @@ before linking between them.** They share the answer-display partials
 (`form_submissions/submission`, `shared/form_answer_value`, the section grouping), so keep
 presentation in those partials, not forked per page.
 
-- **"Ticket" = the registrant's own registration page**, `registration_ticket_path(slug)` →
-  `events/registrations#show` (renders `event_registrations/_ticket`: event details, callout
-  cards, "View your form responses"). The slug is the unguessable token handed to the
-  registrant. When someone says the ticket "shows" submissions or answers, they mean the
-  form-responses page it links to (next bullet).
 - **"Public submission" / "public form display" = the person's own slug-accessible view of
   their submission, reached through the ticket** (and linkable from lists). Today that's the
   event **public registration confirmation** (`events/public_registrations#show`,
   `page_bg "public"`), accessed publicly via `?reg=<registration_slug>` (the unguessable
   ticket token) or, for admins, `?person_id=` (gated by `person_form_submission?`). When
   someone says "public form display," this is what they mean — **not** the admin `show`.
-  It shows each **sitting** with exactly what was sent in it (`RegistrationResponses`): the
-  newest registration's sitting open as cards (registration, scholarship, CE), or the one named
-  by `?form_submission_id=`; the rest collapsed in `<details id="form-submission-<id>">`.
-- **A registrant can have several registration submissions per event** (re-registering
-  appends one). Views list or count them all — never silently take `.first`/`.last`.
-  Count and list them by **sitting** (`FormSubmissionSittings`): a registration plus the
-  scholarship/CE forms saved right after it is one; each registration counts on its own, even
-  seconds apart; a form sent alone later is its own. Bulk payments stay out of counts,
-  tooltips, and edit links (they pay for other people), but a payer who is also a
-  registrant sees theirs among the collapsed submissions on their form-responses page.
 - **Admin submission views** (both `page_bg admin-only`; both carry the admin-only "What this
   submission changed" bar when `FormSubmissionChanges#edited?`):
   - `form_submissions#show` — top-level `/form_submissions/:id` (admin-or-slug).
-  - `events/form_submissions#show` — the event-scoped **submissions page**: every form
-    submission the person made for the event, each anchored `#form-submission-<id>`. Link to
-    one with `anchor: "form-submission-#{id}"`. Its eyebrow branches on `return_to`
-    (`registrants`, `event_registration`, `index`, `link_organization`, each with
-    `event_registration_id`; the last two carry the origin's own `return_to` as
-    `registration_return_to` / `link_org_return_to`), defaulting to "Back to registrants".
-- **Edit registration** shows one admin-only "What this registration's form changed" bar per
-  registration submission, and links each submission (form name + date) to the submissions page.
+  - `events/form_submissions#show` — event-scoped registrant submissions ("← Back to registrants").
 - **Link-organizations pages** (admin) also render a submission summary and the changes link:
   `event_registrations/link_organization` and `form_submissions/link_organization`.
 - The **"What this submission changed"** audit page is `form_submissions#changes` (admin-only);
@@ -529,7 +522,7 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
   - **5 Inspect 🔬** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
 - Include screenshots for UI changes
 - **On every push**, update the PR title and content to reflect the current diff — preserve any existing images/screenshots in the description
-- **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
+- **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts. Edit the tracked sample in `docs/ai/`, plus the live file if this clone has one
 - **Inline-comment only to flag what matters to the reviewer** — do NOT comment on every push, and don't annotate routine or self-explanatory changes. Add a `gh api` line comment on the diff only when a reviewer genuinely needs something flagged: a non-obvious decision or trade-off, a risky/surprising change, a load-bearing assumption, or something easy to miss. When nothing rises to that bar, post no inline comments
 - **Attribute every AI-authored GitHub comment** — `gh` posts as the authenticated user, so any comment you create (PR review comments, issue/PR comments, replies) MUST be prefixed to identify the AI agent that wrote it. Begin the comment body with `🤖 _From <agent>:_` (e.g. `🤖 _From Claude:_` or `🤖 _From Copilot:_`) followed by the content
 - **Keep GitHub comments short and to the point** — one or two sentences, stating the key insight directly. Skip preamble, restating the code, and hedging; if a comment needs more than a few lines, it usually belongs in the PR description instead
