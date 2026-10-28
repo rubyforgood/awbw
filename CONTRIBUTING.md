@@ -154,17 +154,9 @@ A [staging environment](https://awbw-staging-xzek4.ondigitalocean.app/) is also 
 
 [Conductor](https://conductor.build) is an optional macOS platform for running multiple coding agents in parallel, each in its own git worktree. You don't need it to work on this project — it's just one supported way to run isolated workspaces. When used, each workspace gets its own port, database, and session cookie automatically.
 
-The Conductor wiring is opt-in. Copy it into place first:
-
-```bash
-mkdir -p .conductor
-cp docs/ai/conductor/settings.toml.sample .conductor/settings.toml
-cp docs/ai/conductor/bin/conductor-* bin/
-```
-
 The app itself only depends on the generic `WORKSPACE_PORT` environment variable for this isolation. The `bin/conductor-*` scripts derive `WORKSPACE_PORT` from Conductor's `CONDUCTOR_PORT`, but any other system (or a manual setup) can achieve the same result by exporting `WORKSPACE_PORT` itself.
 
-1. Open the project in Conductor — it will run `bin/conductor-setup` to symlink config files and set up a workspace-specific database.
+1. Open the project in Conductor — it will run `bin/conductor-setup` to symlink config files, link any AI files your root checkout has opted into (see [docs/ai](docs/ai/README.md)), and set up a workspace-specific database.
 2. The dev server starts on the port assigned to the workspace.
 3. When a workspace is archived, `bin/conductor-archive` stops the running server.
 

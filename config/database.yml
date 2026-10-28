@@ -6,8 +6,7 @@
 # Mac and Linux environments, preventing schema.rb merge conflicts.
 #
 # WORKSPACE_PORT gives each parallel workspace its own database. Under Conductor
-# it is derived from CONDUCTOR_PORT by the optional bin/conductor-* scripts
-# (copied from docs/ai/conductor/).
+# it is derived from CONDUCTOR_PORT by the bin/conductor-* scripts.
 <% workspace_port = ENV["WORKSPACE_PORT"].presence %>
 
 base: &base

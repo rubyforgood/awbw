@@ -65,6 +65,40 @@ fi
 
 echo "Setting up Conductor workspace..."
 
+# Bring in the opt-in AI files (docs/ai/README.md) the root checkout has opted
+# into. An unedited copy becomes a symlink to this branch's tracked sample, so
+# the rules match the branch and an edit lands in the sample, where the diff
+# shows it. A customized copy is copied as-is, so personal edits survive and
+# stay out of the repo.
+same_content() {
+  diff -rq "$1" "$2" > /dev/null 2>&1
+}
+link_sample() {
+  live="$1"
+  sample="$2"
+  root_live="$CONDUCTOR_ROOT_PATH/$live"
+  [ -e "$root_live" ] || return 0
+  rm -rf "$live"
+  mkdir -p "$(dirname "$live")"
+  if same_content "$root_live" "$CONDUCTOR_ROOT_PATH/$sample" || same_content "$root_live" "$sample"; then
+    case "$live" in
+      */*) up="$(dirname "$live" | sed 's#[^/][^/]*#..#g')/" ;;
+      *) up="" ;;
+    esac
+    echo "Linking $live -> $up$sample..."
+    ln -s "$up$sample" "$live"
+  else
+    echo "Copying customized $live from $CONDUCTOR_ROOT_PATH..."
+    cp -RL "$root_live" "$live"
+  fi
+}
+link_sample CLAUDE.md docs/ai/CLAUDE.md.sample
+link_sample AGENTS.md docs/ai/AGENTS.md.sample
+link_sample .github/copilot-instructions.md docs/ai/copilot-instructions.md.sample
+link_sample docs/agents/domain.md docs/ai/agents/domain.md.sample
+link_sample docs/agents/issue-tracker.md docs/ai/agents/issue-tracker.md.sample
+link_sample ai docs/ai/scripts
+
 # Symlink .env from the root repo so all workspaces share the same config.
 if [ -f "$CONDUCTOR_ROOT_PATH/.env" ]; then
   echo "Symlinking .env from $CONDUCTOR_ROOT_PATH/.env..."
