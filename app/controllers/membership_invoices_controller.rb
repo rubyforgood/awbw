@@ -24,7 +24,6 @@ class MembershipInvoicesController < ApplicationController
   def show
     authorize! @membership_invoice
     @invoice = MembershipInvoicePresenter.new(@membership_invoice)
-    @deletion_blocked_reason = @membership_invoice.deletion_blocked_reason
     track_view("invoices", { membership_invoice_id: @membership_invoice.id })
   end
 

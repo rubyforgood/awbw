@@ -4,5 +4,9 @@
 <%= render "shared/print_actions", back_path: membership_invoice_path(@membership_invoice), back_label: "Back to invoice" %>
 
 <div class="px-4 py-6 sm:px-8 print:p-0">
+  <% if allowed_to?(:manage?, @membership_invoice) %>
+    <%= render "membership_invoices/admin_details", membership_invoice: @membership_invoice %>
+  <% end %>
+
   <%= render "membership_invoices/receipt", receipt: @receipt %>
 </div>
