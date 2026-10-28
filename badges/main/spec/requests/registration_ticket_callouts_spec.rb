@@ -64,6 +64,12 @@ RSpec.describe "Callout inline form", type: :request do
       expect(response.body).not_to match(/name="callout_form\[form_fields\]\[#{email.id}\]"[^>]*required/)
     end
 
+    it "prefills the email from the registrant" do
+      get registration_callout_form_path(registration.slug, callout)
+
+      expect(response.body).to match(/name="callout_form\[form_fields\]\[#{email.id}\]"[^>]*value="#{Regexp.escape(registration.registrant.preferred_email)}"/)
+    end
+
     it "credits the registrant without them" do
       post registration_callout_form_submit_path(registration.slug, callout, form),
            params: { callout_form: { form_fields: { field.id.to_s => "Loved it" } } }
@@ -177,6 +183,15 @@ RSpec.describe "Callout inline form", type: :request do
         get registration_callout_form_path(registration.slug, callout)
 
         expect(response.body).not_to match(/name="callout_form\[form_fields\]\[#{email.id}\]"[^>]*required/)
+      end
+
+      it "prefills them from the registrant and explains clearing them keeps it anonymous" do
+        person = registration.registrant
+        get registration_callout_form_path(registration.slug, callout)
+
+        expect(response.body).to match(/name="callout_form\[form_fields\]\[#{first_name.id}\]"[^>]*value="#{Regexp.escape(person.first_name)}"/)
+        expect(response.body).to match(/name="callout_form\[form_fields\]\[#{email.id}\]"[^>]*value="#{Regexp.escape(person.preferred_email)}"/)
+        expect(response.body).to include("To submit this form anonymously, clear your name and email.")
       end
 
       it "credits the registrant who fills in all three, and shows their answers back" do

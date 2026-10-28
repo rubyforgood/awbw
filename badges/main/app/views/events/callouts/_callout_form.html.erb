@@ -69,18 +69,23 @@
       <h2 class="text-sm font-semibold"><%= form.name %></h2>
     </div>
     <div class="px-4 py-5 sm:px-6">
+      <% asked = form.form_fields.order(:position).to_a %>
+      <% prefill = submission ? {} : PublicFormFields.identity_prefill(asked, @event_registration.registrant) %>
       <% if form.anonymous? %>
         <p class="mb-4 flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
           <i class="fa-solid fa-user-secret mt-0.5 text-gray-400" aria-hidden="true"></i>
           <span>
-            This form is anonymous — your answers aren't linked to your name<%= " unless you fill in your first name, last name, and email" if form.asks_identity? %>.
+            <% if prefill.any? %>
+              We filled in your name and email from your registration. To submit this form anonymously, clear your name and email.
+            <% else %>
+              This form is anonymous — your answers aren't linked to your name<%= " unless you fill in your first name, last name, and email" if form.asks_identity? %>.
+            <% end %>
             Once submitted, anonymous answers can't be changed.
           </span>
         </p>
       <% end %>
       <%= form_with url: registration_callout_form_submit_path(@event_registration.slug, callout, form), method: :post do %>
         <div class="space-y-2">
-          <% asked = form.form_fields.order(:position).to_a %>
           <% asked.each do |field| %>
             <%# Asked inside its _state question's "Not on list?" box. %>
             <% next if field.paired_with_state?(among: asked) %>
@@ -88,7 +93,7 @@
               <h2 class="border-b border-gray-100 pt-2 pb-1 text-sm font-semibold tracking-wide text-gray-400 uppercase"><%= field.name %></h2>
             <% else %>
               <%= render "events/public_registrations/form_field", field: field, asked: asked, param_scope: "callout_form", required: field.answer_required?, submission: submission,
-                    value: field.per_resource? ? submission&.per_resource_values(field) : submission&.form_answers&.find_by(form_field: field)&.submitted_answer %>
+                    value: field.per_resource? ? submission&.per_resource_values(field) : submission&.form_answers&.find_by(form_field: field)&.submitted_answer || prefill[field.id] %>
             <% end %>
           <% end %>
         </div>
