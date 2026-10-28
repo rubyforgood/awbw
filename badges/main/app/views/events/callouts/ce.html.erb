@@ -384,7 +384,7 @@
         <% if editable %>
           <p class="mt-3 text-xs text-gray-400">
             <% if signed_in || window_open %>Sign in when you arrive and sign out when you leave, breaks and lunch included, so your hours are recorded accurately.<br><% end %>
-            You can add or correct any day's times yourself with <span class="font-medium text-teal-700">Edit</span><% if sheet.closes_at %> until <%= ce_timesheet_time(sheet.closes_at) %><% end %>.
+            You can add or correct any day's times yourself with <span class="font-medium text-teal-700">Edit</span> — during the training or after it<% if sheet.closes_at %>, until <%= ce_timesheet_time(sheet.closes_at) %><% end %>.
           </p>
         <% else %>
           <p class="mt-3 flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-gray-700 ring-1 ring-blue-200">
