@@ -5,20 +5,19 @@ class IssueMembershipInvoicesJob < ApplicationJob
     return unless Membership.enabled?
 
     Time.use_zone(Membership::TIME_ZONE) do
-      expiring_invoices.find_each do |invoice|
-        next unless invoice.paid_in_full?
-        Membership::EnsureInvoice.call(membership: invoice.membership, covering: invoice.end_date + 1.day)
+      expiring_memberships.find_each do |membership|
+        Membership::Renew.call(membership: membership)
       end
     end
   end
 
   private
 
-  def expiring_invoices
-    MembershipInvoice
-      .joins(:membership)
-      .preload(:membership, :allocations)
-      .where(memberships: { autorenewal_cancelled_at: nil })
-      .expiring_between(Date.current, Date.current + Membership.renewal_window_days)
+  def expiring_memberships
+    Membership
+      .unlocked
+      .where(autorenewal_cancelled_at: nil)
+      .where(end_date: (Date.current - 1.day)..(Date.current + Membership.renewal_window_days))
+      .includes(:membership_invoices)
   end
 end

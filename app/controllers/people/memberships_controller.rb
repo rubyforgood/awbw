@@ -1,12 +1,12 @@
 module People
   class MembershipsController < ApplicationController
-    before_action :set_person, only: [ :index, :new, :create ]
+    before_action :set_person, only: %i[ index new create ]
 
     def index
       authorize! :membership
 
       @memberships = @person.memberships
-        .includes(person: :pay_subscriptions, membership_invoices: :allocations)
+        .includes(membership_invoices: :allocations)
         .order(created_at: :desc)
         .decorate
         .to_a
@@ -15,22 +15,31 @@ module People
     def new
       authorize! :membership
 
-      @membership = @person.memberships.build
-      @membership.membership_invoices.build(
+      @membership = @person.memberships.new(
         start_date: Date.current,
-        cost_cents: Membership.annual_cost_cents
+        end_date: Date.current + Membership::INVOICE_PERIOD - 1.day
       )
+      @membership.first_invoice_cost_dollars = Membership.annual_cost_cents / 100.0
     end
 
     def create
       authorize! :membership
 
-      @membership = @person.memberships.build(membership_params)
+      start_date = parse_date(params.dig(:membership, :start_date)) || Date.current
+      result = Membership::Create.call(
+        person: @person,
+        start_date: start_date,
+        cost_cents: parse_cents(params.dig(:membership, :cost_dollars)),
+        invoice_cost_cents: parse_cents(params.dig(:membership, :first_invoice_cost_dollars))
+      )
 
-      if @membership.save
+      if result.success?
         redirect_to person_memberships_path(@person),
-          notice: "Membership created. Autorenewal is turned on.", status: :see_other
+          notice: "Membership created with its first invoice.", status: :see_other
       else
+        @membership = result.membership || @person.memberships.new(start_date: start_date)
+        @membership.first_invoice_cost_dollars = params.dig(:membership, :first_invoice_cost_dollars)
+        @errors = result.errors
         render :new, status: :unprocessable_content
       end
     end
@@ -41,10 +50,18 @@ module People
       @person = Person.find(params[:person_id])
     end
 
-    def membership_params
-      params.expect(
-        membership: [ :cost_dollars, { membership_invoices_attributes: [ [ :start_date, :cost_dollars ] ] } ]
-      )
+    def parse_date(value)
+      return if value.blank?
+
+      Date.parse(value)
+    rescue ArgumentError, TypeError
+      nil
+    end
+
+    def parse_cents(value)
+      return if value.blank?
+
+      (value.to_d * 100).to_i
     end
   end
 end

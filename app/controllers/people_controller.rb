@@ -64,13 +64,13 @@ class PeopleController < ApplicationController
 
   def show
     authorize! @person
-    @person = Person.includes(:avatar_attachment, :contact_methods, :user, :pay_subscriptions,
+    @person = Person.includes(:avatar_attachment, :contact_methods, :user,
                               categorizable_items: { category: :category_type }).find(params[:id]).decorate
     track_view(@person)
     @pending_change_requests = own_pending_change_requests unless turbo_frame_request?
 
-    set_membership
     set_checkout_flash
+    set_membership
 
     # Handle paginated sections for Turbo Frame requests
     if turbo_frame_request?
@@ -400,14 +400,6 @@ class PeopleController < ApplicationController
       merge_notes: ->(keep, delete) {
         [ dropped_email_note(keep, delete), login_merge_note(keep, delete) ].compact
       },
-      # Block the merge when both people carry an active pay subscription: the merge
-      # keeps both live (soft-deleting one would strand its billing), so the kept person
-      # would be billed twice. The admin must cancel one before merging.
-      merge_blocks: ->(keep, delete) {
-        next [] unless active_pay_subscription?(keep) && active_pay_subscription?(delete)
-
-        [ "Both people have an active pay subscription. Cancel one before merging so the kept person isn't billed twice." ]
-      },
       # Before the merge moves the deleted person's taggings onto the keeper (where
       # they become indistinguishable), capture which primary sector + age range to
       # keep: the survivor's own, or — when it has none — the deleted person's.
@@ -430,9 +422,9 @@ class PeopleController < ApplicationController
       #     loser's payments, so the person isn't billed twice for a single enrollment);
       #   * two "primary" sectors / age ranges (keep the survivor's, demote the rest,
       #     leaving the single primary Person's single-primary validations require);
-      #   * two live Pay customers (keep one default — the subscription-bearing one,
-      #     else the survivor's own — and soft-delete the redundant sibling so
-      #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
+      #   * two live Pay customers (keep the survivor's own default, else the newest,
+      #     and soft-delete the redundant sibling so `payment_processor` isn't
+      #     ambiguous and a later checkout can't flip it);
       #   * duplicate addresses / contact methods (merge identical ones into one,
       #     keeping a single primary — the survivor's own, else the deleted person's);
       #   * identical affiliations (same org, title, dates, and status → one);
@@ -546,10 +538,6 @@ class PeopleController < ApplicationController
 
     keep.save! if keep.changed?
     PersonLoginEmailSync.call(login)
-  end
-
-  def active_pay_subscription?(person)
-    person.pay_customers.active.any? { |customer| customer.subscriptions.active_uncanceled.exists? }
   end
 
   # Showing anonymous content to anyone but the person and admins would tie an
@@ -775,15 +763,13 @@ class PeopleController < ApplicationController
     @membership = @person.current_membership&.decorate
     return unless @membership
 
-    @membership_invoices_due = @membership.object.invoices_due.includes(:allocations).to_a
-    return unless allowed_to?(:manage_subscription?, @membership)
-
-    subscription = @membership.stripe_subscription
-
-    @membership_autopay = subscription.present? && subscription.active?
-    @membership_autopay_cancelling = @membership_autopay &&
-                                     subscription.canceled? &&
-                                     !subscription.ended?
+    @membership_invoices = @membership.object.membership_invoices
+      .not_paid_in_full
+      .includes(:allocations)
+      .order(:start_date)
+      .to_a
+    @membership_autopay = @person.autopay_on?
+    @membership_has_card = @person.payment_processor&.payment_methods&.exists? || false
   end
 
   def set_checkout_flash
@@ -791,14 +777,20 @@ class PeopleController < ApplicationController
       flash[:notice] = "Thank you for your donation!"
     elsif params[:checkout] == "cancelled"
       flash[:alert] = "Donation was cancelled."
-    elsif params[:membership_subscription_checkout] == "success"
-      flash[:notice] = "Your annual membership is set up. Thank you!"
-    elsif params[:membership_subscription_checkout] == "cancelled"
-      flash[:alert] = "Membership setup was cancelled."
     elsif params[:membership_invoice_checkout] == "success"
+      if params[:autopay] == "1" && allowed_to?(:enable_autopay?, @person.object)
+        @person.object.update(autopay_on: true)
+      end
       flash[:notice] = "Thank you! Your membership payment was received."
     elsif params[:membership_invoice_checkout] == "cancelled"
       flash[:alert] = "Payment was cancelled."
+    elsif params[:autopay_setup] == "success"
+      if allowed_to?(:enable_autopay?, @person.object)
+        @person.object.update(autopay_on: true)
+      end
+      flash[:notice] = "Your card is saved. Automatic card payments are on."
+    elsif params[:autopay_setup] == "cancelled"
+      flash[:alert] = "Card setup was cancelled."
     end
   end
 

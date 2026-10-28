@@ -573,14 +573,11 @@ class Person < ApplicationRecord
     (active || facilitator_affiliations.max_by(&:updated_at))&.organization
   end
 
-  #  subscription's membership_id, by date: active, soonest upcoming, then
-  # the most recent one, so an overdue or ended member still resolves.
   def current_membership
-    live_ids = pay_subscriptions.active.filter_map { |subscription| subscription.metadata&.dig("membership_id")&.to_i }
-    memberships.find { |membership| live_ids.include?(membership.id) } ||
-      memberships.find(&:active?) ||
-      memberships.select(&:upcoming?).min_by(&:upcoming_start_date) ||
-      memberships.max_by { |membership| membership.end_date || Date.new(0) }
+    candidates = memberships.reject(&:locked?)
+    candidates.find(&:active?) ||
+      candidates.select(&:upcoming?).min_by(&:upcoming_start_date) ||
+      candidates.max_by { |membership| membership.end_date || Date.new(0) }
   end
 
   # Facilitator-training events ("TACs") this person registered for and

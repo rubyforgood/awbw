@@ -9,16 +9,19 @@ module Memberships
         return redirect_to(person_path(person), alert: "This invoice has no balance to pay.", status: :see_other)
       end
 
+      autopay = params[:autopay].to_s == "1"
       session = Membership::InvoiceCheckout.call(
         invoice: invoice,
-        success_url: person_url(person, membership_invoice_checkout: "success"),
-        cancel_url: person_url(person, membership_invoice_checkout: "cancelled")
+        success_url: person_url(
+          person,
+          membership_invoice_checkout: "success",
+          autopay: (autopay ? "1" : nil)
+        ),
+        cancel_url: person_url(person, membership_invoice_checkout: "cancelled"),
+        autopay: autopay
       )
       redirect_to session.url, allow_other_host: true, status: :see_other
-    rescue Membership::InvoiceCheckout::AutopayUnresolved
-      redirect_to person_path(person),
-        alert: "This invoice can't be paid online right now. Please contact us.", status: :see_other
-    rescue Stripe::StripeError => e
+    rescue Stripe::StripeError, Pay::Error => e
       redirect_to person_path(person), alert: "Could not reach Stripe: #{e.message}", status: :see_other
     end
   end

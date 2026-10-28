@@ -9,6 +9,8 @@ class MembershipInvoice < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :allocations, as: :allocatable, dependent: :destroy
+  has_many :charge_attempts, -> { order(:attempt_number) },
+           class_name: "MembershipChargeAttempt", dependent: :destroy
 
   belongs_to :invoicee, polymorphic: true, optional: true
   belongs_to :bill_to_address, class_name: "Address", optional: true
@@ -29,17 +31,25 @@ class MembershipInvoice < ApplicationRecord
     not_paid_in_full.where(start_date: ..as_of)
   }
 
+  scope :with_positive_allocation, -> {
+    where(id: Allocation.where(allocatable_type: polymorphic_name)
+      .group(:allocatable_id)
+      .having("SUM(amount) > 0")
+      .select(:allocatable_id))
+  }
+  scope :partially_paid, -> { not_paid_in_full.with_positive_allocation }
+
   before_validation :derive_end_date, on: :create
   before_validation :inherit_invoice_details, on: :create
   before_destroy :prevent_destroy_unless_deletable
-  after_save :sync_membership_dates, if: :paid_in_full?
-  after_commit :enqueue_subscription_price_sync, on: :create, if: :next_billing_year?
+  after_save :clear_payment_in_progress, if: :paid_in_full?
 
   validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :end_date_not_before_start_date
   validate :no_overlapping_invoice_for_person
   validate :only_one_upcoming_invoice
+  validate :cost_cents_immutable_once_allocated, if: :will_save_change_to_cost_cents?
 
   def self.chargeable
     arel_table[:cost_cents].gt(0)
@@ -83,6 +93,28 @@ class MembershipInvoice < ApplicationRecord
     self.cost_cents = (value.to_d * 100).to_i if value.present?
   end
 
+  def locked? = membership.locked?
+
+  def pristine? = allocations.none?
+
+  def payment_in_progress?
+    payment_in_progress_at.present? && payment_in_progress_at > 1.hour.ago
+  end
+
+  def mark_payment_in_progress!
+    update_column(:payment_in_progress_at, Time.current)
+  end
+
+  def clear_payment_in_progress!
+    update_column(:payment_in_progress_at, nil) if payment_in_progress_at.present?
+  end
+
+  def latest_attempt = charge_attempts.last
+
+  def attempts_exhausted?
+    charge_attempts.where(status: "failed").count >= MembershipChargeAttempt::MAX_ATTEMPTS
+  end
+
   attr_accessor :skip_deletion_guard
 
   def deletable?
@@ -90,9 +122,8 @@ class MembershipInvoice < ApplicationRecord
   end
 
   def deletion_blocked_reason
-    return "it has payments or credits applied" if allocations.exists?
-    return "it is comped" if cost_cents.to_i.zero? && !upcoming?
-    return "it covers today — click Cancel recurring first" if active_on?(Date.current) && !membership.autorenewal_cancelled?
+    return "a payment is in progress" if payment_in_progress?
+    return "it has payments or credits applied" unless allocations.sum(:amount).zero?
     return "it is the membership's only invoice" unless other_invoices?
 
     nil
@@ -166,20 +197,19 @@ class MembershipInvoice < ApplicationRecord
     upcoming = upcoming.where.not(id: id) if persisted?
     return unless upcoming.exists?
 
-    errors.add(:base, "This membership already has an upcoming invoice — delete it before adding another")
+    errors.add(:base, "This membership already has an upcoming invoice — remove next year before issuing another")
+  end
+
+  def cost_cents_immutable_once_allocated
+    return if new_record?
+    return if allocations.none?
+
+    errors.add(:cost_cents, "can't change once a payment or discount is applied")
   end
 
   private
 
-  def next_billing_year?
-    Membership.enabled? && start_date.present? && start_date > Date.current
-  end
-
-  def enqueue_subscription_price_sync
-    SyncMembershipSubscriptionPriceJob.perform_later(membership_id)
-  end
-
-  def sync_membership_dates
-    membership.sync_dates_from_invoice(self)
+  def clear_payment_in_progress
+    update_column(:payment_in_progress_at, nil) if payment_in_progress_at.present?
   end
 end

@@ -1,37 +1,22 @@
 class MembershipInvoicesController < ApplicationController
   include AhoyTracking
 
-  before_action :set_membership, only: [ :new, :create ]
-  before_action :set_membership_invoice, only: [ :show, :receipt, :edit, :update, :destroy ]
+  before_action :set_membership_invoice, only: %i[ show receipt edit update destroy charge ]
+
+  STATUS_FILTERS = %w[all paid partial due overdue].freeze
 
   def index
     authorize!
-    @membership_invoices = MembershipInvoice
-      .includes(:allocations, membership: :person)
-      .by_person_name(params[:person_name])
-      .order(start_date: :desc)
-      .paginate(page: params[:page], per_page: params[:number_of_items_per_page].presence || 25)
+    @status_filter = params[:status].presence_in(STATUS_FILTERS) || "all"
+    @status_filters = STATUS_FILTERS
 
-    render :membership_invoices_results if turbo_frame_request?
-  end
-
-  def new
-    authorize!
-    @membership_invoice = @membership.membership_invoices.new(
-      start_date: next_start_date,
-      cost_cents: @membership.cost_cents || Membership.annual_cost_cents
-    )
-  end
-
-  def create
-    authorize!
-    @membership_invoice = @membership.membership_invoices.new(membership_invoice_params)
-
-    if @membership_invoice.save
-      redirect_to person_memberships_path(@membership.person),
-        notice: "Membership invoice created.", status: :see_other
+    if turbo_frame_request?
+      @membership_invoices = filtered_invoices
+        .order(start_date: :desc)
+        .paginate(page: params[:page], per_page: params[:number_of_items_per_page].presence || 25)
+      render :membership_invoices_results
     else
-      render :new, status: :unprocessable_content
+      @membership_invoices = filtered_invoices.order(start_date: :desc)
     end
   end
 
@@ -85,15 +70,38 @@ class MembershipInvoicesController < ApplicationController
     end
   end
 
+  def charge
+    authorize! @membership_invoice, to: :charge?
+
+    result = Membership::Autopay::Charge.call(invoice: @membership_invoice, actor: current_user)
+    if result.success?
+      redirect_to membership_invoice_path(@membership_invoice),
+        notice: "Membership charged.", status: :see_other
+    else
+      redirect_to membership_invoice_path(@membership_invoice),
+        alert: result.errors.to_sentence, status: :see_other
+    end
+  end
+
   private
 
-  def set_membership
-    @membership = Membership.find(params[:membership_id])
+  def filtered_invoices
+    scope = MembershipInvoice
+      .includes(:allocations, :charge_attempts, membership: :person)
+      .by_person_name(params[:person_name])
+
+    case @status_filter
+    when "paid" then scope.paid_in_full
+    when "partial" then scope.partially_paid
+    when "due" then scope.not_paid_in_full.where(start_date: Date.current..)
+    when "overdue" then scope.overdue
+    else scope
+    end
   end
 
   def set_membership_invoice
     @membership_invoice = MembershipInvoice
-      .includes(:allocations, :invoicee, :bill_to_address, :attention_person,
+      .includes(:allocations, :charge_attempts, :invoicee, :bill_to_address, :attention_person,
                 membership: :person, created_by: :person, updated_by: :person)
       .find(params[:id])
   end
@@ -125,19 +133,10 @@ class MembershipInvoicesController < ApplicationController
     end
   end
 
-  def next_start_date
-    latest_end = @membership.membership_invoices.maximum(:end_date)
-    latest_end ? latest_end + 1.day : Date.current
-  end
-
-  def membership_invoice_params
-    params.expect(membership_invoice: [ :start_date, :cost_dollars ])
-  end
-
   def invoice_details_params
     params.expect(membership_invoice: [
       :bill_to_organization_id, :bill_to_address_id, :hide_invoicee, :hide_address,
-      :bill_to_additional_info, :attention_person_id
+      :bill_to_additional_info, :attention_person_id, :cost_dollars
     ])
   end
 end

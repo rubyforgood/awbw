@@ -14,6 +14,7 @@ class MembershipInvoiceDecorator < ApplicationDecorator
     return badge("Upcoming · Paid", "fa-solid fa-circle-check", :green) if upcoming && paid_in_full?
     return badge("Upcoming · #{remaining}", "fa-solid fa-hourglass-start", :blue) if upcoming
     return badge("Paid", "fa-solid fa-circle-check", :green) if paid_in_full?
+    return badge("Partially paid · #{remaining}", "fa-solid fa-circle-half-stroke", :amber) if partially_paid?
 
     badge("Overdue · #{remaining}", "fa-solid fa-triangle-exclamation", :red)
   end
@@ -36,6 +37,10 @@ class MembershipInvoiceDecorator < ApplicationDecorator
 
   def comped?
     cost_cents.zero?
+  end
+
+  def last_error
+    latest_attempt&.error_message
   end
 
   private

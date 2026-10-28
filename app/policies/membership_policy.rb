@@ -3,16 +3,22 @@ class MembershipPolicy < ApplicationPolicy
 
   def show?
     return false unless Membership.enabled?
-    owner? || manage?
+    return true if manage?
+    return false unless record.is_a?(Membership)
+
+    owner? && !record.locked?
   end
 
-  def manage_subscription?
-    Membership.enabled? && owner?
-  end
+  def edit? = manage? && !record.locked?
+  def update? = edit?
+  def destroy? = edit?
 
-  def set_up_subscription?
-    manage_subscription? && !record.autorenewal_cancelled?
-  end
+  def issue_next_invoice? = edit?
+  def remove_next_year? = edit?
+  def cancel_renewal? = edit?
+  def resume_renewal? = edit?
+
+  def manage_subscription? = Membership.enabled? && owner?
 
   private
 

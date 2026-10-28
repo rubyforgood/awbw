@@ -8,7 +8,13 @@
         <%= membership.person.full_name %>
       <% end %>
       <%= render "memberships/status_badge", membership: membership %>
-      <%= render "memberships/stripe_badge", membership: membership %>
+      <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes %>
+      <%= render "shared/badge",
+            label: membership.person.autopay_on? ? "Autopay on" : "Autopay off",
+            classes: membership.person.autopay_on? ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200" %>
+      <% if membership.locked? %>
+        <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300" %>
+      <% end %>
     </div>
 
     <div class="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500">
@@ -16,15 +22,12 @@
       <% if membership.period_label.present? %>
         <span><%= membership.period_label %></span>
       <% end %>
+      <span>Renewal <%= membership.auto_renewal_label %></span>
     </div>
   </div>
 
   <div class="flex items-center gap-2">
     <%= link_to "Manage membership", person_memberships_path(membership.person),
           data: { turbo_frame: "_top" }, class: button_classes(:secondary_outline, size: :sm) %>
-
-    <% if membership.person.user %>
-      <%= render "memberships/membership_lock_toggle", membership: membership %>
-    <% end %>
   </div>
 </div>

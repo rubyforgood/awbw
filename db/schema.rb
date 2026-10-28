@@ -1346,6 +1346,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
     t.index ["updated_by_id"], name: "index_media_files_on_updated_by_id"
   end
 
+  create_table "membership_charge_attempts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "membership_invoice_id", null: false
+    t.integer "attempt_number", null: false
+    t.string "status", default: "pending", null: false
+    t.string "payment_intent_id"
+    t.bigint "pay_charge_id"
+    t.integer "amount_cents", default: 0, null: false
+    t.string "error_code"
+    t.text "error_message"
+    t.datetime "attempted_at"
+    t.date "next_attempt_on"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["membership_invoice_id", "attempt_number"], name: "index_membership_charge_attempts_on_invoice_and_attempt", unique: true
+    t.index ["membership_invoice_id"], name: "index_membership_charge_attempts_on_membership_invoice_id"
+    t.index ["pay_charge_id"], name: "index_membership_charge_attempts_on_pay_charge_id"
+    t.index ["status"], name: "index_membership_charge_attempts_on_status"
+  end
+
   create_table "membership_invoices", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "cost_cents", default: 0, null: false
     t.datetime "created_at", null: false
@@ -1362,6 +1381,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
     t.boolean "hide_address"
     t.text "bill_to_additional_info"
     t.bigint "attention_person_id"
+    t.datetime "payment_in_progress_at"
     t.index ["created_by_id"], name: "index_membership_invoices_on_created_by_id"
     t.index ["membership_id"], name: "index_membership_invoices_on_membership_id"
     t.index ["start_date", "end_date"], name: "index_membership_invoices_on_start_date_and_end_date"
@@ -1378,6 +1398,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
     t.date "start_date"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
+    t.datetime "locked_at"
     t.index ["created_by_id"], name: "index_memberships_on_created_by_id"
     t.index ["person_id"], name: "index_memberships_on_person_id"
     t.index ["updated_by_id"], name: "index_memberships_on_updated_by_id"
@@ -1717,6 +1738,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.string "youtube_url"
+    t.boolean "autopay_on", default: false, null: false
     t.index ["created_by_id"], name: "index_people_on_created_by_id"
     t.index ["first_name", "last_name", "email"], name: "index_people_on_name_and_email", unique: true
     t.index ["updated_by_id"], name: "index_people_on_updated_by_id"
@@ -2825,6 +2847,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
   add_foreign_key "locations", "users", column: "updated_by_id"
   add_foreign_key "media_files", "users", column: "created_by_id"
   add_foreign_key "media_files", "users", column: "updated_by_id"
+  add_foreign_key "membership_charge_attempts", "membership_invoices"
+  add_foreign_key "membership_charge_attempts", "pay_charges"
   add_foreign_key "membership_invoices", "memberships"
   add_foreign_key "membership_invoices", "users", column: "created_by_id"
   add_foreign_key "membership_invoices", "users", column: "updated_by_id"

@@ -1,7 +1,6 @@
 <div class="overflow-hidden rounded-2xl border-2 shadow-sm <%= profile_hidden_wash_class %>"
      data-controller="expandable-card"
      data-expandable-card-expanded-value="true">
-  <!-- Header -->
   <button type="button" data-action="expandable-card#toggle"
           aria-expanded="true"
           class="section-header flex w-full items-center gap-3 border-b px-5 py-4 text-left sm:px-6 <%= profile_hidden_border_class %>">
@@ -15,25 +14,40 @@
       <i class="fa-solid fa-chevron-down rotate-180 text-gray-400 transition-transform" data-expandable-card-target="icon"></i>
     </span>
   </button>
-  <!-- Membership -->
-  <div class="section-content space-y-4 px-4 py-5 sm:px-6 sm:py-6"
+
+  <div class="section-content space-y-5 px-4 py-5 sm:px-6 sm:py-6"
        data-expandable-card-target="body">
-    <% coverage_date = membership&.coverage_date %>
+    <% coverage_date = membership.coverage_date %>
     <% if coverage_date %>
       <p class="text-sm text-gray-700"><%= membership.coverage_label %> <span class="font-medium"><%= coverage_date.strftime("%b %-d, %Y") %></span></p>
     <% end %>
 
-    <% invoices_due = local_assigns[:invoices_due] %>
-    <% if invoices_due&.any? %>
+    <div class="flex flex-wrap items-center gap-2">
+      <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes %>
+      <%= render "shared/badge", label: "Autopay: #{membership.autopay_label(has_card: has_card)}", classes: membership.autopay_classes(has_card: has_card) %>
+      <% if membership.autorenewal_cancelled? %>
+        <%= render "shared/badge", label: "Renewal off", classes: "bg-amber-50 text-amber-700 border-amber-200" %>
+      <% end %>
+    </div>
+
+    <% if invoices&.any? %>
       <div class="space-y-2">
-        <% invoices_due.each do |invoice| %>
+        <% invoices.each do |invoice| %>
           <div class="flex flex-wrap items-center gap-2">
-            <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice %></ul>
-            <% if allowed_to?(:pay?, invoice) && !invoice.upcoming? %>
-              <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
-              <%= button_to "Pay", memberships_invoice_checkouts_path, params: { invoice_id: invoice.id },
-                            class: button_classes(:primary, size: :sm),
-                            data: { turbo: false } %>
+            <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice, viewable: true %></ul>
+            <% if allowed_to?(:pay?, invoice) %>
+              <div class="flex flex-wrap items-center gap-2">
+                <%= button_to "Pay & renew automatically",
+                      memberships_invoice_checkouts_path,
+                      params: { invoice_id: invoice.id, autopay: "1" },
+                      class: button_classes(:primary, size: :sm),
+                      data: { turbo: false } %>
+                <%= button_to "Pay once",
+                      memberships_invoice_checkouts_path,
+                      params: { invoice_id: invoice.id },
+                      class: button_classes(:secondary_outline, size: :sm),
+                      data: { turbo: false } %>
+              </div>
             <% end %>
           </div>
         <% end %>
@@ -41,33 +55,58 @@
     <% end %>
 
     <% if allowed_to?(:manage_subscription?, membership) %>
-      <div>
-        <% if autopay_cancelling %>
-          <p class="mb-3 text-sm text-gray-700">
-            Your automatic payment for membership is set to stop renewing at the end of the current billing cycle. You can change this or update your card below.
-          </p>
-          <%= button_to "Manage autopay", memberships_billing_portals_path,
-                        class: button_classes(:secondary_outline, size: :sm),
-                        data: { turbo: false } %>
-        <% elsif autopay %>
-          <p class="mb-3 text-sm text-gray-700">Your membership renews automatically with the card you have on file.</p>
-          <%= button_to "Manage autopay", memberships_billing_portals_path,
-                        class: button_classes(:secondary_outline, size: :sm),
-                        data: { turbo: false } %>
-        <% elsif membership&.ended? %>
-          <p class="text-sm text-gray-700">Contact us to rejoin your membership.</p>
-        <% elsif membership&.autorenewal_cancelled? %>
-          <p class="text-sm text-gray-700">Contact us to renew your membership.</p>
-        <% elsif !membership.autopay_window_open? %>
-          <p class="text-sm text-gray-700">
-            <span class="font-medium">Automatic renewal can be set up closer to your renewal date</span> — this year was paid directly, so there's nothing to charge until then.
-          </p>
+      <div class="space-y-3">
+        <% if membership.ended? %>
+          <p class="text-sm text-gray-700">Your membership has ended. <%= link_to "Contact us", contact_us_path, class: "text-primary underline hover:no-underline" %> to rejoin.</p>
         <% else %>
-          <p class="mb-3 text-sm text-gray-700">Set up your membership to renew automatically each year at <%= dollars_from_cents(membership&.cost_cents || Membership.annual_cost_cents) %>.</p>
-          <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
-          <%= button_to "Set up automatic renewal", memberships_subscription_checkouts_path,
-                        class: button_classes(:primary),
-                        data: { turbo: false } %>
+          <% if membership.autorenewal_cancelled? %>
+            <p class="text-sm text-gray-700">
+              Renewal is off, so your membership ends <%= membership.end_date ? membership.end_date.strftime("%b %-d, %Y") : "at the end of its term" %>.
+              <%= link_to "Contact us", contact_us_path, class: "text-primary underline hover:no-underline" %> to renew.
+            </p>
+          <% end %>
+
+          <% if autopay && has_card %>
+            <p class="text-sm text-gray-700">
+              Automatic card payments are on.
+              <%= membership.autorenewal_cancelled? ? "Any invoice already issued will still be charged." : "Your card will be charged when the next invoice is due." %>
+            </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <%= button_to "Manage card", billing_portal_path,
+                    class: button_classes(:secondary_outline, size: :sm), data: { turbo: false } %>
+              <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
+                    method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                    data: { turbo_confirm: "Turn off automatic card payments? Your membership will still renew, and you'll receive invoices to pay manually." } %>
+            </div>
+          <% elsif autopay %>
+            <p class="text-sm text-gray-700">
+              <span class="font-medium">Automatic card payments are on, but no card is on file.</span>
+              Add a card to keep automatic payments working.
+            </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <%= button_to "Add a card", billing_portal_path,
+                    class: button_classes(:primary, size: :sm), data: { turbo: false } %>
+              <%= button_to "Turn off automatic payments", person_autopay_path(person, autopay_on: "0"),
+                    method: :patch, class: button_classes(:secondary_outline, size: :sm) %>
+            </div>
+          <% else %>
+            <p class="text-sm text-gray-700">
+              <span class="font-medium">Automatic card payments are off.</span>
+              <%= membership.autorenewal_cancelled? ? "Any invoice already issued will need to be paid manually." : "Your membership still renews, and you'll receive invoices to pay manually." %>
+              To end your membership, <%= link_to "contact us", contact_us_path, class: "text-primary underline hover:no-underline" %>.
+            </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <% if has_card %>
+                <%= button_to "Turn on automatic payments", person_autopay_path(person, autopay_on: "1"),
+                      method: :patch, class: button_classes(:primary, size: :sm) %>
+                <%= button_to "Manage card", billing_portal_path,
+                      class: button_classes(:secondary_outline, size: :sm), data: { turbo: false } %>
+              <% else %>
+                <%= button_to "Add a card & renew automatically", memberships_autopay_setups_path,
+                      class: button_classes(:primary, size: :sm), data: { turbo: false } %>
+              <% end %>
+            </div>
+          <% end %>
         <% end %>
       </div>
     <% end %>

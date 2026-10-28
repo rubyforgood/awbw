@@ -5,32 +5,29 @@ class Membership::EnsureInvoice
 
   def initialize(membership:, covering: Date.current, cost_cents: nil)
     @membership = membership
-    @covering = covering
+    @covering = covering.to_date
     @cost_cents = cost_cents
   end
 
-  # Locked so a webhook and nightly job arriving together can't each create one.
   def call
     @membership.with_lock do
-      invoices.active_on(@covering).first || create_invoice
+      existing = @membership.membership_invoices.active_on(@covering).first
+      next existing if existing.present?
+
+      next if @membership.locked? || !@membership.renewal_on?
+
+      invoice = @membership.membership_invoices.new(
+        start_date: @covering,
+        end_date: @covering + Membership::INVOICE_PERIOD - 1.day,
+        cost_cents: @cost_cents || @membership.cost_cents || Membership.annual_cost_cents
+      )
+      next unless invoice.save
+
+      if @membership.end_date.blank? || invoice.end_date > @membership.end_date
+        @membership.update(end_date: invoice.end_date)
+      end
+
+      invoice
     end
-  end
-
-  private
-
-  def invoices
-    @membership.membership_invoices
-  end
-
-  def create_invoice
-    return if @membership.autorenewal_cancelled?
-
-    invoice = invoices.new(
-      start_date: @covering,
-      end_date: @covering + Membership::INVOICE_PERIOD - 1.day,
-      cost_cents: @cost_cents || @membership.cost_cents || Membership.annual_cost_cents
-    )
-
-    invoice if invoice.save
   end
 end

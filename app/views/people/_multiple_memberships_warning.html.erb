@@ -7,7 +7,7 @@
       <div class="flex-1">
         <h3 class="text-sm font-medium text-yellow-800">Multiple memberships</h3>
         <p class="mt-1 text-sm text-yellow-700">
-          This person has <%= pluralize(person.decorate.uncancelled_membership_count, "active membership") %>. A person should have only one — the extras are usually a leftover from a merge.
+          This person has <%= pluralize(person.decorate.unlocked_membership_count, "unlocked membership") %>. A person should have one current membership — the extras are usually a leftover from a merge. Old memberships are locked automatically when a new one is created.
           <%= link_to "Review memberships", person_memberships_path(person), class: "underline hover:text-yellow-900" %>
         </p>
       </div>

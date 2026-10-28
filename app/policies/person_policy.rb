@@ -69,6 +69,12 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
+  def manage_autopay? = admin? || owner?
+  def enable_autopay? = owner?
+  def disable_autopay? = admin? || owner?
+
+  def manage_payment_methods? = admin? || owner?
+
   def edit?
     admin? || (profiles_visible_to_users? && owner?)
   end

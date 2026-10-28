@@ -2,6 +2,11 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
 <% invoice = @membership_invoice.decorate %>
 <% admin = allowed_to?(:manage?, @membership_invoice) %>
+<% can_edit = allowed_to?(:edit?, @membership_invoice) %>
+<% can_delete = allowed_to?(:destroy?, @membership_invoice) && @deletion_blocked_reason.nil? %>
+<% can_charge = allowed_to?(:charge?, @membership_invoice) &&
+                @membership_invoice.remaining_cost.positive? &&
+                @membership_invoice.person.payment_processor&.payment_methods&.exists? %>
 
 <%
   back_path, back_label =
@@ -19,10 +24,20 @@
       <div class="flex flex-wrap items-center gap-3">
         <h2 class="text-primary font-display text-lg font-bold">Invoice details</h2>
         <%= render "membership_invoices/status_pill", invoice: invoice, linked: true %>
+        <% if @membership_invoice.locked? %>
+          <%= render "shared/badge", label: "Locked membership", classes: "bg-gray-100 text-gray-600 border-gray-300" %>
+        <% end %>
         <div class="ml-auto flex flex-wrap items-center gap-2">
           <%= render "application/activity_log", record: @membership_invoice %>
-          <%= link_to "Edit invoice details", edit_membership_invoice_path(@membership_invoice), class: button_classes(:secondary_outline, size: :sm) %>
-          <% if @deletion_blocked_reason.nil? %>
+          <% if can_edit %>
+            <%= link_to "Edit invoice details", edit_membership_invoice_path(@membership_invoice), class: button_classes(:secondary_outline, size: :sm) %>
+          <% end %>
+          <% if can_charge %>
+            <%= button_to "Charge saved card", charge_membership_invoice_path(@membership_invoice),
+                  method: :post, class: button_classes(:secondary_outline, size: :sm),
+                  data: { turbo_confirm: "Charge the card on file for the remaining balance?" } %>
+          <% end %>
+          <% if can_delete %>
             <%= button_to "Delete invoice", membership_invoice_path(@membership_invoice),
                   method: :delete, class: button_classes(:danger_outline, size: :sm),
                   data: { turbo_confirm: "Delete this invoice? This cannot be undone." } %>
@@ -63,6 +78,22 @@
         <p class="mt-3 text-xs text-gray-500">Can't be deleted: <%= @deletion_blocked_reason %>.</p>
       <% end %>
 
+      <% if @membership_invoice.charge_attempts.any? %>
+        <div class="mt-4 border-t border-blue-200 pt-3">
+          <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">Automatic payment attempts</p>
+          <ul class="mt-2 space-y-1 text-xs text-gray-600">
+            <% @membership_invoice.charge_attempts.recent.limit(7).each do |attempt| %>
+              <li>
+                <span class="font-medium">#<%= attempt.attempt_number %></span>
+                <span class="capitalize"><%= attempt.status.humanize %></span>
+                <% if attempt.error_message.present? %> — <%= attempt.error_message %><% end %>
+                <% if attempt.attempted_at.present? %> · <%= attempt.attempted_at.strftime("%b %-d, %Y %-l:%M %p") %><% end %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
       <%= render "shared/audit_info", resource: @membership_invoice %>
     </div>
   <% end %>
@@ -70,8 +101,17 @@
   <% unless admin %>
     <% if @membership_invoice.remaining_cost.positive? %>
       <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
-        <%= button_to "Pay now", memberships_invoice_checkouts_path, params: { invoice_id: @membership_invoice.id },
-              class: button_classes(:primary), data: { turbo: false } %>
+        <% if @membership_invoice.person.autopay_on? %>
+          <%= button_to "Pay now", memberships_invoice_checkouts_path, params: { invoice_id: @membership_invoice.id },
+                class: button_classes(:primary), data: { turbo: false } %>
+        <% else %>
+          <%= button_to "Pay & renew automatically", memberships_invoice_checkouts_path,
+                params: { invoice_id: @membership_invoice.id, autopay: "1" },
+                class: button_classes(:primary), data: { turbo: false } %>
+          <%= button_to "Pay once", memberships_invoice_checkouts_path,
+                params: { invoice_id: @membership_invoice.id },
+                class: button_classes(:secondary_outline), data: { turbo: false } %>
+        <% end %>
       </div>
     <% end %>
   <% end %>

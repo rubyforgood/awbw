@@ -4,87 +4,69 @@ class Membership < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
-  # TODO enable for production when the full membership feature is complete
   def self.enabled?
     !Rails.env.production?
   end
 
   TIME_ZONE = "Pacific Time (US & Canada)".freeze
+  CURRENCY = "usd".freeze
   INVOICE_PERIOD = 1.year
 
-  # Methods, not constants: these read the Setting row, and a constant would run
-  # that query while the class loads — before the table exists during migration.
   def self.annual_cost_cents = Setting.annual_membership_cents
   def self.renewal_window_days = Setting.membership_renewal_window_days
 
-  DIRECTORY_STATUSES = %w[active ending lapsed ended all].freeze
+  DIRECTORY_STATUSES = %w[active ending upcoming ended all].freeze
 
   has_paper_trail
 
   belongs_to :person
   has_many :membership_invoices, -> { order(start_date: :desc) }, dependent: :destroy
 
-  accepts_nested_attributes_for :membership_invoices
-
-  delegate :active?, :past_due?, to: :stripe_subscription, prefix: :stripe, allow_nil: true
-
-  # When nil, charge standard cost. A value is an override
+  validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
-  validate :one_active_membership_per_person
   validate :end_date_after_start_date
   validate :no_overlapping_membership_dates
 
   scope :autorenewal_not_cancelled, -> { where(autorenewal_cancelled_at: nil) }
+  scope :unlocked, -> { where(locked_at: nil) }
 
   scope :active, ->(as_of = Date.current) {
-    where(autorenewal_cancelled_at: nil).where(end_date: as_of..).where(start_date: ..as_of)
+    where(autorenewal_cancelled_at: nil)
+      .where(start_date: ..as_of, end_date: as_of..)
   }
   scope :ending, ->(as_of = Date.current) {
-    where.not(autorenewal_cancelled_at: nil).where(end_date: as_of..).where(start_date: ..as_of)
+    where.not(autorenewal_cancelled_at: nil)
+      .where(start_date: ..as_of, end_date: as_of..)
   }
-  scope :lapsed, ->(as_of = Date.current) {
-    where("end_date IS NULL OR end_date < ?", as_of)
-      .where(id: MembershipInvoice.overdue(as_of).select(:membership_id))
-  }
-  scope :ended, ->(as_of = Date.current) {
-    where("end_date IS NULL OR end_date < ?", as_of)
-      .where.not(id: MembershipInvoice.overdue(as_of).select(:membership_id))
-  }
+  scope :upcoming, ->(as_of = Date.current) { where("start_date > ?", as_of) }
+  scope :ended, ->(as_of = Date.current) { where(end_date: ...as_of) }
 
-  after_update :cancel_stripe_subscription, if: :just_autorenewal_cancelled?
-  after_update :expire_unbilled_future_invoices, if: :just_autorenewal_cancelled?
+  attr_accessor :skip_deletion_guard, :first_invoice_cost_dollars
+
   before_destroy :prepare_destroy, prepend: true
-  before_destroy :cancel_stripe_subscription
 
-  def active? = start_date.present? && start_date <= Date.current && end_date.present? && end_date >= Date.current
-
-  def upcoming?
-    return true if start_date.present? && start_date > Date.current
-    return false if active?
-
-    membership_invoices.any? { |invoice| invoice.start_date.present? && invoice.start_date > Date.current }
-  end
-
-  def upcoming_start_date = start_date || next_future_invoice&.start_date
-
-  def owes? = membership_invoices.any?(&:overdue?)
-
-  def ended? = !active? && !owes? && !upcoming?
-
-  def renewal_in_flight?
-    return false unless stripe_active?
-
-    invoice = current_invoice
-    invoice&.overdue? && invoice.start_date >= Date.current - 1.day
-  end
-
-  def autorenewal_cancelled? = autorenewal_cancelled_at.present?
+  def locked? = locked_at.present?
+  def renewal_on? = autorenewal_cancelled_at.nil?
+  def autorenewal_cancelled? = !renewal_on?
+  def autopay_on? = person&.autopay_on? || false
 
   def autorenewal_cancelled=(value)
     flag = ActiveModel::Type::Boolean.new.cast(value)
     self.autorenewal_cancelled_at = flag ? (autorenewal_cancelled_at || Time.current) : nil
   end
+
+  def active? = start_date.present? && start_date <= Date.current && end_date.present? && end_date >= Date.current
+
+  def upcoming?
+    start_date.present? && start_date > Date.current
+  end
+
+  def upcoming_start_date = start_date
+
+  def owes? = invoices_due.any?
+
+  def ended? = end_date.present? && end_date < Date.current
 
   def cost_dollars
     cost_cents.to_d / 100 if cost_cents
@@ -94,102 +76,53 @@ class Membership < ApplicationRecord
     self.cost_cents = value.present? ? (value.to_d * 100).to_i : nil
   end
 
-
-
-  def covered_on?(date = Date.current)
-    membership_invoices.any? { |invoice| invoice.active_on?(date) }
-  end
-
-  def current_invoice
-    membership_invoices.find { |invoice| invoice.active_on?(Date.current) } || membership_invoices.first
-  end
-
-  def next_future_invoice
+  def next_invoice
     membership_invoices.where("start_date > ?", Date.current).order(:start_date).first
   end
 
-  def next_billing_invoice
-    membership_invoices
-      .where("start_date > ?", Date.current)
-      .merge(MembershipInvoice.not_paid_in_full)
-      .order(:start_date)
-      .first
-  end
-
-  # What the next automatic charge should be. A comped year ahead returns 0.
-  def next_billing_cents
-    next_future_invoice&.cost_cents || cost_cents || Membership.annual_cost_cents
-  end
-
-  def next_billing_start_date
-    paid_through = membership_invoices.paid_in_full.maximum(:end_date)
-    return paid_through + 1.day if paid_through.present? && paid_through >= Date.current
-
-    next_billing_invoice&.start_date
-  end
-
-  def autopay_window_open?
-    start = next_billing_start_date
-    start.nil? || start <= Date.current + INVOICE_PERIOD
-  end
-
   def invoices_due
-    membership_invoices.not_paid_in_full
+    membership_invoices.not_paid_in_full.where(start_date: ..Date.current)
   end
 
-  def stripe_subscription
-    return if person.blank?
-
-    person.pay_subscriptions.find { |sub| sub.metadata&.dig("membership_id").to_i == id }
-  end
-
-  def cancel_autopay!
-    subscription = stripe_subscription
-    return false if subscription.blank? || subscription.ended?
-
-    subscription.cancel_now!
-    true
-  end
-
-  def deletable?
-    deletion_blocked_reason.nil?
-  end
+  def deletable? = membership_invoices.none?
 
   def deletion_blocked_reason
-    return "it has invoices with payments or credits applied" if membership_invoices.joins(:allocations).exists?
+    return "it has invoices" if membership_invoices.exists?
 
     nil
   end
 
-  attr_accessor :skip_deletion_guard
+  def remove_next_year!
+    invoice = next_invoice
+    return false if invoice.blank?
+    return false unless invoice.start_date > Date.current
+    return false if invoice.payment_in_progress?
+    return false unless invoice.allocations.sum(:amount).zero?
+    return false unless invoice.other_invoices?
 
-  # Update membership start_date/end_date from a newly created paid or free invoice.
-  # Called from MembershipInvoice after_save. Only increases dates; never decreases.
-  def sync_dates_from_invoice(invoice)
-    return unless invoice.paid_in_full?
+    removed_end = invoice.end_date
+    invoice.destroy!
 
-    new_start = invoice.start_date
-    new_end = invoice.end_date
-    changed = false
-
-    if start_date.blank? || (new_start && new_start < start_date)
-      self.start_date = new_start
-      changed = true
+    if end_date == removed_end
+      previous_end = membership_invoices.reload.maximum(:end_date)
+      update_column(:end_date, previous_end) if previous_end
     end
 
-    if end_date.blank? || (new_end && new_end > end_date)
-      self.end_date = new_end
-      changed = true
-    end
+    update_column(:autorenewal_cancelled_at, Time.current)
+    true
+  end
 
-    save(validate: false, touch: false) if changed
+  def lock_for_history!
+    transaction do
+      begin
+        remove_next_year!
+      rescue ActiveRecord::RecordNotDestroyed
+      end
+      update!(locked_at: Time.current, autorenewal_cancelled_at: autorenewal_cancelled_at || Time.current)
+    end
   end
 
   private
-
-  def just_autorenewal_cancelled?
-    saved_change_to_autorenewal_cancelled_at? && autorenewal_cancelled_at.present?
-  end
 
   def prepare_destroy
     unless skip_deletion_guard
@@ -200,25 +133,6 @@ class Membership < ApplicationRecord
     end
 
     membership_invoices.each { |invoice| invoice.skip_deletion_guard = true }
-  end
-
-  def expire_unbilled_future_invoices
-    return unless autorenewal_cancelled_at.present?
-    membership_invoices.where("start_date > ?", Date.current).each do |invoice|
-      next unless invoice.allocations.none?
-
-      invoice.skip_deletion_guard = true
-      invoice.destroy!
-    end
-  end
-
-  def cancel_stripe_subscription
-    sub = stripe_subscription
-    return unless sub&.active?
-
-    sub.cancel_now! # `now!` prevents customer from reactivating in stripe portal. Must create new subscription if admin allows
-  rescue Stripe::StripeError, Pay::Error => e
-    Rails.logger.warn("[Membership] Could not cancel Stripe subscription for membership #{id}: #{e.message}")
   end
 
   def end_date_after_start_date
@@ -236,15 +150,5 @@ class Membership < ApplicationRecord
     return unless overlapping.exists?
 
     errors.add(:base, "This membership overlaps with an existing membership for this person")
-  end
-
-  def one_active_membership_per_person
-    return if autorenewal_cancelled_at.present? || person_id.blank?
-
-    others = Membership.autorenewal_not_cancelled.where(person_id: person_id)
-    others = others.where.not(id: id) if persisted?
-    return unless others.exists?
-
-    errors.add(:base, "This person already has a membership that is active")
   end
 end

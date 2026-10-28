@@ -34,15 +34,12 @@ class Allocation < ApplicationRecord
   validate :within_allocatable_cost, if: -> { allocatable.is_a?(Registerable) }
 
   after_create :adjust_source_remaining
-  after_create :sync_membership_dates_if_paid
+  after_create :clear_membership_payment_in_progress
 
-  def sync_membership_dates_if_paid
+  def clear_membership_payment_in_progress
     return unless allocatable.is_a?(MembershipInvoice)
 
-    allocatable.reload
-    return unless allocatable.paid_in_full?
-
-    allocatable.membership.sync_dates_from_invoice(allocatable)
+    allocatable.clear_payment_in_progress!
   end
 
   def adjust_source_remaining

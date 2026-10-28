@@ -235,16 +235,17 @@ class PaymentsController < ApplicationController
 
   def calculate_allocation_amount(payment, allocatable)
     cost_cents = allocatable.cost_cents
+    label = allocatable.is_a?(MembershipInvoice) ? "Membership invoice" : "Registration"
 
     if cost_cents.blank? || cost_cents <= 0
-      payment.errors.add(:base, "Cannot allocate to a free registration.")
+      payment.errors.add(:base, "Cannot allocate to a free #{label.downcase}.")
       raise ActiveRecord::RecordInvalid.new(payment)
     end
 
     remaining_needed = cost_cents - allocatable.allocations_sum
 
     if remaining_needed <= 0
-      payment.errors.add(:base, "Registration is already fully paid.")
+      payment.errors.add(:base, "#{label} is already fully paid.")
       raise ActiveRecord::RecordInvalid.new(payment)
     end
 
