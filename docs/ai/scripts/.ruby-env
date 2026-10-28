@@ -7,9 +7,11 @@ if [ -n "${CONDUCTOR_PORT:-}" ]; then
   export WORKSPACE_PORT="${WORKSPACE_PORT:-$CONDUCTOR_PORT}"
 fi
 
-# Ensure the correct Ruby version is available via mise or rbenv
+# Ensure the correct Ruby version is available via mise or rbenv. Use shims, not
+# the activate hook: these scripts run non-interactively, where the hook never
+# fires and an inherited __MISE_ORIG_PATH can leave the system Ruby on PATH.
 if command -v mise &> /dev/null; then
-  eval "$(mise activate bash)"
+  eval "$(mise activate bash --shims)"
 elif command -v rbenv &> /dev/null; then
   eval "$(rbenv init -)"
 elif [ -x "$HOME/.rbenv/bin/rbenv" ]; then
