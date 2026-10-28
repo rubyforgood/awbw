@@ -23,6 +23,11 @@ RSpec.describe FormTransferService do
       expect(described_class.simulated_name("Registration", "production")).to eq("FROM PROD: Registration")
       expect(described_class.simulated_name("Registration", "staging")).to eq("FROM STAGING: Registration")
     end
+
+    it "labels a later version, leaving version 1 plain" do
+      expect(described_class.simulated_name("Registration", "production", version: 2)).to eq("FROM PROD V2: Registration")
+      expect(described_class.simulated_name("Registration", "production", version: 1)).to eq("FROM PROD: Registration")
+    end
   end
 
   describe ".console_script" do

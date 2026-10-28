@@ -8,8 +8,9 @@
 # `puts EventCopyService.console_script(event)` in one console prints a line to
 # paste into another, where linked records are matched by name/email, not id. That
 # copy is a simulation, so the event, its callouts, and its forms are all named for
-# the source environment ("FROM PROD: …"); the forms come along through FormTransferService. Swapping `import`
-# for `compare` in that line lists how the target's form copies differ, changing nothing.
+# the source environment ("FROM PROD: …"; `version: 2` makes a separate "FROM PROD V2: …"
+# set). The forms come along through FormTransferService. Swapping `import` for
+# `compare` in that line lists how the target's form copies differ, changing nothing.
 class EventCopyService
   BLUEPRINT_VERSION = 2
   COPY_TITLE_PREFIX = "Copy of ".freeze
@@ -83,8 +84,8 @@ class EventCopyService
 
   # Console entry point for a console_script payload: matches linked records by
   # name/email, prints what it couldn't link, and returns the new event.
-  def self.import(payload, start_on: nil, title: nil)
-    service = new(FormTransferService.decode(payload), match_by: :natural)
+  def self.import(payload, start_on: nil, title: nil, version: nil)
+    service = new(FormTransferService.decode(payload), match_by: :natural, version:)
     event = service.call(start_on: start_on, title: title)
     puts "Created event ##{event.id} \"#{event.title}\" starting #{event.starts_on} (unpublished)."
     service.form_transfer.report_changes
@@ -94,9 +95,9 @@ class EventCopyService
 
   # Read-only console check of a console_script payload: whether this environment's
   # copy of each linked form matches the source's settings and questions.
-  def self.compare(payload)
+  def self.compare(payload, version: nil)
     blueprint = FormTransferService.decode(payload)
-    FormTransferService.new(blueprint["form_definitions"], source_environment: blueprint.dig("source", "environment")).report_differences
+    FormTransferService.new(blueprint["form_definitions"], source_environment: blueprint.dig("source", "environment"), version:).report_differences
     nil
   end
 
@@ -127,14 +128,15 @@ class EventCopyService
 
   private_class_method :offset, :form_ref, :linked_forms, :asset_url
 
-  def initialize(blueprint, match_by: :id)
+  def initialize(blueprint, match_by: :id, version: nil)
     raise ArgumentError, "match_by must be one of #{MATCH_MODES}" unless MATCH_MODES.include?(match_by)
     raise ArgumentError, "unsupported blueprint version #{blueprint["version"]}" unless blueprint["version"] == BLUEPRINT_VERSION
 
     @blueprint = blueprint
     @match_by = match_by
     @warnings = []
-    @form_transfer = FormTransferService.new(blueprint["form_definitions"], source_environment: blueprint.dig("source", "environment"))
+    @version = version
+    @form_transfer = FormTransferService.new(blueprint["form_definitions"], source_environment: blueprint.dig("source", "environment"), version:)
   end
 
   def warnings
@@ -272,7 +274,7 @@ class EventCopyService
 
   # A cross-environment copy is a simulation, named so it's never taken for the real thing.
   def simulated(name)
-    @match_by == :natural ? name && FormTransferService.simulated_name(name, @blueprint.dig("source", "environment")) : name
+    @match_by == :natural ? name && FormTransferService.simulated_name(name, @blueprint.dig("source", "environment"), version: @version) : name
   end
 
   def find_resource(ref)

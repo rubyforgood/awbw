@@ -12,3 +12,5 @@ pro_tips:
     console.
   - Re-copying updates the earlier "FROM PROD" copy instead of making another, and
     never deletes questions or answers already on it.
+  - Need a second, separate simulation? Copy it as version 2 — the event and its
+    forms are labeled "FROM PROD V2: ..." and leave the first copy alone.

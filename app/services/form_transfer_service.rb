@@ -8,7 +8,8 @@ require "zlib"
 # `import` for `compare` lists how the target's copies differ, changing nothing.
 #
 # Copies are named for where they came from — "FROM PROD: <name>" — so they're
-# never mistaken for the real thing. A later import refreshes that same copy to match the source — settings and question
+# never mistaken for the real thing; `version: 2` keeps a separate set ("FROM PROD V2: <name>").
+# A later import of the same version refreshes that same copy to match the source — settings and question
 # wording — and adds what it's missing; it never removes a question or option, so
 # answers already given on the copy stay put. EventCopyService uses it for an
 # event's linked forms.
@@ -26,21 +27,21 @@ class FormTransferService
     "FormTransferService.import(\"#{payload}\") # copy of #{definitions.size} #{"form".pluralize(definitions.size)} from #{Rails.env}"
   end
 
-  def self.import(payload)
-    service = from_payload(payload)
+  def self.import(payload, version: nil)
+    service = from_payload(payload, version:)
     Form.transaction { service.definitions.each_key { |id| service.form_for(id) } }
     service.report_changes
     nil
   end
 
-  def self.compare(payload)
-    from_payload(payload).report_differences
+  def self.compare(payload, version: nil)
+    from_payload(payload, version:).report_differences
     nil
   end
 
-  def self.from_payload(payload)
+  def self.from_payload(payload, version: nil)
     data = decode(payload)
-    new(data["forms"], source_environment: data["environment"])
+    new(data["forms"], source_environment: data["environment"], version:)
   end
 
   # Source form id => its portable definition.
@@ -80,15 +81,17 @@ class FormTransferService
   end
 
   # A copy's name, prefixed with the environment it came from.
-  def self.simulated_name(name, source_environment)
-    label = ENVIRONMENT_LABELS.fetch(source_environment, source_environment.upcase)
+  # Version 1 (or none) is the plain "FROM PROD:" copy.
+  def self.simulated_name(name, source_environment, version: nil)
+    label = [ ENVIRONMENT_LABELS.fetch(source_environment, source_environment.upcase), ("V#{version}" if version.to_i > 1) ].compact.join(" ")
     "FROM #{label}: #{name}".truncate(Form::NAME_MAX_LENGTH)
   end
 
   # Definitions keyed by source form id (string keys, as in a decoded payload).
-  def initialize(definitions, source_environment:)
+  def initialize(definitions, source_environment:, version: nil)
     @definitions = definitions
     @source_environment = source_environment
+    @version = version
     @form_changes = {}
     @warnings = []
     @forms = {}
@@ -133,7 +136,7 @@ class FormTransferService
   private
 
   def copy_name(name)
-    self.class.simulated_name(name, @source_environment)
+    self.class.simulated_name(name, @source_environment, version: @version)
   end
 
   def copy_form(definition)

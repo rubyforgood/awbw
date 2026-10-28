@@ -171,6 +171,21 @@ RSpec.describe EventCopyService do
       expect(copy.registration_ticket_callouts.custom.map(&:title)).to eq([ "FROM TEST: Bring supplies" ])
     end
 
+    it "makes a separate copy of the event and its forms for a later version" do
+      form = create(:form, name: "Registration", role: "registration")
+      event.event_forms.create!(form: form, role: "registration")
+      create(:registration_ticket_callout, event: event, title: "Bring supplies")
+      blueprint = other_environment_blueprint(event)
+
+      first = described_class.new(blueprint, match_by: :natural).call(start_on: new_start_on)
+      second = described_class.new(blueprint, match_by: :natural, version: 2).call(start_on: new_start_on)
+
+      expect(second.title).to eq("FROM TEST V2: Spring training")
+      expect(second.registration_ticket_callouts.custom.map(&:title)).to eq([ "FROM TEST V2: Bring supplies" ])
+      expect(second.registration_form).to have_attributes(name: "FROM TEST V2: Registration")
+      expect(second.registration_form).not_to eq(first.registration_form)
+    end
+
     it "matches staff by email, links a copy of each form, and reports what it can't find" do
       form = create(:form, name: "Registration", role: "registration")
       event.event_forms.create!(form: form, role: "registration")
