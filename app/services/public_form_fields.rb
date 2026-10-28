@@ -11,6 +11,14 @@ class PublicFormFields
     "confirm_email" => :preferred_email
   }.freeze
 
+  # Identity answers from the person for whichever of these fields ask for them.
+  def self.identity_prefill(fields, person)
+    return {} unless person
+
+    fields.select { |field| IDENTITY_PREFILLS.key?(field.field_identifier) }
+          .to_h { |field| [ field.id, person.public_send(IDENTITY_PREFILLS[field.field_identifier]) ] }
+  end
+
   def initialize(form:, person:)
     @form = form
     @person = person
@@ -25,10 +33,7 @@ class PublicFormFields
   end
 
   def prefill_values
-    return {} unless @person
-
-    visible.select { |field| IDENTITY_PREFILLS.key?(field.field_identifier) }
-           .to_h { |field| [ field.id, @person.public_send(IDENTITY_PREFILLS[field.field_identifier]) ] }
+    self.class.identity_prefill(visible, @person)
   end
 
   private

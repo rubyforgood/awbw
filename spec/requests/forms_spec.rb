@@ -805,6 +805,12 @@ RSpec.describe "Forms", type: :request do
       expect(response).to redirect_to(edit_form_path(form))
     end
 
+    it "turns off editing responses after submission" do
+      form = create(:form, :standalone)
+      patch form_path(form), params: { form: { responses_editable: "0" } }
+      expect(form.reload.responses_editable?).to be(false)
+    end
+
     it "refuses anonymous responses on a form processed against a person" do
       form = create(:form, :standalone, role: "registration")
       patch form_path(form), params: { form: { anonymous: "1" } }
