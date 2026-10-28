@@ -1,19 +1,13 @@
-# Lists how a form differs from a form definition carried in an EventCopyService
-# payload — its settings, questions, answer options, and resources — so an admin
-# can tell whether another environment's copy of a form matches the source.
-# Questions pair up the way the copy matches them: field identifier, then wording.
+# Lists how a form differs from a FormTransferService definition — its settings,
+# questions, answer options, and resources — so an admin can tell whether another
+# environment's copy of a form matches the source. Questions pair up the way the
+# copy matches them: field identifier, then wording.
 class FormDefinitionDiff
-  FORM_SETTINGS = EventCopyService::FORM_COLUMNS
+  # The copy's name carries its source environment.
+  FORM_SETTINGS = FormTransferService::FORM_COLUMNS - %w[name]
   # Ids differ across environments; parent links and order are compared through the matched questions.
   UNCOMPARED_FIELD_COLUMNS = %w[parent_id position].freeze
   SHOWN_VALUE_LENGTH = 40
-
-  def self.take_matching_field(candidates, attributes)
-    identifier = attributes["field_identifier"].presence
-    match = (identifier && candidates.find { |field| field.field_identifier == identifier }) ||
-      candidates.find { |field| field.name == attributes["name"] }
-    candidates.delete(match)
-  end
 
   def initialize(definition, form)
     @definition = definition
@@ -35,7 +29,7 @@ class FormDefinitionDiff
   def question_differences
     unmatched = @form.form_fields.includes(:form_field_answer_options, form_field_resources: :resource).sort_by { |field| [ field.position.to_i, field.id ] }
     local_order = unmatched.dup
-    pairs = @definition["fields"].to_h { |data| [ data["id"], self.class.take_matching_field(unmatched, data["attributes"]) ] }
+    pairs = @definition["fields"].to_h { |data| [ data["id"], FormTransferService.take_matching_field(unmatched, data["attributes"]) ] }
     differences = @definition["fields"].flat_map do |data|
       field = pairs[data["id"]]
       next [ "missing question \"#{data["attributes"]["name"]}\"" ] unless field

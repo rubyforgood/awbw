@@ -147,8 +147,11 @@ RSpec.describe EventCopyService do
 
   describe "cross-environment copy" do
     def other_environment_blueprint(event)
-      payload = described_class.console_script(event)[/import\("([^"]+)"\)/, 1]
-      JSON.parse(Zlib.gunzip(Base64.strict_decode64(payload)))
+      FormTransferService.decode(payload(event))
+    end
+
+    def payload(event)
+      described_class.console_script(event)[/import\("([^"]+)"\)/, 1]
     end
 
     it "prints a one-line console script that rebuilds the event" do
@@ -159,7 +162,16 @@ RSpec.describe EventCopyService do
       expect { expect { eval(script) }.to output(/Created event/).to_stdout }.to change(Event, :count).by(1) # rubocop:disable Security/Eval
     end
 
-    it "matches forms and staff by name and email, and reports what it can't find" do
+    it "names the event and its callouts for the source environment" do
+      create(:registration_ticket_callout, event: event, title: "Bring supplies")
+
+      copy = described_class.new(other_environment_blueprint(event), match_by: :natural).call(start_on: new_start_on, title: "Winter training")
+
+      expect(copy.title).to eq("FROM TEST: Winter training")
+      expect(copy.registration_ticket_callouts.custom.map(&:title)).to eq([ "FROM TEST: Bring supplies" ])
+    end
+
+    it "matches staff by email, links a copy of each form, and reports what it can't find" do
       form = create(:form, name: "Registration", role: "registration")
       event.event_forms.create!(form: form, role: "registration")
       matched = create(:event_staff, event: event, person: create(:person, email: "lead@example.com"))
@@ -170,169 +182,71 @@ RSpec.describe EventCopyService do
       service = described_class.new(blueprint, match_by: :natural)
       copy = service.call(start_on: new_start_on)
 
-      expect(copy.registration_form).to eq(form)
+      expect(copy.registration_form).to have_attributes(name: "FROM TEST: Registration", role: "registration")
+      expect(copy.registration_form).not_to eq(form)
       expect(copy.staff_members).to contain_exactly(matched.person)
       expect(service.warnings).to include("Staff Gone Away not found — skipped")
       expect(copy.start_date).to eq(zone.parse("2027-01-11 09:00"))
     end
 
-    it "builds a form the target doesn't have, with its questions, options, and resources, once" do
-      form = create(:form, name: "Registration", role: "registration", header: "<p>Welcome</p>")
-      parent = create(:form_field, form: form, name: "Are you a facilitator?", position: 1, field_identifier: "facilitator")
-      child = create(:form_field, form: form, name: "Since when?", position: 2, parent_id: parent.id)
-      parent.form_field_answer_options.create!(option_name: "Yes")
-      parent.form_field_answer_options.create!(option_name: "No")
-      worksheet = create(:resource, title: "Worksheet")
-      child.form_field_resources.create!(resource: worksheet)
-      event.event_forms.create!(form: form, role: "registration")
-      create(:registration_ticket_callout, event: event, form: form)
-      blueprint = other_environment_blueprint(event)
-      form.update!(name: "Renamed in this environment")
-
-      service = described_class.new(blueprint, match_by: :natural)
-      copy = service.call(start_on: new_start_on)
-
-      built = copy.registration_form
-      expect(built).not_to eq(form)
-      expect(service.form_changes).to eq(built => { created: true, questions: 2, options: 2 })
-      expect(built).to have_attributes(name: "Registration", role: "registration", header: "<p>Welcome</p>", published: false)
-      fields = built.form_fields.order(:position)
-      expect(fields.map(&:name)).to eq([ "Are you a facilitator?", "Since when?" ])
-      expect(fields.first.answer_options.map(&:name)).to eq(%w[Yes No])
-      expect(fields.second.parent_id).to eq(fields.first.id)
-      expect(fields.second.resources).to contain_exactly(worksheet)
-      expect(copy.registration_ticket_callouts.custom.flat_map(&:forms)).to eq([ built ])
-    end
-
-    it "keeps a built form anonymous when the source form is" do
-      form = create(:form, name: "CE evaluation", role: "general", anonymous: true)
-      create(:form_field, form: form, name: "How useful was it?", position: 1)
-      create(:registration_ticket_callout, event: event, form: form)
-      blueprint = other_environment_blueprint(event)
-      form.update!(name: "Renamed in this environment")
-
-      copy = described_class.new(blueprint, match_by: :natural).call(start_on: new_start_on)
-
-      built = copy.registration_ticket_callouts.custom.flat_map(&:forms).sole
-      expect(built).not_to eq(form)
-      expect(built).to be_anonymous
-    end
-
-    it "adds only the missing questions and options to a same-name form, keeping its id and answers" do
+    it "builds a form copy once however many places link to it" do
       form = create(:form, name: "Registration", role: "registration")
-      facilitator = create(:form_field, form: form, name: "Are you a facilitator?", position: 1, field_identifier: "facilitator")
-      facilitator.form_field_answer_options.create!(option_name: "Yes")
-      facilitator.form_field_answer_options.create!(option_name: "No")
-      create(:form_field, form: form, name: "Since when?", position: 2, parent_id: facilitator.id)
-      create(:form_field, form: form, name: "Dietary needs", position: 3)
       event.event_forms.create!(form: form, role: "registration")
-      blueprint = other_environment_blueprint(event)
-      # This environment's copy of the form is older: an earlier wording, one option
-      # and one follow-up question short, plus a question the source has since dropped.
-      facilitator.update!(name: "Facilitator?")
-      facilitator.form_field_answer_options.joins(:answer_option).where(answer_options: { name: "No" }).destroy_all
-      form.form_fields.find_by(name: "Since when?").destroy!
-      form.form_fields.find_by(name: "Dietary needs").update!(name: "Allergies")
-      answer = create(:form_answer, form_field: facilitator)
+      create(:registration_ticket_callout, event: event, form: form)
 
-      service = described_class.new(blueprint, match_by: :natural)
-      copy = service.call(start_on: new_start_on)
+      copy = described_class.new(other_environment_blueprint(event), match_by: :natural).call(start_on: new_start_on)
 
-      expect(copy.registration_form).to eq(form)
-      expect(service.form_changes).to eq(form => { created: false, questions: 2, options: 1 })
-      fields = form.form_fields.order(:position, :id)
-      expect(fields.map(&:name)).to eq([ "Facilitator?", "Since when?", "Allergies", "Dietary needs" ])
-      expect(fields.first.answer_options.map(&:name)).to contain_exactly("Yes", "No")
-      expect(fields.find_by(name: "Since when?").parent_id).to eq(facilitator.id)
-      expect(answer.reload.form_field).to eq(facilitator)
+      expect(copy.registration_ticket_callouts.custom.flat_map(&:forms)).to eq([ copy.registration_form ])
+      expect(Form.where(name: "FROM TEST: Registration").count).to eq(1)
     end
 
-    it "warns when linking a published form to the copy takes its public link offline" do
-      source_form = create(:form, name: "Registration", role: "registration")
-      event.event_forms.create!(form: source_form, role: "registration")
+    it "reuses the form copy from an earlier import" do
+      form = create(:form, name: "CE evaluation", role: "general", anonymous: true)
+      create(:registration_ticket_callout, event: event, form: form)
       blueprint = other_environment_blueprint(event)
-      source_form.destroy!
-      live = create(:form, name: "Registration", role: "registration", slug: "registration", published: true)
 
-      service = described_class.new(blueprint, match_by: :natural)
+      first = described_class.new(blueprint, match_by: :natural).call(start_on: new_start_on)
+      second = described_class.new(blueprint, match_by: :natural).call(start_on: new_start_on)
+
+      forms = [ first, second ].map { |copy| copy.registration_ticket_callouts.custom.flat_map(&:forms).sole }
+      expect(forms.uniq.sole).to have_attributes(name: "FROM TEST: CE evaluation", anonymous: true)
+    end
+
+    it "warns when linking a published form copy takes its public link offline" do
+      form = create(:form, name: "Registration", role: "registration")
+      event.event_forms.create!(form: form, role: "registration")
+      live = create(:form, name: "FROM TEST: Registration", role: "registration", slug: "registration-copy", published: true)
+
+      service = described_class.new(other_environment_blueprint(event), match_by: :natural)
       copy = service.call(start_on: new_start_on)
 
       expect(copy.registration_form).to eq(live)
       expect(live.reload).not_to be_published
-      expect(service.warnings).to include(/Form "Registration" was published/)
+      expect(service.warnings).to include(/Form "FROM TEST: Registration" was published/)
+    end
+
+    it "builds a copy of a survey form, leaving the target's default survey alone" do
+      survey = create(:form, name: "Day 1 evaluation", role: "day_1_survey")
+      create(:registration_ticket_callout, event: event, form: survey)
+
+      copy = described_class.new(other_environment_blueprint(event), match_by: :natural).call(start_on: new_start_on)
+
+      expect(copy.registration_ticket_callouts.custom.flat_map(&:forms).sole).to have_attributes(name: "FROM TEST: Day 1 evaluation", role: "day_1_survey")
+      expect(Form.survey("day_1_survey")).to eq(survey)
     end
 
     describe ".compare" do
-      def payload(event)
-        described_class.console_script(event)[/import\("([^"]+)"\)/, 1]
-      end
-
-      it "reports a form that matches the source and changes nothing" do
+      it "reports each linked form's copy without changing anything" do
         form = create(:form, name: "Registration", role: "registration")
         create(:form_field, form: form, name: "Are you a facilitator?", position: 1)
         event.event_forms.create!(form: form, role: "registration")
-
         script = payload(event)
 
-        expect { described_class.compare(script) }.to output("= Form ##{form.id} \"Registration\" matches\n").to_stdout
-        expect { described_class.compare(script) }.not_to change(Form, :count)
+        expect { described_class.compare(script) }.to output("+ \"FROM TEST: Registration\" isn't here — import builds it\n").to_stdout
+        expect { expect { described_class.compare(script) }.to output.to_stdout }.not_to change(Form, :count)
+        copy = described_class.new(FormTransferService.decode(script), match_by: :natural).call(start_on: new_start_on).registration_form
+        expect { described_class.compare(script) }.to output("= Form ##{copy.id} \"FROM TEST: Registration\" matches\n").to_stdout
       end
-
-      it "reports a form the target doesn't have" do
-        form = create(:form, name: "Registration", role: "registration")
-        event.event_forms.create!(form: form, role: "registration")
-        script = payload(event)
-        form.update!(name: "Renamed in this environment")
-
-        expect { described_class.compare(script) }
-          .to output("+ Form \"Registration\" isn't here — import builds it\n").to_stdout
-      end
-
-      it "lists differing settings, questions, options, resources, and order" do
-        form = create(:form, name: "CE evaluation", role: "general", anonymous: true)
-        useful = create(:form_field, form: form, name: "How useful was it?", position: 1, field_identifier: "useful", required: true)
-        useful.form_field_answer_options.create!(option_name: "Very")
-        useful.form_field_answer_options.create!(option_name: "Not at all")
-        useful.form_field_resources.create!(resource: create(:resource, title: "Handout"))
-        follow_up = create(:form_field, form: form, name: "Why?", position: 2, parent_id: useful.id)
-        create(:form_field, form: form, name: "Anything else?", position: 3)
-        create(:registration_ticket_callout, event: event, form: form)
-        script = payload(event)
-        form.update!(anonymous: false)
-        useful.update!(name: "Was it useful?", required: false, position: 4)
-        useful.form_field_answer_options.joins(:answer_option).where(answer_options: { name: "Not at all" }).destroy_all
-        useful.form_field_answer_options.create!(option_name: "Somewhat")
-        useful.form_field_resources.destroy_all
-        follow_up.update!(parent_id: nil)
-        form.form_fields.find_by(name: "Anything else?").update!(name: "Comments")
-
-        expect { described_class.compare(script) }.to output(<<~OUTPUT).to_stdout
-          ~ Form ##{form.id} "CE evaluation" differs:
-              anonymous: source true, here false
-              "Was it useful?": name: source "How useful was it?", here "Was it useful?"
-              "Was it useful?": required: source true, here false
-              "Was it useful?": missing options Not at all
-              "Was it useful?": extra options Somewhat
-              "Was it useful?": missing resources Handout
-              "Why?": follows a different question
-              missing question "Anything else?"
-              extra question "Comments"
-              questions are in a different order
-        OUTPUT
-      end
-    end
-
-    it "uses the target's form for a survey role rather than building a second one" do
-      survey = create(:form, name: "Day 1 evaluation", role: "day_1_survey")
-      create(:registration_ticket_callout, event: event, form: survey)
-      blueprint = other_environment_blueprint(event)
-      survey.update!(name: "Day 1 evaluation (staging)")
-
-      service = described_class.new(blueprint, match_by: :natural)
-      copy = service.call(start_on: new_start_on)
-
-      expect(copy.registration_ticket_callouts.custom.flat_map(&:forms)).to eq([ survey ])
-      expect(service.form_changes).to eq(survey => { created: false, questions: 0, options: 0 })
     end
   end
 end
