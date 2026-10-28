@@ -1,0 +1,15 @@
+<%# Play icon centered over a video story's image; fill the image's positioned box.
+    Locals: story; compact: true for small thumbnails. %>
+<% if story.youtube_url.present? %>
+  <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+    <% if local_assigns[:compact] %>
+      <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/70">
+        <i class="fa-solid fa-play ml-0.5 text-xs text-gray-800"></i>
+      </span>
+    <% else %>
+      <span class="flex h-14 w-14 items-center justify-center rounded-full bg-white/70">
+        <i class="fa-solid fa-play ml-1 text-lg text-gray-800"></i>
+      </span>
+    <% end %>
+  </div>
+<% end %>

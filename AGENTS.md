@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (78) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (80) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -450,7 +450,8 @@ end
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state; optional `status` targets (`data-field-name` = the field's name) show "Saved" or "Not saved: <reason>" beside a field via `shared/_autosave_status` (dedupe preview, index notes, notification responded toggles)
-- `carousel` — Swiper-based carousels (opt-in `Autoplay` via the options value)
+- `background_video` — Story Share page-wide pause/play toggle for muted background YouTube players and autoplaying carousels (WCAG 2.2.2)
+- `carousel` — Swiper-based carousels (opt-in `Autoplay` via the options value; `setAutoplay` lets `background_video` stop it)
 - `ce_license_picker` — Fill the CE license type/number/state/country/expiry fields from the picked license (or clear them for a new one), opening the "Not on list?" box for a license issued abroad
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce

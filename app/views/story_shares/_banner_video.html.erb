@@ -1,9 +1,14 @@
-<%# Muted, looping YouTube player covering a banner box, decorative so the slide link and swipe stay live.
+<%# Muted, looping YouTube player covering its positioned box, decorative so the slide link and swipe stay live.
+    Sized off the box (container units) so the 16:9 video crops to fill any shape; reduced-motion users keep the still image.
     Locals: story. %>
 <% if (embed_url = youtube_background_embed_url(story.youtube_url)) %>
-  <iframe src="<%= embed_url %>"
-          title="<%= story.title %> video"
-          class="pointer-events-none absolute inset-0 h-full w-full <%= StorySharesHelper::STORY_BANNER_VIDEO_SCALE %>"
-          allow="autoplay; encrypted-media; picture-in-picture"
-          tabindex="-1" aria-hidden="true"></iframe>
+  <div class="[container-type:size] pointer-events-none absolute inset-0 overflow-hidden motion-reduce:hidden">
+    <iframe src="<%= embed_url %>"
+            title="<%= story.title %> video"
+            class="absolute top-1/2 left-1/2 h-[max(100cqh,56.25cqw)] w-[max(100cqw,177.78cqh)] -translate-x-1/2 -translate-y-1/2"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            data-background-video-target="player"
+            data-action="load->background-video#playerLoaded"
+            tabindex="-1" aria-hidden="true"></iframe>
+  </div>
 <% end %>

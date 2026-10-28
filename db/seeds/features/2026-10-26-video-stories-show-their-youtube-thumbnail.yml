@@ -1,0 +1,15 @@
+name: "Video stories show their YouTube thumbnail and a play icon"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-26
+action_path: "/story_share"
+pr_number: 2887
+summary: >-
+  Video stories now show their YouTube thumbnail on Story Share cards, search
+  results, and tag search, with a play icon, so the card matches the video the
+  story opens with. The Story Share home banner plays the top story's video, and
+  a pause button stops every video and slideshow.
+pro_tips:
+  - "To change a video story's card image, change the video's thumbnail on YouTube; uploaded images still show in the story's own carousel."
+  - "Don't add a play button to the image itself — the play icon is added for you, so a baked-in one shows twice."
+  - "Visitors who turn on reduced motion in their device settings see the still image instead of the moving video."
