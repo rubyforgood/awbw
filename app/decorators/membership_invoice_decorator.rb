@@ -22,13 +22,13 @@ class MembershipInvoiceDecorator < ApplicationDecorator
   end
 
   def autopay_action(autopay_ready:)
-    return unless autopay_ready
+    return :pay_now unless autopay_ready
     return :pay_now if latest_attempt&.failed?
     return :pay_now if checkout_session_id.present?
     return :scheduled unless autopay_issued?
-    return :pay_now unless autopay_chargeable?
+    return :none if autopay_chargeable?
 
-    :pending
+    :pay_now
   end
 
   def period_range

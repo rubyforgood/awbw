@@ -55,12 +55,13 @@ RSpec.describe "Membership invoice checkout", type: :request do
     expect(response.body).not_to include("A payment is already in progress for this invoice")
   end
 
-  it "keeps the Pay now control on the profile membership card while a payment is in progress" do
+  it "does not show Pay now on the profile membership card while a payment is in progress" do
     post membership_invoice_checkout_path(invoice)
 
     get person_path(person)
 
-    expect(response.body).to include("Payment in progress", "Pay now")
+    expect(response.body).to include("Payment in progress", "View")
+    expect(response.body).not_to include("Pay now")
   end
 
   it "cancels the Stripe checkout and clears the invoice lock" do

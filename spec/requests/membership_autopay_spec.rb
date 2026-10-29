@@ -203,14 +203,14 @@ RSpec.describe "Membership autopay", type: :request do
     expect(response.body).not_to include("Scheduled for")
   end
 
-  it "shows automatic payment pending on an upcoming invoice when autopay is ready" do
+  it "shows no payment action on an upcoming invoice when autopay is ready" do
     add_card
     invoice = upcoming_invoice(autopay_on: true)
     sign_in create(:user, person: person)
 
     get membership_invoice_path(invoice)
 
-    expect(response.body).to include("Automatic payment pending")
+    expect(response.body).not_to include("Automatic payment pending")
     expect(response.body).not_to include("Scheduled for")
     expect(response.body).not_to include("Pay now")
   end

@@ -33,7 +33,6 @@ RSpec.describe "Membership tooltips", type: :request do
     get person_path(person)
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Pays this invoice once. The card is not saved for automatic payments.")
     expect(response.body).to include("Subscribe")
     expect(response.body).to include("Saves your card, pays the issued invoice now, and turns on automatic payments.")
     expect(response.body).to include("Automatic payments are off. Invoices must be paid manually.")

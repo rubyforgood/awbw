@@ -39,10 +39,11 @@ RSpec.describe "Profile membership invoices", type: :request do
     sign_in create(:user, person:)
     get person_path(person)
 
-    expect(response.body).to include(period(current), period(upcoming), "Receipt", "Pay now")
+    expect(response.body).to include(period(current), period(upcoming), "Receipt", "View")
+    expect(response.body).not_to include("Pay now")
   end
 
-  it "shows automatic payment pending on an upcoming invoice when autopay is ready" do
+  it "shows no payment message on an upcoming invoice when autopay is ready" do
     add_card(person)
     membership = create(:membership, person:, start_date: today + 1.day,
       end_date: today + 1.year, autopay_on: true)
@@ -51,21 +52,26 @@ RSpec.describe "Profile membership invoices", type: :request do
     sign_in create(:user, person:)
     get person_path(person)
 
-    expect(response.body).to include("Automatic payment pending")
+    expect(response.body).to include("Upcoming · $100", "View")
+    expect(response.body).not_to include("Automatic payment pending")
     expect(response.body).not_to include("Scheduled for")
     expect(response.body).not_to include("Pay now")
   end
 
-  it "offers Pay now on an upcoming invoice when autopay has no card" do
+  it "does not show Pay now on the profile; the invoice page has it" do
     membership = create(:membership, person:, start_date: today + 1.day,
       end_date: today + 1.year, autopay_on: true)
-    invoice_for(membership, today + 1.day)
+    invoice = invoice_for(membership, today + 1.day)
 
     sign_in create(:user, person:)
     get person_path(person)
 
+    expect(response.body).to include("View")
+    expect(response.body).not_to include("Pay now")
+
+    get membership_invoice_path(invoice)
+
     expect(response.body).to include("Pay now")
-    expect(response.body).not_to include("Scheduled for")
   end
 
   it "keeps an older unpaid invoice visible" do

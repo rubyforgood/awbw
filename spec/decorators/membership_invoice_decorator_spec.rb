@@ -52,12 +52,12 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
   end
 
   describe "#autopay_action" do
-    it "is nil when autopay is not ready" do
-      expect(invoice.autopay_action(autopay_ready: false)).to be_nil
+    it "offers Pay now when autopay is not ready" do
+      expect(invoice.autopay_action(autopay_ready: false)).to eq(:pay_now)
     end
 
-    it "is pending inside the renewal window" do
-      expect(invoice(start_date: Date.current + 1.day).autopay_action(autopay_ready: true)).to eq(:pending)
+    it "offers no action inside the renewal window when autopay is ready" do
+      expect(invoice(start_date: Date.current + 1.day).autopay_action(autopay_ready: true)).to eq(:none)
     end
 
     it "is scheduled outside the renewal window" do
