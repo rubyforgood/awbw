@@ -261,7 +261,7 @@
     <% if @membership && (allowed_to?(:manage_membership?, @membership) || allowed_to?(:show?, @membership)) %>
       <%= render "people/membership_card", person: @person, membership: @membership,
             autopay: @membership_autopay, has_card: @membership_has_card,
-            invoices: @membership_invoices %>
+            autopay_invoice: @membership_autopay_invoice, invoices: @membership_invoices %>
     <% end %>
     <!-- HIDDEN FROM PROFILE SECTION -->
     <% if allowed_to?(:own_record?, @person) %>

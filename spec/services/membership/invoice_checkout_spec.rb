@@ -34,6 +34,20 @@ RSpec.describe Membership::InvoiceCheckout do
     )
   end
 
+  it "asks Stripe to save the card when requested" do
+    result = described_class.call(invoice:, success_url:, cancel_url:, save_card: true)
+
+    expect(result).to be_success
+    expect(processor).to have_received(:checkout).with(
+      hash_including(
+        payment_intent_data: {
+          metadata: { membership_id: invoice.membership_id, membership_invoice_id: invoice.id },
+          setup_future_usage: "off_session"
+        }
+      )
+    )
+  end
+
   it "resumes an open session without creating another" do
     invoice.update_columns(payment_in_progress_at: 5.minutes.ago, checkout_session_id: "cs_open")
     allow(Stripe::Checkout::Session).to receive(:retrieve)

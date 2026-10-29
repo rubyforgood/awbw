@@ -186,13 +186,23 @@ RSpec.describe Membership::Autopay::Charge do
       expect(latest_attempt.next_attempt_on).to eq(Date.current + 1.day)
     end
 
-    it "refuses to charge before the invoice is due" do
+    it "charges an invoice issued before its start date" do
       invoice.update_columns(start_date: Date.current + 1.day,
         end_date: Date.current + 1.year)
+      stub_intent(status: "succeeded", latest_charge: charge_object)
 
       result = described_class.call(invoice: invoice)
 
-      expect(result.errors).to include("This invoice is not due yet.")
+      expect(result).to be_success
+    end
+
+    it "refuses to charge an invoice outside the automatic payment window" do
+      start_date = Date.current + Membership.renewal_window_days + 1.day
+      invoice.update_columns(start_date:, end_date: start_date + 1.year)
+
+      result = described_class.call(invoice: invoice)
+
+      expect(result.errors).to include("This invoice is outside the automatic payment window.")
       expect(invoice.charge_attempts).to be_empty
     end
 

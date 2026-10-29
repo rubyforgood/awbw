@@ -42,16 +42,17 @@ RSpec.describe "Profile membership invoices", type: :request do
     expect(response.body).to include(period(current), period(upcoming), "Receipt", "Pay now")
   end
 
-  it "shows Scheduled for an upcoming invoice when autopay is ready" do
+  it "shows automatic payment pending on an upcoming invoice when autopay is ready" do
     add_card(person)
     membership = create(:membership, person:, start_date: today + 1.day,
       end_date: today + 1.year, autopay_on: true)
-    upcoming = invoice_for(membership, today + 1.day)
+    invoice_for(membership, today + 1.day)
 
     sign_in create(:user, person:)
     get person_path(person)
 
-    expect(response.body).to include("Scheduled for #{upcoming.start_date.strftime('%b %-d, %Y')}")
+    expect(response.body).to include("Automatic payment pending")
+    expect(response.body).not_to include("Scheduled for")
     expect(response.body).not_to include("Pay now")
   end
 

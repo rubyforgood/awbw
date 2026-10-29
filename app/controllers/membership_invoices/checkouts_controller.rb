@@ -36,7 +36,11 @@ module MembershipInvoices
       )
 
       if result.success?
-        redirect_to membership_invoice_path(invoice), notice: "Payment was cancelled.", status: :see_other
+        if params[:return_to] == "autopay"
+          redirect_to person_path(invoice.person, autopay_setup: "cancelled"), status: :see_other
+        else
+          redirect_to membership_invoice_path(invoice), notice: "Payment was cancelled.", status: :see_other
+        end
       else
         redirect_to membership_invoice_path(invoice),
           alert: result.errors.to_sentence, status: :see_other

@@ -51,6 +51,37 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
     end
   end
 
+  describe "#autopay_action" do
+    it "is nil when autopay is not ready" do
+      expect(invoice.autopay_action(autopay_ready: false)).to be_nil
+    end
+
+    it "is pending inside the renewal window" do
+      expect(invoice(start_date: Date.current + 1.day).autopay_action(autopay_ready: true)).to eq(:pending)
+    end
+
+    it "is scheduled outside the renewal window" do
+      future = invoice(start_date: Date.current + Membership.renewal_window_days + 1.day)
+      expect(future.autopay_action(autopay_ready: true)).to eq(:scheduled)
+    end
+
+    it "is pay now after a failed attempt" do
+      decorated = invoice
+      decorated.object.charge_attempts.create!(
+        attempt_number: 1, status: "failed", amount_cents: 2_500, attempted_at: Time.current
+      )
+
+      expect(decorated.autopay_action(autopay_ready: true)).to eq(:pay_now)
+    end
+
+    it "is pay now when a checkout session is stored" do
+      decorated = invoice
+      decorated.object.update_column(:checkout_session_id, "cs_test_123")
+
+      expect(decorated.autopay_action(autopay_ready: true)).to eq(:pay_now)
+    end
+  end
+
   describe "formatting" do
     it "renders the invoice as a date range" do
       expect(invoice(start_date: Date.new(2026, 10, 14)).period_range).to eq("Oct 14, 2026 – Oct 13, 2027")

@@ -11,18 +11,19 @@ class Membership::InvoiceCheckout
     def success? = cancelled
   end
 
-  def self.call(invoice:, success_url:, cancel_url:)
-    new(invoice:, success_url:, cancel_url:).call
+  def self.call(invoice:, success_url:, cancel_url:, save_card: false)
+    new(invoice:, success_url:, cancel_url:, save_card:).call
   end
 
   def self.cancel(invoice:, session_id: nil)
     new(invoice:).cancel(session_id:)
   end
 
-  def initialize(invoice:, success_url: nil, cancel_url: nil)
+  def initialize(invoice:, success_url: nil, cancel_url: nil, save_card: false)
     @invoice = invoice
     @success_url = success_url
     @cancel_url = cancel_url
+    @save_card = save_card
   end
 
   def call
@@ -94,11 +95,13 @@ class Membership::InvoiceCheckout
     processor = person.stripe_payment_processor
 
     metadata = { membership_id: @invoice.membership_id, membership_invoice_id: @invoice.id }
+    payment_intent_data = { metadata: metadata }
+    payment_intent_data[:setup_future_usage] = "off_session" if @save_card
 
     session = processor.checkout(
       mode: "payment",
       metadata: metadata,
-      payment_intent_data: { metadata: metadata },
+      payment_intent_data: payment_intent_data,
       line_items: [ {
         price_data: {
           currency: Membership::CURRENCY,

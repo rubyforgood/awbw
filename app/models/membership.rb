@@ -81,6 +81,14 @@ class Membership < ApplicationRecord
     membership_invoices.where("start_date > ?", Date.current).order(:start_date).first
   end
 
+  def next_autopay_invoice
+    membership_invoices
+      .not_paid_in_full
+      .where(start_date: ..Date.current + Membership.renewal_window_days)
+      .order(:start_date)
+      .first
+  end
+
   def invoice_coverage_start = membership_invoices.minimum(:start_date)
   def invoice_coverage_end = membership_invoices.maximum(:end_date)
 

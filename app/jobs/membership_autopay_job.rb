@@ -5,12 +5,15 @@ class MembershipAutopayJob < ApplicationJob
     return unless Membership.enabled?
 
     Time.use_zone(Membership::TIME_ZONE) do
-      due_invoices.find_each do |invoice|
+      chargeable_invoices.find_each do |invoice|
         next if invoice.payment_in_progress?
         next if invoice.attempts_exhausted?
 
         last = invoice.latest_attempt
-        next if last&.attempted_at.present? && last.attempted_at.to_date >= Date.current
+        if last&.attempted_at.present? && last.attempted_at.to_date >= Date.current &&
+           !last.needs_card? && !last.failed?
+          next
+        end
         next if last&.pending? || last&.unknown? || last&.needs_action?
 
         card = invoice.person.stripe_customer&.payment_methods&.order(default: :desc, id: :desc)&.first
@@ -38,12 +41,15 @@ class MembershipAutopayJob < ApplicationJob
 
   private
 
-  def due_invoices
+  def chargeable_invoices
+    start_dates = (Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS)..
+      (Date.current + Membership.renewal_window_days)
+
     MembershipInvoice
       .joins(membership: :person)
       .where(memberships: { locked_at: nil, autopay_on: true })
       .merge(MembershipInvoice.not_paid_in_full)
-      .where(start_date: (Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS)..Date.current)
+      .where(start_date: start_dates)
       .includes(membership: :person)
   end
 end

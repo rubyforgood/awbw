@@ -17,6 +17,7 @@ RSpec.describe "Admin membership view", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Annual membership")
     expect(response.body).not_to include("Pay now")
+    expect(response.body).not_to include("Subscribe")
     expect(response.body).not_to include("Turn on automatic payments")
     expect(response.body).not_to include("Add a card & turn on automatic payments")
     expect(response.body).not_to include("Manage card")

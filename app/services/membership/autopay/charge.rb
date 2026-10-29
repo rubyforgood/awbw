@@ -18,7 +18,9 @@ class Membership::Autopay::Charge
   end
 
   def call
-    return failure("This invoice is not due yet.") if @invoice.start_date > Date.current
+    if @invoice.start_date > Date.current + Membership.renewal_window_days
+      return failure("This invoice is outside the automatic payment window.")
+    end
     return failure("This invoice has no balance to pay.") unless @invoice.remaining_cost.positive?
     return failure("A payment is already in progress for this invoice.") if @invoice.payment_in_progress?
     if @invoice.latest_attempt&.succeeded? && @invoice.remaining_cost.positive?

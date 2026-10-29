@@ -23,8 +23,10 @@
     <% if @membership_invoice.remaining_cost.positive? &&
           (!@membership_invoice.payment_in_progress? || @membership_invoice.checkout_session_id.present?) %>
       <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
-        <% if @membership_invoice.upcoming? && autopay_ready &&
-              @membership_invoice.checkout_session_id.blank? %>
+        <% case @membership_invoice.decorate.autopay_action(autopay_ready:) %>
+        <% when :pending %>
+          <p class="text-sm text-gray-600">Automatic payment pending.</p>
+        <% when :scheduled %>
           <p class="text-sm text-gray-600">Scheduled for <%= @membership_invoice.start_date.strftime("%b %-d, %Y") %>.</p>
         <% else %>
           <%= button_to "Pay now", membership_invoice_checkout_path(@membership_invoice),

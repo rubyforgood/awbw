@@ -21,6 +21,15 @@ class MembershipInvoiceDecorator < ApplicationDecorator
     badge("Overdue · #{remaining}", "fa-solid fa-triangle-exclamation", :red)
   end
 
+  def autopay_action(autopay_ready:)
+    return unless autopay_ready
+    return :pay_now if latest_attempt&.failed?
+    return :pay_now if checkout_session_id.present?
+    return :pending if start_date <= Date.current + Membership.renewal_window_days
+
+    :scheduled
+  end
+
   def period_range
     "#{format_date(start_date)} – #{format_date(end_date)}"
   end
