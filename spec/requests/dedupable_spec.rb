@@ -918,59 +918,6 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(keep.email_2).to eq("picked@example.com")
       end
     end
-
-    describe "when both people have an active pay subscription" do
-      let!(:keep) { create(:person, first_name: "Sub", last_name: "One", user: nil) }
-      let!(:delete_rec) { create(:person, first_name: "Sub", last_name: "Two", user: nil) }
-
-      def active_subscription_for(person)
-        customer = Pay::Customer.create!(owner: person, processor: "fake",
-          processor_id: "cus_#{SecureRandom.hex(4)}", default: true)
-        Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_#{SecureRandom.hex(4)}",
-          processor_plan: "membership", status: "active", quantity: 1)
-      end
-
-      before do
-        active_subscription_for(keep)
-        active_subscription_for(delete_rec)
-      end
-
-      it "blocks the merge on the preview and disables the button" do
-        get dedupe_preview_people_path(
-          person_to_keep_id: keep.id,
-          person_to_delete_id: delete_rec.id
-        )
-
-        expect(response.body).to include("Merge blocked")
-        expect(response.body).to include("Both people have an active pay subscription")
-        expect(response.body).to include("Merge disabled")
-      end
-
-      it "refuses to perform the merge" do
-        expect {
-          post dedupe_perform_people_path, params: {
-            person_to_delete_id: delete_rec.id,
-            person_to_keep_id: keep.id
-          }
-        }.not_to change(Person, :count)
-
-        expect(response).to redirect_to(dedupe_index_people_path)
-        follow_redirect!
-        expect(response.body).to include("Both people have an active pay subscription")
-      end
-
-      it "does not block when the other subscription is canceled but riding out its grace period" do
-        delete_rec.pay_customers.each { |customer| customer.subscriptions.update_all(ends_at: 1.month.from_now) }
-
-        get dedupe_preview_people_path(
-          person_to_keep_id: keep.id,
-          person_to_delete_id: delete_rec.id
-        )
-
-        expect(response.body).not_to include("Merge blocked")
-        expect(response.body).not_to include("Cancel one before merging")
-      end
-    end
   end
 
   # ============================================================

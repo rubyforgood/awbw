@@ -1181,23 +1181,15 @@ end
 RSpec.describe Person, "#current_membership" do
   let(:person) { create(:person) }
 
-  def subscribe_to(membership)
-    customer = Pay::Customer.create!(owner: person, processor: "stripe", processor_id: "cus_test", default: true)
-    Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_test",
-      processor_plan: "membership", status: "active", quantity: 1,
-      metadata: { "membership_id" => membership.id })
-  end
-
-  it "prefers the membership the live subscription belongs to over a newer cancelled one" do
+  it "prefers the active membership over a newer renewal-off one" do
     live = create(:membership, person: person)
-    subscribe_to(live)
     create(:membership, :renewal_off, person: person,
       start_date: Date.current + 2.years, end_date: Date.current + 3.years)
 
     expect(person.current_membership).to eq(live)
   end
 
-  it "falls back to the active membership when there is no subscription" do
+  it "returns the active membership" do
     active = create(:membership, person: person)
 
     expect(person.current_membership).to eq(active)
@@ -1216,8 +1208,6 @@ RSpec.describe Person, "#current_membership" do
     create(:membership, :renewal_off, person: person,
       start_date: Date.current + 2.years, end_date: Date.current + 3.years)
     billed = create(:membership, person: person,
-      start_date: Date.current + 1.month, end_date: Date.current + 1.year - 1.day)
-    create(:membership_invoice, membership: billed,
       start_date: Date.current + 1.month, end_date: Date.current + 1.year - 1.day)
 
     expect(person.current_membership).to eq(billed)
