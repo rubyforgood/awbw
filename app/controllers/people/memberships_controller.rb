@@ -1,7 +1,5 @@
 module People
   class MembershipsController < ApplicationController
-    include DollarAmountParsing
-
     before_action :set_person, only: %i[ index new create ]
 
     def index
@@ -27,10 +25,10 @@ module People
       authorize! :membership
 
       start_date = parse_date(params.dig(:membership, :start_date)) || Date.current
-      cost_cents = parse_cents(params.dig(:membership, :cost_dollars))
-      invoice_cost_cents = parse_cents(params.dig(:membership, :first_invoice_cost_dollars))
+      cost_cents = MoneyParser.cents(params.dig(:membership, :cost_dollars))
+      invoice_cost_cents = MoneyParser.cents(params.dig(:membership, :first_invoice_cost_dollars))
 
-      if [ cost_cents, invoice_cost_cents ].include?(DollarAmountParsing::INVALID_AMOUNT)
+      if MoneyParser.invalid?(cost_cents) || MoneyParser.invalid?(invoice_cost_cents)
         @membership = @person.memberships.new(start_date: start_date)
         @errors = [ "Enter the locked price and first invoice as numbers, e.g. 100 or 99.50." ]
         return render :new, status: :unprocessable_content

@@ -1,6 +1,4 @@
 class MembershipsController < ApplicationController
-  include DollarAmountParsing
-
   before_action :set_membership, only: %i[ show edit update destroy ]
 
   def index
@@ -42,8 +40,8 @@ class MembershipsController < ApplicationController
         alert: "Enter both a start and an end date.", status: :see_other
     end
 
-    cost_cents = parse_cents(attrs[:cost_dollars])
-    if cost_cents == DollarAmountParsing::INVALID_AMOUNT
+    cost_cents = MoneyParser.cents(attrs[:cost_dollars])
+    if MoneyParser.invalid?(cost_cents)
       return redirect_to edit_membership_path(@membership),
         alert: "Enter the locked price as a number, e.g. 100 or 99.50.", status: :see_other
     end
