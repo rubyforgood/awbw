@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_120000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -89,7 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
     t.integer "updated_by_id"
     t.string "zip_code", null: false
     t.boolean "invoice_address"
-    t.string "filemaker_code"
+    t.text "filemaker_code"
     t.index ["addressable_type", "addressable_id", "invoice_address"], name: "index_addresses_on_addressable_and_invoice_role"
     t.index ["addressable_type", "addressable_id"], name: "index_addresses_on_addressable"
     t.index ["created_by_id"], name: "index_addresses_on_created_by_id"
@@ -120,7 +120,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
     t.integer "created_by_id"
     t.date "end_date"
     t.bigint "event_registration_id"
-    t.string "filemaker_code"
+    t.text "filemaker_code"
     t.boolean "inactive", default: false, null: false
     t.bigint "organization_address_id"
     t.integer "organization_id", null: false
@@ -460,7 +460,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.string "value", null: false
-    t.string "filemaker_code"
+    t.text "filemaker_code"
     t.index ["address_id"], name: "index_contact_methods_on_address_id"
     t.index ["contactable_type", "contactable_id"], name: "index_contact_methods_on_contactable"
     t.index ["created_by_id"], name: "index_contact_methods_on_created_by_id"
@@ -1477,7 +1477,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
     t.text "description", size: :long
     t.string "email"
     t.date "end_date"
-    t.string "filemaker_code"
+    t.text "filemaker_code"
     t.boolean "high_profile", default: false, null: false
     t.string "internal_id"
     t.boolean "legacy", default: false
@@ -1683,7 +1683,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_142550) do
     t.string "email_2_type"
     t.string "email_type"
     t.string "facebook_url"
-    t.string "filemaker_code"
+    t.text "filemaker_code"
     t.string "first_name", null: false
     t.string "instagram_url"
     t.string "last_name", null: false

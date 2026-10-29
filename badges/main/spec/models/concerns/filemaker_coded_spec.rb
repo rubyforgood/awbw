@@ -59,6 +59,13 @@ RSpec.describe FilemakerCoded do
     it "stores nil for a blank list" do
       expect(create(:person, filemaker_code: " , \t").reload.filemaker_code).to be_nil
     end
+
+    it "holds a list longer than a varchar(255), as merges and imports keep adding codes" do
+      codes = (1..100).map { |n| format("%05d", n) }
+      person = create(:person, filemaker_code: codes.join(","))
+
+      expect(person.reload.filemaker_codes).to eq(codes)
+    end
   end
 
   describe ".filemaker_archives" do
