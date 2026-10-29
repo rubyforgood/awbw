@@ -17,7 +17,7 @@ class Membership::Create
   def call
     membership = nil
 
-    Membership.transaction do
+    @person.with_lock do
       membership = @person.memberships.create!(
         start_date: @start_date,
         end_date: @start_date + Membership::INVOICE_PERIOD - 1.day,
