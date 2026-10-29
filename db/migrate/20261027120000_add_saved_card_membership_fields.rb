@@ -1,6 +1,5 @@
 class AddSavedCardMembershipFields < ActiveRecord::Migration[8.1]
   def change
-    add_column :people, :autopay_on, :boolean, default: false, null: false
     add_column :memberships, :locked_at, :datetime
     add_column :membership_invoices, :payment_in_progress_at, :datetime
 

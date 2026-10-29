@@ -81,10 +81,6 @@ class Membership < ApplicationRecord
     membership_invoices.where("start_date > ?", Date.current).order(:start_date).first
   end
 
-  def invoices_due
-    membership_invoices.not_paid_in_full.where(start_date: ..Date.current)
-  end
-
   def invoice_coverage_start = membership_invoices.minimum(:start_date)
   def invoice_coverage_end = membership_invoices.maximum(:end_date)
 
