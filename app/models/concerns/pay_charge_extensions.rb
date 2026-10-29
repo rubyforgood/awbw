@@ -21,15 +21,9 @@ module PayChargeExtensions
       create_bulk_payment(form_submission_id)
     elsif (membership_invoice_id = metadata["membership_invoice_id"])
       create_membership_invoice_payment(membership_invoice_id)
-    elsif (membership_id = membership_id_from_metadata)
-      create_membership_payment(membership_id)
     elsif (person_id = metadata["person_id"])
       create_donation_payment(person_id)
     end
-  end
-
-  def membership_id_from_metadata
-    metadata["membership_id"]
   end
 
   def create_membership_invoice_payment(invoice_id)
@@ -39,17 +33,6 @@ module PayChargeExtensions
     person = invoice.person
     return unless person
 
-    record_membership_payment(person: person, invoice: invoice)
-  end
-
-  def create_membership_payment(membership_id)
-    membership = Membership.find_by(id: membership_id)
-    return unless membership
-
-    person = membership.person
-    return unless person
-
-    invoice = Membership::EnsureInvoice.call(membership: membership, covering: invoice_period_date)
     record_membership_payment(person: person, invoice: invoice)
   end
 
@@ -82,16 +65,6 @@ module PayChargeExtensions
           context: { membership_invoice_id: invoice.id, external_payment_id: payment.id, amount: allocation_amount }
         )
       end
-    end
-
-    if metadata["autopay"] == "true"
-      Membership.find_by(id: metadata["membership_id"])&.update!(autopay_on: true)
-    end
-  end
-
-  def invoice_period_date
-    Time.use_zone(Membership::TIME_ZONE) do
-      (created_at || Time.current).to_date
     end
   end
 
