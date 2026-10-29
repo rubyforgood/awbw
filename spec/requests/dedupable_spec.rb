@@ -1346,6 +1346,16 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).not_to include("Merge blocked")
       end
 
+      it "previews a login with sign-in history, whose visits and events have no model of their own" do
+        visit = Ahoy::Visit.create!(visit_token: SecureRandom.uuid, visitor_token: SecureRandom.uuid, user_id: delete_rec.id, started_at: Time.current)
+        Ahoy::Event.create!(visit: visit, name: "auth.sign_in", time: Time.current, user_id: delete_rec.id)
+
+        get dedupe_preview_users_path(user_to_keep_id: keep.id, user_to_delete_id: delete_rec.id)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Ahoy visits", "Ahoy events")
+      end
+
       it "blocks merging logins that belong to different people" do
         delete_rec.update!(person: create(:person, first_name: "Other", last_name: "Human", user: nil))
 
