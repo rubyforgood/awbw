@@ -41,7 +41,8 @@ Ask in order, and stop at the first yes:
 1. **Is it internal staff data?** → admin-only.
 2. **Does it identify the person or log them in?** → request a change, or admin-set. An
    owner who could set it could claim someone else's records. `email_2` is matched by
-   `PersonMatcher` and the duplicate finders, so it's admin-set.
+   `PersonMatcher` and the duplicate finders, so it's request a change. Each email's type
+   follows its email.
 3. **Is it shared with other people's records?** → request a change. An organization's name
    is the same for everyone affiliated with it. Affiliations drive program status
    (ADR-0003).
@@ -93,7 +94,7 @@ read-only with a "Request a change" link · 🔵 admin-only (admin styling) · �
 | Badges (years, author, sector leader, …) | Always public (derived) | — | — | ✅ | ✅ | ✅ | — | — |
 | Pronouns | Shared by choice | — | — | 🔀 | 👁 | 👁 | ✅ | ✅ |
 | Primary email | Request a change | 🔀 | ✅ | 🔀 | 👁 | 👁 | 📨 | 🔒 edited on the user |
-| Primary email type | Shared by choice (with the email) | 🔀 | ✅ | 🔀 | 👁 | 👁 | ✅ | ✅ |
+| Primary email type | Request a change (with the email) | 🔀 | ✅ | 🔀 | 👁 | 👁 | 📨 | ✅ |
 | Primary phone | Shared by choice | — | — | 🔀 | 👁 | 👁 | ✅ | ✅ |
 | Social media links | Shared by choice | 🔀 | ✅ | 🔀 | 👁 | 👁 | ✅ | ✅ |
 | Bio | Shared by choice | — | — | 🔀 | 👁 | 👁 | ✅ | ✅ |
@@ -111,8 +112,7 @@ read-only with a "Request a change" link · 🔵 admin-only (admin styling) · �
 | Legal first name, pronunciation, birthday, time zone | Private | — | — | — | — | 🔵 | ✅ | ✅ |
 | Addresses, other phones, best time to call | Private | — | — | — | — | 🔵 | ✅ | ✅ |
 | Program settings | Private | — | — | — | — | 🔵 | ✅ | ✅ |
-| Secondary email | Admin-set | — | — | — | — | 🔵 | 🔒 | ✅ |
-| Secondary email type | Private | — | — | — | — | 🔵 | ✅ (with a secondary email) | ✅ |
+| Secondary email, type | Request a change | — | — | — | — | 🔵 | 📨 | ✅ |
 | Membership | Private | — | filter only | — | ✅ | on the edit page | — | 🔵 |
 | Communications | Admin-only (owner sees their own) | — | — | — | — | 🔵 | 🔒 | ✅ |
 | Blog contributor | Admin-set (shown as a badge) | — | — | badge | badge | badge | — | 🔵 |
