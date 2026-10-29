@@ -126,7 +126,8 @@ RSpec.describe Membership::Autopay::Charge do
 
     it "leaves a succeeded charge unresolved when another payment settled the invoice" do
       allow(Pay::Stripe::Charge).to receive(:sync) do
-        other_payment = create(:payment, amount_cents: invoice.cost_cents)
+        other_payment = create(:external_processor_payment,
+          person: person, amount_cents: invoice.cost_cents, amount_cents_remaining: invoice.cost_cents)
         create(:allocation, source: other_payment, allocatable: invoice, amount: invoice.cost_cents)
         pay_charge
       end
