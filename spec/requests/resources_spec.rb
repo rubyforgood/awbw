@@ -184,7 +184,7 @@ RSpec.describe "/resources", type: :request do
       resource = Resource.create! valid_attributes.merge(filemaker_code: "Q10215")
       get edit_resource_url(resource)
 
-      expect(response.body).to include('value="Q10215"')
+      expect(response.body).to match(%r{<textarea[^>]*name="resource\[filemaker_code\]"[^>]*>\s*Q10215</textarea>})
       expect(response.body).not_to include("table=quotations")
     end
   end
