@@ -48,17 +48,15 @@ RSpec.describe "People with profiles enabled", type: :request do
       expect(person.reload.bio).to eq("Facilitator since 2015")
     end
 
-    it "updates their time zone but ignores email types" do
-      person.update!(email_type: "personal", email_2: "second@example.com", email_2_type: "work")
-
+    it "updates their email types and time zone" do
       patch person_path(person), params: { person: {
         email_type: "work",
         email_2_type: "personal",
         user_attributes: { id: owner_user.id, time_zone: "Hawaii" }
       } }
 
-      expect(person.reload.email_type).to eq("personal")
-      expect(person.email_2_type).to eq("work")
+      expect(person.reload.email_type).to eq("work")
+      expect(person.email_2_type).to eq("personal")
       expect(owner_user.reload.time_zone).to eq("Hawaii")
     end
 
