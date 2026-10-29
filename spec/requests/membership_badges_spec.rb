@@ -21,14 +21,14 @@ RSpec.describe "Membership badges", type: :request do
     expect(response.body).to include("Upcoming · $100")
   end
 
-  it "does not label an upcoming invoice as scheduled on the profile" do
+  it "offers Pay now on an upcoming invoice when autopay is off" do
     person = create(:person)
     upcoming_membership(person)
     sign_in create(:user, person: person)
 
     get person_path(person)
 
+    expect(response.body).to include("Pay now", "Upcoming · $100")
     expect(response.body).not_to include("Scheduled for")
-    expect(response.body).to include("Upcoming · $100")
   end
 end

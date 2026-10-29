@@ -763,11 +763,11 @@ class PeopleController < ApplicationController
     @membership = @person.current_membership&.decorate
     return unless @membership
 
-    @membership_invoices = @membership.object.membership_invoices
-      .not_paid_in_full
-      .includes(:allocations)
-      .order(:start_date)
-      .to_a
+    invoices = @membership.object.membership_invoices.includes(:allocations).to_a
+    current = invoices.select(&:active_on?)
+    upcoming = invoices.select(&:upcoming?).min_by(&:start_date)
+    unpaid = invoices.reject(&:paid_in_full?)
+    @membership_invoices = (current + [ upcoming ] + unpaid).compact.uniq.sort_by(&:start_date)
     @membership_autopay = @membership.autopay_on?
     @membership_has_card = @person.stripe_customer&.payment_methods&.exists? || false
   end
