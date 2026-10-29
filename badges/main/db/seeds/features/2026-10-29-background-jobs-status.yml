@@ -1,0 +1,11 @@
+name: "See whether background jobs are running"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-29
+action_path: "/admin/data_health"
+summary: >-
+  Data health now opens with a Background jobs light showing whether emails,
+  Stripe payment updates, and other background work are going out.
+pro_tips:
+  - "Red means the job runner has stopped checking in or work has waited over an hour. Restarting the app usually fixes it."
+  - "After a restart, use Retry them to rerun anything that was mid-run when the runner stopped. Emails that already went out won't send twice."
