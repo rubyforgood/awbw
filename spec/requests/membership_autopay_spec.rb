@@ -151,15 +151,11 @@ RSpec.describe "Membership autopay", type: :request do
     expect(response.body).not_to include("Pay now")
   end
 
-  it "tells an admin when a customer payment is in progress instead of offering a card charge" do
-    add_card
+  it "tells an admin when a customer payment is in progress" do
     invoice = upcoming_invoice
+    invoice.update_column(:payment_in_progress_at, Time.current)
     sign_in create(:user, :admin)
 
-    get membership_invoice_path(invoice)
-    expect(response.body).to include("Charge saved card")
-
-    invoice.update_column(:payment_in_progress_at, Time.current)
     get membership_invoice_path(invoice)
 
     expect(response.body).to include("A customer payment is in progress")

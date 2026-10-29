@@ -92,13 +92,6 @@ RSpec.describe MembershipInvoicePolicy, type: :policy do
     end
   end
 
-  describe "#charge?" do
-    it "allows an admin only" do
-      expect(policy_for(user: admin)).to be_allowed_to(:charge?)
-      expect(policy_for(user: owner)).not_to be_allowed_to(:charge?)
-    end
-  end
-
   describe "#show_public?" do
     it "allows while memberships are enabled and denies when disabled" do
       expect(policy_for(user: owner)).to be_allowed_to(:show_public?)

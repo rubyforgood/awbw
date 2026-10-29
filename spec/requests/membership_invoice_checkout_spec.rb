@@ -52,13 +52,9 @@ RSpec.describe "Membership invoice checkout", type: :request do
   end
 
   it "tells an admin when a customer payment is in progress" do
-    allow(processor).to receive(:payment_methods).and_return(double(exists?: true))
+    invoice.update_column(:payment_in_progress_at, Time.current)
     sign_in create(:user, :admin)
 
-    get membership_invoice_path(invoice)
-    expect(response.body).to include("Charge saved card")
-
-    invoice.update_column(:payment_in_progress_at, Time.current)
     get membership_invoice_path(invoice)
 
     expect(response.body).to include("A customer payment is in progress")

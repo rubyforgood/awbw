@@ -2,7 +2,6 @@ class MembershipInvoicePolicy < ApplicationPolicy
   alias_rule :receipt?, to: :show?
   alias_rule :create?, to: :new?
   alias_rule :update?, to: :edit?
-  alias_rule :charge?, to: :manage?
 
   def manage? = admin? && Membership.enabled?
 

@@ -1,10 +1,6 @@
 <% invoice = membership_invoice.decorate %>
 <% can_edit = allowed_to?(:edit?, membership_invoice) %>
 <% can_delete = allowed_to?(:destroy?, membership_invoice) && membership_invoice.deletion_blocked_reason.nil? %>
-<% can_charge = allowed_to?(:charge?, membership_invoice) &&
-                membership_invoice.remaining_cost.positive? &&
-                !membership_invoice.payment_in_progress? &&
-                membership_invoice.person.payment_processor&.payment_methods&.exists? %>
 <% next_year = membership_invoice.id == membership_invoice.membership.next_invoice&.id %>
 <% deletion_blocked_reason = membership_invoice.deletion_blocked_reason %>
 
@@ -22,12 +18,6 @@
         <%= link_to "Edit invoice details", edit_membership_invoice_path(membership_invoice),
               class: button_classes(:secondary_outline, size: :sm),
               title: "Cost can't change after a payment or credit is applied." %>
-      <% end %>
-      <% if can_charge %>
-        <%= button_to "Charge saved card", membership_invoice_charge_attempts_path(membership_invoice),
-              method: :post, class: button_classes(:secondary_outline, size: :sm),
-              title: "Charges the saved card for the remaining balance now.",
-              data: { turbo_confirm: "Charge the card on file for the remaining balance?" } %>
       <% end %>
       <% if can_delete %>
         <% if next_year %>
@@ -47,8 +37,8 @@
 
   <% if membership_invoice.payment_in_progress? %>
     <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-      A customer payment is in progress. This invoice can't be edited, deleted, or charged from here until
-      the checkout finishes or expires.
+      A customer payment is in progress. This invoice can't be edited or deleted from here until the
+      checkout finishes or expires.
     </div>
   <% end %>
 

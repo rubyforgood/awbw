@@ -388,7 +388,6 @@ Rails.application.routes.draw do
   resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ] do
     get :receipt, on: :member
     resource :checkout, only: [ :create ], controller: "membership_invoices/checkouts"
-    resources :charge_attempts, only: [ :create ], controller: "membership_invoices/charge_attempts"
   end
 
   namespace :memberships do

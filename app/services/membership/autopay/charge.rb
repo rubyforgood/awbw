@@ -3,8 +3,8 @@ class Membership::Autopay::Charge
     def success? = errors.blank?
   end
 
-  def self.call(invoice:, actor: nil)
-    new(invoice:, actor:).call
+  def self.call(invoice:)
+    new(invoice:).call
   end
 
   # Re-read an unresolved attempt's PaymentIntent through Pay and run it through
@@ -13,9 +13,8 @@ class Membership::Autopay::Charge
     new(invoice: attempt.membership_invoice).reconcile(attempt)
   end
 
-  def initialize(invoice:, actor: nil)
+  def initialize(invoice:)
     @invoice = invoice
-    @actor = actor
   end
 
   def call
