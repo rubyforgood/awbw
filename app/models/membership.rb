@@ -140,7 +140,12 @@ class Membership < ApplicationRecord
 
   def lock_for_history!
     transaction do
-      Membership::RemoveNextYear.call(membership: self)
+      result = Membership::RemoveNextYear.call(membership: self)
+      unless result.success?
+        errors.add(:base, result.errors.to_sentence)
+        raise ActiveRecord::RecordInvalid.new(self)
+      end
+
       update!(locked_at: Time.current, renewal_off_at: renewal_off_at || Time.current, autopay_on: false)
     end
   end
