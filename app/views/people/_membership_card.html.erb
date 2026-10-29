@@ -96,7 +96,7 @@
                 <p class="text-sm text-gray-700">Automatic payments are on for any invoice already issued.</p>
                 <div class="flex flex-wrap items-center gap-2">
                   <%= button_to "Turn off automatic payments", membership_autopay_path(membership),
-                        method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                        method: :delete, class: button_classes(:secondary_outline, size: :sm),
                         title: turn_off_tooltip,
                         data: { turbo_confirm: "Turn off automatic payments for invoices already issued?" } %>
                 </div>
@@ -104,7 +104,7 @@
                 <p class="text-sm text-gray-700">Automatic payments are marked on, but no card is on file. Existing invoices will need to be paid manually.</p>
                 <div class="flex flex-wrap items-center gap-2">
                   <%= button_to "Turn off automatic payments", membership_autopay_path(membership),
-                        method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                        method: :delete, class: button_classes(:secondary_outline, size: :sm),
                         title: turn_off_tooltip %>
                 </div>
               <% end %>
@@ -114,7 +114,7 @@
                       class: button_classes(:secondary_outline, size: :sm),
                       title: manage_card_tooltip, data: { turbo: false } %>
                 <%= button_to "Turn off automatic payments", membership_autopay_path(membership),
-                      method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                      method: :delete, class: button_classes(:secondary_outline, size: :sm),
                       title: turn_off_tooltip,
                       data: { turbo_confirm: "Turn off automatic card payments? Your membership will still renew, and you'll receive invoices to pay manually." } %>
               </div>
@@ -123,7 +123,7 @@
               <div class="flex flex-wrap items-center gap-2">
                 <%= render "people/autopay_subscribe", membership: membership, tooltip: subscribe_tooltip %>
                 <%= button_to "Turn off automatic payments", membership_autopay_path(membership),
-                      method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                      method: :delete, class: button_classes(:secondary_outline, size: :sm),
                       title: turn_off_tooltip %>
               </div>
             <% elsif has_card %>

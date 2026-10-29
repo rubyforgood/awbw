@@ -65,6 +65,11 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
       expect(future.autopay_action(autopay_ready: true)).to eq(:scheduled)
     end
 
+    it "is pay now for an invoice older than the retry window" do
+      past = invoice(start_date: Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS - 1.day)
+      expect(past.autopay_action(autopay_ready: true)).to eq(:pay_now)
+    end
+
     it "is pay now after a failed attempt" do
       decorated = invoice
       decorated.object.charge_attempts.create!(

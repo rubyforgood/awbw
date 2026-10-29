@@ -70,7 +70,7 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def autopay_tooltip(has_card:)
-    return "Automatic payments are on and a card is on file. We'll charge your saved card when an invoice is due." if autopay_on? && has_card
+    return "Automatic payments are on and a card is on file. We'll charge your saved card when an invoice is issued." if autopay_on? && has_card
     return "Automatic payments are on, but no card is available." if autopay_on?
 
     "Automatic payments are off. Invoices must be paid manually."

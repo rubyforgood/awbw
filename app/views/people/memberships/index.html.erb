@@ -65,7 +65,7 @@
           <div class="flex flex-wrap items-center gap-2">
             <% if membership.autopay_on? %>
               <%= button_to "Turn off autopay", membership_autopay_path(membership),
-                    method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                    method: :delete, class: button_classes(:secondary_outline, size: :sm),
                     title: "Stops automatic card charges for this membership. Renewal is unchanged.",
                     data: { turbo_confirm: "Turn off automatic card payments for this membership?" } %>
             <% end %>

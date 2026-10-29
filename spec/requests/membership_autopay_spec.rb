@@ -25,7 +25,7 @@ RSpec.describe "Membership autopay", type: :request do
     add_card
     sign_in create(:user, person: person)
 
-    expect { post membership_autopay_setup_path(membership) }
+    expect { post membership_autopay_path(membership) }
       .to have_enqueued_job(MembershipAutopayJob)
 
     expect(response).to redirect_to(person_path(person))
@@ -37,7 +37,7 @@ RSpec.describe "Membership autopay", type: :request do
       .and_return(double(url: "https://stripe.test/setup"))
     sign_in create(:user, person: person)
 
-    post membership_autopay_setup_path(membership)
+    post membership_autopay_path(membership)
 
     expect(response).to redirect_to("https://stripe.test/setup")
     expect(session[:autopay_setup_membership_id]).to eq(membership.id)
@@ -55,7 +55,7 @@ RSpec.describe "Membership autopay", type: :request do
     end
     sign_in create(:user, person: person)
 
-    post membership_autopay_setup_path(membership)
+    post membership_autopay_path(membership)
 
     expect(response).to redirect_to(fake_session.url)
     expect(checkout_args[:mode]).to eq("payment")
@@ -71,7 +71,7 @@ RSpec.describe "Membership autopay", type: :request do
       .and_return(double(id: "cs_subscribe", url: "https://stripe.test/subscribe", status: "open"))
     sign_in create(:user, person: person)
 
-    post membership_autopay_setup_path(membership)
+    post membership_autopay_path(membership)
     get person_path(person, membership_invoice_checkout: "success", autopay: "1")
 
     expect(membership.reload.autopay_on?).to be(true)
@@ -91,7 +91,7 @@ RSpec.describe "Membership autopay", type: :request do
       .and_return(double(status: "expired"))
     sign_in create(:user, person: person)
 
-    post membership_autopay_setup_path(membership)
+    post membership_autopay_path(membership)
     get cancel_checkout_membership_invoice_path(invoice, return_to: "autopay")
 
     expect(response).to redirect_to(person_path(person, autopay_setup: "cancelled"))
@@ -102,7 +102,7 @@ RSpec.describe "Membership autopay", type: :request do
     membership.update!(autopay_on: true)
     sign_in create(:user, :admin)
 
-    patch membership_autopay_path(membership)
+    delete membership_autopay_path(membership)
 
     expect(response).to redirect_to(membership_path(membership))
     expect(membership.reload.autopay_on?).to be(false)
@@ -111,7 +111,7 @@ RSpec.describe "Membership autopay", type: :request do
   it "does not let an admin subscribe" do
     sign_in create(:user, :admin)
 
-    expect { post membership_autopay_setup_path(membership) }.not_to have_enqueued_job(MembershipAutopayJob)
+    expect { post membership_autopay_path(membership) }.not_to have_enqueued_job(MembershipAutopayJob)
     expect(membership.reload.autopay_on?).to be(false)
   end
 
@@ -119,7 +119,7 @@ RSpec.describe "Membership autopay", type: :request do
     sign_in create(:user, person: person)
     allow(Membership).to receive(:enabled?).and_return(false)
 
-    patch membership_autopay_path(membership)
+    delete membership_autopay_path(membership)
 
     expect(response).to redirect_to(root_path)
     expect(membership.reload.autopay_on?).to be(false)
@@ -140,7 +140,7 @@ RSpec.describe "Membership autopay", type: :request do
       .and_return(double(url: "https://stripe.test/setup"))
     sign_in create(:user, person: person)
 
-    post membership_autopay_setup_path(membership)
+    post membership_autopay_path(membership)
     Pay::Stripe::PaymentMethod.create!(customer: person.payment_processor,
       processor_id: "pm_test_#{SecureRandom.hex(4)}",
       payment_method_type: "card",
@@ -157,7 +157,7 @@ RSpec.describe "Membership autopay", type: :request do
       .and_return(double(url: "https://stripe.test/setup"))
     sign_in create(:user, person: person)
 
-    post membership_autopay_setup_path(membership)
+    post membership_autopay_path(membership)
     get person_path(person, autopay_setup: "success")
 
     expect(membership.reload.autopay_on?).to be(true)
