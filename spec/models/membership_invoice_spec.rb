@@ -30,6 +30,35 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
+  describe "#cost_dollars=" do
+    it "parses a valid dollar amount" do
+      invoice = build(:membership_invoice, cost_cents: 2_500)
+
+      invoice.cost_dollars = "99.50"
+
+      expect(invoice.cost_cents).to eq(9_950)
+      expect(invoice).to be_valid
+    end
+
+    it "rejects a malformed amount without changing the stored amount" do
+      invoice = build(:membership_invoice, cost_cents: 2_500)
+
+      invoice.cost_dollars = "abc"
+
+      expect(invoice).not_to be_valid
+      expect(invoice.errors[:cost_dollars]).to be_present
+      expect(invoice.cost_cents).to eq(2_500)
+    end
+
+    it "leaves the amount unchanged when blank" do
+      invoice = build(:membership_invoice, cost_cents: 2_500)
+
+      invoice.cost_dollars = ""
+
+      expect(invoice.cost_cents).to eq(2_500)
+    end
+  end
+
   describe "#payment_in_progress?" do
     it "is true while a checkout is inside the one-hour window" do
       invoice = create(:membership_invoice)
@@ -45,7 +74,31 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(invoice).not_to be_payment_in_progress
     end
 
-    it "is false when no checkout has started" do
+    it "is true while a recent autopay attempt is pending" do
+      invoice = create(:membership_invoice)
+      invoice.charge_attempts.create!(
+        attempt_number: 1,
+        status: "pending",
+        amount_cents: 100,
+        attempted_at: 5.minutes.ago
+      )
+
+      expect(invoice).to be_payment_in_progress
+    end
+
+    it "is false when the only pending attempt is stale" do
+      invoice = create(:membership_invoice)
+      invoice.charge_attempts.create!(
+        attempt_number: 1,
+        status: "pending",
+        amount_cents: 100,
+        attempted_at: 61.minutes.ago
+      )
+
+      expect(invoice).not_to be_payment_in_progress
+    end
+
+    it "is false when no checkout or pending attempt exists" do
       expect(create(:membership_invoice)).not_to be_payment_in_progress
     end
   end

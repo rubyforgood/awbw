@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<% has_card = @person.payment_processor&.payment_methods&.exists? || false %>
+<% has_card = @person.stripe_customer&.payment_methods&.exists? || false %>
 <% offer_new_membership = @memberships.none? { |membership| !membership.locked? && (membership.active? || membership.upcoming?) } %>
 
 <div class="border-primary/10 mx-auto max-w-3xl rounded-2xl border bg-white p-4 shadow-sm sm:p-6">

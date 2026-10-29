@@ -8,8 +8,7 @@ RSpec.describe Membership::InvoiceCheckout do
   let(:cancel_url) { "https://example.test/payment/cancelled" }
 
   before do
-    allow_any_instance_of(Person).to receive(:set_payment_processor)
-    allow_any_instance_of(Person).to receive(:payment_processor).and_return(processor)
+    allow_any_instance_of(Person).to receive(:stripe_payment_processor).and_return(processor)
     allow(processor).to receive(:checkout).and_return(fake_session)
   end
 
@@ -44,6 +43,18 @@ RSpec.describe Membership::InvoiceCheckout do
 
     expect(checkout).to be_nil
     expect(invoice.reload.payment_in_progress_at).to be_within(1.second).of(timestamp)
+    expect(processor).not_to have_received(:checkout)
+  end
+
+  it "refuses while an autopay attempt is pending" do
+    invoice.charge_attempts.create!(
+      attempt_number: 1,
+      status: "pending",
+      amount_cents: 100,
+      attempted_at: 5.minutes.ago
+    )
+
+    expect(checkout).to be_nil
     expect(processor).not_to have_received(:checkout)
   end
 

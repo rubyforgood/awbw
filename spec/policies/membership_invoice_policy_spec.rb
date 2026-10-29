@@ -73,6 +73,17 @@ RSpec.describe MembershipInvoicePolicy, type: :policy do
       expect(policy_for(user: admin)).not_to be_allowed_to(:edit?)
     end
 
+    it "denies edit while an autopay attempt is pending" do
+      invoice.charge_attempts.create!(
+        attempt_number: 1,
+        status: "pending",
+        amount_cents: 100,
+        attempted_at: 5.minutes.ago
+      )
+
+      expect(policy_for(user: admin)).not_to be_allowed_to(:edit?)
+    end
+
     it "denies an owner" do
       expect(policy_for(user: owner)).not_to be_allowed_to(:edit?)
     end

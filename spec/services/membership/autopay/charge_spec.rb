@@ -124,6 +124,20 @@ RSpec.describe Membership::Autopay::Charge do
       expect(latest_attempt).to have_attributes(status: "unknown", error_code: "allocation_failed")
     end
 
+    it "leaves a succeeded charge unresolved when another payment settled the invoice" do
+      allow(Pay::Stripe::Charge).to receive(:sync) do
+        other_payment = create(:payment, amount_cents: invoice.cost_cents)
+        create(:allocation, source: other_payment, allocatable: invoice, amount: invoice.cost_cents)
+        pay_charge
+      end
+      stub_intent(status: "succeeded", latest_charge: charge_object(id: "ch_test"))
+
+      result = described_class.call(invoice: invoice)
+
+      expect(result).not_to be_success
+      expect(latest_attempt).to have_attributes(status: "unknown", error_code: "allocation_failed")
+    end
+
     it "leaves a succeeded charge unresolved when Pay cannot record it" do
       allow(Pay::Stripe::Charge).to receive(:sync).and_raise(StandardError, "Stripe is down")
       stub_intent(status: "succeeded", latest_charge: charge_object)
@@ -180,6 +194,20 @@ RSpec.describe Membership::Autopay::Charge do
 
       expect(result.errors).to include("This invoice is not due yet.")
       expect(invoice.charge_attempts).to be_empty
+    end
+
+    it "refuses while an autopay attempt is already pending" do
+      invoice.charge_attempts.create!(
+        attempt_number: 1,
+        status: "pending",
+        amount_cents: invoice.remaining_cost,
+        attempted_at: 5.minutes.ago
+      )
+
+      result = described_class.call(invoice: invoice)
+
+      expect(result.errors).to include("A payment is already in progress for this invoice.")
+      expect(invoice.charge_attempts.count).to eq(1)
     end
   end
 

@@ -22,7 +22,7 @@ class MembershipsController < ApplicationController
     @membership_invoices = @membership.membership_invoices.includes(:allocations).to_a
     @next_invoice = @membership.next_invoice
     @autopay_on = @membership.autopay_on?
-    @has_card = @person.payment_processor&.payment_methods&.exists? || false
+    @has_card = @person.stripe_customer&.payment_methods&.exists? || false
   end
 
   def edit

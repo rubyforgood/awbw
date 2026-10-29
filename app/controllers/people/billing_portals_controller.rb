@@ -5,8 +5,8 @@ module People
     def create
       authorize! @person, to: :manage_payment_methods?
 
-      @person.set_payment_processor :stripe
-      session = @person.payment_processor.billing_portal(
+      processor = @person.stripe_payment_processor
+      session = processor.billing_portal(
         return_url: person_url(@person)
       )
       redirect_to session.url, allow_other_host: true, status: :see_other

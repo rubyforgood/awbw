@@ -6,15 +6,15 @@ module Memberships
       authorize! @membership, to: :enable_autopay?
 
       person = @membership.person
-      person.set_payment_processor :stripe
+      processor = person.stripe_payment_processor
 
-      if person.payment_processor.payment_methods.exists?
+      if processor.payment_methods.exists?
         @membership.update!(autopay_on: true)
         return redirect_to person_path(@membership.person),
           notice: "Automatic payments are on.", status: :see_other
       end
 
-      checkout_session = person.payment_processor.checkout(
+      checkout_session = processor.checkout(
         mode: "setup",
         currency: Membership::CURRENCY,
         success_url: person_url(@membership.person, autopay_setup: "success"),

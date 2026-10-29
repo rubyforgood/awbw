@@ -2,7 +2,7 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
 <% admin = allowed_to?(:manage?, @membership_invoice) %>
 <% autopay_ready = @membership_invoice.membership.autopay_on? &&
-                   @membership_invoice.person.payment_processor&.payment_methods&.exists? %>
+                   @membership_invoice.person.stripe_customer&.payment_methods&.exists? %>
 
 <%
   back_path, back_label =

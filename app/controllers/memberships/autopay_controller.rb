@@ -24,7 +24,7 @@ module Memberships
     end
 
     def card_on_file?
-      @membership.person.payment_processor&.payment_methods&.exists? || false
+      @membership.person.stripe_customer&.payment_methods&.exists? || false
     end
 
     def autopay_destination

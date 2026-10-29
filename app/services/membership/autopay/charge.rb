@@ -25,7 +25,7 @@ class Membership::Autopay::Charge
       return failure("The last charge succeeded but has not been applied yet.")
     end
 
-    processor = @invoice.person.payment_processor
+    processor = @invoice.person.stripe_payment_processor
     card = processor&.payment_methods&.order(default: :desc, id: :desc)&.first
     return failure("No card is on file for this member.") if processor.blank? || card.blank?
 
@@ -55,6 +55,7 @@ class Membership::Autopay::Charge
   def create_attempt
     @invoice.with_lock do
       @invoice.reload
+      return failure("A payment is already in progress for this invoice.") if @invoice.payment_in_progress?
       return failure("This invoice has no balance to pay.") unless @invoice.remaining_cost.positive?
 
       return failure("A charge is already in progress for this invoice.") if @invoice.charge_attempts.pending.exists?
@@ -178,8 +179,6 @@ class Membership::Autopay::Charge
   # received it. Pay's after_save_commit creates the payment and allocation
   # before sync returns, so this is a cheap verification, not a repair.
   def payment_applied?(pay_charge)
-    return true if @invoice.reload.paid_in_full?
-
     payment = ExternalProcessorPayment.find_by(stripe_charge_id: pay_charge.processor_id)
     payment.present? && payment.allocations.exists?(allocatable: @invoice)
   end

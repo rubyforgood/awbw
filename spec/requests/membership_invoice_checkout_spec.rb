@@ -6,13 +6,10 @@ RSpec.describe "Membership invoice checkout", type: :request do
   let(:invoice) { create(:membership_invoice, membership: membership, cost_cents: 2_500) }
   let(:fake_session) { double(url: "https://checkout.stripe.com/membership") }
   let(:processor) { instance_double("Pay::Stripe::Customer") }
-  let(:payment_methods) { double(exists?: false) }
 
   before do
-    allow_any_instance_of(Person).to receive(:set_payment_processor)
-    allow_any_instance_of(Person).to receive(:payment_processor).and_return(processor)
+    allow_any_instance_of(Person).to receive(:stripe_payment_processor).and_return(processor)
     allow(processor).to receive(:checkout).and_return(fake_session)
-    allow(processor).to receive(:payment_methods).and_return(payment_methods)
     sign_in create(:user, person: person)
   end
 

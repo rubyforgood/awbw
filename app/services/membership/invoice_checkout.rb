@@ -16,11 +16,11 @@ class Membership::InvoiceCheckout
     return unless claimed
 
     person = @invoice.person
-    person.set_payment_processor :stripe
+    processor = person.stripe_payment_processor
 
     metadata = { membership_id: @invoice.membership_id, membership_invoice_id: @invoice.id }
 
-    person.payment_processor.checkout(
+    processor.checkout(
       mode: "payment",
       metadata: metadata,
       payment_intent_data: { metadata: metadata },

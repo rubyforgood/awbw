@@ -41,6 +41,24 @@ RSpec.describe "Membership invoice deletion", type: :request do
     expect(flash[:notice]).to eq("Next year removed. Renewal is now off.")
   end
 
+  it "refuses to delete while an autopay attempt is pending" do
+    past = invoice_for(Date.current - 1.year)
+    invoice_for(Date.current)
+    invoice_for(Date.current + 1.year)
+    past.charge_attempts.create!(
+      attempt_number: 1,
+      status: "pending",
+      amount_cents: past.cost_cents,
+      attempted_at: 5.minutes.ago
+    )
+
+    expect { delete membership_invoice_path(past) }
+      .not_to change(MembershipInvoice, :count)
+
+    expect(response).to redirect_to(membership_path(membership))
+    expect(flash[:alert]).to match(/payment is in progress/)
+  end
+
   it "points the next-year invoice at the next-year resource" do
     invoice_for(Date.current)
     future = invoice_for(Date.current + 1.year)

@@ -18,8 +18,7 @@ RSpec.describe "Memberships::PublicInvoices", type: :request do
   end
 
   before do
-    allow_any_instance_of(Person).to receive(:set_payment_processor)
-    allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
+    allow_any_instance_of(Person).to receive(:stripe_payment_processor).and_return(fake_processor)
   end
 
   describe "GET /memberships/public_invoices/:token" do

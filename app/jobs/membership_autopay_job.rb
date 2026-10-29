@@ -13,7 +13,7 @@ class MembershipAutopayJob < ApplicationJob
         next if last&.attempted_at.present? && last.attempted_at.to_date >= Date.current
         next if last&.pending? || last&.unknown? || last&.needs_action?
 
-        card = invoice.person.payment_processor&.payment_methods&.order(default: :desc, id: :desc)&.first
+        card = invoice.person.stripe_customer&.payment_methods&.order(default: :desc, id: :desc)&.first
         if card.blank?
           unless last&.needs_card?
             begin

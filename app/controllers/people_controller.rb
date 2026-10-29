@@ -769,7 +769,7 @@ class PeopleController < ApplicationController
       .order(:start_date)
       .to_a
     @membership_autopay = @membership.autopay_on?
-    @membership_has_card = @person.payment_processor&.payment_methods&.exists? || false
+    @membership_has_card = @person.stripe_customer&.payment_methods&.exists? || false
   end
 
   def set_checkout_flash

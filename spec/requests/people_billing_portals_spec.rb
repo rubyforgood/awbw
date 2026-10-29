@@ -6,8 +6,7 @@ RSpec.describe "Person billing portal", type: :request do
   let(:portal_session) { double(url: "https://billing.stripe.test/session") }
 
   before do
-    allow_any_instance_of(Person).to receive(:set_payment_processor)
-    allow_any_instance_of(Person).to receive(:payment_processor).and_return(customer)
+    allow_any_instance_of(Person).to receive(:stripe_payment_processor).and_return(customer)
     allow(customer).to receive(:billing_portal).and_return(portal_session)
     sign_in create(:user, person: person)
   end

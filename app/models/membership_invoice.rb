@@ -52,6 +52,7 @@ class MembershipInvoice < ApplicationRecord
   validate :contiguous_with_membership_invoices, on: :create
   validate :only_one_upcoming_invoice
   validate :cost_cents_immutable_once_allocated, if: :will_save_change_to_cost_cents?
+  validate :cost_dollars_is_valid
 
   def self.chargeable
     arel_table[:cost_cents].gt(0)
@@ -92,7 +93,15 @@ class MembershipInvoice < ApplicationRecord
   end
 
   def cost_dollars=(value)
-    self.cost_cents = (value.to_d * 100).to_i if value.present?
+    @cost_dollars_invalid = false
+    return if value.blank?
+
+    cents = MoneyParser.cents(value)
+    if MoneyParser.invalid?(cents)
+      @cost_dollars_invalid = true
+    else
+      self.cost_cents = cents
+    end
   end
 
   def locked? = membership.locked?
@@ -100,7 +109,9 @@ class MembershipInvoice < ApplicationRecord
   def pristine? = allocations.none?
 
   def payment_in_progress?
-    payment_in_progress_at.present? && payment_in_progress_at > 1.hour.ago
+    return true if payment_in_progress_at.present? && payment_in_progress_at > 1.hour.ago
+
+    charge_attempts.pending.where(attempted_at: 1.hour.ago..).exists?
   end
 
   def mark_payment_in_progress!
@@ -225,6 +236,12 @@ class MembershipInvoice < ApplicationRecord
     return if allocations.none?
 
     errors.add(:cost_cents, "can't change once a payment or discount is applied")
+  end
+
+  def cost_dollars_is_valid
+    return unless @cost_dollars_invalid
+
+    errors.add(:cost_dollars, "must be a number, e.g. 100 or 99.50")
   end
 
   private

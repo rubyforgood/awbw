@@ -1226,3 +1226,28 @@ RSpec.describe Person, "#current_membership" do
     expect(person.current_membership).to be_nil
   end
 end
+
+RSpec.describe Person, "#stripe_customer" do
+  let(:person) { create(:person) }
+
+  it "returns the default Stripe customer" do
+    stripe = Pay::Stripe::Customer.create!(owner: person, processor: "stripe",
+      processor_id: "cus_stripe", default: true)
+    create(:pay_customer, owner: person, processor: "braintree",
+      processor_id: "cus_braintree", default: false)
+
+    expect(person.stripe_customer).to eq(stripe)
+  end
+
+  it "reuses the default Stripe customer for membership billing" do
+    stripe = Pay::Stripe::Customer.create!(owner: person, processor: "stripe",
+      processor_id: "cus_stripe", default: true)
+
+    expect(person.stripe_payment_processor).to eq(stripe)
+  end
+
+  it "creates a Stripe processor only when no Stripe default exists" do
+    expect { person.stripe_payment_processor }.to change(Pay::Customer, :count).by(1)
+    expect(person.stripe_payment_processor.processor).to eq("stripe")
+  end
+end

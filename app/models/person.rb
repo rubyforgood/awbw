@@ -501,6 +501,19 @@ class Person < ApplicationRecord
   # pay gem falls back to person.name without this. `name` returns display preference which we do not want
   def pay_customer_name = full_name
 
+  # Membership billing is Stripe-only. Prefer the reconciled default customer;
+  # only create/select a Stripe processor when the person has none.
+  def stripe_customer
+    pay_customers.find_by(processor: "stripe", default: true)
+  end
+
+  def stripe_payment_processor
+    stripe_customer || begin
+      set_payment_processor(:stripe)
+      stripe_customer
+    end
+  end
+
   # Distinct professional-license types (e.g. "LMFT, LCSW"), shown as a credential
   # suffix after the person's name on their profile (replaces the old free-text
   # credentials field). Nil when no licensed types are on file.
