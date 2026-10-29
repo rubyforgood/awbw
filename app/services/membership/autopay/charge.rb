@@ -165,8 +165,24 @@ class Membership::Autopay::Charge
         error_message: "The charge could not be linked to a Pay customer.")
     end
 
+    unless payment_applied?(pay_charge)
+      return record_unknown(attempt, intent,
+        error_code: "allocation_failed",
+        error_message: "The charge succeeded but was not applied to this invoice. Check Stripe before retrying.")
+    end
+
     attempt.update!(status: "succeeded", payment_intent_id: intent.id, pay_charge: pay_charge)
     Result.new(attempt:, errors: [])
+  end
+
+  # A succeeded charge is only a succeeded attempt if the invoice actually
+  # received it. Pay's after_save_commit creates the payment and allocation
+  # before sync returns, so this is a cheap verification, not a repair.
+  def payment_applied?(pay_charge)
+    return true if @invoice.reload.paid_in_full?
+
+    payment = ExternalProcessorPayment.find_by(stripe_charge_id: pay_charge.processor_id)
+    payment.present? && payment.allocations.exists?(allocatable: @invoice)
   end
 
   def record_needs_action(attempt, intent)

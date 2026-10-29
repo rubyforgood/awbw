@@ -33,7 +33,7 @@
               <td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900"><%= invoice.paid %></td>
               <td class="px-6 py-4 text-sm whitespace-nowrap">
                 <%= render "membership_invoices/status_pill", invoice: invoice, linked: true %>
-                <% if invoice.latest_attempt&.error_message.present? %>
+                <% if invoice.remaining_cost.positive? && invoice.latest_attempt&.error_message.present? %>
                   <span class="mt-1 block text-xs text-amber-700"><%= invoice.latest_attempt.error_message %></span>
                 <% end %>
               </td>

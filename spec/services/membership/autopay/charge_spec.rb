@@ -24,7 +24,21 @@ RSpec.describe Membership::Autopay::Charge do
   end
 
   before do
-    allow(Pay::Stripe::Charge).to receive(:sync).and_return(pay_charge)
+    # Simulate what PayChargeExtensions does inside Pay::Stripe::Charge.sync:
+    # the payment record and its allocation to the invoice.
+    allow(Pay::Stripe::Charge).to receive(:sync) do
+      payment = ExternalProcessorPayment.create!(
+        stripe_charge_id: pay_charge.processor_id,
+        external_origin: false,
+        person: person,
+        amount_cents: invoice.cost_cents,
+        amount_cents_remaining: invoice.cost_cents,
+        currency: "usd",
+        pay_charge: pay_charge
+      )
+      Allocation.create!(source: payment, allocatable: invoice, amount: invoice.cost_cents)
+      pay_charge
+    end
   end
 
   def intent(status:, latest_charge: nil, last_payment_error: nil, id: "pi_#{SecureRandom.hex(4)}")
@@ -79,6 +93,35 @@ RSpec.describe Membership::Autopay::Charge do
 
       expect(result).not_to be_success
       expect(latest_attempt).to have_attributes(status: "unknown", error_code: "sync_missing")
+    end
+
+    it "leaves a succeeded charge unresolved when it was not applied to the invoice" do
+      allow(Pay::Stripe::Charge).to receive(:sync).and_return(pay_charge)
+      stub_intent(status: "succeeded", latest_charge: charge_object(id: "ch_test"))
+
+      result = described_class.call(invoice: invoice)
+
+      expect(result).not_to be_success
+      expect(latest_attempt).to have_attributes(status: "unknown", error_code: "allocation_failed")
+    end
+
+    it "leaves a succeeded charge unresolved when its payment has no allocation" do
+      ExternalProcessorPayment.create!(
+        stripe_charge_id: pay_charge.processor_id,
+        external_origin: false,
+        person: person,
+        amount_cents: invoice.cost_cents,
+        amount_cents_remaining: invoice.cost_cents,
+        currency: "usd",
+        pay_charge: pay_charge
+      )
+      allow(Pay::Stripe::Charge).to receive(:sync).and_return(pay_charge)
+      stub_intent(status: "succeeded", latest_charge: charge_object(id: "ch_test"))
+
+      result = described_class.call(invoice: invoice)
+
+      expect(result).not_to be_success
+      expect(latest_attempt).to have_attributes(status: "unknown", error_code: "allocation_failed")
     end
 
     it "leaves a succeeded charge unresolved when Pay cannot record it" do
@@ -142,7 +185,7 @@ RSpec.describe Membership::Autopay::Charge do
 
   describe ".reconcile" do
     it "runs an unresolved attempt through the same state machine" do
-      charge = charge_object(id: "ch_reconcile")
+      charge = charge_object(id: "ch_test")
       value = intent(id: "pi_reconcile", status: "succeeded", latest_charge: charge)
       attempt = invoice.charge_attempts.create!(
         attempt_number: 1, status: "unknown", amount_cents: invoice.remaining_cost,
@@ -156,17 +199,17 @@ RSpec.describe Membership::Autopay::Charge do
 
       expect(result).to be_success
       expect(Pay::Stripe::Charge).to have_received(:sync)
-        .with("ch_reconcile", object: charge, stripe_account: nil)
+        .with("ch_test", object: charge, stripe_account: nil)
       expect(attempt.reload).to have_attributes(status: "succeeded", pay_charge: pay_charge)
     end
 
     it "fetches a charge the reconciled intent only references by id" do
-      value = intent(id: "pi_reconcile", status: "succeeded", latest_charge: "ch_reconcile")
+      value = intent(id: "pi_reconcile", status: "succeeded", latest_charge: "ch_test")
       attempt = invoice.charge_attempts.create!(
         attempt_number: 1, status: "unknown", amount_cents: invoice.remaining_cost,
         attempted_at: 1.hour.ago, payment_intent_id: value.id
       )
-      charge = charge_object(id: "ch_reconcile")
+      charge = charge_object(id: "ch_test")
       allow(Pay::Payment).to receive(:from_id).and_return(Pay::Payment.new(value))
       allow(Stripe::Charge).to receive(:retrieve).and_return(charge)
 
@@ -174,7 +217,7 @@ RSpec.describe Membership::Autopay::Charge do
 
       expect(result).to be_success
       expect(Stripe::Charge).to have_received(:retrieve)
-        .with({ id: "ch_reconcile", expand: Pay::Stripe::Charge::EXPAND }, {})
+        .with({ id: "ch_test", expand: Pay::Stripe::Charge::EXPAND }, {})
       expect(attempt.reload).to have_attributes(status: "succeeded", pay_charge: pay_charge)
     end
 
