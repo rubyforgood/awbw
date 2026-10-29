@@ -311,8 +311,8 @@ class Event < ApplicationRecord
   end
 
   # Whether the recipient survey's own drip date (if any) has passed — the
-  # event-level half of its availability. The per-recipient half (agreement signed,
-  # tasks complete) lives on EventRegistration#recipient_survey_available?.
+  # event-level half of its availability. The per-recipient half (agreement signed)
+  # lives on EventRegistration#recipient_survey_available?.
   def recipient_survey_drip_open?(now = Time.current)
     link = recipient_survey_form_link
     return false unless link

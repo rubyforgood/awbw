@@ -100,6 +100,7 @@ class EventRegistration < ApplicationRecord
   SCHOLARSHIP_STATUS_FILTER_OPTIONS = [
     [ "All recipients", "yes" ],
     [ "Agreed", "agreed" ],
+    [ "Not agreed yet", "not_agreed" ],
     [ "Tasks complete", "complete" ],
     [ "Tasks not complete", "incomplete" ],
     [ "No scholarship", "no" ]
@@ -113,6 +114,7 @@ class EventRegistration < ApplicationRecord
   CE_STATUS_FILTER_OPTIONS = [
     [ "Registered for CE", "registered" ],
     [ "Requested", "requested" ],
+    [ "Not paid yet", "not_paid" ],
     [ "Needs license", "needs_license" ],
     [ "Paid", "paid" ],
     [ "Certificate issued", "issued" ],
@@ -270,6 +272,20 @@ class EventRegistration < ApplicationRecord
       )
     SQL
   }
+  # Awarded but not yet agreed to: still pending or asking for support. Declined
+  # awards are left out — those recipients already answered.
+  scope :with_unagreed_scholarship, -> {
+    where(<<~SQL.squish)
+      EXISTS (
+        SELECT 1 FROM allocations
+        INNER JOIN scholarships ON scholarships.id = allocations.source_id
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+          AND scholarships.agreement_response_status IN ('pending', 'support_requested')
+      )
+    SQL
+  }
   scope :without_scholarship, -> {
     where(<<~SQL.squish)
       NOT EXISTS (
@@ -285,6 +301,7 @@ class EventRegistration < ApplicationRecord
     when "yes" then with_scholarship
     when "no" then without_scholarship
     when "agreed" then with_agreed_scholarship
+    when "not_agreed" then with_unagreed_scholarship
     when "complete" then scholarship_tasks_completed
     when "incomplete" then scholarship_tasks_incomplete
     else all
@@ -404,7 +421,8 @@ class EventRegistration < ApplicationRecord
       when "registered" then "TRUE"
       when "needs_license" then "pl.number IS NULL"
       when "paid" then paid_sql
-      when "requested" then "NOT (#{paid_sql})"
+      # Same rows today: CE has no approval step yet, so "requested" is just unpaid.
+      when "requested", "not_paid" then "NOT (#{paid_sql})"
       when "issued" then "cer.certificate_sent_at IS NOT NULL"
       when "not_issued" then "cer.certificate_sent_at IS NULL"
       when NO_CE then "TRUE"
@@ -734,15 +752,18 @@ class EventRegistration < ApplicationRecord
   end
 
   # The recipients survey becomes available once the recipient has signed their
-  # agreement and their scholarship tasks are complete, and once any drip date on
-  # the scholarship callout row has passed. Reads preloaded scholarships + the
+  # agreement and any drip date on the scholarship callout row has passed — not on
+  # scholarship tasks, which can run alongside it. Reads preloaded scholarships + the
   # event's memoized survey row, so it adds no per-row roster query. It's what
-  # gates both the survey's display on the scholarship page and readiness.
+  # gates the survey's display on the scholarship page, the ticket card, and readiness.
   def recipient_survey_available?(now = Time.current)
+    recipient_survey_agreement_signed? && event.recipient_survey_drip_open?(now)
+  end
+
+  # The per-recipient half of the survey gate: every live (undeclined) award signed.
+  def recipient_survey_agreement_signed?
     live = scholarships.reject(&:agreement_declined?)
-    return false if live.empty?
-    return false unless live.all?(&:agreement_signed?) && live.all?(&:tasks_completed?)
-    event.recipient_survey_drip_open?(now)
+    live.any? && live.all?(&:agreement_signed?)
   end
 
   def scholarship_declined?
