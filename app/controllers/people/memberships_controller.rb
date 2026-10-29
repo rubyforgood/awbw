@@ -30,7 +30,7 @@ module People
 
       if MoneyParser.invalid?(cost_cents) || MoneyParser.invalid?(invoice_cost_cents)
         @membership = @person.memberships.new(start_date: start_date)
-        @errors = [ "Enter the locked price and first invoice as numbers, e.g. 100 or 99.50." ]
+        @errors = [ "Enter the locked price and first invoice as numbers, e.g. 100" ]
         return render :new, status: :unprocessable_content
       end
 

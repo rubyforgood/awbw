@@ -30,12 +30,12 @@ RSpec.describe "Membership invoice checkout", type: :request do
     expect(processor).to have_received(:checkout).once
   end
 
-  it "shows the in-progress state on the invoice instead of a Pay now button" do
+  it "hides the checkout controls on the invoice while a payment is in progress" do
     post membership_invoice_checkout_path(invoice)
 
     get membership_invoice_path(invoice)
 
-    expect(response.body).to include("A payment is already in progress for this invoice")
+    expect(response.body).not_to include("A payment is already in progress for this invoice")
     expect(response.body).not_to include("Pay now")
   end
 

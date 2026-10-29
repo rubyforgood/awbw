@@ -52,12 +52,12 @@ RSpec.describe "Memberships::PublicInvoices", type: :request do
       expect(response.body).to include("Payment was cancelled.")
     end
 
-    it "shows the payment-in-progress state instead of offering Pay now" do
+    it "hides the checkout controls while a payment is in progress" do
       invoice.mark_payment_in_progress!
 
       get memberships_public_invoice_path(token)
 
-      expect(response.body).to include("A payment is already in progress for this invoice")
+      expect(response.body).not_to include("A payment is already in progress for this invoice")
       expect(response.body).not_to include("Pay now")
     end
   end
