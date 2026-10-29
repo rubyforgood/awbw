@@ -16,13 +16,6 @@
         </span>
       <% end %>
     </h2>
-    <% if AppRestart.available? && allowed_to?(:restart_app?, :data_health) %>
-      <%= button_to admin_data_health_restart_app_path,
-            class: button_classes(:danger_outline, size: :sm),
-            form: { data: { turbo_confirm: "Restart the app? The whole site goes down for a minute or two while it comes back." } } do %>
-        <i class="fa-solid fa-power-off"></i> Restart app
-      <% end %>
-    <% end %>
   </div>
 
   <% if status %>

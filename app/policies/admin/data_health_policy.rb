@@ -11,10 +11,6 @@ module Admin
       admin?
     end
 
-    def restart_app?
-      admin?
-    end
-
     def retry_interrupted_jobs?
       admin?
     end
