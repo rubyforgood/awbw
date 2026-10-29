@@ -2,7 +2,8 @@
 <% content_for(:page_bg_class, "public") %>
 
 <div class="px-4 py-6 sm:px-8 print:p-0">
-  <% unless @membership_invoice.payment_in_progress? && !@payment_received %>
+  <% if @payment_received || !@membership_invoice.payment_in_progress? ||
+        @membership_invoice.checkout_session_id.present? %>
     <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
       <% if @membership_invoice.remaining_cost.positive? %>
         <% unless @payment_received %>

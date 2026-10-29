@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_173149) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_175532) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1383,6 +1383,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_173149) do
     t.text "bill_to_additional_info"
     t.bigint "attention_person_id"
     t.datetime "payment_in_progress_at"
+    t.string "checkout_session_id"
     t.index ["created_by_id"], name: "index_membership_invoices_on_created_by_id"
     t.index ["membership_id"], name: "index_membership_invoices_on_membership_id"
     t.index ["start_date", "end_date"], name: "index_membership_invoices_on_start_date_and_end_date"

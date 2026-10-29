@@ -67,6 +67,15 @@ RSpec.describe Allocation, type: :model do
         create(:allocation, source: payment, allocatable: term, amount: 2_500)
         expect(build(:allocation, source: payment, allocatable: term, amount: -2_500)).to be_valid
       end
+
+      it "clears the checkout lock when a payment is applied" do
+        term.update_columns(payment_in_progress_at: Time.current, checkout_session_id: "cs_test_123")
+
+        create(:allocation, source: payment, allocatable: term, amount: 1_000)
+
+        expect(term.reload.payment_in_progress_at).to be_nil
+        expect(term.checkout_session_id).to be_nil
+      end
     end
 
     describe "validate_event_registration_cost" do

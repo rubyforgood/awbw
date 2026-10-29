@@ -115,11 +115,13 @@ class MembershipInvoice < ApplicationRecord
   end
 
   def mark_payment_in_progress!
-    update_column(:payment_in_progress_at, Time.current)
+    update_columns(payment_in_progress_at: Time.current, checkout_session_id: nil)
   end
 
   def clear_payment_in_progress!
-    update_column(:payment_in_progress_at, nil) if payment_in_progress_at.present?
+    return if payment_in_progress_at.nil? && checkout_session_id.nil?
+
+    update_columns(payment_in_progress_at: nil, checkout_session_id: nil)
   end
 
   def latest_attempt = charge_attempts.last
@@ -281,6 +283,6 @@ class MembershipInvoice < ApplicationRecord
   end
 
   def clear_payment_in_progress
-    update_column(:payment_in_progress_at, nil) if payment_in_progress_at.present?
+    clear_payment_in_progress! if payment_in_progress_at.present? || checkout_session_id.present?
   end
 end

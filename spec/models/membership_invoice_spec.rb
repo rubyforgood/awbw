@@ -103,6 +103,30 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
+  describe "#mark_payment_in_progress!" do
+    it "clears any previous checkout session id" do
+      invoice = create(:membership_invoice, checkout_session_id: "cs_old")
+
+      invoice.mark_payment_in_progress!
+
+      expect(invoice.payment_in_progress_at).to be_present
+      expect(invoice.checkout_session_id).to be_nil
+    end
+  end
+
+  describe "#clear_payment_in_progress!" do
+    it "clears the lease and checkout session id together" do
+      invoice = create(:membership_invoice,
+        payment_in_progress_at: Time.current,
+        checkout_session_id: "cs_test_123")
+
+      invoice.clear_payment_in_progress!
+
+      expect(invoice.payment_in_progress_at).to be_nil
+      expect(invoice.checkout_session_id).to be_nil
+    end
+  end
+
   describe "overlap" do
     let(:person) { create(:person) }
     let(:subscription) { create(:membership, person: person) }

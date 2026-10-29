@@ -15,17 +15,36 @@ module Memberships
             notice: "This invoice has already been paid.", status: :see_other
         end
 
-        session = Membership::InvoiceCheckout.call(
+        result = Membership::InvoiceCheckout.call(
           invoice: @membership_invoice,
           success_url: memberships_public_invoice_url(token, paid: "1"),
-          cancel_url: memberships_public_invoice_url(token, cancelled: "1")
+          cancel_url: cancel_checkout_memberships_public_invoice_url(token)
         )
-        if session.nil?
+        unless result.success?
           return redirect_to memberships_public_invoice_path(token),
-            alert: "A payment is already in progress for this invoice.", status: :see_other
+            alert: result.errors.to_sentence, status: :see_other
         end
 
-        redirect_to session.url, allow_other_host: true, status: :see_other
+        redirect_to result.session.url, allow_other_host: true, status: :see_other
+      rescue Stripe::StripeError, Pay::Error => e
+        redirect_to memberships_public_invoice_path(token),
+          alert: "Could not reach Stripe: #{e.message}", status: :see_other
+      end
+
+      def cancel
+        authorize! @membership_invoice, to: :show_public?
+
+        result = Membership::InvoiceCheckout.cancel(
+          invoice: @membership_invoice,
+          session_id: params[:stripe_checkout_session_id].presence
+        )
+
+        if result.success?
+          redirect_to memberships_public_invoice_path(token), notice: "Payment was cancelled.", status: :see_other
+        else
+          redirect_to memberships_public_invoice_path(token),
+            alert: result.errors.to_sentence, status: :see_other
+        end
       rescue Stripe::StripeError, Pay::Error => e
         redirect_to memberships_public_invoice_path(token),
           alert: "Could not reach Stripe: #{e.message}", status: :see_other
@@ -34,7 +53,7 @@ module Memberships
       private
 
       def token
-        params[:public_invoice_token]
+        params[:token].presence || params[:public_invoice_token]
       end
 
       def set_membership_invoice

@@ -389,11 +389,13 @@ Rails.application.routes.draw do
   resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ] do
     get :receipt, on: :member
     resource :checkout, only: [ :create ], controller: "membership_invoices/checkouts"
+    get :cancel_checkout, on: :member, to: "membership_invoices/checkouts#cancel"
   end
 
   namespace :memberships do
     resources :public_invoices, only: :show, param: :token do
       resource :checkout, only: [ :create ], module: :public_invoices
+      get :cancel_checkout, on: :member, to: "public_invoices/checkouts#cancel"
     end
   end
 
