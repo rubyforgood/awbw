@@ -1,0 +1,14 @@
+name: "Scholarship survey opens on agreement, with its status on the ticket"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-10-29
+pr_number: 2907
+action_path: "/registration/sample"
+summary: >-
+  The scholarship recipients survey no longer waits for scholarship tasks to be
+  marked complete — it opens as soon as the recipient signs their agreement (plus
+  any display date). The ticket's Scholarship card now says when the survey opens
+  or that it's due.
+pro_tips:
+  - "The Scholarship callout takes one form. Its editor shows a single form picker; choose the blank option to remove it."
+  - "Callout forms and Agreement history now share a collapsible card, titled with the form's name."
