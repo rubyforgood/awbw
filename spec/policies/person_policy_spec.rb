@@ -494,8 +494,8 @@ RSpec.describe PersonPolicy, type: :policy do
       filtered = write_params_for(owner_user)
 
       expect(filtered.keys).to contain_exactly(
-        "first_name", "email_type", "email_2_type", "sectorable_items_attributes",
-        "user_attributes", "professional_licenses_attributes"
+        "first_name", "sectorable_items_attributes", "user_attributes",
+        "professional_licenses_attributes"
       )
     end
 
