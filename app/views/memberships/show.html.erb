@@ -67,6 +67,12 @@
                     class: button_classes(:secondary_outline, size: :sm),
                     title: "Stops future invoices. The current term remains in place.",
                     data: { turbo_confirm: "Stop renewing this membership? The current term still stands." } %>
+            <% elsif (renewal_blocked_reason = membership.renewal_blocked_reason) %>
+              <%= button_to "Turn on renewal", membership_renewal_path(membership),
+                    method: :patch, params: { renewal_on: "1" },
+                    class: button_classes(:secondary_outline, size: :sm),
+                    title: renewal_blocked_reason, disabled: true %>
+              <p class="w-full text-xs text-gray-500"><%= renewal_blocked_reason %></p>
             <% else %>
               <%= button_to "Turn on renewal", membership_renewal_path(membership),
                     method: :patch, params: { renewal_on: "1" },

@@ -24,9 +24,14 @@ class Membership::Renew
 
       ending_invoice = @membership.membership_invoices.order(:end_date).last
       return failure("There is no invoice to settle.") if ending_invoice.blank?
+
+      if ending_invoice.end_date > @membership.end_date
+        return failure("The membership term ends before its invoice coverage. Extend the term first.")
+      end
+
       return failure("The ending period is not settled.") unless ending_invoice.paid_in_full?
 
-      new_start = @membership.end_date + 1.day
+      new_start = ending_invoice.end_date + 1.day
       new_end = new_start + Membership::INVOICE_PERIOD - 1.day
 
       invoice = @membership.membership_invoices.create!(

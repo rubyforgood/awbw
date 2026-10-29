@@ -6,6 +6,7 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
       membership: subscription,
       start_date: date - 1.year + 1.day,
       end_date: date)
+    subscription.update_columns(start_date: invoice.start_date, end_date: invoice.end_date)
     create(:allocation, source: create(:payment), allocatable: invoice, amount: invoice.cost_cents)
     invoice
   end
@@ -53,10 +54,11 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
 
     it "charges the standard cost after a comped year" do
       subscription = create(:membership)
-      create(:membership_invoice, :comped,
+      comped = create(:membership_invoice, :comped,
         membership: subscription,
         start_date: Date.current - 1.year + 10.days,
         end_date: Date.current + 10.days)
+      subscription.update_columns(start_date: comped.start_date, end_date: comped.end_date)
 
       described_class.new.perform
 

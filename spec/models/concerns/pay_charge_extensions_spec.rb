@@ -174,7 +174,7 @@ RSpec.describe PayChargeExtensions do
       target = create(:membership_invoice, membership: membership, cost_cents: 2_500,
         start_date: Date.current - 2.years, end_date: Date.current - 1.year - 1.day)
       current = create(:membership_invoice, membership: membership, cost_cents: 2_500,
-        start_date: Date.current, end_date: Date.current + 1.year - 1.day)
+        start_date: target.end_date + 1.day, end_date: target.end_date + Membership::INVOICE_PERIOD)
 
       Pay::Charge.create!(
         customer: pay_customer, processor_id: "ch_balance",

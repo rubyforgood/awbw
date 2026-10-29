@@ -21,10 +21,12 @@ class Membership::UpdateTerm
       shortening = @end_date < @membership.end_date
       future = @membership.next_invoice
 
-      if shortening && future.present?
-        return failure("Next year already has payments applied. Refund it, or keep the term.") unless future.allocations.sum(:amount).zero?
+      if shortening && future.present? && future.start_date > @end_date
+        return failure("A payment is in progress for next year. Try again shortly.") if future.payment_in_progress?
 
-        if future.start_date > Date.current && future.other_invoices?
+        # An unpaid, unstarted year is dropped. A paid/partially paid one stays
+        # as issued; the term simply ends before it.
+        if future.allocations.sum(:amount).zero? && future.other_invoices?
           future.destroy!
         end
       end

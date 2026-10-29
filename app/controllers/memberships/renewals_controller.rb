@@ -6,6 +6,12 @@ module Memberships
       authorize! @membership
 
       renewal_on = ActiveModel::Type::Boolean.new.cast(params[:renewal_on])
+
+      if renewal_on && (reason = @membership.renewal_blocked_reason)
+        return redirect_to membership_path(@membership),
+          alert: reason, status: :see_other
+      end
+
       @membership.update!(autorenewal_cancelled_at: renewal_on ? nil : Time.current)
 
       redirect_to membership_path(@membership),

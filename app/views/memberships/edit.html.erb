@@ -32,8 +32,17 @@
           hint: "Leave blank for the standard cost (#{dollars_from_cents(Membership.annual_cost_cents)}). Applies to future invoices only — invoices already issued keep the amount they were billed at.",
           input_html: { min: 0, step: 0.01, placeholder: "Standard", class: "bg-white" } %>
 
+    <% coverage_start = @membership.invoice_coverage_start %>
+    <% coverage_end = @membership.invoice_coverage_end %>
     <p class="mt-2 text-xs text-gray-500">
-      Changing the term does not change an invoice that has already been issued. Shortening the term stops renewal and removes an unstarted, unpaid next year.
+      <% if coverage_start && coverage_end %>
+        The term controls membership coverage and must stay within the issued invoices
+        (<%= coverage_start.strftime("%b %-d, %Y") %> – <%= coverage_end.strftime("%b %-d, %Y") %>).
+        Changing it does not change an invoice's period. Shortening ends coverage and removes an unstarted, unpaid next year;
+        to add another year, issue the next invoice. If an invoice covers past the term, renewal stays off until the term is extended.
+      <% else %>
+        This membership has no invoices yet, so its term is not limited by them.
+      <% end %>
     </p>
 
     <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-6">

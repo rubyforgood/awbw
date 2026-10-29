@@ -20,13 +20,7 @@ class Membership::RemoveNextYear
         return failure("Next year already has payments applied. Refund it instead.") unless invoice.allocations.sum(:amount).zero?
         return failure("Next year is the membership's only invoice.") unless invoice.other_invoices?
 
-        removed_end = invoice.end_date
         invoice.destroy!
-
-        if @membership.end_date == removed_end
-          previous_end = @membership.membership_invoices.reload.maximum(:end_date)
-          @membership.update!(end_date: previous_end) if previous_end
-        end
       end
 
       @membership.update!(autorenewal_cancelled_at: Time.current)

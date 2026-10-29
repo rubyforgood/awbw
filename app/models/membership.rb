@@ -27,6 +27,7 @@ class Membership < ApplicationRecord
 
   validate :end_date_after_start_date
   validate :no_overlapping_membership_dates
+  validate :term_within_invoice_coverage, if: :persisted?
 
   scope :autorenewal_not_cancelled, -> { where(autorenewal_cancelled_at: nil) }
   scope :unlocked, -> { where(locked_at: nil) }
@@ -83,6 +84,32 @@ class Membership < ApplicationRecord
     membership_invoices.not_paid_in_full.where(start_date: ..Date.current)
   end
 
+  def invoice_coverage_start = membership_invoices.minimum(:start_date)
+  def invoice_coverage_end = membership_invoices.maximum(:end_date)
+
+  # Renewal can run only while the term is current (or within the same one-day
+  # grace Renew allows) and the term reaches the last issued invoice. Paid
+  # coverage extending past an early-ended term must be reinstated first.
+  def renewal_blocked_reason
+    return "This membership has no end date. Edit the term first." if end_date.blank?
+
+    if end_date < Date.current - 1.day
+      return "This membership ended on #{end_date.strftime("%b %-d, %Y")}. Extend the term or create a new membership."
+    end
+
+    coverage_end = invoice_coverage_end
+    return "This membership has no invoices to renew." if coverage_end.blank?
+
+    if coverage_end > end_date
+      return "An invoice covers through #{coverage_end.strftime("%b %-d, %Y")}. " \
+             "Extend the term to at least that date before turning renewal on."
+    end
+
+    nil
+  end
+
+  def renewable? = renewal_blocked_reason.nil?
+
   def deletable? = membership_invoices.none?
 
   def discardable?
@@ -116,13 +143,7 @@ class Membership < ApplicationRecord
     return false unless invoice.allocations.sum(:amount).zero?
     return false unless invoice.other_invoices?
 
-    removed_end = invoice.end_date
     invoice.destroy!
-
-    if end_date == removed_end
-      previous_end = membership_invoices.reload.maximum(:end_date)
-      update_column(:end_date, previous_end) if previous_end
-    end
 
     update_column(:autorenewal_cancelled_at, Time.current)
     true
@@ -162,9 +183,29 @@ class Membership < ApplicationRecord
 
     overlapping = Membership.where(person_id: person_id)
       .where.not(id: id)
-      .where("start_date < ? AND end_date > ?", end_date, start_date)
+      .where("start_date <= ? AND end_date >= ?", end_date, start_date)
     return unless overlapping.exists?
 
     errors.add(:base, "This membership overlaps with an existing membership for this person")
+  end
+
+  # The term is the source of truth for coverage, but it must stay within the
+  # invoices: shorter is allowed (ending early), longer is not (issue an invoice
+  # for added time). Skipped until the membership has invoices, so the create
+  # flow can save the term before its first invoice.
+  def term_within_invoice_coverage
+    return if start_date.blank? || end_date.blank?
+
+    first_start = invoice_coverage_start
+    last_end = invoice_coverage_end
+    return if first_start.blank? || last_end.blank?
+
+    if start_date < first_start
+      errors.add(:start_date, "can't be before the first invoice (#{first_start.strftime("%b %-d, %Y")})")
+    end
+
+    if end_date > last_end
+      errors.add(:end_date, "can't be after the last invoice (#{last_end.strftime("%b %-d, %Y")})")
+    end
   end
 end
