@@ -53,6 +53,13 @@ RSpec.describe "Events::Callouts CE form", type: :request do
       expect(response.body).to include("CE Evaluation")
     end
 
+    it "breaks the form link out of the CE page's turbo frame" do
+      travel_to Time.zone.local(2026, 7, 24, 10, 0)
+      get registration_ce_path(registration.slug)
+      link = Nokogiri::HTML(response.body).at_css("a[href='#{registration_callout_form_path(registration.slug, callout, return_to: "ce")}']")
+      expect(link["data-turbo-frame"]).to eq("_top")
+    end
+
     it "hides the step during the training" do
       travel_to Time.zone.local(2026, 7, 23, 10, 0)
       get registration_ce_path(registration.slug)
