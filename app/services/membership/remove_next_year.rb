@@ -17,6 +17,7 @@ class Membership::RemoveNextYear
 
       if invoice.present?
         return failure("A payment is in progress for next year.") if invoice.payment_in_progress?
+        return failure("Next year has an unresolved payment attempt.") if invoice.unresolved_attempt?
         return failure("Next year already has payments applied. Refund it instead.") unless invoice.allocations.sum(:amount).zero?
         return failure("Next year is the membership's only invoice.") unless invoice.other_invoices?
 

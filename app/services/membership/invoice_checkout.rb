@@ -135,9 +135,7 @@ class Membership::InvoiceCheckout
         @invoice.clear_payment_in_progress!
       end
       next false if @invoice.payment_in_progress?
-      next false if @invoice.charge_attempts
-        .where(status: %w[pending unknown needs_action])
-        .exists?
+      next false if @invoice.unresolved_attempt?
 
       @invoice.mark_payment_in_progress!
       true

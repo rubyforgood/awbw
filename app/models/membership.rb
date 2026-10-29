@@ -128,7 +128,7 @@ class Membership < ApplicationRecord
     invoice = invoices.first
     return "its invoice has payments or credits applied" unless invoice.allocations.sum(:amount).zero?
     return "its invoice has a payment in progress" if invoice.payment_in_progress?
-    return "its invoice has a pending charge attempt" if invoice.charge_attempts.pending.exists?
+    return "its invoice has an unresolved payment attempt" if invoice.unresolved_attempt?
 
     nil
   end

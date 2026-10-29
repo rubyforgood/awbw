@@ -3,6 +3,7 @@ class MembershipInvoice < ApplicationRecord
 
   PAYMENT_TOKEN_PURPOSE = "membership_invoice_payment".freeze
   PAYMENT_WINDOW = 31.minutes
+  UNRESOLVED_ATTEMPT_STATUSES = %w[pending unknown needs_action].freeze
 
   has_paper_trail
 
@@ -132,6 +133,10 @@ class MembershipInvoice < ApplicationRecord
     charge_attempts.pending.where(attempted_at: PAYMENT_WINDOW.ago..).exists?
   end
 
+  def unresolved_attempt?
+    charge_attempts.where(status: UNRESOLVED_ATTEMPT_STATUSES).exists?
+  end
+
   def mark_payment_in_progress!
     update_columns(payment_in_progress_at: Time.current, checkout_session_id: nil)
   end
@@ -156,6 +161,7 @@ class MembershipInvoice < ApplicationRecord
 
   def deletion_blocked_reason
     return "a payment is in progress" if payment_in_progress?
+    return "it has an unresolved payment attempt" if unresolved_attempt?
     return "it has payments or credits applied" unless allocations.sum(:amount).zero?
     return "it is the membership's only invoice" unless other_invoices?
     return "deleting it would leave a gap in the membership's invoices" if middle_invoice?

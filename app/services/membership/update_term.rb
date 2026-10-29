@@ -23,6 +23,7 @@ class Membership::UpdateTerm
 
       if shortening && future.present? && future.start_date > @end_date
         return failure("A payment is in progress for next year. Try again shortly.") if future.payment_in_progress?
+        return failure("Next year has an unresolved payment attempt.") if future.unresolved_attempt?
 
         # An unpaid, unstarted year is dropped. A paid/partially paid one stays
         # as issued; the term simply ends before it.
