@@ -306,10 +306,10 @@
                   input_html: { class: "w-full" } %>
 
       <%= f.input :filemaker_code,
-                  as: :string,
+                  as: :text,
                   label: "FileMaker code",
                   hint: filemaker_code_hint(f.object),
-                  input_html: { class: "w-full" } %>
+                  input_html: { rows: 1, class: "w-full resize-y" } %>
 
       <% if person.persisted? %>
         <div class="mb-4">
