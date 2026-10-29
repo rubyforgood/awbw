@@ -102,6 +102,52 @@ RSpec.describe Membership::InvoiceCheckout do
     expect(processor).not_to have_received(:checkout)
   end
 
+  it "refuses while a stale pending attempt is still unresolved" do
+    invoice.charge_attempts.create!(
+      attempt_number: 1,
+      status: "pending",
+      amount_cents: 100,
+      attempted_at: 2.hours.ago
+    )
+
+    result = checkout
+
+    expect(result).not_to be_success
+    expect(result.errors).to include(Membership::InvoiceCheckout::IN_PROGRESS_ERROR)
+    expect(processor).not_to have_received(:checkout)
+  end
+
+  %w[unknown needs_action].each do |status|
+    it "refuses while an autopay attempt is #{status}" do
+      invoice.charge_attempts.create!(
+        attempt_number: 1,
+        status: status,
+        amount_cents: 100,
+        attempted_at: 2.hours.ago
+      )
+
+      result = checkout
+
+      expect(result).not_to be_success
+      expect(result.errors).to include(Membership::InvoiceCheckout::IN_PROGRESS_ERROR)
+      expect(processor).not_to have_received(:checkout)
+    end
+  end
+
+  it "allows a new checkout after a failed autopay attempt" do
+    invoice.charge_attempts.create!(
+      attempt_number: 1,
+      status: "failed",
+      amount_cents: 100,
+      attempted_at: 2.hours.ago
+    )
+
+    result = checkout
+
+    expect(result).to be_success
+    expect(processor).to have_received(:checkout).once
+  end
+
   it "reclaims a lock that is older than the checkout window" do
     invoice.update_column(:payment_in_progress_at, 61.minutes.ago)
 
