@@ -77,7 +77,7 @@ RSpec.describe Membership::Autopay::Charge do
 
       expect(result).to be_success
       expect(Pay::Stripe::Charge).to have_received(:sync)
-        .with("ch_test", object: charge, stripe_account: nil)
+        .with("ch_test", object: charge)
       expect(latest_attempt).to have_attributes(
         status: "succeeded",
         payment_intent_id: value.id,
@@ -230,14 +230,14 @@ RSpec.describe Membership::Autopay::Charge do
         attempted_at: 1.hour.ago, payment_intent_id: value.id
       )
       allow(Pay::Payment).to receive(:from_id)
-        .with(value.id, stripe_account: nil)
+        .with(value.id)
         .and_return(Pay::Payment.new(value))
 
       result = described_class.reconcile(attempt)
 
       expect(result).to be_success
       expect(Pay::Stripe::Charge).to have_received(:sync)
-        .with("ch_test", object: charge, stripe_account: nil)
+        .with("ch_test", object: charge)
       expect(attempt.reload).to have_attributes(status: "succeeded", pay_charge: pay_charge)
     end
 
@@ -255,7 +255,7 @@ RSpec.describe Membership::Autopay::Charge do
 
       expect(result).to be_success
       expect(Stripe::Charge).to have_received(:retrieve)
-        .with({ id: "ch_test", expand: Pay::Stripe::Charge::EXPAND }, {})
+        .with({ id: "ch_test", expand: Pay::Stripe::Charge::EXPAND })
       expect(attempt.reload).to have_attributes(status: "succeeded", pay_charge: pay_charge)
     end
 

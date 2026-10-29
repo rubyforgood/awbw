@@ -27,7 +27,7 @@ RSpec.describe "Membership invoice checkout", type: :request do
   it "resumes the in-progress checkout instead of creating another" do
     post membership_invoice_checkout_path(invoice)
     allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_test_123", {})
+      .with("cs_test_123")
       .and_return(fake_session)
 
     post membership_invoice_checkout_path(invoice)
@@ -67,10 +67,10 @@ RSpec.describe "Membership invoice checkout", type: :request do
   it "cancels the Stripe checkout and clears the invoice lock" do
     post membership_invoice_checkout_path(invoice)
     allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_test_123", {})
+      .with("cs_test_123")
       .and_return(fake_session)
     allow(Stripe::Checkout::Session).to receive(:expire)
-      .with("cs_test_123", {})
+      .with("cs_test_123")
       .and_return(double(status: "expired"))
 
     get cancel_checkout_membership_invoice_path(invoice)

@@ -159,19 +159,15 @@ class Membership::InvoiceCheckout
   end
 
   def retrieve_session(session_id)
-    Stripe::Checkout::Session.retrieve(session_id, stripe_options)
+    Stripe::Checkout::Session.retrieve(session_id)
   end
 
   def expire_session(session_id)
-    Stripe::Checkout::Session.expire(session_id, stripe_options)
+    Stripe::Checkout::Session.expire(session_id)
     true
   rescue Stripe::InvalidRequestError
     # It may have expired, or been paid, between our retrieve and expire calls.
     retrieve_session(session_id).status == "expired"
-  end
-
-  def stripe_options
-    { stripe_account: @invoice.person.stripe_customer&.stripe_account }.compact
   end
 
   def store_session_id(session)

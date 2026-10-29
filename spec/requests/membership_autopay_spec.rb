@@ -69,7 +69,7 @@ RSpec.describe "Membership autopay", type: :request do
       end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
     invoice.update_column(:checkout_session_id, "cs_open")
     allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_open", {})
+      .with("cs_open")
       .and_return(double(status: "open"))
     sign_in create(:user, person: person)
 
@@ -101,10 +101,10 @@ RSpec.describe "Membership autopay", type: :request do
     allow_any_instance_of(Pay::Stripe::Customer).to receive(:checkout)
       .and_return(double(id: "cs_subscribe", url: "https://stripe.test/subscribe", status: "open"))
     allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_subscribe", {})
+      .with("cs_subscribe")
       .and_return(double(status: "open"))
     allow(Stripe::Checkout::Session).to receive(:expire)
-      .with("cs_subscribe", {})
+      .with("cs_subscribe")
       .and_return(double(status: "expired"))
     sign_in create(:user, person: person)
 

@@ -51,7 +51,7 @@ RSpec.describe Membership::InvoiceCheckout do
   it "resumes an open session without creating another" do
     invoice.update_columns(payment_in_progress_at: 5.minutes.ago, checkout_session_id: "cs_open")
     allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_open", {})
+      .with("cs_open")
       .and_return(fake_session)
 
     result = checkout
@@ -64,7 +64,7 @@ RSpec.describe Membership::InvoiceCheckout do
   it "does not resume an open session when the card must be saved" do
     invoice.update_columns(payment_in_progress_at: 5.minutes.ago, checkout_session_id: "cs_open")
     allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_open", {})
+      .with("cs_open")
       .and_return(fake_session)
 
     result = described_class.call(invoice:, success_url:, cancel_url:, save_card: true)
@@ -162,7 +162,7 @@ RSpec.describe Membership::InvoiceCheckout do
   it "creates a new session when the stored session has expired" do
     invoice.update_columns(payment_in_progress_at: 5.minutes.ago, checkout_session_id: "cs_expired")
     allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_expired", {})
+      .with("cs_expired")
       .and_return(double(status: "expired"))
 
     result = checkout
@@ -175,7 +175,7 @@ RSpec.describe Membership::InvoiceCheckout do
   it "does not create a new session when the stored session is complete" do
     invoice.update_columns(payment_in_progress_at: 5.minutes.ago, checkout_session_id: "cs_complete")
     allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_complete", {})
+      .with("cs_complete")
       .and_return(double(status: "complete"))
 
     result = checkout
@@ -189,7 +189,7 @@ RSpec.describe Membership::InvoiceCheckout do
   it "replaces a session that Stripe no longer knows about" do
     invoice.update_columns(payment_in_progress_at: 5.minutes.ago, checkout_session_id: "cs_missing")
     allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_missing", {})
+      .with("cs_missing")
       .and_raise(Stripe::InvalidRequestError.new("No such checkout session", nil))
 
     result = checkout
@@ -214,10 +214,10 @@ RSpec.describe Membership::InvoiceCheckout do
 
     it "expires an open session and clears the lock" do
       allow(Stripe::Checkout::Session).to receive(:retrieve)
-        .with("cs_cancel", {})
+        .with("cs_cancel")
         .and_return(double(status: "open"))
       allow(Stripe::Checkout::Session).to receive(:expire)
-        .with("cs_cancel", {})
+        .with("cs_cancel")
         .and_return(double(status: "expired"))
 
       result = described_class.cancel(invoice:)
@@ -229,7 +229,7 @@ RSpec.describe Membership::InvoiceCheckout do
 
     it "clears an already-expired session without expiring it again" do
       allow(Stripe::Checkout::Session).to receive(:retrieve)
-        .with("cs_cancel", {})
+        .with("cs_cancel")
         .and_return(double(status: "expired"))
       allow(Stripe::Checkout::Session).to receive(:expire)
 
@@ -242,7 +242,7 @@ RSpec.describe Membership::InvoiceCheckout do
 
     it "leaves a completed session locked" do
       allow(Stripe::Checkout::Session).to receive(:retrieve)
-        .with("cs_cancel", {})
+        .with("cs_cancel")
         .and_return(double(status: "complete"))
 
       result = described_class.cancel(invoice:)
@@ -254,7 +254,7 @@ RSpec.describe Membership::InvoiceCheckout do
 
     it "clears the lock if the session expires before it can be expired" do
       allow(Stripe::Checkout::Session).to receive(:retrieve)
-        .with("cs_cancel", {})
+        .with("cs_cancel")
         .and_return(double(status: "open"), double(status: "expired"))
       allow(Stripe::Checkout::Session).to receive(:expire)
         .and_raise(Stripe::InvalidRequestError.new("Session is expired", nil))
@@ -268,7 +268,7 @@ RSpec.describe Membership::InvoiceCheckout do
 
     it "does not clear the lock if the session completes before it can be expired" do
       allow(Stripe::Checkout::Session).to receive(:retrieve)
-        .with("cs_cancel", {})
+        .with("cs_cancel")
         .and_return(double(status: "open"), double(status: "complete"))
       allow(Stripe::Checkout::Session).to receive(:expire)
         .and_raise(Stripe::InvalidRequestError.new("Session is complete", nil))
@@ -282,7 +282,7 @@ RSpec.describe Membership::InvoiceCheckout do
 
     it "does not clear a newer checkout session" do
       allow(Stripe::Checkout::Session).to receive(:retrieve)
-        .with("cs_old", {})
+        .with("cs_old")
         .and_return(double(status: "expired"))
 
       result = described_class.cancel(invoice:, session_id: "cs_old")

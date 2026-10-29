@@ -88,7 +88,7 @@ RSpec.describe "Memberships::PublicInvoices", type: :request do
     it "resumes an open checkout instead of creating another" do
       invoice.update_columns(payment_in_progress_at: Time.current, checkout_session_id: "cs_test_123")
       allow(Stripe::Checkout::Session).to receive(:retrieve)
-        .with("cs_test_123", {})
+        .with("cs_test_123")
         .and_return(fake_session)
 
       post memberships_public_invoice_checkout_path(token)
@@ -120,10 +120,10 @@ RSpec.describe "Memberships::PublicInvoices", type: :request do
     it "cancels the Stripe checkout and clears the invoice lock" do
       invoice.update_columns(payment_in_progress_at: Time.current, checkout_session_id: "cs_test_123")
       allow(Stripe::Checkout::Session).to receive(:retrieve)
-        .with("cs_test_123", {})
+        .with("cs_test_123")
         .and_return(fake_session)
       allow(Stripe::Checkout::Session).to receive(:expire)
-        .with("cs_test_123", {})
+        .with("cs_test_123")
         .and_return(double(status: "expired"))
 
       get cancel_checkout_memberships_public_invoice_path(token)

@@ -43,11 +43,8 @@ class Membership::Autopay::Charge
   def reconcile(attempt)
     return failure("This attempt has no PaymentIntent to reconcile.", attempt:) if attempt.payment_intent_id.blank?
 
-    processor = @invoice.person.payment_processor
-    return failure("No payment processor on file for this member.", attempt:) if processor.blank?
-
-    payment = Pay::Payment.from_id(attempt.payment_intent_id, stripe_account: processor.stripe_account)
-    apply_intent(attempt, payment.intent, processor)
+    payment = Pay::Payment.from_id(attempt.payment_intent_id)
+    apply_intent(attempt, payment.intent)
   rescue Stripe::StripeError, Pay::Error => e
     failure(e.message, attempt:)
   end
@@ -78,8 +75,8 @@ class Membership::Autopay::Charge
   end
 
   def charge(attempt, processor, card)
-    # The Pay customer owns the Stripe account, customer id, and latest_charge
-    # expansion. Price/description/metadata are ours.
+    # The Pay customer owns the customer id and latest_charge expansion.
+    # Price/description/metadata are ours.
     intent = processor.create_payment_intent(
       attempt.amount_cents,
       currency: Membership::CURRENCY,
@@ -95,7 +92,7 @@ class Membership::Autopay::Charge
     )
 
     attempt.update_column(:payment_intent_id, intent.id)
-    apply_intent(attempt, intent, processor)
+    apply_intent(attempt, intent)
   rescue Stripe::StripeError, Pay::Error => e
     attempt.update!(
       status: "failed",
@@ -107,12 +104,12 @@ class Membership::Autopay::Charge
   end
 
   # One state machine for both a live charge and a later reconciliation.
-  def apply_intent(attempt, intent, processor)
+  def apply_intent(attempt, intent)
     Pay::Payment.new(intent).validate
 
     case intent.status
     when "succeeded"
-      record_success(attempt, intent, processor)
+      record_success(attempt, intent)
     when "requires_confirmation"
       record_needs_action(attempt, intent)
     when "canceled"
@@ -126,7 +123,7 @@ class Membership::Autopay::Charge
     record_failure(attempt, e.payment.intent)
   end
 
-  def record_success(attempt, intent, processor)
+  def record_success(attempt, intent)
     charge = intent.latest_charge
     if charge.blank?
       return record_unknown(attempt, intent,
@@ -136,18 +133,16 @@ class Membership::Autopay::Charge
 
     begin
       # Pay expands latest_charge when it creates the intent; a reconciled intent
-      # carries only the id, so fetch that one on the customer's account.
+      # carries only the id, so fetch that one.
       if charge.is_a?(String)
         charge = Stripe::Charge.retrieve(
-          { id: charge, expand: Pay::Stripe::Charge::EXPAND },
-          { stripe_account: processor.stripe_account }.compact
+          { id: charge, expand: Pay::Stripe::Charge::EXPAND }
         )
       end
 
       pay_charge = Pay::Stripe::Charge.sync(
         charge.id,
-        object: charge,
-        stripe_account: processor.stripe_account
+        object: charge
       )
     rescue StandardError => e
       Rails.error.report(
