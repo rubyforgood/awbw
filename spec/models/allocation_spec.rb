@@ -68,13 +68,32 @@ RSpec.describe Allocation, type: :model do
         expect(build(:allocation, source: payment, allocatable: term, amount: -2_500)).to be_valid
       end
 
-      it "clears the checkout lock when a payment is applied" do
-        term.update_columns(payment_in_progress_at: Time.current, checkout_session_id: "cs_test_123")
+      it "clears a stale checkout lock when a payment is applied" do
+        term.update_columns(payment_in_progress_at: 32.minutes.ago, checkout_session_id: "cs_test_123")
 
         create(:allocation, source: payment, allocatable: term, amount: 1_000)
 
         expect(term.reload.payment_in_progress_at).to be_nil
         expect(term.checkout_session_id).to be_nil
+      end
+
+      it "blocks a manual payment while an online checkout is in progress" do
+        term.update_columns(payment_in_progress_at: Time.current, checkout_session_id: "cs_test_123")
+
+        allocation = build(:allocation, source: payment, allocatable: term, amount: 1_000)
+
+        expect(allocation).not_to be_valid
+        expect(allocation.errors[:base].join).to include("A payment is already in progress")
+      end
+
+      it "allows an external processor payment while an online checkout is in progress" do
+        term.update_columns(payment_in_progress_at: Time.current, checkout_session_id: "cs_test_123")
+        external_payment = create(:external_processor_payment,
+          person: term.person, amount_cents: 1_000, amount_cents_remaining: 1_000)
+
+        allocation = build(:allocation, source: external_payment, allocatable: term, amount: 1_000)
+
+        expect(allocation).to be_valid
       end
     end
 

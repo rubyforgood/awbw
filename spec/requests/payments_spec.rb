@@ -79,6 +79,32 @@ RSpec.describe "Payments", type: :request do
       end
     end
 
+    context "when allocating a manual payment to a membership invoice with an open checkout" do
+      let(:invoice) { create(:membership_invoice, cost_cents: 5_000) }
+
+      before do
+        invoice.update_columns(payment_in_progress_at: Time.current, checkout_session_id: "cs_test_123")
+      end
+
+      it "does not create a payment or allocation and explains why" do
+        expect {
+          post payments_path, params: {
+            payment: {
+              type: "CashPayment",
+              payer_type: "Person",
+              person_id: person.id,
+              amount_dollars: "10.00",
+              allocatable_sgid: invoice.to_sgid.to_s
+            }
+          }
+        }.to change(Payment, :count).by(0)
+          .and change(Allocation, :count).by(0)
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("A payment is already in progress for this invoice.")
+      end
+    end
+
     context "when allocating to a free EventRegistration" do
       let(:free_event) { create(:event, cost_cents: nil) }
       let(:registration) { create(:event_registration, event: free_event) }

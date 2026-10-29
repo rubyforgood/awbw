@@ -60,16 +60,16 @@ RSpec.describe MembershipInvoice, type: :model do
   end
 
   describe "#payment_in_progress?" do
-    it "is true while a checkout is inside the one-hour window" do
+    it "is true while a checkout is inside the payment window" do
       invoice = create(:membership_invoice)
-      invoice.update_column(:payment_in_progress_at, 59.minutes.ago)
+      invoice.update_column(:payment_in_progress_at, 30.minutes.ago)
 
       expect(invoice).to be_payment_in_progress
     end
 
     it "is false once the checkout window has passed" do
       invoice = create(:membership_invoice)
-      invoice.update_column(:payment_in_progress_at, 61.minutes.ago)
+      invoice.update_column(:payment_in_progress_at, 32.minutes.ago)
 
       expect(invoice).not_to be_payment_in_progress
     end

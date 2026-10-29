@@ -32,6 +32,7 @@ class Allocation < ApplicationRecord
 
   validate :reverted_requires_positive_amount, :negative_cannot_be_reverted
   validate :within_allocatable_cost, if: -> { allocatable.is_a?(Registerable) }
+  validate :no_manual_allocation_during_checkout, if: -> { allocatable.is_a?(MembershipInvoice) }
 
   after_create :adjust_source_remaining
   after_create :clear_membership_payment_in_progress
@@ -112,6 +113,15 @@ class Allocation < ApplicationRecord
   end
 
   private
+
+  def no_manual_allocation_during_checkout
+    return if source.is_a?(ExternalProcessorPayment)
+    return unless allocatable.payment_in_progress?
+
+    errors.add(:base,
+      "A payment is already in progress for this invoice. " \
+      "Wait for the online checkout to expire before recording a manual payment or credit.")
+  end
 
   def within_allocatable_cost
     messages = COST_ERRORS.fetch(allocatable_type)

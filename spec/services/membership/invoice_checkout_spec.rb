@@ -149,7 +149,7 @@ RSpec.describe Membership::InvoiceCheckout do
   end
 
   it "reclaims a lock that is older than the checkout window" do
-    invoice.update_column(:payment_in_progress_at, 61.minutes.ago)
+    invoice.update_column(:payment_in_progress_at, 32.minutes.ago)
 
     result = checkout
 

@@ -2,7 +2,7 @@ class MembershipInvoice < ApplicationRecord
   include PersonNameSearchable, Registerable
 
   PAYMENT_TOKEN_PURPOSE = "membership_invoice_payment".freeze
-  PAYMENT_WINDOW = 1.hour
+  PAYMENT_WINDOW = 31.minutes
 
   has_paper_trail
 

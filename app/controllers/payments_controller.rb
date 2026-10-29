@@ -66,7 +66,7 @@ class PaymentsController < ApplicationController
     rescue ActiveRecord::RecordInvalid => e
       if allocatable.present?
         @allocatable = allocatable
-        flash.now[:error] = @payment.errors.full_messages.join(", ")
+        flash.now[:error] = e.record.errors.full_messages.join(", ")
         respond_to do |format|
           format.turbo_stream { render status: :unprocessable_content }
           format.html { render :new, status: :unprocessable_content }
