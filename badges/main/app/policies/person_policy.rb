@@ -3,7 +3,7 @@ class PersonPolicy < ApplicationPolicy
 
   # Which tier each field sits in: docs/adr/0006-person-profile-field-access.md
   ADMIN_ONLY_FIELDS = %i[
-    email email_2
+    email email_type email_2 email_2_type
     filemaker_code blog_contributor notes member_since racial_ethnic_identity
     created_by_id updated_by_id
     staff_taggings_attributes affiliations_attributes comments_attributes

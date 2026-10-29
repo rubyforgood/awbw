@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get "up/jobs", to: "health_checks#jobs", as: :jobs_health_check
+
   resources :primary_assets
   resources :rich_text_assets
   resources :invoices
