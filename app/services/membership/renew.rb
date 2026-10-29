@@ -16,7 +16,7 @@ class Membership::Renew
     @membership.with_lock do
       return failure("This membership is locked.") if @membership.locked?
       return failure("Renewal is turned off.") unless @membership.renewal_on?
-      return failure("The next year has already been issued.") if @membership.next_invoice.present?
+      return failure("The next year has already been issued.") if @membership.next_invoice
       return failure("The membership term has already ended.") if @membership.end_date.blank? || @membership.end_date < Date.current - 1.day
       unless @force || @membership.end_date <= Date.current + Membership.renewal_window_days
         return failure("This membership is not in its renewal window yet.")

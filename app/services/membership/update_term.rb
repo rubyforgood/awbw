@@ -21,7 +21,7 @@ class Membership::UpdateTerm
       shortening = @end_date < @membership.end_date
       future = @membership.next_invoice
 
-      if shortening && future.present? && future.start_date > @end_date
+      if shortening && future && future.start_date > @end_date
         return failure("A payment is in progress for next year. Try again shortly.") if future.payment_in_progress?
         return failure("Next year has an unresolved payment attempt.") if future.unresolved_attempt?
 

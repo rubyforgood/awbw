@@ -53,7 +53,6 @@ class Membership::Autopay::Charge
 
   def create_attempt
     @invoice.with_lock do
-      @invoice.reload
       return failure("A payment is already in progress for this invoice.") if @invoice.payment_in_progress?
       return failure("This invoice has no balance to pay.") unless @invoice.remaining_cost.positive?
 

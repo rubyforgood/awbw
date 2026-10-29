@@ -128,7 +128,6 @@ class Membership::InvoiceCheckout
   # Do not hold the lock while talking to Stripe.
   def claim_invoice(replacing_session_id: nil)
     @invoice.with_lock do
-      @invoice.reload
       if replacing_session_id
         next false unless @invoice.checkout_session_id == replacing_session_id
 
@@ -144,7 +143,6 @@ class Membership::InvoiceCheckout
 
   def clear_cancelled_session(session_id)
     cleared = @invoice.with_lock do
-      @invoice.reload
       next false if @invoice.checkout_session_id.present? && @invoice.checkout_session_id != session_id
 
       @invoice.clear_payment_in_progress!

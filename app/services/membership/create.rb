@@ -41,7 +41,7 @@ class Membership::Create
   private
 
   def invoice_cost_cents(membership)
-    return @invoice_cost_cents unless @invoice_cost_cents.nil?
+    return @invoice_cost_cents if @invoice_cost_cents
 
     membership.cost_cents || Membership.annual_cost_cents
   end

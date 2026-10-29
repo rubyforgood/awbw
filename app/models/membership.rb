@@ -52,11 +52,9 @@ class Membership < ApplicationRecord
   def renewal_on? = renewal_off_at.nil?
   def renewal_off? = !renewal_on?
 
-  def active? = start_date.present? && start_date <= Date.current && end_date.present? && end_date >= Date.current
+  def active? = start_date <= Date.current && end_date >= Date.current
 
-  def upcoming?
-    start_date.present? && start_date > Date.current
-  end
+  def upcoming? = start_date > Date.current
 
   def upcoming_start_date = start_date
 
@@ -68,7 +66,7 @@ class Membership < ApplicationRecord
     end
   end
 
-  def ended? = end_date.present? && end_date < Date.current
+  def ended? = end_date < Date.current
 
   def cost_dollars
     cost_cents.to_d / 100 if cost_cents
@@ -129,14 +127,10 @@ class Membership < ApplicationRecord
     return "its invoice has payments or credits applied" unless invoice.allocations.sum(:amount).zero?
     return "its invoice has a payment in progress" if invoice.payment_in_progress?
     return "its invoice has an unresolved payment attempt" if invoice.unresolved_attempt?
-
-    nil
   end
 
   def deletion_blocked_reason
     return "it has invoices" if membership_invoices.exists?
-
-    nil
   end
 
   def lock_for_history!
@@ -147,7 +141,7 @@ class Membership < ApplicationRecord
         raise ActiveRecord::RecordInvalid.new(self)
       end
 
-      update!(locked_at: Time.current, renewal_off_at: renewal_off_at || Time.current, autopay_on: false)
+      update!(locked_at: Time.current, renewal_off_at: renewal_off_at || Time.current)
     end
   end
 

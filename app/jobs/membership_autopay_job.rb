@@ -18,7 +18,7 @@ class MembershipAutopayJob < ApplicationJob
     return if invoice.attempts_exhausted?
 
     last = invoice.latest_attempt
-    return if last&.attempted_at.present? && last.attempted_at.to_date >= Date.current
+    return if last&.attempted_at && last.attempted_at.to_date >= Date.current
     return if last&.pending? || last&.unknown? || last&.needs_action?
 
     card = invoice.person.stripe_customer&.payment_methods&.order(default: :desc, id: :desc)&.first

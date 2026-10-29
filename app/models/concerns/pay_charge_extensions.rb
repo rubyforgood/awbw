@@ -48,10 +48,7 @@ module PayChargeExtensions
       metadata: metadata.merge(stripe_charge: object)
     )
 
-    return unless invoice
-
     invoice.with_lock do
-      invoice.reload
       allocation_amount = [ amount, invoice.remaining_cost ].min
       next unless allocation_amount.positive?
 

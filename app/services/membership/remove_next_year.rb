@@ -15,7 +15,7 @@ class Membership::RemoveNextYear
     @membership.with_lock do
       invoice = @membership.next_invoice
 
-      if invoice.present?
+      if invoice
         return failure("A payment is in progress for next year.") if invoice.payment_in_progress?
         return failure("Next year has an unresolved payment attempt.") if invoice.unresolved_attempt?
         return failure("Next year already has payments applied. Refund it instead.") unless invoice.allocations.sum(:amount).zero?

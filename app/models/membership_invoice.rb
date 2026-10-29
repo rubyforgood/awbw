@@ -307,6 +307,6 @@ class MembershipInvoice < ApplicationRecord
   end
 
   def clear_payment_in_progress
-    clear_payment_in_progress! if payment_in_progress_at.present? || checkout_session_id.present?
+    clear_payment_in_progress! if payment_in_progress_at || checkout_session_id
   end
 end
