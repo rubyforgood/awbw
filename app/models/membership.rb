@@ -51,11 +51,6 @@ class Membership < ApplicationRecord
   def renewal_on? = renewal_off_at.nil?
   def renewal_off? = !renewal_on?
 
-  def renewal_off=(value)
-    flag = ActiveModel::Type::Boolean.new.cast(value)
-    self.renewal_off_at = flag ? (renewal_off_at || Time.current) : nil
-  end
-
   def active? = start_date.present? && start_date <= Date.current && end_date.present? && end_date >= Date.current
 
   def upcoming?
@@ -64,7 +59,13 @@ class Membership < ApplicationRecord
 
   def upcoming_start_date = start_date
 
-  def owes? = invoices_due.any?
+  def owes?
+    return @owes if defined?(@owes)
+
+    @owes = membership_invoices.any? do |invoice|
+      invoice.start_date <= Date.current && !invoice.paid_in_full?
+    end
+  end
 
   def ended? = end_date.present? && end_date < Date.current
 
@@ -135,26 +136,9 @@ class Membership < ApplicationRecord
     nil
   end
 
-  def remove_next_year!
-    invoice = next_invoice
-    return false if invoice.blank?
-    return false unless invoice.start_date > Date.current
-    return false if invoice.payment_in_progress?
-    return false unless invoice.allocations.sum(:amount).zero?
-    return false unless invoice.other_invoices?
-
-    invoice.destroy!
-
-    update_column(:renewal_off_at, Time.current)
-    true
-  end
-
   def lock_for_history!
     transaction do
-      begin
-        remove_next_year!
-      rescue ActiveRecord::RecordNotDestroyed
-      end
+      Membership::RemoveNextYear.call(membership: self)
       update!(locked_at: Time.current, renewal_off_at: renewal_off_at || Time.current, autopay_on: false)
     end
   end
