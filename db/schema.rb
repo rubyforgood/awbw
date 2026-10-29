@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_28_150001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_120000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1362,6 +1362,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_150001) do
     t.index ["membership_invoice_id", "attempt_number"], name: "index_membership_charge_attempts_on_invoice_and_attempt", unique: true
     t.index ["membership_invoice_id"], name: "index_membership_charge_attempts_on_membership_invoice_id"
     t.index ["pay_charge_id"], name: "index_membership_charge_attempts_on_pay_charge_id"
+    t.index ["payment_intent_id"], name: "index_membership_charge_attempts_on_payment_intent_id"
     t.index ["status"], name: "index_membership_charge_attempts_on_status"
   end
 
