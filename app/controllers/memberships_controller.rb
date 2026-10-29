@@ -1,4 +1,6 @@
 class MembershipsController < ApplicationController
+  include DollarAmountParsing
+
   before_action :set_membership, only: %i[ show edit update destroy ]
 
   def index
@@ -40,11 +42,17 @@ class MembershipsController < ApplicationController
         alert: "Enter both a start and an end date.", status: :see_other
     end
 
+    cost_cents = parse_cents(attrs[:cost_dollars])
+    if cost_cents == DollarAmountParsing::INVALID_AMOUNT
+      return redirect_to edit_membership_path(@membership),
+        alert: "Enter the locked price as a number, e.g. 100 or 99.50.", status: :see_other
+    end
+
     result = Membership::UpdateTerm.call(
       membership: @membership,
       start_date: start_date,
       end_date: end_date,
-      cost_cents: parse_cents(attrs[:cost_dollars])
+      cost_cents: cost_cents
     )
 
     if result.success?
@@ -82,11 +90,5 @@ class MembershipsController < ApplicationController
     Date.parse(value)
   rescue ArgumentError, TypeError
     nil
-  end
-
-  def parse_cents(value)
-    return if value.blank?
-
-    (value.to_d * 100).to_i
   end
 end

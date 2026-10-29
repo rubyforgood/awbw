@@ -1,5 +1,7 @@
 module People
   class MembershipsController < ApplicationController
+    include DollarAmountParsing
+
     before_action :set_person, only: %i[ index new create ]
 
     def index
@@ -19,18 +21,26 @@ module People
         start_date: Date.current,
         end_date: Date.current + Membership::INVOICE_PERIOD - 1.day
       )
-      @membership.first_invoice_cost_dollars = Membership.annual_cost_cents / 100.0
     end
 
     def create
       authorize! :membership
 
       start_date = parse_date(params.dig(:membership, :start_date)) || Date.current
+      cost_cents = parse_cents(params.dig(:membership, :cost_dollars))
+      invoice_cost_cents = parse_cents(params.dig(:membership, :first_invoice_cost_dollars))
+
+      if [ cost_cents, invoice_cost_cents ].include?(DollarAmountParsing::INVALID_AMOUNT)
+        @membership = @person.memberships.new(start_date: start_date)
+        @errors = [ "Enter the locked price and first invoice as numbers, e.g. 100 or 99.50." ]
+        return render :new, status: :unprocessable_content
+      end
+
       result = Membership::Create.call(
         person: @person,
         start_date: start_date,
-        cost_cents: parse_cents(params.dig(:membership, :cost_dollars)),
-        invoice_cost_cents: parse_cents(params.dig(:membership, :first_invoice_cost_dollars))
+        cost_cents: cost_cents,
+        invoice_cost_cents: invoice_cost_cents
       )
 
       if result.success?
@@ -56,12 +66,6 @@ module People
       Date.parse(value)
     rescue ArgumentError, TypeError
       nil
-    end
-
-    def parse_cents(value)
-      return if value.blank?
-
-      (value.to_d * 100).to_i
     end
   end
 end
