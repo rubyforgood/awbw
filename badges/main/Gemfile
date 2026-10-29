@@ -105,7 +105,7 @@ end
 
 gem "rack-mini-profiler", "~> 4.0"
 
-gem "solid_queue", "~> 1.3"
+gem "solid_queue", "~> 1.7"
 
 # Observability (production-only via initializer guard)
 gem "opentelemetry-sdk"
