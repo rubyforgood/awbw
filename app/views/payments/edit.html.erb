@@ -46,7 +46,8 @@
 
           <div class="admin-only rounded-md bg-blue-100 px-3 pt-3">
             <%= f.input :filemaker_code,
-              input_html: { class: "bg-white" },
+              as: :text,
+              input_html: { rows: 1, class: "bg-white resize-y" },
               label: "FileMaker code",
               hint: filemaker_code_hint(f.object) %>
           </div>
