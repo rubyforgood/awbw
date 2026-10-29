@@ -10,5 +10,13 @@ module Admin
     def repair?
       admin?
     end
+
+    def restart_app?
+      admin?
+    end
+
+    def retry_interrupted_jobs?
+      admin?
+    end
   end
 end
