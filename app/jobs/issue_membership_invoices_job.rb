@@ -6,12 +6,23 @@ class IssueMembershipInvoicesJob < ApplicationJob
 
     Time.use_zone(Membership::TIME_ZONE) do
       expiring_memberships.find_each do |membership|
-        Membership::Renew.call(membership: membership)
+        renew_membership(membership)
       end
     end
   end
 
   private
+
+  def renew_membership(membership)
+    Membership::Renew.call(membership: membership)
+  rescue StandardError => e
+    Rails.error.report(
+      e,
+      handled: true,
+      source: "membership.issue_invoices",
+      context: { membership_id: membership.id }
+    )
+  end
 
   def expiring_memberships
     Membership
