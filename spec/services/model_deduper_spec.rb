@@ -310,6 +310,13 @@ RSpec.describe ModelDeduper do
       expect(names_for("Comments")).to eq([ "Called about the spring training and left a voicemail for..." ])
       expect(names_for("Notifications (person)")).to eq([ "Your registration is confirmed · Jun 2, 2025" ])
     end
+
+    it "names a row from a table with no model class" do
+      organization = create(:organization, name: "Sunrise Shelter")
+      anonymous = Class.new(ApplicationRecord) { self.table_name = "organizations" }
+
+      expect(service.record_display(anonymous.find(organization.id))).to eq("Sunrise Shelter")
+    end
   end
 
   describe "#lost_references" do
