@@ -25,7 +25,7 @@ class MembershipDecorator < ApplicationDecorator
 
   def status_tooltip
     return "Membership starts #{start_date.strftime("%b %-d, %Y")}." if upcoming?
-    return "Renewal is off. Membership ends #{end_date.strftime("%b %-d, %Y")}." if active? && renewal_off?
+    return "Renewal is off, so automatic payments are off. Membership ends #{end_date.strftime("%b %-d, %Y")}." if active? && renewal_off?
     return "Current membership covers today." if active?
 
     "Membership term ended #{end_date.strftime("%b %-d, %Y")}."
@@ -88,7 +88,7 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def renewal_tooltip
-    renewal_on? ? "A new invoice is issued each year." : "No new invoices will be issued. Existing invoices remain payable."
+    renewal_on? ? "A new invoice is issued each year." : "No new invoices will be issued. Automatic payments are off. Existing invoices remain payable."
   end
 
   def period_label

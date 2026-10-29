@@ -22,7 +22,7 @@
                         title="Historical membership. Unlock it before editing or issuing new invoices.">Locked membership</span>
                 <% elsif !invoice.membership.renewal_on? %>
                   <span class="mt-1 block text-xs text-gray-500"
-                        title="No new invoices will be issued. Existing invoices remain payable.">Renewal off</span>
+                        title="No new invoices will be issued. Automatic payments are off. Existing invoices remain payable.">Renewal off</span>
                 <% end %>
               </td>
               <td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">

@@ -65,8 +65,8 @@
               <%= button_to "Turn off renewal", membership_renewal_path(membership),
                     method: :patch, params: { renewal_on: "0" },
                     class: button_classes(:secondary_outline, size: :sm),
-                    title: "Stops future invoices. The current term remains in place.",
-                    data: { turbo_confirm: "Stop renewing this membership? The current term still stands." } %>
+                    title: "Stops future invoices and automatic payments. The current term remains in place.",
+                    data: { turbo_confirm: "Stop renewing this membership and turn off automatic payments? The current term still stands." } %>
             <% elsif (renewal_blocked_reason = membership.renewal_blocked_reason) %>
               <%= button_to "Turn on renewal", membership_renewal_path(membership),
                     method: :patch, params: { renewal_on: "1" },
@@ -77,14 +77,14 @@
               <%= button_to "Turn on renewal", membership_renewal_path(membership),
                     method: :patch, params: { renewal_on: "1" },
                     class: button_classes(:secondary_outline, size: :sm),
-                    title: "Resumes future invoices. It does not issue an invoice immediately." %>
+                    title: "Resumes future invoices. Automatic payments stay off until the member subscribes." %>
             <% end %>
 
             <% if @next_invoice.present? %>
               <%= button_to "Remove next year", membership_next_year_path(membership),
                     method: :delete, class: button_classes(:danger_outline, size: :sm),
-                    title: "Deletes the unstarted next invoice, rolls the end date back, and turns renewal off.",
-                    data: { turbo_confirm: "Remove the unstarted next year and roll the term back?" } %>
+                    title: "Deletes the unstarted next invoice, rolls the end date back, and turns renewal and automatic payments off.",
+                    data: { turbo_confirm: "Remove the unstarted next year, roll the term back, and turn off renewal and automatic payments?" } %>
             <% end %>
 
             <% if membership.deletable? || membership.discardable? %>
@@ -113,7 +113,7 @@
         <dt class="text-xs tracking-wide text-gray-500 uppercase">
           Renewal
           <i class="fa-solid fa-circle-info ml-0.5 cursor-help text-[0.65rem] text-gray-400"
-             title="Renewal controls whether future invoices are issued. Autopay only charges invoices that already exist."></i>
+             title="Renewal controls whether future invoices are issued. Turning it off also stops automatic payments. Issued invoices remain payable."></i>
         </dt>
         <dd class="mt-0.5 font-medium text-gray-800"><%= membership.auto_renewal_label %></dd>
       </div>

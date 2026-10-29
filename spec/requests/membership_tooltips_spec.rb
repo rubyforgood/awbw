@@ -21,7 +21,7 @@ RSpec.describe "Membership tooltips", type: :request do
     expect(response).to have_http_status(:ok)
     body = CGI.unescapeHTML(response.body)
     expect(body).to include("Creates the next year's invoice now. The ending invoice must be paid in full.")
-    expect(body).to include("Stops future invoices. The current term remains in place.")
+    expect(body).to include("Stops future invoices and automatic payments. The current term remains in place.")
     expect(body).to include("Current membership covers today.")
   end
 

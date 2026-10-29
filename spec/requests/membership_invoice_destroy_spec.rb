@@ -38,7 +38,7 @@ RSpec.describe "Membership invoice deletion", type: :request do
     expect(membership.reload.end_date).to eq(current.end_date)
     expect(membership).not_to be_renewal_on
     expect(response).to redirect_to(membership_path(membership))
-    expect(flash[:notice]).to eq("Next year removed. Renewal is now off.")
+    expect(flash[:notice]).to eq("Next year removed. Renewal and automatic payments are off.")
   end
 
   it "refuses to delete while an autopay attempt is pending" do

@@ -8,7 +8,7 @@ module Memberships
       result = Membership::RemoveNextYear.call(membership: @membership)
       if result.success?
         redirect_to membership_path(@membership),
-          notice: "Next year removed. Renewal is now off.", status: :see_other
+          notice: "Next year removed. Renewal and automatic payments are off.", status: :see_other
       else
         redirect_to membership_path(@membership),
           alert: result.errors.to_sentence, status: :see_other

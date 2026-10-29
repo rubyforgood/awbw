@@ -45,6 +45,7 @@ class Membership < ApplicationRecord
 
   attr_accessor :skip_deletion_guard, :first_invoice_cost_dollars
 
+  before_save :disable_autopay_when_renewal_off, if: :renewal_off?
   before_destroy :prepare_destroy, prepend: true
 
   def locked? = locked_at.present?
@@ -151,6 +152,10 @@ class Membership < ApplicationRecord
   end
 
   private
+
+  def disable_autopay_when_renewal_off
+    self.autopay_on = false
+  end
 
   def prepare_destroy
     unless skip_deletion_guard

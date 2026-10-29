@@ -15,7 +15,7 @@ class MembershipPolicy < ApplicationPolicy
   def remove_next_year? = record.persisted? && manage? && !record.locked?
 
   # Owners choose the card; admins may only turn automatic payments off.
-  def enable_autopay? = Membership.enabled? && owner? && !record.locked?
+  def enable_autopay? = Membership.enabled? && owner? && !record.locked? && record.renewal_on?
   def disable_autopay? = Membership.enabled? && (manage? || owner?)
 
   def manage_membership? = Membership.enabled? && owner?

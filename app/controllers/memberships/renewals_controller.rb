@@ -15,7 +15,7 @@ module Memberships
       @membership.update!(renewal_off_at: renewal_on ? nil : Time.current)
 
       redirect_to membership_path(@membership),
-        notice: renewal_on ? "Renewal turned on." : "Renewal turned off.",
+        notice: renewal_on ? "Renewal turned on." : "Renewal turned off. Automatic payments are off.",
         status: :see_other
     end
 

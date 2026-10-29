@@ -23,8 +23,8 @@
         <% if next_year %>
           <%= button_to "Remove next year", membership_next_year_path(membership_invoice.membership),
                 method: :delete, class: button_classes(:danger_outline, size: :sm),
-                title: "Deletes the unstarted next invoice and turns renewal off.",
-                data: { turbo_confirm: "Remove the unstarted next year and turn renewal off?" } %>
+                title: "Deletes the unstarted next invoice and turns renewal and automatic payments off.",
+                data: { turbo_confirm: "Remove the unstarted next year and turn off renewal and automatic payments?" } %>
         <% else %>
           <%= button_to "Delete invoice", membership_invoice_path(membership_invoice),
                 method: :delete, class: button_classes(:danger_outline, size: :sm),
