@@ -104,6 +104,13 @@ year = ->(membership, start_date, cost_cents: standard, paid: false, partial: ni
   invoice
 end
 
+renewal_soon = ->(person) do
+  start = Date.current - 1.year + 10.days
+  membership = membership_for.(person, start_date: start)
+  current = year.(membership, start, paid: true)
+  [ membership, current ]
+end
+
 join = ->(person, start_date) do
   result = Membership::Create.call(person:, start_date:)
   raise result.errors.to_sentence unless result.success?
@@ -117,25 +124,29 @@ join = ->(person, start_date) do
   membership
 end
 
-autopay = ->(membership, card: true) do
-  person = membership.person
+card_for = ->(person) do
+  customer = Pay::Customer.find_or_initialize_by(owner: person, processor: "stripe")
+  customer.update!(
+    processor_id: customer.processor_id.presence || "cus_mseed_#{person.id}",
+    default: true
+  )
 
-  if card
-    customer = Pay::Customer.find_or_create_by!(owner: person, processor: "stripe") do |record|
-      record.processor_id = "cus_mseed_#{person.id}"
-      record.default = true
-    end
-    Pay::Stripe::PaymentMethod.find_or_create_by!(customer: customer, processor_id: "pm_mseed_#{person.id}") do |method|
-      method.payment_method_type = "card"
-      method.brand = "Visa"
-      method.last4 = "4242"
-      method.exp_month = "12"
-      method.exp_year = (Date.current.year + 2).to_s
-      method.default = true
-    end
-  end
+  method = Pay::Stripe::PaymentMethod.find_or_initialize_by(
+    customer: customer, processor_id: "pm_mseed_#{person.id}"
+  )
+  method.update!(
+    payment_method_type: "card",
+    brand: "Visa",
+    last4: "4242",
+    exp_month: "12",
+    exp_year: (Date.current.year + 2).to_s,
+    default: true
+  )
+end
 
-  membership.update!(autopay_on: true)
+autopay = ->(membership, card: true, on: true) do
+  card_for.(membership.person) if card
+  membership.update!(autopay_on: on)
 end
 
 seed = ->(email:, first:, last:, label:, &block) do
@@ -177,6 +188,43 @@ seed.(email: "upcoming.renewal", first: "Upcoming", last: "Renewal", label: "Act
   membership = membership_for.(person)
   current = year.(membership, Date.current - 3.months, paid: true)
   year.(membership, current.end_date + 1.day)
+end
+
+seed.(email: "autopay.upcoming", first: "Autopay", last: "Upcoming", label: "Active — next invoice issued, autopay pending") do |person|
+  membership, current = renewal_soon.(person)
+  year.(membership, current.end_date + 1.day)
+  autopay.(membership)
+end
+
+seed.(email: "autopay.scheduled", first: "Autopay", last: "Scheduled", label: "Active — next invoice scheduled") do |person|
+  membership = membership_for.(person)
+  current = year.(membership, Date.current - 3.months, paid: true)
+  year.(membership, current.end_date + 1.day)
+  autopay.(membership)
+end
+
+seed.(email: "subscribe.card", first: "Subscribe", last: "Card", label: "Active — card on file, autopay off") do |person|
+  membership = membership_for.(person)
+  year.(membership, Date.current - 3.months, paid: true)
+  autopay.(membership, on: false)
+end
+
+seed.(email: "subscribe.issued", first: "Subscribe", last: "Issued", label: "Active — card on file, next invoice due") do |person|
+  membership, current = renewal_soon.(person)
+  year.(membership, current.end_date + 1.day)
+  autopay.(membership, on: false)
+end
+
+seed.(email: "checkout.in_progress", first: "Checkout", last: "In progress", label: "Active — checkout in progress") do |person|
+  membership = membership_for.(person)
+  invoice = year.(membership, Date.current - 3.months)
+  invoice.update_column(:payment_in_progress_at, 10.minutes.ago)
+end
+
+seed.(email: "paid.upcoming", first: "Paid", last: "Upcoming", label: "Active — current and next year paid") do |person|
+  membership = membership_for.(person)
+  current = year.(membership, Date.current - 3.months, paid: true)
+  year.(membership, current.end_date + 1.day, paid: true)
 end
 
 seed.(email: "free.year", first: "Free", last: "Year", label: "Active — $0 current year") do |person|

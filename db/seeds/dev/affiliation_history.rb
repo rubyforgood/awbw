@@ -114,7 +114,7 @@ else
     note.(first_facilitator, "Minted from the Foundations training roster.", year.(7) + 2.days)
 
     # ── 6 years ago: first membership year, paid ─────────────────────────────
-    # Reuse an existing uncancelled membership if another seed gave this person
+    # Reuse an existing renewal-on membership if another seed gave this person
     # one (e.g. membership.rb's checkout demos), so seed order can't collide.
     membership = person.memberships.renewal_on.first ||
       person.memberships.create!(
