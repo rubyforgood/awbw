@@ -82,16 +82,7 @@ class MembershipInvoicesController < ApplicationController
     authorize! @membership_invoice
     membership = @membership_invoice.membership
 
-    if @membership_invoice.id == membership.next_invoice&.id
-      result = Membership::RemoveNextYear.call(membership:)
-      if result.success?
-        redirect_to membership_path(membership),
-          notice: "Next year removed. Renewal is now off.", status: :see_other
-      else
-        redirect_to membership_path(membership),
-          alert: result.errors.to_sentence, status: :see_other
-      end
-    elsif @membership_invoice.deletable?
+    if @membership_invoice.deletable?
       @membership_invoice.destroy!
       redirect_to membership_path(membership),
         notice: "Membership invoice deleted.", status: :see_other
