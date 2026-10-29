@@ -10,5 +10,9 @@ module Admin
     def repair?
       admin?
     end
+
+    def retry_interrupted_jobs?
+      admin?
+    end
   end
 end
