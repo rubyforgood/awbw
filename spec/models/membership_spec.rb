@@ -86,6 +86,25 @@ RSpec.describe Membership, type: :model do
     end
   end
 
+  describe "#next_autopay_invoice" do
+    it "returns an unpaid invoice within the renewal window" do
+      membership = create(:membership)
+      invoice = create(:membership_invoice, membership: membership,
+        start_date: Date.current, end_date: Date.current + 1.year - 1.day)
+
+      expect(membership.next_autopay_invoice).to eq(invoice)
+    end
+
+    it "ignores an invoice beyond the renewal window" do
+      membership = create(:membership)
+      create(:membership_invoice, membership: membership,
+        start_date: Date.current + Membership.renewal_window_days + 1.day,
+        end_date: Date.current + Membership.renewal_window_days + 1.year)
+
+      expect(membership.next_autopay_invoice).to be_nil
+    end
+  end
+
   describe "#owes?" do
     it "is true when a started invoice still has a balance" do
       membership = create(:membership)

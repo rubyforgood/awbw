@@ -65,7 +65,6 @@ RSpec.describe "Membership term", type: :model do
       invoice_for(membership, membership.start_date, end_date: membership.end_date)
 
       expect(membership.renewal_blocked_reason).to be_nil
-      expect(membership).to be_renewable
     end
 
     it "blocks an ended term beyond the one-day grace" do

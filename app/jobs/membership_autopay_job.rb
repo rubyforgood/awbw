@@ -39,14 +39,10 @@ class MembershipAutopayJob < ApplicationJob
   private
 
   def chargeable_invoices
-    start_dates = (Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS)..
-      (Date.current + Membership.renewal_window_days)
-
     MembershipInvoice
       .joins(membership: :person)
       .where(memberships: { locked_at: nil, autopay_on: true })
-      .merge(MembershipInvoice.not_paid_in_full)
-      .where(start_date: start_dates)
+      .merge(MembershipInvoice.not_paid_in_full.autopay_chargeable)
       .includes(membership: :person)
   end
 end

@@ -2,6 +2,7 @@ class MembershipInvoice < ApplicationRecord
   include PersonNameSearchable, Registerable
 
   PAYMENT_TOKEN_PURPOSE = "membership_invoice_payment".freeze
+  PAYMENT_WINDOW = 1.hour
 
   has_paper_trail
 
@@ -29,6 +30,14 @@ class MembershipInvoice < ApplicationRecord
 
   scope :overdue, ->(as_of = Date.current) {
     not_paid_in_full.where(start_date: ..as_of)
+  }
+
+  scope :autopay_issued, ->(as_of = Date.current) {
+    where(start_date: ..(as_of + Membership.renewal_window_days))
+  }
+
+  scope :autopay_chargeable, ->(as_of = Date.current) {
+    autopay_issued(as_of).where(start_date: (as_of - MembershipChargeAttempt::RETRY_WINDOW_DAYS)..)
   }
 
   scope :with_positive_allocation, -> {
@@ -88,6 +97,15 @@ class MembershipInvoice < ApplicationRecord
     start_date.present? && start_date > as_of
   end
 
+  def autopay_issued?(as_of = Date.current)
+    start_date.present? && start_date <= as_of + Membership.renewal_window_days
+  end
+
+  def autopay_chargeable?(as_of = Date.current)
+    autopay_issued?(as_of) &&
+      start_date >= as_of - MembershipChargeAttempt::RETRY_WINDOW_DAYS
+  end
+
   def cost_dollars
     cost_cents.to_d / 100 if cost_cents
   end
@@ -109,9 +127,9 @@ class MembershipInvoice < ApplicationRecord
   def pristine? = allocations.none?
 
   def payment_in_progress?
-    return true if payment_in_progress_at.present? && payment_in_progress_at > 1.hour.ago
+    return true if payment_in_progress_at.present? && payment_in_progress_at > PAYMENT_WINDOW.ago
 
-    charge_attempts.pending.where(attempted_at: 1.hour.ago..).exists?
+    charge_attempts.pending.where(attempted_at: PAYMENT_WINDOW.ago..).exists?
   end
 
   def mark_payment_in_progress!

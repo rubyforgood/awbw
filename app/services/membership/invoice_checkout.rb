@@ -110,7 +110,7 @@ class Membership::InvoiceCheckout
         },
         quantity: 1
       } ],
-      expires_at: 1.hour.from_now.to_i,
+      expires_at: MembershipInvoice::PAYMENT_WINDOW.from_now.to_i,
       success_url: @success_url,
       cancel_url: @cancel_url
     )

@@ -18,7 +18,7 @@ class Membership::Autopay::Charge
   end
 
   def call
-    if @invoice.start_date > Date.current + Membership.renewal_window_days
+    unless @invoice.autopay_chargeable?
       return failure("This invoice is outside the automatic payment window.")
     end
     return failure("This invoice has no balance to pay.") unless @invoice.remaining_cost.positive?

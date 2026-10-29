@@ -84,7 +84,7 @@ class Membership < ApplicationRecord
   def next_autopay_invoice
     membership_invoices
       .not_paid_in_full
-      .where(start_date: ..Date.current + Membership.renewal_window_days)
+      .autopay_issued
       .order(:start_date)
       .first
   end
@@ -112,8 +112,6 @@ class Membership < ApplicationRecord
 
     nil
   end
-
-  def renewable? = renewal_blocked_reason.nil?
 
   def deletable? = membership_invoices.none?
 

@@ -763,14 +763,18 @@ class PeopleController < ApplicationController
     @membership = @person.current_membership&.decorate
     return unless @membership
 
-    invoices = @membership.object.membership_invoices.includes(:allocations).to_a
-    current = invoices.select(&:active_on?)
-    upcoming = invoices.select(&:upcoming?).min_by(&:start_date)
-    unpaid = invoices.reject(&:paid_in_full?)
-    @membership_invoices = (current + [ upcoming ] + unpaid).compact.uniq.sort_by(&:start_date)
+    @membership_invoices = membership_invoices_for_profile(@membership.object)
     @membership_autopay = @membership.autopay_on?
     @membership_autopay_invoice = @membership.object.next_autopay_invoice
     @membership_has_card = @person.stripe_customer&.payment_methods&.exists? || false
+  end
+
+  def membership_invoices_for_profile(membership)
+    invoices = membership.membership_invoices.includes(:allocations).to_a
+    current = invoices.select(&:active_on?)
+    upcoming = invoices.select(&:upcoming?).min_by(&:start_date)
+    unpaid = invoices.reject(&:paid_in_full?)
+    (current + [ upcoming ] + unpaid).compact.uniq.sort_by(&:start_date)
   end
 
   def set_checkout_flash
@@ -784,8 +788,6 @@ class PeopleController < ApplicationController
       else
         flash[:notice] = "Thank you! Your membership payment was received."
       end
-    elsif params[:membership_invoice_checkout] == "cancelled"
-      flash[:alert] = "Payment was cancelled."
     elsif params[:autopay_setup] == "success"
       if enable_autopay_from_setup
         flash[:notice] = "Automatic payments are on."

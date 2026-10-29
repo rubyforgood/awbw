@@ -25,10 +25,10 @@ class MembershipInvoiceDecorator < ApplicationDecorator
     return unless autopay_ready
     return :pay_now if latest_attempt&.failed?
     return :pay_now if checkout_session_id.present?
-    return :pay_now if start_date < Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS
-    return :pending if start_date <= Date.current + Membership.renewal_window_days
+    return :scheduled unless autopay_issued?
+    return :pay_now unless autopay_chargeable?
 
-    :scheduled
+    :pending
   end
 
   def period_range
@@ -49,10 +49,6 @@ class MembershipInvoiceDecorator < ApplicationDecorator
 
   def comped?
     cost_cents.zero?
-  end
-
-  def last_error
-    latest_attempt&.error_message
   end
 
   private

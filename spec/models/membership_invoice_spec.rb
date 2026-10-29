@@ -373,6 +373,39 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
+  describe "autopay windows" do
+    it "is issued through the renewal window" do
+      inside = create(:membership_invoice,
+        start_date: Date.current + Membership.renewal_window_days)
+      outside = create(:membership_invoice,
+        start_date: Date.current + Membership.renewal_window_days + 1.day)
+
+      expect(inside).to be_autopay_issued
+      expect(outside).not_to be_autopay_issued
+      expect(described_class.autopay_issued).to include(inside)
+      expect(described_class.autopay_issued).not_to include(outside)
+    end
+
+    it "is chargeable through the retry window" do
+      inside = create(:membership_invoice,
+        start_date: Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS)
+      outside = create(:membership_invoice,
+        start_date: Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS - 1.day)
+
+      expect(inside).to be_autopay_chargeable
+      expect(outside).not_to be_autopay_chargeable
+      expect(described_class.autopay_chargeable).to include(inside)
+      expect(described_class.autopay_chargeable).not_to include(outside)
+    end
+
+    it "does not charge an invoice beyond the renewal window" do
+      future = create(:membership_invoice,
+        start_date: Date.current + Membership.renewal_window_days + 1.day)
+
+      expect(future).not_to be_autopay_chargeable
+    end
+  end
+
   describe "#registrant" do
     it "is the subscription's person, so payment code can stay type-agnostic" do
       invoice = create(:membership_invoice)
