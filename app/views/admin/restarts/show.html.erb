@@ -1,0 +1,25 @@
+<% content_for(:page_title, "Restart app") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-xl">
+  <div class="mb-6">
+    <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class}" %>
+  </div>
+
+  <h1 class="mb-2 text-2xl font-semibold text-gray-900">Restart app</h1>
+  <p class="mb-6 text-sm text-gray-600">
+    Restarts the portal, the same as a restart from the hosting dashboard. Use it when
+    emails or other background work have stopped going out, or the site is stuck. The
+    whole site goes down for a minute or two while it comes back.
+  </p>
+
+  <% if AppRestart.available? %>
+    <%= button_to admin_restart_path,
+          class: button_classes(:danger_outline),
+          form: { data: { turbo_confirm: "Restart the app? The whole site goes down for a minute or two while it comes back." } } do %>
+      <i class="fa-solid fa-power-off"></i> Restart app
+    <% end %>
+  <% else %>
+    <p class="text-sm text-gray-500">Restarting isn't available in this environment.</p>
+  <% end %>
+</div>

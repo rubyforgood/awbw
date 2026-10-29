@@ -1,0 +1,11 @@
+name: "Restart the app from an admin page"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-29
+action_path: "/admin/restart"
+summary: >-
+  Admins can restart the portal without access to the hosting dashboard, from a
+  page with a single Restart app button.
+pro_tips:
+  - "The page isn't linked from any menu on purpose. Type /admin/restart after the portal's address to reach it."
+  - "Use it when emails or other background work have stopped going out, or the site is stuck. The whole site is down for a minute or two."

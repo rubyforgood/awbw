@@ -71,6 +71,8 @@ Rails.application.routes.draw do
     get "data_health/worklists",     to: "data_health#worklists", as: "data_health_worklists"
     get "data_health/:check/rows",   to: "data_health#rows", as: "data_health_rows"
     post "data_health/:check/repair", to: "data_health#repair", as: "data_health_repair"
+    get "restart",                   to: "restarts#show", as: "restart"
+    post "restart",                  to: "restarts#create"
     get "resource_roles",            to: "resource_roles#show", as: "resource_roles"
     patch "resource_roles",          to: "resource_roles#update"
     get "certificate_settings",      to: redirect("/admin/resource_roles")
