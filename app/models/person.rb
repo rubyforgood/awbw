@@ -504,7 +504,7 @@ class Person < ApplicationRecord
   # Membership billing is Stripe-only. Prefer the reconciled default customer;
   # only create/select a Stripe processor when the person has none.
   def stripe_customer
-    pay_customers.find_by(processor: "stripe", default: true)
+    pay_customers.active.find_by(processor: "stripe", default: true)
   end
 
   def stripe_payment_processor
