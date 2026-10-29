@@ -765,6 +765,28 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".scholarship_status not_agreed" do
+    def reg_with_scholarship(status)
+      reg = create(:event_registration)
+      scholarship = create(:scholarship, recipient: reg.registrant)
+      scholarship.update_columns(agreement_response_status: status)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 0)
+      reg
+    end
+
+    it "matches pending and support-requested scholarships, not agreed or declined ones" do
+      pending_reg = reg_with_scholarship("pending")
+      support_reg = reg_with_scholarship("support_requested")
+      agreed_reg = reg_with_scholarship("accepted")
+      declined_reg = reg_with_scholarship("declined")
+      no_scholarship_reg = create(:event_registration)
+
+      results = EventRegistration.scholarship_status("not_agreed")
+      expect(results).to include(pending_reg, support_reg)
+      expect(results).not_to include(agreed_reg, declined_reg, no_scholarship_reg)
+    end
+  end
+
   describe "#over_allocated? / #over_allocation_cents" do
     let(:event) { create(:event, cost_cents: 1_000) }
     let(:reg) { create(:event_registration, event: event) }
@@ -1022,6 +1044,12 @@ RSpec.describe EventRegistration, type: :model do
 
       it "maps 'requested' to CE registrations not yet paid" do
         results = EventRegistration.ce_status("requested")
+        expect(results).to include(requested_ce, needs_license_ce)
+        expect(results).not_to include(paid_ce, no_ce)
+      end
+
+      it "maps 'not_paid' to CE registrations not yet paid" do
+        results = EventRegistration.ce_status("not_paid")
         expect(results).to include(requested_ce, needs_license_ce)
         expect(results).not_to include(paid_ce, no_ce)
       end

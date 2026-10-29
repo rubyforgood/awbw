@@ -1,0 +1,10 @@
+name: "Filter registrants by unagreed scholarships and unpaid CE"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-29
+action_path: "/events"
+summary: >-
+  The Scholarship filter adds "Not agreed yet" and the CE status filter adds
+  "Not paid yet", on both the registrants list and the bulk email picker.
+pro_tips:
+  - "Not agreed yet skips declined scholarships, so a reminder only reaches people who still need to respond."
