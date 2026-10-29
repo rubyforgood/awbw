@@ -17,7 +17,7 @@ class MembershipDecorator < ApplicationDecorator
 
   def status_label
     return "Upcoming" if upcoming?
-    return "Ending #{end_date.strftime("%b %-d, %Y")}" if active? && autorenewal_cancelled?
+    return "Ending #{end_date.strftime("%b %-d, %Y")}" if active? && renewal_off?
     return "Active" if active?
 
     "Ended"
@@ -25,7 +25,7 @@ class MembershipDecorator < ApplicationDecorator
 
   def status_tooltip
     return "Membership starts #{start_date.strftime("%b %-d, %Y")}." if upcoming?
-    return "Renewal is off. Membership ends #{end_date.strftime("%b %-d, %Y")}." if active? && autorenewal_cancelled?
+    return "Renewal is off. Membership ends #{end_date.strftime("%b %-d, %Y")}." if active? && renewal_off?
     return "Current membership covers today." if active?
 
     "Membership term ended #{end_date.strftime("%b %-d, %Y")}."
@@ -33,7 +33,7 @@ class MembershipDecorator < ApplicationDecorator
 
   def status_classes
     return "bg-blue-50 text-blue-700 border-blue-200" if upcoming?
-    return "bg-amber-50 text-amber-700 border-amber-200" if active? && autorenewal_cancelled?
+    return "bg-amber-50 text-amber-700 border-amber-200" if active? && renewal_off?
     return "bg-green-50 text-green-700 border-green-200" if active?
 
     "bg-gray-50 text-gray-600 border-gray-200"

@@ -31,27 +31,102 @@ RSpec.describe MembershipPolicy, type: :policy do
     end
   end
 
-  describe "#manage_subscription?" do
-    it "allows the member who owns the membership" do
-      expect(policy_for(user: owner)).to be_allowed_to(:manage_subscription?)
+  describe "#edit? / #update?" do
+    it "allows an admin on an unlocked membership" do
+      expect(policy_for(user: admin)).to be_allowed_to(:edit?)
+      expect(policy_for(user: admin)).to be_allowed_to(:update?)
     end
 
-    it "denies a member looking at someone else's membership" do
-      expect(policy_for(user: other, record: membership)).not_to be_allowed_to(:manage_subscription?)
+    it "denies an admin on a locked membership" do
+      membership.update_column(:locked_at, Time.current)
+
+      expect(policy_for(user: admin)).not_to be_allowed_to(:edit?)
+      expect(policy_for(user: admin)).not_to be_allowed_to(:update?)
     end
 
-    it "denies when no membership record is given" do
-      expect(policy_for(user: owner, record: :membership)).not_to be_allowed_to(:manage_subscription?)
+    it "denies an owner and another member" do
+      expect(policy_for(user: owner)).not_to be_allowed_to(:edit?)
+      expect(policy_for(user: other)).not_to be_allowed_to(:edit?)
+    end
+  end
+
+  describe "#destroy?" do
+    it "allows an admin, including a locked membership (the service enforces the guard)" do
+      expect(policy_for(user: admin)).to be_allowed_to(:destroy?)
+
+      membership.update_column(:locked_at, Time.current)
+      expect(policy_for(user: admin)).to be_allowed_to(:destroy?)
     end
 
-    it "denies an admin who does not own the membership" do
-      expect(policy_for(user: admin, record: membership)).not_to be_allowed_to(:manage_subscription?)
-    end
+    it "denies owners, other members, unpersisted records, and disabled memberships" do
+      expect(policy_for(user: owner)).not_to be_allowed_to(:destroy?)
+      expect(policy_for(user: other)).not_to be_allowed_to(:destroy?)
+      expect(policy_for(user: admin, record: build(:membership))).not_to be_allowed_to(:destroy?)
 
-    it "denies while membership is disabled" do
       allow(Membership).to receive(:enabled?).and_return(false)
+      expect(policy_for(user: admin)).not_to be_allowed_to(:destroy?)
+    end
+  end
 
-      expect(policy_for(user: owner)).not_to be_allowed_to(:manage_subscription?)
+  describe "#remove_next_year?" do
+    it "allows an admin on an unlocked membership" do
+      expect(policy_for(user: admin)).to be_allowed_to(:remove_next_year?)
+    end
+
+    it "denies a locked membership, an owner, and a disabled membership" do
+      membership.update_column(:locked_at, Time.current)
+      expect(policy_for(user: admin)).not_to be_allowed_to(:remove_next_year?)
+
+      expect(policy_for(user: owner)).not_to be_allowed_to(:remove_next_year?)
+
+      allow(Membership).to receive(:enabled?).and_return(false)
+      expect(policy_for(user: admin)).not_to be_allowed_to(:remove_next_year?)
+    end
+  end
+
+  describe "#enable_autopay?" do
+    it "allows the owner of an unlocked membership" do
+      expect(policy_for(user: owner)).to be_allowed_to(:enable_autopay?)
+    end
+
+    it "denies an admin, another member, a locked membership, and a disabled membership" do
+      expect(policy_for(user: admin)).not_to be_allowed_to(:enable_autopay?)
+      expect(policy_for(user: other)).not_to be_allowed_to(:enable_autopay?)
+
+      membership.update_column(:locked_at, Time.current)
+      expect(policy_for(user: owner)).not_to be_allowed_to(:enable_autopay?)
+
+      allow(Membership).to receive(:enabled?).and_return(false)
+      expect(policy_for(user: owner)).not_to be_allowed_to(:enable_autopay?)
+    end
+  end
+
+  describe "#disable_autopay?" do
+    it "allows the owner and an admin" do
+      expect(policy_for(user: owner)).to be_allowed_to(:disable_autopay?)
+      expect(policy_for(user: admin)).to be_allowed_to(:disable_autopay?)
+    end
+
+    it "denies another member and a disabled membership" do
+      expect(policy_for(user: other)).not_to be_allowed_to(:disable_autopay?)
+
+      allow(Membership).to receive(:enabled?).and_return(false)
+      expect(policy_for(user: owner)).not_to be_allowed_to(:disable_autopay?)
+    end
+  end
+
+  describe "#manage_membership?" do
+    it "allows the owner" do
+      expect(policy_for(user: owner)).to be_allowed_to(:manage_membership?)
+    end
+
+    it "denies another member, an admin who does not own it, a missing record, and disabled memberships" do
+      expect(policy_for(user: other)).not_to be_allowed_to(:manage_membership?)
+      expect(policy_for(user: admin)).not_to be_allowed_to(:manage_membership?)
+      expect(policy_for(user: owner, record: :membership)).not_to be_allowed_to(:manage_membership?)
+
+      allow(Membership).to receive(:enabled?).and_return(false)
+      expect(policy_for(user: owner)).not_to be_allowed_to(:manage_membership?)
     end
   end
 end

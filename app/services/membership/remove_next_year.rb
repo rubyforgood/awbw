@@ -23,7 +23,7 @@ class Membership::RemoveNextYear
         invoice.destroy!
       end
 
-      @membership.update!(autorenewal_cancelled_at: Time.current)
+      @membership.update!(renewal_off_at: Time.current)
       Result.new(removed: invoice.present?, errors: [])
     end
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotDestroyed => e

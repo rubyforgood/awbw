@@ -5,11 +5,6 @@ module Memberships
     def create
       authorize! @membership, to: :enable_autopay?
 
-      unless Membership.enabled?
-        return redirect_to person_path(@membership.person), alert: "Memberships are not available right now.",
-          status: :see_other
-      end
-
       person = @membership.person
       person.set_payment_processor :stripe
 

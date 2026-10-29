@@ -34,7 +34,7 @@ class Membership::UpdateTerm
       @membership.start_date = @start_date
       @membership.end_date = @end_date
       @membership.cost_cents = @cost_cents
-      @membership.autorenewal_cancelled_at = Time.current if shortening
+      @membership.renewal_off_at = Time.current if shortening
       @membership.save!
 
       Result.new(membership: @membership, errors: [])

@@ -3,7 +3,7 @@ module Memberships
     before_action :set_membership
 
     def destroy
-      authorize! @membership, to: :update?
+      authorize! @membership, to: :remove_next_year?
 
       result = Membership::RemoveNextYear.call(membership: @membership)
       if result.success?

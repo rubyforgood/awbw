@@ -49,4 +49,15 @@ RSpec.describe "Membership invoice deletion", type: :request do
 
     expect(response.body).to include(membership_next_year_path(membership))
   end
+
+  it "denies removing the next year on a locked membership" do
+    invoice_for(Date.current)
+    future = invoice_for(Date.current + 1.year)
+    membership.update_column(:locked_at, Time.current)
+
+    delete membership_next_year_path(membership)
+
+    expect(response).to redirect_to(root_path)
+    expect(MembershipInvoice.exists?(future.id)).to be(true)
+  end
 end

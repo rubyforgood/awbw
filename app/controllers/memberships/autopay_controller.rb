@@ -6,11 +6,6 @@ module Memberships
       enabled = ActiveModel::Type::Boolean.new.cast(params[:autopay_on])
       authorize! @membership, to: (enabled ? :enable_autopay? : :disable_autopay?)
 
-      unless Membership.enabled?
-        return redirect_to autopay_destination, alert: "Memberships are not available right now.",
-          status: :see_other
-      end
-
       if enabled && !card_on_file?
         return redirect_to autopay_destination,
           alert: "Add a card before turning on automatic payments.", status: :see_other

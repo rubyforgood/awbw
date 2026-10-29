@@ -59,7 +59,7 @@ RSpec.describe Membership::Renew do
 
   it "refuses when renewal is turned off" do
     membership = create_membership(end_date: Date.current + 10.days)
-    membership.update_column(:autorenewal_cancelled_at, Time.current)
+    membership.update_column(:renewal_off_at, Time.current)
     pay(invoice_for(membership))
 
     result = described_class.call(membership: membership)

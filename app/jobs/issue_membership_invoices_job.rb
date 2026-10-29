@@ -16,7 +16,7 @@ class IssueMembershipInvoicesJob < ApplicationJob
   def expiring_memberships
     Membership
       .unlocked
-      .where(autorenewal_cancelled_at: nil)
+      .where(renewal_off_at: nil)
       .where(end_date: (Date.current - 1.day)..(Date.current + Membership.renewal_window_days))
       .includes(:membership_invoices)
   end

@@ -69,6 +69,16 @@ RSpec.describe "Membership autopay", type: :request do
     expect(membership.reload.autopay_on?).to be(false)
   end
 
+  it "denies autopay actions while memberships are disabled" do
+    sign_in create(:user, person: person)
+    allow(Membership).to receive(:enabled?).and_return(false)
+
+    patch membership_autopay_path(membership, autopay_on: "0")
+
+    expect(response).to redirect_to(root_path)
+    expect(membership.reload.autopay_on?).to be(false)
+  end
+
   it "shows the admin turn-off action" do
     membership.update!(autopay_on: true)
     sign_in create(:user, :admin)

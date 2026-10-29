@@ -1191,7 +1191,7 @@ RSpec.describe Person, "#current_membership" do
   it "prefers the membership the live subscription belongs to over a newer cancelled one" do
     live = create(:membership, person: person)
     subscribe_to(live)
-    create(:membership, :autorenewal_cancelled, person: person,
+    create(:membership, :renewal_off, person: person,
       start_date: Date.current + 2.years, end_date: Date.current + 3.years)
 
     expect(person.current_membership).to eq(live)
@@ -1204,7 +1204,7 @@ RSpec.describe Person, "#current_membership" do
   end
 
   it "falls back to the soonest upcoming membership" do
-    create(:membership, :autorenewal_cancelled, person: person,
+    create(:membership, :renewal_off, person: person,
       start_date: Date.current + 2.years, end_date: Date.current + 3.years)
     sooner = create(:membership, person: person,
       start_date: Date.current + 1.month, end_date: Date.current + 1.year)
@@ -1213,7 +1213,7 @@ RSpec.describe Person, "#current_membership" do
   end
 
   it "treats a membership whose term starts in the future as upcoming" do
-    create(:membership, :autorenewal_cancelled, person: person,
+    create(:membership, :renewal_off, person: person,
       start_date: Date.current + 2.years, end_date: Date.current + 3.years)
     billed = create(:membership, person: person,
       start_date: Date.current + 1.month, end_date: Date.current + 1.year - 1.day)
@@ -1224,9 +1224,9 @@ RSpec.describe Person, "#current_membership" do
   end
 
   it "falls back to the most recent membership when all have ended" do
-    create(:membership, :autorenewal_cancelled, person: person,
+    create(:membership, :renewal_off, person: person,
       start_date: Date.current - 3.years, end_date: Date.current - 2.years)
-    newer = create(:membership, :autorenewal_cancelled, person: person,
+    newer = create(:membership, :renewal_off, person: person,
       start_date: Date.current - 1.year, end_date: Date.current - 1.day)
 
     expect(person.current_membership).to eq(newer)

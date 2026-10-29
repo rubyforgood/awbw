@@ -29,15 +29,15 @@ class Membership < ApplicationRecord
   validate :no_overlapping_membership_dates
   validate :term_within_invoice_coverage, if: :persisted?
 
-  scope :autorenewal_not_cancelled, -> { where(autorenewal_cancelled_at: nil) }
+  scope :renewal_on, -> { where(renewal_off_at: nil) }
   scope :unlocked, -> { where(locked_at: nil) }
 
   scope :active, ->(as_of = Date.current) {
-    where(autorenewal_cancelled_at: nil)
+    where(renewal_off_at: nil)
       .where(start_date: ..as_of, end_date: as_of..)
   }
   scope :ending, ->(as_of = Date.current) {
-    where.not(autorenewal_cancelled_at: nil)
+    where.not(renewal_off_at: nil)
       .where(start_date: ..as_of, end_date: as_of..)
   }
   scope :upcoming, ->(as_of = Date.current) { where("start_date > ?", as_of) }
@@ -48,12 +48,12 @@ class Membership < ApplicationRecord
   before_destroy :prepare_destroy, prepend: true
 
   def locked? = locked_at.present?
-  def renewal_on? = autorenewal_cancelled_at.nil?
-  def autorenewal_cancelled? = !renewal_on?
+  def renewal_on? = renewal_off_at.nil?
+  def renewal_off? = !renewal_on?
 
-  def autorenewal_cancelled=(value)
+  def renewal_off=(value)
     flag = ActiveModel::Type::Boolean.new.cast(value)
-    self.autorenewal_cancelled_at = flag ? (autorenewal_cancelled_at || Time.current) : nil
+    self.renewal_off_at = flag ? (renewal_off_at || Time.current) : nil
   end
 
   def active? = start_date.present? && start_date <= Date.current && end_date.present? && end_date >= Date.current
@@ -145,7 +145,7 @@ class Membership < ApplicationRecord
 
     invoice.destroy!
 
-    update_column(:autorenewal_cancelled_at, Time.current)
+    update_column(:renewal_off_at, Time.current)
     true
   end
 
@@ -155,7 +155,7 @@ class Membership < ApplicationRecord
         remove_next_year!
       rescue ActiveRecord::RecordNotDestroyed
       end
-      update!(locked_at: Time.current, autorenewal_cancelled_at: autorenewal_cancelled_at || Time.current, autopay_on: false)
+      update!(locked_at: Time.current, renewal_off_at: renewal_off_at || Time.current, autopay_on: false)
     end
   end
 

@@ -29,7 +29,7 @@ membership_for = ->(person, start_date, cost_cents: nil, renewal_off: false) do
     start_date: start_date,
     end_date: start_date + Membership::INVOICE_PERIOD - 1.day,
     cost_cents: cost_cents,
-    autorenewal_cancelled_at: renewal_off ? Time.current : nil
+    renewal_off_at: renewal_off ? Time.current : nil
   )
 end
 

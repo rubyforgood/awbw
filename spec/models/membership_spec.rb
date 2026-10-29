@@ -24,7 +24,7 @@ RSpec.describe Membership, type: :model do
 
     it "rejects overlapping dates with an existing membership for the same person" do
       person = create(:person)
-      create(:membership, :autorenewal_cancelled, person: person,
+      create(:membership, :renewal_off, person: person,
         start_date: Date.current - 1.month, end_date: Date.current + 1.month)
 
       overlap = build(:membership, person: person, start_date: Date.current, end_date: Date.current + 2.months)
@@ -34,7 +34,7 @@ RSpec.describe Membership, type: :model do
 
     it "allows a new membership with non-overlapping dates when the previous is cancelled" do
       person = create(:person)
-      create(:membership, :autorenewal_cancelled, person: person,
+      create(:membership, :renewal_off, person: person,
         start_date: Date.current - 2.months, end_date: Date.current - 1.month)
 
       expect(build(:membership, person: person, start_date: Date.current, end_date: Date.current + 1.month)).to be_valid
@@ -62,11 +62,11 @@ RSpec.describe Membership, type: :model do
   end
 
   describe "scopes" do
-    it "autorenewal_not_cancelled excludes cancelled memberships" do
+    it "renewal_on excludes cancelled memberships" do
       open_subscription = create(:membership)
-      create(:membership, :autorenewal_cancelled)
+      create(:membership, :renewal_off)
 
-      expect(described_class.autorenewal_not_cancelled).to contain_exactly(open_subscription)
+      expect(described_class.renewal_on).to contain_exactly(open_subscription)
     end
   end
 
@@ -422,28 +422,28 @@ RSpec.describe Membership, type: :model do
     end
   end
 
-  describe "autorenewal-cancelling a membership" do
+  describe "turning renewal off" do
     it "cancels the linked Stripe subscription immediately so the portal can't re-enable autopay" do
       membership = create(:membership)
       subscription = instance_double("Pay::Stripe::Subscription", active?: true)
       allow(membership).to receive(:stripe_subscription).and_return(subscription)
 
       expect(subscription).to receive(:cancel_now!)
-      membership.update!(autorenewal_cancelled_at: Time.current)
+      membership.update!(renewal_off_at: Time.current)
     end
 
     it "leaves a membership with no Stripe subscription untouched" do
       membership = create(:membership)
 
-      expect { membership.update!(autorenewal_cancelled_at: Time.current) }.not_to raise_error
-      expect(membership.reload).to be_autorenewal_cancelled
+      expect { membership.update!(renewal_off_at: Time.current) }.not_to raise_error
+      expect(membership.reload).to be_renewal_off
     end
 
-    it "does not cancel anything when resuming (clearing autorenewal_cancelled_at)" do
-      membership = create(:membership, :autorenewal_cancelled)
+    it "does not cancel anything when resuming (clearing renewal_off_at)" do
+      membership = create(:membership, :renewal_off)
       allow(membership).to receive(:stripe_subscription)
 
-      membership.update!(autorenewal_cancelled_at: nil)
+      membership.update!(renewal_off_at: nil)
 
       expect(membership).not_to have_received(:stripe_subscription)
     end
@@ -455,8 +455,8 @@ RSpec.describe Membership, type: :model do
       allow(subscription).to receive(:cancel_now!).and_raise(Pay::Stripe::Error.new("boom"))
       allow(Rails.logger).to receive(:warn)
 
-      expect { membership.update!(autorenewal_cancelled_at: Time.current) }.not_to raise_error
-      expect(membership.reload).to be_autorenewal_cancelled
+      expect { membership.update!(renewal_off_at: Time.current) }.not_to raise_error
+      expect(membership.reload).to be_renewal_off
       expect(Rails.logger).to have_received(:warn).with(/Stripe/i)
     end
   end

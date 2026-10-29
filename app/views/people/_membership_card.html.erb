@@ -30,7 +30,7 @@
       <%= render "shared/badge", label: "Autopay: #{membership.autopay_label(has_card: has_card)}",
             classes: membership.autopay_classes(has_card: has_card),
             title: membership.autopay_tooltip(has_card: has_card) %>
-      <% if membership.autorenewal_cancelled? %>
+      <% if membership.renewal_off? %>
         <%= render "shared/badge", label: "Renewal off", classes: "bg-amber-50 text-amber-700 border-amber-200",
               title: membership.renewal_tooltip %>
       <% end %>
@@ -59,12 +59,12 @@
       </div>
     <% end %>
 
-    <% if allowed_to?(:manage_subscription?, membership) %>
+    <% if allowed_to?(:manage_membership?, membership) %>
       <div class="space-y-3">
         <% if membership.ended? %>
           <p class="text-sm text-gray-700">Your membership has ended. <%= link_to "Contact us", contact_us_path, class: "text-primary underline hover:no-underline" %> to rejoin.</p>
         <% else %>
-          <% if membership.autorenewal_cancelled? %>
+          <% if membership.renewal_off? %>
             <p class="text-sm text-gray-700">
               Renewal is off, so your membership ends <%= membership.end_date ? membership.end_date.strftime("%b %-d, %Y") : "at the end of its term" %>.
               <%= link_to "Contact us", contact_us_path, class: "text-primary underline hover:no-underline" %> to renew.
@@ -82,7 +82,7 @@
               <p class="text-xs text-gray-500" title="The default card used for automatic payments.">Card on file: <%= card_label %></p>
             <% end %>
 
-            <% if membership.autorenewal_cancelled? %>
+            <% if membership.renewal_off? %>
               <% if autopay && has_card %>
                 <p class="text-sm text-gray-700">Automatic payments are on for any invoice already issued.</p>
                 <div class="flex flex-wrap items-center gap-2">

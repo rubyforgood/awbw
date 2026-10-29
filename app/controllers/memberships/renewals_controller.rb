@@ -12,7 +12,7 @@ module Memberships
           alert: reason, status: :see_other
       end
 
-      @membership.update!(autorenewal_cancelled_at: renewal_on ? nil : Time.current)
+      @membership.update!(renewal_off_at: renewal_on ? nil : Time.current)
 
       redirect_to membership_path(@membership),
         notice: renewal_on ? "Renewal turned on." : "Renewal turned off.",

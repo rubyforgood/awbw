@@ -116,7 +116,7 @@ else
     # ── 6 years ago: first membership year, paid ─────────────────────────────
     # Reuse an existing uncancelled membership if another seed gave this person
     # one (e.g. membership.rb's checkout demos), so seed order can't collide.
-    membership = person.memberships.autorenewal_not_cancelled.first ||
+    membership = person.memberships.renewal_on.first ||
       person.memberships.create!(
         start_date: year.(6),
         end_date: year.(6) + Membership::INVOICE_PERIOD - 1.day
