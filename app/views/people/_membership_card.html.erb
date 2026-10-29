@@ -48,7 +48,7 @@
         <% invoices.each do |invoice| %>
           <div class="flex flex-wrap items-center gap-2">
             <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice, viewable: true %></ul>
-            <% if !invoice.upcoming? && allowed_to?(:pay?, invoice) %>
+            <% if !invoice.upcoming? && !invoice.payment_in_progress? && allowed_to?(:pay?, invoice) %>
               <%= button_to "Pay now", membership_invoice_checkout_path(invoice),
                     class: button_classes(:primary, size: :sm),
                     title: "Pays this invoice once. The card is not saved for automatic payments.",

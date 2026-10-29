@@ -10,6 +10,8 @@ class MembershipInvoiceDecorator < ApplicationDecorator
   }.freeze
 
   def status_badge(as_of: Date.current)
+    return badge("Payment in progress", "fa-solid fa-spinner", :blue) if payment_in_progress?
+
     upcoming = start_date > as_of
     return badge("Upcoming · Paid", "fa-solid fa-circle-check", :green) if upcoming && paid_in_full?
     return badge("Upcoming · #{remaining}", "fa-solid fa-hourglass-start", :blue) if upcoming

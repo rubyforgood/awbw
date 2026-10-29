@@ -39,6 +39,16 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
     it "reads Partially paid with amount for an invoice after a part payment" do
       expect(invoice(paid: 1_000, start_date: Date.current).status_badge.label).to eq("Partially paid · $15")
     end
+
+    it "reads Payment in progress while a checkout is active" do
+      decorated = invoice
+      decorated.object.update_column(:payment_in_progress_at, Time.current)
+
+      badge = decorated.status_badge
+
+      expect(badge.label).to eq("Payment in progress")
+      expect(badge.classes).to eq(described_class::BADGE_CLASSES[:blue])
+    end
   end
 
   describe "formatting" do

@@ -30,6 +30,26 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
+  describe "#payment_in_progress?" do
+    it "is true while a checkout is inside the one-hour window" do
+      invoice = create(:membership_invoice)
+      invoice.update_column(:payment_in_progress_at, 59.minutes.ago)
+
+      expect(invoice).to be_payment_in_progress
+    end
+
+    it "is false once the checkout window has passed" do
+      invoice = create(:membership_invoice)
+      invoice.update_column(:payment_in_progress_at, 61.minutes.ago)
+
+      expect(invoice).not_to be_payment_in_progress
+    end
+
+    it "is false when no checkout has started" do
+      expect(create(:membership_invoice)).not_to be_payment_in_progress
+    end
+  end
+
   describe "overlap" do
     let(:person) { create(:person) }
     let(:subscription) { create(:membership, person: person) }

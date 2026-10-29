@@ -20,7 +20,14 @@
   <% end %>
 
   <% unless admin %>
-    <% if @membership_invoice.remaining_cost.positive? %>
+    <% if @membership_invoice.payment_in_progress? %>
+      <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
+        <p class="text-sm text-gray-600">
+          A payment is already in progress for this invoice. Complete it in the Stripe tab or try again
+          once the current checkout expires.
+        </p>
+      </div>
+    <% elsif @membership_invoice.remaining_cost.positive? %>
       <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
         <% if @membership_invoice.upcoming? && autopay_ready %>
           <p class="text-sm text-gray-600">Scheduled for <%= @membership_invoice.start_date.strftime("%b %-d, %Y") %>.</p>

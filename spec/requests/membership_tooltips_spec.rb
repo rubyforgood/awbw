@@ -28,4 +28,17 @@ RSpec.describe "Membership tooltips", type: :request do
     expect(response.body).to include("Saves a card and turns on automatic payments. Membership renewal is unchanged.")
     expect(response.body).to include("Automatic payments are off. Invoices must be paid manually.")
   end
+
+  it "shows payment in progress on the membership card instead of Pay now" do
+    invoice = create(:membership_invoice, membership: membership, start_date: Date.current,
+      end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
+    invoice.mark_payment_in_progress!
+    sign_in create(:user, person: person)
+
+    get person_path(person)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Payment in progress")
+    expect(response.body).not_to include("Pays this invoice once")
+  end
 end

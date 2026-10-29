@@ -12,7 +12,9 @@ class Membership::InvoiceCheckout
   end
 
   def call
-    @invoice.mark_payment_in_progress!
+    claimed = claim_invoice
+    return unless claimed
+
     person = @invoice.person
     person.set_payment_processor :stripe
 
@@ -35,7 +37,22 @@ class Membership::InvoiceCheckout
       cancel_url: @cancel_url
     )
   rescue StandardError
-    @invoice.clear_payment_in_progress!
+    @invoice.clear_payment_in_progress! if claimed
     raise
+  end
+
+  private
+
+  # A short row lock makes the check-and-mark atomic. The timestamp is the
+  # durable reservation: once this transaction commits, later requests see it.
+  # Do not hold the lock while talking to Stripe.
+  def claim_invoice
+    @invoice.with_lock do
+      @invoice.reload
+      next false if @invoice.payment_in_progress?
+
+      @invoice.mark_payment_in_progress!
+      true
+    end
   end
 end

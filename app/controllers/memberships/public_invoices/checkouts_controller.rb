@@ -20,6 +20,11 @@ module Memberships
           success_url: memberships_public_invoice_url(token, paid: "1"),
           cancel_url: memberships_public_invoice_url(token, cancelled: "1")
         )
+        if session.nil?
+          return redirect_to memberships_public_invoice_path(token),
+            alert: "A payment is already in progress for this invoice.", status: :see_other
+        end
+
         redirect_to session.url, allow_other_host: true, status: :see_other
       rescue Stripe::StripeError, Pay::Error => e
         redirect_to memberships_public_invoice_path(token),

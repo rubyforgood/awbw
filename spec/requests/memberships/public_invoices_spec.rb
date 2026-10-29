@@ -52,6 +52,15 @@ RSpec.describe "Memberships::PublicInvoices", type: :request do
 
       expect(response.body).to include("Payment was cancelled.")
     end
+
+    it "shows the payment-in-progress state instead of offering Pay now" do
+      invoice.mark_payment_in_progress!
+
+      get memberships_public_invoice_path(token)
+
+      expect(response.body).to include("A payment is already in progress for this invoice")
+      expect(response.body).not_to include("Pay now")
+    end
   end
 
   describe "POST /memberships/public_invoices/:token/checkout" do
@@ -73,6 +82,16 @@ RSpec.describe "Memberships::PublicInvoices", type: :request do
 
       expect(response).to redirect_to(memberships_public_invoice_path(token))
       expect(flash[:notice]).to match(/already been paid/)
+      expect(checkout_args).to be_empty
+    end
+
+    it "does not start another checkout while a payment is in progress" do
+      invoice.mark_payment_in_progress!
+
+      post memberships_public_invoice_checkout_path(token)
+
+      expect(response).to redirect_to(memberships_public_invoice_path(token))
+      expect(flash[:alert]).to match(/already in progress/)
       expect(checkout_args).to be_empty
     end
   end
