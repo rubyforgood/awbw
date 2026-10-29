@@ -27,6 +27,8 @@ RSpec.describe "Membership tooltips", type: :request do
     expect(response.body).to include("Pays this invoice once. The card is not saved for automatic payments.")
     expect(response.body).to include("Saves a card and turns on automatic payments. Membership renewal is unchanged.")
     expect(response.body).to include("Automatic payments are off. Invoices must be paid manually.")
+    expect(response.body).not_to include("Manage card")
+    expect(response.body).not_to include("Card on file")
   end
 
   it "shows payment in progress on the membership card instead of Pay now" do

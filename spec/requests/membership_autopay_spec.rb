@@ -106,6 +106,30 @@ RSpec.describe "Membership autopay", type: :request do
     expect(flash[:notice]).to match(/Automatic payments are on/)
   end
 
+  it "turns autopay on after setup even before the card is visible" do
+    allow_any_instance_of(Pay::Stripe::Customer).to receive(:checkout)
+      .and_return(double(url: "https://stripe.test/setup"))
+    sign_in create(:user, person: person)
+
+    post membership_autopay_setup_path(membership)
+    get person_path(person, autopay_setup: "success")
+
+    expect(membership.reload.autopay_on?).to be(true)
+    expect(flash[:notice]).to match(/Automatic payments are on/)
+  end
+
+  it "does not display the saved card number but keeps the Stripe portal when a card exists" do
+    membership
+    add_card
+    sign_in create(:user, person: person)
+
+    get person_path(person)
+
+    expect(response.body).to include("Manage card")
+    expect(response.body).not_to include("Card on file")
+    expect(response.body).not_to include("ending 4242")
+  end
+
   it "shows Pay now on an upcoming invoice when autopay is off" do
     invoice = upcoming_invoice
     sign_in create(:user, person: person)

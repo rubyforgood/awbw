@@ -36,7 +36,6 @@
       <% end %>
     </div>
 
-    <% card_label = card&.last4.present? ? "#{card.brand.to_s.titleize.presence || 'Card'} ending #{card.last4}" : nil %>
     <% turn_off_tooltip = "Stops automatic charges. Renewal and already-issued invoices are unchanged." %>
     <% manage_card_tooltip = "Opens Stripe to update the saved card." %>
     <% add_card_tooltip = "Opens Stripe to save a card. Automatic payments stay on." %>
@@ -77,10 +76,6 @@
               <i class="fa-solid fa-circle-info ml-0.5 cursor-help text-[0.65rem] text-gray-400"
                  title="Autopay charges issued invoices automatically. It is separate from membership renewal."></i>
             </p>
-
-            <% if card_label.present? %>
-              <p class="text-xs text-gray-500" title="The default card used for automatic payments.">Card on file: <%= card_label %></p>
-            <% end %>
 
             <% if membership.renewal_off? %>
               <% if autopay && has_card %>

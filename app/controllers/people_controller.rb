@@ -769,8 +769,7 @@ class PeopleController < ApplicationController
       .order(:start_date)
       .to_a
     @membership_autopay = @membership.autopay_on?
-    @membership_card = @person.payment_processor&.payment_methods&.order(default: :desc, id: :desc)&.first
-    @membership_has_card = @membership_card.present?
+    @membership_has_card = @person.payment_processor&.payment_methods&.exists? || false
   end
 
   def set_checkout_flash
@@ -785,12 +784,8 @@ class PeopleController < ApplicationController
     elsif params[:autopay_setup] == "success"
       membership = Membership.find_by(id: session.delete(:autopay_setup_membership_id))
       if membership && membership.person == @person.object && allowed_to?(:enable_autopay?, membership)
-        if @person.object.payment_processor&.payment_methods&.exists?
-          membership.update!(autopay_on: true)
-          flash[:notice] = "Your card is saved. Automatic payments are on."
-        else
-          flash[:notice] = "Card setup received. Automatic payments will turn on once the card is confirmed."
-        end
+        membership.update!(autopay_on: true)
+        flash[:notice] = "Automatic payments are on."
       end
     elsif params[:autopay_setup] == "cancelled"
       had_setup = session.delete(:autopay_setup_membership_id).present?
