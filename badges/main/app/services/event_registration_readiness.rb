@@ -191,8 +191,7 @@ class EventRegistrationReadiness
     registration.scholarship? && !registration.scholarship_tasks_met?
   end
 
-  # Recipients only, once the survey is available (agreement signed, tasks done,
-  # drip passed). Reads preloaded scholarships + the event's memoized callout, so
+  # Recipients only, once the survey is available (agreement signed, drip passed). Reads preloaded scholarships + the event's memoized callout, so
   # no per-row roster query.
   def survey_outstanding?
     registration.recipient_survey_available? &&

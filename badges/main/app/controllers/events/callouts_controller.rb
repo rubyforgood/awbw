@@ -76,7 +76,7 @@ module Events
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
 
       # The recipients survey, delivered here once the recipient has signed their
-      # agreement and finished their tasks (and any drip date has passed).
+      # agreement (and any drip date has passed).
       @recipient_survey_link = @event.recipient_survey_form_link
       @recipient_survey_available = @recipient_survey_link.present? && @event_registration.recipient_survey_available?
       if @recipient_survey_available
@@ -432,8 +432,7 @@ module Events
     end
 
     # A form on the scholarship callout can't be filled until the recipient has
-    # signed their agreement and finished their tasks — guards a direct POST past
-    # the page gate.
+    # signed their agreement — guards a direct POST past the page gate.
     def recipient_survey_locked?
       @callout.builtin_key == "scholarship" && !@event_registration.recipient_survey_available?
     end

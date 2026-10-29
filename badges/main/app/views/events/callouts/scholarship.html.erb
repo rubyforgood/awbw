@@ -144,11 +144,9 @@
       </div>
 
       <%# Admin-only agreement history (registrants never see it), shown only when
-          there's history to show. %>
+          there's history to show. A self-framed card, so no divider above it. %>
       <% if allowed_to?(:edit?, @scholarship) && @scholarship.agreement_responses.exists? %>
-        <div class="border-t border-gray-100 pt-5">
-          <%= render "scholarships/agreement_history", scholarship: @scholarship, admin: true %>
-        </div>
+        <%= render "scholarships/agreement_history", scholarship: @scholarship, admin: true %>
       <% end %>
 
       <% if grant %>
@@ -174,18 +172,16 @@
       </div>
     <% end %>
 
-    <%# The recipients survey, once the recipient has signed their agreement and
-        finished their tasks (and any drip date has passed). %>
+    <%# The recipients survey, once the recipient has signed their agreement (and
+        any drip date has passed). A self-framed card, so no divider above it. %>
     <% if @recipient_survey_available %>
-      <div class="border-t border-gray-100 pt-5">
-        <%= render "events/callouts/callout_form",
-              callout: @recipient_survey_link.registration_ticket_callout,
-              callout_form: @recipient_survey_link,
-              submission: @recipient_survey_submission,
-              anonymously_completed: @recipient_survey_completed_anonymously,
-              editing: @recipient_survey_editing,
-              edit_url: registration_scholarship_path(@event_registration.slug, edit: @recipient_survey_link.form_id, anchor: "form-#{@recipient_survey_link.form_id}") %>
-      </div>
+      <%= render "events/callouts/callout_form",
+            callout: @recipient_survey_link.registration_ticket_callout,
+            callout_form: @recipient_survey_link,
+            submission: @recipient_survey_submission,
+            anonymously_completed: @recipient_survey_completed_anonymously,
+            editing: @recipient_survey_editing,
+            edit_url: registration_scholarship_path(@event_registration.slug, edit: @recipient_survey_link.form_id, anchor: "form-#{@recipient_survey_link.form_id}") %>
     <% end %>
 
     <%# Jump to the registrant's full submission, where their scholarship

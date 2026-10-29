@@ -246,7 +246,11 @@
           </summary>
 
           <div class="mt-1">
-            <p class="text-xs text-gray-500 mb-1">Optional. Each form is delivered inline on this callout's page. Set a <strong>display date</strong> to drip it open on that date; leave it blank to open it with the callout. This callout's own display date above always wins, so no form opens before the callout does. Completed forms collapse to a "Completed" toggle.</p>
+            <% if f.object.single_form? %>
+              <p class="text-xs text-gray-500 mb-1">Optional. One form, delivered as the recipients survey on the scholarship page once the recipient has signed their agreement. Set a <strong>display date</strong> to also hold it until that date. The ticket's Scholarship card shows when it opens.</p>
+            <% else %>
+              <p class="text-xs text-gray-500 mb-1">Optional. Each form is delivered inline on this callout's page. Set a <strong>display date</strong> to drip it open on that date; leave it blank to open it with the callout. This callout's own display date above always wins, so no form opens before the callout does. Completed forms collapse to a "Completed" toggle.</p>
+            <% end %>
 
             <div class="space-y-2">
               <div class="text-2xs mt-2 hidden items-center gap-2 font-semibold tracking-wide text-gray-400 uppercase sm:flex">
@@ -257,14 +261,23 @@
                 <span class="w-3 shrink-0" aria-hidden="true"></span>
               </div>
 
-              <%= f.fields_for :registration_ticket_callout_forms do |ff| %>
-                <%= render "events/registration_ticket_callout_form_fields", f: ff %>
-              <% end %>
+              <%# Single-form built-ins (Scholarship) get one fixed picker — a blank one when
+                  nothing's linked — with no Add/remove; picking the blank option clears it. %>
+              <% if f.object.single_form? %>
+                <%= f.fields_for :registration_ticket_callout_forms,
+                      f.object.registration_ticket_callout_forms.presence || [ RegistrationTicketCalloutForm.new ] do |ff| %>
+                  <%= render "events/registration_ticket_callout_form_fields", f: ff, removable: false %>
+                <% end %>
+              <% else %>
+                <%= f.fields_for :registration_ticket_callout_forms do |ff| %>
+                  <%= render "events/registration_ticket_callout_form_fields", f: ff %>
+                <% end %>
 
-              <%= link_to_add_association "➕ Add form", f, :registration_ticket_callout_forms,
-                    partial: "events/registration_ticket_callout_form_fields",
-                    data: { association_insertion_node: "this", association_insertion_method: "before" },
-                    class: "inline-block text-sm font-medium text-purple-600 hover:text-purple-800" %>
+                <%= link_to_add_association "➕ Add form", f, :registration_ticket_callout_forms,
+                      partial: "events/registration_ticket_callout_form_fields",
+                      data: { association_insertion_node: "this", association_insertion_method: "before" },
+                      class: "inline-block text-sm font-medium text-purple-600 hover:text-purple-800" %>
+              <% end %>
             </div>
           </div>
         </details>

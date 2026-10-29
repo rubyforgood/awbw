@@ -7,6 +7,6 @@ summary: >-
   gates their certificate. Until they submit it the recipient sits at "Survey
   pending" on the registrants roster and can't be marked complete.
 pro_tips:
-  - "The survey shows on the recipient's scholarship page once they've signed their agreement and their scholarship tasks are marked complete (plus any display date on the scholarship callout's linked form)."
+  - "The survey shows on the recipient's scholarship page once they've signed their agreement (plus any display date on the scholarship callout's linked form)."
   - "Setup: run `bin/rails data:seed_survey_forms` to create the survey forms, then open the callout editor on the scholarship callout and Restore default so it links the recipients survey."
   - "To record a survey received another way (e.g. on paper), use the Survey received toggle on the registration edit page — it satisfies the gate without a digital submission."
