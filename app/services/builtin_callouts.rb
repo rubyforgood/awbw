@@ -226,8 +226,8 @@ class BuiltinCallouts
         color_class: "fuchsia",
         hidden: ->(_event) { true },
         # The scholarship-only recipients survey, shown on the scholarship page once
-        # the recipient has signed their agreement and their tasks are complete (and
-        # any drip date has passed). Seeded with no date; admins can add one.
+        # the recipient has signed their agreement (and any drip date has passed).
+        # Seeded with no date; admins can add one.
         forms: ->(_event) {
           [ { form: Form.survey("recipient_survey"), display_from: nil } ]
         }

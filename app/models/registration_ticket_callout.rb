@@ -42,6 +42,11 @@ class RegistrationTicketCallout < ApplicationRecord
   # Built-ins whose delivered forms (the CE hours evaluation) must never name the respondent.
   ANONYMOUS_BUILTIN_KEYS = %w[ ce_hours ].freeze
 
+  # Built-ins that deliver only one form: Scholarship shows just its first linked
+  # form, as the recipients survey (see Event#recipient_survey_form_link), so the
+  # editor shows one fixed picker and a second is rejected rather than silently ignored.
+  SINGLE_FORM_BUILTIN_KEYS = %w[ scholarship ].freeze
+
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
   # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
@@ -78,7 +83,7 @@ class RegistrationTicketCallout < ApplicationRecord
   # Linked forms and resources are each added one row at a time in the editor
   # (cocoon add/remove), like Sectors on a Person. Blank picks are dropped.
   accepts_nested_attributes_for :registration_ticket_callout_forms, allow_destroy: true,
-    reject_if: proc { |attrs| attrs["form_id"].blank? }
+    reject_if: proc { |attrs| attrs["form_id"].blank? && attrs["id"].blank? }
   accepts_nested_attributes_for :registration_ticket_callout_resources, allow_destroy: true,
     reject_if: proc { |attrs| attrs["resource_id"].blank? }
 
@@ -95,6 +100,7 @@ class RegistrationTicketCallout < ApplicationRecord
   validates :position, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
   validates :builtin_key, inclusion: { in: BUILTIN_KEYS }, allow_nil: true
   validates :builtin_key, uniqueness: { scope: :event_id }, allow_nil: true
+  validate :single_form_builtin_has_one_form
 
   scope :ordered, -> { order(:position, :id) }
   scope :visible, -> { where(hidden: false) }
@@ -105,6 +111,16 @@ class RegistrationTicketCallout < ApplicationRecord
   # Reset flagged rows to their template after the save that set the flag. The
   # flag is cleared first so the reset's own update doesn't recurse.
   after_save :apply_reset_to_default, if: :reset_to_default?
+
+  # A saved form row whose picker was set back to blank is a removal (the
+  # single-form Scholarship picker has no ✖), so it's destroyed, not ignored.
+  def registration_ticket_callout_forms_attributes=(attributes)
+    rows = attributes.respond_to?(:each_pair) ? attributes.to_h.values : Array(attributes)
+    super(rows.map do |row|
+      row = row.to_h.with_indifferent_access
+      row[:id].present? && row[:form_id].blank? && row.key?(:form_id) ? row.merge(_destroy: "1") : row
+    end)
+  end
 
   def apply_reset_to_default
     self.reset_to_default = nil
@@ -156,6 +172,10 @@ class RegistrationTicketCallout < ApplicationRecord
 
   def anonymous_responses?
     builtin_key.in?(ANONYMOUS_BUILTIN_KEYS)
+  end
+
+  def single_form?
+    builtin_key.in?(SINGLE_FORM_BUILTIN_KEYS)
   end
 
   # Whether the row carries the inline CE config fields (hours offered / cost).
@@ -219,5 +239,14 @@ class RegistrationTicketCallout < ApplicationRecord
 
   def to_s
     title
+  end
+
+  private
+
+  def single_form_builtin_has_one_form
+    return unless single_form?
+    return if registration_ticket_callout_forms.reject(&:marked_for_destruction?).size <= 1
+
+    errors.add(:registration_ticket_callout_forms, "on the #{title} callout are limited to one")
   end
 end

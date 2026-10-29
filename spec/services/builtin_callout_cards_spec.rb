@@ -362,6 +362,62 @@ RSpec.describe BuiltinCalloutCards do
     end
   end
 
+  describe "Scholarship card recipients survey chip" do
+    let(:survey_form) { create(:form) }
+    let(:callout) { create(:registration_ticket_callout, event:, builtin_key: "scholarship", title: "Scholarship") }
+    let!(:survey_link) { callout.registration_ticket_callout_forms.create!(form: survey_form) }
+
+    before do
+      add_scholarship_form(event)
+      registration.update!(scholarship_requested: true)
+    end
+
+    def award(signed:, tasks_completed: true)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 25_000,
+        agreement_signed: signed, tasks_completed:)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
+    end
+
+    def scholarship_card
+      described_class.new(registration.reload).card_for(callout)
+    end
+
+    it "says the survey opens once the recipient accepts" do
+      award(signed: false)
+      expect(scholarship_card.badge).to eq("Survey opens once you accept")
+    end
+
+    it "names the drip date while the survey is held" do
+      award(signed: true)
+      survey_link.update!(display_from: Time.zone.local(2026, 12, 4, 9))
+      travel_to Time.zone.local(2026, 11, 1) do
+        expect(scholarship_card.badge).to eq("$250 · Survey opens Dec 4")
+      end
+    end
+
+    it "flags the survey as due in amber once open, even with tasks outstanding" do
+      award(signed: true, tasks_completed: false)
+      card = scholarship_card
+      expect(card.badge).to eq("$250 · Tasks outstanding · Survey due")
+      expect(card.badge_classes).to be_nil
+      expect(card.theme).to eq(DomainTheme.swatch("amber"))
+    end
+
+    it "drops the survey chip once it's submitted" do
+      award(signed: true)
+      registration.mark_post_survey_completed!
+      card = scholarship_card
+      expect(card.badge).to eq("$250")
+      expect(card.badge_classes).to include("fuchsia")
+    end
+
+    it "adds no survey chip when the callout links no form" do
+      survey_link.destroy!
+      award(signed: true)
+      expect(scholarship_card.badge).to eq("$250")
+    end
+  end
+
   describe "CE card attendance reminder" do
     # Paid CE registration on a training day so the sign-in nudge is live.
     let(:event) do

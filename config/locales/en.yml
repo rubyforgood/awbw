@@ -66,10 +66,14 @@ en:
     attributes:
       community_news:
         rhino_body: "Body / Description"
+      event/registration_ticket_callouts:
+        registration_ticket_callout_forms: "Linked forms"
       event/registration_ticket_callouts/registration_ticket_callout_forms:
         form: "CE hours evaluation"
       form_field:
         name: "Question text"
+      registration_ticket_callout:
+        registration_ticket_callout_forms: "Linked forms"
       grant:
         funder_sgid: "Funder"
       workshop_variation:

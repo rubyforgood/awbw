@@ -1,6 +1,7 @@
 <%# One linked-form row: the form to deliver plus its optional display date,
     added another at a time (cocoon), mirroring the linked-resources rows. A blank
-    date shows the form right away; a future date drips it open on that date. %>
+    date shows the form right away; a future date drips it open on that date.
+    `removable: false` drops the ✖ (the single-form Scholarship picker). %>
 <div class="nested-fields flex items-start gap-2">
   <div class="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-2">
     <%= f.select :form_id,
@@ -10,6 +11,8 @@
     <%= f.datetime_local_field :display_from,
           class: "rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
   </div>
-  <%= link_to_remove_association "✖", f,
-        class: "shrink-0 text-gray-400 hover:text-red-600 font-bold text-xs pt-1.5" %>
+  <% if local_assigns.fetch(:removable, true) %>
+    <%= link_to_remove_association "✖", f,
+          class: "shrink-0 text-gray-400 hover:text-red-600 font-bold text-xs pt-1.5" %>
+  <% end %>
 </div>

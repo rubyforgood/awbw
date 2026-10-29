@@ -1,73 +1,59 @@
-<%# One linked form on a callout page. Gated (future date) → a header chip naming
-    when it opens. Completed anonymously → a "Completed" header with no answers.
-    Completed → a collapsed toggle with a "Completed" chip that expands to the
-    answers + Edit. Otherwise → the form, ready to fill. %>
+<%# One linked form on a callout page, as a collapsible card. Gated (future date)
+    → just its title bar, with a chip naming when it opens. Completed anonymously →
+    folded, with a "Completed" chip and no answers. Completed → folded, expanding to
+    the answers + Edit. Otherwise → open, with the form ready to fill. %>
 <% form = callout_form.form %>
 <% anonymously_completed = local_assigns.fetch(:anonymously_completed, false) %>
 <% completed = submission.present? %>
 <%# Where "Edit responses" returns to — defaults to this callout's page; the
     scholarship page overrides it so its survey edits stay on the scholarship page. %>
 <% edit_url = local_assigns.fetch(:edit_url, registration_callout_form_path(@event_registration.slug, callout, edit: form.id, anchor: "form-#{form.id}")) %>
-<div id="form-<%= form.id %>" class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200">
-  <% if callout_form.dripping? %>
-    <div class="flex items-center justify-between gap-2 <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-4 py-2.5">
-      <div class="flex items-center gap-2 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
-        <i class="fa-solid fa-clipboard-list text-sm" aria-hidden="true"></i>
-        <h2 class="text-sm font-semibold"><%= form.name %></h2>
-      </div>
-      <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-        <i class="fa-solid fa-clock text-2xs" aria-hidden="true"></i>
-        Available <%= DripDate.label(callout_form.available_from) %>
-      </span>
-    </div>
+<% bar_class = "#{DomainTheme.bg_class_for(:forms, intensity: 50)} #{DomainTheme.text_class_for(:forms, intensity: 800)}" %>
+<% border_class = DomainTheme.border_class_for(:forms, intensity: 200) %>
+<% completed_chip = capture do %>
+  <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+    <i class="fa-solid fa-check text-2xs" aria-hidden="true"></i> Completed
+  </span>
+<% end %>
+<% card = { title: form.name, icon: "fa-solid fa-clipboard-list", bar_class:, border_class:, id: "form-#{form.id}" } %>
+<% if callout_form.dripping? %>
+  <div id="form-<%= form.id %>" class="flex scroll-mt-24 items-center gap-2 overflow-hidden rounded-xl border <%= border_class %> <%= bar_class %> px-4 py-2.5 shadow-sm">
+    <i class="fa-solid fa-clipboard-list text-sm" aria-hidden="true"></i>
+    <h2 class="text-sm font-semibold"><%= form.name %></h2>
+    <span class="ml-auto inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+      <i class="fa-solid fa-clock text-2xs" aria-hidden="true"></i>
+      Available <%= DripDate.label(callout_form.available_from) %>
+    </span>
+  </div>
 
-  <% elsif anonymously_completed %>
-    <div class="flex items-center justify-between gap-2 <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-4 py-2.5">
-      <div class="flex items-center gap-2 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
-        <i class="fa-solid fa-clipboard-list text-sm" aria-hidden="true"></i>
-        <h2 class="text-sm font-semibold"><%= form.name %></h2>
-      </div>
-      <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-        <i class="fa-solid fa-check text-2xs" aria-hidden="true"></i> Completed
-      </span>
-    </div>
-    <p class="flex items-start gap-2 border-t border-gray-100 px-4 py-3 text-sm text-gray-600 sm:px-6">
+<% elsif anonymously_completed %>
+  <%= render layout: "shared/collapsible_card", locals: { **card, badges: completed_chip } do %>
+    <p class="flex items-start gap-2 px-4 py-3 text-sm text-gray-600 sm:px-6">
       <i class="fa-solid fa-user-secret mt-0.5 text-gray-400" aria-hidden="true"></i>
       <span>Thanks — your responses were submitted anonymously, so they can't be shown or changed here.</span>
     </p>
+  <% end %>
 
-  <% elsif completed && !editing %>
-    <details class="group">
-      <summary class="flex cursor-pointer items-center justify-between gap-2 <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> list-none px-4 py-2.5 select-none [&::-webkit-details-marker]:hidden">
-        <div class="flex items-center gap-2 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
-          <i class="fa-solid fa-chevron-right text-xs transition-transform group-open:rotate-90" aria-hidden="true"></i>
-          <h2 class="text-sm font-semibold"><%= form.name %></h2>
-        </div>
-        <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-          <i class="fa-solid fa-check text-2xs" aria-hidden="true"></i> Completed
-        </span>
-      </summary>
-      <div class="border-t border-gray-100 px-4 py-5 sm:px-6">
-        <dl class="space-y-4">
-          <% submission.form_answers.includes(:form_field).order(:id).each do |answer| %>
-            <div>
-              <dt class="rich-label text-sm font-semibold text-gray-900"><%= form_label_html(answer.question_name_when_answered.presence || answer.form_field&.name) %></dt>
-              <dd class="text-sm whitespace-pre-line text-gray-700"><%= answer.submitted_answer.presence || "—" %></dd>
-            </div>
-          <% end %>
-        </dl>
-        <div class="mt-6">
-          <%= link_to "Edit responses", edit_url,
-                class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
-        </div>
+<% elsif completed && !editing %>
+  <%= render layout: "shared/collapsible_card", locals: { **card, badges: completed_chip } do %>
+    <div class="px-4 py-5 sm:px-6">
+      <dl class="space-y-4">
+        <% submission.form_answers.includes(:form_field).order(:id).each do |answer| %>
+          <div>
+            <dt class="rich-label text-sm font-semibold text-gray-900"><%= form_label_html(answer.question_name_when_answered.presence || answer.form_field&.name) %></dt>
+            <dd class="text-sm whitespace-pre-line text-gray-700"><%= answer.submitted_answer.presence || "—" %></dd>
+          </div>
+        <% end %>
+      </dl>
+      <div class="mt-6">
+        <%= link_to "Edit responses", edit_url,
+              class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
       </div>
-    </details>
-
-  <% else %>
-    <div class="flex items-center gap-2 border-b <%= DomainTheme.border_class_for(:forms, intensity: 200) %> <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-4 py-2.5 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
-      <i class="fa-solid fa-clipboard-list text-sm" aria-hidden="true"></i>
-      <h2 class="text-sm font-semibold"><%= form.name %></h2>
     </div>
+  <% end %>
+
+<% else %>
+  <%= render layout: "shared/collapsible_card", locals: { **card, open: true } do %>
     <div class="px-4 py-5 sm:px-6">
       <% asked = form.form_fields.order(:position).to_a %>
       <% prefill = submission ? {} : PublicFormFields.identity_prefill(asked, @event_registration.registrant) %>
@@ -101,4 +87,4 @@
       <% end %>
     </div>
   <% end %>
-</div>
+<% end %>
