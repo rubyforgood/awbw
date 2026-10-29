@@ -403,8 +403,9 @@
 
     <%# The CE callout's post-training form (e.g. an evaluation). It opens only
         once the registrant's sign-outs are complete, links to the form on its own
-        page (the generic callout-form flow) and returns here. Completing it is
-        required before the CE certificate is issued. %>
+        page (the generic callout-form flow) and returns here — breaking out of the
+        enclosing frame (_top), since that page has no matching frame. Completing it
+        is required before the CE certificate is issued. %>
     <% if @ce_form&.present? && (@ce_form.available? || sample_preview? || simulate_ce_paid) %>
       <section id="ce-form" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -436,6 +437,7 @@
             <% else %>
               <%= link_to link_label,
                     registration_callout_form_path(@event_registration.slug, @ce_callout, return_to: "ce"),
+                    data: { turbo_frame: "_top" },
                     class: "inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300" %>
             <% end %>
           </div>
