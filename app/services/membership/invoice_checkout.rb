@@ -76,6 +76,8 @@ class Membership::InvoiceCheckout
 
     case session.status
     when "open"
+      return Result.new(errors: [ IN_PROGRESS_ERROR ]) if @save_card
+
       Result.new(session:)
     when "expired"
       claim_and_create(replacing_session_id: session_id)

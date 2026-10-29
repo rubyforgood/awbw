@@ -61,6 +61,20 @@ RSpec.describe Membership::InvoiceCheckout do
     expect(processor).not_to have_received(:checkout)
   end
 
+  it "does not resume an open session when the card must be saved" do
+    invoice.update_columns(payment_in_progress_at: 5.minutes.ago, checkout_session_id: "cs_open")
+    allow(Stripe::Checkout::Session).to receive(:retrieve)
+      .with("cs_open", {})
+      .and_return(fake_session)
+
+    result = described_class.call(invoice:, success_url:, cancel_url:, save_card: true)
+
+    expect(result).not_to be_success
+    expect(result.errors).to include(Membership::InvoiceCheckout::IN_PROGRESS_ERROR)
+    expect(invoice.reload.checkout_session_id).to eq("cs_open")
+    expect(processor).not_to have_received(:checkout)
+  end
+
   it "does not create a second session while a payment is in progress without a session id" do
     invoice.update_column(:payment_in_progress_at, 5.minutes.ago)
     timestamp = invoice.reload.payment_in_progress_at

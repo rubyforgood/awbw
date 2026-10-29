@@ -64,6 +64,23 @@ RSpec.describe "Membership autopay", type: :request do
     expect(session[:autopay_setup_membership_id]).to eq(membership.id)
   end
 
+  it "does not subscribe over an open one-time checkout" do
+    invoice = create(:membership_invoice, membership: membership, start_date: Date.current,
+      end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
+    invoice.update_column(:checkout_session_id, "cs_open")
+    allow(Stripe::Checkout::Session).to receive(:retrieve)
+      .with("cs_open", {})
+      .and_return(double(status: "open"))
+    sign_in create(:user, person: person)
+
+    post membership_autopay_path(membership)
+
+    expect(response).to redirect_to(person_path(person))
+    expect(flash[:alert]).to match(/already in progress/)
+    expect(membership.reload.autopay_on?).to be(false)
+    expect(invoice.reload.checkout_session_id).to eq("cs_open")
+  end
+
   it "turns autopay on after the combined checkout returns" do
     create(:membership_invoice, membership: membership, start_date: Date.current,
       end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
