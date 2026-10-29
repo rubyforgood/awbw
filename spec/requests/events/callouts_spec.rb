@@ -629,6 +629,32 @@ RSpec.describe "Events::Callouts", type: :request do
     let(:scholarship)  { create(:scholarship, recipient: registration.registrant, amount_cents: 5_000) }
     let!(:allocation)  { create(:allocation, source: scholarship, allocatable: registration, amount: 5_000) }
 
+    describe "a recipients survey with scholarship tasks still outstanding" do
+      let(:survey) { create(:form, name: "Recipients survey", role: "recipient_survey") }
+      let!(:survey_field) { create(:form_field, form: survey, name: "What did you take away?") }
+      let(:scholarship_callout) { create(:registration_ticket_callout, event:, builtin_key: "scholarship") }
+
+      before do
+        scholarship.update!(agreement_signed: true, tasks_completed: false)
+        scholarship_callout.update!(hidden: false)
+        scholarship_callout.registration_ticket_callout_forms.create!(form: survey)
+      end
+
+      it "opens the survey in its expanded form card once the agreement is signed" do
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to include("callout_form[form_fields][#{survey_field.id}]")
+        expect(response.body).to match(/<details id="form-#{survey.id}" class="group\/collapsible-card[^"]*"\s+open>/)
+      end
+
+      it "accepts the submission" do
+        post registration_callout_form_submit_path(registration.slug, scholarship_callout, survey),
+          params: { callout_form: { form_fields: { survey_field.id.to_s => "So much" } } }
+
+        expect(registration.reload.post_survey_completed?).to be(true)
+      end
+    end
+
     describe "an anonymous recipients survey on the scholarship page" do
       let(:survey) { create(:form, name: "Recipients survey", role: "recipient_survey", anonymous: true) }
       let!(:survey_field) { create(:form_field, form: survey, name: "What did you take away?") }

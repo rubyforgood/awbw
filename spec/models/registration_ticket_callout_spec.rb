@@ -200,6 +200,45 @@ RSpec.describe RegistrationTicketCallout, type: :model do
     it "defaults to delivering no form" do
       expect(create(:registration_ticket_callout).delivers_form?).to be(false)
     end
+
+    # Scholarship delivers only its first form (the recipients survey), so a second
+    # is rejected rather than saved and silently never shown.
+    it "limits the Scholarship built-in to one form" do
+      callout = create(:registration_ticket_callout, builtin_key: "scholarship", title: "Scholarship")
+      callout.registration_ticket_callout_forms.build(form: create(:form))
+      expect(callout).to be_valid
+
+      callout.registration_ticket_callout_forms.build(form: create(:form))
+      expect(callout).not_to be_valid
+      expect(callout.errors.full_messages).to include("Linked forms on the Scholarship callout are limited to one")
+    end
+
+    it "lets a Scholarship callout swap its form by removing the old one in the same save" do
+      callout = create(:registration_ticket_callout, builtin_key: "scholarship", title: "Scholarship")
+      old_link = callout.registration_ticket_callout_forms.create!(form: create(:form))
+
+      callout.update!(registration_ticket_callout_forms_attributes: [
+        { id: old_link.id, _destroy: "1" },
+        { form_id: create(:form).id }
+      ])
+      expect(callout.reload.forms.size).to eq(1)
+    end
+
+    # The Scholarship picker has no ✖, so choosing its blank option is the removal.
+    it "removes a saved form row whose picker is set back to blank" do
+      callout = create(:registration_ticket_callout, builtin_key: "scholarship", title: "Scholarship")
+      link = callout.registration_ticket_callout_forms.create!(form: create(:form))
+
+      callout.update!(registration_ticket_callout_forms_attributes: { "0" => { id: link.id.to_s, form_id: "" } })
+      expect(callout.reload.forms).to be_empty
+    end
+
+    it "still ignores a new blank form row" do
+      callout = create(:registration_ticket_callout, builtin_key: "scholarship", title: "Scholarship")
+
+      callout.update!(registration_ticket_callout_forms_attributes: { "0" => { form_id: "", display_from: "" } })
+      expect(callout.reload.forms).to be_empty
+    end
   end
 
   describe "positioning" do

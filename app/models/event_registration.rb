@@ -734,15 +734,18 @@ class EventRegistration < ApplicationRecord
   end
 
   # The recipients survey becomes available once the recipient has signed their
-  # agreement and their scholarship tasks are complete, and once any drip date on
-  # the scholarship callout row has passed. Reads preloaded scholarships + the
+  # agreement and any drip date on the scholarship callout row has passed — not on
+  # scholarship tasks, which can run alongside it. Reads preloaded scholarships + the
   # event's memoized survey row, so it adds no per-row roster query. It's what
-  # gates both the survey's display on the scholarship page and readiness.
+  # gates the survey's display on the scholarship page, the ticket card, and readiness.
   def recipient_survey_available?(now = Time.current)
+    recipient_survey_agreement_signed? && event.recipient_survey_drip_open?(now)
+  end
+
+  # The per-recipient half of the survey gate: every live (undeclined) award signed.
+  def recipient_survey_agreement_signed?
     live = scholarships.reject(&:agreement_declined?)
-    return false if live.empty?
-    return false unless live.all?(&:agreement_signed?) && live.all?(&:tasks_completed?)
-    event.recipient_survey_drip_open?(now)
+    live.any? && live.all?(&:agreement_signed?)
   end
 
   def scholarship_declined?

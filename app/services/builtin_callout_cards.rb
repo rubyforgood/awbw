@@ -42,6 +42,10 @@ class BuiltinCalloutCards
     def theme = DomainTheme.swatch(color)
   end
 
+  # The Scholarship card's survey chip once the recipients survey is open and
+  # unsubmitted — the one survey state that turns the card amber.
+  RECIPIENT_SURVEY_DUE = "Survey due".freeze
+
   # Every built-in card in the order it appears on a ticket, for the editor to
   # preview the full ticket context. Cards whose content the event has already
   # materialized are omitted — they're edited as real rows in the callout list.
@@ -237,8 +241,10 @@ class BuiltinCalloutCards
   # Shown only when the registrant requested a scholarship. Its page surfaces the
   # award amount, funder, and tasks once awarded. Awarded but with tasks still
   # pending shows an amber "$X · Tasks outstanding" badge (action needed); fully
-  # met shows a fuchsia amount badge. A declined award keeps the card — the page
-  # behind it holds the decline confirmation — but with nothing left to act on.
+  # met shows a fuchsia amount badge. When the event delivers a recipients survey
+  # on this callout, the badge also says when it opens or that it's due (amber).
+  # A declined award keeps the card — the page behind it holds the decline
+  # confirmation — but with nothing left to act on.
   def scholarship_status_card
     return if config_gap?("scholarship")
     # A transferred-in recipient's award lives on the source; keep the card so they
@@ -251,17 +257,19 @@ class BuiltinCalloutCards
     declined = registration.scholarships.any?(&:agreement_declined?)
     needs_agreement = registration.scholarship? && !awarded && !declined
     tasks_outstanding = awarded && !registration.scholarship_tasks_met?
-    action_needed = needs_agreement || tasks_outstanding
+    survey = declined ? nil : recipient_survey_badge
+    survey_due = survey == RECIPIENT_SURVEY_DUE
+    action_needed = needs_agreement || tasks_outstanding || survey_due
     Card.new(icon_class: "fa-solid fa-award",
-             # Amber while an action is needed (accept the agreement, or complete
-             # tasks), otherwise the scholarship colour.
+             # Amber while an action is needed (accept the agreement, complete
+             # tasks, or fill the survey), otherwise the scholarship colour.
              color: action_needed ? "amber" : DomainTheme.color_for(:scholarships).to_s,
              title: "Scholarship",
              subtitle: scholarship_subtitle(awarded, needs_agreement, declined),
              href: registration_scholarship_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
-             badge: declined ? "Declined" : scholarship_badge(awarded, tasks_outstanding),
-             badge_classes: scholarship_badge_classes(declined, tasks_outstanding))
+             badge: declined ? "Declined" : scholarship_badge(awarded, tasks_outstanding, survey),
+             badge_classes: scholarship_badge_classes(declined, tasks_outstanding || survey_due))
   end
 
   def scholarship_subtitle(awarded, needs_agreement, declined)
@@ -271,15 +279,27 @@ class BuiltinCalloutCards
     "Your scholarship request status"
   end
 
-  def scholarship_badge_classes(declined, tasks_outstanding)
+  def scholarship_badge_classes(declined, action_needed)
     return "bg-red-100 text-red-800 border border-red-300" if declined
-    tasks_outstanding ? nil : "bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-300"
+    action_needed ? nil : "bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-300"
   end
 
-  def scholarship_badge(awarded, tasks_outstanding)
-    return unless awarded
-    amount = MoneyFormatter.dollars_from_cents(registration.scholarships.not_declined.sum(:amount_cents))
-    tasks_outstanding ? "#{amount} · Tasks outstanding" : amount
+  def scholarship_badge(awarded, tasks_outstanding, survey)
+    amount = MoneyFormatter.dollars_from_cents(registration.scholarships.not_declined.sum(:amount_cents)) if awarded
+    [ amount, ("Tasks outstanding" if tasks_outstanding), survey ].compact.join(" · ").presence
+  end
+
+  # The recipients survey's gate, for a recipient whose event delivers one on the
+  # scholarship callout: opens once they accept their agreement, then on the
+  # survey's drip date if one is set. Nil without a survey or award, or once it's in.
+  def recipient_survey_badge
+    link = event.recipient_survey_form_link
+    return unless link && registration.scholarship?
+    return if registration.post_survey_completed?
+    return "Survey opens once you accept" unless registration.recipient_survey_agreement_signed?
+    return "Survey opens #{ce_deadline_text(link.available_from)}" if link.dripping?
+
+    RECIPIENT_SURVEY_DUE
   end
 
   # CE hours: an action card prompting the registrant to request credit until
