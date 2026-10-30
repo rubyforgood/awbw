@@ -14,7 +14,7 @@
       <% when "registrants" %>
         <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% when "signins" %>
-        <%= link_to "← All timesheets", signins_events_path(report_to_hub_params.except(:period)), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <%= link_to "← All timesheets", signins_events_path(report_to_hub_params.except(:period).merge({ ce_payment: params[:ce_payment].presence }.compact)), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% else %>
         <%= link_to "← Events participation", participation_events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% end %>
@@ -23,6 +23,7 @@
 
     <% ce_badge = capture do %>
       <% if @report.ce_only? %>
+        <%= render "events/ce_payment_toggle", paid_count: @report.paid_row_count, all_count: @report.all_rows.size %>
         <span class="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
           <i class="fa-solid fa-graduation-cap text-2xs"></i>
           Continuing education
@@ -55,7 +56,7 @@
           registrants page's active/inactive filter — a full-page reload carrying
           the ce/return_to params. %>
       <% group_by_day = params[:group] == "day" %>
-      <% toggle_params = { ce: params[:ce].presence, return_to: params[:return_to].presence }.compact %>
+      <% toggle_params = { ce: params[:ce].presence, ce_payment: params[:ce_payment].presence, return_to: params[:return_to].presence }.compact %>
       <%# The page state every session-cell link has to carry so editing, saving and
           cancelling all land back on the view the admin was looking at. %>
       <% cell_state = toggle_params.merge(group: params[:group].presence).compact %>
@@ -193,7 +194,11 @@
       </p>
     <% else %>
       <div class="py-12 text-center text-gray-500">
-        <%= @report.ce_only? ? "No one has registered for CE credit on this event yet." : "No attendance has been logged for this event yet." %>
+        <% if @report.paid_only? && @report.all_rows.any? %>
+          No one has paid for CE credit on this event yet.
+        <% else %>
+          <%= @report.ce_only? ? "No one has registered for CE credit on this event yet." : "No attendance has been logged for this event yet." %>
+        <% end %>
       </div>
     <% end %>
   </div>
