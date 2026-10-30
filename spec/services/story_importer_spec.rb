@@ -192,6 +192,20 @@ RSpec.describe StoryImporter do
       file.path
     end
 
+    it "reads each author's job title from the review labels" do
+      path = labeled_csv(
+        "Title" => "A labeled story", "Status" => "Published story", "Content" => "<p>Body.</p>",
+        "Organization" => "Example Family Services", "Window type" => "Adult",
+        "First name" => "Jamie", "Last name" => "Rivera", "Job title" => "Case manager",
+        "Coauthor first name" => "Sam", "Coauthor last name" => "Lee", "Coauthor job title" => "Therapist"
+      )
+
+      described_class.new(csv_path: path, import_user: import_user).call
+
+      expect(Person.find_by(first_name: "Jamie").affiliations.pluck(:title)).to include("Case manager")
+      expect(Person.find_by(first_name: "Sam").affiliations.pluck(:title)).to include("Therapist")
+    end
+
     it "imports a sheet that uses the review labels instead of snake_case headers" do
       path = labeled_csv(
         "Title" => "A labeled story",
@@ -735,6 +749,31 @@ RSpec.describe StoryImporter do
       author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
       org = Organization.find_by("LOWER(name) = ?", "example family services")
       expect(Affiliation.where(person: author, organization: org, title: "Facilitator")).to exist
+    end
+
+    it "adds a job affiliation alongside the facilitator one when the row names a job title" do
+      import([ base_row("facilitator_job_title" => "Program director") ])
+
+      author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
+      expect(author.affiliations.pluck(:title)).to contain_exactly("Facilitator", "Program director")
+    end
+
+    it "gives the co-author their own job affiliation" do
+      import([ base_row("co_facilitator_name" => "Sam", "co_facilitator_last_name" => "Lee",
+                        "co_facilitator_job_title" => "Therapist") ])
+
+      co_author = Person.find_by(first_name: "Sam", last_name: "Lee")
+      expect(co_author.affiliations.pluck(:title)).to contain_exactly("Facilitator", "Therapist")
+    end
+
+    it "does not duplicate a job affiliation the author already holds" do
+      author = create(:person, first_name: "Jamie", last_name: "Rivera")
+      org = create(:organization, name: "Example Family Services")
+      create(:affiliation, person: author, organization: org, title: "Program Director")
+
+      import([ base_row("facilitator_job_title" => "program director") ])
+
+      expect(author.affiliations.where(organization: org).pluck(:title)).to contain_exactly("Program Director")
     end
 
     it "leaves an author already affiliated with the organization under another title alone" do

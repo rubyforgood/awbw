@@ -9,3 +9,4 @@ summary: >-
   back into "Facilitator" on the next save.
 pro_tips:
   - "Re-running the story import leaves an author alone when they're already affiliated with the story's organization, whatever the title."
+  - "The story import sheet takes a Job title (and Coauthor job title) column. Each one adds a job affiliation next to the author's Facilitator one."

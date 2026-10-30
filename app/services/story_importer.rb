@@ -25,8 +25,8 @@ class StoryImporter
   TEMPLATE_HEADERS = %w[
     row_source row_number title status wp_id content published published_date
     organization_name organization_status facilitator_name facilitator_last_name
-    facilitator_email author_note name_display anonymous
-    co_facilitator_name co_facilitator_last_name co_facilitator_email co_name_display co_anonymous
+    facilitator_email facilitator_job_title author_note name_display anonymous
+    co_facilitator_name co_facilitator_last_name co_facilitator_email co_facilitator_job_title co_name_display co_anonymous
     workshop sectors primary_sector window_type categories primary_story_population grants
     professional_licenses image_count image_urls image_alt_titles youtube_url featured
   ].freeze
@@ -47,12 +47,14 @@ class StoryImporter
     "first name" => "facilitator_name",
     "last name" => "facilitator_last_name",
     "author email" => "facilitator_email",
+    "job title" => "facilitator_job_title",
     "author note" => "author_note",
     "name display" => "name_display",
     "anonymous credit?" => "anonymous",
     "coauthor first name" => "co_facilitator_name",
     "coauthor last name" => "co_facilitator_last_name",
     "coauthor email" => "co_facilitator_email",
+    "coauthor job title" => "co_facilitator_job_title",
     "coauthor name display" => "co_name_display",
     "coauthor anonymous credit?" => "co_anonymous",
     "workshop" => "workshop",
@@ -79,11 +81,11 @@ class StoryImporter
   # author and an optional second (co-author), each with its own name/credit.
   AUTHOR_COLUMNS = {
     name: "facilitator_name", last: "facilitator_last_name", email: "facilitator_email",
-    display: "name_display", anonymous: "anonymous"
+    job_title: "facilitator_job_title", display: "name_display", anonymous: "anonymous"
   }.freeze
   CO_AUTHOR_COLUMNS = {
     name: "co_facilitator_name", last: "co_facilitator_last_name", email: "co_facilitator_email",
-    display: "co_name_display", anonymous: "co_anonymous"
+    job_title: "co_facilitator_job_title", display: "co_name_display", anonymous: "co_anonymous"
   }.freeze
 
   Result = Struct.new(
@@ -340,6 +342,8 @@ class StoryImporter
     apply_professional_licenses(row, story, author)
     create_facilitator_affiliation(author, organization)
     create_facilitator_affiliation(co_author, organization)
+    create_job_affiliation(author, organization, row, AUTHOR_COLUMNS)
+    create_job_affiliation(co_author, organization, row, CO_AUTHOR_COLUMNS)
   end
 
   def build_story(row, idea:, title:, organization:, windows_type:, author:, co_author:, content:, workshop:, external_title:, credit:, co_credit:)
@@ -592,6 +596,15 @@ class StoryImporter
     return if Affiliation.exists?(person: author, organization: organization)
 
     Affiliation.create!(person: author, organization: organization, title: Affiliation::FACILITATOR_TITLE)
+  end
+
+  # The author's job at their organization, when the row names a job title.
+  def create_job_affiliation(author, organization, row, cols)
+    title = clean(row[cols[:job_title]]).squish.presence
+    return unless title && from_non_awbw?(author) && author.persisted? && organization
+    return if Affiliation.where(person: author, organization: organization).where("LOWER(title) = ?", title.downcase).exists?
+
+    Affiliation.create!(person: author, organization: organization, title: title)
   end
 
   # Reflect the story's credit on the author's profile. An anonymous credit flags
