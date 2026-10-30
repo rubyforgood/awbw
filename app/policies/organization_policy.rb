@@ -9,7 +9,7 @@ class OrganizationPolicy < ApplicationPolicy
     admin? || (profiles_visible_to_users? && record.published?)
   end
 
-  def show_associated_records?
+  def show_submitted_content?
     admin? || member?
   end
 

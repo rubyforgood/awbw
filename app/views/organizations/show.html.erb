@@ -18,6 +18,12 @@
             <i class="fa-solid fa-pen text-xs"></i> Edit
           <% end %>
         <% end %>
+        <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+          <%= link_to organization_activity_path(@organization), data: { turbo_prefetch: false },
+                      class: "admin-only inline-flex items-center gap-1.5 text-sm font-semibold rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-800 px-4 py-1.5 shadow-sm transition" do %>
+            <i class="fa-solid fa-clock-rotate-left text-xs"></i> Activity
+          <% end %>
+        <% end %>
         <span class="inline-flex rounded-lg bg-white text-sm shadow-sm">
           <%= render "bookmarks/editable_bookmark_button", resource: @organization %>
         </span>
@@ -52,9 +58,14 @@
                        @organization.addresses.active.first
                      end %>
         <% if address %>
-          <p class="mt-1 text-sm text-gray-600">
-            <%= [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %>
-          </p>
+          <div class="mt-1 flex flex-wrap items-center justify-center gap-2 text-sm text-gray-600 md:justify-start">
+            <span><%= [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %></span>
+            <% if address.street_address.present? && allowed_to?(:manage?, Organization) %>
+              <span class="<%= admin_only_chip_class %>" title="Street address (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= address.street_address %>
+              </span>
+            <% end %>
+          </div>
         <% end %>
         <% affiliated_since = org_decorated.affiliated_since_display %>
         <% if affiliated_since.present? %>
@@ -244,7 +255,7 @@
           <% @published_sections.each do |section, records| %>
             <div>
               <h3 class="mb-3 font-display text-xl text-gray-900"><%= section_titles.fetch(section) %></h3>
-              <%= render "organizations/sections/published", organization: @organization, section: section, records: records %>
+              <%= render "organizations/sections/cards", organization: @organization, section: section, records: records %>
             </div>
           <% end %>
         </div>
@@ -279,36 +290,38 @@
         </div>
       </div>
     <% end %>
-    <!-- WORKSHOP LOGS SECTION -->
-    <% if @workshop_logs %>
+    <!-- SUBMITTED SECTION -->
+    <%# Members and admins; each section only shows when it has something to list. %>
+    <% if @workshop_logs.present? || @submitted_sections.present? %>
+      <% submitted_titles = {
+           "workshop_ideas" => "Workshop ideas",
+           "workshop_variation_ideas" => "Workshop variation ideas",
+           "story_ideas" => "Story ideas",
+           "monthly_reports" => "Monthly reports"
+         } %>
       <div class="organization-only border-2 bg-white <%= DomainTheme.border_class_for(:user_only) %> overflow-hidden rounded-2xl shadow-sm">
         <!-- Header -->
         <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(:user_only, intensity: 200) %>">
           <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full <%= DomainTheme.bg_class_for(:user_only, intensity: 100) %> <%= DomainTheme.text_class_for(:user_only, intensity: 700) %>">
             <i class="fa-solid fa-lock"></i>
           </span>
-          <h2 class="font-display text-2xl text-gray-900">Workshop logs</h2>
+          <h2 class="font-display text-2xl text-gray-900">Submitted content</h2>
           <span class="ml-auto text-sm <%= DomainTheme.text_class_for(:user_only, intensity: 700) %> italic">Only visible to members and admins</span>
         </div>
-        <div class="section-content px-4 py-5 sm:px-6 sm:py-6">
-          <%= render "organizations/sections/workshop_logs", organization: @organization, workshop_logs: @workshop_logs %>
-        </div>
-      </div>
-    <% end %>
-    <!-- ASSOCIATED RECORDS SECTION -->
-    <% if allowed_to?(:show_associated_records?, @organization) %>
-      <div class="organization-only border-2 bg-white <%= DomainTheme.border_class_for(:user_only) %> overflow-hidden rounded-2xl shadow-sm">
-        <!-- Header -->
-        <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(:user_only, intensity: 200) %>">
-          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full <%= DomainTheme.bg_class_for(:user_only, intensity: 100) %> <%= DomainTheme.text_class_for(:user_only, intensity: 700) %>">
-            <i class="fa-solid fa-lock"></i>
-          </span>
-          <h2 class="font-display text-2xl text-gray-900">Associated records</h2>
-          <span class="ml-auto text-sm <%= DomainTheme.text_class_for(:user_only, intensity: 700) %> italic">Only visible to members and admins</span>
-        </div>
-        <!-- Content -->
-        <div class="section-content px-4 py-5 sm:px-6 sm:py-6">
-          <%= render "associated_records", organization: @organization %>
+        <div class="section-content space-y-8 px-4 py-5 sm:space-y-10 sm:px-6 sm:py-6">
+          <% if @workshop_logs.present? %>
+            <div>
+              <h3 class="mb-3 font-display text-xl text-gray-900">Workshop logs</h3>
+              <%= render "organizations/sections/workshop_logs", organization: @organization, workshop_logs: @workshop_logs %>
+            </div>
+          <% end %>
+          <% @submitted_sections.each do |section, records| %>
+            <div>
+              <h3 class="mb-3 font-display text-xl text-gray-900"><%= submitted_titles.fetch(section) %></h3>
+              <% partial = section == "monthly_reports" ? "organizations/sections/monthly_reports" : "organizations/sections/cards" %>
+              <%= render partial, organization: @organization, section: section, records: records %>
+            </div>
+          <% end %>
         </div>
       </div>
     <% end %>

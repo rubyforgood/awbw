@@ -6,6 +6,9 @@ class OrganizationsController < ApplicationController
   PUBLISHED_SECTIONS = %w[workshops workshop_variations resources stories community_news].freeze
   # The sections an org can hide from its profile; the rest always show.
   PUBLISHED_SECTION_FLAGS = { "workshops" => :profile_show_workshops?, "stories" => :profile_show_stories? }.freeze
+  # The members-and-admins "Submitted content" sections, in display order. Each
+  # model's policy scope narrows them further (most ideas are admin-only).
+  SUBMITTED_SECTIONS = %w[workshop_ideas workshop_variation_ideas story_ideas monthly_reports].freeze
 
   def index
     authorize!
@@ -51,25 +54,25 @@ class OrganizationsController < ApplicationController
       return render partial: "organizations/sections/events", locals: { organization: @organization, events: events }
     end
 
-    # Later pages of the published-content sections swap in through their frames.
-    # The section name comes from the constant, never the param, so the render path is fixed.
-    section = PUBLISHED_SECTIONS.find { |name| name == params[:section] }
+    # Later pages of the paged sections swap in through their frames.
+    # The section name comes from the constants, never the param, so the render path is fixed.
+    section = (PUBLISHED_SECTIONS + SUBMITTED_SECTIONS).find { |name| name == params[:section] }
     if turbo_frame_request? && section
-      # A section the org hid stays hidden from a crafted ?section= request.
-      authorize! @organization, to: :manage? unless published_section_shown?(section)
-      records = published_section_records(section, page: params[:page])
-      return render partial: "organizations/sections/published", locals: { organization: @organization, section: section, records: records }
+      # A hidden section stays hidden from a crafted ?section= request.
+      if SUBMITTED_SECTIONS.include?(section)
+        authorize! @organization, to: :show_submitted_content?
+      else
+        authorize! @organization, to: :manage? unless published_section_shown?(section)
+      end
+      return render_section(section, section_records(section, page: params[:page]))
     end
 
     track_view(@organization)
 
-    # Only sections with something to list, loaded so the view doesn't re-query.
-    @published_sections = PUBLISHED_SECTIONS.each_with_object({}) do |section, sections|
-      next unless published_section_shown?(section)
-      records = published_section_records(section, page: 1).load
-      sections[section] = records if records.any?
-    end
+    @published_sections = loaded_sections(PUBLISHED_SECTIONS.select { |name| published_section_shown?(name) })
+    return unless allowed_to?(:show_submitted_content?, @organization)
 
+    @submitted_sections = loaded_sections(SUBMITTED_SECTIONS)
     if allowed_to?(:show_workshop_logs?, @organization)
       @workshop_logs = @organization.affiliated_workshop_logs
                                     .includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets)
@@ -198,7 +201,25 @@ class OrganizationsController < ApplicationController
     flag.nil? || @organization.public_send(flag)
   end
 
-  def published_section_records(section, page:)
+  # Only sections with something to list, loaded so the view doesn't re-query.
+  def loaded_sections(names)
+    names.each_with_object({}) do |name, sections|
+      records = section_records(name, page: 1).load
+      sections[name] = records if records.any?
+    end
+  end
+
+  def render_section(section, records)
+    partial = section == "monthly_reports" ? "organizations/sections/monthly_reports" : "organizations/sections/cards"
+    render partial: partial, locals: { organization: @organization, section: section, records: records }
+  end
+
+  def section_records(section, page:)
+    if section == "monthly_reports"
+      return authorized_scope(MonthlyReport.where(organization_id: @organization.id))
+               .order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")).paginate(page: page, per_page: 9)
+    end
+
     records = case section
     when "workshops"
       openly_credited(authorized_scope(@organization.credited_workshops.with_author_credit)).includes(created_by: :person)
@@ -210,6 +231,12 @@ class OrganizationsController < ApplicationController
       authorized_scope(@organization.stories.with_author_credit)
     when "community_news"
       authorized_scope(@organization.community_news.with_author_credit)
+    when "workshop_ideas"
+      authorized_scope(@organization.credited_to_affiliates(WorkshopIdea))
+    when "workshop_variation_ideas"
+      authorized_scope(WorkshopVariationIdea.where(organization_id: @organization.id))
+    when "story_ideas"
+      authorized_scope(StoryIdea.where(organization_id: @organization.id)).includes(story_idea_workshops: :workshop)
     end
     # Stories lay out two to a row, everything else three.
     per_page = section == "stories" ? 8 : 9

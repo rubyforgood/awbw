@@ -359,12 +359,17 @@ class Organization < ApplicationRecord
     affiliations.active.exists?
   end
 
-  # Workshops credited to anyone ever affiliated here — the explicit author, or the
-  # legacy created_by fallback when no author is named (AuthorCreditable#credited_to_person).
-  def credited_workshops
+  # Records of an AuthorCreditable model credited to anyone ever affiliated here — the
+  # explicit author, or the legacy created_by fallback when no author is named
+  # (AuthorCreditable#credited_to_person).
+  def credited_to_affiliates(model)
     person_ids = affiliations.select(:person_id)
-    Workshop.where(author_id: person_ids)
-            .or(Workshop.where(author_id: nil, created_by_id: User.where(person_id: person_ids).select(:id)))
+    model.where(author_id: person_ids)
+         .or(model.where(author_id: nil, created_by_id: User.where(person_id: person_ids).select(:id)))
+  end
+
+  def credited_workshops
+    credited_to_affiliates(Workshop)
   end
 
   # Sectors and age groups are never entered on an org — they roll up from the

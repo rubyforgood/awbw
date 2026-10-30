@@ -19,7 +19,7 @@
      Story.where(org_filter),
      StoryIdea.where(org_filter),
      organization.credited_workshops,
-     WorkshopIdea.created_by_person(organization.affiliations.select(:person_id)),
+     organization.credited_to_affiliates(WorkshopIdea),
      WorkshopVariation.where(org_filter),
      WorkshopVariationIdea.where(org_filter)
    ] %>

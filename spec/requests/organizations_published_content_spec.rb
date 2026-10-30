@@ -186,75 +186,78 @@ RSpec.describe "Organization profile published content", type: :request do
     end
   end
 
-  describe "Workshop logs" do
+  describe "Submitted content" do
     let(:member) { create(:user, person: facilitator) }
     let(:workshop) { create(:workshop, title: "Logged Workshop") }
+
+    def submitted_card
+      Capybara.string(response.body).find("h2", text: "Submitted content").ancestor("div.rounded-2xl", match: :first)
+    end
 
     before do
       create(:workshop_log, organization: organization, workshop: workshop, adults_first_time: 3, teens_ongoing: 2)
       create(:workshop_log, organization: organization, workshop: workshop, adults_ongoing: 1)
     end
 
-    it "groups the org's logs by workshop for members" do
+    it "groups the org's workshop logs by workshop for members" do
       sign_in member
       get organization_path(organization)
 
-      section = Capybara.string(response.body).find("h2", text: "Workshop logs").ancestor("div.rounded-2xl", match: :first)
-      expect(section).to have_text("Total participants: 6")
-      expect(section).to have_text("Unique workshops: 1")
-      expect(section).to have_link(href: workshop_logs_path(organization_id: organization.id, workshop_id: workshop.id))
+      expect(submitted_card).to have_text("Only visible to members and admins")
+      expect(submitted_card).to have_text("Total participants: 6")
+      expect(submitted_card).to have_text("Unique workshops: 1")
+      expect(submitted_card).to have_link(href: workshop_logs_path(organization_id: organization.id, workshop_id: workshop.id))
     end
 
     it "stays off for non-members" do
       sign_in viewer
       get organization_path(organization)
-      expect(response.body).not_to include(">Workshop logs</h2>")
+      expect(response.body).not_to include("Submitted content")
     end
 
-    it "hides from members but not admins when the toggle is off" do
+    it "hides workshop logs from members but not admins when the toggle is off" do
       organization.update!(profile_show_workshop_logs: false)
 
       sign_in member
       get organization_path(organization)
-      expect(response.body).not_to include(">Workshop logs</h2>")
-      expect(response.body).to include("Associated records")
+      expect(response.body).not_to include(">Workshop logs</h3>")
 
       sign_in admin
       get organization_path(organization)
-      expect(response.body).to include(">Workshop logs</h2>")
+      expect(response.body).to include(">Workshop logs</h3>")
+    end
+
+    it "lists ideas to admins only and monthly reports to members" do
+      create(:story_idea, organization: organization, workshop: create(:workshop, title: "Org Story Idea"))
+      create(:workshop_idea, title: "Org Workshop Idea", author: facilitator)
+      create(:workshop_variation_idea, organization: organization, name: "Org Variation Idea")
+      create(:monthly_report, organization: organization)
+
+      sign_in member
+      get organization_path(organization)
+      expect(submitted_card).to have_text("Monthly reports")
+      expect(submitted_card).to have_no_text("Org Story Idea")
+      expect(submitted_card).to have_no_text("Org Workshop Idea")
+      expect(submitted_card).to have_no_text("Org Variation Idea")
+
+      sign_in admin
+      get organization_path(organization)
+      expect(submitted_card).to have_text("Org Story Idea")
+      expect(submitted_card).to have_text("Org Workshop Idea")
+      expect(submitted_card).to have_text("Org Variation Idea")
     end
   end
 
-  describe "Associated records card" do
+  describe "admin extras" do
     let(:member) { create(:user, person: facilitator) }
 
-    it "shows to members" do
-      sign_in member
-      get organization_path(organization)
-      expect(response.body).to include("Associated records")
-    end
-
-    it "groups buttons like the person's card and shows each only to viewers its index lets in" do
-      card = -> { Capybara.string(response.body).find("h2", text: "Associated records").ancestor("div.rounded-2xl", match: :first) }
-
-      sign_in member
-      get organization_path(organization)
-      expect(card.call).to have_text("Administrative").and have_text("Contributed content")
-      %w[Community\ news Resources Stories Workshops Workshop\ variations Workshop\ logs].each do |label|
-        expect(card.call).to have_link(label)
-      end
-      [ "Story ideas", "Workshop ideas", "Workshop variation ideas", "Event registrations" ].each do |label|
-        expect(card.call).to have_no_link(label)
-      end
-
+    it "leaves the associated-records chips off the profile" do
       sign_in admin
       get organization_path(organization)
-      [ "Story ideas", "Workshop ideas", "Workshop variation ideas", "Event registrations" ].each do |label|
-        expect(card.call).to have_link(label)
-      end
+      expect(response.body).not_to include("Associated records")
     end
 
-    it "keeps the Activity link to admins" do
+    it "shows the Activity button to admins only" do
       activity_link = -> { Capybara.string(response.body).has_link?(href: /#{admin_activities_events_path}\?.*organization_id=#{organization.id}/) }
 
       sign_in member
@@ -264,6 +267,20 @@ RSpec.describe "Organization profile published content", type: :request do
       sign_in admin
       get organization_path(organization)
       expect(activity_link.call).to be(true)
+    end
+
+    it "shows the street address to admins only, as a locked chip" do
+      create(:address, addressable: organization, street_address: "123 Sample Street")
+
+      sign_in member
+      get organization_path(organization)
+      expect(response.body).not_to include("123 Sample Street")
+
+      sign_in admin
+      get organization_path(organization)
+      chip = Capybara.string(response.body).find("[title='Street address (admin only)']")
+      expect(chip[:class]).to include("admin-only")
+      expect(chip).to have_text("123 Sample Street")
     end
   end
 end
