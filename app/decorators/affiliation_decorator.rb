@@ -1,12 +1,10 @@
 class AffiliationDecorator < ApplicationDecorator
   def detail(length: nil)
-    "#{person.full_name}: #{title.presence || Affiliation::FACILITATOR_TITLE} - #{organization.name}"
+    "#{[ person.full_name, title ].compact.join(": ")} - #{organization.name}"
   end
 
-  # A blank title means a facilitator affiliation, the same default used elsewhere.
   def display_title
-    shown = title.presence || Affiliation::FACILITATOR_TITLE
-    shown.strip == Affiliation::FACILITATOR_TITLE ? "AWBW #{Affiliation::FACILITATOR_TITLE}" : shown
+    facilitator? ? "AWBW #{Affiliation::FACILITATOR_TITLE}" : title
   end
 
   def dedupe_label
