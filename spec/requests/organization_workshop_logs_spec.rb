@@ -48,6 +48,21 @@ RSpec.describe "Organization workshop logs page", type: :request do
     expect(response.body).not_to include("Collage Workshop")
   end
 
+  it "pages the grouped cards" do
+    create_list(:workshop, OrganizationServices::WorkshopLogSummary::GROUPS_PER_PAGE).each_with_index do |workshop, index|
+      create(:workshop_log, organization: organization, workshop: workshop, workshop_held_on: index.days.ago)
+    end
+    create(:workshop_log, organization: organization, workshop: collage, workshop_held_on: 1.year.ago)
+    sign_in member
+
+    get workshop_logs_organization_path(organization)
+    expect(response.body).not_to include("Collage Workshop")
+    expect(Capybara.string(response.body)).to have_link(href: /workshop_logs\?.*page=2/)
+
+    get workshop_logs_organization_path(organization, page: 2)
+    expect(response.body).to include("Collage Workshop")
+  end
+
   it "turns away non-members" do
     create(:workshop_log, organization: organization, workshop: collage)
     sign_in viewer
