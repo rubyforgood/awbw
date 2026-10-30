@@ -5,10 +5,8 @@ released_on: 2026-10-29
 pr_number: 2910
 action_path: "/registration/sample"
 summary: >-
-  The CE callout's evaluation form now opens inline on the registrant's CE page,
-  in the same card as the scholarship survey and other callout forms, instead of
-  a separate page. While the form is open to fill, the training sign-in folds to
-  its total hours and the callout's Details fold into a toggle, so the form comes
-  first.
+  The CE evaluation now opens right on the registrant's CE page, in the same card
+  as other callout forms. While it's open, the training sign-in folds to its total
+  hours and the callout's Details fold away, so the form comes first.
 pro_tips:
   - "Put the CE evaluation on the built-in CE hours callout, not a separate custom callout — the ticket then shows one CE card."
