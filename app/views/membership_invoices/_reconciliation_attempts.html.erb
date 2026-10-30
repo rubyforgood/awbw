@@ -83,6 +83,14 @@
                     ),
                     class: button_classes(:secondary_outline, size: :sm),
                     title: "Reads this PaymentIntent from Stripe and repairs the local payment records." %>
+              <%= button_to "Cancel payment attempt",
+                    membership_invoice_reconciliation_path(
+                      membership_invoice, attempt_id: attempt.id, **return_params
+                    ),
+                    method: :delete,
+                    class: button_classes(:danger_outline, size: :sm),
+                    title: "Cancels this PaymentIntent in Stripe. If it already succeeded, it will be reconciled instead.",
+                    data: { turbo_confirm: "Cancel this PaymentIntent in Stripe? If it already succeeded, Stripe will refuse and the attempt will be reconciled instead. This does not move money." } %>
             <% else %>
               <span class="text-xs text-gray-500">No PaymentIntent was stored for this attempt.</span>
               <% if attempt.manual_failure_allowed? %>

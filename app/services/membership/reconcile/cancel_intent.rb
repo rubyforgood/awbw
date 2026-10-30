@@ -12,9 +12,7 @@ class Membership::Reconcile::CancelIntent
   end
 
   def call
-    unless @attempt.needs_action?
-      return failure("Only a card-authentication attempt can be canceled.")
-    end
+    return failure("This attempt is already resolved.") unless @attempt.unresolved?
     return failure("This attempt has no PaymentIntent to cancel.") if @attempt.payment_intent_id.blank?
 
     customer = @attempt.membership_invoice.person.stripe_customer
@@ -52,7 +50,7 @@ class Membership::Reconcile::CancelIntent
     result = Membership::Reconcile.call(attempt: @attempt)
     if result.success? && @attempt.reload.succeeded?
       Result.new(status: :succeeded, attempt: @attempt,
-                 message: "The member completed authentication first; the payment was applied.", errors: [])
+                 message: "Stripe reports this payment already succeeded. The attempt was reconciled.", errors: [])
     else
       failure("Stripe could not cancel this payment. Reconcile the attempt to see its current status.")
     end
