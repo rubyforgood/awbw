@@ -75,9 +75,9 @@ RSpec.describe "Events::Callouts CE form", type: :request do
       expect(Nokogiri::HTML(response.body).css("summary").map(&:text).join).not_to include("Details")
     end
 
-    context "with the CE paid and a day signed in and out" do
+    context "with the CE approved and paid and a day signed in and out" do
       before do
-        registration.continuing_education_registrations.first.update!(cost_cents: 0)
+        registration.continuing_education_registrations.first.update!(cost_cents: 0, approved_at: Time.current)
         registration.event_attendance_time_entries.create!(signed_in_at: Time.zone.local(2026, 7, 23, 9, 0),
           signed_out_at: Time.zone.local(2026, 7, 23, 16, 0))
       end

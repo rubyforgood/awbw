@@ -169,11 +169,24 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       end
     end
 
-    context "when paid in full but not issued" do
+    context "when paid in full but not approved" do
       before { pay(add_ce(cost_cents: 15_000), 15_000) }
 
       it "is a blue Pending badge" do
         expect(badge.label).to eq("Pending")
+        expect(badge.classes).to include("blue")
+      end
+    end
+
+    context "when paid in full and approved but not issued" do
+      before do
+        cer = add_ce(cost_cents: 15_000)
+        pay(cer, 15_000)
+        cer.update!(approved_at: Time.current)
+      end
+
+      it "is a blue Approved badge" do
+        expect(badge.label).to eq("Approved")
         expect(badge.classes).to include("blue")
       end
     end
@@ -268,26 +281,36 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       it { is_expected.to eq(0) }
     end
 
-    context "when paid in full but not issued" do
-      before { pay(add_ce, 15_000) }
+    context "when paid in full and approved but not issued" do
+      before do
+        cer = add_ce
+        pay(cer, 15_000)
+        cer.update!(approved_at: Time.current)
+      end
 
       it { is_expected.to eq(1) }
+    end
+
+    context "when paid in full but not approved" do
+      before { pay(add_ce, 15_000) }
+
+      it { is_expected.to eq(2) }
     end
 
     context "when the license is on file but unpaid" do
       before { add_ce }
 
-      it { is_expected.to eq(2) }
+      it { is_expected.to eq(3) }
     end
 
     context "when the CE registration sits on a placeholder license" do
       before { add_ce(placeholder: true) }
 
-      it { is_expected.to eq(3) }
+      it { is_expected.to eq(4) }
     end
 
     context "when CE isn't in play" do
-      it { is_expected.to eq(4) }
+      it { is_expected.to eq(5) }
     end
   end
 

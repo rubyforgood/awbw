@@ -419,7 +419,7 @@ RSpec.describe BuiltinCalloutCards do
   end
 
   describe "CE card attendance reminder" do
-    # Paid CE registration on a training day so the sign-in nudge is live.
+    # Approved, paid CE registration on a training day so the sign-in nudge is live.
     let(:event) do
       create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000,
         start_date: Time.zone.local(2026, 7, 23, 9, 0),
@@ -432,7 +432,7 @@ RSpec.describe BuiltinCalloutCards do
 
     def pay_ce!
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
-      ce = create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      ce = create(:continuing_education_registration, :approved, event_registration: registration, professional_license: license)
       create(:allocation, source: create(:payment), allocatable: ce, amount: ce.cost_cents)
       registration.reload
     end

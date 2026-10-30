@@ -1,8 +1,8 @@
 class EventRegistrationDecorator < ApplicationDecorator
   # The CE lifecycle badge, shared by every surface that shows CE status (the
   # registrants index, the CE callout, the CE card on the registration edit page).
-  # One progression: Requested → License # needed → $X due → Pending → Issued.
-  # Pending is blue, Issued is green, every actionable/in-progress state is amber.
+  # One progression: Requested → License # needed → $X due → Pending → Approved → Issued.
+  # Pending and Approved are blue, Issued is green, every actionable/in-progress state is amber.
   CeBadge = Struct.new(:label, :icon, :classes, keyword_init: true)
 
   CE_BADGE_CLASSES = {
@@ -53,18 +53,20 @@ class EventRegistrationDecorator < ApplicationDecorator
     return unless ce_registered?
     return ce_badge("Issued", "fa-solid fa-circle-check", :green) if ce_certificate_issued?
     return ce_badge("License # needed", "fa-solid fa-id-card", :amber) unless ce_license_provided?
-    return ce_badge("Pending", "fa-solid fa-hourglass-half", :blue) if ce_paid_in_full? || simulate_paid
+    return ce_badge("#{h.dollars_from_cents(ce_amount_due_cents)} due", "fa-solid fa-dollar-sign", :amber) unless ce_paid_in_full? || simulate_paid
+    return ce_badge("Approved", "fa-solid fa-thumbs-up", :blue) if ce_approved?
 
-    ce_badge("#{h.dollars_from_cents(ce_amount_due_cents)} due", "fa-solid fa-dollar-sign", :amber)
+    ce_badge("Pending", "fa-solid fa-hourglass-half", :blue)
   end
 
   # Priority for sorting the CE column: most-complete first, "Create" (no CE) last.
   # Mirrors the ce_status_badge guard order so the two never drift.
   def ce_status_sort_key
-    return 4 unless ce_registered?
+    return 5 unless ce_registered?
     return 0 if ce_certificate_issued?
-    return 3 unless ce_license_provided?
-    return 1 if ce_paid_in_full?
+    return 4 unless ce_license_provided?
+    return 3 unless ce_paid_in_full?
+    return 1 if ce_approved?
     2
   end
 

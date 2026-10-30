@@ -34,6 +34,25 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
     end
   end
 
+  describe "#access_granted?" do
+    let(:ce) { create(:continuing_education_registration, cost_cents: 15_000) }
+
+    it "stays closed when paid but not approved" do
+      create(:allocation, source: create(:payment), allocatable: ce, amount: 15_000)
+      expect(ce.access_granted?).to be(false)
+    end
+
+    it "stays closed when approved but neither paid nor intending to pay" do
+      ce.update!(approved_at: Time.current)
+      expect(ce.access_granted?).to be(false)
+    end
+
+    it "opens once approved and intending to pay" do
+      ce.update!(approved_at: Time.current, intends_to_pay: true)
+      expect(ce.access_granted?).to be(true)
+    end
+  end
+
   describe ".search_by_params approval filter" do
     let!(:approved) { create(:continuing_education_registration, :approved) }
     let!(:pending) { create(:continuing_education_registration) }
@@ -291,8 +310,15 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
     def ce_reg_for(event:, status:, cost_cents: 0)
       registration = create(:event_registration, event: event, status: status)
       create(:continuing_education_registration,
-        event_registration: registration, cost_cents: cost_cents,
+        event_registration: registration, cost_cents: cost_cents, approved_at: Time.current,
         professional_license: create(:professional_license, person: registration.registrant))
+    end
+
+    it "is unavailable until an admin approves the CE" do
+      event = create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago)
+      ce_reg = ce_reg_for(event: event, status: "attended")
+      ce_reg.update!(approved_at: nil)
+      expect(ce_reg.certificate_available?).to be(false)
     end
 
     it "is available once a CE-eligible training has ended, the registrant attended, and it's paid" do
@@ -384,7 +410,7 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
         dest_reg = create(:event_registration, event: future, registrant: origin_reg.registrant,
           status: "attended", transferred_from_registration: origin_reg)
         ce = dest_reg.continuing_education_registrations.create!(
-          professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
+          professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true, approved_at: Time.current)
 
         # Origin already ended, but the hours are earned at the destination event,
         # which hasn't happened yet → not certifiable until that event ends.
