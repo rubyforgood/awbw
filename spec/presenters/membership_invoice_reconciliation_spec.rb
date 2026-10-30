@@ -21,6 +21,25 @@ RSpec.describe MembershipInvoiceReconciliation do
     )
   end
 
+  it "summarizes an unallocated payment on an unpaid invoice" do
+    create(:external_processor_payment, person: invoice.person, amount_cents: 1_000,
+      amount_cents_remaining: 1_000, metadata: { "membership_invoice_id" => invoice.id })
+
+    summary = described_class.new(invoice)
+
+    expect(summary.issues.map(&:kind)).to include(:unallocated_payment)
+    expect(summary.summary).to include("unallocated payment")
+  end
+
+  it "does not show an unallocated payment on a paid invoice" do
+    paid = create(:payment, person: invoice.person, amount_cents: 1_000)
+    create(:allocation, source: paid, allocatable: invoice, amount: 1_000)
+    create(:external_processor_payment, person: invoice.person, amount_cents: 1_000,
+      amount_cents_remaining: 1_000, metadata: { "membership_invoice_id" => invoice.id })
+
+    expect(described_class.new(invoice)).not_to be_needed
+  end
+
   it "reports nothing for a clean invoice" do
     expect(described_class.new(invoice)).not_to be_needed
   end

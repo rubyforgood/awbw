@@ -20,7 +20,8 @@ module DataHealth
     ],
     "Payments" => [
       OverAllocatedRegistrations,
-      MembershipReconciliation
+      MembershipReconciliation,
+      MembershipCredits
     ],
     "Stories" => [
       StoriesWithoutWorkshop

@@ -6,6 +6,7 @@ module MembershipInvoices
       authorize! @invoice, to: :reconcile?
       @lookup = Membership::Reconcile::Lookup.call(invoice: @invoice)
       @reconciliation = MembershipInvoiceReconciliation.new(@invoice)
+      @stripe_customer = @invoice.person.stripe_customer
     end
 
     def create

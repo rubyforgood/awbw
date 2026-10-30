@@ -86,22 +86,30 @@ Concern mixed into `Pay::Charge` in `config/initializers/pay.rb`.
 Stripe is authoritative. Reconciliation only reads Stripe and repairs the portal's
 local records; it never creates a charge.
 
-- **Data health → Memberships with payments to reconcile** lists memberships with an
-  unresolved autopay attempt (`pending`, `unknown`, `needs_action`) or a checkout
-  session whose 31-minute window has passed.
+- **Data health → Membership invoices with payments to reconcile** lists invoices with
+  an unresolved autopay attempt (`pending`, `unknown`, `needs_action`), a checkout
+  session whose 31-minute window has passed, or a portal-originated membership
+  payment that is unallocated while the invoice still owes.
 - The invoice admin panel shows the attempts, the stored checkout session, and any
   unallocated Stripe payment. **Find payments in Stripe** is a read-only lookup of
   the member's recent PaymentIntents for that invoice.
 - A succeeded PaymentIntent is synced through `Pay::Stripe::Charge.sync_payment_intent`.
   `PayChargeExtensions` remains the only creator of `ExternalProcessorPayment`; the
   reconciliation service then applies that payment with `Membership::Reconcile::Payment`.
-- If the invoice was already paid by another payment, the new payment stays
-  unallocated and is reported for a refund or a manual application elsewhere.
-- `needs_action` is report-only. **Cancel payment attempt** is the one deliberate
-  Stripe write in this flow: it cancels the abandoned PaymentIntent (no money has
-  moved) and then runs the normal state machine so the attempt becomes failed and
-  the invoice can be retried. It is a business action like expiring an abandoned
-  Checkout Session, not reconciliation rewriting Stripe data.
+- A charge that succeeded but could not be applied marks the attempt `succeeded` with
+  an `unallocated_payment` note. The invoice stays in Data health while it owes.
+- **Membership credits and overpayments** lists portal-originated membership payments
+  with money left after their invoice was paid, or with no linked invoice. External
+  Stripe payments with no membership link stay out of both checks.
+- A credit can be acknowledged on the payment page. Acknowledgement hides the payment
+  from both Data health checks without changing the payment or its remaining amount.
+  Remove the acknowledgement to show it again.
+- **Cancel payment attempt** handles any unresolved attempt with a PaymentIntent. It
+  cancels the PaymentIntent (no money has moved) and then runs the normal state
+  machine so the attempt becomes failed and the invoice can be retried. If Stripe
+  says the payment already succeeded, it reconciles instead of canceling. It is a
+  business action like expiring an abandoned Checkout Session, not reconciliation
+  rewriting Stripe data.
 - **Mark failed: no charge found** is only available when no PaymentIntent was ever
   stored. A known PaymentIntent is always decided by Stripe.
 

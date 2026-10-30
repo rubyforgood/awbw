@@ -52,6 +52,7 @@ class MembershipInvoice < ApplicationRecord
   def self.needing_reconciliation
     where(id: MembershipChargeAttempt.unresolved.select(:membership_invoice_id))
       .or(where(id: stale_checkout_ids))
+      .or(where(id: unpaid_payment_invoice_ids))
   end
 
   def self.stale_checkout_ids
@@ -59,7 +60,17 @@ class MembershipInvoice < ApplicationRecord
       .where("payment_in_progress_at IS NULL OR payment_in_progress_at <= ?", PAYMENT_WINDOW.ago)
       .select(:id)
   end
-  private_class_method :stale_checkout_ids
+
+  def self.unpaid_payment_invoice_ids
+    ExternalProcessorPayment.membership_originated
+      .where(amount_cents_remaining: 1.., reconciliation_acknowledged_at: nil)
+      .filter_map do |payment|
+        link = MembershipPaymentLink.new(payment)
+        link.invoice.id if link.unpaid?
+      end
+      .uniq
+  end
+  private_class_method :stale_checkout_ids, :unpaid_payment_invoice_ids
 
   before_validation :derive_end_date, on: :create
   before_validation :inherit_invoice_details, on: :create
@@ -284,7 +295,7 @@ class MembershipInvoice < ApplicationRecord
     upcoming = upcoming.where.not(id: id) if persisted?
     return unless upcoming.exists?
 
-    errors.add(:base, "This membership already has an upcoming invoice — remove next year before issuing another")
+    errors.add(:base, "This membership already has an upcoming invoice. Remove next year before issuing another")
   end
 
   def cost_cents_immutable_once_allocated

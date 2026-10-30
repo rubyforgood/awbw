@@ -54,6 +54,11 @@ class Membership::Reconcile
     if result.allocated?
       Result.new(status: :succeeded, attempt: @attempt.reload, payment: result.payment,
                  message: result.message, errors: [])
+    elsif result.success? && result.payment.present?
+      mark_unallocated(result.payment, result.message)
+      Result.new(status: :succeeded, attempt: @attempt.reload, payment: result.payment,
+                 message: "#{result.message} The attempt is marked succeeded; the payment remains unallocated.",
+                 errors: [])
     else
       mark_unresolved("allocation_failed", result.message)
       Result.new(status: result.status, attempt: @attempt.reload, payment: result.payment,
@@ -82,6 +87,18 @@ class Membership::Reconcile
     else
       failure(result.errors.to_sentence.presence || "Stripe did not resolve this attempt.")
     end
+  end
+
+  def mark_unallocated(payment, message)
+    @attempt.update!(
+      status: "succeeded",
+      payment_intent_id: @attempt.payment_intent_id || @intent.id,
+      pay_charge: payment.pay_charge || @attempt.pay_charge,
+      error_code: "unallocated_payment",
+      error_message: "Stripe reports this charge succeeded, but the payment could not be applied " \
+                     "to this invoice. #{message}",
+      next_attempt_on: nil
+    )
   end
 
   def mark_unresolved(code, message)

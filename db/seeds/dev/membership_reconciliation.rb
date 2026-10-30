@@ -48,6 +48,16 @@ attempt = ->(invoice, status:, on: 1.hour.ago, **attrs) do
   )
 end
 
+pay = ->(invoice, cents) do
+  payment = CashPayment.create!(
+    person: invoice.person,
+    amount_cents: cents,
+    amount_cents_remaining: cents,
+    currency: Membership::CURRENCY
+  )
+  Allocation.create!(source: payment, allocatable: invoice, amount: cents)
+end
+
 customer_for = ->(person) do
   customer = Pay::Stripe::Customer.find_or_initialize_by(owner: person, processor: "stripe")
   customer.update!(processor_id: "cus_recon_#{person.id}", default: true)
@@ -133,6 +143,25 @@ seed.(email: "reconcile.unallocated", first: "Reconcile", last: "Unallocated",
   attempt.(invoice, status: "unknown", on: 1.hour.ago, pay_charge: charge,
     error_code: "allocation_failed",
     error_message: "The charge succeeded but was not applied to this invoice.")
+end
+
+seed.(email: "reconcile.credit", first: "Reconcile", last: "Credit",
+  label: "Paid invoice with a $25 portal credit: acknowledge hides it from Data health") do |person|
+  membership = membership_for.(person)
+  invoice = invoice_for.(membership)
+  pay.(invoice, standard)
+
+  credit = ExternalProcessorPayment.new(
+    person:,
+    amount_cents: 2_500,
+    amount_cents_remaining: 2_500,
+    currency: Membership::CURRENCY,
+    external_origin: false,
+    stripe_charge_id: "ch_recon_credit_#{person.id}",
+    metadata: { "membership_invoice_id" => invoice.id }
+  )
+  credit.skip_pay_charge_validation = true
+  credit.save!
 end
 
 seed.(email: "reconcile.stale-checkout", first: "Reconcile", last: "Stale checkout",

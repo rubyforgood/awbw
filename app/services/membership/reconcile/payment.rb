@@ -70,9 +70,12 @@ class Membership::Reconcile::Payment
   def resolve_linked_attempts
     return if @payment.pay_charge_id.blank?
 
-    @invoice.charge_attempts.unresolved
+    @invoice.charge_attempts
       .where(pay_charge_id: @payment.pay_charge_id)
+      .where(status: MembershipChargeAttempt::UNRESOLVED_STATUSES + [ "succeeded" ])
       .find_each do |attempt|
+        next unless attempt.unresolved? || attempt.error_code == "unallocated_payment"
+
         attempt.update!(status: "succeeded", error_code: nil, error_message: nil, next_attempt_on: nil)
       end
   end

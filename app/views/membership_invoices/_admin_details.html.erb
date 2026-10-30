@@ -78,7 +78,8 @@
     <p class="mt-3 text-xs text-gray-500">Can't be deleted: <%= @deletion_blocked_reason %>.</p>
   <% end %>
 
-  <%= render "membership_invoices/reconciliation", membership_invoice: membership_invoice %>
+  <%= render "membership_invoices/reconciliation", membership_invoice: membership_invoice,
+        summary: @reconciliation %>
 
   <%= render "shared/audit_info", resource: membership_invoice %>
 </div>

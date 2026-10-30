@@ -27,6 +27,7 @@ class MembershipsController < ApplicationController
     else
       []
     end
+    @reconciliation_summaries = @reconciliation_invoices.map { |invoice| MembershipInvoiceReconciliation.new(invoice) }
     @next_invoice = @membership.next_invoice
     @has_card = @person.stripe_customer&.payment_methods&.exists? || false
     @renewal_blocked_reason = @membership.renewal_blocked_reason

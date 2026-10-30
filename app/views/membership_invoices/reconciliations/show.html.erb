@@ -1,7 +1,6 @@
 <% content_for(:page_title, "Reconcile payments: Invoice M-#{@invoice.id}") %>
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% invoice = @invoice.decorate %>
-<% customer = @invoice.person.stripe_customer %>
 <% back_path, back_label =
      case params[:return_to]
      when "data_health"
@@ -51,8 +50,8 @@
       <%= link_to "Invoice", membership_invoice_path(@invoice), class: "text-primary hover:underline" %>
       <%= link_to "Membership", membership_path(@invoice.membership), class: "text-primary hover:underline" %>
       <%= link_to "Person", person_path(@invoice.person), class: "text-primary hover:underline" %>
-      <% if customer.present? %>
-        <%= link_to "Stripe customer", stripe_customer_url(customer.processor_id),
+      <% if @stripe_customer.present? %>
+        <%= link_to "Stripe customer", stripe_customer_url(@stripe_customer.processor_id),
               target: "_blank", rel: "noopener", class: "text-primary hover:underline" %>
       <% end %>
     </div>

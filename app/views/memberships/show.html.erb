@@ -133,8 +133,8 @@
       </div>
     <% end %>
 
-    <% if admin && @reconciliation_invoices.any? %>
-      <%= render "memberships/reconciliation_card", invoices: @reconciliation_invoices %>
+    <% if admin && @reconciliation_summaries.any? %>
+      <%= render "memberships/reconciliation_card", summaries: @reconciliation_summaries %>
     <% end %>
 
     <div class="mt-6 border-t border-gray-200 pt-4">

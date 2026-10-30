@@ -20,7 +20,7 @@ module DataHealth
     end
 
     def path_for(invoice)
-      MembershipInvoiceReconciliation.new(invoice).path(return_to: "data_health")
+      membership_invoice_reconciliation_path(invoice, return_to: "data_health")
     end
   end
 end

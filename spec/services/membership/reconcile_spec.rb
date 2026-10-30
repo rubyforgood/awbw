@@ -35,6 +35,23 @@ RSpec.describe Membership::Reconcile do
     expect(invoice.reload).to be_paid_in_full
   end
 
+  it "marks the attempt succeeded when the charge succeeds but stays unallocated" do
+    pay_charge = create(:pay_charge, customer:, processor_id: "ch_test", amount: 1_000)
+    attempt.update!(pay_charge:)
+    create(:external_processor_payment, person:, amount_cents: 1_000, amount_cents_remaining: 1_000,
+      stripe_charge_id: "ch_test", pay_charge:)
+    paid = create(:payment, person:, amount_cents: 1_000)
+    create(:allocation, source: paid, allocatable: invoice, amount: 1_000)
+    allow(Pay::Payment).to receive(:from_id).and_return(Pay::Payment.new(intent(status: "succeeded")))
+    allow(Pay::Stripe::Charge).to receive(:sync_payment_intent).and_return(pay_charge)
+
+    result = described_class.call(attempt:)
+
+    expect(result).to be_success
+    expect(attempt.reload).to have_attributes(status: "succeeded", error_code: "unallocated_payment")
+    expect(invoice.reload).to be_paid_in_full
+  end
+
   it "records a card that still needs authentication" do
     allow(Pay::Payment).to receive(:from_id).and_return(Pay::Payment.new(intent(status: "requires_action")))
 

@@ -373,6 +373,8 @@ Rails.application.routes.draw do
       get :new_checkout_link
       post :create_checkout_link
     end
+    resource :reconciliation_acknowledgement, only: [ :create, :destroy ],
+             controller: "payments/reconciliation_acknowledgements"
   end
   resources :allocations, only: [ :new, :create, :index ] do
     post :revert, on: :member
