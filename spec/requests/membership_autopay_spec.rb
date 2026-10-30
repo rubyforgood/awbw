@@ -26,7 +26,7 @@ RSpec.describe "Membership autopay", type: :request do
     sign_in create(:user, person: person)
 
     expect { post membership_autopayments_path(membership) }
-      .to have_enqueued_job(MembershipAutopayJob)
+      .to have_enqueued_job(MembershipAutopayJob).with(membership.id)
 
     expect(response).to redirect_to(person_path(person))
     expect(membership.reload.autopay_on?).to be(true)

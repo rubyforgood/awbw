@@ -75,7 +75,7 @@ RSpec.describe "Memberships::PublicInvoices", type: :request do
 
   describe "POST /memberships/public_invoices/:token/checkout" do
     it "sends the payer to Stripe with the invoice it settles" do
-      post memberships_public_invoice_checkout_path(token)
+      post checkout_memberships_public_invoice_path(token)
 
       expect(response).to redirect_to(fake_session.url)
       expect(checkout_args[:mode]).to eq("payment")
@@ -91,7 +91,7 @@ RSpec.describe "Memberships::PublicInvoices", type: :request do
         .with("cs_test_123")
         .and_return(fake_session)
 
-      post memberships_public_invoice_checkout_path(token)
+      post checkout_memberships_public_invoice_path(token)
 
       expect(response).to redirect_to(fake_session.url)
       expect(checkout_args).to be_empty
@@ -100,7 +100,7 @@ RSpec.describe "Memberships::PublicInvoices", type: :request do
     it "does not start another checkout for a settled year" do
       create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: invoice, amount: 2_500)
 
-      post memberships_public_invoice_checkout_path(token)
+      post checkout_memberships_public_invoice_path(token)
 
       expect(response).to redirect_to(memberships_public_invoice_path(token))
       expect(flash[:notice]).to match(/already been paid/)
@@ -110,7 +110,7 @@ RSpec.describe "Memberships::PublicInvoices", type: :request do
     it "does not start another checkout while a payment is in progress without a session id" do
       invoice.mark_payment_in_progress!
 
-      post memberships_public_invoice_checkout_path(token)
+      post checkout_memberships_public_invoice_path(token)
 
       expect(response).to redirect_to(memberships_public_invoice_path(token))
       expect(flash[:alert]).to match(/already in progress/)

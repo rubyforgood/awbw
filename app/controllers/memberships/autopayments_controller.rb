@@ -64,7 +64,7 @@ module Memberships
 
     def enable_autopay!
       @membership.update!(autopay_on: true)
-      MembershipAutopayJob.perform_later
+      MembershipAutopayJob.perform_later(@membership.id)
     end
 
     def autopay_destination

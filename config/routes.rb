@@ -393,7 +393,7 @@ Rails.application.routes.draw do
 
   namespace :memberships do
     resources :public_invoices, only: :show, param: :token do
-      resource :checkout, only: [ :create ], module: :public_invoices
+      post :checkout, on: :member, to: "public_invoices/checkouts#create"
       get :cancel_checkout, on: :member, to: "public_invoices/checkouts#cancel"
     end
   end

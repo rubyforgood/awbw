@@ -52,9 +52,7 @@ module Memberships
 
       private
 
-      def token
-        params[:token].presence || params[:public_invoice_token]
-      end
+      def token = params[:token]
 
       def set_membership_invoice
         @membership_invoice = MembershipInvoice.find_signed(

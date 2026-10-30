@@ -1,11 +1,11 @@
 class MembershipAutopayJob < ApplicationJob
   queue_as :default
 
-  def perform
+  def perform(membership_id = nil)
     return unless Membership.enabled?
 
     Time.use_zone(Membership::TIME_ZONE) do
-      chargeable_invoices.find_each do |invoice|
+      chargeable_invoices(membership_id).find_each do |invoice|
         process_invoice(invoice)
       end
     end
@@ -49,11 +49,14 @@ class MembershipAutopayJob < ApplicationJob
     )
   end
 
-  def chargeable_invoices
-    MembershipInvoice
+  def chargeable_invoices(membership_id = nil)
+    scope = MembershipInvoice
       .joins(membership: :person)
       .where(memberships: { locked_at: nil, autopay_on: true })
       .merge(MembershipInvoice.not_paid_in_full.autopay_chargeable)
       .includes(membership: :person)
+
+    scope = scope.where(memberships: { id: membership_id }) if membership_id
+    scope
   end
 end

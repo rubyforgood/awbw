@@ -7,7 +7,7 @@
     <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
       <% if @membership_invoice.remaining_cost.positive? %>
         <% unless @payment_received %>
-          <%= button_to "Pay now", memberships_public_invoice_checkout_path(@token),
+          <%= button_to "Pay now", checkout_memberships_public_invoice_path(@token),
                 class: button_classes(:primary), data: { turbo: false } %>
         <% end %>
       <% else %>
