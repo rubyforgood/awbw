@@ -3,11 +3,11 @@ class Membership::InvoiceCheckout
   IN_PROGRESS_ERROR = "A payment is already in progress for this invoice.".freeze
   COMPLETED_ERROR = "This payment is already being processed by Stripe.".freeze
 
-  Result = Struct.new(:session, :errors, keyword_init: true) do
+  Result = Data.define(:session, :errors) do
     def success? = errors.blank?
   end
 
-  CancelResult = Struct.new(:cancelled, :errors, keyword_init: true) do
+  CancelResult = Data.define(:cancelled, :errors) do
     def success? = cancelled
   end
 
@@ -76,21 +76,21 @@ class Membership::InvoiceCheckout
 
     case session.status
     when "open"
-      return Result.new(errors: [ IN_PROGRESS_ERROR ]) if @save_card
+      return Result.new(session: nil, errors: [ IN_PROGRESS_ERROR ]) if @save_card
 
-      Result.new(session:)
+      Result.new(session:, errors: [])
     when "expired"
       claim_and_create(replacing_session_id: session_id)
     when "complete"
-      Result.new(errors: [ COMPLETED_ERROR ])
+      Result.new(session: nil, errors: [ COMPLETED_ERROR ])
     else
-      Result.new(errors: [ IN_PROGRESS_ERROR ])
+      Result.new(session: nil, errors: [ IN_PROGRESS_ERROR ])
     end
   end
 
   def claim_and_create(replacing_session_id: nil)
     claimed = claim_invoice(replacing_session_id:)
-    return Result.new(errors: [ IN_PROGRESS_ERROR ]) unless claimed
+    return Result.new(session: nil, errors: [ IN_PROGRESS_ERROR ]) unless claimed
 
     session = nil
     person = @invoice.person
@@ -117,7 +117,7 @@ class Membership::InvoiceCheckout
       cancel_url: @cancel_url
     )
     store_session_id(session)
-    Result.new(session:)
+    Result.new(session:, errors: [])
   rescue StandardError
     @invoice.clear_payment_in_progress! if claimed && session.nil?
     raise
@@ -149,7 +149,7 @@ class Membership::InvoiceCheckout
       true
     end
 
-    return CancelResult.new(cancelled: true) if cleared
+    return CancelResult.new(cancelled: true, errors: []) if cleared
 
     cancel_failure("A newer payment is already in progress for this invoice.")
   end

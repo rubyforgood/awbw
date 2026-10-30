@@ -1,5 +1,5 @@
 class Membership::Renew
-  Result = Struct.new(:membership, :invoice, :errors, keyword_init: true) do
+  Result = Data.define(:membership, :invoice, :errors) do
     def success? = errors.blank?
   end
 

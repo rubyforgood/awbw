@@ -1,5 +1,5 @@
 class Membership::Discard
-  Result = Struct.new(:membership, :errors, keyword_init: true) do
+  Result = Data.define(:membership, :errors) do
     def success? = errors.blank?
   end
 

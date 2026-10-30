@@ -1,5 +1,5 @@
 class Membership::RemoveNextYear
-  Result = Struct.new(:removed, :errors, keyword_init: true) do
+  Result = Data.define(:removed, :errors) do
     def success? = errors.blank?
   end
 

@@ -1,5 +1,5 @@
 class Membership::Autopay::Charge
-  Result = Struct.new(:attempt, :errors, keyword_init: true) do
+  Result = Data.define(:attempt, :errors) do
     def success? = errors.blank?
   end
 
