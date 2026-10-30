@@ -1,0 +1,12 @@
+<%# The org's workshop logs grouped by workshop, like the person profile's. Only
+    rendered when there are logs. %>
+<%# locals: (organization:, summary:) %>
+<% totals = summary.totals %>
+<div class="mb-4 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+  <span class="font-semibold text-gray-800">Total participants: <%= totals[:adults] + totals[:teens] + totals[:children] %></span>
+  <span>Adults: <%= totals[:adults] %></span>
+  <span>Teens: <%= totals[:teens] %></span>
+  <span>Children: <%= totals[:children] %></span>
+  <span>Unique workshops: <%= totals[:workshops] %></span>
+</div>
+<%= render "organizations/sections/workshop_log_groups", organization: organization, groups: summary.groups(page: 1) %>

@@ -8,6 +8,8 @@ RSpec.describe "organizations/show", type: :view do
 
   before do
     assign(:organization, organization)
+    assign(:published_sections, {})
+    assign(:submitted_sections, {})
     sign_in user
     allow(view).to receive(:current_user).and_return(user)
     render

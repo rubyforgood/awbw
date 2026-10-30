@@ -1,0 +1,4 @@
+<%# locals: (organization:) %>
+<span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
+  <i class="fa-solid fa-envelope text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i> <%= mail_to organization.email, organization.email, class: "hover:text-primary" %>
+</span>

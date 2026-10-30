@@ -28,8 +28,9 @@
     <%= form_tag(workshops_path, method: :get,
                  data: {turbo_stream: true, turbo_frame: "workshops_results",
                         controller: "collection share-url"}, autocomplete: "off", class: "space-y-6") do %>
-      <%# Preserve the person scope (from a person's authored-content card) across sorts/filters %>
+      <%# Preserve the person/org scope (from an authored-content card) across sorts/filters %>
       <%= hidden_field_tag :author_id, params[:author_id] if params[:author_id].present? %>
+      <%= hidden_field_tag :organization_id, params[:organization_id] if params[:organization_id].present? %>
       <%= render "filters" %>
 
       <div><hr class="my-6 border-gray-300"></div>
@@ -50,7 +51,7 @@
       <%= render "workshops_count" %>
     <% end %>
 
-    <%= render "shared/filtered_to", record: @author, clear_path: workshops_path %>
+    <%= render "shared/filtered_to", record: @author || @organization, clear_path: workshops_path %>
 
     <!-- Workshops List -->
     <% result_src = workshops_path + "?" + request.query_string %>

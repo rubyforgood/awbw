@@ -1,6 +1,6 @@
 <%= turbo_stream.replace("workshop_variations_count", partial: "workshop_variations_count") %>
 <%
-  sort_base = params.permit(:query, :author_name, :author_id, :number_of_items_per_page).to_h.symbolize_keys
+  sort_base = params.permit(:query, :author_name, :author_id, :organization_id, :number_of_items_per_page).to_h.symbolize_keys
   sort_link = sort_header_link(frame: "workshop_variations_results", path: ->(p) { workshop_variations_path(p) }, base: sort_base)
 %>
 <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm <%= 'animate-fade blur-on-submit' if @workshop_variations.any? %>">

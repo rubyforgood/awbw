@@ -27,6 +27,7 @@ class WorkshopVariation < ApplicationRecord
       results = results.where(id: by_name)
     end
     results = results.authored_by(params[:author_id])
+    results = results.where(organization_id: params[:organization_id]) if params[:organization_id].present?
     results
   end
 

@@ -1,0 +1,14 @@
+name: "Organization profiles list every kind of content they contributed"
+area: people
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2919
+action_path: "/organizations"
+summary: >-
+  An organization's profile now lists its workshops, variations, resources,
+  stories and community news as paged cards, with submitted ideas, monthly
+  reports and grouped workshop logs in a members-and-admins card.
+pro_tips:
+  - "Anything a sharing toggle hides now sits in a Hidden from profile card only admins see, instead of disappearing."
+  - "Content is credited to the organization through its active facilitators, so an ex-facilitator's work no longer lists here."
+  - "A workshop-log card opens the organization's own grouped log page."

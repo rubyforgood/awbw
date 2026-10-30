@@ -6,6 +6,7 @@ class WorkshopsController < ApplicationController
   def index
     authorize!
     @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
+    @organization = Organization.find_by(id: params[:organization_id]) if params[:organization_id].present?
     @category_types = CategoryType.published.general.order(:name).decorate
     @sectors        = Sector.published.order(:name)
     @windows_types  = WindowsType.all

@@ -1,0 +1,22 @@
+<%# One page of a card-grid profile section (OrganizationsController#show ?section=). %>
+<%# locals: (organization:, section:, records:) %>
+<%= turbo_frame_tag "organization_#{section}_section" do %>
+  <% if records.any? %>
+    <div class="grid grid-cols-1 gap-6 blur-on-submit <%= section == "stories" ? "lg:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3" %>">
+      <% admin = allowed_to?(:manage?, Organization) %>
+      <% records.each do |record| %>
+        <%# Only admins get anonymously credited workshops here, so the marker is theirs alone. %>
+        <% author = section == "workshops" && admin ? record.author_person : nil %>
+        <%# Story ideas title by their workshops, as on the person profile. %>
+        <%= render "people/show_card", record: record.decorate, title_font_size: "text-sm",
+                   record_title: (record.workshop_title if section == "story_ideas"),
+                   anonymous: author.present? && record.credit_anonymous?(author) %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate records, url_for_page: ->(page) { organization_path(organization, section: section, page: page) } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">Nothing more to show.</p>
+  <% end %>
+<% end %>
