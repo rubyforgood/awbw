@@ -1438,7 +1438,7 @@ RSpec.describe "EventRegistrations", type: :request do
           delete event_registration_path(existing_registration)
         }.not_to change(EventRegistration, :count)
 
-        expect(flash[:alert]).to match(/has payments/)
+        expect(flash[:alert]).to include("can't be deleted")
       end
     end
 

@@ -159,6 +159,7 @@ class EventRegistrationDecorator < ApplicationDecorator
 
     reasons = []
     reasons << "financial records — payments, scholarships, discounts, or refunds (reverted payments still count)" if allocations.exists?
+    reasons << "a CE registration with payment records" if ce_allocations?
     reasons << "an attendance outcome on record (attended, incomplete, or no-show)" if attendance_recorded?
     reasons << "a transfer to another event" if transferred_out?
     "Can't be deleted — this registration has #{reasons.to_sentence}."

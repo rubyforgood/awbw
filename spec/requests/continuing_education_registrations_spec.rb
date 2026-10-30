@@ -389,7 +389,24 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       delete continuing_education_registration_path(ce_registration)
 
       expect(ContinuingEducationRegistration.exists?(ce_registration.id)).to be(true)
-      expect(flash[:alert]).to match(/has payments/)
+      expect(flash[:alert]).to include("payment records")
+    end
+
+    it "swaps the Delete button for the reason on a CE registration with a reverted payment" do
+      payment = create(:payment, amount_cents: 12_000, amount_cents_remaining: nil)
+      allocation = create(:allocation, source: payment, allocatable: ce_registration, amount: 12_000)
+      revert = create(:allocation, source: payment, allocatable: ce_registration, amount: -12_000)
+      allocation.update!(reverted_id: revert.id)
+
+      get edit_continuing_education_registration_path(ce_registration)
+
+      expect(response.body).not_to include("Remove this CE registration?")
+      expect(response.body).to include("reverted payments still count")
+    end
+
+    it "shows the Delete button on a CE registration with no payments" do
+      get edit_continuing_education_registration_path(ce_registration)
+      expect(response.body).to include("Remove this CE registration?")
     end
 
     context "reached from the registrants roster (return_to=registrants)" do

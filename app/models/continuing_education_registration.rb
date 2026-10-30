@@ -225,6 +225,13 @@ class ContinuingEducationRegistration < ApplicationRecord
     paid_in_full? || intends_to_pay?
   end
 
+  # Any allocation — a payment, a scholarship, or a revert (which adds a negative
+  # allocation rather than removing the original) — keeps the record, so the money
+  # trail stays linked to the CE it paid for.
+  def deletable?
+    !allocations.exists?
+  end
+
   # Human-readable payment status — the real balance, so intending to pay still reads Due.
   def payment_status_label
     return "Paid" if paid_in_full?
