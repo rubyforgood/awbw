@@ -9,6 +9,34 @@ RSpec.describe "Organization profile published content", type: :request do
   # An active affiliation publishes the profile so non-admins can view it.
   before { create(:affiliation, organization: organization, person: facilitator) }
 
+  describe "empty sections" do
+    before { sign_in viewer }
+
+    it "leaves the whole card off when there is nothing to list" do
+      get organization_path(organization)
+
+      expect(response.body).not_to include("Published content")
+    end
+
+    it "shows only the sections that have something to list" do
+      create(:story, :published, organization: organization, title: "Only Story")
+
+      get organization_path(organization)
+
+      expect(response.body).to include("Published content")
+      expect(response.body).to include("Only Story")
+      expect(response.body).not_to include(">Workshops authored</h3>")
+    end
+
+    it "leaves a section off when only non-viewable records exist" do
+      create(:story, :unpublished, organization: organization)
+
+      get organization_path(organization)
+
+      expect(response.body).not_to include("Published content")
+    end
+  end
+
   describe "Stories" do
     it "lists published stories linked to the organization" do
       create(:story, :published, organization: organization, title: "Linked Story")

@@ -59,9 +59,10 @@ class OrganizationsController < ApplicationController
 
     track_view(@organization)
 
+    # Loaded up front so the view's emptiness checks don't re-query.
     PUBLISHED_SECTIONS.each do |section|
       next unless @organization.public_send(:"profile_show_#{section}?")
-      instance_variable_set(:"@published_#{section}", published_section_records(section, page: 1))
+      instance_variable_set(:"@published_#{section}", published_section_records(section, page: 1).load)
     end
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)

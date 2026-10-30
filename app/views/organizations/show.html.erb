@@ -222,7 +222,8 @@
       </div>
     <% end %>
     <!-- AUTHORED SECTION -->
-    <% if @organization.profile_show_workshops? || @organization.profile_show_stories? %>
+    <%# A section (and the card) only shows when it's enabled and has something to list. %>
+    <% if @published_workshops.present? || @published_stories.present? %>
       <div class="organization-only border-2 bg-white <%= DomainTheme.border_class_for(:workshops) %> overflow-hidden rounded-2xl shadow-sm">
         <!-- Header -->
         <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(:workshops, intensity: 200) %>">
@@ -234,14 +235,14 @@
         <!-- Contributed content -->
         <div class="section-content space-y-8 px-4 py-5 sm:space-y-10 sm:px-6 sm:py-6">
           <!-- Workshops authored -->
-          <% if @organization.profile_show_workshops? %>
+          <% if @published_workshops.present? %>
             <div>
               <h3 class="mb-3 font-display text-xl text-gray-900">Workshops authored</h3>
               <%= render "organizations/sections/workshops", workshops: @published_workshops %>
             </div>
           <% end %>
           <!-- Stories authored -->
-          <% if @organization.profile_show_stories? %>
+          <% if @published_stories.present? %>
             <div>
               <h3 class="mb-3 font-display text-xl text-gray-900">Stories</h3>
               <%= render "organizations/sections/stories", stories: @published_stories %>
