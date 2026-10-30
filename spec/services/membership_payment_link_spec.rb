@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe MembershipPaymentLink do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_user) }
   let(:membership) { create(:membership, person:) }
   let(:invoice) { create(:membership_invoice, membership:, cost_cents: 1_000) }
 

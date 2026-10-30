@@ -14,7 +14,7 @@ RSpec.describe "People multiple-memberships warning", type: :request do
   end
 
   it "flags a person with more than one active membership on show and edit" do
-    person = create(:person)
+    person = create(:person, :without_audit)
     two_uncancelled_memberships(person)
 
     get person_path(person)
@@ -26,7 +26,7 @@ RSpec.describe "People multiple-memberships warning", type: :request do
   end
 
   it "does not flag a person with a single active membership plus a locked historical one" do
-    person = create(:person)
+    person = create(:person, :without_audit)
     create(:membership, person: person)
     create(:membership, :renewal_off, person: person,
       start_date: Date.current - 3.years, end_date: Date.current - 2.years,

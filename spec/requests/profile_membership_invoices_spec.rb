@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Profile membership invoices", type: :request do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
   let(:today) { Date.current }
 
   def invoice_for(membership, start_date, cost_cents: 10_000)

@@ -128,7 +128,7 @@ RSpec.describe MembershipInvoice, type: :model do
   end
 
   describe "overlap" do
-    let(:person) { create(:person) }
+    let(:person) { create(:person, :without_user) }
     let(:subscription) { create(:membership, person: person) }
     # Anchor the fixture in the past so cancelling its membership never trips
     # Membership#expire_unbilled_future_invoices (which drops unbilled future years).
@@ -393,7 +393,7 @@ RSpec.describe MembershipInvoice, type: :model do
   end
 
   describe "#deletable?" do
-    let(:person) { create(:person) }
+    let(:person) { create(:person, :without_user) }
     let(:subscription) do
       create(:membership, person: person,
         start_date: Date.current - 1.year,
@@ -462,7 +462,7 @@ RSpec.describe MembershipInvoice, type: :model do
 
   describe ".by_person_name" do
     it "filters to invoices whose person's name matches" do
-      named = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+      named = create(:person, :without_user, first_name: "Bartholomew", last_name: "Snazzlepants")
       matching = create(:membership_invoice, membership: create(:membership, person: named))
       other = create(:membership_invoice)
 

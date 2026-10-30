@@ -1,13 +1,20 @@
 require "rails_helper"
 
 RSpec.describe MembershipInvoiceDecorator, type: :decorator do
-  def invoice(cost_cents: 2_500, start_date: Date.current, paid: 0)
-    record = create(:membership_invoice,
+  def invoice(cost_cents: 2_500, start_date: Date.current, paid: 0, payment_in_progress: false,
+    latest_attempt: nil, checkout_session_id: nil)
+    record = build_stubbed(:membership_invoice,
       cost_cents: cost_cents,
       start_date: start_date,
-      end_date: start_date + 1.year - 1.day)
-    create(:allocation, source: create(:payment, amount_cents: paid), allocatable: record, amount: paid) if paid.positive?
-    record.reload.decorate
+      end_date: start_date + 1.year - 1.day,
+      checkout_session_id: checkout_session_id)
+    allow(record).to receive(:payment_in_progress?).and_return(payment_in_progress)
+    allow(record).to receive(:allocations_sum).and_return(paid)
+    allow(record).to receive(:remaining_cost).and_return([ cost_cents - paid, 0 ].max)
+    allow(record).to receive(:paid_in_full?).and_return(paid >= cost_cents)
+    allow(record).to receive(:partially_paid?).and_return(paid.positive? && paid < cost_cents)
+    allow(record).to receive(:latest_attempt).and_return(latest_attempt)
+    record.decorate
   end
 
   describe "#status_badge" do
@@ -41,10 +48,7 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
     end
 
     it "reads Payment in progress while a checkout is active" do
-      decorated = invoice
-      decorated.object.update_column(:payment_in_progress_at, Time.current)
-
-      badge = decorated.status_badge
+      badge = invoice(payment_in_progress: true).status_badge
 
       expect(badge.label).to eq("Payment in progress")
       expect(badge.classes).to eq(described_class::BADGE_CLASSES[:blue])
@@ -71,17 +75,13 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
     end
 
     it "is pay now after a failed attempt" do
-      decorated = invoice
-      decorated.object.charge_attempts.create!(
-        attempt_number: 1, status: "failed", amount_cents: 2_500, attempted_at: Time.current
-      )
+      decorated = invoice(latest_attempt: double(failed?: true))
 
       expect(decorated.autopay_action(autopay_ready: true)).to eq(:pay_now)
     end
 
     it "is pay now when a checkout session is stored" do
-      decorated = invoice
-      decorated.object.update_column(:checkout_session_id, "cs_test_123")
+      decorated = invoice(checkout_session_id: "cs_test_123")
 
       expect(decorated.autopay_action(autopay_ready: true)).to eq(:pay_now)
     end

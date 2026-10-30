@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Membership invoice reconciliation", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
   let(:membership) { create(:membership, person:) }
   let(:invoice) { create(:membership_invoice, membership:, cost_cents: 1_000) }
   let(:attempt) do

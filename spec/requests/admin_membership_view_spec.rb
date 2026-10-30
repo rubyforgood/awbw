@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Admin membership view", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
   let!(:membership) { create(:membership, person: person) }
   let!(:invoice) do
     create(:membership_invoice, membership: membership, start_date: Date.current,

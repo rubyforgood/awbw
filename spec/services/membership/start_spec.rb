@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Membership::Start do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_user) }
 
   it "creates a subscription with a comped first year" do
     subscription = described_class.call(person: person)
