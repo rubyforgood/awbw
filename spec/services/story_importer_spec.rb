@@ -773,17 +773,27 @@ RSpec.describe StoryImporter do
 
       import([ base_row("facilitator_job_title" => "program director") ])
 
-      expect(author.affiliations.where(organization: org).pluck(:title)).to contain_exactly("Program Director")
+      expect(author.affiliations.where(organization: org).pluck(:title)).to contain_exactly("Program Director", "Facilitator")
     end
 
-    it "leaves an author already affiliated with the organization under another title alone" do
+    it "adds a facilitator affiliation even when the author holds another title there" do
       author = create(:person, first_name: "Jamie", last_name: "Rivera")
       org = create(:organization, name: "Example Family Services")
-      existing = create(:affiliation, person: author, organization: org, title: nil)
+      create(:affiliation, person: author, organization: org, title: nil)
 
       import([ base_row ])
 
-      expect(author.affiliations.where(organization: org)).to contain_exactly(existing)
+      expect(author.affiliations.where(organization: org).pluck(:title)).to contain_exactly(nil, "Facilitator")
+    end
+
+    it "does not duplicate a facilitator affiliation the author already holds, including an old-app role title" do
+      author = create(:person, first_name: "Jamie", last_name: "Rivera")
+      org = create(:organization, name: "Example Family Services")
+      held = create(:affiliation, person: author, organization: org, title: "Leader")
+
+      import([ base_row ])
+
+      expect(author.affiliations.where(organization: org)).to contain_exactly(held)
     end
 
     it "keeps the WordPress id as a comment on the story" do
