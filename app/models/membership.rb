@@ -124,7 +124,7 @@ class Membership < ApplicationRecord
     return "it has more than one invoice" unless invoices.one?
 
     invoice = invoices.first
-    return "its invoice has payments or credits applied" unless invoice.allocations.sum(:amount).zero?
+    return "its invoice has payments or credits applied" unless invoice.allocations_sum.zero?
     return "its invoice has a payment in progress" if invoice.payment_in_progress?
     return "its invoice has an unresolved payment attempt" if invoice.unresolved_attempt?
   end

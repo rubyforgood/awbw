@@ -67,12 +67,12 @@
                     class: button_classes(:secondary_outline, size: :sm),
                     title: "Stops future invoices and automatic payments. The current term remains in place.",
                     data: { turbo_confirm: "Stop renewing this membership and turn off automatic payments? The current term still stands." } %>
-            <% elsif (renewal_blocked_reason = membership.renewal_blocked_reason) %>
+            <% elsif @renewal_blocked_reason %>
               <%= button_to "Turn on renewal", membership_renewal_path(membership),
                     method: :patch, params: { renewal_on: "1" },
                     class: button_classes(:secondary_outline, size: :sm),
-                    title: renewal_blocked_reason, disabled: true %>
-              <p class="w-full text-xs text-gray-500"><%= renewal_blocked_reason %></p>
+                    title: @renewal_blocked_reason, disabled: true %>
+              <p class="w-full text-xs text-gray-500"><%= @renewal_blocked_reason %></p>
             <% else %>
               <%= button_to "Turn on renewal", membership_renewal_path(membership),
                     method: :patch, params: { renewal_on: "1" },
@@ -87,9 +87,9 @@
                     data: { turbo_confirm: "Remove the unstarted next year, roll the term back, and turn off renewal and automatic payments?" } %>
             <% end %>
 
-            <% if membership.deletable? || membership.discardable? %>
-              <% delete_confirm = membership.deletable? ? "Delete this membership? Nothing financial is attached." : "Delete this membership and its only invoice? This cannot be undone." %>
-              <% delete_tooltip = membership.deletable? ? "Deletes this empty membership." : "Deletes this membership and its only unpaid invoice. Financial history is protected." %>
+            <% if @deletable || @discardable %>
+              <% delete_confirm = @deletable ? "Delete this membership? Nothing financial is attached." : "Delete this membership and its only invoice? This cannot be undone." %>
+              <% delete_tooltip = @deletable ? "Deletes this empty membership." : "Deletes this membership and its only unpaid invoice. Financial history is protected." %>
               <%= button_to "Delete membership", membership_path(membership),
                     method: :delete, class: button_classes(:danger_outline, size: :sm),
                     title: delete_tooltip,

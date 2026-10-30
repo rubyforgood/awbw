@@ -1,8 +1,6 @@
 <% content_for(:page_title, "Invoice #{@invoice.number} — #{@membership_invoice.person.full_name}") %>
 <% content_for(:page_bg_class, "admin-or-owner") %>
 <% admin = allowed_to?(:manage?, @membership_invoice) %>
-<% autopay_ready = @membership_invoice.membership.autopay_on? &&
-                   @membership_invoice.person.stripe_customer&.payment_methods&.exists? %>
 
 <%
   back_path, back_label =
@@ -23,7 +21,7 @@
     <% if @membership_invoice.remaining_cost.positive? &&
           (!@membership_invoice.payment_in_progress? || @membership_invoice.checkout_session_id.present?) %>
       <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
-        <% case @membership_invoice.decorate.autopay_action(autopay_ready:) %>
+        <% case @membership_invoice.decorate.autopay_action(autopay_ready: @autopay_ready) %>
         <% when :scheduled %>
           <p class="text-sm text-gray-600">Scheduled for <%= @membership_invoice.start_date.strftime("%b %-d, %Y") %>.</p>
         <% when :pay_now %>

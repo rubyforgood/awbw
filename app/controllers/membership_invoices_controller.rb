@@ -24,6 +24,10 @@ class MembershipInvoicesController < ApplicationController
   def show
     authorize! @membership_invoice
     @invoice = MembershipInvoicePresenter.new(@membership_invoice)
+    @next_invoice = @membership_invoice.membership.next_invoice
+    @deletion_blocked_reason = @membership_invoice.deletion_blocked_reason
+    @autopay_ready = @membership_invoice.membership.autopay_on? &&
+      @membership_invoice.person.stripe_customer&.payment_methods&.exists?
     track_view("invoices", { membership_invoice_id: @membership_invoice.id })
   end
 
@@ -59,6 +63,8 @@ class MembershipInvoicesController < ApplicationController
     end
 
     @receipt = MembershipInvoiceReceipt.new(@membership_invoice)
+    @next_invoice = @membership_invoice.membership.next_invoice
+    @deletion_blocked_reason = @membership_invoice.deletion_blocked_reason
   end
 
   def edit

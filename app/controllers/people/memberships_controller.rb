@@ -10,6 +10,7 @@ module People
         .order(created_at: :desc)
         .decorate
         .to_a
+      @has_card = @person.stripe_customer&.payment_methods&.exists? || false
     end
 
     def new

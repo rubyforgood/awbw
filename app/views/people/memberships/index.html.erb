@@ -1,6 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<% has_card = @person.stripe_customer&.payment_methods&.exists? || false %>
 <% offer_new_membership = @memberships.none? { |membership| !membership.locked? && (membership.active? || membership.upcoming?) } %>
 
 <div class="border-primary/10 mx-auto max-w-3xl rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
@@ -44,9 +43,9 @@
                       classes: membership.payment_classes, title: membership.payment_tooltip %>
               <% end %>
               <%= render "shared/badge",
-                    label: "Autopay: #{membership.autopay_label(has_card: has_card)}",
-                    classes: membership.autopay_classes(has_card: has_card),
-                    title: membership.autopay_tooltip(has_card: has_card) %>
+                    label: "Autopay: #{membership.autopay_label(has_card: @has_card)}",
+                    classes: membership.autopay_classes(has_card: @has_card),
+                    title: membership.autopay_tooltip(has_card: @has_card) %>
               <% if membership.locked? %>
                 <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300",
                       title: "Historical membership. Unlock it before editing or issuing new invoices." %>

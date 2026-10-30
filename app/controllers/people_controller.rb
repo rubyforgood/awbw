@@ -770,7 +770,7 @@ class PeopleController < ApplicationController
   end
 
   def membership_invoices_for_profile(membership)
-    invoices = membership.membership_invoices.includes(:allocations).to_a
+    invoices = membership.membership_invoices.includes(:allocations, :charge_attempts).to_a
     current = invoices.select(&:active_on?)
     upcoming = invoices.select(&:upcoming?).min_by(&:start_date)
     unpaid = invoices.reject(&:paid_in_full?)

@@ -129,12 +129,19 @@ class MembershipInvoice < ApplicationRecord
 
   def payment_in_progress?
     return true if payment_in_progress_at.present? && payment_in_progress_at > PAYMENT_WINDOW.ago
+    if charge_attempts.loaded?
+      return charge_attempts.any? { |attempt| attempt.pending? && attempt.attempted_at && attempt.attempted_at > PAYMENT_WINDOW.ago }
+    end
 
     charge_attempts.pending.where(attempted_at: PAYMENT_WINDOW.ago..).exists?
   end
 
   def unresolved_attempt?
-    charge_attempts.where(status: UNRESOLVED_ATTEMPT_STATUSES).exists?
+    if charge_attempts.loaded?
+      charge_attempts.any? { |attempt| UNRESOLVED_ATTEMPT_STATUSES.include?(attempt.status) }
+    else
+      charge_attempts.where(status: UNRESOLVED_ATTEMPT_STATUSES).exists?
+    end
   end
 
   def mark_payment_in_progress!
@@ -162,7 +169,7 @@ class MembershipInvoice < ApplicationRecord
   def deletion_blocked_reason
     return "a payment is in progress" if payment_in_progress?
     return "it has an unresolved payment attempt" if unresolved_attempt?
-    return "it has payments or credits applied" unless allocations.sum(:amount).zero?
+    return "it has payments or credits applied" unless allocations_sum.zero?
     return "it is the membership's only invoice" unless other_invoices?
     return "deleting it would leave a gap in the membership's invoices" if middle_invoice?
     return "it is the only invoice covering the membership term" unless term_still_covered?

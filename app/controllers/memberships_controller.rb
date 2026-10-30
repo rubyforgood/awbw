@@ -19,14 +19,19 @@ class MembershipsController < ApplicationController
 
   def show
     authorize! @membership
-    @membership_invoices = @membership.membership_invoices.includes(:allocations).to_a
+    @membership_invoices = @membership.membership_invoices.includes(:allocations, :charge_attempts).to_a
     @next_invoice = @membership.next_invoice
     @autopay_on = @membership.autopay_on?
     @has_card = @person.stripe_customer&.payment_methods&.exists? || false
+    @renewal_blocked_reason = @membership.renewal_blocked_reason
+    @deletable = @membership.deletable?
+    @discardable = @membership.discardable?
   end
 
   def edit
     authorize! @membership
+    @invoice_coverage_start = @membership.invoice_coverage_start
+    @invoice_coverage_end = @membership.invoice_coverage_end
   end
 
   def update

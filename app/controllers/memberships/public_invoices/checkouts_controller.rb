@@ -59,6 +59,9 @@ module Memberships
           token, purpose: MembershipInvoice::PAYMENT_TOKEN_PURPOSE
         )
         raise ActiveRecord::RecordNotFound if @membership_invoice.nil?
+
+        @membership_invoice.allocations.load
+        @membership_invoice.charge_attempts.load
       end
     end
   end
