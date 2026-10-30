@@ -137,6 +137,55 @@ RSpec.describe "Organization profile published content", type: :request do
     end
   end
 
+  describe "other org-linked content" do
+    it "lists published community news, resources, and workshop variations linked to the org" do
+      create(:community_news, :published, organization: organization, title: "Linked News")
+      create(:resource, :published, organization: organization, title: "Linked Resource")
+      create(:workshop_variation, :published, organization: organization, name: "Linked Variation")
+      create(:community_news, :unpublished, organization: organization, title: "Draft News")
+      create(:community_news, :published, title: "Other Org News")
+      sign_in viewer
+
+      get organization_path(organization)
+
+      expect(response.body).to include(">Community news</h3>", "Linked News")
+      expect(response.body).to include(">Resources</h3>", "Linked Resource")
+      expect(response.body).to include(">Workshop variations</h3>", "Linked Variation")
+      expect(response.body).not_to include("Draft News")
+      expect(response.body).not_to include("Other Org News")
+    end
+  end
+
+  describe "Events attended" do
+    def get_events_section
+      get organization_path(organization, section: "events"),
+          headers: { "Turbo-Frame" => "organization_events_section" }
+    end
+
+    it "shows to everyone while the org shares it" do
+      sign_in viewer
+      get organization_path(organization)
+      expect(response.body).to include("Events attended")
+      expect(response.body).not_to include("only admins see this")
+    end
+
+    it "shows only to admins, marked admin-only, when the org hides it" do
+      organization.update!(profile_show_events_registered: false)
+
+      sign_in viewer
+      get organization_path(organization)
+      expect(response.body).not_to include("Events attended")
+      get_events_section
+      expect(response.body).not_to include("organization_events_section")
+
+      sign_in admin
+      get organization_path(organization)
+      expect(response.body).to include("Events attended", "only admins see this")
+      get_events_section
+      expect(response.body).to include("organization_events_section")
+    end
+  end
+
   describe "Associated records card" do
     let(:member) { create(:user, person: facilitator) }
 

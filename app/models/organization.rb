@@ -40,6 +40,9 @@ class Organization < ApplicationRecord
   has_many :reports
   has_many :workshop_logs
   has_many :stories
+  has_many :community_news
+  has_many :resources
+  has_many :workshop_variations
   has_many :grants, as: :funder, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable

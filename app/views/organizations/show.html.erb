@@ -223,7 +223,14 @@
     <% end %>
     <!-- AUTHORED SECTION -->
     <%# A section (and the card) only shows when it's enabled and has something to list. %>
-    <% if @published_workshops.present? || @published_stories.present? %>
+    <% if @published_sections.any? %>
+      <% section_titles = {
+           "workshops" => "Workshops authored",
+           "workshop_variations" => "Workshop variations",
+           "resources" => "Resources",
+           "stories" => "Stories",
+           "community_news" => "Community news"
+         } %>
       <div class="organization-only border-2 bg-white <%= DomainTheme.border_class_for(:workshops) %> overflow-hidden rounded-2xl shadow-sm">
         <!-- Header -->
         <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(:workshops, intensity: 200) %>">
@@ -234,32 +241,32 @@
         </div>
         <!-- Contributed content -->
         <div class="section-content space-y-8 px-4 py-5 sm:space-y-10 sm:px-6 sm:py-6">
-          <!-- Workshops authored -->
-          <% if @published_workshops.present? %>
+          <% @published_sections.each do |section, records| %>
             <div>
-              <h3 class="mb-3 font-display text-xl text-gray-900">Workshops authored</h3>
-              <%= render "organizations/sections/workshops", organization: @organization, workshops: @published_workshops %>
-            </div>
-          <% end %>
-          <!-- Stories authored -->
-          <% if @published_stories.present? %>
-            <div>
-              <h3 class="mb-3 font-display text-xl text-gray-900">Stories</h3>
-              <%= render "organizations/sections/stories", organization: @organization, stories: @published_stories %>
+              <h3 class="mb-3 font-display text-xl text-gray-900"><%= section_titles.fetch(section) %></h3>
+              <%= render "organizations/sections/published", organization: @organization, section: section, records: records %>
             </div>
           <% end %>
         </div>
       </div>
     <% end %>
     <!-- PARTICIPATION SECTION -->
-    <% if @organization.profile_show_events_registered? %>
-      <div class="organization-only border-2 bg-white <%= DomainTheme.border_class_for(:events) %> overflow-hidden rounded-2xl shadow-sm">
+    <%# Hidden from the profile, admins still see it, marked admin-only. %>
+    <% events_hidden = !@organization.profile_show_events_registered? %>
+    <% if !events_hidden || allowed_to?(:manage?, Organization) %>
+      <% events_theme = events_hidden ? :admin_only : :events %>
+      <div class="<%= "admin-only" if events_hidden %> organization-only border-2 bg-white <%= DomainTheme.border_class_for(events_theme) %> overflow-hidden rounded-2xl shadow-sm">
         <!-- Header -->
-        <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(:events, intensity: 200) %>">
-          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full <%= DomainTheme.bg_class_for(:events, intensity: 100) %> <%= DomainTheme.text_class_for(:events, intensity: 700) %>">
+        <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(events_theme, intensity: 200) %>">
+          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full <%= DomainTheme.bg_class_for(events_theme, intensity: 100) %> <%= DomainTheme.text_class_for(events_theme, intensity: 700) %>">
             <i class="fa-solid fa-calendar-check"></i>
           </span>
           <h2 class="font-display text-2xl text-gray-900">Participation history</h2>
+          <% if events_hidden %>
+            <span class="ml-auto text-sm <%= DomainTheme.text_class_for(:admin_only, intensity: 700) %> italic">
+              <i class="fa-solid fa-eye-slash"></i> Hidden from profile — only admins see this
+            </span>
+          <% end %>
         </div>
         <!-- Events attended -->
         <div class="section-content space-y-8 px-4 py-5 sm:space-y-10 sm:px-6 sm:py-6">

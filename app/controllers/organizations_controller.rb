@@ -2,8 +2,10 @@ class OrganizationsController < ApplicationController
   include AhoyTracking, Dedupable
   before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
 
-  # The "Published content" sections, each gated by its profile_show_* flag.
-  PUBLISHED_SECTIONS = %w[workshops stories].freeze
+  # The "Published content" sections, in display order.
+  PUBLISHED_SECTIONS = %w[workshops workshop_variations resources stories community_news].freeze
+  # The sections an org can hide from its profile; the rest always show.
+  PUBLISHED_SECTION_FLAGS = { "workshops" => :profile_show_workshops?, "stories" => :profile_show_stories? }.freeze
 
   def index
     authorize!
@@ -39,6 +41,8 @@ class OrganizationsController < ApplicationController
     authorize! @organization
 
     if turbo_frame_request? && params[:section] == "events"
+      # Hidden from the profile means admins only, crafted ?section= requests included.
+      authorize! @organization, to: :manage? unless @organization.profile_show_events_registered?
       events = authorized_scope(
         Event.where(id: @organization.event_registrations.active.select(:event_id))
              .includes(:primary_asset)
@@ -52,17 +56,18 @@ class OrganizationsController < ApplicationController
     section = PUBLISHED_SECTIONS.find { |name| name == params[:section] }
     if turbo_frame_request? && section
       # A section the org hid stays hidden from a crafted ?section= request.
-      authorize! @organization, to: :manage? unless @organization.public_send(:"profile_show_#{section}?")
+      authorize! @organization, to: :manage? unless published_section_shown?(section)
       records = published_section_records(section, page: params[:page])
-      return render partial: "organizations/sections/#{section}", locals: { organization: @organization, section.to_sym => records }
+      return render partial: "organizations/sections/published", locals: { organization: @organization, section: section, records: records }
     end
 
     track_view(@organization)
 
-    # Loaded up front so the view's emptiness checks don't re-query.
-    PUBLISHED_SECTIONS.each do |section|
-      next unless @organization.public_send(:"profile_show_#{section}?")
-      instance_variable_set(:"@published_#{section}", published_section_records(section, page: 1).load)
+    # Only sections with something to list, loaded so the view doesn't re-query.
+    @published_sections = PUBLISHED_SECTIONS.each_with_object({}) do |section, sections|
+      next unless published_section_shown?(section)
+      records = published_section_records(section, page: 1).load
+      sections[section] = records if records.any?
     end
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
@@ -220,14 +225,27 @@ class OrganizationsController < ApplicationController
 
   private
 
+  def published_section_shown?(section)
+    flag = PUBLISHED_SECTION_FLAGS[section]
+    flag.nil? || @organization.public_send(flag)
+  end
+
   def published_section_records(section, page:)
     records = case section
     when "workshops"
       openly_credited(authorized_scope(@organization.credited_workshops.with_author_credit)).includes(created_by: :person)
+    when "workshop_variations"
+      authorized_scope(@organization.workshop_variations.with_author_credit)
+    when "resources"
+      authorized_scope(@organization.resources.with_author_credit)
     when "stories"
       authorized_scope(@organization.stories.with_author_credit)
+    when "community_news"
+      authorized_scope(@organization.community_news.with_author_credit)
     end
-    records.includes(:primary_asset).order(created_at: :desc).paginate(page: page, per_page: 8)
+    # Stories lay out two to a row, everything else three.
+    per_page = section == "stories" ? 8 : 9
+    records.includes(:primary_asset).order(created_at: :desc).paginate(page: page, per_page: per_page)
   end
 
   # Non-admins don't see workshops credited anonymously — listing them here would
