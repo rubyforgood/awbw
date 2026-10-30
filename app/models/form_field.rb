@@ -130,7 +130,7 @@ class FormField < ApplicationRecord
   # email checks, etc.), so the same identifier must not appear twice on one form
   # or that logic would target an ambiguous field. Ordinary fields carry no
   # identifier, so blanks are exempt — any number of them may coexist.
-  validates :field_identifier, uniqueness: { scope: :form_id }, allow_blank: true
+  validate :field_identifier_unique_on_form
   validates :min_words, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :max_characters, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :max_characters_allows_min_words
@@ -388,6 +388,22 @@ class FormField < ApplicationRecord
     return unless required?
 
     errors.add(:required, "is not available for #{answer_type_label.downcase} fields")
+  end
+
+  # Checks the identifier against the form's other fields as the editor is about
+  # to save them, not as the database has them — so swapping identifiers between
+  # two fields, or moving one off a removed field, saves in one go, while two
+  # unsaved fields claiming the same identifier are still caught.
+  def field_identifier_unique_on_form
+    return if field_identifier.blank?
+
+    siblings = form ? form.association(:form_fields).target.reject { |f| f.equal?(self) || (id && f.id == id) } : []
+    taken = siblings.any? { |f| !f.marked_for_destruction? && f.field_identifier == field_identifier }
+    taken ||= form_id.present? &&
+      FormField.where(form_id: form_id, field_identifier: field_identifier)
+               .where.not(id: [ id, *siblings.map(&:id) ].compact).exists?
+
+    errors.add(:field_identifier, :taken) if taken
   end
 
   # Places a positionless new field after the current last field on its form, so
