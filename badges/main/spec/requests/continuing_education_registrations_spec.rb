@@ -256,6 +256,21 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         delete continuing_education_registration_path(ce_registration, return_to: "attendance")
         expect(response).to redirect_to(attendance_event_path(event, ce: "true", anchor: "totals"))
       end
+
+      context "from the All CE view (ce_payment=all)" do
+        it "carries the choice through the form and back links" do
+          get edit_continuing_education_registration_path(ce_registration, return_to: "attendance", ce_payment: "all")
+          page = Capybara.string(response.body)
+          expect(page).to have_link(href: attendance_event_path(event, ce: "true", ce_payment: "all", anchor: "totals"))
+          expect(page).to have_css("form[action='#{continuing_education_registration_path(ce_registration, return_to: "attendance", ce_payment: "all")}']")
+        end
+
+        it "returns to All CE after saving" do
+          patch continuing_education_registration_path(ce_registration, return_to: "attendance", ce_payment: "all"),
+                params: { continuing_education_registration: { hours: "6", cost_dollars: "120" } }
+          expect(response).to redirect_to(attendance_event_path(event, ce: "true", ce_payment: "all", anchor: "totals"))
+        end
+      end
     end
 
     it "marks the certificate issued and back to not issued" do

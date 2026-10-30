@@ -68,7 +68,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
   def destroy
     authorize! @ce_registration
     if @ce_registration.allocations.exists?
-      redirect_to edit_continuing_education_registration_path(@ce_registration, return_to: params[:return_to]),
+      redirect_to edit_continuing_education_registration_path(@ce_registration, **helpers.ce_registration_return_params),
         alert: "Can't remove CE — it has payments. Revert the payment first.", status: :see_other
       return
     end
@@ -82,7 +82,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
     authorize! @ce_registration
     issued = @ce_registration.certificate_sent_at.present?
     @ce_registration.update!(certificate_sent_at: issued ? nil : Time.current)
-    redirect_to edit_continuing_education_registration_path(@ce_registration, return_to: params[:return_to]),
+    redirect_to edit_continuing_education_registration_path(@ce_registration, **helpers.ce_registration_return_params),
       notice: issued ? "Certificate marked not issued." : "Certificate marked issued.", status: :see_other
   end
 

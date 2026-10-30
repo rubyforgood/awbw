@@ -209,6 +209,14 @@ module EventsHelper
     attendees_params.compact.merge(extra)
   end
 
+  # The current timesheet page with its Paid / All CE toggle set, dropping any open
+  # cell editor so the switch doesn't reopen a row the new list may not hold.
+  def ce_payment_toggle_path(all:)
+    query = request.query_parameters.except("ce_payment", "edit")
+    query = query.merge("ce_payment" => "all") if all
+    [ request.path, query.to_query.presence ].compact.join("?")
+  end
+
   # Full report filters → reports hub query params.
   def report_to_hub_params
     {
