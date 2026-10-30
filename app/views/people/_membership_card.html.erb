@@ -38,7 +38,6 @@
 
     <% turn_off_tooltip = "Stops automatic charges. Renewal and already-issued invoices are unchanged." %>
     <% manage_card_tooltip = "Opens Stripe to update the saved card." %>
-    <% autopay_ready = membership.autopay_on? && has_card %>
     <% subscribe_tooltip =
       if has_card
         autopay_invoice ? "Turns on automatic payments and charges any issued invoice." : "Turns on automatic payments for future invoices."
@@ -49,18 +48,11 @@
       end %>
 
     <% if invoices&.any? %>
-      <div class="space-y-2">
+      <ul class="space-y-2">
         <% invoices.each do |invoice| %>
-          <div class="flex flex-wrap items-center gap-2">
-            <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice, viewable: true %></ul>
-            <% if allowed_to?(:pay?, invoice) && invoice.remaining_cost.positive? &&
-                  (!invoice.payment_in_progress? || invoice.checkout_session_id.present?) &&
-                  invoice.decorate.autopay_action(autopay_ready:) == :scheduled %>
-              <span class="text-xs text-gray-500">Scheduled for <%= invoice.start_date.strftime("%b %-d, %Y") %></span>
-            <% end %>
-          </div>
+          <%= render "membership_invoices/invoice_row", invoice: invoice, viewable: true %>
         <% end %>
-      </div>
+      </ul>
     <% end %>
 
     <% if allowed_to?(:manage_membership?, membership) %>
