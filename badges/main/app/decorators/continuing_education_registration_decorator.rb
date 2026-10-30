@@ -22,6 +22,13 @@ class ContinuingEducationRegistrationDecorator < ApplicationDecorator
     Badge.new(label: "Check payments", icon: "fa-solid fa-triangle-exclamation", classes: "bg-amber-50 text-amber-700 border-amber-200")
   end
 
+  # Why the Delete button is hidden; nil when the record can be deleted.
+  def deletion_blocked_reason
+    return if deletable?
+
+    "Can't be deleted — this CE registration has payment records (reverted payments still count), which stay linked to it."
+  end
+
   # Pill for whether the completion certificate has been issued.
   def certificate_badge
     if certificate_sent_at.present?

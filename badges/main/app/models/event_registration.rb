@@ -681,8 +681,14 @@ class EventRegistration < ApplicationRecord
   # so a registration with any allocation must be kept — even a reverted payment
   # leaves its (now net-zero) allocation rows. An attendance outcome (attended,
   # incomplete, or no-show) or a transfer out is likewise history worth keeping.
+  # Deleting would also cascade away its CE registrations, so a paid CE blocks too.
   def deletable?
-    !allocations.exists? && !attendance_recorded? && !transferred_out?
+    !allocations.exists? && !ce_allocations? && !attendance_recorded? && !transferred_out?
+  end
+
+  def ce_allocations?
+    Allocation.where(allocatable_type: "ContinuingEducationRegistration",
+                     allocatable_id: continuing_education_registrations.select(:id)).exists?
   end
 
   # True when the registrant should be granted access to ticket materials

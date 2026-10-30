@@ -70,6 +70,16 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       expect(reg.decorate.deletion_blocked_reason).to include("financial records")
     end
 
+    it "blocks (and explains) when its CE registration has payment records" do
+      reg = create(:event_registration, status: "registered")
+      ce = create(:continuing_education_registration, event_registration: reg, cost_cents: 12_000)
+      create(:allocation, source: create(:payment, amount_cents: 12_000, amount_cents_remaining: 12_000),
+                          allocatable: ce, amount: 12_000)
+
+      expect(reg.decorate.deletable?).to be(false)
+      expect(reg.decorate.deletion_blocked_reason).to include("a CE registration with payment records")
+    end
+
     it "explains recorded attendance, enumerating the outcomes that count" do
       reg = create(:event_registration, status: "attended")
       expect(reg.decorate.deletion_blocked_reason).to eq(
