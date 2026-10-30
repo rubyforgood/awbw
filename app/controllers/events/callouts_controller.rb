@@ -469,7 +469,7 @@ module Events
     # or intends to pay renders its own sheet, and since they all record the same
     # hours, one such licence is enough to let the registrant write those hours down.
     def attendance_enabled?
-      @event_registration.ce_attendance_offered?
+      @event_registration.ce_attendance_available?
     end
 
     def timesheet_locked_alert

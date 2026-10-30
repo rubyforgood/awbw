@@ -358,7 +358,7 @@ class BuiltinCalloutCards
   # ce_paid_in_full? — otherwise a second licence still being paid for silently
   # takes the nudge away from someone who can, and should, be signing in.
   def ce_attendance_reminder
-    return unless registration.ce_attendance_offered?
+    return unless registration.ce_attendance_available?
     return :signed_in if registration.signed_in?
 
     :sign_in if event.attendance_sign_in_open?

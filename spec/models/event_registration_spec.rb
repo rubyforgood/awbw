@@ -306,7 +306,7 @@ RSpec.describe EventRegistration, type: :model do
       end
 
       it "offers attendance sign-in on the destination reg" do
-        expect(destination.reload.ce_attendance_offered?).to be(true)
+        expect(destination.reload.ce_attendance_available?).to be(true)
       end
 
       it "keeps the paid stub on the source reg CE-paid too" do
