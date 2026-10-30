@@ -262,7 +262,31 @@ class OrganizationDecorator < ApplicationDecorator
           .select { |_person, affiliations| affiliations.any?(&:facilitator?) }
   end
 
+  # The sharing flags over a value the hero reads directly. The content sections
+  # are left out: the controller already knows which of those the org hid and
+  # whether each has anything to list.
+  PROFILE_PIECE_FLAGS = %i[
+    profile_show_email profile_show_phone profile_show_website
+    profile_show_description profile_show_sectors profile_show_age_ranges
+  ].freeze
+
+  # Pieces the org turned off that still have something to show.
+  def hidden_profile_pieces
+    PROFILE_PIECE_FLAGS.reject { |flag| public_send(:"#{flag}?") }.select { |flag| profile_piece_content?(flag) }
+  end
+
   private
+
+  def profile_piece_content?(flag)
+    case flag
+    when :profile_show_email then email.present?
+    when :profile_show_phone then phone_number.present?
+    when :profile_show_website then website_link_url.present?
+    when :profile_show_description then description.present?
+    when :profile_show_sectors then active_facilitator_sectors.any?
+    when :profile_show_age_ranges then active_facilitator_age_groups.any?
+    end
+  end
 
   # The facilitator rows that record real facilitation. A zero-length (start ==
   # end) row is a no-show's deactivated stub, not a term served, so it feeds

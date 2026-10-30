@@ -9,6 +9,9 @@ module OrganizationServices
     # workshop outside the catalog — the in-memory `workshop_id || external_workshop_title`.
     GROUP_KEY = "COALESCE(CONCAT('w', workshop_logs.workshop_id), CONCAT('x', workshop_logs.external_workshop_title))".freeze
 
+    # What a grouped card and a date row read off each log.
+    LOG_PRELOADS = %i[workshop windows_type quotable_item_quotes gallery_assets].freeze
+
     def initialize(organization)
       @logs = organization.affiliated_workshop_logs
     end
@@ -21,7 +24,9 @@ module OrganizationServices
           Arel.sql(sum_of(:adults_first_time, :adults_ongoing)),
           Arel.sql(sum_of(:teens_first_time, :teens_ongoing)),
           Arel.sql(sum_of(:children_first_time, :children_ongoing)),
-          Arel.sql("COUNT(DISTINCT #{GROUP_KEY})")
+          # COUNT(DISTINCT) skips NULL, so the group of logs naming neither a
+          # workshop nor a title is added back by hand.
+          Arel.sql("COUNT(DISTINCT #{GROUP_KEY}) + COALESCE(MAX(#{GROUP_KEY} IS NULL), 0)")
         )
         { logs: logs.to_i, adults: adults.to_i, teens: teens.to_i, children: children.to_i, workshops: workshops.to_i }
       end
@@ -42,23 +47,36 @@ module OrganizationServices
       end
     end
 
+    # The one group a workshop or outside title names, newest first; nil when the
+    # caller named neither, so a page can tell "no filter" from "an empty group".
+    def logs_for(workshop_id: nil, external_title: nil)
+      scope = if workshop_id.present?
+        @logs.where(workshop_id: workshop_id)
+      elsif external_title.present?
+        @logs.where(workshop_id: nil, external_workshop_title: external_title)
+      end
+      scope&.includes(*LOG_PRELOADS)&.order(workshop_held_on: :desc, created_at: :desc)
+    end
+
     private
 
     def sum_of(*columns)
       "COALESCE(SUM(#{columns.map { |column| "COALESCE(workshop_logs.#{column}, 0)" }.join(" + ")}), 0)"
     end
 
-    # A nil key is the group of logs with neither a workshop nor a title.
+    # A nil key is the group of logs with neither a workshop nor a title. The keys
+    # come from a case-insensitive GROUP BY (the column's collation), so the Ruby
+    # side folds case too or two spellings of one title lose their logs.
     def logs_grouped_by(keys)
       workshop_ids = keys.filter_map { |key| key.delete_prefix("w").to_i if key&.start_with?("w") }
       titles = keys.filter_map { |key| key.delete_prefix("x") if key&.start_with?("x") }
       titles << nil if keys.include?(nil)
       logs = @logs.where(workshop_id: workshop_ids)
                   .or(@logs.where(workshop_id: nil, external_workshop_title: titles))
-                  .includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets)
+                  .includes(*LOG_PRELOADS)
                   .order(workshop_held_on: :desc, created_at: :desc)
-                  .group_by { |log| group_key(log) }
-      keys.filter_map { |key| logs[key] }
+                  .group_by { |log| group_key(log)&.downcase }
+      keys.filter_map { |key| logs[key&.downcase] }
     end
 
     def group_key(log)

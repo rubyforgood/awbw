@@ -361,6 +361,7 @@ Rails.application.routes.draw do
     end
     member do
       get :populations_served
+      get :workshop_logs
     end
     resources :comments, only: [ :create, :update ]
     resources :monthly_reports, only: :index

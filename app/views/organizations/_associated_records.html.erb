@@ -12,14 +12,14 @@
 <%# Column flow pairs each record type with its related idea: community news /
     resources · stories / story ideas · workshops / workshop ideas · workshop
     variations / workshop variation ideas. Workshop ideas carry no organization,
-    so they're credited through the org's affiliated people. %>
+    so they're credited through the org's active facilitators. %>
 <% contributed = [
      CommunityNews.where(org_filter),
      Resource.where(org_filter),
      Story.where(org_filter),
      StoryIdea.where(org_filter),
      organization.credited_workshops,
-     organization.credited_to_affiliates(WorkshopIdea),
+     organization.credited_to_facilitators(WorkshopIdea),
      WorkshopVariation.where(org_filter),
      WorkshopVariationIdea.where(org_filter)
    ] %>

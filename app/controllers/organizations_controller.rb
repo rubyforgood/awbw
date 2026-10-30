@@ -80,6 +80,10 @@ class OrganizationsController < ApplicationController
     track_view(@organization)
 
     @published_sections = loaded_sections(PUBLISHED_SECTIONS.select { |name| published_section_shown?(name) })
+    # What the org hid still reaches admins, in the "Hidden from profile" card.
+    if allowed_to?(:manage?, @organization)
+      @hidden_sections = loaded_sections(PUBLISHED_SECTIONS.reject { |name| published_section_shown?(name) })
+    end
     return unless allowed_to?(:show_submitted_content?, @organization)
 
     @submitted_sections = loaded_sections(SUBMITTED_SECTIONS)
@@ -203,6 +207,17 @@ class OrganizationsController < ApplicationController
     @sort = params[:sort].presence_in(Organization::BREAKDOWN_SORTS) || Organization::BREAKDOWN_SORTS.first
   end
 
+  # The org's workshop logs on their own page: the date rows of the one group a
+  # workshop or outside title names, otherwise a page of grouped cards.
+  def workshop_logs
+    @organization = Organization.find(params[:id])
+    authorize! @organization, to: :show_workshop_logs?
+
+    summary = OrganizationServices::WorkshopLogSummary.new(@organization)
+    @filtered_logs = summary.logs_for(workshop_id: params[:workshop_id], external_title: params[:external_title])
+    @groups = summary.groups(page: params[:page]) if @filtered_logs.nil?
+  end
+
   private
 
   def published_section_shown?(section)
@@ -242,7 +257,7 @@ class OrganizationsController < ApplicationController
     when "community_news"
       authorized_scope(@organization.community_news.with_author_credit)
     when "workshop_ideas"
-      authorized_scope(@organization.credited_to_affiliates(WorkshopIdea))
+      authorized_scope(@organization.credited_to_facilitators(WorkshopIdea))
     when "workshop_variation_ideas"
       authorized_scope(WorkshopVariationIdea.where(organization_id: @organization.id))
     when "story_ideas"

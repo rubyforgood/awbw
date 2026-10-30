@@ -85,7 +85,7 @@ class WorkshopSearchService
     @workshops = @workshops.authored_by(params[:author_id])
   end
 
-  # Workshops credited to the org's people (Organization#credited_workshops).
+  # Workshops credited to the org's active facilitators (Organization#credited_workshops).
   def filter_by_organization_id
     return unless params[:organization_id].present?
     credited = Organization.find_by(id: params[:organization_id])&.credited_workshops || Workshop.none

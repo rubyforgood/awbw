@@ -1,0 +1,5 @@
+<%# The org's events attended, loaded lazily (OrganizationsController#show ?section=events). %>
+<%# locals: (organization:) %>
+<%= turbo_frame_tag "organization_events_section", src: organization_path(organization, section: "events"), loading: :lazy do %>
+  <p class="text-gray-500 italic">Loading events...</p>
+<% end %>

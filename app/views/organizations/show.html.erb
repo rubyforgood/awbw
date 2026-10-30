@@ -92,9 +92,7 @@
         <!-- Contact info -->
         <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm md:justify-start">
           <% if @organization.profile_show_email? && @organization.email.present? %>
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
-              <i class="fa-solid fa-envelope text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i> <%= mail_to @organization.email, @organization.email, class: "hover:text-primary" %>
-            </span>
+            <%= render "organizations/profile_pieces/email_chip", organization: @organization %>
           <% elsif @organization.email.present? && allowed_to?(:manage?, Organization) %>
             <span class="<%= admin_only_chip_class %>" title="Email (admin only)">
               <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= mail_to @organization.email, @organization.email, class: "hover:text-primary" %>
@@ -103,9 +101,7 @@
           <% phone = @organization.phone_number %>
           <% if phone.present? %>
             <% if @organization.profile_show_phone? %>
-              <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
-                <i class="fa-solid fa-phone text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i> <%= link_to phone, tel_href(phone), class: "hover:text-primary" %>
-              </span>
+              <%= render "organizations/profile_pieces/phone_chip", organization: @organization %>
             <% elsif allowed_to?(:manage?, Organization) %>
               <span class="<%= admin_only_chip_class %>" title="Phone (admin only)">
                 <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= link_to phone, tel_href(phone), class: "hover:text-primary" %>
@@ -115,11 +111,7 @@
           <% if @organization.website_url.present? %>
             <% safe_url = @organization.website_link_url %>
             <% if safe_url.present? && @organization.profile_show_website? %>
-              <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
-                <i class="fa-solid fa-globe text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i> <%= link_to @organization.website_url, safe_url,
-                              target: "_blank", rel: "noopener noreferrer",
-                              class: "hover:text-primary" %>
-              </span>
+              <%= render "organizations/profile_pieces/website_chip", organization: @organization %>
             <% elsif safe_url.present? && allowed_to?(:manage?, Organization) %>
               <span class="<%= admin_only_chip_class %>" title="Website (admin only)">
                 <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= link_to @organization.website_url, safe_url,
@@ -177,7 +169,6 @@
       </div>
       <!-- Sectors + Age groups served (two columns on desktop; stack on narrow viewports) -->
       <% show_sectors = @organization.profile_show_sectors? %>
-      <% sectors = show_sectors ? @organization.active_facilitator_sectors : [] %>
       <% age_groups = @organization.profile_show_age_ranges? ? @organization.active_facilitator_age_groups : [] %>
       <% show_age = age_groups.any? %>
       <% if show_sectors || show_age %>
@@ -186,12 +177,7 @@
             <% if show_sectors %>
               <div class="min-w-0 flex-1">
                 <h2 class="mb-3 font-display text-2xl text-gray-900">Sectors</h2>
-                <% if sectors.any? %>
-                  <%= render "organizations/sector_preview", sectors: sectors,
-                             breakdown_path: populations_served_organization_path(@organization) %>
-                <% else %>
-                  <p class="text-gray-500 italic">None listed by active facilitators.</p>
-                <% end %>
+                <%= render "organizations/profile_pieces/sectors", organization: @organization %>
               </div>
             <% end %>
             <% if show_age %>
@@ -227,9 +213,7 @@
       <div class="<%= DomainTheme.bg_class_for(:organizations, intensity: 50) %>
           border-2 <%= DomainTheme.border_class_for(:organizations) %> rounded-2xl p-5 sm:p-6">
         <h2 class="mb-3 font-display text-2xl text-gray-900">Description</h2>
-        <div class="leading-relaxed text-gray-700">
-          <%= sanitize(@organization.description, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
-        </div>
+        <%= render "organizations/profile_pieces/description", organization: @organization %>
       </div>
     <% end %>
     <!-- AUTHORED SECTION -->
@@ -262,37 +246,30 @@
       </div>
     <% end %>
     <!-- PARTICIPATION SECTION -->
-    <%# Hidden from the profile, admins still see it, marked admin-only. %>
-    <% events_hidden = !@organization.profile_show_events_registered? %>
-    <% if !events_hidden || allowed_to?(:manage?, Organization) %>
-      <% events_theme = events_hidden ? :admin_only : :events %>
-      <div class="<%= "admin-only" if events_hidden %> organization-only border-2 bg-white <%= DomainTheme.border_class_for(events_theme) %> overflow-hidden rounded-2xl shadow-sm">
+    <%# Turned off, this moves to the "Hidden from profile" card. %>
+    <% if @organization.profile_show_events_registered? %>
+      <div class="organization-only border-2 bg-white <%= DomainTheme.border_class_for(:events) %> overflow-hidden rounded-2xl shadow-sm">
         <!-- Header -->
-        <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(events_theme, intensity: 200) %>">
-          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full <%= DomainTheme.bg_class_for(events_theme, intensity: 100) %> <%= DomainTheme.text_class_for(events_theme, intensity: 700) %>">
+        <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(:events, intensity: 200) %>">
+          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full <%= DomainTheme.bg_class_for(:events, intensity: 100) %> <%= DomainTheme.text_class_for(:events, intensity: 700) %>">
             <i class="fa-solid fa-calendar-check"></i>
           </span>
           <h2 class="font-display text-2xl text-gray-900">Participation history</h2>
-          <% if events_hidden %>
-            <span class="ml-auto text-sm <%= DomainTheme.text_class_for(:admin_only, intensity: 700) %> italic">
-              <i class="fa-solid fa-eye-slash"></i> Hidden from profile — only admins see this
-            </span>
-          <% end %>
         </div>
         <!-- Events attended -->
         <div class="section-content space-y-8 px-4 py-5 sm:space-y-10 sm:px-6 sm:py-6">
           <div>
             <h3 class="mb-3 font-display text-xl text-gray-900">Events attended</h3>
-            <%= turbo_frame_tag "organization_events_section", src: organization_path(@organization, section: "events"), loading: :lazy do %>
-              <p class="text-gray-500 italic">Loading events...</p>
-            <% end %>
+            <%= render "organizations/sections/events_frame", organization: @organization %>
           </div>
         </div>
       </div>
     <% end %>
     <!-- SUBMITTED SECTION -->
-    <%# Members and admins; each section only shows when it has something to list. %>
-    <% if @workshop_log_summary || @submitted_sections.present? %>
+    <%# Members and admins; each section only shows when it has something to list.
+        Workshop logs turned off move to the "Hidden from profile" card. %>
+    <% shared_log_summary = @workshop_log_summary if @organization.profile_show_workshop_logs? %>
+    <% if shared_log_summary || @submitted_sections.present? %>
       <% submitted_titles = {
            "workshop_ideas" => "Workshop ideas",
            "workshop_variation_ideas" => "Workshop variation ideas",
@@ -309,10 +286,10 @@
           <span class="ml-auto text-sm <%= DomainTheme.text_class_for(:user_only, intensity: 700) %> italic">Only visible to members and admins</span>
         </div>
         <div class="section-content space-y-8 px-4 py-5 sm:space-y-10 sm:px-6 sm:py-6">
-          <% if @workshop_log_summary %>
-            <div>
+          <% if shared_log_summary %>
+            <div id="workshop_logs" class="scroll-mt-4">
               <h3 class="mb-3 font-display text-xl text-gray-900">Workshop logs</h3>
-              <%= render "organizations/sections/workshop_logs", organization: @organization, summary: @workshop_log_summary %>
+              <%= render "organizations/sections/workshop_logs", organization: @organization, summary: shared_log_summary %>
             </div>
           <% end %>
           <% @submitted_sections.each do |section, records| %>
@@ -324,6 +301,12 @@
           <% end %>
         </div>
       </div>
+    <% end %>
+    <!-- HIDDEN FROM PROFILE SECTION -->
+    <% if @hidden_sections %>
+      <%= render "organizations/hidden_from_profile_card", organization: org_decorated,
+                 hidden_sections: @hidden_sections,
+                 workshop_log_summary: (@workshop_log_summary unless @organization.profile_show_workshop_logs?) %>
     <% end %>
   </div>
 </div>

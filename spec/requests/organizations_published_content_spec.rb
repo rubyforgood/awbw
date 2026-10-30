@@ -9,6 +9,10 @@ RSpec.describe "Organization profile published content", type: :request do
   # An active affiliation publishes the profile so non-admins can view it.
   before { create(:affiliation, organization: organization, person: facilitator) }
 
+  def hidden_card
+    Capybara.string(response.body).find("#hidden_from_profile")
+  end
+
   describe "empty sections" do
     before { sign_in viewer }
 
@@ -94,6 +98,21 @@ RSpec.describe "Organization profile published content", type: :request do
 
       expect(response.body).not_to include("Hidden Story")
     end
+
+    it "moves a hidden stories section into the admins' Hidden from profile card" do
+      organization.update!(profile_show_stories: false)
+      create(:story, :published, organization: organization, title: "Hidden Story")
+
+      sign_in viewer
+      get organization_path(organization)
+      expect(response.body).not_to include("Hidden Story")
+      expect(response.body).not_to include("Hidden from profile")
+
+      sign_in admin
+      get organization_path(organization)
+      expect(hidden_card).to have_text("Hidden Story")
+      expect(hidden_card).to have_text("Only visible to admins")
+    end
   end
 
   describe "Workshops authored" do
@@ -108,6 +127,36 @@ RSpec.describe "Organization profile published content", type: :request do
       expect(response.body).to include("Authored Workshop")
       expect(response.body).to include("Legacy Workshop")
       expect(response.body).not_to include("Outside Workshop")
+    end
+
+    it "credits only active facilitators, not every affiliation the org ever had" do
+      past = create(:person)
+      create(:affiliation, organization: organization, person: past,
+             start_date: 3.years.ago.to_date, end_date: 1.year.ago.to_date)
+      staff = create(:person)
+      create(:affiliation, organization: organization, person: staff, title: "Director")
+      create(:workshop, published: true, author: past, title: "Former Facilitator Workshop")
+      create(:workshop, published: true, author: staff, title: "Director Workshop")
+      sign_in admin
+
+      get organization_path(organization)
+
+      expect(response.body).not_to include("Former Facilitator Workshop")
+      expect(response.body).not_to include("Director Workshop")
+    end
+
+    it "moves a hidden workshops section into the admins' Hidden from profile card" do
+      organization.update!(profile_show_workshops: false)
+      create(:workshop, published: true, author: facilitator, title: "Unshared Workshop")
+
+      sign_in viewer
+      get organization_path(organization)
+      expect(response.body).not_to include("Unshared Workshop")
+
+      sign_in admin
+      get organization_path(organization)
+      expect(hidden_card).to have_text("Workshops authored")
+      expect(hidden_card).to have_text("Unshared Workshop")
     end
 
     it "hides unpublished workshops from non-admins" do
@@ -169,7 +218,7 @@ RSpec.describe "Organization profile published content", type: :request do
       expect(response.body).not_to include("only admins see this")
     end
 
-    it "shows only to admins, marked admin-only, when the org hides it" do
+    it "moves to the admins' Hidden from profile card when the org hides it" do
       organization.update!(profile_show_events_registered: false)
 
       sign_in viewer
@@ -180,7 +229,8 @@ RSpec.describe "Organization profile published content", type: :request do
 
       sign_in admin
       get organization_path(organization)
-      expect(response.body).to include("Events attended", "only admins see this")
+      expect(response.body).not_to include("Participation history")
+      expect(hidden_card).to have_text("Events attended")
       get_events_section
       expect(response.body).to include("organization_events_section")
     end
@@ -206,7 +256,7 @@ RSpec.describe "Organization profile published content", type: :request do
       expect(submitted_card).to have_text("Only visible to members and admins")
       expect(submitted_card).to have_text("Total participants: 6")
       expect(submitted_card).to have_text("Unique workshops: 1")
-      expect(submitted_card).to have_link(href: workshop_logs_path(organization_id: organization.id, workshop_id: workshop.id))
+      expect(submitted_card).to have_link(href: workshop_logs_organization_path(organization, workshop_id: workshop.id))
     end
 
     it "stays off for non-members" do
@@ -237,7 +287,7 @@ RSpec.describe "Organization profile published content", type: :request do
       expect(response.body).not_to include("Logged Workshop")
     end
 
-    it "hides workshop logs from members but not admins when the toggle is off" do
+    it "moves workshop logs to the admins' Hidden from profile card when the toggle is off" do
       organization.update!(profile_show_workshop_logs: false)
 
       sign_in member
@@ -246,7 +296,9 @@ RSpec.describe "Organization profile published content", type: :request do
 
       sign_in admin
       get organization_path(organization)
-      expect(response.body).to include(">Workshop logs</h3>")
+      expect(response.body).not_to include("Submitted content")
+      expect(hidden_card).to have_text("Workshop logs")
+      expect(hidden_card).to have_text("Total participants: 6")
     end
 
     it "lists ideas to admins only and monthly reports to members" do
