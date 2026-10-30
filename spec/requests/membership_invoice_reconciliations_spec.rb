@@ -68,6 +68,25 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
     expect(attempt.reload).not_to be_failed
   end
 
+  it "shows every unresolved attempt, not just the last seven" do
+    invoice.charge_attempts.create!(attempt_number: 1, status: "unknown",
+      amount_cents: 1_000, attempted_at: 8.hours.ago,
+      error_message: "Oldest unresolved attempt")
+    8.times do |index|
+      invoice.charge_attempts.create!(attempt_number: index + 2, status: "unknown",
+        amount_cents: 1_000, attempted_at: 7.hours.ago + index.minutes)
+    end
+    allow(Membership::Reconcile::Lookup).to receive(:call).and_return(
+      Membership::Reconcile::Lookup::Result.new(
+        candidates: [], local_payments: [], message: nil, errors: []
+      )
+    )
+
+    get membership_invoice_reconciliation_path(invoice)
+
+    expect(response.body).to include("Oldest unresolved attempt")
+  end
+
   it "shows the cancel action for an unresolved attempt with a PaymentIntent" do
     attempt.update!(status: "unknown", payment_intent_id: "pi_test")
     allow(Membership::Reconcile::Lookup).to receive(:call).and_return(
