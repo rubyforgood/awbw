@@ -127,6 +127,18 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include(attendance_event_path(event, ce: "true", anchor: "totals"))
     end
 
+    it "keeps the All CE choice on the links out to a CE registration and back" do
+      log_ce_time!
+      ce = registration.continuing_education_registrations.first
+      get attendance_event_path(event, ce: "true", ce_payment: "all")
+      page = Capybara.string(response.body)
+      expect(page).to have_link(href: edit_continuing_education_registration_path(ce, return_to: "attendance", ce_payment: "all"))
+      expect(page).to have_link(href: registration_ce_path(registration.slug, return_to: "attendance", ce_payment: "all"))
+
+      get registration_ce_path(registration.slug, return_to: "attendance", ce_payment: "all")
+      expect(Capybara.string(response.body)).to have_link(href: attendance_event_path(event, ce: "true", ce_payment: "all", anchor: "totals"))
+    end
+
     it "returns to the registrants page when opened from there" do
       get attendance_event_path(event, ce: "true", return_to: "registrants")
       expect(response.body).to include("← Registrants")
