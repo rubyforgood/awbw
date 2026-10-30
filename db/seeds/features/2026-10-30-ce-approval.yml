@@ -13,3 +13,4 @@ pro_tips:
   - "Paid but not approved shows the registrant a blue Pending badge; approved shows Approved."
   - "Switch timesheets to All CE to see everyone who signed up."
   - "Filter the CE registrations list by Approved or Not approved."
+  - "Mark certificates issued straight from the registrants list — the Certificate slider column now shows by default."

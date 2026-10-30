@@ -157,21 +157,22 @@
           </span>
         </label>
 
-        <%# Off by default — Certificate issued is hidden until the admin reveals it. %>
+        <%# On by default — the Certificate issued slider shows unless the admin hides it. %>
         <label class="inline-flex cursor-pointer items-center gap-2 select-none"
                data-controller="column-toggle" data-column-toggle-group-value="certificate">
           <span class="text-sm text-gray-500">Certificate</span>
 
           <input
             type="checkbox"
+            checked
             data-column-toggle-target="toggle"
             data-action="column-toggle#toggle"
             class="sr-only"
           >
 
           <span class="relative inline-block h-5 w-9">
-            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
+            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: translateX(16px)"></span>
           </span>
         </label>
 
@@ -292,8 +293,8 @@
                   <%= render "shared/sortable_header", label: Form.role_label(role), index: status_index + 1 + offset %>
                 </th>
               <% end %>
-              <%# Off by default; kept out of the sortable index range (last data column). %>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" data-column-toggle-col="certificate">Certificate</th>
+              <%# Kept out of the sortable index range (last data column). %>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" data-column-toggle-col="certificate">Certificate</th>
               <%# One completion column per form callout, revealed together by the Ticket forms switch. %>
               <% form_columns.each do |callout, form| %>
                 <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" data-column-toggle-col="ticket_forms"><%= form.name %></th>
@@ -434,14 +435,13 @@
                 <% if ce_col %>
                   <td class="px-4 py-2 text-sm text-center" data-column-toggle-col="ce" data-sort-value="<%= registration.decorate.ce_status_sort_key %>">
                     <%# Canonical CE badge (Requested → License # needed → $X due →
-                        Pending → Issued). Each state links to the connected CE
+                        Pending → Approved → Issued). Each state links to the connected CE
                         registration's edit page; "Create" opens the new CE form. %>
                     <% ce_registration = registration.continuing_education_registrations.first %>
                     <% if ce_registration %>
                       <%# The transfer-in reg carries its own CE record now, so it
                           shows the normal status badge linking to that record. %>
-                      <%= render "event_registrations/ce_status_badge", registration: registration,
-                            href: edit_continuing_education_registration_path(ce_registration, return_to: "registrants") %>
+                      <%= render "event_registrations/roster_ce_status", registration: registration, ce_registration: ce_registration %>
                     <% elsif registration.transferred_in? %>
                       <%# No CE came across on transfer, and CE isn't created here —
                           it's managed on the original registration. %>
@@ -609,7 +609,7 @@
                     <% end %>
                   </td>
                 <% end %>
-                <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
+                <td class="px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
                   <%= render "event_registrations/certificate_issued_toggle", registration: registration %>
                 </td>
                 <% form_columns.each do |callout, form| %>

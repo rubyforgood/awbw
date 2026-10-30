@@ -364,6 +364,16 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(ce.reload.certificate_sent_at).to be_nil
       end
 
+      it "refreshes the row's CE badge alongside the slider" do
+        create(:continuing_education_registration, event_registration: registration)
+
+        toggle_certificate("1")
+
+        stream = Capybara.string(response.body)
+        expect(stream).to have_css("turbo-stream[action='replace'][target='#{ActionView::RecordIdentifier.dom_id(registration, :ce_status)}']")
+        expect(response.body).to include("Issued")
+      end
+
       it "replaces just the toggled cell in the turbo stream" do
         toggle_certificate("1")
         expect(response.body).to include("certificate_issued_event_registration_#{registration.id}")
