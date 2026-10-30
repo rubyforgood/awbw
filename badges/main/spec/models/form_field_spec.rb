@@ -99,6 +99,60 @@ RSpec.describe FormField do
         expect(build(:form_field, form: form, field_identifier: nil)).to be_valid
         expect(build(:form_field, form: form, field_identifier: "")).to be_valid
       end
+
+      context "when saved through the form editor" do
+        let!(:first) { create(:form_field, form: form, name: "First Name", field_identifier: "first_name") }
+        let!(:preferred) { create(:form_field, form: form, name: "Preferred Name", field_identifier: "preferred_name") }
+
+        it "lets one save move an identifier to another field" do
+          saved = form.reload.update(form_fields_attributes: [
+            { id: first.id, field_identifier: "legal_first_name" },
+            { id: preferred.id, field_identifier: "first_name" }
+          ])
+
+          expect(saved).to be(true)
+          expect(first.reload.field_identifier).to eq("legal_first_name")
+          expect(preferred.reload.field_identifier).to eq("first_name")
+        end
+
+        it "lets one save swap two fields' identifiers" do
+          saved = form.reload.update(form_fields_attributes: [
+            { id: first.id, field_identifier: "preferred_name" },
+            { id: preferred.id, field_identifier: "first_name" }
+          ])
+
+          expect(saved).to be(true)
+          expect(first.reload.field_identifier).to eq("preferred_name")
+        end
+
+        it "lets one save reuse the identifier of a removed field" do
+          saved = form.reload.update(form_fields_attributes: [
+            { id: first.id, _destroy: "1" },
+            { id: preferred.id, field_identifier: "first_name" }
+          ])
+
+          expect(saved).to be(true)
+          expect(preferred.reload.field_identifier).to eq("first_name")
+        end
+
+        it "still rejects an identifier left on another saved field" do
+          saved = form.reload.update(form_fields_attributes: [
+            { id: preferred.id, field_identifier: "first_name" }
+          ])
+
+          expect(saved).to be(false)
+          expect(preferred.reload.field_identifier).to eq("preferred_name")
+        end
+
+        it "rejects two new fields claiming the same identifier" do
+          saved = form.reload.update(form_fields_attributes: [
+            { name: "Email", field_identifier: "email" },
+            { name: "Email again", field_identifier: "email" }
+          ])
+
+          expect(saved).to be(false)
+        end
+      end
     end
   end
 
