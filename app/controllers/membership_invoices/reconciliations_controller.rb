@@ -7,6 +7,7 @@ module MembershipInvoices
       @lookup = Membership::Reconcile::Lookup.call(invoice: @invoice)
       @reconciliation = MembershipInvoiceReconciliation.new(@invoice)
       @stripe_customer = @invoice.person.stripe_customer
+      @unresolved_attempts = @invoice.charge_attempts.select(&:unresolved?)
     end
 
     def create

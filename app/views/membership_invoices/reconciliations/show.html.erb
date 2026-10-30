@@ -79,6 +79,41 @@
 
     <%= render "membership_invoices/stripe_lookup", membership_invoice: @invoice, lookup: @lookup,
           return_to: params[:return_to] %>
+
+    <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">Manual PaymentIntent</p>
+      <p class="mt-1 text-xs text-gray-500">
+        Have a PaymentIntent ID the lookup missed? Paste it here.
+      </p>
+
+      <%= form_with url: membership_invoice_reconciliation_path(@invoice), method: :post,
+            class: "mt-2 flex flex-wrap items-end gap-2" do %>
+        <%= hidden_field_tag :operation, "use_intent" %>
+        <% if params[:return_to].present? %>
+          <%= hidden_field_tag :return_to, params[:return_to] %>
+        <% end %>
+
+        <div class="min-w-[16rem] flex-1">
+          <%= label_tag :payment_intent_id, "PaymentIntent ID",
+                class: "block text-xs font-medium text-gray-600" %>
+          <%= text_field_tag :payment_intent_id, nil, required: true, placeholder: "pi_...",
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200 sm:text-sm" %>
+        </div>
+
+        <div>
+          <%= label_tag :attempt_id, "Link to attempt",
+                class: "block text-xs font-medium text-gray-600" %>
+          <%= select_tag :attempt_id,
+                options_for_select(@unresolved_attempts.map { |attempt|
+                  [ "Attempt ##{attempt.attempt_number} (#{attempt.status.humanize})", attempt.id ]
+                }),
+                include_blank: "Apply to invoice only",
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200 sm:text-sm" %>
+        </div>
+
+        <%= submit_tag "Use this PaymentIntent", class: button_classes(:secondary_outline, size: :sm) %>
+      <% end %>
+    </div>
   </div>
 
   <div class="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">

@@ -12,6 +12,22 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
 
   before { sign_in admin }
 
+  def manual_payment
+    customer = Pay::Stripe::Customer.create!(owner: person, processor: "stripe",
+      processor_id: "cus_manual", default: true)
+    pay_charge = create(:pay_charge, customer:, processor_id: "ch_manual", amount: 1_000)
+    create(:external_processor_payment, person:, amount_cents: 1_000,
+      amount_cents_remaining: 1_000, stripe_charge_id: "ch_manual", pay_charge:)
+    intent = Stripe::PaymentIntent.construct_from(
+      id: "pi_manual", object: "payment_intent", status: "succeeded", amount: 1_000,
+      currency: "usd", customer: customer.processor_id,
+      metadata: { "membership_invoice_id" => invoice.id.to_s }
+    )
+    allow(Stripe::PaymentIntent).to receive(:retrieve).and_return(intent)
+    allow(Pay::Stripe::Charge).to receive(:sync_payment_intent).and_return(pay_charge)
+    pay_charge
+  end
+
   it "marks a no-intent attempt failed" do
     post membership_invoice_reconciliation_path(invoice,
       operation: "fail_attempt", attempt_id: attempt.id)
@@ -132,7 +148,40 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Reconcile payments")
+    expect(response.body).to include("Manual PaymentIntent")
+    expect(response.body).to include("Use this PaymentIntent")
     expect(response.body).to include("No Stripe payments found for this invoice")
+  end
+
+  it "applies a manually entered PaymentIntent and resolves the attempt" do
+    pay_charge = manual_payment
+    post membership_invoice_reconciliation_path(invoice,
+      operation: "use_intent", payment_intent_id: "pi_manual", attempt_id: attempt.id)
+
+    expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
+    expect(flash[:notice]).to match(/Applied/)
+    expect(attempt.reload).to have_attributes(status: "succeeded", pay_charge:)
+    expect(invoice.reload).to be_paid_in_full
+  end
+
+  it "applies a manually entered PaymentIntent without an attempt" do
+    manual_payment
+    post membership_invoice_reconciliation_path(invoice,
+      operation: "use_intent", payment_intent_id: "pi_manual")
+
+    expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
+    expect(invoice.reload).to be_paid_in_full
+  end
+
+  it "reports an invalid manual PaymentIntent id" do
+    allow(Stripe::PaymentIntent).to receive(:retrieve)
+      .and_raise(Stripe::InvalidRequestError.new("No such payment_intent", nil))
+
+    post membership_invoice_reconciliation_path(invoice,
+      operation: "use_intent", payment_intent_id: "pi_missing")
+
+    expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
+    expect(flash[:alert]).to match(/Could not retrieve/)
   end
 
   it "shows local unallocated payments when Stripe can't be reached" do
