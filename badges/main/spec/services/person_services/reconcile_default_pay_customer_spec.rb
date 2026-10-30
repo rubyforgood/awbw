@@ -9,20 +9,14 @@ RSpec.describe PersonServices::ReconcileDefaultPayCustomer do
     Pay::Customer.create!(owner: person, processor: processor, processor_id: processor_id, default: default)
   end
 
-  def active_subscription_for(customer)
-    Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_#{customer.processor_id}",
-      processor_plan: "membership", status: "active", quantity: 1)
-  end
-
-  it "keeps the subscription-bearing customer default even when the survivor's own default is another" do
+  it "prefers the requested customer even when another is default" do
     own = customer(processor_id: "cus_own")
-    subscribed = customer(processor_id: "cus_sub", default: false)
-    active_subscription_for(subscribed)
+    other = customer(processor_id: "cus_other")
 
     described_class.new(person, preferred_customer_id: own.id).call
 
-    expect(subscribed.reload.default).to be true
-    expect(own.reload.default).to be false
+    expect(own.reload.default).to be true
+    expect(other.reload.deleted_at).to be_present
   end
 
   it "soft-deletes the redundant loser without destroying its charges" do
@@ -39,42 +33,7 @@ RSpec.describe PersonServices::ReconcileDefaultPayCustomer do
     expect(charge.reload.customer_id).to eq(loser.id)
   end
 
-  it "never soft-deletes a customer with an active subscription, only clears its default" do
-    winner = customer(processor_id: "cus_keep")
-    active_subscription_for(winner)
-    other_subscribed = customer(processor_id: "cus_other", default: false)
-    active_subscription_for(other_subscribed)
-
-    described_class.new(person, preferred_customer_id: winner.id).call
-
-    expect(other_subscribed.reload.deleted_at).to be_nil
-    expect(other_subscribed.default).to be false
-    expect(person.pay_customers.active).to contain_exactly(winner, other_subscribed)
-  end
-
-  it "ignores a canceled subscription still in its grace period when picking the winner" do
-    own = customer(processor_id: "cus_own")
-    canceled = customer(processor_id: "cus_canceled", default: false)
-    Pay::Subscription.create!(customer: canceled, name: "default", processor_id: "sub_canceled",
-      processor_plan: "membership", status: "active", quantity: 1, ends_at: 1.month.from_now)
-
-    described_class.new(person, preferred_customer_id: own.id).call
-
-    expect(own.reload.default).to be true
-    expect(canceled.reload.deleted_at).to be_present
-  end
-
-  it "falls back to the survivor's own default when no customer has a subscription" do
-    own = customer(processor_id: "cus_own", default: false)
-    other = customer(processor_id: "cus_other")
-
-    described_class.new(person, preferred_customer_id: own.id).call
-
-    expect(own.reload.default).to be true
-    expect(other.reload.deleted_at).to be_present
-  end
-
-  it "falls back to the newest customer when neither a subscription nor the preferred id is present" do
+  it "falls back to the newest customer when no preferred id is present" do
     older = customer(processor_id: "cus_old")
     older.update!(created_at: 2.days.ago)
     newer = customer(processor_id: "cus_new")

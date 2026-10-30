@@ -42,6 +42,29 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#unlocked_membership_count" do
+    let(:person) { create(:person) }
+
+    before do
+      create(:membership, person: person)
+      create(:membership, :renewal_off, person: person,
+        start_date: Date.current - 3.years, end_date: Date.current - 2.years,
+        locked_at: Time.current)
+    end
+
+    it "counts only unlocked memberships" do
+      expect(person.decorate.unlocked_membership_count).to eq(1)
+      expect(person.decorate.multiple_unlocked_memberships?).to be(false)
+    end
+
+    it "counts correctly when the association is preloaded" do
+      loaded_person = Person.includes(:memberships).find(person.id)
+
+      expect(loaded_person.decorate.unlocked_membership_count).to eq(1)
+      expect(loaded_person.decorate.multiple_unlocked_memberships?).to be(false)
+    end
+  end
+
   describe ".email_with_type" do
     it "abbreviates a work or personal email and leaves an unknown one bare" do
       expect(described_class.email_with_type("ada@example.com", "work")).to eq("ada@example.com (w)")

@@ -114,25 +114,33 @@ else
     note.(first_facilitator, "Minted from the Foundations training roster.", year.(7) + 2.days)
 
     # ── 6 years ago: first membership year, paid ─────────────────────────────
-    # Reuse an existing uncancelled membership if another seed gave this person
+    # Reuse an existing renewal-on membership if another seed gave this person
     # one (e.g. membership.rb's checkout demos), so seed order can't collide.
-    subscription = person.memberships.autorenewal_not_cancelled.first || person.memberships.create!
-    subscription.update_columns(created_at: year.(6), updated_at: year.(6))
-    track.("create", subscription, year.(6), { resource_title: "Membership" })
+    membership = person.memberships.renewal_on.first ||
+      person.memberships.create!(
+        start_date: year.(6),
+        end_date: year.(6) + Membership::INVOICE_PERIOD - 1.day
+      )
+    membership.update_columns(created_at: year.(6), updated_at: year.(6))
+    track.("create", membership, year.(6), { resource_title: "Membership" })
 
     [ 6, 5, 4, 3, 2, 1, 0 ].each_with_index do |years_ago, index|
       # The first year is created with the membership; renewals are minted a renewal
       # window before the year they cover.
       minted_at = index.zero? ? year.(years_ago) : year.(years_ago) - Membership.renewal_window_days
-      invoice = subscription.membership_invoices.create!(
+      invoice = membership.membership_invoices.create!(
         start_date: year.(years_ago), cost_cents: Membership.annual_cost_cents
+      )
+      membership.update_columns(
+        start_date: [ membership.start_date, invoice.start_date ].compact.min,
+        end_date: [ membership.end_date, invoice.end_date ].compact.max
       )
       invoice.update_columns(created_at: minted_at, updated_at: minted_at)
 
       # MembershipInvoice isn't one of the person's tracked resources, so the renewal
       # shows as an update to the membership itself.
       unless index.zero?
-        track.("update", subscription, minted_at,
+        track.("update", membership, minted_at,
                { resource_title: "Membership" }.merge(changed.({ "membership_invoices" => [ index, index + 1 ] })))
       end
 
@@ -141,7 +149,7 @@ else
       paid_at = year.(years_ago) + (index == 2 ? 70 : 9).days
       payment = CashPayment.create!(
         person: person, amount_cents: Membership.annual_cost_cents,
-        amount_cents_remaining: Membership.annual_cost_cents, currency: "usd"
+        amount_cents_remaining: Membership.annual_cost_cents, currency: Membership::CURRENCY
       )
       payment.update_columns(created_at: paid_at, updated_at: paid_at)
       allocation = Allocation.create!(source: payment, allocatable: invoice, amount: Membership.annual_cost_cents)
@@ -195,7 +203,7 @@ else
     note.(person, "Confirmed the corrected dates by phone.", 6.weeks.ago, topic: "Profile")
 
     puts "  #{person.full_name}: #{person.event_registrations.count} registrations, " \
-         "#{person.affiliations.count} affiliations, #{subscription.membership_invoices.count} membership years, " \
+         "#{person.affiliations.count} affiliations, #{membership.membership_invoices.count} membership years, " \
          "#{PersonCommentAggregator.new(person).comments.count} comments, " \
          "#{Analytics::PersonActivityEvents.new(person).count} activity events"
   end

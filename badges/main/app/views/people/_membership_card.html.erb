@@ -1,7 +1,6 @@
 <div class="overflow-hidden rounded-2xl border-2 shadow-sm <%= profile_hidden_wash_class %>"
      data-controller="expandable-card"
      data-expandable-card-expanded-value="true">
-  <!-- Header -->
   <button type="button" data-action="expandable-card#toggle"
           aria-expanded="true"
           class="section-header flex w-full items-center gap-3 border-b px-5 py-4 text-left sm:px-6 <%= profile_hidden_border_class %>">
@@ -15,59 +14,114 @@
       <i class="fa-solid fa-chevron-down rotate-180 text-gray-400 transition-transform" data-expandable-card-target="icon"></i>
     </span>
   </button>
-  <!-- Membership -->
-  <div class="section-content space-y-4 px-4 py-5 sm:px-6 sm:py-6"
+
+  <div class="section-content space-y-5 px-4 py-5 sm:px-6 sm:py-6"
        data-expandable-card-target="body">
-    <% coverage_date = membership&.coverage_date %>
+    <% coverage_date = membership.coverage_date %>
     <% if coverage_date %>
       <p class="text-sm text-gray-700"><%= membership.coverage_label %> <span class="font-medium"><%= coverage_date.strftime("%b %-d, %Y") %></span></p>
     <% end %>
 
-    <% invoices_due = local_assigns[:invoices_due] %>
-    <% if invoices_due&.any? %>
-      <div class="space-y-2">
-        <% invoices_due.each do |invoice| %>
-          <div class="flex flex-wrap items-center gap-2">
-            <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice %></ul>
-            <% if allowed_to?(:pay?, invoice) && !invoice.upcoming? %>
-              <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
-              <%= button_to "Pay", memberships_invoice_checkouts_path, params: { invoice_id: invoice.id },
-                            class: button_classes(:primary, size: :sm),
-                            data: { turbo: false } %>
-            <% end %>
-          </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <% if membership.payment_badge? %>
+        <%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes,
+              title: membership.payment_tooltip %>
+      <% end %>
+      <%= render "shared/badge", label: "Autopay: #{membership.autopay_label(has_card: has_card)}",
+            classes: membership.autopay_classes(has_card: has_card),
+            title: membership.autopay_tooltip(has_card: has_card) %>
+      <% if membership.renewal_off? %>
+        <%= render "shared/badge", label: "Renewal off", classes: "bg-amber-50 text-amber-700 border-amber-200",
+              title: membership.renewal_tooltip %>
+      <% end %>
+    </div>
+
+    <% turn_off_tooltip = "Stops automatic charges. Renewal and already-issued invoices are unchanged." %>
+    <% manage_card_tooltip = "Opens Stripe to update the saved card." %>
+    <% subscribe_tooltip =
+      if has_card
+        autopay_invoice ? "Turns on automatic payments and charges any issued invoice." : "Turns on automatic payments for future invoices."
+      elsif autopay_invoice
+        membership.autopay_on? ? "Saves your card and pays the issued invoice now. Automatic payments are already on." : "Saves your card, pays the issued invoice now, and turns on automatic payments."
+      else
+        membership.autopay_on? ? "Saves your card. Automatic payments are already on." : "Saves your card and turns on automatic payments for future invoices."
+      end %>
+
+    <% if invoices&.any? %>
+      <ul class="space-y-2">
+        <% invoices.each do |invoice| %>
+          <%= render "membership_invoices/invoice_row", invoice: invoice, viewable: true %>
         <% end %>
-      </div>
+      </ul>
     <% end %>
 
-    <% if allowed_to?(:manage_subscription?, membership) %>
-      <div>
-        <% if autopay_cancelling %>
-          <p class="mb-3 text-sm text-gray-700">
-            Your automatic payment for membership is set to stop renewing at the end of the current billing cycle. You can change this or update your card below.
-          </p>
-          <%= button_to "Manage autopay", memberships_billing_portals_path,
-                        class: button_classes(:secondary_outline, size: :sm),
-                        data: { turbo: false } %>
-        <% elsif autopay %>
-          <p class="mb-3 text-sm text-gray-700">Your membership renews automatically with the card you have on file.</p>
-          <%= button_to "Manage autopay", memberships_billing_portals_path,
-                        class: button_classes(:secondary_outline, size: :sm),
-                        data: { turbo: false } %>
-        <% elsif membership&.ended? %>
-          <p class="text-sm text-gray-700">Contact us to rejoin your membership.</p>
-        <% elsif membership&.autorenewal_cancelled? %>
-          <p class="text-sm text-gray-700">Contact us to renew your membership.</p>
-        <% elsif !membership.autopay_window_open? %>
-          <p class="text-sm text-gray-700">
-            <span class="font-medium">Automatic renewal can be set up closer to your renewal date</span> — this year was paid directly, so there's nothing to charge until then.
-          </p>
+    <% if allowed_to?(:manage_membership?, membership) %>
+      <div class="space-y-3">
+        <% if membership.ended? %>
+          <p class="text-sm text-gray-700">Your membership has ended. <%= link_to "Contact us", contact_us_path, class: "text-primary underline hover:no-underline" %> to rejoin.</p>
         <% else %>
-          <p class="mb-3 text-sm text-gray-700">Set up your membership to renew automatically each year at <%= dollars_from_cents(membership&.cost_cents || Membership.annual_cost_cents) %>.</p>
-          <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
-          <%= button_to "Set up automatic renewal", memberships_subscription_checkouts_path,
-                        class: button_classes(:primary),
-                        data: { turbo: false } %>
+          <% if membership.renewal_off? %>
+            <p class="text-sm text-gray-700">
+              Renewal is off, so your membership ends <%= membership.end_date ? membership.end_date.strftime("%b %-d, %Y") : "at the end of its term" %>.
+              <%= link_to "Contact us", contact_us_path, class: "text-primary underline hover:no-underline" %> to renew.
+            </p>
+          <% end %>
+
+          <div class="space-y-2">
+            <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+              Automatic payments
+              <i class="fa-solid fa-circle-info ml-0.5 cursor-help text-[0.65rem] text-gray-400"
+                 title="Autopay charges issued invoices automatically. It is separate from membership renewal."></i>
+            </p>
+
+            <% if membership.renewal_off? %>
+              <% if membership.autopay_on? && has_card %>
+                <p class="text-sm text-gray-700">Automatic payments are on for any invoice already issued.</p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <%= button_to "Turn off automatic payments", membership_autopayments_path(membership),
+                        method: :delete, class: button_classes(:secondary_outline, size: :sm),
+                        title: turn_off_tooltip,
+                        data: { turbo_confirm: "Turn off automatic payments for invoices already issued?" } %>
+                </div>
+              <% elsif membership.autopay_on? %>
+                <p class="text-sm text-gray-700">Automatic payments are marked on, but no card is on file. Existing invoices will need to be paid manually.</p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <%= button_to "Turn off automatic payments", membership_autopayments_path(membership),
+                        method: :delete, class: button_classes(:secondary_outline, size: :sm),
+                        title: turn_off_tooltip %>
+                </div>
+              <% end %>
+            <% elsif membership.autopay_on? && has_card %>
+              <div class="flex flex-wrap items-center gap-2">
+                <%= button_to "Manage card", person_billing_portal_path(person),
+                      class: button_classes(:secondary_outline, size: :sm),
+                      title: manage_card_tooltip, data: { turbo: false } %>
+                <%= button_to "Turn off automatic payments", membership_autopayments_path(membership),
+                      method: :delete, class: button_classes(:secondary_outline, size: :sm),
+                      title: turn_off_tooltip,
+                      data: { turbo_confirm: "Turn off automatic card payments? Your membership will still renew, and you'll receive invoices to pay manually." } %>
+              </div>
+            <% elsif membership.autopay_on? %>
+              <p class="text-sm text-gray-700">Automatic payments need a card.</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <%= render "people/autopay_subscribe", membership: membership, tooltip: subscribe_tooltip %>
+                <%= button_to "Turn off automatic payments", membership_autopayments_path(membership),
+                      method: :delete, class: button_classes(:secondary_outline, size: :sm),
+                      title: turn_off_tooltip %>
+              </div>
+            <% elsif has_card %>
+              <div class="flex flex-wrap items-center gap-2">
+                <%= render "people/autopay_subscribe", membership: membership, tooltip: subscribe_tooltip %>
+                <%= button_to "Manage card", person_billing_portal_path(person),
+                      class: button_classes(:secondary_outline, size: :sm),
+                      title: manage_card_tooltip, data: { turbo: false } %>
+              </div>
+            <% else %>
+              <div class="flex flex-wrap items-center gap-2">
+                <%= render "people/autopay_subscribe", membership: membership, tooltip: subscribe_tooltip %>
+              </div>
+            <% end %>
+          </div>
         <% end %>
       </div>
     <% end %>

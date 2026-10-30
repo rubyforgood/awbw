@@ -43,19 +43,15 @@ class PersonDecorator < ApplicationDecorator
       .includes(:organization, :organization_address).order(:id).uniq(&:organization_address_id)
   end
 
-  # A person may hold only one uncancelled membership (Membership enforces it), so
-  # more than one usually means a duplicate a merge left behind — flagged for admins
-  # on the profile and edit pages so they can consolidate. Cancelled historical
-  # memberships don't count. Uses the loaded association when preloaded.
-  def multiple_memberships?
-    uncancelled_membership_count > 1
+  def multiple_unlocked_memberships?
+    unlocked_membership_count > 1
   end
 
-  def uncancelled_membership_count
+  def unlocked_membership_count
     if memberships.loaded?
-      memberships.count { |membership| membership.autorenewal_cancelled_at.nil? }
+      memberships.to_a.count { |membership| membership.locked_at.nil? }
     else
-      memberships.autorenewal_not_cancelled.count
+      memberships.unlocked.count
     end
   end
 

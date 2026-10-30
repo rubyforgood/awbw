@@ -1,11 +1,12 @@
 require "rails_helper"
 
 RSpec.describe IssueMembershipInvoicesJob, type: :job do
-  def term_ending(date, subscription: create(:membership))
+  def term_ending(date, membership: create(:membership))
     invoice = create(:membership_invoice,
-      membership: subscription,
+      membership: membership,
       start_date: date - 1.year + 1.day,
       end_date: date)
+    membership.update_columns(start_date: invoice.start_date, end_date: invoice.end_date)
     create(:allocation, source: create(:payment), allocatable: invoice, amount: invoice.cost_cents)
     invoice
   end
@@ -22,7 +23,7 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
       expect(renewal.cost_cents).to eq(Membership.annual_cost_cents)
     end
 
-    it "creates one for a invoice expiring on the window's last day" do
+    it "creates one for an invoice expiring on the window's last day" do
       travel_to(Time.current.midday) do
         term_ending(Date.current + Membership.renewal_window_days)
 
@@ -30,37 +31,38 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
       end
     end
 
-    it "leaves a invoice expiring beyond the window alone" do
+    it "leaves an invoice expiring beyond the window alone" do
       term_ending(Date.current + Membership.renewal_window_days + 1)
 
       expect { described_class.new.perform }.not_to change(MembershipInvoice, :count)
     end
 
-    it "skips a cancelled subscription" do
-      term_ending(Date.current + 10.days, subscription: create(:membership, :autorenewal_cancelled))
+    it "skips a cancelled membership" do
+      term_ending(Date.current + 10.days, membership: create(:membership, :renewal_off))
 
       expect { described_class.new.perform }.not_to change(MembershipInvoice, :count)
     end
 
-    it "carries the subscription's own cost onto the renewal" do
-      subscription = create(:membership, cost_cents: 1_500)
-      term_ending(Date.current + 10.days, subscription: subscription)
+    it "carries the membership's own cost onto the renewal" do
+      membership = create(:membership, cost_cents: 1_500)
+      term_ending(Date.current + 10.days, membership: membership)
 
       described_class.new.perform
 
-      expect(subscription.membership_invoices.reorder(:start_date).last.cost_cents).to eq(1_500)
+      expect(membership.membership_invoices.reorder(:start_date).last.cost_cents).to eq(1_500)
     end
 
     it "charges the standard cost after a comped year" do
-      subscription = create(:membership)
-      create(:membership_invoice, :comped,
-        membership: subscription,
+      membership = create(:membership)
+      comped = create(:membership_invoice, :comped,
+        membership: membership,
         start_date: Date.current - 1.year + 10.days,
         end_date: Date.current + 10.days)
+      membership.update_columns(start_date: comped.start_date, end_date: comped.end_date)
 
       described_class.new.perform
 
-      expect(subscription.membership_invoices.reorder(:start_date).last.cost_cents)
+      expect(membership.membership_invoices.reorder(:start_date).last.cost_cents)
         .to eq(Membership.annual_cost_cents)
     end
 
@@ -79,7 +81,7 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
       end
     end
 
-    it "still renews a invoice inside the Pacific window" do
+    it "still renews an invoice inside the Pacific window" do
       travel_to Time.utc(2026, 8, 4, 2, 0) do
         term_ending(Date.new(2026, 9, 2))
 
@@ -87,7 +89,7 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
       end
     end
 
-    it "handles several subscriptions in one pass" do
+    it "handles several memberships in one pass" do
       3.times { term_ending(Date.current + 5.days) }
 
       expect { described_class.new.perform }.to change(MembershipInvoice, :count).by(3)

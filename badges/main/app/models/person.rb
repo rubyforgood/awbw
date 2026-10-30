@@ -501,6 +501,19 @@ class Person < ApplicationRecord
   # pay gem falls back to person.name without this. `name` returns display preference which we do not want
   def pay_customer_name = full_name
 
+  # Membership billing is Stripe-only. Prefer the reconciled default customer;
+  # only create/select a Stripe processor when the person has none.
+  def stripe_customer
+    pay_customers.active.find_by(processor: "stripe", default: true)
+  end
+
+  def stripe_payment_processor
+    stripe_customer || begin
+      set_payment_processor(:stripe)
+      stripe_customer
+    end
+  end
+
   # Distinct professional-license types (e.g. "LMFT, LCSW"), shown as a credential
   # suffix after the person's name on their profile (replaces the old free-text
   # credentials field). Nil when no licensed types are on file.
@@ -573,14 +586,11 @@ class Person < ApplicationRecord
     (active || facilitator_affiliations.max_by(&:updated_at))&.organization
   end
 
-  #  subscription's membership_id, by date: active, soonest upcoming, then
-  # the most recent one, so an overdue or ended member still resolves.
   def current_membership
-    live_ids = pay_subscriptions.active.filter_map { |subscription| subscription.metadata&.dig("membership_id")&.to_i }
-    memberships.find { |membership| live_ids.include?(membership.id) } ||
-      memberships.find(&:active?) ||
-      memberships.select(&:upcoming?).min_by(&:upcoming_start_date) ||
-      memberships.max_by { |membership| membership.end_date || Date.new(0) }
+    candidates = memberships.reject(&:locked?)
+    candidates.find(&:active?) ||
+      candidates.select(&:upcoming?).min_by(&:upcoming_start_date) ||
+      candidates.max_by { |membership| membership.end_date || Date.new(0) }
   end
 
   # Facilitator-training events ("TACs") this person registered for and

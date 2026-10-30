@@ -8,7 +8,18 @@
         <%= membership.person.full_name %>
       <% end %>
       <%= render "memberships/status_badge", membership: membership %>
-      <%= render "memberships/stripe_badge", membership: membership %>
+      <% if membership.payment_badge? %>
+        <%= render "shared/badge", label: membership.payment_label,
+              classes: membership.payment_classes, title: membership.payment_tooltip %>
+      <% end %>
+      <%= render "shared/badge",
+            label: membership.autopay_on? ? "Autopay on" : "Autopay off",
+            classes: membership.autopay_on? ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200",
+            title: membership.autopay_on? ? "Automatic payments are enabled for this membership." : "Automatic payments are disabled for this membership." %>
+      <% if membership.locked? %>
+        <%= render "shared/badge", label: "Locked", classes: "bg-gray-100 text-gray-600 border-gray-300",
+              title: "Historical membership. Unlock it before editing or issuing new invoices." %>
+      <% end %>
     </div>
 
     <div class="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500">
@@ -16,15 +27,12 @@
       <% if membership.period_label.present? %>
         <span><%= membership.period_label %></span>
       <% end %>
+      <span title="<%= membership.renewal_tooltip %>">Renewal <%= membership.auto_renewal_label %></span>
     </div>
   </div>
 
   <div class="flex items-center gap-2">
-    <%= link_to "Manage membership", person_memberships_path(membership.person),
+    <%= link_to "Manage membership", membership_path(membership),
           data: { turbo_frame: "_top" }, class: button_classes(:secondary_outline, size: :sm) %>
-
-    <% if membership.person.user %>
-      <%= render "memberships/membership_lock_toggle", membership: membership %>
-    <% end %>
   </div>
 </div>

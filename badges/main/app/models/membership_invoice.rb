@@ -2,6 +2,8 @@ class MembershipInvoice < ApplicationRecord
   include PersonNameSearchable, Registerable
 
   PAYMENT_TOKEN_PURPOSE = "membership_invoice_payment".freeze
+  PAYMENT_WINDOW = 31.minutes
+  UNRESOLVED_ATTEMPT_STATUSES = %w[pending unknown needs_action].freeze
 
   has_paper_trail
 
@@ -9,6 +11,8 @@ class MembershipInvoice < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :allocations, as: :allocatable, dependent: :destroy
+  has_many :charge_attempts, -> { order(:attempt_number) },
+           class_name: "MembershipChargeAttempt", dependent: :destroy
 
   belongs_to :invoicee, polymorphic: true, optional: true
   belongs_to :bill_to_address, class_name: "Address", optional: true
@@ -29,17 +33,36 @@ class MembershipInvoice < ApplicationRecord
     not_paid_in_full.where(start_date: ..as_of)
   }
 
+  scope :autopay_issued, ->(as_of = Date.current) {
+    where(start_date: ..(as_of + Membership.renewal_window_days))
+  }
+
+  scope :autopay_chargeable, ->(as_of = Date.current) {
+    autopay_issued(as_of).where(start_date: (as_of - MembershipChargeAttempt::RETRY_WINDOW_DAYS)..)
+  }
+
+  scope :with_positive_allocation, -> {
+    where(id: Allocation.where(allocatable_type: polymorphic_name)
+      .group(:allocatable_id)
+      .having("SUM(amount) > 0")
+      .select(:allocatable_id))
+  }
+  scope :partially_paid, -> { not_paid_in_full.with_positive_allocation }
+
   before_validation :derive_end_date, on: :create
   before_validation :inherit_invoice_details, on: :create
   before_destroy :prevent_destroy_unless_deletable
-  after_save :sync_membership_dates, if: :paid_in_full?
-  after_commit :enqueue_subscription_price_sync, on: :create, if: :next_billing_year?
+  after_save :clear_payment_in_progress, if: :paid_in_full?
+  after_destroy :clamp_membership_term
 
   validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :end_date_not_before_start_date
-  validate :no_overlapping_invoice_for_person
+  validate :no_overlapping_invoice_for_membership
+  validate :contiguous_with_membership_invoices, on: :create
   validate :only_one_upcoming_invoice
+  validate :cost_cents_immutable_once_allocated, if: :will_save_change_to_cost_cents?
+  validate :cost_dollars_is_valid
 
   def self.chargeable
     arel_table[:cost_cents].gt(0)
@@ -75,12 +98,66 @@ class MembershipInvoice < ApplicationRecord
     start_date.present? && start_date > as_of
   end
 
+  def autopay_issued?(as_of = Date.current)
+    start_date.present? && start_date <= as_of + Membership.renewal_window_days
+  end
+
+  def autopay_chargeable?(as_of = Date.current)
+    autopay_issued?(as_of) &&
+      start_date >= as_of - MembershipChargeAttempt::RETRY_WINDOW_DAYS
+  end
+
   def cost_dollars
     cost_cents.to_d / 100 if cost_cents
   end
 
   def cost_dollars=(value)
-    self.cost_cents = (value.to_d * 100).to_i if value.present?
+    @cost_dollars_invalid = false
+    return if value.blank?
+
+    cents = MoneyParser.cents(value)
+    if MoneyParser.invalid?(cents)
+      @cost_dollars_invalid = true
+    else
+      self.cost_cents = cents
+    end
+  end
+
+  def locked? = membership.locked?
+
+  def pristine? = allocations.none?
+
+  def payment_in_progress?
+    return true if payment_in_progress_at.present? && payment_in_progress_at > PAYMENT_WINDOW.ago
+    if charge_attempts.loaded?
+      return charge_attempts.any? { |attempt| attempt.pending? && attempt.attempted_at && attempt.attempted_at > PAYMENT_WINDOW.ago }
+    end
+
+    charge_attempts.pending.where(attempted_at: PAYMENT_WINDOW.ago..).exists?
+  end
+
+  def unresolved_attempt?
+    if charge_attempts.loaded?
+      charge_attempts.any? { |attempt| UNRESOLVED_ATTEMPT_STATUSES.include?(attempt.status) }
+    else
+      charge_attempts.where(status: UNRESOLVED_ATTEMPT_STATUSES).exists?
+    end
+  end
+
+  def mark_payment_in_progress!
+    update_columns(payment_in_progress_at: Time.current, checkout_session_id: nil)
+  end
+
+  def clear_payment_in_progress!
+    return if payment_in_progress_at.nil? && checkout_session_id.nil?
+
+    update_columns(payment_in_progress_at: nil, checkout_session_id: nil)
+  end
+
+  def latest_attempt = charge_attempts.last
+
+  def attempts_exhausted?
+    charge_attempts.where(status: "failed").count >= MembershipChargeAttempt::MAX_ATTEMPTS
   end
 
   attr_accessor :skip_deletion_guard
@@ -90,10 +167,12 @@ class MembershipInvoice < ApplicationRecord
   end
 
   def deletion_blocked_reason
-    return "it has payments or credits applied" if allocations.exists?
-    return "it is comped" if cost_cents.to_i.zero? && !upcoming?
-    return "it covers today — click Cancel recurring first" if active_on?(Date.current) && !membership.autorenewal_cancelled?
+    return "a payment is in progress" if payment_in_progress?
+    return "it has an unresolved payment attempt" if unresolved_attempt?
+    return "it has payments or credits applied" unless allocations_sum.zero?
     return "it is the membership's only invoice" unless other_invoices?
+    return "deleting it would leave a gap in the membership's invoices" if middle_invoice?
+    return "it is the only invoice covering the membership term" unless term_still_covered?
 
     nil
   end
@@ -148,15 +227,31 @@ class MembershipInvoice < ApplicationRecord
     errors.add(:end_date, "can't be before the start date")
   end
 
-  def no_overlapping_invoice_for_person
-    return if start_date.blank? || end_date.blank? || membership&.person.blank?
+  def no_overlapping_invoice_for_membership
+    return if start_date.blank? || end_date.blank? || membership.blank?
 
-    overlapping = membership.person.membership_invoices
+    overlapping = membership.membership_invoices
       .where(start_date: ..end_date, end_date: start_date..)
     overlapping = overlapping.where.not(id: id) if persisted?
     return unless overlapping.exists?
 
-    errors.add(:base, "This person already has a membership invoice overlapping #{start_date} to #{end_date}")
+    errors.add(:base, "This membership already has an invoice overlapping #{start_date} to #{end_date}")
+  end
+
+  # One membership is one continuous coverage range. A new invoice may only
+  # append after the last one or prepend before the first; a gap or an overlap
+  # is rejected (the overlap validation gives the more specific message).
+  def contiguous_with_membership_invoices
+    return if start_date.blank? || end_date.blank? || membership.blank?
+
+    others = membership.membership_invoices
+    return unless others.exists?
+
+    first_start = others.minimum(:start_date)
+    last_end = others.maximum(:end_date)
+    return if start_date == last_end + 1.day || end_date == first_start - 1.day
+
+    errors.add(:base, "Invoices for a membership must be contiguous")
   end
 
   def only_one_upcoming_invoice
@@ -166,20 +261,59 @@ class MembershipInvoice < ApplicationRecord
     upcoming = upcoming.where.not(id: id) if persisted?
     return unless upcoming.exists?
 
-    errors.add(:base, "This membership already has an upcoming invoice — delete it before adding another")
+    errors.add(:base, "This membership already has an upcoming invoice — remove next year before issuing another")
+  end
+
+  def cost_cents_immutable_once_allocated
+    return if new_record?
+    return if allocations.none?
+
+    errors.add(:cost_cents, "can't change once a payment or discount is applied")
+  end
+
+  def cost_dollars_is_valid
+    return unless @cost_dollars_invalid
+
+    errors.add(:cost_dollars, "must be a number, e.g. 100 or 99.50")
   end
 
   private
 
-  def next_billing_year?
-    Membership.enabled? && start_date.present? && start_date > Date.current
+  # Deleting a middle invoice would leave a hole between its neighbours.
+  def middle_invoice?
+    others = membership.membership_invoices.where.not(id: id)
+    others.where("start_date < ?", start_date).exists? &&
+      others.where("start_date > ?", start_date).exists?
   end
 
-  def enqueue_subscription_price_sync
-    SyncMembershipSubscriptionPriceJob.perform_later(membership_id)
+  # True while some remaining invoice still overlaps the membership term.
+  def term_still_covered?
+    others = membership.membership_invoices.where.not(id: id)
+    first_start = others.minimum(:start_date)
+    last_end = others.maximum(:end_date)
+    return false if first_start.blank? || last_end.blank?
+
+    [ membership.start_date, first_start ].compact.max <= [ membership.end_date, last_end ].compact.min
   end
 
-  def sync_membership_dates
-    membership.sync_dates_from_invoice(self)
+  # After an invoice goes, shrink the term into what remains. Never extend:
+  # a term that ended early stays short even when later invoices are removed.
+  def clamp_membership_term
+    return if membership.blank?
+
+    remaining_start = membership.membership_invoices.minimum(:start_date)
+    remaining_end = membership.membership_invoices.maximum(:end_date)
+    return if remaining_start.blank? || remaining_end.blank?
+
+    new_start = [ membership.start_date, remaining_start ].compact.max
+    new_end = [ membership.end_date, remaining_end ].compact.min
+    return if new_start.blank? || new_end.blank? || new_start > new_end
+    return if new_start == membership.start_date && new_end == membership.end_date
+
+    membership.update_columns(start_date: new_start, end_date: new_end)
+  end
+
+  def clear_payment_in_progress
+    clear_payment_in_progress! if payment_in_progress_at || checkout_session_id
   end
 end

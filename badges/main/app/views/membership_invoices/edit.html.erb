@@ -15,8 +15,23 @@
 
   <p class="mb-6 text-sm text-gray-500"><%= person.full_name %> &middot; <%= invoice.period_range %></p>
 
+  <% if @membership_invoice.locked? %>
+    <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+      This membership is locked. Its invoices can still be paid or refunded, but the details are frozen.
+    </div>
+  <% end %>
+
   <%= simple_form_for @membership_invoice do |f| %>
     <%= render "shared/errors", resource: f.object %>
+
+    <% if @membership_invoice.pristine? %>
+      <%= f.input :cost_dollars,
+            label: "Amount ($)",
+            hint: "Editable only until a payment or discount is recorded. The invoice period does not change.",
+            input_html: { min: 0, step: 0.01, class: "bg-white" } %>
+    <% else %>
+      <p class="text-sm text-gray-600">Amount: <span class="font-medium"><%= invoice.cost %></span>. It is fixed because a payment or discount has been applied.</p>
+    <% end %>
 
     <div class="space-y-4">
       <%= f.input :bill_to_organization_id,

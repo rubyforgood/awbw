@@ -2,30 +2,55 @@
 
 <div class="border-primary/10 mx-auto max-w-2xl rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
-    <%= link_to person_memberships_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+    <%= link_to membership_path(@membership), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Membership
     <% end %>
   </div>
 
-  <h1 class="text-primary mb-1 font-display text-2xl font-bold">Membership cost</h1>
+  <h1 class="text-primary mb-1 font-display text-2xl font-bold">Membership term</h1>
   <p class="mb-6 text-sm text-gray-500"><%= @person.full_name %></p>
 
   <%= simple_form_for @membership do |f| %>
     <%= render "shared/errors", resource: f.object %>
 
+    <div class="grid gap-4 sm:grid-cols-2">
+      <%= f.input :start_date,
+            as: :date,
+            html5: true,
+            label: "Starts",
+            input_html: { class: "bg-white" } %>
+      <%= f.input :end_date,
+            as: :date,
+            html5: true,
+            label: "Ends",
+            input_html: { class: "bg-white" } %>
+    </div>
+
     <%= f.input :cost_dollars,
-          label: "Cost ($ per year)",
+          label: "Locked price ($ per year)",
           required: false,
-          hint: "Leave blank for the standard cost (#{dollars_from_cents(Membership.annual_cost_cents)}). Applies to future membership invoices only - those already created keep the price they were billed at.",
+          hint: "Leave blank for the standard cost (#{dollars_from_cents(Membership.annual_cost_cents)}). Applies to future invoices only — invoices already issued keep the amount they were billed at.",
           input_html: { min: 0, step: 0.01, placeholder: "Standard", class: "bg-white" } %>
+
+    <p class="mt-2 text-xs text-gray-500">
+      <% if @invoice_coverage_start && @invoice_coverage_end %>
+        The term controls membership coverage and must stay within the issued invoices
+        (<%= @invoice_coverage_start.strftime("%b %-d, %Y") %> – <%= @invoice_coverage_end.strftime("%b %-d, %Y") %>).
+        Changing it does not change an invoice's period. Shortening ends coverage and removes an unstarted, unpaid next year;
+        to add another year, issue the next invoice. If an invoice covers past the term, renewal stays off until the term is extended.
+      <% else %>
+        This membership has no invoices yet, so its term is not limited by them.
+      <% end %>
+    </p>
 
     <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-6">
       <div class="ml-auto flex items-center gap-3">
-        <%= link_to "Cancel", person_memberships_path(@person), class: button_classes(:secondary_outline) %>
-        <%= f.button :submit, "Save cost", class: button_classes(:primary) %>
+        <%= link_to "Cancel", membership_path(@membership), class: button_classes(:secondary_outline) %>
+        <%= f.button :submit, "Save term", class: button_classes(:primary) %>
       </div>
     </div>
   <% end %>
+
   <%= render "shared/audit_info", resource: @membership %>
   <div class="mt-4 flex justify-end">
     <%= render "application/activity_log", record: @membership %>

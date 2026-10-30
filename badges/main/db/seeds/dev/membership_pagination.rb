@@ -1,11 +1,3 @@
-# `rake db:seed:membership_pagination`. Not part of `rake db:seed:dev`.
-# 30 memberships per directory state (Active / Ending / Lapsed / Ended) so every
-# filter tab paginates. Years run back to back the way EnsureInvoice mints them, and
-# each person's dates are offset so the directory doesn't read as one synthetic batch.
-# Invoice variety (partial / upcoming / comped) lives in the dedicated
-# `db/seeds/dev/membership.rb` scenarios.
-# Also stages the price-change scenarios, one of which carries a real Stripe test
-# subscription so the price sync can be exercised from the admin side.
 
 puts "Creating membership pagination volume…"
 
@@ -25,15 +17,28 @@ pay = ->(invoice, cents, on:) do
     person: invoice.person,
     amount_cents: cents,
     amount_cents_remaining: cents,
-    currency: "usd"
+    currency: Membership::CURRENCY
   )
   payment.update_columns(created_at: on, updated_at: on)
   allocation = Allocation.create!(source: payment, allocatable: invoice, amount: cents)
   allocation.update_columns(created_at: on)
 end
 
+membership_for = ->(person, start_date, cost_cents: nil, renewal_off: false) do
+  person.memberships.create!(
+    start_date: start_date,
+    end_date: start_date + Membership::INVOICE_PERIOD - 1.day,
+    cost_cents: cost_cents,
+    renewal_off_at: renewal_off ? Time.current : nil
+  )
+end
+
 year = ->(membership, start_date, cost_cents: standard, paid: false) do
   invoice = membership.membership_invoices.create!(start_date: start_date, cost_cents: cost_cents)
+  membership.update_columns(
+    start_date: [ membership.start_date, invoice.start_date ].compact.min,
+    end_date: [ membership.end_date, invoice.end_date ].compact.max
+  )
   minted = minted_at.(start_date)
   invoice.update_columns(created_at: minted, updated_at: minted)
 
@@ -63,80 +68,48 @@ build_group = ->(last_name, prefix, &build) do
   puts "  #{first_names.size} #{last_name.downcase} memberships"
 end
 
-# Active — covered, renewing
 build_group.("Active", "active") do |person, i|
-  membership = person.memberships.create!
+  membership = membership_for.(person, Date.current - (3.months + i.days))
   year.(membership, Date.current - (3.months + i.days), paid: true)
 end
 
-# Ending — covered, renewal cancelled at some point in the last month
 build_group.("Ending", "ending") do |person, i|
-  membership = person.memberships.create!(autorenewal_cancelled_at: (Date.current - i.days).in_time_zone)
+  membership = membership_for.(person, Date.current - (3.months + i.days), renewal_off: true)
   year.(membership, Date.current - (3.months + i.days), paid: true)
 end
 
-# Lapsed — not covered, owes the renewal issued at the end of the paid year
-build_group.("Lapsed", "lapsed") do |person, i|
-  membership = person.memberships.create!
-  paid = year.(membership, Date.current - (2.years + i.days), paid: true)
+build_group.("Owing", "owing") do |person, i|
+  start = Date.current - (2.years + i.days)
+  membership = membership_for.(person, start)
+  paid = year.(membership, start, paid: true)
   year.(membership, paid.end_date + 1.day)
 end
 
-# Ended — not covered, nothing owed, because renewals were stopped during the year
+build_group.("Upcoming", "upcoming") do |person, i|
+  start = Date.current + (1.month + i.days)
+  membership = membership_for.(person, start)
+  year.(membership, start)
+end
+
 build_group.("Ended", "ended") do |person, i|
   start = Date.current - (2.years + i.days)
-  membership = person.memberships.create!(autorenewal_cancelled_at: start + 10.months)
+  membership = membership_for.(person, start, renewal_off: true)
   year.(membership, start, paid: true)
 end
 
-# ── price changes ────────────────────────────────────────────────────────────
-# The Stripe price follows the next year's invoice, so raising the cost only reaches
-# autopay once that year is re-issued: editing the cost sets what the next year mints
-# at, and adding that invoice is what fires SyncMembershipSubscriptionPriceJob.
-#
-# Price Raised — next year still invoiced at the old price: the state the flow fixes.
-# Price Live   — a real Stripe test subscription at the old price, so editing the cost
-#                and adding the next year updates Stripe itself.
+build_group.("Ended owing", "ended_owing") do |person, i|
+  start = Date.current - (3.years + i.days)
+  membership = membership_for.(person, start, renewal_off: true)
+  paid = year.(membership, start, paid: true)
+  year.(membership, paid.end_date + 1.day)
+end
+
 raised = standard + 5_000
 
 add.("Raised", "Price", "price.raised", 0) do |person, _index|
-  membership = person.memberships.create!(cost_cents: raised)
+  membership = membership_for.(person, Date.current - 3.months, cost_cents: raised)
   current = year.(membership, Date.current - 3.months, paid: true)
-  year.(membership, current.end_date + 1.day)
-end
-
-if Rails.env.development? && ENV["STRIPE_PRIVATE_KEY"].to_s.start_with?("sk_test_")
-  begin
-    add.("Live", "Price", "price.live", 0) do |person, _index|
-      membership = person.memberships.create!
-      invoice = year.(membership, Date.current - 3.months, paid: true)
-      customer = person.set_payment_processor(:stripe)
-      price = Stripe::Price.create(
-        currency: "usd",
-        unit_amount: invoice.cost_cents,
-        recurring: { interval: "year" },
-        product_data: { name: "AWBW annual membership (seed)" }
-      )
-      payment_method = Stripe::PaymentMethod.create({ type: "card", card: { token: "tok_visa" } })
-      customer.add_payment_method(payment_method.id, default: true)
-      customer.subscribe(
-        name: "default",
-        plan: price.id,
-        metadata: { "membership_id" => membership.id },
-        billing_cycle_anchor: Time.use_zone(Membership::TIME_ZONE) { (invoice.end_date + 1.day).beginning_of_day.to_i },
-        proration_behavior: "none"
-      )
-
-      puts "  Price Live carries a real Stripe test subscription at " \
-           "#{MoneyFormatter.dollars_from_cents(invoice.cost_cents)}. Open " \
-           "#{Rails.application.routes.url_helpers.person_memberships_path(person)}, " \
-           "edit the cost, then add the next year's invoice to sync it."
-    end
-  rescue Stripe::StripeError, Pay::Error => e
-    puts "  Skipped Price Live: Stripe refused the subscription (#{e.message})."
-  end
-else
-  puts "  Skipped Price Live: it needs development with Stripe test keys."
+  year.(membership, current.end_date + 1.day, cost_cents: raised)
 end
 
 puts "  #{Membership.count} memberships, #{MembershipInvoice.count} membership invoices"

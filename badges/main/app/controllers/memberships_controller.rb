@@ -1,52 +1,81 @@
 class MembershipsController < ApplicationController
-  before_action :set_membership, only: [ :edit, :update, :destroy ]
+  before_action :set_membership, only: %i[ show edit update destroy ]
 
   def index
     authorize!
-    @status_filter = params[:status].presence_in(Membership::DIRECTORY_STATUSES) || "all"
+    @status_filter = params[:status].presence_in(Membership::DIRECTORY_STATUSES) || "active"
 
     if turbo_frame_request?
       scope = Membership.all
-        .includes(person: [ :user, :pay_subscriptions ], membership_invoices: :allocations)
+        .includes(person: :user, membership_invoices: :allocations)
         .by_person_name(params[:person_name])
       scope = scope.public_send(@status_filter) unless @status_filter == "all"
       @memberships = scope.order(start_date: :desc).paginate(page: params[:page], per_page: 25)
-      @memberships.total_entries
-      @memberships.load
-
       render "memberships/memberships_results"
     else
       render :index
     end
   end
 
+  def show
+    authorize! @membership
+    @membership_invoices = @membership.membership_invoices.includes(:allocations, :charge_attempts).to_a
+    @next_invoice = @membership.next_invoice
+    @has_card = @person.stripe_customer&.payment_methods&.exists? || false
+    @renewal_blocked_reason = @membership.renewal_blocked_reason
+    @deletable = @membership.deletable?
+    @discardable = @membership.discardable?
+  end
+
   def edit
     authorize! @membership
+    @invoice_coverage_start = @membership.invoice_coverage_start
+    @invoice_coverage_end = @membership.invoice_coverage_end
   end
 
   def update
     authorize! @membership
 
-    if @membership.update(membership_params)
-      redirect_to person_memberships_path(@person),
-        notice: update_notice, status: :see_other
+    attrs = params[:membership] || {}
+    start_date = parse_date(attrs[:start_date])
+    end_date = parse_date(attrs[:end_date])
+    unless start_date && end_date
+      return redirect_to edit_membership_path(@membership),
+        alert: "Enter both a start and an end date.", status: :see_other
+    end
+
+    cost_cents = MoneyParser.cents(attrs[:cost_dollars])
+    if MoneyParser.invalid?(cost_cents)
+      return redirect_to edit_membership_path(@membership),
+        alert: "Enter the locked price as a number, e.g. 100 or 99.50.", status: :see_other
+    end
+
+    result = Membership::UpdateTerm.call(
+      membership: @membership,
+      start_date: start_date,
+      end_date: end_date,
+      cost_cents: cost_cents
+    )
+
+    if result.success?
+      redirect_to membership_path(@membership),
+        notice: "Membership updated.", status: :see_other
     else
-      redirect_to person_memberships_path(@person),
-        alert: @membership.errors.full_messages.to_sentence, status: :see_other
+      redirect_to edit_membership_path(@membership),
+        alert: result.errors.to_sentence, status: :see_other
     end
   end
 
   def destroy
     authorize! @membership
 
-    if @membership.deletable?
-      @membership.destroy!
+    result = Membership::Discard.call(membership: @membership)
+    if result.success?
       redirect_to person_memberships_path(@person),
         notice: "Membership deleted.", status: :see_other
     else
-      redirect_to person_memberships_path(@person),
-        alert: "Cannot delete this membership because #{@membership.deletion_blocked_reason}.",
-        status: :see_other
+      redirect_to membership_path(@membership),
+        alert: result.errors.to_sentence, status: :see_other
     end
   end
 
@@ -57,14 +86,11 @@ class MembershipsController < ApplicationController
     @person = @membership.person
   end
 
-  def membership_params
-    params.expect(membership: [ :cost_dollars, :autorenewal_cancelled ])
-  end
+  def parse_date(value)
+    return if value.blank?
 
-  def update_notice
-    return "Cost updated. Changes will only be applied to future years." unless @membership.saved_change_to_autorenewal_cancelled_at?
-    return "Membership cancelled. Autorenewal turned off." if @membership.autorenewal_cancelled?
-
-    "Membership resumed. Autorenewal turned back on."
+    Date.parse(value)
+  rescue ArgumentError, TypeError
+    nil
   end
 end

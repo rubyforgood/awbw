@@ -10,12 +10,25 @@ class MembershipInvoiceDecorator < ApplicationDecorator
   }.freeze
 
   def status_badge(as_of: Date.current)
+    return badge("Payment in progress", "fa-solid fa-spinner", :blue) if payment_in_progress?
+
     upcoming = start_date > as_of
     return badge("Upcoming · Paid", "fa-solid fa-circle-check", :green) if upcoming && paid_in_full?
     return badge("Upcoming · #{remaining}", "fa-solid fa-hourglass-start", :blue) if upcoming
     return badge("Paid", "fa-solid fa-circle-check", :green) if paid_in_full?
+    return badge("Partially paid · #{remaining}", "fa-solid fa-circle-half-stroke", :amber) if partially_paid?
 
     badge("Overdue · #{remaining}", "fa-solid fa-triangle-exclamation", :red)
+  end
+
+  def autopay_action(autopay_ready:)
+    return :pay_now unless autopay_ready
+    return :pay_now if latest_attempt&.failed?
+    return :pay_now if checkout_session_id.present?
+    return :scheduled unless autopay_issued?
+    return :none if autopay_chargeable?
+
+    :pay_now
   end
 
   def period_range

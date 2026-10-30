@@ -66,9 +66,9 @@ namespace :data do
         bucket = buckets.max
         multi_bucket << [ person, buckets ] if buckets.size > 1
 
-        if person.memberships.autorenewal_not_cancelled.exists?
+        if person.memberships.unlocked.exists?
           skipped_membership += 1
-          puts "  - #{person.id} #{person.full_name}: already has an uncancelled membership — skipped"
+          puts "  - #{person.id} #{person.full_name}: already has an unlocked membership — skipped"
           next
         end
 
@@ -80,10 +80,20 @@ namespace :data do
         end
 
         cost_cents = bucketed_cost_cents.(bucket)
-        membership = person.memberships.create!(cost_cents: cost_cents)
-        Membership::EnsureInvoice.call(membership: membership, covering: covering)
-        created[bucket] += 1
-        puts "  + #{person.id} #{person.full_name}: bucket #{bucket}, #{MoneyFormatter.dollars_from_cents(membership.cost_cents || Membership.annual_cost_cents)} (#{covering.iso8601})"
+        result = Membership::Create.call(
+          person: person,
+          start_date: covering,
+          cost_cents: cost_cents,
+          invoice_cost_cents: cost_cents
+        )
+        if result.success?
+          membership = result.membership
+          created[bucket] += 1
+          puts "  + #{person.id} #{person.full_name}: bucket #{bucket}, #{MoneyFormatter.dollars_from_cents(membership.cost_cents || Membership.annual_cost_cents)} (#{covering.iso8601})"
+        else
+          skipped_no_user[:invalid] += 1
+          puts "  ! #{person.id} #{person.full_name}: #{result.errors.to_sentence} — skipped"
+        end
       end
 
       raise ActiveRecord::Rollback if dry_run

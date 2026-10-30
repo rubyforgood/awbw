@@ -30,6 +30,103 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
+  describe "#cost_dollars=" do
+    it "parses a valid dollar amount" do
+      invoice = build(:membership_invoice, cost_cents: 2_500)
+
+      invoice.cost_dollars = "99.50"
+
+      expect(invoice.cost_cents).to eq(9_950)
+      expect(invoice).to be_valid
+    end
+
+    it "rejects a malformed amount without changing the stored amount" do
+      invoice = build(:membership_invoice, cost_cents: 2_500)
+
+      invoice.cost_dollars = "abc"
+
+      expect(invoice).not_to be_valid
+      expect(invoice.errors[:cost_dollars]).to be_present
+      expect(invoice.cost_cents).to eq(2_500)
+    end
+
+    it "leaves the amount unchanged when blank" do
+      invoice = build(:membership_invoice, cost_cents: 2_500)
+
+      invoice.cost_dollars = ""
+
+      expect(invoice.cost_cents).to eq(2_500)
+    end
+  end
+
+  describe "#payment_in_progress?" do
+    it "is true while a checkout is inside the payment window" do
+      invoice = create(:membership_invoice)
+      invoice.update_column(:payment_in_progress_at, 30.minutes.ago)
+
+      expect(invoice).to be_payment_in_progress
+    end
+
+    it "is false once the checkout window has passed" do
+      invoice = create(:membership_invoice)
+      invoice.update_column(:payment_in_progress_at, 32.minutes.ago)
+
+      expect(invoice).not_to be_payment_in_progress
+    end
+
+    it "is true while a recent autopay attempt is pending" do
+      invoice = create(:membership_invoice)
+      invoice.charge_attempts.create!(
+        attempt_number: 1,
+        status: "pending",
+        amount_cents: 100,
+        attempted_at: 5.minutes.ago
+      )
+
+      expect(invoice).to be_payment_in_progress
+    end
+
+    it "is false when the only pending attempt is stale" do
+      invoice = create(:membership_invoice)
+      invoice.charge_attempts.create!(
+        attempt_number: 1,
+        status: "pending",
+        amount_cents: 100,
+        attempted_at: 61.minutes.ago
+      )
+
+      expect(invoice).not_to be_payment_in_progress
+    end
+
+    it "is false when no checkout or pending attempt exists" do
+      expect(create(:membership_invoice)).not_to be_payment_in_progress
+    end
+  end
+
+  describe "#mark_payment_in_progress!" do
+    it "clears any previous checkout session id" do
+      invoice = create(:membership_invoice, checkout_session_id: "cs_old")
+
+      invoice.mark_payment_in_progress!
+
+      expect(invoice.payment_in_progress_at).to be_present
+      expect(invoice.checkout_session_id).to be_nil
+    end
+  end
+
+  describe "#clear_payment_in_progress!" do
+    it "clears the lease and checkout session id together" do
+      invoice = create(:membership_invoice,
+        payment_in_progress_at: Time.current,
+        checkout_session_id: "cs_test_123")
+
+      invoice.clear_payment_in_progress!
+
+      expect(invoice.payment_in_progress_at).to be_nil
+      expect(invoice.checkout_session_id).to be_nil
+    end
+  end
+
   describe "overlap" do
     let(:person) { create(:person) }
     let(:subscription) { create(:membership, person: person) }
@@ -72,8 +169,8 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(invoice).to be_valid
     end
 
-    it "rejects an overlap that sits under a different subscription for the same person" do
-      existing.membership.update!(autorenewal_cancelled_at: Time.current)
+    it "allows an overlap under a different membership for the same person" do
+      existing.membership.update!(renewal_off_at: Time.current)
       rejoined = create(:membership, person: person,
         start_date: subscription.end_date + 1.day, end_date: subscription.end_date + 1.year)
 
@@ -82,8 +179,17 @@ RSpec.describe MembershipInvoice, type: :model do
         start_date: existing_start + 1.week,
         end_date: existing_end + 1.week)
 
+      expect(invoice).to be_valid
+    end
+
+    it "rejects a gap between invoices on the same membership" do
+      invoice = build(:membership_invoice,
+        membership: subscription,
+        start_date: existing_end + 2.days,
+        end_date: existing_end + 1.year)
+
       expect(invoice).not_to be_valid
-      expect(invoice.errors[:base].join).to match(/overlapping/)
+      expect(invoice.errors[:base].join).to match(/contiguous/)
     end
 
     it "allows another person to hold the same dates" do
@@ -267,6 +373,39 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
+  describe "autopay windows" do
+    it "is issued through the renewal window" do
+      inside = create(:membership_invoice,
+        start_date: Date.current + Membership.renewal_window_days)
+      outside = create(:membership_invoice,
+        start_date: Date.current + Membership.renewal_window_days + 1.day)
+
+      expect(inside).to be_autopay_issued
+      expect(outside).not_to be_autopay_issued
+      expect(described_class.autopay_issued).to include(inside)
+      expect(described_class.autopay_issued).not_to include(outside)
+    end
+
+    it "is chargeable through the retry window" do
+      inside = create(:membership_invoice,
+        start_date: Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS)
+      outside = create(:membership_invoice,
+        start_date: Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS - 1.day)
+
+      expect(inside).to be_autopay_chargeable
+      expect(outside).not_to be_autopay_chargeable
+      expect(described_class.autopay_chargeable).to include(inside)
+      expect(described_class.autopay_chargeable).not_to include(outside)
+    end
+
+    it "does not charge an invoice beyond the renewal window" do
+      future = create(:membership_invoice,
+        start_date: Date.current + Membership.renewal_window_days + 1.day)
+
+      expect(future).not_to be_autopay_chargeable
+    end
+  end
+
   describe "#registrant" do
     it "is the subscription's person, so payment code can stay type-agnostic" do
       invoice = create(:membership_invoice)
@@ -284,69 +423,69 @@ RSpec.describe MembershipInvoice, type: :model do
 
   describe "#deletable?" do
     let(:person) { create(:person) }
-    let(:subscription) { create(:membership, person: person) }
-
-    def sibling(start_date)
-      create(:membership_invoice, membership: subscription,
-        start_date: start_date, end_date: start_date + 1.year - 1.day)
+    let(:subscription) do
+      create(:membership, person: person,
+        start_date: Date.current - 1.year,
+        end_date: Date.current + 2.years - 1.day)
     end
 
-    it "is true for an unpaid future invoice when another invoice remains" do
-      sibling(Date.current - 2.years)
-      future = sibling(Date.current + 1.day)
+    def term_invoice(start_date, cost_cents: Membership.annual_cost_cents)
+      create(:membership_invoice, membership: subscription, cost_cents: cost_cents,
+        start_date: start_date, end_date: start_date + Membership::INVOICE_PERIOD - 1.day)
+    end
+
+    let!(:past) { term_invoice(Date.current - 1.year) }
+    let!(:current) { term_invoice(Date.current) }
+    let!(:future) { term_invoice(Date.current + 1.year) }
+
+    it "blocks deleting a middle invoice because it would leave a gap" do
+      expect(current).not_to be_deletable
+      expect(current.deletion_blocked_reason).to match(/gap/)
+    end
+
+    it "is true for an invoice beyond the term when another invoice remains" do
+      subscription.update_columns(end_date: current.end_date)
 
       expect(future).to be_deletable
       expect(future.deletion_blocked_reason).to be_nil
     end
 
     it "is false once anything is allocated to it" do
-      sibling(Date.current - 2.years)
-      invoice = sibling(Date.current + 1.day)
-      create(:allocation, source: create(:payment, amount_cents: 100), allocatable: invoice, amount: 100)
+      create(:allocation, source: create(:payment, amount_cents: 100), allocatable: future, amount: 100)
 
-      expect(invoice.reload).not_to be_deletable
-      expect(invoice.deletion_blocked_reason).to match(/payments or credits/)
+      expect(future.reload).not_to be_deletable
+      expect(future.deletion_blocked_reason).to match(/payments or credits/)
     end
 
-    it "is true for a future comped invoice, so a mis-comped year can be reissued" do
-      sibling(Date.current - 2.years)
-      comped = create(:membership_invoice, :comped, membership: subscription,
-        start_date: Date.current + 1.day, end_date: Date.current + 1.year)
+    it "blocks deleting the only invoice covering the term" do
+      subscription.update_columns(start_date: past.start_date, end_date: past.end_date)
 
-      expect(comped).to be_deletable
-      expect(comped.deletion_blocked_reason).to be_nil
-    end
-
-    it "is false for a comped invoice that has already started" do
-      sibling(Date.current + 2.years)
-      comped = create(:membership_invoice, :comped, membership: subscription,
-        start_date: Date.current - 1.year, end_date: Date.current - 1.day)
-
-      expect(comped).not_to be_deletable
-      expect(comped.deletion_blocked_reason).to eq("it is comped")
-    end
-
-    it "is false while it covers today on an uncancelled membership" do
-      sibling(Date.current + 2.years)
-      active = create(:membership_invoice, membership: subscription,
-        start_date: Date.current - 1.day, end_date: Date.current + 1.day)
-
-      expect(active).not_to be_deletable
-      expect(active.deletion_blocked_reason).to match(/covers today/)
+      expect(past).not_to be_deletable
+      expect(past.deletion_blocked_reason).to eq("it is the only invoice covering the membership term")
     end
 
     it "is false when it is the membership's only invoice" do
-      only = sibling(Date.current + 1.day)
+      only = create(:membership_invoice, membership: create(:membership))
 
       expect(only).not_to be_deletable
       expect(only.deletion_blocked_reason).to eq("it is the membership's only invoice")
     end
 
     it "blocks destroy at the model level" do
-      only = sibling(Date.current + 1.day)
+      subscription.update_columns(start_date: past.start_date, end_date: past.end_date)
 
-      expect { only.destroy }.not_to change(MembershipInvoice, :count)
-      expect(only.errors[:base].join).to match(/Cannot delete/)
+      expect { past.destroy }.not_to change(MembershipInvoice, :count)
+      expect(past.errors[:base].join).to match(/Cannot delete/)
+    end
+
+    context "with a comped invoice beyond the term" do
+      let!(:future) { term_invoice(Date.current + 1.year, cost_cents: 0) }
+
+      it "is deletable" do
+        subscription.update_columns(end_date: current.end_date)
+
+        expect(future).to be_deletable
+      end
     end
   end
 
