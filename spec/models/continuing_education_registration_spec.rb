@@ -34,6 +34,16 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
     end
   end
 
+  describe ".search_by_params approval filter" do
+    let!(:approved) { create(:continuing_education_registration, :approved) }
+    let!(:pending) { create(:continuing_education_registration) }
+
+    it "narrows to approved or not-approved CE" do
+      expect(described_class.search_by_params(approval: "approved")).to contain_exactly(approved)
+      expect(described_class.search_by_params(approval: "pending")).to contain_exactly(pending)
+    end
+  end
+
   describe "validations" do
     it "rejects a license that belongs to someone other than the registrant" do
       registration = create(:event_registration)

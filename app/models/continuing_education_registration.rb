@@ -45,18 +45,22 @@ class ContinuingEducationRegistration < ApplicationRecord
   scope :for_event, ->(event_id) { joins(:event_registration).where(event_registrations: { event_id: event_id }) }
   scope :for_registrant, ->(person_id) { joins(:event_registration).where(event_registrations: { registrant_id: person_id }) }
   scope :for_license, ->(license_id) { where(professional_license_id: license_id) }
+  scope :approved, -> { where.not(approved_at: nil) }
+  scope :not_approved, -> { where(approved_at: nil) }
   scope :certificate_issued, -> { where.not(certificate_sent_at: nil) }
   scope :certificate_pending, -> { where(certificate_sent_at: nil) }
   scope :issued_on_or_after, ->(date) { where(certificate_sent_at: date.beginning_of_day..) }
   scope :issued_on_or_before, ->(date) { where(certificate_sent_at: ..date.end_of_day) }
 
-  # Drives the admin index filters (event, registrant, license, certificate
-  # status, and issued-date range).
+  # Drives the admin index filters (event, registrant, license, approval,
+  # certificate status, and issued-date range).
   def self.search_by_params(params)
     results = all
     results = results.for_event(params[:event_id]) if params[:event_id].present?
     results = results.for_registrant(params[:person_id]) if params[:person_id].present?
     results = results.for_license(params[:professional_license_id]) if params[:professional_license_id].present?
+    results = results.approved if params[:approval] == "approved"
+    results = results.not_approved if params[:approval] == "pending"
     results = results.certificate_issued if params[:certificate] == "issued"
     results = results.certificate_pending if params[:certificate] == "pending"
     if (from = parse_iso_date(params[:issued_from]))
@@ -217,6 +221,11 @@ class ContinuingEducationRegistration < ApplicationRecord
     end
     professional_license.update!(details) if details.any?
     save! if changed?
+  end
+
+  # The admin's call that this CE is good to go, set by hand whatever the payment state.
+  def approved?
+    approved_at.present?
   end
 
   # May this CE reach CE-paid content (callouts gated on CE payment)? Mirrors

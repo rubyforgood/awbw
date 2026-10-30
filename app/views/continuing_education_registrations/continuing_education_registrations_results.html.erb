@@ -21,6 +21,7 @@
               <th class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Hours</th>
               <th class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Cost</th>
               <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Payment</th>
+              <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Approval</th>
               <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Certificate</th>
               <th class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Actions</th>
             </tr>
@@ -31,6 +32,7 @@
               <% ce = ce.decorate %>
               <% registration = ce.event_registration %>
               <% payment = ce.payment_status_badge %>
+              <% approval = ce.approval_badge %>
               <% certificate = ce.certificate_badge %>
               <tr class="transition-colors duration-150 hover:bg-gray-50">
                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap text-gray-900">
@@ -50,6 +52,9 @@
                   <% if (overpayment = ce.overpayment_badge) %>
                     <%= render "shared/badge", label: overpayment.label, classes: overpayment.classes, icon: overpayment.icon %>
                   <% end %>
+                </td>
+                <td class="px-4 py-3 text-sm whitespace-nowrap">
+                  <%= render "shared/badge", label: approval.label, classes: approval.classes, icon: approval.icon %>
                 </td>
                 <td class="px-4 py-3 text-sm whitespace-nowrap">
                   <%= render "shared/badge", label: certificate.label, classes: certificate.classes, icon: certificate.icon %>
