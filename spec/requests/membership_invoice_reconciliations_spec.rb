@@ -150,6 +150,7 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
     expect(response.body).to include("Reconcile payments")
     expect(response.body).to include("Manual PaymentIntent")
     expect(response.body).to include("Use this PaymentIntent")
+    expect(response.body).to include("Record this charge")
     expect(response.body).to include("No Stripe payments found for this invoice")
   end
 
@@ -185,6 +186,28 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
 
     expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
     expect(invoice.reload).to be_paid_in_full
+  end
+
+  it "records a manual charge when no local payment exists" do
+    charge = Stripe::Charge.construct_from(id: "ch_manual", object: "charge", amount: 1_000,
+      currency: "usd", metadata: {})
+    intent = Stripe::PaymentIntent.construct_from(
+      id: "pi_manual", object: "payment_intent", status: "succeeded", amount: 1_000,
+      currency: "usd", customer: "cus_test", latest_charge: charge,
+      metadata: { "membership_invoice_id" => invoice.id.to_s }
+    )
+    attempt.update!(status: "unknown", payment_intent_id: "pi_manual")
+    allow(Stripe::PaymentIntent).to receive(:retrieve).and_return(intent)
+    allow(Pay::Stripe::Charge).to receive(:sync_payment_intent).and_return(nil)
+
+    post membership_invoice_reconciliation_path(invoice,
+      operation: "record_charge", payment_intent_id: "pi_manual", attempt_id: attempt.id)
+
+    expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
+    expect(flash[:notice]).to match(/Applied/)
+    expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_manual")).to be_present
+    expect(invoice.reload).to be_paid_in_full
+    expect(attempt.reload).to be_succeeded
   end
 
   it "reports an invalid manual PaymentIntent id" do

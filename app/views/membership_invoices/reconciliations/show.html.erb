@@ -88,7 +88,6 @@
 
       <%= form_with url: membership_invoice_reconciliation_path(@invoice), method: :post,
             class: "mt-2 flex flex-wrap items-end gap-2" do %>
-        <%= hidden_field_tag :operation, "use_intent" %>
         <% if params[:return_to].present? %>
           <%= hidden_field_tag :return_to, params[:return_to] %>
         <% end %>
@@ -111,7 +110,11 @@
                 class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200 sm:text-sm" %>
         </div>
 
-        <%= submit_tag "Use this PaymentIntent", class: button_classes(:secondary_outline, size: :sm) %>
+        <%= submit_tag "Use this PaymentIntent", name: "operation", value: "use_intent",
+              class: button_classes(:secondary_outline, size: :sm) %>
+        <%= submit_tag "Record this charge", name: "operation", value: "record_charge",
+              class: button_classes(:secondary_outline, size: :sm),
+              data: { turbo_confirm: "Record this Stripe charge as a local payment? Only use this when Stripe shows a successful charge the portal did not capture. This does not create a new charge." } %>
       <% end %>
     </div>
   </div>

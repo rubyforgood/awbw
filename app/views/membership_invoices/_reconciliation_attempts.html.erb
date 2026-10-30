@@ -99,6 +99,15 @@
                     class: button_classes(:danger_outline, size: :sm),
                     title: "Cancels this PaymentIntent in Stripe. If it already succeeded, it will be reconciled instead.",
                     data: { turbo_confirm: "Cancel this PaymentIntent in Stripe? If it already succeeded, Stripe will refuse and the attempt will be reconciled instead. This does not move money." } %>
+              <%= button_to "Record this charge",
+                    membership_invoice_reconciliation_path(
+                      membership_invoice, operation: "record_charge",
+                      payment_intent_id: attempt.payment_intent_id,
+                      attempt_id: attempt.id, **return_params
+                    ),
+                    class: button_classes(:secondary_outline, size: :sm),
+                    title: "Records a successful Stripe charge when no local payment exists. This does not create a charge.",
+                    data: { turbo_confirm: "Record this Stripe charge as a local payment? Only use this when Stripe shows a successful charge the portal did not capture. This does not create a new charge." } %>
               <%= button_to "Clear missing PaymentIntent",
                     membership_invoice_reconciliation_path(
                       membership_invoice, operation: "clear_missing_intent",

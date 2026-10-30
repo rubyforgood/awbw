@@ -1,7 +1,7 @@
 class Membership::Reconcile::Action
   OPERATIONS = %w[
     reconcile_attempt check_checkout clear_checkout
-    apply_payment use_intent fail_attempt clear_missing_intent
+    apply_payment use_intent record_charge fail_attempt clear_missing_intent
   ].freeze
 
   Result = Data.define(:status, :message, :errors) do
@@ -31,6 +31,8 @@ class Membership::Reconcile::Action
       with_payment { |payment| Membership::Reconcile::Payment.call(invoice: @invoice, payment:) }
     when "use_intent"
       apply_intent
+    when "record_charge"
+      record_charge
     when "fail_attempt"
       with_attempt { |attempt| Membership::Reconcile::FailAttempt.call(attempt:) }
     when "clear_missing_intent"
@@ -88,6 +90,20 @@ class Membership::Reconcile::Action
     else
       Membership::Reconcile::Charge.call(invoice: @invoice, intent:)
     end
+  end
+
+  def record_charge
+    intent = retrieve_intent
+    return failure(@intent_error) if intent.blank? && @intent_error.present?
+    return failure("Choose a Stripe payment first.") if intent.blank?
+
+    attempt = nil
+    if @params[:attempt_id].present?
+      attempt = @invoice.charge_attempts.find_by(id: @params[:attempt_id])
+      return failure("That payment attempt doesn't belong to this invoice.") if attempt.blank?
+    end
+
+    Membership::Reconcile::RecordCharge.call(invoice: @invoice, intent:, attempt:)
   end
 
   def retrieve_intent
