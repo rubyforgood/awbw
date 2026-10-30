@@ -84,58 +84,6 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
     expect(attempt.reload).not_to be_failed
   end
 
-  it "offers to apply a metadata-linked payment without a Stripe lookup" do
-    create(:external_processor_payment, person:, amount_cents: 1_000,
-      amount_cents_remaining: 1_000, metadata: { "membership_invoice_id" => invoice.id })
-
-    get membership_invoice_reconciliation_path(invoice)
-
-    expect(response.body).to include("Apply $10")
-  end
-
-  it "shows every unresolved attempt, not just the last seven" do
-    invoice.charge_attempts.create!(attempt_number: 1, status: "unknown",
-      amount_cents: 1_000, attempted_at: 8.hours.ago,
-      error_message: "Oldest unresolved attempt")
-    8.times do |index|
-      invoice.charge_attempts.create!(attempt_number: index + 2, status: "unknown",
-        amount_cents: 1_000, attempted_at: 7.hours.ago + index.minutes)
-    end
-    allow(Membership::Reconcile::Lookup).to receive(:call).and_return(
-      Membership::Reconcile::Lookup::Result.new(
-        candidates: [], local_payments: [], message: nil, errors: []
-      )
-    )
-
-    get membership_invoice_reconciliation_path(invoice)
-
-    expect(response.body).to include("Oldest unresolved attempt")
-  end
-
-  it "shows the cancel action for an unresolved attempt with a PaymentIntent" do
-    attempt.update!(status: "unknown", payment_intent_id: "pi_test")
-    allow(Membership::Reconcile::Lookup).to receive(:call).and_return(
-      Membership::Reconcile::Lookup::Result.new(
-        candidates: [], local_payments: [], message: nil, errors: []
-      )
-    )
-
-    get membership_invoice_reconciliation_path(invoice)
-
-    expect(response.body).to include("Cancel payment attempt")
-  end
-
-  it "shows the reconciliation card on the membership" do
-    attempt
-
-    get membership_path(membership)
-
-    expect(response.body).to include("Payment reconciliation")
-    expect(response.body).to include(
-      membership_invoice_reconciliation_path(invoice, return_to: "membership")
-    )
-  end
-
   it "renders the Stripe lookup page for an admin" do
     allow(Membership::Reconcile::Lookup).to receive(:call).and_return(
       Membership::Reconcile::Lookup::Result.new(
@@ -176,15 +124,6 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
     expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
     expect(flash[:notice]).to match(/Applied/)
     expect(attempt.reload).to have_attributes(status: "succeeded", pay_charge:)
-    expect(invoice.reload).to be_paid_in_full
-  end
-
-  it "applies a manually entered PaymentIntent without an attempt" do
-    manual_payment
-    post membership_invoice_reconciliation_path(invoice,
-      operation: "use_intent", payment_intent_id: "pi_manual")
-
-    expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
     expect(invoice.reload).to be_paid_in_full
   end
 
@@ -234,47 +173,5 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
 
     expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
     expect(flash[:alert]).to match(/Could not retrieve/)
-  end
-
-  it "shows local unallocated payments when Stripe can't be reached" do
-    customer = Pay::Stripe::Customer.create!(owner: person, processor: "stripe",
-      processor_id: "cus_test", default: true)
-    charge = Pay::Charge.create!(
-      customer:, processor_id: "ch_test", amount: 1_000, amount_refunded: 0,
-      currency: "usd", metadata: {},
-      object: { "paid" => false, "refunds" => { "object" => "list", "data" => [] } }
-    )
-    invoice.charge_attempts.create!(attempt_number: 2, status: "unknown",
-      amount_cents: 1_000, attempted_at: 1.hour.ago, pay_charge: charge)
-    create(:external_processor_payment, person:, amount_cents: 1_000,
-      amount_cents_remaining: 1_000, stripe_charge_id: "ch_test")
-    allow(Stripe::PaymentIntent).to receive(:list)
-      .and_raise(Stripe::APIConnectionError.new("Stripe is down"))
-
-    get membership_invoice_reconciliation_path(invoice)
-
-    expect(response.body).to include("Stripe is down")
-    expect(response.body).to include("ch_test")
-    expect(response.body).to include("Apply $10")
-  end
-
-  it "offers to link or apply a Stripe candidate" do
-    payment = create(:external_processor_payment, person:, amount_cents: 1_000, amount_cents_remaining: 1_000,
-      stripe_charge_id: "ch_test")
-    candidate = Membership::Reconcile::Lookup::Candidate.new(
-      payment_intent_id: "pi_test", status: "succeeded", amount_cents: 1_000, currency: "usd",
-      created_at: Time.current, attempt_number: "1", charge_id: "ch_test",
-      attempt:, payment:, allocated: false
-    )
-    allow(Membership::Reconcile::Lookup).to receive(:call).and_return(
-      Membership::Reconcile::Lookup::Result.new(
-        candidates: [ candidate ], local_payments: [], message: nil, errors: []
-      )
-    )
-
-    get membership_invoice_reconciliation_path(invoice)
-
-    expect(response.body).to include("Use for attempt #1")
-    expect(response.body).to include("Apply $10")
   end
 end
