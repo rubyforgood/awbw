@@ -152,9 +152,10 @@
         <%# Until a number is on file, the title bar says why the card needs filling in. %>
         <% license_needed_chip = capture do %>
           <% unless license_on_file || license_locked %>
-            <%= render "shared/badge", label: "Needed for your CE certificate",
+            <%= render "shared/badge", label: "License # needed",
                   classes: "bg-amber-50 text-amber-700 border-amber-200",
-                  icon: "fa-solid fa-circle-exclamation text-2xs" %>
+                  icon: "fa-solid fa-circle-exclamation text-2xs", extra: "shrink-0",
+                  title: "We need your license type and number to issue your CE certificate." %>
           <% end %>
         <% end %>
         <%= render layout: "shared/collapsible_card",
