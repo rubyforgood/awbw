@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Membership::Renew do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_user) }
 
   def create_membership(end_date:, cost_cents: nil)
     create(:membership, person: person,

@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Memberships::PublicInvoices", type: :request do
-  let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
+  let(:person) { create(:person, :without_audit, first_name: "Ada", last_name: "Lovelace") }
   let(:membership) { create(:membership, person: person) }
   let(:invoice) { create(:membership_invoice, membership: membership, cost_cents: 2_500) }
   let(:token) { invoice.signed_id(purpose: MembershipInvoice::PAYMENT_TOKEN_PURPOSE) }

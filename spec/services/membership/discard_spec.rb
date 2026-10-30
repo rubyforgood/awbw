@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Membership::Discard do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_user) }
 
   it "refuses a locked membership" do
     membership = create(:membership, person: person, locked_at: Time.current)

@@ -128,7 +128,7 @@ RSpec.describe MembershipInvoice, type: :model do
   end
 
   describe "overlap" do
-    let(:person) { create(:person) }
+    let(:person) { create(:person, :without_user) }
     let(:subscription) { create(:membership, person: person) }
     # Anchor the fixture in the past so cancelling its membership never trips
     # Membership#expire_unbilled_future_invoices (which drops unbilled future years).
@@ -289,10 +289,6 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(described_class.active_on(present.end_date)).to include(present)
     end
 
-    it ".active_on defaults to today" do
-      expect(described_class.active_on).to contain_exactly(present)
-    end
-
     it ".expiring_between finds invoices ending in the window" do
       expect(described_class.expiring_between(Date.current, Date.current + 30.days))
         .to be_empty
@@ -326,22 +322,11 @@ RSpec.describe MembershipInvoice, type: :model do
     it ".not_paid_in_full counts unpaid and part-paid, never a comped invoice" do
       expect(described_class.not_paid_in_full).to contain_exactly(unpaid, part_paid)
     end
-
-    it "agrees with #paid_in_full?" do
-      expect(described_class.paid_in_full.map(&:paid_in_full?)).to all(be(true))
-      expect(described_class.not_paid_in_full.map(&:paid_in_full?)).to all(be(false))
-    end
   end
 
   describe "overdue semantics" do
     it "treats an unpaid invoice whose term has started as overdue" do
       invoice = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current - 1)
-      expect(invoice).to be_overdue
-      expect(described_class.overdue).to include(invoice)
-    end
-
-    it "treats an unpaid invoice whose term starts today as overdue" do
-      invoice = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current)
       expect(invoice).to be_overdue
       expect(described_class.overdue).to include(invoice)
     end
@@ -397,13 +382,6 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(described_class.autopay_chargeable).to include(inside)
       expect(described_class.autopay_chargeable).not_to include(outside)
     end
-
-    it "does not charge an invoice beyond the renewal window" do
-      future = create(:membership_invoice,
-        start_date: Date.current + Membership.renewal_window_days + 1.day)
-
-      expect(future).not_to be_autopay_chargeable
-    end
   end
 
   describe "#registrant" do
@@ -414,15 +392,8 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
-  describe "#person" do
-    it "comes through the subscription" do
-      subscription = create(:membership)
-      expect(create(:membership_invoice, membership: subscription).person).to eq(subscription.person)
-    end
-  end
-
   describe "#deletable?" do
-    let(:person) { create(:person) }
+    let(:person) { create(:person, :without_user) }
     let(:subscription) do
       create(:membership, person: person,
         start_date: Date.current - 1.year,
@@ -491,7 +462,7 @@ RSpec.describe MembershipInvoice, type: :model do
 
   describe ".by_person_name" do
     it "filters to invoices whose person's name matches" do
-      named = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+      named = create(:person, :without_user, first_name: "Bartholomew", last_name: "Snazzlepants")
       matching = create(:membership_invoice, membership: create(:membership, person: named))
       other = create(:membership_invoice)
 

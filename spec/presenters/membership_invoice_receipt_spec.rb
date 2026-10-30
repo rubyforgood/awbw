@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe MembershipInvoiceReceipt do
-  let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
+  let(:person) { create(:person, :without_user, first_name: "Ada", last_name: "Lovelace") }
   let!(:address) { create(:address, addressable: person, street_address: "1 Main St", city: "Los Angeles", state: "CA", zip_code: "90001") }
   let(:membership) { create(:membership, person: person) }
   let(:invoice) { create(:membership_invoice, membership: membership, cost_cents: 25_000) }

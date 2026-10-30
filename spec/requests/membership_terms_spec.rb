@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Membership terms", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
   let!(:membership) { create(:membership, person: person, cost_cents: 1_500) }
 
   before { sign_in admin }

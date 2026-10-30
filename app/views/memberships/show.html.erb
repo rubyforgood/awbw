@@ -133,6 +133,10 @@
       </div>
     <% end %>
 
+    <% if admin && @reconciliation_summaries.any? %>
+      <%= render "memberships/reconciliation_card", summaries: @reconciliation_summaries %>
+    <% end %>
+
     <div class="mt-6 border-t border-gray-200 pt-4">
       <h2 class="mb-3 text-sm font-semibold tracking-wide text-gray-700 uppercase">Invoices</h2>
 

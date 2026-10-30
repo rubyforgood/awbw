@@ -1,0 +1,128 @@
+<% content_for(:page_title, "Reconcile payments: Invoice M-#{@invoice.id}") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% invoice = @invoice.decorate %>
+<% back_path, back_label =
+     case params[:return_to]
+     when "data_health"
+       [ admin_data_health_path(open: "membership_reconciliation", anchor: "check-membership_reconciliation"), "Data health" ]
+     when "membership"
+       [ membership_path(@invoice.membership), "Membership" ]
+     else
+       [ membership_invoice_path(@invoice), "Invoice" ]
+     end %>
+
+<div class="mx-auto max-w-4xl">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to back_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i>
+      <%= back_label %>
+    <% end %>
+  </div>
+
+  <div class="border-primary/10 rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
+    <h1 class="text-primary font-display text-2xl font-bold">Reconcile payments</h1>
+    <p class="mt-1 text-sm text-gray-600">
+      Reads Stripe and repairs local records; it never creates a charge. Cancel payment attempt is the only Stripe change.
+    </p>
+
+    <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+      <div>
+        <dt class="text-xs tracking-wide text-gray-500 uppercase">Member</dt>
+        <dd class="mt-0.5 font-medium text-gray-800"><%= @invoice.person.full_name %></dd>
+      </div>
+      <div>
+        <dt class="text-xs tracking-wide text-gray-500 uppercase">Invoice</dt>
+        <dd class="mt-0.5 font-medium text-gray-800">M-<%= @invoice.id %></dd>
+      </div>
+      <div>
+        <dt class="text-xs tracking-wide text-gray-500 uppercase">Period</dt>
+        <dd class="mt-0.5 font-medium text-gray-800"><%= invoice.period_range %></dd>
+      </div>
+      <div>
+        <dt class="text-xs tracking-wide text-gray-500 uppercase">Remaining</dt>
+        <dd class="mt-0.5 font-medium text-gray-800">
+          <%= invoice.paid_in_full? ? "Paid in full" : invoice.remaining %>
+        </dd>
+      </div>
+    </dl>
+
+    <div class="mt-4 flex flex-wrap gap-3 text-sm">
+      <%= link_to "Invoice", membership_invoice_path(@invoice), class: "text-primary hover:underline" %>
+      <%= link_to "Membership", membership_path(@invoice.membership), class: "text-primary hover:underline" %>
+      <%= link_to "Person", person_path(@invoice.person), class: "text-primary hover:underline" %>
+      <% if @stripe_customer&.processor_id.present? %>
+        <%= link_to "Stripe customer", stripe_customer_url(@stripe_customer.processor_id),
+              target: "_blank", rel: "noopener", class: "text-primary hover:underline" %>
+      <% end %>
+    </div>
+
+    <% if @reconciliation.needed? || @lookup.local_payments.any? %>
+      <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <p class="text-sm font-semibold text-amber-900">Needs attention</p>
+        <% if @reconciliation.needed? %>
+          <p class="mt-1 text-sm text-amber-800"><%= @reconciliation.summary %></p>
+        <% end %>
+        <% if @lookup.local_payments.any? %>
+          <p class="mt-1 text-sm text-amber-800">An unallocated Stripe payment is available below.</p>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+        No unresolved payment attempts or checkout sessions. Review the Stripe payments below.
+      </div>
+    <% end %>
+  </div>
+
+  <div class="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+    <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">What Stripe says</p>
+    <p class="text-xs text-gray-500">Read-only; Stripe is the source of truth.</p>
+
+    <%= render "membership_invoices/stripe_lookup", membership_invoice: @invoice, lookup: @lookup,
+          return_to: params[:return_to] %>
+
+    <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">Manual PaymentIntent</p>
+      <p class="mt-1 text-xs text-gray-500">
+        Have a PaymentIntent ID the lookup missed? Paste it here.
+      </p>
+
+      <%= form_with url: membership_invoice_reconciliation_path(@invoice), method: :post,
+            class: "mt-2 flex flex-wrap items-end gap-2" do %>
+        <% if params[:return_to].present? %>
+          <%= hidden_field_tag :return_to, params[:return_to] %>
+        <% end %>
+
+        <div class="min-w-[16rem] flex-1">
+          <%= label_tag :payment_intent_id, "PaymentIntent ID",
+                class: "block text-xs font-medium text-gray-600" %>
+          <%= text_field_tag :payment_intent_id, nil, required: true, placeholder: "pi_...",
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200 sm:text-sm" %>
+        </div>
+
+        <div>
+          <%= label_tag :attempt_id, "Link to attempt",
+                class: "block text-xs font-medium text-gray-600" %>
+          <%= select_tag :attempt_id,
+                options_for_select(@unresolved_attempts.map { |attempt|
+                  [ "Attempt ##{attempt.attempt_number} (#{attempt.status.humanize})", attempt.id ]
+                }),
+                include_blank: "Apply to invoice only",
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200 sm:text-sm" %>
+        </div>
+
+        <%= submit_tag "Use this PaymentIntent", name: "operation", value: "use_intent",
+              class: button_classes(:secondary_outline, size: :sm) %>
+        <%= submit_tag "Record this charge", name: "operation", value: "record_charge",
+              class: button_classes(:secondary_outline, size: :sm),
+              data: { turbo_confirm: "Record this Stripe charge as a local payment? Only use this when Stripe shows a successful charge the portal did not capture. This does not create a new charge." } %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+    <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">What happened here</p>
+
+    <%= render "membership_invoices/reconciliation_attempts", membership_invoice: @invoice,
+          return_to: params[:return_to] %>
+  </div>
+</div>

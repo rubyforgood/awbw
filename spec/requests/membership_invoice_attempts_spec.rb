@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Membership invoice attempt warnings", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
   let(:membership) { create(:membership, person: person) }
 
   before { sign_in admin }

@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Membership::UpdateTerm do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_user) }
 
   def create_membership(start_date:, end_date: start_date + Membership::INVOICE_PERIOD - 1.day)
     create(:membership, person: person, start_date: start_date, end_date: end_date)

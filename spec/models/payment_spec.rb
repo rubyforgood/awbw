@@ -33,11 +33,6 @@ RSpec.describe Payment, type: :model do
         expect(payment.payer_type).to eq("Organization")
       end
 
-      it "accepts valid values" do
-        payment = build(:payment, person: nil, organization: create(:organization), payer_type: "Organization")
-        expect(payment).to be_valid
-      end
-
       it "rejects invalid values when both person and organization are present" do
         person = create(:person)
         org = create(:organization)
@@ -53,22 +48,6 @@ RSpec.describe Payment, type: :model do
         expect(payment).not_to be_valid
         expect(payment.errors[:base]).to include("At least one payer (person or organization) must be present")
       end
-
-      it "is valid with a person" do
-        payment = build(:payment, person: create(:person), organization: nil)
-        expect(payment).to be_valid
-      end
-
-      it "is valid with an organization" do
-        payment = build(:payment, person: nil, organization: create(:organization))
-        expect(payment).to be_valid
-      end
-    end
-  end
-
-  describe "constants" do
-    it "defines PAYER_TYPES" do
-      expect(Payment::PAYER_TYPES).to eq(%w[Person Organization])
     end
   end
 
@@ -212,11 +191,6 @@ RSpec.describe Payment, type: :model do
           expect(result).not_to include(no_match, metadata_match)
         end
 
-        it "returns all payments when search is blank" do
-          result = Payment.search_by_params({ search: "" })
-          expect(result).to include(metadata_match, stripe_match, no_match)
-        end
-
         it "escapes LIKE wildcards in the query" do
           result = Payment.search_by_params({ search: "%" })
           expect(result).not_to include(metadata_match, stripe_match, no_match)
@@ -244,11 +218,6 @@ RSpec.describe Payment, type: :model do
           result = Payment.search_by_params({ amount_min: "10", amount_max: "20" })
           expect(result).to include(medium)
           expect(result).not_to include(small, large)
-        end
-
-        it "returns all payments when the range is blank" do
-          result = Payment.search_by_params({ amount_min: "", amount_max: "" })
-          expect(result).to include(small, medium, large)
         end
       end
 

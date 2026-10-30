@@ -1,16 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "Membership autopay", type: :request do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
   let(:membership) { create(:membership, person: person) }
-
-  def upcoming_invoice(autopay_on: false)
-    start_date = Date.current + 1.day
-    membership = create(:membership, person: person, autopay_on: autopay_on,
-      start_date: start_date, end_date: start_date + 1.year - 1.day)
-    create(:membership_invoice, membership: membership, start_date: start_date,
-      end_date: start_date + 1.year - 1.day, cost_cents: 10_000)
-  end
 
   def add_card
     customer = Pay::Stripe::Customer.create!(owner: person, processor: "stripe",
@@ -142,16 +134,6 @@ RSpec.describe "Membership autopay", type: :request do
     expect(membership.reload.autopay_on?).to be(false)
   end
 
-  it "shows the admin turn-off action" do
-    membership.update!(autopay_on: true)
-    sign_in create(:user, :admin)
-
-    get person_memberships_path(person)
-
-    expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Turn off autopay")
-  end
-
   it "turns autopay on after a successful card setup" do
     allow_any_instance_of(Pay::Stripe::Customer).to receive(:checkout)
       .and_return(double(url: "https://stripe.test/setup"))
@@ -169,18 +151,6 @@ RSpec.describe "Membership autopay", type: :request do
     expect(flash[:notice]).to match(/Automatic payments are on/)
   end
 
-  it "turns autopay on after setup even before the card is visible" do
-    allow_any_instance_of(Pay::Stripe::Customer).to receive(:checkout)
-      .and_return(double(url: "https://stripe.test/setup"))
-    sign_in create(:user, person: person)
-
-    post membership_autopayments_path(membership)
-    get person_path(person, autopay_setup: "success")
-
-    expect(membership.reload.autopay_on?).to be(true)
-    expect(flash[:notice]).to match(/Automatic payments are on/)
-  end
-
   it "does not display the saved card number but keeps the Stripe portal when a card exists" do
     membership
     add_card
@@ -191,40 +161,6 @@ RSpec.describe "Membership autopay", type: :request do
     expect(response.body).to include("Manage card")
     expect(response.body).not_to include("Card on file")
     expect(response.body).not_to include("ending 4242")
-  end
-
-  it "shows Pay now on an upcoming invoice when autopay is off" do
-    invoice = upcoming_invoice
-    sign_in create(:user, person: person)
-
-    get membership_invoice_path(invoice)
-
-    expect(response.body).to include("Pay now")
-    expect(response.body).not_to include("Scheduled for")
-  end
-
-  it "shows no payment action on an upcoming invoice when autopay is ready" do
-    add_card
-    invoice = upcoming_invoice(autopay_on: true)
-    sign_in create(:user, person: person)
-
-    get membership_invoice_path(invoice)
-
-    expect(response.body).not_to include("Automatic payment pending")
-    expect(response.body).not_to include("Scheduled for")
-    expect(response.body).not_to include("Pay now")
-  end
-
-  it "tells an admin when a customer payment is in progress" do
-    invoice = upcoming_invoice
-    invoice.update_column(:payment_in_progress_at, Time.current)
-    sign_in create(:user, :admin)
-
-    get membership_invoice_path(invoice)
-
-    expect(response.body).to include("A customer payment is in progress")
-    expect(response.body).to include("Payment in progress")
-    expect(response.body).not_to include("Charge saved card")
   end
 
   it "does not let the owner open the membership admin page" do

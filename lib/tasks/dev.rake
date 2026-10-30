@@ -23,6 +23,7 @@ namespace :db do
       payments
       scholarships
       membership
+      membership_reconciliation
       affiliation_history
       bulk_payments
       public_forms
@@ -129,6 +130,11 @@ namespace :db do
     desc "Seed memberships and invoices covering every status (dev only)"
     task membership: :environment do
       load Rails.root.join("db/seeds/dev/membership.rb")
+    end
+
+    desc "Seed membership payment reconciliation scenarios (dev only)"
+    task membership_reconciliation: :environment do
+      load Rails.root.join("db/seeds/dev/membership_reconciliation.rb")
     end
 
     desc "Seed 90 more memberships so every admin overview tab paginates (dev only)"

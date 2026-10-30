@@ -7,6 +7,11 @@
     </span>
   </div>
   <div class="flex items-center gap-2">
+    <% if allowed_to?(:reconcile?, invoice.object) && invoice.needs_reconciliation? %>
+      <%= render "shared/badge", label: "Check payment",
+            classes: "bg-amber-50 text-amber-700 border-amber-200",
+            title: "An automatic payment or checkout hasn't been reconciled with Stripe. Open the invoice for details." %>
+    <% end %>
     <%= render "membership_invoices/status_pill", invoice: invoice, linked: local_assigns.fetch(:linked, false) %>
 
     <% if allowed_to?(:receipt?, invoice) && invoice.receipt_available? %>

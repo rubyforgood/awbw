@@ -1,0 +1,124 @@
+<% return_to = local_assigns.fetch(:return_to, nil) %>
+<% return_params = return_to.present? ? { return_to: } : {} %>
+
+<% if lookup.errors.any? %>
+  <div class="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+    <%= lookup.errors.to_sentence %>
+  </div>
+<% end %>
+
+<% if lookup.candidates.any? %>
+  <div class="mt-3 overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <table class="min-w-full divide-y divide-gray-200 text-xs">
+      <thead class="bg-gray-50 text-left text-gray-500 uppercase">
+        <tr>
+          <th class="px-3 py-2 font-medium">Status</th>
+          <th class="px-3 py-2 font-medium">Amount</th>
+          <th class="px-3 py-2 font-medium">Created</th>
+          <th class="px-3 py-2 font-medium">Attempt</th>
+          <th class="px-3 py-2 font-medium">Payment</th>
+          <th class="px-3 py-2 font-medium">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% lookup.candidates.each do |candidate| %>
+          <tr>
+            <td class="px-3 py-2">
+              <span class="font-medium capitalize"><%= candidate.status.humanize %></span>
+              <%= link_to "Stripe", stripe_payment_url(candidate.payment_intent_id),
+                    target: "_blank", rel: "noopener",
+                    class: "text-primary ml-1 hover:underline" %>
+              <% if candidate.status.in?(%w[requires_action requires_confirmation]) %>
+                <span class="block text-amber-700">Needs member authentication</span>
+              <% end %>
+            </td>
+            <td class="px-3 py-2"><%= dollars_from_cents(candidate.amount_cents) %></td>
+            <td class="px-3 py-2"><%= candidate.created_at.strftime("%b %-d, %Y %-l:%M %p") %></td>
+            <td class="px-3 py-2">
+              <% if candidate.attempt %>
+                #<%= candidate.attempt.attempt_number %> · <%= candidate.attempt.status.humanize %>
+              <% elsif candidate.attempt_number.present? %>
+                #<%= candidate.attempt_number %>
+              <% else %>
+                -
+              <% end %>
+            </td>
+            <td class="px-3 py-2">
+              <% if candidate.payment %>
+                <%= link_to candidate.payment.stripe_charge_id,
+                      stripe_payment_url(candidate.payment.stripe_charge_id),
+                      target: "_blank", rel: "noopener",
+                      class: "text-primary font-mono hover:underline" %>
+                <span class="block text-gray-500">
+                  <%= dollars_from_cents(candidate.payment_remaining_cents) %> unallocated
+                </span>
+              <% else %>
+                <span class="text-gray-500">No local payment</span>
+              <% end %>
+            </td>
+            <td class="px-3 py-2">
+              <div class="flex flex-wrap items-center gap-1">
+                <% if candidate.can_link_attempt? %>
+                  <%= button_to "Use for attempt ##{candidate.attempt.attempt_number}",
+                        membership_invoice_reconciliation_path(
+                          membership_invoice,
+                          operation: "use_intent",
+                          payment_intent_id: candidate.payment_intent_id,
+                          attempt_id: candidate.attempt.id,
+                          **return_params
+                        ),
+                        class: button_classes(:secondary_outline, size: :sm) %>
+                <% end %>
+                <% if candidate.can_apply? && membership_invoice.remaining_cost.positive? %>
+                  <%= button_to "Apply #{dollars_from_cents(candidate.payment_remaining_cents)}",
+                        membership_invoice_reconciliation_path(
+                          membership_invoice,
+                          operation: "apply_payment",
+                          payment_id: candidate.payment.id,
+                          **return_params
+                        ),
+                        class: button_classes(:primary, size: :sm) %>
+                <% end %>
+                <% if candidate.allocated %>
+                  <span class="text-green-700">Applied</span>
+                <% elsif candidate.succeeded? && candidate.payment.blank? %>
+                  <span class="text-amber-700">No local payment</span>
+                <% elsif candidate.status == "canceled" %>
+                  <span class="text-gray-500">No money taken</span>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="mt-3 text-xs text-gray-500"><%= lookup.message || "No Stripe payments found for this invoice." %></p>
+<% end %>
+
+<% if lookup.local_payments.any? %>
+  <div class="mt-4">
+    <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">Unallocated payments linked to this invoice</p>
+    <ul class="mt-2 space-y-2 text-xs text-gray-600">
+      <% lookup.local_payments.each do |payment| %>
+        <li class="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+          <%= link_to payment.stripe_charge_id, stripe_payment_url(payment.stripe_charge_id),
+                target: "_blank", rel: "noopener",
+                class: "text-primary font-mono hover:underline" %>
+          <span><%= dollars_from_cents(payment.amount_cents_remaining) %> remaining</span>
+          <% if membership_invoice.remaining_cost.positive? %>
+            <%= button_to "Apply #{dollars_from_cents([ payment.amount_cents_remaining, membership_invoice.remaining_cost ].min)}",
+                  membership_invoice_reconciliation_path(
+                    membership_invoice, operation: "apply_payment", payment_id: payment.id, **return_params
+                  ),
+                  class: button_classes(:primary, size: :sm),
+                  title: "Applies this already-recorded payment to the invoice." %>
+          <% else %>
+            <span class="text-gray-500">Invoice already paid; this payment stays unallocated.</span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

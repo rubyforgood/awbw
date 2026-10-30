@@ -23,7 +23,7 @@ RSpec.describe Membership, type: :model do
     end
 
     it "rejects overlapping dates with an existing membership for the same person" do
-      person = create(:person)
+      person = create(:person, :without_user)
       create(:membership, :renewal_off, person: person,
         start_date: Date.current - 1.month, end_date: Date.current + 1.month)
 
@@ -33,7 +33,7 @@ RSpec.describe Membership, type: :model do
     end
 
     it "allows a new membership with non-overlapping dates when the previous is renewal off" do
-      person = create(:person)
+      person = create(:person, :without_user)
       create(:membership, :renewal_off, person: person,
         start_date: Date.current - 2.months, end_date: Date.current - 1.month)
 

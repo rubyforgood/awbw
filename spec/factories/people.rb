@@ -16,5 +16,27 @@ FactoryBot.define do
         person.organizations << create(:organization)
       end
     end
+
+    trait :without_audit do
+      created_by { nil }
+      updated_by { nil }
+    end
+
+    trait :without_user do
+      user { nil }
+      created_by { nil }
+      updated_by { nil }
+    end
+  end
+
+  factory :person_without_audit, parent: :person do
+    created_by { nil }
+    updated_by { nil }
+  end
+
+  factory :person_without_user, parent: :person do
+    user { nil }
+    created_by { nil }
+    updated_by { nil }
   end
 end

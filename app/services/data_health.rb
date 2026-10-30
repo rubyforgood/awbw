@@ -19,7 +19,9 @@ module DataHealth
       PendingOtherResponses
     ],
     "Payments" => [
-      OverAllocatedRegistrations
+      OverAllocatedRegistrations,
+      MembershipReconciliation,
+      MembershipCredits
     ],
     "Stories" => [
       StoriesWithoutWorkshop

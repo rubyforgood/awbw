@@ -373,6 +373,8 @@ Rails.application.routes.draw do
       get :new_checkout_link
       post :create_checkout_link
     end
+    resource :reconciliation_acknowledgement, only: [ :create, :destroy ],
+             controller: "payments/reconciliation_acknowledgements"
   end
   resources :allocations, only: [ :new, :create, :index ] do
     post :revert, on: :member
@@ -390,6 +392,8 @@ Rails.application.routes.draw do
     get :receipt, on: :member
     resource :checkout, only: [ :create ], controller: "membership_invoices/checkouts"
     get :cancel_checkout, on: :member, to: "membership_invoices/checkouts#cancel"
+    resource :reconciliation, only: [ :show, :create, :destroy ],
+             controller: "membership_invoices/reconciliations"
   end
 
   namespace :memberships do

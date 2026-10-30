@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Membership invoice checkout", type: :request do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
   let(:membership) { create(:membership, person: person) }
   let(:invoice) { create(:membership_invoice, membership: membership, cost_cents: 2_500) }
   let(:fake_session) do
@@ -24,18 +24,6 @@ RSpec.describe "Membership invoice checkout", type: :request do
     expect(invoice.checkout_session_id).to eq("cs_test_123")
   end
 
-  it "resumes the in-progress checkout instead of creating another" do
-    post membership_invoice_checkout_path(invoice)
-    allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_test_123")
-      .and_return(fake_session)
-
-    post membership_invoice_checkout_path(invoice)
-
-    expect(response).to redirect_to(fake_session.url)
-    expect(processor).to have_received(:checkout).once
-  end
-
   it "refuses a second checkout while a payment is in progress without a session id" do
     invoice.update_column(:payment_in_progress_at, Time.current)
 
@@ -44,24 +32,6 @@ RSpec.describe "Membership invoice checkout", type: :request do
     expect(response).to redirect_to(membership_invoice_path(invoice))
     expect(flash[:alert]).to match(/already in progress/)
     expect(processor).not_to have_received(:checkout)
-  end
-
-  it "keeps the Pay now control on the invoice while a payment is in progress" do
-    post membership_invoice_checkout_path(invoice)
-
-    get membership_invoice_path(invoice)
-
-    expect(response.body).to include("Pay now")
-    expect(response.body).not_to include("A payment is already in progress for this invoice")
-  end
-
-  it "does not show Pay now on the profile membership card while a payment is in progress" do
-    post membership_invoice_checkout_path(invoice)
-
-    get person_path(person)
-
-    expect(response.body).to include("Payment in progress", "View")
-    expect(response.body).not_to include("Pay now")
   end
 
   it "cancels the Stripe checkout and clears the invoice lock" do

@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Membership::Create do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_user) }
 
   def create_membership(**options)
     described_class.call(person: person, start_date: Date.current, **options)

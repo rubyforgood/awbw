@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "People memberships", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
 
   before { sign_in admin }
 
