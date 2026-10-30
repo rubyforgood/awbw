@@ -48,8 +48,9 @@ class OrganizationsController < ApplicationController
     end
 
     # Later pages of the published-content sections swap in through their frames.
-    if turbo_frame_request? && PUBLISHED_SECTIONS.include?(params[:section])
-      section = params[:section]
+    # The section name comes from the constant, never the param, so the render path is fixed.
+    section = PUBLISHED_SECTIONS.find { |name| name == params[:section] }
+    if turbo_frame_request? && section
       # A section the org hid stays hidden from a crafted ?section= request.
       authorize! @organization, to: :manage? unless @organization.public_send(:"profile_show_#{section}?")
       records = published_section_records(section, page: params[:page])
