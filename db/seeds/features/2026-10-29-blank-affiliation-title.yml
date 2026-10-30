@@ -2,6 +2,7 @@ name: "Blank affiliation title keeps someone linked without making them a facili
 area: people
 display_status: admin_facing
 released_on: 2026-10-29
+pr_number: 2918
 summary: >-
   Clear an affiliation's title to keep a person linked to an organization without
   counting them as a facilitator. A blank title now stays blank instead of turning
