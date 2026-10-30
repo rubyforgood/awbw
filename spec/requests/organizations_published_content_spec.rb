@@ -195,6 +195,26 @@ RSpec.describe "Organization profile published content", type: :request do
       expect(response.body).to include("Associated records")
     end
 
+    it "groups buttons like the person's card and shows each only to viewers its index lets in" do
+      card = -> { Capybara.string(response.body).find("h2", text: "Associated records").ancestor("div.rounded-2xl", match: :first) }
+
+      sign_in member
+      get organization_path(organization)
+      expect(card.call).to have_text("Administrative").and have_text("Contributed content")
+      %w[Community\ news Resources Stories Workshops Workshop\ variations Workshop\ logs].each do |label|
+        expect(card.call).to have_link(label)
+      end
+      [ "Story ideas", "Workshop ideas", "Workshop variation ideas", "Event registrations" ].each do |label|
+        expect(card.call).to have_no_link(label)
+      end
+
+      sign_in admin
+      get organization_path(organization)
+      [ "Story ideas", "Workshop ideas", "Workshop variation ideas", "Event registrations" ].each do |label|
+        expect(card.call).to have_link(label)
+      end
+    end
+
     it "keeps the Activity link to admins" do
       activity_link = -> { Capybara.string(response.body).has_link?(href: /#{admin_activities_events_path}\?.*organization_id=#{organization.id}/) }
 

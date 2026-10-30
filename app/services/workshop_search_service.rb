@@ -47,6 +47,7 @@ class WorkshopSearchService
     filter_by_query
     filter_by_author_name
     filter_by_author_id
+    filter_by_organization_id
     filter_by_categories
     filter_by_sectors
     filter_by_tag_names
@@ -82,6 +83,13 @@ class WorkshopSearchService
 
   def filter_by_author_id
     @workshops = @workshops.authored_by(params[:author_id])
+  end
+
+  # Workshops credited to the org's people (Organization#credited_workshops).
+  def filter_by_organization_id
+    return unless params[:organization_id].present?
+    credited = Organization.find_by(id: params[:organization_id])&.credited_workshops || Workshop.none
+    @workshops = @workshops.where(id: credited.select(:id))
   end
 
   def filter_by_categories
