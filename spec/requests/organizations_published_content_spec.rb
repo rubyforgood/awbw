@@ -195,6 +195,18 @@ RSpec.describe "Organization profile published content", type: :request do
       expect(response.body).to include("Associated records")
     end
 
+    it "keeps the Activity link to admins" do
+      activity_link = -> { Capybara.string(response.body).has_link?(href: /#{admin_activities_events_path}\?.*organization_id=#{organization.id}/) }
+
+      sign_in member
+      get organization_path(organization)
+      expect(activity_link.call).to be(false)
+
+      sign_in admin
+      get organization_path(organization)
+      expect(activity_link.call).to be(true)
+    end
+
     it "hides from members but not admins when the toggle is off" do
       organization.update!(profile_show_workshop_logs: false)
 
