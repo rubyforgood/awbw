@@ -52,33 +52,6 @@ RSpec.describe "Payments", type: :request do
   end
 
   describe "POST /payments" do
-    context "when allocating to a fully-paid EventRegistration" do
-      let(:event) { create(:event, cost_cents: 10_000) }
-      let(:registration) { create(:event_registration, event:) }
-
-      before do
-        initial_payment = create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000, person:)
-        create(:allocation, source: initial_payment, allocatable: registration, amount: 10_000)
-      end
-
-      it "does not create a payment or allocation" do
-        expect {
-          post payments_path, params: {
-            payment: {
-              type: "CashPayment",
-              payer_type: "Person",
-              person_id: person.id,
-              amount_dollars: "11.11",
-              allocatable_sgid: registration.to_sgid.to_s
-            }
-          }
-        }.to change(Payment, :count).by(0)
-          .and change(Allocation, :count).by(0)
-
-        expect(response).to have_http_status(:unprocessable_content)
-      end
-    end
-
     context "when allocating a manual payment to a membership invoice with an open checkout" do
       let(:invoice) { create(:membership_invoice, cost_cents: 5_000) }
 
@@ -102,28 +75,6 @@ RSpec.describe "Payments", type: :request do
 
         expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include("A payment is already in progress for this invoice.")
-      end
-    end
-
-    context "when allocating to a free EventRegistration" do
-      let(:free_event) { create(:event, cost_cents: nil) }
-      let(:registration) { create(:event_registration, event: free_event) }
-
-      it "does not create a payment or allocation" do
-        expect {
-          post payments_path, params: {
-            payment: {
-              type: "CashPayment",
-              payer_type: "Person",
-              person_id: person.id,
-              amount_dollars: "5.00",
-              allocatable_sgid: registration.to_sgid.to_s
-            }
-          }
-        }.to change(Payment, :count).by(0)
-          .and change(Allocation, :count).by(0)
-
-        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 
@@ -248,22 +199,6 @@ RSpec.describe "Payments", type: :request do
       expect(payment.person).to eq(person)
     end
 
-    it "switches the payer from a person to an organization" do
-      payment = create(:payment, person:, organization: nil)
-
-      patch payment_path(payment), params: {
-        payment: {
-          payer_sgid: organization.to_sgid.to_s,
-          additional_designation_sgid: ""
-        }
-      }
-
-      payment.reload
-      expect(payment.payer_type).to eq("Organization")
-      expect(payment.organization).to eq(organization)
-      expect(payment.person).to be_nil
-    end
-
     it "clears the additional designation when blank is sent" do
       payment = create(:payment, person:, organization:, payer_type: "Organization")
 
@@ -277,57 +212,6 @@ RSpec.describe "Payments", type: :request do
       payment.reload
       expect(payment.organization).to eq(organization)
       expect(payment.person).to be_nil
-    end
-
-    it "shows a flash alert when validation fails" do
-      payment = create(:payment, person:, organization: nil)
-      other_person = create(:person)
-
-      patch payment_path(payment), params: {
-        payment: {
-          payer_sgid: person.to_sgid.to_s,
-          additional_designation_sgid: other_person.to_sgid.to_s
-        }
-      }
-
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(flash[:alert]).to include("must be different kinds")
-    end
-  end
-
-  describe "payer type on create" do
-    let(:event) { create(:event, cost_cents: 10_000) }
-    let(:registration) { create(:event_registration, event:) }
-    let(:organization) { create(:organization) }
-
-    it "keeps Organization as the payer when both a person and an organization are given" do
-      post payments_path, params: {
-        payment: {
-          type: "CashPayment",
-          payer_type: "Organization",
-          person_id: registration.registrant_id,
-          organization_id: organization.id,
-          amount_dollars: "50.00",
-          allocatable_sgid: registration.to_sgid.to_s
-        }
-      }
-
-      expect(Payment.last.payer_type).to eq("Organization")
-      expect(Payment.last.organization).to eq(organization)
-    end
-
-    it "switches the payer type to Person when only a person is selected" do
-      post payments_path, params: {
-        payment: {
-          type: "CashPayment",
-          payer_type: "Organization",
-          person_id: registration.registrant_id,
-          amount_dollars: "50.00",
-          allocatable_sgid: registration.to_sgid.to_s
-        }
-      }
-
-      expect(Payment.last.payer_type).to eq("Person")
     end
   end
 

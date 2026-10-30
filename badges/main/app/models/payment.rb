@@ -1,4 +1,6 @@
 class Payment < ApplicationRecord
+  def self.policy_class = PaymentPolicy
+
   include FilemakerCoded, PersonNameSearchable
 
   filemaker_archived_in FmPayment

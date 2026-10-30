@@ -496,3 +496,83 @@ RSpec.describe DataHealth, ".grouped_checks" do
     expect(grouped.uniq).to eq(grouped)
   end
 end
+
+RSpec.describe DataHealth::MembershipReconciliation do
+  it "lists an invoice with an unresolved attempt and links to its reconcile page" do
+    person = create(:person)
+    membership = create(:membership, person:)
+    invoice = create(:membership_invoice, membership:)
+    invoice.charge_attempts.create!(attempt_number: 1, status: "unknown",
+      amount_cents: 1_000, attempted_at: 1.hour.ago)
+
+    check = described_class.new
+
+    expect(check.scope).to contain_exactly(invoice)
+    expect(check.describe(invoice)).to include("1 unresolved attempt")
+    expect(check.path_for(invoice)).to eq(
+      Rails.application.routes.url_helpers.membership_invoice_reconciliation_path(
+        invoice, return_to: "data_health"
+      )
+    )
+  end
+
+  it "lists a stale checkout session" do
+    invoice = create(:membership_invoice)
+    invoice.update_columns(checkout_session_id: "cs_test", payment_in_progress_at: 2.hours.ago)
+
+    check = described_class.new
+
+    expect(check.scope).to contain_exactly(invoice)
+    expect(check.describe(invoice)).to include("checkout session")
+  end
+
+  it "lists an unpaid invoice with a portal-originated unallocated payment" do
+    invoice = create(:membership_invoice, cost_cents: 1_000)
+    payment = create(:external_processor_payment, person: invoice.person,
+      amount_cents: 1_000, amount_cents_remaining: 1_000,
+      metadata: { "membership_invoice_id" => invoice.id })
+
+    check = described_class.new
+
+    expect(check.scope).to include(invoice)
+
+    payment.update!(reconciliation_acknowledged_at: Time.current)
+    expect(check.scope).not_to include(invoice)
+  end
+
+  it "leaves a clean invoice alone" do
+    create(:membership_invoice)
+
+    expect(described_class.new).not_to be_any
+  end
+end
+
+RSpec.describe DataHealth::MembershipCredits do
+  it "lists a portal-originated credit on a paid invoice" do
+    person = create(:person)
+    membership = create(:membership, person:)
+    invoice = create(:membership_invoice, membership:, cost_cents: 1_000)
+    paid = create(:payment, person:, amount_cents: 1_000)
+    create(:allocation, source: paid, allocatable: invoice, amount: 1_000)
+    payment = create(:external_processor_payment, person:, amount_cents: 1_000,
+      amount_cents_remaining: 1_000, metadata: { "membership_invoice_id" => invoice.id })
+
+    check = described_class.new
+
+    expect(check.scope).to contain_exactly(payment)
+    expect(check.describe(payment)).to include("credit")
+    expect(check.path_for(payment)).to eq(Rails.application.routes.url_helpers.payment_path(payment))
+  end
+
+  it "includes a missing linked invoice and excludes external or acknowledged payments" do
+    person = create(:person)
+    missing = create(:external_processor_payment, person:, amount_cents: 1_000,
+      amount_cents_remaining: 1_000, metadata: { "membership_invoice_id" => 999_999 })
+    create(:external_processor_payment, person:, amount_cents_remaining: 1_000)
+    create(:external_processor_payment, person:, amount_cents_remaining: 1_000,
+      metadata: { "membership_invoice_id" => 999_998 },
+      reconciliation_acknowledged_at: Time.current)
+
+    expect(described_class.new.scope).to contain_exactly(missing)
+  end
+end

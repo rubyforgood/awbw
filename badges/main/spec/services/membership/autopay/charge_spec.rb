@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Membership::Autopay::Charge do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_user) }
   let(:membership) { create(:membership, person: person, cost_cents: 10_000) }
   let(:invoice) do
     create(:membership_invoice, membership: membership, cost_cents: 10_000,

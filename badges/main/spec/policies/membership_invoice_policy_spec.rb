@@ -112,6 +112,16 @@ RSpec.describe MembershipInvoicePolicy, type: :policy do
     end
   end
 
+  describe "#reconcile?" do
+    it "allows an admin while memberships are enabled and denies an owner" do
+      expect(policy_for(user: admin)).to be_allowed_to(:reconcile?)
+      expect(policy_for(user: owner)).not_to be_allowed_to(:reconcile?)
+
+      allow(Membership).to receive(:enabled?).and_return(false)
+      expect(policy_for(user: admin)).not_to be_allowed_to(:reconcile?)
+    end
+  end
+
   describe "#pay?" do
     it "allows the member who owns the invoice and denies everyone else" do
       expect(policy_for(user: owner)).to be_allowed_to(:pay?)

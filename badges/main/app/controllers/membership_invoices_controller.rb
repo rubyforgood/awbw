@@ -28,6 +28,9 @@ class MembershipInvoicesController < ApplicationController
     @deletion_blocked_reason = @membership_invoice.deletion_blocked_reason
     @autopay_ready = @membership_invoice.membership.autopay_on? &&
       @membership_invoice.person.stripe_customer&.payment_methods&.exists?
+    if allowed_to?(:manage?, @membership_invoice)
+      @reconciliation = MembershipInvoiceReconciliation.new(@membership_invoice)
+    end
     track_view("invoices", { membership_invoice_id: @membership_invoice.id })
   end
 
@@ -65,6 +68,9 @@ class MembershipInvoicesController < ApplicationController
     @receipt = MembershipInvoiceReceipt.new(@membership_invoice)
     @next_invoice = @membership_invoice.membership.next_invoice
     @deletion_blocked_reason = @membership_invoice.deletion_blocked_reason
+    if allowed_to?(:manage?, @membership_invoice)
+      @reconciliation = MembershipInvoiceReconciliation.new(@membership_invoice)
+    end
   end
 
   def edit
@@ -121,7 +127,8 @@ class MembershipInvoicesController < ApplicationController
 
   def set_membership_invoice
     @membership_invoice = MembershipInvoice
-      .includes(:allocations, :charge_attempts, :invoicee, :bill_to_address, :attention_person,
+      .includes(:allocations, :invoicee, :bill_to_address, :attention_person,
+                charge_attempts: :pay_charge,
                 membership: :person, created_by: :person, updated_by: :person)
       .find(params[:id])
   end

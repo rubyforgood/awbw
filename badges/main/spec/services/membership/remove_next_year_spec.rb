@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Membership::RemoveNextYear do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_user) }
 
   def create_membership(start_date:, end_date:)
     create(:membership, person: person, start_date: start_date, end_date: end_date)

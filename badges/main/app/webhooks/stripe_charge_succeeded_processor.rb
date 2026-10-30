@@ -9,19 +9,12 @@ class StripeChargeSucceededProcessor
 
     person = resolve_person(stripe_charge, pay_charge)
 
-    payment = ExternalProcessorPayment.new(
-      stripe_charge_id: stripe_charge.id,
-      person: person,
-      pay_charge: pay_charge,
-      amount_cents: stripe_charge.amount,
-      amount_cents_remaining: stripe_charge.amount,
-      currency: stripe_charge.currency,
-      metadata: {
-        stripe_charge: stripe_charge.to_hash
-      }
+    PaymentServices::RecordStripeCharge.call(
+      charge: stripe_charge,
+      person:,
+      pay_charge:,
+      metadata: { stripe_charge: stripe_charge.to_hash }
     )
-    payment.skip_pay_charge_validation = pay_charge.nil?
-    payment.save!
   end
 
   private

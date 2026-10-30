@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :external_processor_payment do
-    association :person
+    association :person, factory: :person_without_user
 
     amount_cents { 1000 }
     amount_cents_remaining { 1000 }

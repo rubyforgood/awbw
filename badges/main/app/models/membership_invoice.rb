@@ -49,6 +49,29 @@ class MembershipInvoice < ApplicationRecord
   }
   scope :partially_paid, -> { not_paid_in_full.with_positive_allocation }
 
+  def self.needing_reconciliation
+    where(id: MembershipChargeAttempt.unresolved.select(:membership_invoice_id))
+      .or(where(id: stale_checkout_ids))
+      .or(where(id: unpaid_payment_invoice_ids))
+  end
+
+  def self.stale_checkout_ids
+    where.not(checkout_session_id: nil)
+      .where("payment_in_progress_at IS NULL OR payment_in_progress_at <= ?", PAYMENT_WINDOW.ago)
+      .select(:id)
+  end
+
+  def self.unpaid_payment_invoice_ids
+    ExternalProcessorPayment.membership_originated
+      .where(amount_cents_remaining: 1.., reconciliation_acknowledged_at: nil)
+      .filter_map do |payment|
+        link = MembershipPaymentLink.new(payment)
+        link.invoice.id if link.unpaid?
+      end
+      .uniq
+  end
+  private_class_method :stale_checkout_ids, :unpaid_payment_invoice_ids
+
   before_validation :derive_end_date, on: :create
   before_validation :inherit_invoice_details, on: :create
   before_destroy :prevent_destroy_unless_deletable
@@ -142,6 +165,17 @@ class MembershipInvoice < ApplicationRecord
     else
       charge_attempts.where(status: UNRESOLVED_ATTEMPT_STATUSES).exists?
     end
+  end
+
+  def needs_reconciliation?
+    unresolved_attempt? || (checkout_session_id.present? && !payment_in_progress?)
+  end
+
+  def stripe_payments_with_remaining
+    charge_ids = charge_attempts.includes(:pay_charge).filter_map { |attempt| attempt.pay_charge&.processor_id }
+    return ExternalProcessorPayment.none if charge_ids.empty?
+
+    ExternalProcessorPayment.where(stripe_charge_id: charge_ids, amount_cents_remaining: 1..)
   end
 
   def mark_payment_in_progress!
@@ -261,7 +295,7 @@ class MembershipInvoice < ApplicationRecord
     upcoming = upcoming.where.not(id: id) if persisted?
     return unless upcoming.exists?
 
-    errors.add(:base, "This membership already has an upcoming invoice — remove next year before issuing another")
+    errors.add(:base, "This membership already has an upcoming invoice. Remove next year before issuing another")
   end
 
   def cost_cents_immutable_once_allocated

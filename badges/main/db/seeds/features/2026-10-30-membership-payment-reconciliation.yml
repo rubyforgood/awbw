@@ -1,0 +1,15 @@
+name: "Reconcile membership payments against Stripe"
+area: payments
+display_status: admin_facing
+released_on: 2026-10-30
+action_path: "/admin/data_health"
+summary: >-
+  Data health now lists membership invoices with automatic payments or checkout
+  sessions that haven't been reconciled, plus a separate list of portal-originated
+  membership credits. Each invoice has a panel to check Stripe, apply an unallocated
+  payment, or resolve a stuck attempt.
+pro_tips:
+  - "Reconciliation reads Stripe; it never creates a new card charge. Cancel payment attempt is the only Stripe change."
+  - "The Stripe lookup can find a payment whose PaymentIntent id was never saved."
+  - "Only mark an attempt failed after checking Stripe: it lets the next automatic charge retry."
+  - "A portal-originated membership credit can be acknowledged on the payment page to hide it from Data health."

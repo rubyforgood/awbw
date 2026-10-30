@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :membership do
-    association :person
+    association :person, factory: :person_without_user
     start_date { Date.current }
     end_date { start_date + Membership::INVOICE_PERIOD - 1.day }
 

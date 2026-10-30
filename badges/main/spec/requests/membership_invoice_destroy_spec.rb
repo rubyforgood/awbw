@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Membership invoice deletion", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
   let(:membership) do
     create(:membership, person: person,
       start_date: Date.current, end_date: Date.current + 2.years - 1.day)

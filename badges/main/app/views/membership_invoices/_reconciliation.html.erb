@@ -1,0 +1,18 @@
+<div id="reconciliation" class="mt-4 scroll-mt-24 border-t border-blue-200 pt-3">
+  <div class="flex flex-wrap items-center gap-2">
+    <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">Payment reconciliation</p>
+    <span class="text-xs text-gray-500">Reviews payments; never creates a charge.</span>
+    <div class="ml-auto">
+      <%= link_to "Reconcile payments",
+            membership_invoice_reconciliation_path(membership_invoice, return_to: "invoice"),
+            class: button_classes(:secondary_outline, size: :sm),
+            title: "Open Stripe payments, attempts, and the actions for this invoice." %>
+    </div>
+  </div>
+
+  <% if summary.needed? %>
+    <p class="mt-2 text-sm text-amber-800"><%= summary.summary %></p>
+  <% else %>
+    <p class="mt-2 text-xs text-gray-500">No unresolved payment attempts or checkout sessions.</p>
+  <% end %>
+</div>

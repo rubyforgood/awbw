@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Membership tooltips", type: :request do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
   let(:membership) { create(:membership, person: person) }
 
   def add_card

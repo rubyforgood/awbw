@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Membership invoice receipts", type: :request do
-  let(:person) { create(:person) }
+  let(:person) { create(:person, :without_audit) }
   let(:membership) { create(:membership, person: person) }
   let(:invoice) { create(:membership_invoice, membership: membership, cost_cents: 2_500) }
 

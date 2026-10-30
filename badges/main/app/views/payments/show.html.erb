@@ -22,6 +22,27 @@
       <% end %>
     </div>
   </div>
+
+  <% if @payment.is_a?(ExternalProcessorPayment) && @payment.amount_cents_remaining.to_i.positive? %>
+    <div class="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+      <% if @payment.reconciliation_acknowledged_at.present? %>
+        <span>
+          Credit acknowledged on <%= @payment.reconciliation_acknowledged_at.strftime("%b %-d, %Y") %>
+        </span>
+        <%= button_to "Remove acknowledgement",
+              payment_reconciliation_acknowledgement_path(@payment),
+              method: :delete,
+              class: button_classes(:secondary_outline, size: :sm),
+              title: "Shows this credit in Data Health again." %>
+      <% else %>
+        <%= button_to "Acknowledge credit",
+              payment_reconciliation_acknowledgement_path(@payment),
+              class: button_classes(:secondary_outline, size: :sm),
+              title: "Hides this credit from Data Health. The payment and remaining amount stay unchanged. Remove the acknowledgement to show it again." %>
+      <% end %>
+    </div>
+  <% end %>
+
   <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
     <div>
       <dt class="text-sm font-medium text-gray-500">Type</dt>
@@ -120,7 +141,7 @@
                   <%= link_to allocations_path(allocatable_sgid: allocation.allocatable.to_sgid.to_s) do %>
                     <% if allocation.allocatable_type == "EventRegistration" && allocation.allocatable.present? %>
                       <%= allocation.allocatable.registrant.full_name %>
-                      —
+                      -
                       <%= allocation.allocatable.event.title %>
                     <% else %>
                       <%= allocation.allocatable_type.underscore.titleize %>

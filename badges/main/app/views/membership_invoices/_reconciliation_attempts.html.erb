@@ -1,0 +1,139 @@
+<% attempts = membership_invoice.charge_attempts.to_a %>
+<% return_to = local_assigns.fetch(:return_to, nil) %>
+<% return_params = return_to.present? ? { return_to: } : {} %>
+
+<% if membership_invoice.checkout_session_id.present? %>
+  <div class="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+    <span class="font-mono"><%= membership_invoice.checkout_session_id %></span>
+    <span>Checkout session</span>
+    <%= button_to "Check checkout session",
+          membership_invoice_reconciliation_path(
+            membership_invoice, operation: "check_checkout", **return_params
+          ),
+          class: button_classes(:secondary_outline, size: :sm),
+          title: "Checks the stored Stripe Checkout Session and records a completed payment." %>
+    <% unless membership_invoice.payment_in_progress? %>
+      <%= button_to "Clear stale checkout",
+            membership_invoice_reconciliation_path(
+              membership_invoice, operation: "clear_checkout", **return_params
+            ),
+            class: button_classes(:danger_outline, size: :sm),
+            title: "Clears the local checkout lock without calling Stripe.",
+            data: { turbo_confirm: "Only clear this if Stripe shows the session expired or missing. The invoice can then be paid again." } %>
+    <% end %>
+  </div>
+<% end %>
+
+<% if attempts.any? %>
+  <ul class="mt-3 space-y-2 text-xs text-gray-600">
+    <% attempts.reverse.each do |attempt| %>
+      <% badge_classes = case attempt.status
+         when "succeeded" then "bg-green-50 text-green-700 border-green-200"
+         when "failed" then "bg-red-50 text-red-700 border-red-200"
+         when "needs_action" then "bg-amber-50 text-amber-700 border-amber-200"
+         else "bg-gray-50 text-gray-600 border-gray-200"
+         end %>
+      <li class="rounded-lg border border-gray-200 bg-white px-3 py-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="font-medium">#<%= attempt.attempt_number %></span>
+          <span class="rounded-full border px-2 py-0.5 font-medium <%= badge_classes %>">
+            <%= attempt.status.humanize %>
+          </span>
+          <span><%= dollars_from_cents(attempt.amount_cents) %></span>
+          <% if attempt.attempted_at.present? %>
+            <span class="text-gray-400"><%= attempt.attempted_at.strftime("%b %-d, %Y %-l:%M %p") %></span>
+          <% end %>
+          <% if attempt.payment_intent_id.present? %>
+            <%= link_to "PaymentIntent #{attempt.payment_intent_id}",
+                  stripe_payment_url(attempt.payment_intent_id),
+                  target: "_blank", rel: "noopener",
+                  class: "text-primary font-mono hover:underline" %>
+          <% end %>
+          <% if attempt.pay_charge&.processor_id.present? %>
+            <%= link_to "Charge #{attempt.pay_charge.processor_id}",
+                  stripe_payment_url(attempt.pay_charge.processor_id),
+                  target: "_blank", rel: "noopener",
+                  class: "text-primary font-mono hover:underline" %>
+          <% end %>
+        </div>
+
+        <% if attempt.error_message.present? %>
+          <p class="mt-1 text-xs text-gray-500"><%= attempt.error_message %></p>
+        <% end %>
+
+        <% if attempt.unresolved? %>
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            <% if attempt.needs_action? %>
+              <span class="text-xs text-amber-800">
+                The member must finish authentication in Stripe. If they can't, cancel the attempt.
+              </span>
+              <%= button_to "Cancel payment attempt",
+                    membership_invoice_reconciliation_path(
+                      membership_invoice, attempt_id: attempt.id, **return_params
+                    ),
+                    method: :delete,
+                    class: button_classes(:danger_outline, size: :sm),
+                    title: "Cancels this PaymentIntent in Stripe. No money has moved.",
+                    data: { turbo_confirm: "Cancel this PaymentIntent in Stripe? If the member is mid-authentication, their payment will fail. The invoice can then be retried." } %>
+              <%= button_to "Clear missing PaymentIntent",
+                    membership_invoice_reconciliation_path(
+                      membership_invoice, operation: "clear_missing_intent",
+                      attempt_id: attempt.id, **return_params
+                    ),
+                    class: button_classes(:secondary_outline, size: :sm),
+                    title: "Clears a PaymentIntent Stripe no longer has. A live PaymentIntent is refused.",
+                    data: { turbo_confirm: "Only use this if Stripe says the PaymentIntent no longer exists. The attempt will be marked failed and the invoice can retry." } %>
+            <% elsif attempt.payment_intent_id.present? %>
+              <%= button_to "Reconcile with Stripe",
+                    membership_invoice_reconciliation_path(
+                      membership_invoice, operation: "reconcile_attempt",
+                      attempt_id: attempt.id, **return_params
+                    ),
+                    class: button_classes(:secondary_outline, size: :sm),
+                    title: "Reads this PaymentIntent from Stripe and repairs the local payment records." %>
+              <%= button_to "Cancel payment attempt",
+                    membership_invoice_reconciliation_path(
+                      membership_invoice, attempt_id: attempt.id, **return_params
+                    ),
+                    method: :delete,
+                    class: button_classes(:danger_outline, size: :sm),
+                    title: "Cancels this PaymentIntent in Stripe. If it already succeeded, it will be reconciled instead.",
+                    data: { turbo_confirm: "Cancel this PaymentIntent in Stripe? If it already succeeded, Stripe will refuse and the attempt will be reconciled instead. This does not move money." } %>
+              <%= button_to "Record this charge",
+                    membership_invoice_reconciliation_path(
+                      membership_invoice, operation: "record_charge",
+                      payment_intent_id: attempt.payment_intent_id,
+                      attempt_id: attempt.id, **return_params
+                    ),
+                    class: button_classes(:secondary_outline, size: :sm),
+                    title: "Records a successful Stripe charge when no local payment exists. This does not create a charge.",
+                    data: { turbo_confirm: "Record this Stripe charge as a local payment? Only use this when Stripe shows a successful charge the portal did not capture. This does not create a new charge." } %>
+              <%= button_to "Clear missing PaymentIntent",
+                    membership_invoice_reconciliation_path(
+                      membership_invoice, operation: "clear_missing_intent",
+                      attempt_id: attempt.id, **return_params
+                    ),
+                    class: button_classes(:secondary_outline, size: :sm),
+                    title: "Clears a PaymentIntent Stripe no longer has. A live PaymentIntent is refused.",
+                    data: { turbo_confirm: "Only use this if Stripe says the PaymentIntent no longer exists. The attempt will be marked failed and the invoice can retry." } %>
+            <% else %>
+              <span class="text-xs text-gray-500">No PaymentIntent was stored for this attempt.</span>
+              <% if attempt.manual_failure_allowed? %>
+                <%= button_to "Mark failed: no charge found",
+                      membership_invoice_reconciliation_path(
+                        membership_invoice, operation: "fail_attempt",
+                        attempt_id: attempt.id, **return_params
+                      ),
+                      class: button_classes(:danger_outline, size: :sm),
+                      title: "Only use this after checking Stripe: no successful charge exists.",
+                      data: { turbo_confirm: "Only do this after checking Stripe. Mark this attempt failed so the next automatic charge can retry?" } %>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="mt-2 text-xs text-gray-500">No automatic payment attempts.</p>
+<% end %>
