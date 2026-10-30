@@ -464,9 +464,9 @@ module Events
       OutsideUsaState.form_field_answers(params, :callout_form)
     end
 
-    # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of
-    # rather than all-of, matching the callout view: each CE registration that's paid
-    # or intends to pay renders its own sheet, and since they all record the same
+    # Attendance sign-in/out follows CE approval and payment — it's the CE sign-in sheet. Any-of
+    # rather than all-of, matching the callout view: each CE registration that's approved and
+    # paid or intends to pay renders its own sheet, and since they all record the same
     # hours, one such licence is enough to let the registrant write those hours down.
     def attendance_enabled?
       @event_registration.ce_attendance_available?

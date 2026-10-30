@@ -74,6 +74,7 @@
             Approved <%= @ce_registration.approved_at.to_date.to_fs(:long) %>
           <% else %>
             Not approved yet
+            <span class="block text-xs text-gray-500">Approval opens sign-in (once paid or intending to pay) and the certificate.</span>
           <% end %>
         </p>
         <%= button_to toggle_approval_continuing_education_registration_path(@ce_registration, **ce_registration_return_params),

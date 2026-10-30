@@ -5,9 +5,11 @@ released_on: 2026-10-30
 pr_number: 2921
 action_path: "/continuing_education_registrations"
 summary: >-
-  Each CE registration now has an Approve CE button, like the certificate's
-  Mark issued. CE timesheets list approved registrations by default, whether
-  or not they've paid; switch to "All CE" to see everyone who signed up.
+  Each CE registration now has an Approve CE button. Approval, plus payment or
+  intent to pay, opens the registrant's sign-in sheet; the certificate needs it
+  too. CE timesheets list approved registrations by default.
 pro_tips:
-  - "Approval is your call — payment, attendance, and the CE form don't set it."
+  - "Approval is your call — payment, attendance, and the CE form never set it."
+  - "Paid but not approved shows the registrant a blue Pending badge; approved shows Approved."
+  - "Switch timesheets to All CE to see everyone who signed up."
   - "Filter the CE registrations list by Approved or Not approved."

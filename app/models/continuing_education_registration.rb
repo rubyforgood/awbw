@@ -129,15 +129,15 @@ class ContinuingEducationRegistration < ApplicationRecord
       &.find { |c| c.professional_license_id == professional_license_id }
   end
 
-  # CE certificate eligibility — its own rule (not shared): the event grants CE,
-  # the registrant attended, the training has ended, the CE balance is paid, the
+  # CE certificate eligibility — its own rule (not shared): the event grants CE, an
+  # admin approved this CE, the registrant attended, the training has ended, the CE balance is paid, the
   # CE callout's post-training form (if one is set) is complete, and (when
   # attendance was tracked) the logged time approximately covers the hours.
   # Everything is judged at this record's own event/registration — after a transfer
   # the hours ride on the destination reg's own record, so there's nothing to walk.
   def certificate_available?
     event = event_registration&.event
-    return false unless event&.ce_eligible?
+    return false unless event&.ce_eligible? && approved?
     return false unless event.end_date&.past? && event_registration.attended? && paid_in_full?
     return false unless event_registration.ce_form_requirement_met?
 
@@ -228,10 +228,15 @@ class ContinuingEducationRegistration < ApplicationRecord
     approved_at.present?
   end
 
-  # May this CE reach CE-paid content (callouts gated on CE payment)? Mirrors
-  # EventRegistration#payment_access_granted?; reporting keeps using paid_in_full?.
+  # Paid or intends to pay. Mirrors EventRegistration#payment_access_granted?;
+  # reporting keeps using paid_in_full?.
   def payment_access_granted?
     paid_in_full? || intends_to_pay?
+  end
+
+  # Opens this CE's sign-in sheet and CE-gated callouts.
+  def access_granted?
+    approved? && payment_access_granted?
   end
 
   # Any allocation — a payment, a scholarship, or a revert (which adds a negative

@@ -287,12 +287,12 @@
       the event's timesheet window (see events/callouts/_ce_attendance_sheet), and the
       controls stay singular above them because every sheet shares one set of times.
     %>
-    <%# Gated per licence (paid or intends to pay), so a second still being paid for
+    <%# Gated per licence (approved, and paid or intends to pay), so a second still being paid for
         doesn't take the first one's sheet away. The sample preview has no payments behind its built CE
         record, so treat it as paid the way the "Paid in full" badge above does —
         otherwise the section is invisible where it's meant to be previewed. %>
     <% attendance_sheets = @event_registration.continuing_education_registrations
-         .select { |ce| ce.payment_access_granted? || simulate_ce_paid || sample_preview? } %>
+         .select { |ce| ce.access_granted? || simulate_ce_paid || sample_preview? } %>
     <% sheet = RegistrantAttendanceSheet.new(@event_registration) %>
     <% signed_in = sheet.signed_in? %>
     <% forgotten_entry = sheet.forgotten_entry %>

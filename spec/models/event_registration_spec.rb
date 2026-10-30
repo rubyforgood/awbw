@@ -305,7 +305,11 @@ RSpec.describe EventRegistration, type: :model do
         expect(destination.reload.ce_paid_in_full?).to be(true)
       end
 
-      it "offers attendance sign-in on the destination reg" do
+      it "offers attendance sign-in on the destination reg once its CE is approved" do
+        expect(destination.reload.ce_attendance_available?).to be(false)
+
+        destination.continuing_education_registrations.first.update!(approved_at: Time.current)
+
         expect(destination.reload.ce_attendance_available?).to be(true)
       end
 
@@ -324,12 +328,14 @@ RSpec.describe EventRegistration, type: :model do
         expect(destination.reload.ce_paid_in_full?).to be(false)
       end
 
-      it "grants CE payment access once the carried balance intends to pay" do
-        expect(destination.reload.ce_payment_access_granted?).to be(false)
+      it "grants CE access once the carried balance is approved and intends to pay" do
+        carried = destination.continuing_education_registrations.first
+        carried.update!(intends_to_pay: true)
+        expect(destination.reload.ce_access_granted?).to be(false)
 
-        destination.continuing_education_registrations.first.update!(intends_to_pay: true)
+        carried.update!(approved_at: Time.current)
 
-        expect(destination.reload.ce_payment_access_granted?).to be(true)
+        expect(destination.reload.ce_access_granted?).to be(true)
         expect(destination.ce_paid_in_full?).to be(false)
       end
     end

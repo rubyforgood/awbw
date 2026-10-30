@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe ContinuingEducationRegistrationDecorator do
   let(:event) { create(:event, :ended, ce_hours_offered: 6) }
   let(:registration) { create(:event_registration, event: event, status: "attended") }
-  let(:ce_registration) { create(:continuing_education_registration, event_registration: registration, hours: 6, cost_cents: 0) }
+  let(:ce_registration) { create(:continuing_education_registration, :approved, event_registration: registration, hours: 6, cost_cents: 0) }
 
   describe "#approval_badge" do
     it "reads Approved once an admin approves, whatever the payment" do
@@ -12,6 +12,7 @@ RSpec.describe ContinuingEducationRegistrationDecorator do
     end
 
     it "reads Not approved until then" do
+      ce_registration.update!(approved_at: nil)
       expect(ce_registration.decorate.approval_badge.label).to eq("Not approved")
     end
   end
@@ -44,6 +45,11 @@ RSpec.describe ContinuingEducationRegistrationDecorator do
   end
 
   describe "#certificate_conditions" do
+    it "lists approval as unmet until an admin approves" do
+      ce_registration.update!(approved_at: nil)
+      expect(ce_registration.decorate.certificate_locked_reason).to eq("Unlocks once your CE is approved")
+    end
+
     it "leaves off the signed-in time condition when no time was logged" do
       labels = ce_registration.decorate.certificate_conditions.map(&:label)
 

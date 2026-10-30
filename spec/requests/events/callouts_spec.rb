@@ -1150,7 +1150,7 @@ RSpec.describe "Events::Callouts", type: :request do
     let(:event) { create(:event, :ended, facilitator_training: true, ce_hours_offered: 6) }
     let(:registration) { create(:event_registration, event: event, status: "attended") }
     let(:license) { create(:professional_license, person: registration.registrant, kind: "LCSW", number: "86747") }
-    let(:ce_registration) { registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0) }
+    let(:ce_registration) { registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0, approved_at: Time.current) }
 
     it "renders the CE confirmation of attendance once the credit is earned" do
       get registration_ce_certificate_path(registration.slug, ce_registration)

@@ -54,7 +54,8 @@ class ContinuingEducationRegistrationDecorator < ApplicationDecorator
     conditions = [
       Condition.new(label: ended_label, met: event.end_date&.past?),
       Condition.new(label: "your attendance is confirmed", met: event_registration.attended?),
-      Condition.new(label: "your CE payment is received in full", met: paid_in_full?)
+      Condition.new(label: "your CE payment is received in full", met: paid_in_full?),
+      Condition.new(label: "your CE is approved", met: approved?)
     ]
     conditions << Condition.new(label: "#{ce_form.form.display_name} is complete", met: ce_form.complete?) if ce_form.form
     if event_registration.attendance_minutes_total.positive?
