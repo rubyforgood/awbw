@@ -398,10 +398,13 @@ class FormField < ApplicationRecord
     return if field_identifier.blank?
 
     siblings = form ? form.association(:form_fields).target.reject { |f| f.equal?(self) || (id && f.id == id) } : []
-    taken = siblings.any? { |f| !f.marked_for_destruction? && f.field_identifier == field_identifier }
+    # Only siblings this same save adds, edits, or removes are judged in memory;
+    # the rest come from the database, since a loaded list can hold stale copies.
+    pending = siblings.select { |f| f.new_record? || f.field_identifier_changed? || f.marked_for_destruction? }
+    taken = pending.any? { |f| !f.marked_for_destruction? && f.field_identifier == field_identifier }
     taken ||= form_id.present? &&
       FormField.where(form_id: form_id, field_identifier: field_identifier)
-               .where.not(id: [ id, *siblings.map(&:id) ].compact).exists?
+               .where.not(id: [ id, *pending.map(&:id) ].compact).exists?
 
     errors.add(:field_identifier, :taken) if taken
   end
