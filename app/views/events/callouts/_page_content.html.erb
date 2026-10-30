@@ -1,0 +1,10 @@
+<%# A callout's admin-authored page copy. Folded into a closed "Details" toggle
+    while one of the page's forms is open to fill, so the form comes first.
+    locals: content (raw HTML string), collapsed (Boolean). %>
+<% if collapsed %>
+  <%= render layout: "events/callouts/toggle", locals: { summary: "Details" } do %>
+    <%= render "events/callouts/rich_content", content: content %>
+  <% end %>
+<% else %>
+  <%= render "events/callouts/rich_content", content: content %>
+<% end %>

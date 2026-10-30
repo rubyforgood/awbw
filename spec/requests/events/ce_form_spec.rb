@@ -1,8 +1,9 @@
 require "rails_helper"
 
 # The CE callout's post-training form: built on the generic callout-form flow
-# (#2384), but gated so it opens only once the registrant's sign-outs are complete
-# and reached from the CE page. Slug is the authorization, no login.
+# (#2384), but gated so it opens only once the registrant's sign-outs are complete,
+# and rendered inline on the CE page in the shared callout-form card. Slug is the
+# authorization, no login.
 RSpec.describe "Events::Callouts CE form", type: :request do
   let(:event) do
     create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000,
@@ -20,19 +21,11 @@ RSpec.describe "Events::Callouts CE form", type: :request do
   end
   after { travel_back }
 
-  describe "the CE callout's form page" do
-    it "redirects to the CE page while sign-outs aren't complete" do
-      travel_to Time.zone.local(2026, 7, 23, 10, 0) # during the event
-      get registration_callout_form_path(registration.slug, callout, return_to: "ce")
-      expect(response).to redirect_to(registration_ce_path(registration.slug))
-    end
-
-    it "renders the form, returning to the CE page, once sign-outs are complete" do
+  describe "the CE callout's generic form page" do
+    it "sends the registrant to the CE page, where the form lives" do
       travel_to Time.zone.local(2026, 7, 24, 10, 0) # the day after — event has ended
-      get registration_callout_form_path(registration.slug, callout, return_to: "ce")
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("How was the training?")
-      expect(response.body).to include(registration_ce_path(registration.slug))
+      get registration_callout_form_path(registration.slug, callout)
+      expect(response).to redirect_to(registration_ce_path(registration.slug, anchor: "ce-form"))
     end
 
     it "rejects a submit before sign-outs are complete" do
@@ -46,24 +39,78 @@ RSpec.describe "Events::Callouts CE form", type: :request do
   end
 
   describe "the CE page step" do
-    it "links to the form once sign-outs are complete" do
+    it "renders the form inline once sign-outs are complete" do
       travel_to Time.zone.local(2026, 7, 24, 10, 0)
       get registration_ce_path(registration.slug)
-      expect(response.body).to include(registration_callout_form_path(registration.slug, callout, return_to: "ce"))
-      expect(response.body).to include("CE Evaluation")
+      expect(response.body).to include("CE Evaluation").and include("How was the training?")
+      expect(response.body).to include(registration_callout_form_submit_path(registration.slug, callout, form))
     end
 
-    it "breaks the form link out of the CE page's turbo frame" do
+    it "breaks the form out of the CE page's turbo frame" do
       travel_to Time.zone.local(2026, 7, 24, 10, 0)
       get registration_ce_path(registration.slug)
-      link = Nokogiri::HTML(response.body).at_css("a[href='#{registration_callout_form_path(registration.slug, callout, return_to: "ce")}']")
-      expect(link["data-turbo-frame"]).to eq("_top")
+      html_form = Nokogiri::HTML(response.body).at_css("form[action='#{registration_callout_form_submit_path(registration.slug, callout, form)}']")
+      expect(html_form["data-turbo-frame"]).to eq("_top")
+    end
+
+    it "folds the callout's Details while the form is open to fill" do
+      callout.update!(description: "<p>CE requirements</p>")
+      travel_to Time.zone.local(2026, 7, 24, 10, 0)
+
+      get registration_ce_path(registration.slug)
+
+      toggle = Nokogiri::HTML(response.body).css("details").find { |d| d.at_css("summary")&.text&.include?("Details") }
+      expect(toggle).to be_present
+      expect(toggle["open"]).to be_nil
+      expect(toggle.text).to include("CE requirements")
+    end
+
+    it "leaves the Details open during the training, before the form" do
+      callout.update!(description: "<p>CE requirements</p>")
+      travel_to Time.zone.local(2026, 7, 23, 10, 0)
+
+      get registration_ce_path(registration.slug)
+
+      expect(response.body).to include("CE requirements")
+      expect(Nokogiri::HTML(response.body).css("summary").map(&:text).join).not_to include("Details")
+    end
+
+    context "with the CE paid and a day signed in and out" do
+      before do
+        registration.continuing_education_registrations.first.update!(cost_cents: 0)
+        registration.event_attendance_time_entries.create!(signed_in_at: Time.zone.local(2026, 7, 23, 9, 0),
+          signed_out_at: Time.zone.local(2026, 7, 23, 16, 0))
+      end
+
+      def sign_in_toggle
+        Nokogiri::HTML(response.body).at_css("#attendance details")
+      end
+
+      it "folds the training sign-in to its total while the form is open" do
+        travel_to Time.zone.local(2026, 7, 24, 10, 0)
+        get registration_ce_path(registration.slug)
+
+        expect(sign_in_toggle).to be_present
+        expect(sign_in_toggle["open"]).to be_nil
+        expect(sign_in_toggle.at_css("summary").text).to include("Training sign-in").and include("7h 0m logged")
+      end
+
+      it "leaves the training sign-in unfolded once the form is submitted" do
+        travel_to Time.zone.local(2026, 7, 24, 10, 0)
+        post registration_callout_form_submit_path(registration.slug, callout, form),
+          params: { callout_form: { form_fields: { field.id.to_s => "Great" } } }
+
+        get registration_ce_path(registration.slug)
+
+        expect(response.body).to include("Training sign-in")
+        expect(sign_in_toggle).to be_nil
+      end
     end
 
     it "hides the step during the training" do
       travel_to Time.zone.local(2026, 7, 23, 10, 0)
       get registration_ce_path(registration.slug)
-      expect(response.body).not_to include("Complete the form")
+      expect(response.body).not_to include("How was the training?")
     end
   end
 
@@ -82,13 +129,20 @@ RSpec.describe "Events::Callouts CE form", type: :request do
       expect(registration.reload.ce_form_requirement_met?).to be(true)
     end
 
-    it "marks the CE page step submitted without offering to review the answers" do
+    it "returns to the CE page's form" do
+      submit_form
+
+      expect(response).to redirect_to(registration_ce_path(registration.slug, anchor: "ce-form"))
+    end
+
+    it "folds the card to completed without offering to edit the answers" do
       submit_form
 
       get registration_ce_path(registration.slug)
 
-      expect(response.body).to include("Submitted")
-      expect(response.body).not_to include("Review your responses")
+      expect(response.body).to include("Completed").and include("submitted anonymously")
+      expect(response.body).not_to include("Edit responses")
+      expect(response.body).not_to include("Please complete this form")
     end
   end
 end
