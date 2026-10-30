@@ -11,15 +11,15 @@ module ContinuingEducationRegistrationsHelper
     when "ce_index" then continuing_education_registrations_path
     when "professional_license" then edit_professional_license_path(params[:license_id])
     when "registrants" then registrants_event_row_path(registration.event, registration.id)
-    when "attendance" then attendance_event_path(registration.event, ce: "true", ce_payment: params[:ce_payment].presence, anchor: "totals")
+    when "attendance" then attendance_event_path(registration.event, ce: "true", ce_approval: params[:ce_approval].presence, anchor: "totals")
     else edit_event_registration_path(registration)
     end
   end
 
   # The origin params every CE form link and redirect carries, so the return trip
-  # lands on the timesheet view (Paid / All CE) the admin left.
+  # lands on the timesheet view (Approved / All CE) the admin left.
   def ce_registration_return_params
-    { return_to: params[:return_to].presence, ce_payment: params[:ce_payment].presence }.compact
+    { return_to: params[:return_to].presence, ce_approval: params[:ce_approval].presence }.compact
   end
 
   # Eyebrow label for the CE form back-link, matching whichever origin the form

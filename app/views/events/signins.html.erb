@@ -24,14 +24,14 @@
     <%= form_with url: signins_events_path, method: :get, local: true,
           class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-8" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
-      <%= hidden_field_tag :ce_payment, params[:ce_payment].presence %>
+      <%= hidden_field_tag :ce_approval, params[:ce_approval].presence %>
       <div class="flex flex-wrap items-end gap-4">
         <%= render "event_type_filter" %>
         <%= render "event_filter" %>
         <%= render "event_search_filter" %>
         <% if @signins_ce %>
           <div class="ml-auto">
-            <%= render "events/ce_payment_toggle", paying_count: @signins_paying_ce_count, all_count: @signins_all_ce_count %>
+            <%= render "events/ce_approval_toggle", approved_count: @signins_approved_ce_count, all_count: @signins_all_ce_count %>
           </div>
         <% end %>
       </div>
@@ -43,11 +43,11 @@
         <section class="mb-8">
           <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">
-              <%= link_to event.compact_label, attendance_event_path(report.event, ce: ("true" if report.ce_only?), ce_payment: params[:ce_payment].presence, return_to: "signins"),
+              <%= link_to event.compact_label, attendance_event_path(report.event, ce: ("true" if report.ce_only?), ce_approval: params[:ce_approval].presence, return_to: "signins"),
                     title: event.hover_title, class: "hover:text-gray-700 hover:underline" %>
               <span class="ml-1 normal-case font-normal text-gray-400"><%= event.date_range %></span>
             </h2>
-            <%= link_to "Open timesheets →", attendance_event_path(report.event, ce: ("true" if report.ce_only?), ce_payment: params[:ce_payment].presence, return_to: "signins"),
+            <%= link_to "Open timesheets →", attendance_event_path(report.event, ce: ("true" if report.ce_only?), ce_approval: params[:ce_approval].presence, return_to: "signins"),
                   class: "text-xs font-medium text-teal-700 hover:underline" %>
           </div>
 
@@ -63,8 +63,8 @@
       <% end %>
     <% else %>
       <div class="text-center py-12 text-gray-500">
-        <% if @signins_ce && ce_paying_only? && @signins_all_ce_count.positive? %>
-          No CE registrations on the events in scope are paid or intending to pay yet.
+        <% if @signins_ce && ce_approved_only? && @signins_all_ce_count.positive? %>
+          No CE registrations on the events in scope are approved yet.
         <% else %>
           <%= @signins_ce ? "No CE registrations on the events in scope yet." : "No sign-in time has been logged for the events in scope yet." %>
         <% end %>

@@ -5,6 +5,17 @@ RSpec.describe ContinuingEducationRegistrationDecorator do
   let(:registration) { create(:event_registration, event: event, status: "attended") }
   let(:ce_registration) { create(:continuing_education_registration, event_registration: registration, hours: 6, cost_cents: 0) }
 
+  describe "#approval_badge" do
+    it "reads Approved once an admin approves, whatever the payment" do
+      ce_registration.update!(cost_cents: 15_000, approved_at: Time.current)
+      expect(ce_registration.decorate.approval_badge.label).to eq("Approved")
+    end
+
+    it "reads Not approved until then" do
+      expect(ce_registration.decorate.approval_badge.label).to eq("Not approved")
+    end
+  end
+
   describe "#certificate_locked_reason" do
     it "is nil once the certificate is earned" do
       expect(ce_registration.decorate.certificate_locked_reason).to be_nil

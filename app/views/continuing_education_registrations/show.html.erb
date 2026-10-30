@@ -3,6 +3,7 @@
 <% registration = @ce_registration.event_registration %>
 <% license = @ce_registration.professional_license %>
 <% payment = ce.payment_status_badge %>
+<% approval = ce.approval_badge %>
 <% certificate = ce.certificate_badge %>
 
 <div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:continuing_education) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
@@ -58,6 +59,10 @@
               <%= render "shared/badge", label: overpayment.label, classes: overpayment.classes, icon: overpayment.icon %>
             <% end %>
           </dd>
+        </div>
+        <div class="bg-white px-4 py-3">
+          <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Approval</dt>
+          <dd class="mt-1"><%= render "shared/badge", label: approval.label, classes: approval.classes, icon: approval.icon %></dd>
         </div>
         <div class="bg-white px-4 py-3">
           <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Certificate</dt>

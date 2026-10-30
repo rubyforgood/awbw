@@ -15,7 +15,7 @@
       turbo_frame: "continuing_education_registrations_results"
     }, autocomplete: "off" do %>
     <%= hidden_field_tag "professional_license_id", params[:professional_license_id] if params[:professional_license_id].present? %>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div>
         <label for="event_id" class="<%= label_class %>">Event</label>
         <%= select_tag "event_id",
@@ -36,6 +36,15 @@
           },
           prompt: "Search for a person" %>
       </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div>
+        <label for="approval" class="<%= label_class %>">Approval</label>
+        <%= select_tag "approval",
+          options_for_select({ "All" => "", "Approved" => "approved", "Not approved" => "pending" }, params[:approval]),
+          class: placeholder_select_class %>
+      </div>
 
       <div>
         <label for="certificate" class="<%= label_class %>">Certificate</label>
@@ -43,9 +52,7 @@
           options_for_select({ "All" => "", "Issued" => "issued", "Not issued" => "pending" }, params[:certificate]),
           class: placeholder_select_class %>
       </div>
-    </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
       <div>
         <label for="issued_from" class="<%= label_class %>">Issued from</label>
         <%= date_field_tag "issued_from", params[:issued_from], class: date_filter_class(field_class, params[:issued_from]) %>

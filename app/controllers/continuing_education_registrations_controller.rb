@@ -78,6 +78,14 @@ class ContinuingEducationRegistrationsController < ApplicationController
     redirect_to helpers.ce_registration_return_path(registration), notice: "CE registration removed.", status: :see_other
   end
 
+  def toggle_approval
+    authorize! @ce_registration
+    approved = @ce_registration.approved?
+    @ce_registration.update!(approved_at: approved ? nil : Time.current)
+    redirect_to edit_continuing_education_registration_path(@ce_registration, **helpers.ce_registration_return_params),
+      notice: approved ? "CE marked not approved." : "CE approved.", status: :see_other
+  end
+
   def toggle_certificate
     authorize! @ce_registration
     issued = @ce_registration.certificate_sent_at.present?

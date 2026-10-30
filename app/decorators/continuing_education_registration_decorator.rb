@@ -29,6 +29,14 @@ class ContinuingEducationRegistrationDecorator < ApplicationDecorator
     "Can't be deleted — this CE registration has payment records (reverted payments still count), which stay linked to it."
   end
 
+  def approval_badge
+    if approved?
+      Badge.new(label: "Approved", icon: "fa-solid fa-circle-check", classes: "bg-green-50 text-green-700 border-green-200")
+    else
+      Badge.new(label: "Not approved", icon: "fa-regular fa-clock", classes: "bg-gray-50 text-gray-500 border-gray-200")
+    end
+  end
+
   # Pill for whether the completion certificate has been issued.
   def certificate_badge
     if certificate_sent_at.present?

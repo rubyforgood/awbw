@@ -478,6 +478,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_172715) do
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
     t.boolean "intends_to_pay", default: false, null: false
+    t.datetime "approved_at"
     t.index ["created_by_id"], name: "index_continuing_education_registrations_on_created_by_id"
     t.index ["event_registration_id"], name: "idx_on_event_registration_id_41b5ee2e9c"
     t.index ["professional_license_id"], name: "idx_on_professional_license_id_54fea68922"

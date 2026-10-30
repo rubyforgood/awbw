@@ -1,0 +1,13 @@
+name: "Approve CE registrations, and timesheets show approved CE by default"
+area: events
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2921
+action_path: "/continuing_education_registrations"
+summary: >-
+  Each CE registration now has an Approve CE button, like the certificate's
+  Mark issued. CE timesheets list approved registrations by default, whether
+  or not they've paid; switch to "All CE" to see everyone who signed up.
+pro_tips:
+  - "Approval is your call — payment, attendance, and the CE form don't set it."
+  - "Filter the CE registrations list by Approved or Not approved."
