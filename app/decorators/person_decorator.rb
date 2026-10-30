@@ -43,13 +43,13 @@ class PersonDecorator < ApplicationDecorator
       .includes(:organization, :organization_address).order(:id).uniq(&:organization_address_id)
   end
 
-  def multiple_memberships?
+  def multiple_unlocked_memberships?
     unlocked_membership_count > 1
   end
 
   def unlocked_membership_count
     if memberships.loaded?
-      memberships.count { |membership| membership.locked_at.nil? }
+      memberships.to_a.count { |membership| membership.locked_at.nil? }
     else
       memberships.unlocked.count
     end
