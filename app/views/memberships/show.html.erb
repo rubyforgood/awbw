@@ -126,7 +126,7 @@
           <i class="fa-solid fa-circle-info ml-0.5 cursor-help text-[0.65rem] text-gray-400"
              title="Autopay charges issued invoices automatically. It is separate from membership renewal."></i>
         </span>
-        <%= button_to "Turn off autopay", membership_autopay_path(membership),
+        <%= button_to "Turn off autopay", membership_autopayments_path(membership),
               method: :delete, class: button_classes(:secondary_outline, size: :sm),
               title: "Stops automatic card charges for this membership. Renewal is unchanged.",
               data: { turbo_confirm: "Turn off automatic card payments for this membership?" } %>

@@ -382,7 +382,7 @@ Rails.application.routes.draw do
     resource :renewal, only: [ :update ], controller: "memberships/renewals"
     resource :next_year, only: [ :destroy ], controller: "memberships/next_years"
     resource :lock, only: [ :destroy ], controller: "memberships/locks"
-    resource :autopay, only: [ :create, :destroy ], controller: "memberships/autopay"
+    resource :autopayments, only: [ :create, :destroy ], controller: "memberships/autopayments"
   end
 
   resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ] do

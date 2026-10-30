@@ -1,5 +1,5 @@
 module Memberships
-  class AutopayController < ApplicationController
+  class AutopaymentsController < ApplicationController
     before_action :set_membership
 
     def create
