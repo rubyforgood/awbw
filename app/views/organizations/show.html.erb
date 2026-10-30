@@ -279,8 +279,24 @@
         </div>
       </div>
     <% end %>
+    <!-- WORKSHOP LOGS SECTION -->
+    <% if @workshop_logs %>
+      <div class="organization-only border-2 bg-white <%= DomainTheme.border_class_for(:user_only) %> overflow-hidden rounded-2xl shadow-sm">
+        <!-- Header -->
+        <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(:user_only, intensity: 200) %>">
+          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full <%= DomainTheme.bg_class_for(:user_only, intensity: 100) %> <%= DomainTheme.text_class_for(:user_only, intensity: 700) %>">
+            <i class="fa-solid fa-lock"></i>
+          </span>
+          <h2 class="font-display text-2xl text-gray-900">Workshop logs</h2>
+          <span class="ml-auto text-sm <%= DomainTheme.text_class_for(:user_only, intensity: 700) %> italic">Only visible to members and admins</span>
+        </div>
+        <div class="section-content px-4 py-5 sm:px-6 sm:py-6">
+          <%= render "organizations/sections/workshop_logs", organization: @organization, workshop_logs: @workshop_logs %>
+        </div>
+      </div>
+    <% end %>
     <!-- ASSOCIATED RECORDS SECTION -->
-    <% if allowed_to?(:show_workshop_logs?, @organization) %>
+    <% if allowed_to?(:show_associated_records?, @organization) %>
       <div class="organization-only border-2 bg-white <%= DomainTheme.border_class_for(:user_only) %> overflow-hidden rounded-2xl shadow-sm">
         <!-- Header -->
         <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(:user_only, intensity: 200) %>">

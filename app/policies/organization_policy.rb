@@ -9,8 +9,12 @@ class OrganizationPolicy < ApplicationPolicy
     admin? || (profiles_visible_to_users? && record.published?)
   end
 
-  # The "Show workshop logs" profile toggle hides the associated-records card from
-  # members; admins always see it.
+  def show_associated_records?
+    admin? || member?
+  end
+
+  # The "Show workshop logs" profile toggle hides the org's workshop logs from
+  # members; admins always see them.
   def show_workshop_logs?
     admin? || (member? && record.profile_show_workshop_logs?)
   end

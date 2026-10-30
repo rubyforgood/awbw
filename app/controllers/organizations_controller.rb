@@ -70,43 +70,11 @@ class OrganizationsController < ApplicationController
       sections[section] = records if records.any?
     end
 
-    workshop_logs = WorkshopLog.where(organization_id: @organization.id)
-    @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
-                                       .select("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m') AS ym,
-       MAX(COALESCE(workshop_held_on, created_at)) AS max_dt")
-                                       .order("max_dt DESC")
-                                       .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
-
-    @year_options = workshop_logs.pluck(
-      Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(workshop_held_on, created_at, NOW()))")
-    ).sort.reverse
-    @organizations = Organization.where(id: @organization.id)
-    @per_page = params[:per_page] || 10
-    @workshop_logs_unpaginated = workshop_logs
-                                 .includes(:workshop, :windows_type, created_by: :person)
-                                 .order(workshop_held_on: :desc, created_at: :desc)
-    @workshop_logs_count = @workshop_logs_unpaginated.count
-    @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
-
-    # Pre-compute grand totals to avoid expensive query in view
-    @grand_totals = @workshop_logs_unpaginated.pick(
-      Arel.sql("COALESCE(SUM(children_ongoing),0)"),
-      Arel.sql("COALESCE(SUM(teens_ongoing),0)"),
-      Arel.sql("COALESCE(SUM(adults_ongoing),0)"),
-      Arel.sql("COALESCE(SUM(children_first_time),0)"),
-      Arel.sql("COALESCE(SUM(teens_first_time),0)"),
-      Arel.sql("COALESCE(SUM(adults_first_time),0)")
-    ) || [ 0, 0, 0, 0, 0, 0 ]
-
-    # Cache filter options to avoid duplicate queries
-    @workshops = Workshop.joins(:windows_type)
-                         .where(id: workshop_logs.where.not(workshop_id: nil).select(:workshop_id))
-                         .select("workshops.id, workshops.title, workshops.windows_type_id, windows_types.name")
-                         .order("workshops.title ASC, windows_types.name ASC")
-    @users = User.where(id: workshop_logs.where.not(created_by_id: nil).select(:created_by_id))
-                  .joins(:person)
-                  .select("users.id, users.person_id, users.email, people.first_name, people.last_name")
-                  .order("people.first_name, people.last_name")
+    if allowed_to?(:show_workshop_logs?, @organization)
+      @workshop_logs = @organization.affiliated_workshop_logs
+                                    .includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets)
+                                    .order(workshop_held_on: :desc, created_at: :desc).to_a
+    end
   end
 
   def new

@@ -186,10 +186,49 @@ RSpec.describe "Organization profile published content", type: :request do
     end
   end
 
+  describe "Workshop logs" do
+    let(:member) { create(:user, person: facilitator) }
+    let(:workshop) { create(:workshop, title: "Logged Workshop") }
+
+    before do
+      create(:workshop_log, organization: organization, workshop: workshop, adults_first_time: 3, teens_ongoing: 2)
+      create(:workshop_log, organization: organization, workshop: workshop, adults_ongoing: 1)
+    end
+
+    it "groups the org's logs by workshop for members" do
+      sign_in member
+      get organization_path(organization)
+
+      section = Capybara.string(response.body).find("h2", text: "Workshop logs").ancestor("div.rounded-2xl", match: :first)
+      expect(section).to have_text("Total participants: 6")
+      expect(section).to have_text("Unique workshops: 1")
+      expect(section).to have_link(href: workshop_logs_path(organization_id: organization.id, workshop_id: workshop.id))
+    end
+
+    it "stays off for non-members" do
+      sign_in viewer
+      get organization_path(organization)
+      expect(response.body).not_to include(">Workshop logs</h2>")
+    end
+
+    it "hides from members but not admins when the toggle is off" do
+      organization.update!(profile_show_workshop_logs: false)
+
+      sign_in member
+      get organization_path(organization)
+      expect(response.body).not_to include(">Workshop logs</h2>")
+      expect(response.body).to include("Associated records")
+
+      sign_in admin
+      get organization_path(organization)
+      expect(response.body).to include(">Workshop logs</h2>")
+    end
+  end
+
   describe "Associated records card" do
     let(:member) { create(:user, person: facilitator) }
 
-    it "shows to members while the workshop logs toggle is on" do
+    it "shows to members" do
       sign_in member
       get organization_path(organization)
       expect(response.body).to include("Associated records")
@@ -225,18 +264,6 @@ RSpec.describe "Organization profile published content", type: :request do
       sign_in admin
       get organization_path(organization)
       expect(activity_link.call).to be(true)
-    end
-
-    it "hides from members but not admins when the toggle is off" do
-      organization.update!(profile_show_workshop_logs: false)
-
-      sign_in member
-      get organization_path(organization)
-      expect(response.body).not_to include("Associated records")
-
-      sign_in admin
-      get organization_path(organization)
-      expect(response.body).to include("Associated records")
     end
   end
 end
