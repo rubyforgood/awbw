@@ -480,6 +480,9 @@
                   <% if ce_certificate_regs.many? && ce_reg.professional_license&.number_known? %>
                     <span class="text-gray-500">— <%= ce_reg.professional_license.name %></span>
                   <% end %>
+                  <% unless cert_available %>
+                    <span class="mt-0.5 block text-xs text-gray-500"><%= ce_reg.decorate.certificate_locked_reason %></span>
+                  <% end %>
                 </span>
               </span>
               <i class="fa-solid <%= cert_available ? "fa-arrow-right text-gray-400" : "fa-lock text-gray-300" %>"></i>
