@@ -16,7 +16,7 @@
       <p class="text-[4.2cqw] leading-tight font-bold tracking-tight text-gray-900"><%= recipient %></p>
       <p class="text-[1.8cqw] text-gray-500">has successfully completed</p>
       <p class="text-[3cqw] font-semibold text-purple-900"><%= event.title %></p>
-      <p class="text-[2cqw] text-gray-600"><%= event.date_range %></p>
+      <p class="text-[2cqw] text-gray-600"><%= event.short_date_range %></p>
     </div>
   </article>
 <% else %>
@@ -47,13 +47,13 @@
     <div class="space-y-1">
       <p class="text-sm text-gray-500">has successfully completed</p>
       <p class="text-2xl font-semibold text-purple-900"><%= event.title %></p>
-      <p class="text-base text-gray-600"><%= event.date_range %></p>
+      <p class="text-base text-gray-600"><%= event.short_date_range %></p>
     </div>
 
     <div class="mt-6 flex w-full max-w-md items-end justify-between gap-8 text-left">
       <div class="flex-1">
         <p class="border-t border-gray-300 pt-2 text-xs uppercase tracking-wide text-gray-500">Date completed</p>
-        <p class="text-sm font-medium text-gray-800"><%= event.date_range %></p>
+        <p class="text-sm font-medium text-gray-800"><%= event.short_date_range %></p>
       </div>
       <div class="flex-1">
         <p class="border-t border-gray-300 pt-2 text-xs uppercase tracking-wide text-gray-500">Issued by</p>

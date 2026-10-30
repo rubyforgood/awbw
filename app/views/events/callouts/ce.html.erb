@@ -461,10 +461,20 @@
             <% cert_available = sample_preview? || ce_reg.certificate_available? %>
             <%= link_to cert_path, data: { turbo_frame: "_top" },
                   class: "flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm hover:bg-gray-50 #{"opacity-70" unless cert_available}" do %>
-              <span class="flex items-center gap-2 text-gray-700">
-                <i class="fa-solid fa-award text-teal-600"></i>
+              <span class="flex items-center gap-3 text-gray-700">
+                <%# The live certificate drawn at 768px and scaled to the 96px thumbnail. %>
+                <span class="relative aspect-[2200/1556] w-24 shrink-0 overflow-hidden rounded border border-gray-200 bg-white <%= "grayscale" unless cert_available %>" aria-hidden="true" inert>
+                  <span class="absolute top-0 left-0 block w-[768px] origin-top-left scale-[0.125]">
+                    <%= render "events/callouts/ce_certificate_document",
+                          event: @event.decorate,
+                          ce_registration: ce_reg,
+                          recipient: @event_registration.registrant.full_name,
+                          signature_file: @ce_signature_file,
+                          frame_file: @ce_frame_file %>
+                  </span>
+                </span>
                 <span>
-                  <span class="font-medium text-gray-900">View your CE confirmation</span>
+                  <span class="font-medium text-gray-900">View your CE certificate</span>
                   <% if ce_certificate_regs.many? && ce_reg.professional_license&.number_known? %>
                     <span class="text-gray-500">— <%= ce_reg.professional_license.name %></span>
                   <% end %>

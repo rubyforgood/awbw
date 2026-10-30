@@ -1,0 +1,11 @@
+<% license = ce_registration.professional_license %>
+<% hours = ce_registration.hours.to_d %>
+<%= render "events/callouts/ce_confirmation_certificate",
+      event: event,
+      recipient: recipient,
+      license_label: license&.number_known? ? license.name : "—",
+      hours_label: hours == hours.to_i ? hours.to_i : hours,
+      facilitator_names: event.facilitator_event_staffs.map { |staff| staff.person.full_name },
+      signature_file: signature_file,
+      frame_file: frame_file,
+      issued_on: ce_registration.certificate_sent_at&.to_date || Date.current %>

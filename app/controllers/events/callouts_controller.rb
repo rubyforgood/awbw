@@ -158,6 +158,8 @@ module Events
     def ce
       @ce_callout = @event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
       @ce_form = RegistrantCeForm.new(@event_registration)
+      @ce_signature_file = Resource.ce_certificate_signature_file
+      @ce_frame_file = Resource.ce_certificate_frame_file
       case params[:checkout]
       when "success"
         flash.now[:notice] = "Your CE payment was successful."
