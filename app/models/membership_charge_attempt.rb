@@ -27,7 +27,5 @@ class MembershipChargeAttempt < ApplicationRecord
   def unknown? = status == "unknown"
   def unresolved? = UNRESOLVED_STATUSES.include?(status)
 
-  # Only an attempt whose PaymentIntent was never stored can be failed by hand:
-  # a known intent is always decided by Stripe.
   def manual_failure_allowed? = (pending? || unknown?) && payment_intent_id.blank?
 end

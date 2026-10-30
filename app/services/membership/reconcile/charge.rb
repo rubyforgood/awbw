@@ -1,6 +1,3 @@
-# Syncs a succeeded Stripe PaymentIntent through Pay and applies the resulting
-# local payment to the invoice. Stripe stays authoritative: the local mirror is
-# created by PayChargeExtensions, never rebuilt from raw Stripe fields here.
 class Membership::Reconcile::Charge
   Result = Data.define(:status, :payment, :pay_charge, :allocation, :message, :errors) do
     def success? = errors.blank?
@@ -29,8 +26,6 @@ class Membership::Reconcile::Charge
       stripe_account: stripe_account
     )
 
-    # The app's own charge webhook can record the payment before Pay sees it, so
-    # look it up by the charge id too. Never create a second local payment here.
     payment = pay_charge.present? ? ExternalProcessorPayment.find_by(stripe_charge_id: pay_charge.processor_id) : nil
     payment ||= ExternalProcessorPayment.find_by(stripe_charge_id: charge_id) if charge_id.present?
     if payment.blank?
@@ -50,9 +45,6 @@ class Membership::Reconcile::Charge
 
   def stripe_account = @invoice.person.stripe_customer&.stripe_account
 
-  # A PaymentIntent is allowed to repair this invoice when it names it, when the
-  # invoice already has it on an attempt, or when it belongs to the member's Stripe
-  # customer (the lookup only lists that customer's intents anyway).
   def related_to_member?
     metadata = (@intent.metadata || {}).to_h.stringify_keys
     return true if metadata["membership_invoice_id"].to_s == @invoice.id.to_s

@@ -8,6 +8,6 @@ summary: >-
   that haven't been reconciled, and each invoice has a panel to check Stripe,
   apply an unallocated payment, or resolve a stuck attempt.
 pro_tips:
-  - "Reconciling only reads Stripe — it never creates a new card charge."
+  - "Reconciling only reads Stripe; it never creates a new card charge."
   - "Find payments in Stripe can recover a payment whose PaymentIntent id was never saved."
   - "Only mark an attempt failed after checking Stripe: it lets the next automatic charge retry."

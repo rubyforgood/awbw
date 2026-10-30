@@ -1,5 +1,3 @@
-# Explicit admin resolution for an attempt whose PaymentIntent was never stored.
-# A known intent is always decided by Stripe, never by the portal.
 class Membership::Reconcile::FailAttempt
   Result = Data.define(:status, :attempt, :message, :errors) do
     def success? = errors.blank?

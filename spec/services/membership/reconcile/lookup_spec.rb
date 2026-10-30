@@ -43,4 +43,26 @@ RSpec.describe Membership::Reconcile::Lookup do
     expect(result).to be_success
     expect(result.candidates).to be_empty
   end
+
+  it "still returns local unallocated payments when Stripe can't be reached" do
+    charge = Pay::Charge.create!(
+      customer:, processor_id: "ch_test", amount: 1_000, amount_refunded: 0,
+      currency: "usd", metadata: {},
+      object: {
+        "paid" => false,
+        "refunds" => { "object" => "list", "data" => [], "has_more" => false }
+      }
+    )
+    invoice.charge_attempts.create!(attempt_number: 1, status: "unknown",
+      amount_cents: 1_000, attempted_at: 1.hour.ago, pay_charge: charge)
+    payment = create(:external_processor_payment, person:, amount_cents: 1_000,
+      amount_cents_remaining: 1_000, stripe_charge_id: "ch_test")
+    allow(Stripe::PaymentIntent).to receive(:list)
+      .and_raise(Stripe::APIConnectionError.new("Stripe is down"))
+
+    result = described_class.call(invoice:)
+
+    expect(result).not_to be_success
+    expect(result.local_payments).to contain_exactly(payment)
+  end
 end

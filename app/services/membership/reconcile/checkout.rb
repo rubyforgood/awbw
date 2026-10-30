@@ -1,5 +1,3 @@
-# Checks a stored Checkout Session against Stripe. A completed, paid session whose
-# webhook was lost is the one-time-checkout equivalent of an unresolved autopay attempt.
 class Membership::Reconcile::Checkout
   Result = Data.define(:status, :session, :payment, :message, :errors) do
     def success? = errors.blank?

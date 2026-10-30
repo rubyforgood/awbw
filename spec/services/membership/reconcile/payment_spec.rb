@@ -46,4 +46,28 @@ RSpec.describe Membership::Reconcile::Payment do
     expect(result).to be_success
     expect(payment.reload.amount_cents_remaining).to eq(1_000)
   end
+
+  it "resolves the linked attempt and clears the reconciliation worklist" do
+    customer = Pay::Stripe::Customer.create!(owner: person, processor: "stripe",
+      processor_id: "cus_test", default: true)
+    charge = Pay::Charge.create!(
+      customer:, processor_id: "ch_test", amount: 1_000, amount_refunded: 0,
+      currency: "usd", metadata: {},
+      object: { "paid" => false, "refunds" => { "object" => "list", "data" => [] } }
+    )
+    attempt = invoice.charge_attempts.create!(
+      attempt_number: 1, status: "unknown", amount_cents: 1_000, attempted_at: 1.hour.ago,
+      pay_charge: charge, error_code: "allocation_failed", error_message: "Not applied."
+    )
+    linked_payment = create(:external_processor_payment, person:, amount_cents: 1_000,
+      amount_cents_remaining: 1_000, stripe_charge_id: "ch_test", pay_charge: charge)
+
+    expect(MembershipInvoice.needing_reconciliation).to include(invoice)
+
+    result = described_class.call(invoice:, payment: linked_payment)
+
+    expect(result).to be_success
+    expect(attempt.reload).to have_attributes(status: "succeeded", error_code: nil, error_message: nil)
+    expect(MembershipInvoice.needing_reconciliation).not_to include(invoice)
+  end
 end

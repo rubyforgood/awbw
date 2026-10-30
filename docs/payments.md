@@ -6,7 +6,7 @@
 
 - `Person` model: `pay_customer default_payment_processor: :stripe`
 - Stripe config via `.env` env vars (not Rails credentials)
-- No custom webhook controller — pay gem auto-mounts `POST /pay/webhooks/stripe`
+- No custom webhook controller; pay gem auto-mounts `POST /pay/webhooks/stripe`
 
 ## Data Model
 
@@ -16,9 +16,9 @@ Fields: `amount_cents`, `amount_cents_remaining`, `currency`, `payer_type`, `per
 
 Subclasses:
 
-- **CashPayment** — manual cash, created by admins
-- **CheckPayment** — manual check, requires `check_number`
-- **ExternalProcessorPayment** — auto-created from Stripe charges (linked to `Pay::Charge`)
+- **CashPayment**: manual cash, created by admins
+- **CheckPayment**: manual check, requires `check_number`
+- **ExternalProcessorPayment**: auto-created from Stripe charges (linked to `Pay::Charge`)
 
 > **Why duplicate Stripe data?** `ExternalProcessorPayment` intentionally mirrors what's in the pay gem's `pay_charges` table. We own the `Payment` model and its STI hierarchy, so we keep our own records rather than coupling business logic to the pay gem's schema.
 
@@ -40,7 +40,7 @@ Polymorphic join: `source` (Payment / Scholarship / Refund / Discount) → `allo
 ### Discount
 
 - Simple `amount_cents`, creates allocations like a payment
-- No payer — admin-applied credit
+- No payer: admin-applied credit
 
 ### Scholarship
 
@@ -71,14 +71,14 @@ Polymorphic join: `source` (Payment / Scholarship / Refund / Discount) → `allo
 
 ### 4. Admin Cash / Check
 
-`PaymentsController#create` — directly creates `CashPayment` or `CheckPayment`, no Stripe involved. Admin allocates manually.
+`PaymentsController#create` directly creates `CashPayment` or `CheckPayment`, no Stripe involved. Admin allocates manually.
 
 ## PayChargeExtensions (the glue)
 
 Concern mixed into `Pay::Charge` in `config/initializers/pay.rb`.
 
-- `after_save_commit :create_external_processor_payment` — dispatches on `metadata` keys
-- `after_save_commit :sync_refunds` — creates local `Refund` records from Stripe refund data
+- `after_save_commit :create_external_processor_payment`: dispatches on `metadata` keys
+- `after_save_commit :sync_refunds`: creates local `Refund` records from Stripe refund data
 - Checks `ExternalProcessorPayment.exists?(pay_charge_id:)` to avoid duplicates (idempotent)
 
 ## Membership reconciliation (admin)
@@ -102,7 +102,7 @@ local records; it never creates a charge.
   moved) and then runs the normal state machine so the attempt becomes failed and
   the invoice can be retried. It is a business action like expiring an abandoned
   Checkout Session, not reconciliation rewriting Stripe data.
-- **Mark failed — no charge found** is only available when no PaymentIntent was ever
+- **Mark failed: no charge found** is only available when no PaymentIntent was ever
   stored. A known PaymentIntent is always decided by Stripe.
 
 ## Environment Variables (`.env`)
@@ -138,7 +138,7 @@ Copy the `whsec_...` secret from the `stripe listen` output into `STRIPE_SIGNING
 stripe trigger payment_intent.succeeded
 ```
 
-This simulates a complete payment. The charge won't have meaningful metadata (`event_registration_id`, etc.), so `PayChargeExtensions` won't create a local payment — but it confirms the webhook pipeline works.
+This simulates a complete payment. The charge won't have meaningful metadata (`event_registration_id`, etc.), so `PayChargeExtensions` won't create a local payment, but it confirms the webhook pipeline works.
 
 To test end-to-end, go through registration in the browser. Stripe test mode accepts `4242 4242 4242 4242` (and other test card numbers) without real money.
 
@@ -155,4 +155,4 @@ https://YOUR_DOMAIN/pay/webhooks/stripe
 - `payment_intent.succeeded` / `charge.succeeded` → triggers `PayChargeExtensions`
 - `charge.refunded` → triggers refund sync
 
-All handled by pay gem — no custom webhook controller.
+All handled by pay gem; no custom webhook controller.

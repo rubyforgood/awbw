@@ -1,6 +1,3 @@
-# Dispatches one reconciliation operation from the standard `create` action.
-# Keeps the controller resourceful: the operation, its ids, and the scoping all
-# live here.
 class Membership::Reconcile::Action
   OPERATIONS = %w[reconcile_attempt check_checkout apply_payment use_intent fail_attempt].freeze
 

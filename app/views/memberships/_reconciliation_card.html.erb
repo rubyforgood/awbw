@@ -1,0 +1,17 @@
+<div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+  <div class="flex flex-wrap items-center gap-2">
+    <p class="text-sm font-semibold text-amber-900">Payment reconciliation</p>
+    <span class="text-xs text-amber-800"><%= pluralize(invoices.size, "invoice") %> need attention.</span>
+  </div>
+
+  <ul class="mt-2 space-y-1 text-sm">
+    <% invoices.each do |invoice| %>
+      <% summary = MembershipInvoiceReconciliation.new(invoice) %>
+      <li class="flex flex-wrap items-center gap-2">
+        <%= link_to summary.invoice_label, summary.path(return_to: "membership"),
+              class: "text-primary font-medium hover:underline" %>
+        <span class="text-xs text-gray-600"><%= summary.summary %></span>
+      </li>
+    <% end %>
+  </ul>
+</div>

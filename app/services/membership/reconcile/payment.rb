@@ -1,5 +1,3 @@
-# Applies an already-recorded payment to a membership invoice. This is pure local
-# accounting: it never creates a Stripe charge, refunds anything, or moves money.
 class Membership::Reconcile::Payment
   Result = Data.define(:status, :payment, :allocation, :amount_cents, :message, :errors) do
     def success? = errors.blank?
@@ -36,6 +34,7 @@ class Membership::Reconcile::Payment
 
         amount = [ payment_remaining, @invoice.remaining_cost ].min
         allocation = Allocation.create!(source: @payment, allocatable: @invoice, amount:)
+        resolve_linked_attempts
 
         Result.new(status: :applied, payment: @payment.reload, allocation:,
                    amount_cents: amount,
@@ -63,8 +62,19 @@ class Membership::Reconcile::Payment
   end
 
   def already_applied_result
+    resolve_linked_attempts
     Result.new(status: :already_applied, payment: @payment, allocation: existing_allocation,
                amount_cents: 0, message: "This payment is already applied to the invoice.", errors: [])
+  end
+
+  def resolve_linked_attempts
+    return if @payment.pay_charge_id.blank?
+
+    @invoice.charge_attempts.unresolved
+      .where(pay_charge_id: @payment.pay_charge_id)
+      .find_each do |attempt|
+        attempt.update!(status: "succeeded", error_code: nil, error_message: nil, next_attempt_on: nil)
+      end
   end
 
   def no_op(status, message)

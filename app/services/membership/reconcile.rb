@@ -48,8 +48,6 @@ class Membership::Reconcile
 
   def stripe_account = @invoice.person.stripe_customer&.stripe_account
 
-  # A succeeded intent is the one case the live charge path deliberately does not
-  # repair: it syncs the charge and applies the resulting local payment.
   def reconcile_success
     result = Membership::Reconcile::Charge.call(invoice: @invoice, intent: @intent, attempt: @attempt)
 
@@ -63,8 +61,6 @@ class Membership::Reconcile
     end
   end
 
-  # Failures, SCA, and still-processing intents go through the same state machine
-  # a live charge uses.
   def apply_other_status
     before = [ @attempt.status, @attempt.updated_at ]
     result = Membership::Autopay::Charge.reconcile(@attempt, payment: Pay::Payment.new(@intent))

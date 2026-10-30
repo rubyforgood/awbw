@@ -9,7 +9,6 @@ class Membership::Autopay::Charge
 
   # Re-read an unresolved attempt's PaymentIntent through Pay and run it through
   # the same state machine as a live charge. Backs the reconcile page/job.
-  # A caller that already retrieved the intent can pass it in to avoid a second call.
   def self.reconcile(attempt, payment: nil)
     new(invoice: attempt.membership_invoice).reconcile(attempt, payment:)
   end

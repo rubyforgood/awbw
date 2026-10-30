@@ -1,7 +1,3 @@
-# Cancels an abandoned card-authentication PaymentIntent in Stripe, then runs the
-# normal reconcile state machine so the attempt is marked failed and the invoice
-# is released. This is a deliberate business action, not reconciliation rewriting
-# Stripe data: no money has moved, and the PaymentIntent is stopped.
 class Membership::Reconcile::CancelIntent
   Result = Data.define(:status, :attempt, :message, :errors) do
     def success? = errors.blank?
@@ -52,8 +48,6 @@ class Membership::Reconcile::CancelIntent
 
   private
 
-  # The member may finish authentication between our read and the cancel. If so,
-  # the charge succeeded and the normal reconcile applies it instead.
   def complete_elsewhere
     result = Membership::Reconcile.call(attempt: @attempt)
     if result.success? && @attempt.reload.succeeded?

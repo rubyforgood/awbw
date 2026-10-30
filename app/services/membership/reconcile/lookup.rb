@@ -1,6 +1,3 @@
-# Read-only Stripe inspection for one membership invoice. Lists the member's recent
-# PaymentIntents, keeps the ones whose metadata names this invoice, and maps each
-# to the local attempt/payment. Writes nothing.
 class Membership::Reconcile::Lookup
   Result = Data.define(:candidates, :local_payments, :message, :errors) do
     def success? = errors.blank?
@@ -31,9 +28,12 @@ class Membership::Reconcile::Lookup
   end
 
   def call
+    local_payments = []
+    local_payments = @invoice.stripe_payments_with_remaining.includes(:allocations).to_a
+
     customer = @invoice.person.stripe_customer
-    return failure("This member has no Stripe customer.") if customer.blank?
-    return failure("This member's Stripe customer has no processor id.") if customer.processor_id.blank?
+    return failure("This member has no Stripe customer.", local_payments:) if customer.blank?
+    return failure("This member's Stripe customer has no processor id.", local_payments:) if customer.processor_id.blank?
 
     intents = Stripe::PaymentIntent.list(
       { customer: customer.processor_id, limit: LIMIT },
@@ -55,9 +55,7 @@ class Membership::Reconcile::Lookup
       .reverse
 
     candidate_payment_ids = candidates.filter_map { |candidate| candidate.payment&.id }
-    local_payments = @invoice.stripe_payments_with_remaining
-      .includes(:allocations)
-      .reject { |payment| candidate_payment_ids.include?(payment.id) }
+    local_payments = local_payments.reject { |payment| candidate_payment_ids.include?(payment.id) }
 
     Result.new(
       candidates:,
@@ -66,7 +64,7 @@ class Membership::Reconcile::Lookup
       errors: []
     )
   rescue Stripe::StripeError, Pay::Error => e
-    failure("Could not search Stripe: #{e.message}")
+    failure("Could not search Stripe: #{e.message}", local_payments:)
   end
 
   private
@@ -112,7 +110,7 @@ class Membership::Reconcile::Lookup
     { stripe_account: customer.stripe_account }.compact
   end
 
-  def failure(message)
-    Result.new(candidates: [], local_payments: [], message:, errors: [ message ])
+  def failure(message, local_payments: [])
+    Result.new(candidates: [], local_payments:, message:, errors: [ message ])
   end
 end

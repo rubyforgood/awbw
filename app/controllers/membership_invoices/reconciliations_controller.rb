@@ -2,9 +2,10 @@ module MembershipInvoices
   class ReconciliationsController < ApplicationController
     before_action :set_invoice
 
-    def new
+    def show
       authorize! @invoice, to: :reconcile?
       @lookup = Membership::Reconcile::Lookup.call(invoice: @invoice)
+      @reconciliation = MembershipInvoiceReconciliation.new(@invoice)
     end
 
     def create
@@ -29,7 +30,7 @@ module MembershipInvoices
 
     def redirect_with(result)
       if result.success?
-        redirect_to membership_invoice_path(@invoice, anchor: "reconciliation"),
+        redirect_to reconciliation_path,
           notice: result.message.presence || "Reconciled with Stripe.", status: :see_other
       else
         redirect_alert(result.errors.to_sentence)
@@ -37,8 +38,13 @@ module MembershipInvoices
     end
 
     def redirect_alert(message)
-      redirect_to membership_invoice_path(@invoice, anchor: "reconciliation"),
+      redirect_to reconciliation_path,
         alert: message.presence || "Could not reconcile with Stripe.", status: :see_other
+    end
+
+    def reconciliation_path
+      options = params[:return_to].present? ? { return_to: params[:return_to] } : {}
+      membership_invoice_reconciliation_path(@invoice, **options)
     end
   end
 end

@@ -20,6 +20,13 @@ class MembershipsController < ApplicationController
   def show
     authorize! @membership
     @membership_invoices = @membership.membership_invoices.includes(:allocations, :charge_attempts).to_a
+    @reconciliation_invoices = if allowed_to?(:manage?, @membership)
+      @membership.membership_invoices.needing_reconciliation
+        .includes(:allocations, charge_attempts: :pay_charge)
+        .to_a
+    else
+      []
+    end
     @next_invoice = @membership.next_invoice
     @has_card = @person.stripe_customer&.payment_methods&.exists? || false
     @renewal_blocked_reason = @membership.renewal_blocked_reason
