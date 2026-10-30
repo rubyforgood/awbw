@@ -9,8 +9,9 @@ class Membership::Autopay::Charge
 
   # Re-read an unresolved attempt's PaymentIntent through Pay and run it through
   # the same state machine as a live charge. Backs the reconcile page/job.
-  def self.reconcile(attempt)
-    new(invoice: attempt.membership_invoice).reconcile(attempt)
+  # A caller that already retrieved the intent can pass it in to avoid a second call.
+  def self.reconcile(attempt, payment: nil)
+    new(invoice: attempt.membership_invoice).reconcile(attempt, payment:)
   end
 
   def initialize(invoice:)
@@ -40,10 +41,12 @@ class Membership::Autopay::Charge
     failure("A charge is already in progress for this invoice.")
   end
 
-  def reconcile(attempt)
-    return failure("This attempt has no PaymentIntent to reconcile.", attempt:) if attempt.payment_intent_id.blank?
+  def reconcile(attempt, payment: nil)
+    if payment.blank? && attempt.payment_intent_id.blank?
+      return failure("This attempt has no PaymentIntent to reconcile.", attempt:)
+    end
 
-    payment = Pay::Payment.from_id(attempt.payment_intent_id)
+    payment ||= Pay::Payment.from_id(attempt.payment_intent_id)
     apply_intent(attempt, payment.intent)
   rescue Stripe::StripeError, Pay::Error => e
     failure(e.message, attempt:)
@@ -167,7 +170,14 @@ class Membership::Autopay::Charge
         error_message: "The charge succeeded but was not applied to this invoice. Check Stripe before retrying.")
     end
 
-    attempt.update!(status: "succeeded", payment_intent_id: intent.id, pay_charge: pay_charge)
+    attempt.update!(
+      status: "succeeded",
+      payment_intent_id: intent.id,
+      pay_charge: pay_charge,
+      error_code: nil,
+      error_message: nil,
+      next_attempt_on: nil
+    )
     Result.new(attempt:, errors: [])
   end
 

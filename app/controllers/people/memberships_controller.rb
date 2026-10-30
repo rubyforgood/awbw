@@ -6,7 +6,7 @@ module People
       authorize! :membership
 
       @memberships = @person.memberships
-        .includes(membership_invoices: :allocations)
+        .includes(membership_invoices: [ :allocations, :charge_attempts ])
         .order(created_at: :desc)
         .decorate
         .to_a

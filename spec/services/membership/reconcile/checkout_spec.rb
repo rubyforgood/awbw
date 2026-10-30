@@ -1,0 +1,50 @@
+require "rails_helper"
+
+RSpec.describe Membership::Reconcile::Checkout do
+  let(:person) { create(:person) }
+  let(:membership) { create(:membership, person:) }
+  let(:invoice) { create(:membership_invoice, membership:, cost_cents: 1_000) }
+
+  before do
+    invoice.update_columns(checkout_session_id: "cs_test", payment_in_progress_at: 1.hour.ago)
+  end
+
+  it "records a completed, paid checkout and clears the session" do
+    intent = Stripe::PaymentIntent.construct_from(
+      id: "pi_test", object: "payment_intent", status: "succeeded", amount: 1_000, currency: "usd"
+    )
+    session = double(status: "complete", payment_status: "paid", payment_intent: intent)
+    allow(Stripe::Checkout::Session).to receive(:retrieve).and_return(session)
+    allow(Membership::Reconcile::Charge).to receive(:call).and_return(
+      Membership::Reconcile::Charge::Result.new(
+        status: :applied, payment: nil, pay_charge: nil, allocation: nil,
+        message: "Applied $10 to the invoice.", errors: []
+      )
+    )
+
+    result = described_class.call(invoice:)
+
+    expect(result).to be_success
+    expect(invoice.reload.checkout_session_id).to be_nil
+  end
+
+  it "clears an expired checkout so the invoice can be paid again" do
+    allow(Stripe::Checkout::Session).to receive(:retrieve)
+      .and_return(double(status: "expired"))
+
+    result = described_class.call(invoice:)
+
+    expect(result).to be_success
+    expect(invoice.reload.checkout_session_id).to be_nil
+  end
+
+  it "leaves an open checkout alone" do
+    allow(Stripe::Checkout::Session).to receive(:retrieve)
+      .and_return(double(status: "open"))
+
+    result = described_class.call(invoice:)
+
+    expect(result).not_to be_success
+    expect(invoice.reload.checkout_session_id).to eq("cs_test")
+  end
+end

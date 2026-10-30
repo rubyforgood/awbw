@@ -144,6 +144,20 @@ class MembershipInvoice < ApplicationRecord
     end
   end
 
+  # A stored checkout session is only stale once its 31-minute window has passed;
+  # while it is fresh the member may still be paying.
+  def needs_reconciliation?
+    unresolved_attempt? || (checkout_session_id.present? && !payment_in_progress?)
+  end
+
+  # Stripe payments this invoice's attempts point at that still have money to apply.
+  def stripe_payments_with_remaining
+    charge_ids = charge_attempts.includes(:pay_charge).filter_map { |attempt| attempt.pay_charge&.processor_id }
+    return ExternalProcessorPayment.none if charge_ids.empty?
+
+    ExternalProcessorPayment.where(stripe_charge_id: charge_ids, amount_cents_remaining: 1..)
+  end
+
   def mark_payment_in_progress!
     update_columns(payment_in_progress_at: Time.current, checkout_session_id: nil)
   end

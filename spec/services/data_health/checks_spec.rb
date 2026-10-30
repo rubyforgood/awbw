@@ -496,3 +496,25 @@ RSpec.describe DataHealth, ".grouped_checks" do
     expect(grouped.uniq).to eq(grouped)
   end
 end
+
+RSpec.describe DataHealth::MembershipReconciliation do
+  it "lists a membership with an unresolved attempt and links to it" do
+    person = create(:person)
+    membership = create(:membership, person:)
+    invoice = create(:membership_invoice, membership:)
+    invoice.charge_attempts.create!(attempt_number: 1, status: "unknown",
+      amount_cents: 1_000, attempted_at: 1.hour.ago)
+
+    check = described_class.new
+
+    expect(check.scope).to contain_exactly(membership)
+    expect(check.describe(membership)).to include("1 unresolved attempt")
+    expect(check.path_for(membership)).to eq(Rails.application.routes.url_helpers.membership_path(membership))
+  end
+
+  it "leaves a clean membership alone" do
+    create(:membership)
+
+    expect(described_class.new).not_to be_any
+  end
+end

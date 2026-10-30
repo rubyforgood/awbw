@@ -121,7 +121,8 @@ class MembershipInvoicesController < ApplicationController
 
   def set_membership_invoice
     @membership_invoice = MembershipInvoice
-      .includes(:allocations, :charge_attempts, :invoicee, :bill_to_address, :attention_person,
+      .includes(:allocations, :invoicee, :bill_to_address, :attention_person,
+                charge_attempts: :pay_charge,
                 membership: :person, created_by: :person, updated_by: :person)
       .find(params[:id])
   end

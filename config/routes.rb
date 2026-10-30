@@ -390,6 +390,8 @@ Rails.application.routes.draw do
     get :receipt, on: :member
     resource :checkout, only: [ :create ], controller: "membership_invoices/checkouts"
     get :cancel_checkout, on: :member, to: "membership_invoices/checkouts#cancel"
+    resource :reconciliation, only: [ :new, :create, :destroy ],
+             controller: "membership_invoices/reconciliations"
   end
 
   namespace :memberships do
