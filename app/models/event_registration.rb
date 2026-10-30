@@ -1024,15 +1024,15 @@ class EventRegistration < ApplicationRecord
   end
 
   # Whether the attendance sign-in sheet is open to this registrant. Deliberately
-  # any-of, not the all-of ce_paid_in_full? the status badge uses: each paid CE
-  # registration gets its own sheet, and they all record the same hours in the same
-  # room, so one paid licence is enough to justify writing those hours down. Someone
-  # part-way through paying for a second licence keeps signing in for the first.
-  # Events can switch timesheets off entirely.
+  # any-of, not the all-of ce_paid_in_full? the status badge uses: each CE
+  # registration that's paid or intends to pay gets its own sheet, and they all
+  # record the same hours in the same room, so one such licence is enough to justify
+  # writing those hours down. Someone part-way through paying for a second licence
+  # keeps signing in for the first. Events can switch timesheets off entirely.
   def ce_attendance_offered?
     return false unless event&.ce_timesheets_enabled?
 
-    continuing_education_registrations.any?(&:paid_in_full?)
+    continuing_education_registrations.any?(&:payment_access_granted?)
   end
 
   # License numbers on file across this registration's CE registrations.

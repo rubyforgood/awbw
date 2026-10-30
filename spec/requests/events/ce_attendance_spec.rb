@@ -48,6 +48,13 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       expect(flash[:alert]).to be_present
     end
 
+    it "records an entry when unpaid CE intends to pay" do
+      pay_ce!(paid: false).update!(intends_to_pay: true)
+      expect {
+        post registration_ce_sign_in_path(registration.slug)
+      }.to change { registration.event_attendance_time_entries.count }.by(1)
+    end
+
     it "does nothing outside the day's sign-in window" do
       pay_ce!
       travel_to Time.zone.local(2026, 7, 23, 6, 0)
@@ -263,6 +270,12 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
       get registration_ce_path(registration.slug)
       expect(response.body).not_to include("Training sign-in")
+    end
+
+    it "shows the attendance section when unpaid CE intends to pay" do
+      pay_ce!(paid: false).update!(intends_to_pay: true)
+      get registration_ce_path(registration.slug)
+      expect(response.body).to include("Training sign-in")
     end
 
     # Two licences means two boards, each audited on its own sheet showing its own
