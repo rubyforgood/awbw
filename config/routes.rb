@@ -167,6 +167,7 @@ Rails.application.routes.draw do
       delete :unlink_organization
       patch :update_onboarding
       patch :toggle_certificate_issued
+      patch :toggle_ce_certificate_issued
       patch :update_attendance
       patch :toggle_post_survey
     end
