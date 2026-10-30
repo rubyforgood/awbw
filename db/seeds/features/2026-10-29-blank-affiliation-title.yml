@@ -1,0 +1,10 @@
+name: "Blank affiliation title keeps someone linked without making them a facilitator"
+area: people
+display_status: admin_facing
+released_on: 2026-10-29
+summary: >-
+  Clear an affiliation's title to keep a person linked to an organization without
+  counting them as a facilitator. A blank title now stays blank instead of turning
+  back into "Facilitator" on the next save.
+pro_tips:
+  - "Re-running the story import leaves an author alone when they're already affiliated with the story's organization, whatever the title."

@@ -585,10 +585,11 @@ class StoryImporter
     Comment.create!(commentable: record, body: body, created_by: @import_user)
   end
 
-  # Facilitator affiliations connect a non-AWBW author to their organization.
+  # Facilitator affiliations connect a non-AWBW author to their organization. Any existing
+  # affiliation there already does, whatever its title — an admin may have blanked it.
   def create_facilitator_affiliation(author, organization)
     return unless from_non_awbw?(author) && author.persisted? && organization
-    return if Affiliation.exists?(person: author, organization: organization, title: Affiliation::FACILITATOR_TITLE)
+    return if Affiliation.exists?(person: author, organization: organization)
 
     Affiliation.create!(person: author, organization: organization, title: Affiliation::FACILITATOR_TITLE)
   end

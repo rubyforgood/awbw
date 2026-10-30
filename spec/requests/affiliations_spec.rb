@@ -23,6 +23,14 @@ RSpec.describe "/affiliations", type: :request do
         expect(response).to be_successful
       end
 
+      it "leaves an untitled affiliation's title blank" do
+        affiliation.update!(title: nil)
+
+        get edit_affiliation_path(affiliation)
+
+        expect(Capybara.string(response.body).find("input[name='affiliation[title]']").value).to be_blank
+      end
+
       it "surfaces the FileMaker code field" do
         get edit_affiliation_path(affiliation)
 

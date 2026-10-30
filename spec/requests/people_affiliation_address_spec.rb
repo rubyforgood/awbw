@@ -18,6 +18,15 @@ RSpec.describe "People affiliation address picker", type: :request do
       expect(response.body).to include("Address")
     end
 
+    it "leaves an untitled affiliation's title blank" do
+      person = create(:person)
+      create(:affiliation, person: person, organization: create(:organization), title: nil)
+
+      get edit_person_path(person)
+
+      expect(Capybara.string(response.body).find("input[name*='[affiliations_attributes]'][name$='[title]']").value).to be_blank
+    end
+
     it "still lists a linked address that is inactive, marked [INACTIVE]" do
       person = create(:person)
       organization = create(:organization)

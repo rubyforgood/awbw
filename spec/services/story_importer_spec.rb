@@ -737,6 +737,16 @@ RSpec.describe StoryImporter do
       expect(Affiliation.where(person: author, organization: org, title: "Facilitator")).to exist
     end
 
+    it "leaves an author already affiliated with the organization under another title alone" do
+      author = create(:person, first_name: "Jamie", last_name: "Rivera")
+      org = create(:organization, name: "Example Family Services")
+      existing = create(:affiliation, person: author, organization: org, title: nil)
+
+      import([ base_row ])
+
+      expect(author.affiliations.where(organization: org)).to contain_exactly(existing)
+    end
+
     it "keeps the WordPress id as a comment on the story" do
       import([ base_row("wp_id" => "9003") ])
 
