@@ -47,4 +47,35 @@ RSpec.describe Membership::Reconcile::Checkout do
     expect(result).not_to be_success
     expect(invoice.reload.checkout_session_id).to eq("cs_test")
   end
+
+  it "clears a stale session Stripe no longer has" do
+    allow(Stripe::Checkout::Session).to receive(:retrieve)
+      .and_raise(Stripe::InvalidRequestError.new("No such checkout session", nil))
+
+    result = described_class.call(invoice:)
+
+    expect(result).to be_success
+    expect(invoice.reload.checkout_session_id).to be_nil
+  end
+
+  it "leaves a fresh session alone when Stripe cannot find it" do
+    invoice.update_columns(payment_in_progress_at: Time.current)
+    allow(Stripe::Checkout::Session).to receive(:retrieve)
+      .and_raise(Stripe::InvalidRequestError.new("No such checkout session", nil))
+
+    result = described_class.call(invoice:)
+
+    expect(result).not_to be_success
+    expect(invoice.reload.checkout_session_id).to eq("cs_test")
+  end
+
+  it "leaves a stale session alone on a transient Stripe error" do
+    allow(Stripe::Checkout::Session).to receive(:retrieve)
+      .and_raise(Stripe::APIConnectionError.new("Stripe is down"))
+
+    result = described_class.call(invoice:)
+
+    expect(result).not_to be_success
+    expect(invoice.reload.checkout_session_id).to eq("cs_test")
+  end
 end

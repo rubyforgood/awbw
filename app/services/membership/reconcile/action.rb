@@ -1,5 +1,5 @@
 class Membership::Reconcile::Action
-  OPERATIONS = %w[reconcile_attempt check_checkout apply_payment use_intent fail_attempt].freeze
+  OPERATIONS = %w[reconcile_attempt check_checkout clear_checkout apply_payment use_intent fail_attempt].freeze
 
   Result = Data.define(:status, :message, :errors) do
     def success? = errors.blank?
@@ -22,6 +22,8 @@ class Membership::Reconcile::Action
       with_attempt { |attempt| Membership::Reconcile.call(attempt:) }
     when "check_checkout"
       Membership::Reconcile::Checkout.call(invoice: @invoice)
+    when "clear_checkout"
+      clear_checkout
     when "apply_payment"
       with_payment { |payment| Membership::Reconcile::Payment.call(invoice: @invoice, payment:) }
     when "use_intent"
@@ -34,6 +36,22 @@ class Membership::Reconcile::Action
   private
 
   def operation = @params[:operation].to_s
+
+  def clear_checkout
+    return failure("This invoice has no checkout session to clear.") if @invoice.checkout_session_id.blank?
+
+    @invoice.with_lock do
+      @invoice.reload
+      next failure("This checkout is still in progress.") if @invoice.payment_in_progress?
+
+      @invoice.clear_payment_in_progress!
+      Result.new(
+        status: :cleared,
+        message: "Cleared the stale checkout session. The invoice can be paid again.",
+        errors: []
+      )
+    end
+  end
 
   def with_attempt
     attempt = @invoice.charge_attempts.find_by(id: @params[:attempt_id])

@@ -12,6 +12,15 @@
           ),
           class: button_classes(:secondary_outline, size: :sm),
           title: "Checks the stored Stripe Checkout Session and records a completed payment." %>
+    <% unless membership_invoice.payment_in_progress? %>
+      <%= button_to "Clear stale checkout",
+            membership_invoice_reconciliation_path(
+              membership_invoice, operation: "clear_checkout", **return_params
+            ),
+            class: button_classes(:danger_outline, size: :sm),
+            title: "Clears the local checkout lock without calling Stripe.",
+            data: { turbo_confirm: "Only clear this if Stripe shows the session expired or missing. The invoice can then be paid again." } %>
+    <% end %>
   </div>
 <% end %>
 

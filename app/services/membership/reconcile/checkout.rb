@@ -31,6 +31,17 @@ class Membership::Reconcile::Checkout
     else
       failure("Stripe reports this checkout session as #{session.status}.")
     end
+  rescue Stripe::InvalidRequestError => e
+    return failure("Could not check the checkout session with Stripe: #{e.message}") if @invoice.payment_in_progress?
+
+    clear_checkout_state
+    Result.new(
+      status: :cleared,
+      session: nil,
+      payment: nil,
+      message: "Stripe no longer has this checkout session. Cleared the local checkout state.",
+      errors: []
+    )
   rescue Stripe::StripeError, Pay::Error => e
     failure("Could not check the checkout session with Stripe: #{e.message}")
   end

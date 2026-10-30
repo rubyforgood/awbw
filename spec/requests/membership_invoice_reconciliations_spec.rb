@@ -35,6 +35,28 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
     expect(flash[:notice]).to match(/Canceled/)
   end
 
+  it "clears a stale checkout session" do
+    invoice.update_columns(checkout_session_id: "cs_test", payment_in_progress_at: 2.hours.ago)
+    expect(MembershipInvoice.needing_reconciliation).to include(invoice)
+
+    post membership_invoice_reconciliation_path(invoice, operation: "clear_checkout")
+
+    expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
+    expect(flash[:notice]).to match(/Cleared the stale checkout/)
+    expect(invoice.reload.checkout_session_id).to be_nil
+    expect(MembershipInvoice.needing_reconciliation).not_to include(invoice)
+  end
+
+  it "refuses to clear a checkout that is still in progress" do
+    invoice.update_columns(checkout_session_id: "cs_test", payment_in_progress_at: Time.current)
+
+    post membership_invoice_reconciliation_path(invoice, operation: "clear_checkout")
+
+    expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
+    expect(flash[:alert]).to match(/still in progress/)
+    expect(invoice.reload.checkout_session_id).to eq("cs_test")
+  end
+
   it "denies a member" do
     sign_out admin
     sign_in create(:user, person:)
