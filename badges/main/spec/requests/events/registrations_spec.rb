@@ -443,7 +443,7 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("License type")
       expect(response.body).to include("Your license number")
       expect(response.body).to include("License # needed")
-      expect(response.body).to include("We need your license type and number")
+      expect(response.body).to include("title=\"We need your license type and number to issue your CE certificate.\"")
       expect(response.body).to include("Save changes")
       # Nothing on file yet, so there's no read-only value to edit or cancel back to.
       expect(response.body).not_to include("editing=license")
