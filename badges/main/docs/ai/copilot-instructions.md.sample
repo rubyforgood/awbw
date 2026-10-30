@@ -19,8 +19,7 @@ npm ci
 
 ## AI Instruction Files
 
-When the user says "AI files", "AI instructions", "tell AI to", or "remember to always", these are the files —
-**always both copies: the live file and its tracked `docs/ai/` sample.** Never edit just one.
+When the user says "AI files", "AI instructions", "tell AI to", or "remember to always", these are the files.
 If you notice the user repeatedly correcting the same pattern, suggest adding it to the AI files with a concrete proposal.
 
 | File | Purpose |
@@ -415,7 +414,7 @@ what changed.
   fake with `area`/`display_status`.)
 - Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
   (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
-  sentences, **max 300 characters** — longer detail goes in `description`), `released_on` (ship date), plus optional `pro_tips` (list),
+  sentences), `released_on` (ship date), plus optional `pro_tips` (list),
   `description`, `external_url`, `action_path` (in-app "Check out this feature"
   link), and `pr_number` (GitHub PR link).
 - **`display_status` is who the announcement is for, not who the feature is for.**

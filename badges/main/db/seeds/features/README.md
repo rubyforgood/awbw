@@ -50,7 +50,7 @@ pro_tips:
 | `name` | Short, sentence-case, unique. The sync matches records by it. |
 | `area` | One of `Feature::AREA_KEYS` (events, registration, scholarships, payments, people, content, stories, communications, reporting). |
 | `display_status` | Announcement audience: `admin_facing` (default; super-admins only), `user_facing`, or `public_facing`. |
-| `summary` | One or two plain-language sentences, max 300 characters (the model rejects longer). Put longer detail in `description`. |
+| `summary` | One or two plain-language sentences. |
 | `released_on` | Ship date (`YYYY-MM-DD`). |
 | `action_path` | Optional in-app path for "Check out this feature". Use `/registration/sample` for ticket/callout features. |
 | `pr_number` | Optional GitHub PR number (adds a pull request link). |
