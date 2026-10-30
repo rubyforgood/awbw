@@ -1,7 +1,7 @@
 class MembershipPolicy < ApplicationPolicy
   alias_rule :update?, to: :edit?
   alias_rule :show?, to: :manage?
-  alias_rule :unlock, to: destory?
+  alias_rule :unlock?, to: :destroy?
 
   def manage? = admin? && Membership.enabled?
 
