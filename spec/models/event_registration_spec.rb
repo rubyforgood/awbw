@@ -252,9 +252,9 @@ RSpec.describe EventRegistration, type: :model do
       dest_ce = destination.continuing_education_registrations.create!(
         professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
 
-      destination.mark_certificate_issued!(true)
+      destination.mark_ce_certificate_issued!(true)
       expect(dest_ce.reload.certificate_sent?).to be(true)
-      expect(destination.reload.certificate_issued?).to be(true)
+      expect(destination.reload.ce_certificate_issued?).to be(true)
     end
 
     it "does not reach across the transfer link to the other reg's CE" do
@@ -263,7 +263,7 @@ RSpec.describe EventRegistration, type: :model do
       dest_ce = destination.continuing_education_registrations.create!(
         professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
 
-      destination.mark_certificate_issued!(true)
+      destination.mark_ce_certificate_issued!(true)
       expect(dest_ce.reload.certificate_sent?).to be(true)
       expect(source_stub.reload.certificate_sent?).to be(false)
     end

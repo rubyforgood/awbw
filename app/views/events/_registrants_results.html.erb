@@ -122,8 +122,11 @@
                   <%= render "shared/sortable_header", label: Form.role_label(role), index: status_index + 1 + offset %>
                 </th>
               <% end %>
-              <%# Kept out of the sortable index range (last data column). %>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" data-column-toggle-col="certificate">Certificate</th>
+              <%# Kept out of the sortable index range (last data columns); one switch shows both. %>
+              <th class="px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="certificate">Certificate</th>
+              <% if ce_col %>
+                <th class="px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="certificate">CE certificate</th>
+              <% end %>
               <%# One completion column per form callout, revealed together by the Ticket forms switch. %>
               <% form_columns.each do |callout, form| %>
                 <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" data-column-toggle-col="ticket_forms"><%= form.name %></th>
@@ -441,6 +444,15 @@
                 <td class="px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
                   <%= render "event_registrations/certificate_issued_toggle", registration: registration %>
                 </td>
+                <% if ce_col %>
+                  <td class="px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
+                    <% if registration.continuing_education_registrations.any? %>
+                      <%= render "event_registrations/certificate_issued_toggle", registration: registration, ce: true %>
+                    <% else %>
+                      <span class="text-gray-300">—</span>
+                    <% end %>
+                  </td>
+                <% end %>
                 <% form_columns.each do |callout, form| %>
                   <% submitted_at = callout_form_completion[[ registration.registrant_id, form.id ]] %>
                   <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="ticket_forms">
