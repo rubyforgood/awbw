@@ -1,0 +1,12 @@
+<%# One page of the org's workshop-log groups (OrganizationsController#show ?section=workshop_logs). %>
+<%# locals: (organization:, groups:) %>
+<%= turbo_frame_tag "organization_workshop_logs_section" do %>
+  <div class="grid grid-cols-1 gap-6 blur-on-submit sm:grid-cols-2 lg:grid-cols-3">
+    <% groups.each do |logs| %>
+      <%= render "organizations/sections/workshop_log_grouped_card", organization: organization, logs: logs %>
+    <% end %>
+  </div>
+  <div class="mt-6 flex justify-center">
+    <%= tailwind_paginate groups, url_for_page: ->(page) { organization_path(organization, section: "workshop_logs", page: page) } %>
+  </div>
+<% end %>

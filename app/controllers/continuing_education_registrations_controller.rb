@@ -68,7 +68,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
   def destroy
     authorize! @ce_registration
     if @ce_registration.allocations.exists?
-      redirect_to edit_continuing_education_registration_path(@ce_registration, return_to: params[:return_to]),
+      redirect_to edit_continuing_education_registration_path(@ce_registration, **helpers.ce_registration_return_params),
         alert: "Can't remove CE — it has payments. Revert the payment first.", status: :see_other
       return
     end
@@ -82,7 +82,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
     authorize! @ce_registration
     issued = @ce_registration.certificate_sent_at.present?
     @ce_registration.update!(certificate_sent_at: issued ? nil : Time.current)
-    redirect_to edit_continuing_education_registration_path(@ce_registration, return_to: params[:return_to]),
+    redirect_to edit_continuing_education_registration_path(@ce_registration, **helpers.ce_registration_return_params),
       notice: issued ? "Certificate marked not issued." : "Certificate marked issued.", status: :see_other
   end
 
@@ -112,6 +112,8 @@ class ContinuingEducationRegistrationsController < ApplicationController
                                    expires_on: params.dig(:continuing_education_registration, :license_expires_on),
                                    license_id: params.dig(:continuing_education_registration, :professional_license_id))
     ce_registration.hours = params.dig(:continuing_education_registration, :hours)
+    intends_to_pay = params.dig(:continuing_education_registration, :intends_to_pay)
+    ce_registration.intends_to_pay = intends_to_pay unless intends_to_pay.nil?
     # A transfer-created record's cost is snapshotted from the source's outstanding
     # balance and admin-locked, so ignore any submitted cost for it. (#1944)
     unless ce_registration.transfer_created?

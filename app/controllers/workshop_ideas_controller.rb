@@ -7,6 +7,11 @@ class WorkshopIdeasController < ApplicationController
     base_scope = authorized_scope(WorkshopIdea.with_author_credit.includes(:workshops))
     filtered = base_scope.search(params.slice(:title, :author_name))
     filtered = filtered.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
+    # Ideas carry no organization; credit them through the org's active facilitators.
+    if params[:organization_id].present?
+      organization = Organization.find_by(id: params[:organization_id])
+      filtered = organization ? filtered.merge(organization.credited_to_facilitators(WorkshopIdea)) : filtered.none
+    end
     @workshop_ideas_count = filtered.size
     @workshop_ideas = filtered.paginate(page: params[:page], per_page: per_page).decorate
   end

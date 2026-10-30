@@ -11,12 +11,6 @@
       back_path = sample_preview? ? sample_ce_event_path(@event) : registration_ce_path(@event_registration.slug)
       back_label = "Back to CE credit"
     end
-    license = @ce_registration.professional_license
-    license_label = license&.number_known? ? license.name : "—"
-    hours = @ce_registration.hours.to_d
-    hours_label = hours == hours.to_i ? hours.to_i : hours
-    facilitator_names = @event.facilitator_event_staffs.map { |staff| staff.person.full_name }
-    issued_on = @ce_registration.certificate_sent_at&.to_date || Date.current
   %>
 
   <% content_for :head do %>
@@ -47,43 +41,24 @@
   </div>
 
   <div class="px-4 py-6 sm:px-8 <%= @frame_file.present? ? "print:p-0" : "print:p-[0.4in]" %>">
-    <%= render "events/callouts/ce_confirmation_certificate",
+    <%= render "events/callouts/ce_certificate_document",
           event: event,
+          ce_registration: @ce_registration,
           recipient: @event_registration.registrant.full_name,
-          license_label: license_label,
-          hours_label: hours_label,
-          facilitator_names: facilitator_names,
           signature_file: @signature_file,
-          frame_file: @frame_file,
-          issued_on: issued_on %>
+          frame_file: @frame_file %>
   </div>
 <% else %>
   <%= render layout: "events/callouts/callout_page", locals: { title: "CE confirmation of attendance" } do %>
     <%# Not yet unlocked: show each CE condition and which are met, like the
         completion certificate's pending page. %>
-    <% ended = @event.end_date&.past? %>
-    <% attended = @event_registration.attended? %>
-    <% paid = @ce_registration.paid_in_full? %>
-    <% ce_form = RegistrantCeForm.new(@event_registration) %>
     <div class="space-y-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
       <p class="font-medium text-gray-700">Your CE confirmation of attendance unlocks once these are met:</p>
       <ul class="space-y-1">
-        <li class="flex items-center gap-2">
-          <i class="fa-solid <%= ended ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
-          The training has ended<%= " (#{@event.end_date.to_date.strftime("%B %-d, %Y")})" if @event.end_date %>
-        </li>
-        <li class="flex items-center gap-2">
-          <i class="fa-solid <%= attended ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
-          Your attendance is confirmed
-        </li>
-        <li class="flex items-center gap-2">
-          <i class="fa-solid <%= paid ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
-          Your CE payment is received in full
-        </li>
-        <% if ce_form.form %>
+        <% @ce_registration.decorate.certificate_conditions.each do |condition| %>
           <li class="flex items-center gap-2">
-            <i class="fa-solid <%= ce_form.complete? ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
-            <%= ce_form.form.display_name %> is complete
+            <i class="fa-solid <%= condition.met ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
+            <%= condition.label.upcase_first %>
           </li>
         <% end %>
       </ul>

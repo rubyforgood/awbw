@@ -9,12 +9,10 @@
 
 <%# Live field tinting mirrors the inline editor (affiliations/_fields): role is the
     hue (facilitator = purple, else blue), status the saturation (active = full,
-    past = light). Kept in sync as you type by the inactive-toggle controller. A
-    blank title displays and saves as "Facilitator", so treat it as one here too. %>
+    past = light). Kept in sync as you type by the inactive-toggle controller. %>
 <% expired = @affiliation.inactive? || (@affiliation.end_date.present? && @affiliation.end_date < Date.current) %>
 <% upcoming = !expired && @affiliation.start_date.present? && @affiliation.start_date > Date.current %>
-<% displayed_title = @affiliation.title.presence || Affiliation::FACILITATOR_TITLE %>
-<% facilitator = displayed_title.strip == Affiliation::FACILITATOR_TITLE %>
+<% facilitator = @affiliation.facilitator? %>
 <% accent = facilitator ? (expired ? "bg-purple-300" : "bg-purple-500") : (expired ? "bg-blue-300" : "bg-blue-500") %>
 <% row_bg = facilitator ? "bg-purple-50 border-purple-200" : "bg-blue-50 border-blue-200" %>
 <% fill_color = if facilitator
@@ -162,9 +160,8 @@
             <%= f.input :title,
                   as: :string,
                   label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
-                  hint: "\"Facilitator\" = AWBW Facilitator.",
+                  hint: "\"Facilitator\" = AWBW Facilitator. Leave blank to keep them linked to the organization without being a facilitator.",
                   input_html: {
-                    value: displayed_title,
                     class: title_class,
                     data: { inactive_toggle_target: "title", action: "inactive-toggle#updateBorder" }
                   } %>

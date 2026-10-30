@@ -219,9 +219,13 @@ class ContinuingEducationRegistration < ApplicationRecord
     save! if changed?
   end
 
-  # Human-readable payment status, mirroring EventRegistration#payment_status_label.
-  # CE has no "intends to pay" concept (that's an event-access affordance), so the
-  # middle state is a genuine partial payment instead.
+  # May this CE reach CE-paid content (callouts gated on CE payment)? Mirrors
+  # EventRegistration#payment_access_granted?; reporting keeps using paid_in_full?.
+  def payment_access_granted?
+    paid_in_full? || intends_to_pay?
+  end
+
+  # Human-readable payment status — the real balance, so intending to pay still reads Due.
   def payment_status_label
     return "Paid" if paid_in_full?
     return "Partial" if partially_paid?

@@ -1,0 +1,10 @@
+name: "See what your organization has contributed"
+area: people
+display_status: user_facing
+released_on: 2026-10-30
+pr_number: 2919
+action_path: "/organizations"
+summary: >-
+  Your organization's profile now shows the workshops, resources, stories and
+  community news its facilitators are credited with, plus the workshop logs and
+  ideas your team has submitted.

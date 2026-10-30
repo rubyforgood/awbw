@@ -1,0 +1,7 @@
+<%# One workshop's logs as a card, titled to the org's own grouped page rather
+    than the person profile's. %>
+<%# locals: (organization:, logs:) %>
+<% first_log = logs.first %>
+<% link_params = first_log.workshop_id? ? { workshop_id: first_log.workshop_id } : { external_title: first_log.external_workshop_title } %>
+<%= render "people/sections/workshop_log_grouped_card", logs: logs,
+           title_path: workshop_logs_organization_path(organization, **link_params) %>

@@ -158,6 +158,12 @@ module Events
     def ce
       @ce_callout = @event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
       @ce_form = RegistrantCeForm.new(@event_registration)
+      @ce_signature_file = Resource.ce_certificate_signature_file
+      @ce_frame_file = Resource.ce_certificate_frame_file
+      # The CE callout's post-training form renders inline here, in the same card as
+      # every other callout form. Open to fill until submitted (or while editing).
+      @ce_form_editing = @ce_form.present? && !@ce_form.completed_anonymously? &&
+        (@ce_form.submission.nil? || params[:edit].to_i == @ce_form.form.id)
       case params[:checkout]
       when "success"
         flash.now[:notice] = "Your CE payment was successful."
@@ -351,9 +357,8 @@ module Events
     def callout
       @callout = @event.registration_ticket_callouts.find(params[:callout_id])
       return redirect_to registration_ticket_path(@event_registration.slug) if @callout.hidden? || !@callout.delivers_form?
-      # The CE callout's form is a post-training step — it opens only once the
-      # registrant's sign-outs are complete, and it lives on the CE page.
-      return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
+      # The CE callout's form is a post-training step delivered inline on the CE page.
+      return redirect_to callout_form_landing(@callout, nil) if @callout.ce_config?
       # The scholarship callout delivers the recipients survey inline on its own
       # page (gated on agreement + tasks), not the generic callout-forms page.
       return redirect_to registration_scholarship_path(@event_registration.slug) if @callout.builtin_key == "scholarship"
@@ -438,10 +443,11 @@ module Events
     end
 
     # Where to send the registrant after landing on / submitting a callout form. The
-    # scholarship callout's survey lives on the scholarship page; everything else
-    # returns to the generic callout-forms page, anchored to the form.
+    # scholarship callout's survey and the CE callout's form live on their own pages;
+    # everything else returns to the generic callout-forms page, anchored to the form.
     def callout_form_landing(callout, callout_form)
       return registration_scholarship_path(@event_registration.slug) if callout.builtin_key == "scholarship"
+      return registration_ce_path(@event_registration.slug, anchor: "ce-form") if callout.ce_config?
       registration_callout_form_path(@event_registration.slug, callout, anchor: callout_form && "form-#{callout_form.form_id}")
     end
 
@@ -459,11 +465,11 @@ module Events
     end
 
     # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of
-    # rather than all-of, matching the callout view: each paid CE registration renders
-    # its own sheet, and since they all record the same hours, one paid licence is
-    # enough to let the registrant write those hours down.
+    # rather than all-of, matching the callout view: each CE registration that's paid
+    # or intends to pay renders its own sheet, and since they all record the same
+    # hours, one such licence is enough to let the registrant write those hours down.
     def attendance_enabled?
-      @event_registration.ce_attendance_offered?
+      @event_registration.ce_attendance_available?
     end
 
     def timesheet_locked_alert

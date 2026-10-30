@@ -126,6 +126,17 @@ RSpec.describe "Event registration show page", type: :system do
         href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
     end
 
+    it "shows a CE-payment-gated callout when the CE intends to pay" do
+      gated_callout = create(:registration_ticket_callout, :ce_payment_access_gated, event: event, title: "CE evaluation")
+      create(:continuing_education_registration, event_registration: registration, cost_cents: 15_000, intends_to_pay: true)
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_link("CE evaluation",
+        href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
+    end
+
     it "hides an attended-gated callout until the registration is marked attended" do
       gated_callout = create(:registration_ticket_callout, :attended_gated, event: event, title: "Certificate of completion")
 

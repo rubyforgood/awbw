@@ -1017,16 +1017,22 @@ class EventRegistration < ApplicationRecord
     chain.any? && chain.all?(&:paid_in_full?)
   end
 
+  # The CE-paid callout gate: every CE across the transfer chain is paid or intends to pay.
+  def ce_payment_access_granted?
+    chain = continuing_education_registrations_across_transfers
+    chain.any? && chain.all?(&:payment_access_granted?)
+  end
+
   # Whether the attendance sign-in sheet is open to this registrant. Deliberately
-  # any-of, not the all-of ce_paid_in_full? the status badge uses: each paid CE
-  # registration gets its own sheet, and they all record the same hours in the same
-  # room, so one paid licence is enough to justify writing those hours down. Someone
-  # part-way through paying for a second licence keeps signing in for the first.
-  # Events can switch timesheets off entirely.
-  def ce_attendance_offered?
+  # any-of, not the all-of ce_paid_in_full? the status badge uses: each CE
+  # registration that's paid or intends to pay gets its own sheet, and they all
+  # record the same hours in the same room, so one such licence is enough to justify
+  # writing those hours down. Someone part-way through paying for a second licence
+  # keeps signing in for the first. Events can switch timesheets off entirely.
+  def ce_attendance_available?
     return false unless event&.ce_timesheets_enabled?
 
-    continuing_education_registrations.any?(&:paid_in_full?)
+    continuing_education_registrations.any?(&:payment_access_granted?)
   end
 
   # License numbers on file across this registration's CE registrations.

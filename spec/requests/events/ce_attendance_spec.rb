@@ -48,6 +48,13 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       expect(flash[:alert]).to be_present
     end
 
+    it "records an entry when unpaid CE intends to pay" do
+      pay_ce!(paid: false).update!(intends_to_pay: true)
+      expect {
+        post registration_ce_sign_in_path(registration.slug)
+      }.to change { registration.event_attendance_time_entries.count }.by(1)
+    end
+
     it "does nothing outside the day's sign-in window" do
       pay_ce!
       travel_to Time.zone.local(2026, 7, 23, 6, 0)
@@ -265,6 +272,12 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       expect(response.body).not_to include("Training sign-in")
     end
 
+    it "shows the attendance section when unpaid CE intends to pay" do
+      pay_ce!(paid: false).update!(intends_to_pay: true)
+      get registration_ce_path(registration.slug)
+      expect(response.body).to include("Training sign-in")
+    end
+
     # Two licences means two boards, each audited on its own sheet showing its own
     # licence number and awarded hours — over one shared set of times, since the
     # registrant sat in one room once.
@@ -473,7 +486,7 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
         expect(response.body).to include("Sign-in opens")
         # 10:00 UTC shown in the page's Pacific zone.
         expect(response.body).to include("Thursday, July 23 at 3:00 AM PDT")
-        expect(response.body).to include("once your timesheet opens")
+        expect(response.body).not_to include("once your timesheet opens")
         expect(response.body).not_to include("Edit your times")
       end
 

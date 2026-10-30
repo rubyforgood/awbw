@@ -11,11 +11,7 @@
   <%# Status badges (kept live by inactive-toggle as the dates are edited), at most
       one: "Inactive" for an ended/flagged row, "Upcoming" for a not-yet-started
       one, and nothing at all for a currently-active row. %>
-  <%# A blank title displays (and saves) as the "Facilitator" default, so treat it
-      as a facilitator for the row styling too — otherwise the JS (which reads the
-      shown title) tints the row purple while the server-rendered pill stays neutral. %>
-  <% displayed_title = f.object.title.presence || "Facilitator" %>
-  <% facilitator = displayed_title.strip == "Facilitator" %>
+  <% facilitator = f.object.facilitator? %>
   <%# Four states by colour: role is the hue (facilitator = purple, else blue) and
       status is the saturation (active = full, inactive = super-light). Kept in sync
       live by inactive-toggle. %>
@@ -94,7 +90,6 @@
                     label_html: { class: "block text-sm font-medium text-gray-700 mb-1 xl:hidden" },
                     placeholder: "Title",
                     input_html: {
-                      value: displayed_title,
                       style: "height: 42px;",
                       class: "text-sm #{title_class}",
                       data: {

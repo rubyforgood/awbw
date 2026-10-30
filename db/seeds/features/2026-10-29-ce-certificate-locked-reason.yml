@@ -1,0 +1,10 @@
+name: "CE certificate card says why it's locked"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-29
+summary: >-
+  On a registrant's CE page, a locked CE certificate now says what's still
+  needed, like confirmed attendance, the CE payment, or the evaluation form.
+pro_tips:
+  - "The certificate page lists the same conditions with a check next to each one that's met."
+  - "When sign-in time was logged, it also needs to cover the CE hours."

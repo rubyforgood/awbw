@@ -1,0 +1,8 @@
+<%# locals: (organization:) %>
+<% sectors = organization.active_facilitator_sectors %>
+<% if sectors.any? %>
+  <%= render "organizations/sector_preview", sectors: sectors,
+             breakdown_path: populations_served_organization_path(organization) %>
+<% else %>
+  <p class="text-gray-500 italic">None listed by active facilitators.</p>
+<% end %>

@@ -12,9 +12,16 @@ RSpec.describe "Events attendance report", type: :request do
     create(:event_registration, event: event, registrant: create(:person, first_name: "Alice", last_name: "Adams"))
   end
 
+  # The timesheets list paid (or intending) CE licences by default, so the fixtures pay theirs.
+  def paid_ce!(license, **attrs)
+    ce = create(:continuing_education_registration, event_registration: registration, professional_license: license, **attrs)
+    create(:allocation, source: create(:payment), allocatable: ce, amount: ce.cost_cents)
+    ce
+  end
+
   def log_ce_time!
     license = create(:professional_license, person: registration.registrant, number: "AAA111")
-    create(:continuing_education_registration, event_registration: registration, professional_license: license)
+    paid_ce!(license)
     create(:event_attendance_time_entry, event_registration: registration,
       signed_in_at: Time.zone.local(2026, 7, 23, 8, 50), signed_out_at: Time.zone.local(2026, 7, 23, 10, 34))
   end
@@ -29,6 +36,32 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include("CE timesheets")
       expect(response.body).to include("Alice Adams")
       expect(response.body).to include("AAA111")
+    end
+
+    it "lists only CE licences paid or intending to pay by default, with a toggle to show every one" do
+      log_ce_time!
+      unpaid = create(:professional_license, person: registration.registrant, number: "UNPAID1")
+      create(:continuing_education_registration, event_registration: registration, professional_license: unpaid)
+      intending = create(:professional_license, person: registration.registrant, number: "INTENDS1")
+      create(:continuing_education_registration, event_registration: registration, professional_license: intending, intends_to_pay: true)
+
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("AAA111", "INTENDS1")
+      expect(response.body).not_to include("UNPAID1")
+      toggle = Capybara.string(response.body).find("nav[aria-label='CE payment filter']")
+      expect(toggle).to have_link("Paid or intends to pay (2)", href: attendance_event_path(event, ce: "true"))
+      expect(toggle).to have_link("All CE (3)", href: attendance_event_path(event, ce: "true", ce_payment: "all"))
+
+      get attendance_event_path(event, ce: "true", ce_payment: "all")
+      expect(response.body).to include("AAA111", "UNPAID1")
+    end
+
+    it "says when nobody has paid or intends to pay for CE yet" do
+      license = create(:professional_license, person: registration.registrant, number: "UNPAID1")
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("No one has paid or said they intend to pay for CE credit on this event yet.")
     end
 
     it "renders the generic attendance report without CE scoping" do
@@ -96,6 +129,18 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include(attendance_event_path(event, ce: "true", anchor: "totals"))
     end
 
+    it "keeps the All CE choice on the links out to a CE registration and back" do
+      log_ce_time!
+      ce = registration.continuing_education_registrations.first
+      get attendance_event_path(event, ce: "true", ce_payment: "all")
+      page = Capybara.string(response.body)
+      expect(page).to have_link(href: edit_continuing_education_registration_path(ce, return_to: "attendance", ce_payment: "all"))
+      expect(page).to have_link(href: registration_ce_path(registration.slug, return_to: "attendance", ce_payment: "all"))
+
+      get registration_ce_path(registration.slug, return_to: "attendance", ce_payment: "all")
+      expect(Capybara.string(response.body)).to have_link(href: attendance_event_path(event, ce: "true", ce_payment: "all", anchor: "totals"))
+    end
+
     it "returns to the registrants page when opened from there" do
       get attendance_event_path(event, ce: "true", return_to: "registrants")
       expect(response.body).to include("← Registrants")
@@ -120,7 +165,7 @@ RSpec.describe "Events attendance report", type: :request do
     it "flags 'signed in' only on the day whose entry is still open" do
       event.update!(end_date: Time.zone.local(2026, 7, 24, 16, 0))
       license = create(:professional_license, person: registration.registrant, number: "AAA111")
-      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      paid_ce!(license)
       create(:event_attendance_time_entry, :open, event_registration: registration,
         signed_in_at: Time.zone.local(2026, 7, 23, 9, 0))
       create(:event_attendance_time_entry, event_registration: registration,
@@ -140,8 +185,7 @@ RSpec.describe "Events attendance report", type: :request do
     it "reports a line per licence when a registrant claims CE against two" do
       log_ce_time!
       second = create(:professional_license, person: registration.registrant, number: "ZZZ999")
-      create(:continuing_education_registration, event_registration: registration,
-        professional_license: second, hours: 3)
+      paid_ce!(second, hours: 3)
 
       get attendance_event_path(event, ce: "true")
 
@@ -185,6 +229,13 @@ RSpec.describe "Events attendance report", type: :request do
         expect(page).to have_link(href: attendance_event_path(event, ce: "true", edit: empty_cell, anchor: empty_cell))
       end
 
+      it "carries the All CE choice back after saving" do
+        log_ce_time!
+        patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true", ce_payment: "all", row: ce_row_key),
+              params: { attendance: { entries: { "0" => { in: "08:50", out: "16:00" } } } }
+        expect(response).to redirect_to(attendance_event_path(event, ce: "true", ce_payment: "all", anchor: cell))
+      end
+
       it "opens the editor for one cell and leaves the rest read-only" do
         log_ce_time!
         get attendance_event_path(event, ce: "true", edit: cell)
@@ -196,7 +247,7 @@ RSpec.describe "Events attendance report", type: :request do
 
       it "adds both times for a day nobody signed in on" do
         license = create(:professional_license, person: registration.registrant, number: "AAA111")
-        create(:continuing_education_registration, event_registration: registration, professional_license: license)
+        paid_ce!(license)
 
         expect {
           patch update_attendance_event_registration_path(registration, date: day.iso8601, ce: "true", row: ce_row_key),

@@ -1,5 +1,6 @@
 class ContinuingEducationRegistrationDecorator < ApplicationDecorator
   Badge = Struct.new(:label, :icon, :classes, keyword_init: true)
+  Condition = Struct.new(:label, :met, keyword_init: true)
 
   PAYMENT_STATUS_BADGES = {
     "Paid" => Badge.new(label: "Paid", icon: "fa-solid fa-circle-check", classes: "bg-green-50 text-green-700 border-green-200"),
@@ -28,6 +29,30 @@ class ContinuingEducationRegistrationDecorator < ApplicationDecorator
     else
       Badge.new(label: "Not issued", icon: "fa-regular fa-clock", classes: "bg-gray-50 text-gray-500 border-gray-200")
     end
+  end
+
+  # The registrant-facing conditions behind #certificate_available?, each with whether it's met.
+  def certificate_conditions
+    event = event_registration.event
+    ce_form = RegistrantCeForm.new(event_registration)
+    ended_label = [ "the training has ended", ("(#{event.end_date.to_date.strftime("%B %-d, %Y")})" if event.end_date) ].compact.join(" ")
+    conditions = [
+      Condition.new(label: ended_label, met: event.end_date&.past?),
+      Condition.new(label: "your attendance is confirmed", met: event_registration.attended?),
+      Condition.new(label: "your CE payment is received in full", met: paid_in_full?)
+    ]
+    conditions << Condition.new(label: "#{ce_form.form.display_name} is complete", met: ce_form.complete?) if ce_form.form
+    if event_registration.attendance_minutes_total.positive?
+      conditions << Condition.new(label: "your signed-in time covers the CE hours", met: attendance_time_sufficient?)
+    end
+    conditions
+  end
+
+  def certificate_locked_reason
+    unmet = certificate_conditions.reject(&:met).map(&:label)
+    return if unmet.empty?
+
+    "Unlocks once #{unmet.to_sentence}"
   end
 
   # "LMFT #555" — kind and number as typed, or an em dash when neither is set.
