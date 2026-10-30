@@ -1181,6 +1181,15 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include(registration_ce_certificate_path(registration.slug, ce_registration))
     end
 
+    it "says on the CE page why a locked certificate isn't ready" do
+      registration.update!(status: "registered")
+      ce_registration
+      get registration_ce_path(registration.slug)
+
+      expect(response.body).to include("fa-lock")
+      expect(response.body).to include("Unlocks once your attendance is confirmed")
+    end
+
     it "prints the issuing address the app settings point at" do
       org = create(:organization)
       Setting.create!(organization: org,
