@@ -46,7 +46,7 @@
         <% end %>
       </dl>
       <div class="mt-6">
-        <%= link_to "Edit responses", edit_url,
+        <%= link_to "Edit responses", edit_url, data: { turbo_frame: "_top" },
               class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
       </div>
     </div>
@@ -70,7 +70,9 @@
           </span>
         </p>
       <% end %>
-      <%= form_with url: registration_callout_form_submit_path(@event_registration.slug, callout, form), method: :post do %>
+      <%# _top: the CE page renders this inside its turbo frame; a full-page response
+          keeps the post-submit notice and the anchor scroll. %>
+      <%= form_with url: registration_callout_form_submit_path(@event_registration.slug, callout, form), method: :post, data: { turbo_frame: "_top" } do %>
         <div class="space-y-2">
           <% asked.each do |field| %>
             <%# Asked inside its _state question's "Not on list?" box. %>

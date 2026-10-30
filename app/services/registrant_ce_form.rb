@@ -10,10 +10,17 @@ class RegistrantCeForm
     @event_registration = event_registration
   end
 
-  # The form attached to the CE callout, or nil when none is set. The CE callout
-  # carries a single form, so this reads the first linked form.
+  # The CE callout's linked-form row (form + drip date), or nil when none is set.
+  # The CE callout carries a single form, so this reads the first link.
+  def link
+    return @link if defined?(@link)
+
+    @link = ce_callout&.registration_ticket_callout_forms&.first
+  end
+
+  # The form attached to the CE callout, or nil when none is set.
   def form
-    ce_callout&.forms&.first
+    link&.form
   end
 
   # Something to fill: a form with at least one non-header field.
@@ -30,7 +37,7 @@ class RegistrantCeForm
   # the same way CalloutFormSubmission stores and Callouts#callout_submission reads
   # it, so the two never drift.
   def submission
-    return unless form
+    return unless form && registrant_saved?
 
     form.form_submissions.find_by(person: @event_registration.registrant,
                                   event: @event_registration.event)
@@ -49,11 +56,17 @@ class RegistrantCeForm
   def completed_anonymously?
     return @completed_anonymously if defined?(@completed_anonymously)
 
-    @completed_anonymously = form.present? &&
+    @completed_anonymously = form.present? && registrant_saved? &&
       FormCompletion.exists?(person: @event_registration.registrant, form:, event: @event_registration.event)
   end
 
   private
+
+  # The sample ticket's registrant is unsaved; a nil person would match other
+  # registrants' anonymous (person-less) submissions.
+  def registrant_saved?
+    @event_registration.registrant&.persisted?
+  end
 
   def answerable_fields
     return [] unless form

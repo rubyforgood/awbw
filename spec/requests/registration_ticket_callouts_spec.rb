@@ -37,6 +37,31 @@ RSpec.describe "Callout inline form", type: :request do
     end
   end
 
+  describe "the callout's own page copy" do
+    let(:callout) { create(:registration_ticket_callout, event:, form:, description: "<p>Read me first</p>") }
+
+    def details_toggle
+      Nokogiri::HTML(response.body).css("details").find { |d| d.at_css("summary")&.text&.include?("Details") }
+    end
+
+    it "folds into a closed Details toggle while the form is open to fill" do
+      get registration_callout_form_path(registration.slug, callout)
+
+      expect(details_toggle).to be_present
+      expect(details_toggle["open"]).to be_nil
+      expect(details_toggle.text).to include("Read me first")
+    end
+
+    it "shows unfolded once the form is submitted" do
+      create(:form_submission, person: registration.registrant, form:, event:)
+
+      get registration_callout_form_path(registration.slug, callout)
+
+      expect(response.body).to include("Read me first")
+      expect(details_toggle).to be_nil
+    end
+  end
+
   describe "POST /registration/:slug/forms/:callout_id" do
     it "records the submission and shows the answers back" do
       expect {

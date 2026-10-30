@@ -1,0 +1,13 @@
+name: "CE evaluation fills in right on the CE page"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-29
+pr_number:
+action_path: "/registration/sample"
+summary: >-
+  The CE callout's evaluation form now opens inline on the registrant's CE page,
+  in the same card as the scholarship survey and other callout forms, instead of
+  a separate page. While any callout form is open to fill, the callout's Details
+  fold into a toggle so the form comes first.
+pro_tips:
+  - "Put the CE evaluation on the built-in CE hours callout, not a separate custom callout — the ticket then shows one CE card."

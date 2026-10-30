@@ -86,6 +86,14 @@ RSpec.describe RegistrantCeForm do
       expect(described_class.new(registration)).not_to be_complete
     end
 
+    it "never matches others' anonymous submissions for the unsaved sample registrant" do
+      create(:form_submission, person: nil, form:, event:)
+      sample = SampleTicketRegistration.new(event, all_options: true).registration
+
+      expect(described_class.new(sample).submission).to be_nil
+      expect(described_class.new(sample)).not_to be_complete
+    end
+
     it "still finds the submission after the form's role changes" do
       EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:, form:,
         form_params: { required_field.id.to_s => "Great" })
