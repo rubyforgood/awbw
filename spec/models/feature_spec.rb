@@ -11,6 +11,10 @@ RSpec.describe Feature, type: :model do
     it { is_expected.to validate_inclusion_of(:area).in_array(Feature::AREA_KEYS) }
     it { is_expected.to validate_inclusion_of(:display_status).in_array(Feature::DISPLAY_STATUS_KEYS) }
 
+    it "allows a summary longer than 300 characters" do
+      expect(build(:feature, summary: "a" * 1_000)).to be_valid
+    end
+
     it "rejects an area outside the taxonomy" do
       expect(build(:feature, area: "nonsense")).not_to be_valid
     end
