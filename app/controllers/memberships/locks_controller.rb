@@ -3,7 +3,7 @@ module Memberships
     before_action :set_membership
 
     def destroy
-      authorize! @membership
+      authorize! @membership, to: :unlock?
 
       if @membership.locked?
         @membership.update!(locked_at: nil)

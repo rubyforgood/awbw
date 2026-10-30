@@ -14,7 +14,7 @@ class MembershipInvoicePolicy < ApplicationPolicy
   def new? = manage? && !record.membership.locked?
 
   def edit? = manage? && !record.membership.locked? && !record.payment_in_progress? && !record.unresolved_attempt?
-  def destroy? = manage? && !record.membership.locked?
+  def destroy? = record.persisted? && manage? && !record.membership.locked?
 
   private
 

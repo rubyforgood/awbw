@@ -2,8 +2,8 @@ class MembershipChargeAttempt < ApplicationRecord
   MAX_ATTEMPTS = 7
   RETRY_WINDOW_DAYS = MAX_ATTEMPTS - 1
 
-  STATUSES = %w[pending succeeded failed needs_action unknown needs_card].freeze
   TERMINAL_STATUSES = %w[succeeded failed needs_action unknown needs_card].freeze
+  STATUSES = (%w[pending] + TERMINAL_STATUSES).freeze
 
   belongs_to :membership_invoice
   belongs_to :pay_charge, class_name: "Pay::Charge", optional: true

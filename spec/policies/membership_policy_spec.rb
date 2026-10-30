@@ -68,6 +68,24 @@ RSpec.describe MembershipPolicy, type: :policy do
     end
   end
 
+  describe "#unlock?" do
+    it "allows an admin, including a locked membership" do
+      expect(policy_for(user: admin)).to be_allowed_to(:unlock?)
+
+      membership.update_column(:locked_at, Time.current)
+      expect(policy_for(user: admin)).to be_allowed_to(:unlock?)
+    end
+
+    it "denies owners, other members, unpersisted records, and disabled memberships" do
+      expect(policy_for(user: owner)).not_to be_allowed_to(:unlock?)
+      expect(policy_for(user: other)).not_to be_allowed_to(:unlock?)
+      expect(policy_for(user: admin, record: build(:membership))).not_to be_allowed_to(:unlock?)
+
+      allow(Membership).to receive(:enabled?).and_return(false)
+      expect(policy_for(user: admin)).not_to be_allowed_to(:unlock?)
+    end
+  end
+
   describe "#remove_next_year?" do
     it "allows an admin on an unlocked membership" do
       expect(policy_for(user: admin)).to be_allowed_to(:remove_next_year?)
