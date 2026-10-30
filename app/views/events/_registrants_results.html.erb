@@ -8,7 +8,7 @@
        .reject { |_, form| form.survey_role? } %>
   <% survey_roles = @survey_completions.roles %>
   <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm blur-on-submit" data-column-toggle-root data-column-toggle-scope="event-<%= @event.id %>">
-    <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+    <div class="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-4">
       <% current_filter = params[:attendance_status].present? ? nil : (params[:status_filter].presence || "active") %>
       <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Attendance filter">
         <%= link_to registrants_event_path(@event, status_filter: "active", keyword: params[:keyword].presence),
@@ -23,196 +23,25 @@
         <% end %>
       </nav>
 
-      <div class="flex items-center gap-4">
-        <%# On by default — Organization shows unless the admin hides it. %>
-        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
-               data-controller="column-toggle" data-column-toggle-group-value="organization">
-          <span class="text-sm text-gray-500">Linked org</span>
-
-          <input
-            type="checkbox"
-            checked
-            data-column-toggle-target="toggle"
-            data-action="column-toggle#toggle"
-            class="sr-only"
-          >
-
-          <span class="relative inline-block h-5 w-9">
-            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: translateX(16px)"></span>
-          </span>
-        </label>
-
+      <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+        <%= render "shared/column_toggle_switch", group: "organization", label: "Linked org", on: true %>
         <% if @ce_eligible %>
-          <label class="inline-flex cursor-pointer items-center gap-2 select-none"
-                 data-controller="column-toggle" data-column-toggle-group-value="ce">
-            <span class="text-sm text-gray-500">CE</span>
-
-            <%# On by default — the CE column shows unless the admin hides it. %>
-            <input
-              type="checkbox"
-              checked
-              data-column-toggle-target="toggle"
-              data-action="column-toggle#toggle"
-              class="sr-only"
-            >
-
-            <span class="relative inline-block h-5 w-9">
-              <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
-              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: translateX(16px)"></span>
-            </span>
-          </label>
+          <%= render "shared/column_toggle_switch", group: "ce", label: "CE", on: true %>
         <% end %>
-
-        <%# On by default when the event charges a fee; always togglable. %>
-        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
-               data-controller="column-toggle" data-column-toggle-group-value="scholarship">
-          <span class="text-sm text-gray-500">Scholarship</span>
-
-          <input
-            type="checkbox"
-            <%= "checked" if scholarship_on %>
-            data-column-toggle-target="toggle"
-            data-action="column-toggle#toggle"
-            class="sr-only"
-          >
-
-          <span class="relative inline-block h-5 w-9">
-            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full <%= scholarship_on ? "bg-blue-600" : "bg-gray-300" %> transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: <%= scholarship_on ? "translateX(16px)" : "none" %>"></span>
-          </span>
-        </label>
-
+        <%= render "shared/column_toggle_switch", group: "scholarship", label: "Scholarship", on: scholarship_on %>
         <% if @event.cost_cents.to_i > 0 %>
-          <%# Off by default — the payment-method chips are hidden until the admin reveals them. %>
-          <label class="inline-flex cursor-pointer items-center gap-2 select-none"
-                 data-controller="column-toggle" data-column-toggle-group-value="payment_method">
-            <span class="text-sm text-gray-500">Payment method</span>
-
-            <input
-              type="checkbox"
-              data-column-toggle-target="toggle"
-              data-action="column-toggle#toggle"
-              class="sr-only"
-            >
-
-            <span class="relative inline-block h-5 w-9">
-              <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
-            </span>
-          </label>
+          <%= render "shared/column_toggle_switch", group: "payment_method", label: "Payment method" %>
         <% end %>
-
-        <%# Off by default — Date registered is hidden until the admin reveals it. %>
-        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
-               data-controller="column-toggle" data-column-toggle-group-value="date">
-          <span class="text-sm text-gray-500">Date registered</span>
-
-          <input
-            type="checkbox"
-            data-column-toggle-target="toggle"
-            data-action="column-toggle#toggle"
-            class="sr-only"
-          >
-
-          <span class="relative inline-block h-5 w-9">
-            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
-          </span>
-        </label>
-
-        <%# On by default — Attendance shows unless the admin hides it. %>
-        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
-               data-controller="column-toggle" data-column-toggle-group-value="attendance">
-          <span class="text-sm text-gray-500">Attendance</span>
-
-          <input
-            type="checkbox"
-            checked
-            data-column-toggle-target="toggle"
-            data-action="column-toggle#toggle"
-            class="sr-only"
-          >
-
-          <span class="relative inline-block h-5 w-9">
-            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: translateX(16px)"></span>
-          </span>
-        </label>
-
-        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
-               data-controller="column-toggle" data-column-toggle-group-value="confirmed">
-          <span class="text-sm text-gray-500">User account</span>
-
-          <input
-            type="checkbox"
-            data-column-toggle-target="toggle"
-            data-action="column-toggle#toggle"
-            class="sr-only"
-          >
-
-          <span class="relative inline-block h-5 w-9">
-            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
-          </span>
-        </label>
-
-        <%# On by default — the Certificate issued slider shows unless the admin hides it. %>
-        <label class="inline-flex cursor-pointer items-center gap-2 select-none"
-               data-controller="column-toggle" data-column-toggle-group-value="certificate">
-          <span class="text-sm text-gray-500">Certificate</span>
-
-          <input
-            type="checkbox"
-            checked
-            data-column-toggle-target="toggle"
-            data-action="column-toggle#toggle"
-            class="sr-only"
-          >
-
-          <span class="relative inline-block h-5 w-9">
-            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
-            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: translateX(16px)"></span>
-          </span>
-        </label>
-
+        <%= render "shared/column_toggle_switch", group: "date", label: "Date registered" %>
+        <%= render "shared/column_toggle_switch", group: "attendance", label: "Attendance", on: true %>
+        <%= render "shared/column_toggle_switch", group: "confirmed", label: "User account" %>
+        <%= render "shared/column_toggle_switch", group: "certificate", label: "Certificate", on: true %>
         <% if survey_roles.any? %>
-          <label class="inline-flex cursor-pointer items-center gap-2 select-none"
-                 data-controller="column-toggle" data-column-toggle-group-value="surveys">
-            <span class="text-sm text-gray-500">Surveys</span>
-
-            <input
-              type="checkbox"
-              data-column-toggle-target="toggle"
-              data-action="column-toggle#toggle"
-              class="sr-only"
-            >
-
-            <span class="relative inline-block h-5 w-9">
-              <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
-            </span>
-          </label>
+          <%= render "shared/column_toggle_switch", group: "surveys", label: "Surveys" %>
         <% end %>
-
         <%# One switch reveals a completion column per form-bearing callout. %>
         <% if form_columns.any? %>
-          <label class="inline-flex cursor-pointer items-center gap-2 select-none"
-                 data-controller="column-toggle" data-column-toggle-group-value="ticket_forms">
-            <span class="text-sm text-gray-500">Ticket forms</span>
-
-            <input
-              type="checkbox"
-              data-column-toggle-target="toggle"
-              data-action="column-toggle#toggle"
-              class="sr-only"
-            >
-
-            <span class="relative inline-block h-5 w-9">
-              <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
-            </span>
-          </label>
+          <%= render "shared/column_toggle_switch", group: "ticket_forms", label: "Ticket forms" %>
         <% end %>
       </div>
     </div>
