@@ -317,6 +317,7 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ], controller: "people/memberships"
+    resource :billing_portal, only: [ :create ], controller: "people/billing_portals"
   end
   resources :comments_and_communications, only: [ :index ] do
     collection do
@@ -377,21 +378,25 @@ Rails.application.routes.draw do
     post :revert, on: :member
   end
 
-  resources :memberships, only: [ :index, :edit, :update, :destroy ] do
+  resources :memberships, only: [ :index, :show, :edit, :update, :destroy ] do
     resources :membership_invoices, only: [ :new, :create ]
+    resource :renewal, only: [ :update ], controller: "memberships/renewals"
+    resource :next_year, only: [ :destroy ], controller: "memberships/next_years"
+    resource :lock, only: [ :destroy ], controller: "memberships/locks"
+    resource :autopayments, only: [ :create, :destroy ], controller: "memberships/autopayments"
   end
 
   resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ] do
     get :receipt, on: :member
+    resource :checkout, only: [ :create ], controller: "membership_invoices/checkouts"
+    get :cancel_checkout, on: :member, to: "membership_invoices/checkouts#cancel"
   end
 
   namespace :memberships do
-    resources :subscription_checkouts, only: [ :create ]
-    resources :invoice_checkouts, only: [ :create ]
     resources :public_invoices, only: :show, param: :token do
-      resource :checkout, only: [ :create ], module: :public_invoices
+      post :checkout, on: :member, to: "public_invoices/checkouts#create"
+      get :cancel_checkout, on: :member, to: "public_invoices/checkouts#cancel"
     end
-    resources :billing_portals, only: [ :create ]
   end
 
   resources :refunds, only: [ :new, :create, :show ]

@@ -1,18 +1,20 @@
 class MembershipPolicy < ApplicationPolicy
+  alias_rule :update?, to: :edit?
+  alias_rule :show?, to: :manage?
+  alias_rule :unlock?, to: :destroy?
+
   def manage? = admin? && Membership.enabled?
 
-  def show?
-    return false unless Membership.enabled?
-    owner? || manage?
-  end
+  def edit? = manage? && !record.locked?
 
-  def manage_subscription?
-    Membership.enabled? && owner?
-  end
+  def destroy? = record.persisted? && manage?
 
-  def set_up_subscription?
-    manage_subscription? && !record.autorenewal_cancelled?
-  end
+  def remove_next_year? = record.persisted? && manage? && !record.locked?
+
+  def enable_autopay? = Membership.enabled? && owner? && !record.locked? && record.renewal_on?
+  def disable_autopay? = Membership.enabled? && (manage? || owner?)
+
+  def manage_membership? = Membership.enabled? && owner?
 
   private
 

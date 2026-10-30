@@ -8,7 +8,7 @@
         autocomplete: "off", class: "flex flex-wrap items-end gap-4" do %>
     <div class="w-full md:w-44"><%= render "shared/filter_select",
             param: :status,
-            label: "Status",
+            label: "Coverage",
             options: Membership::DIRECTORY_STATUSES.map { |status| [ status.capitalize, status ] },
             selected: status,
             blank: nil,

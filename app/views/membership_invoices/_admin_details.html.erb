@@ -1,0 +1,98 @@
+<% invoice = membership_invoice.decorate %>
+<% can_edit = allowed_to?(:edit?, membership_invoice) %>
+<% can_delete = allowed_to?(:destroy?, membership_invoice) && @deletion_blocked_reason.nil? %>
+<% next_year = membership_invoice.id == @next_invoice&.id %>
+
+<div class="admin-only border-primary/10 mx-auto mb-8 max-w-3xl rounded-2xl border bg-blue-100 p-4 shadow-sm sm:p-5 print:hidden">
+  <div class="flex flex-wrap items-center gap-3">
+    <h2 class="text-primary font-display text-lg font-bold">Invoice details</h2>
+    <%= render "membership_invoices/status_pill", invoice: invoice, linked: true %>
+    <% if membership_invoice.locked? %>
+      <%= render "shared/badge", label: "Locked membership", classes: "bg-gray-100 text-gray-600 border-gray-300",
+            title: "Historical membership. Unlock it before editing or issuing new invoices." %>
+    <% end %>
+    <div class="ml-auto flex flex-wrap items-center gap-2">
+      <%= render "application/activity_log", record: membership_invoice %>
+      <% if can_edit %>
+        <%= link_to "Edit invoice details", edit_membership_invoice_path(membership_invoice),
+              class: button_classes(:secondary_outline, size: :sm),
+              title: "Cost can't change after a payment or credit is applied." %>
+      <% end %>
+      <% if can_delete %>
+        <% if next_year %>
+          <%= button_to "Remove next year", membership_next_year_path(membership_invoice.membership),
+                method: :delete, class: button_classes(:danger_outline, size: :sm),
+                title: "Deletes the unstarted next invoice and turns renewal and automatic payments off.",
+                data: { turbo_confirm: "Remove the unstarted next year and turn off renewal and automatic payments?" } %>
+        <% else %>
+          <%= button_to "Delete invoice", membership_invoice_path(membership_invoice),
+                method: :delete, class: button_classes(:danger_outline, size: :sm),
+                title: "Deletes this unpaid invoice. The only invoice, paid invoices, and invoices with payments cannot be deleted.",
+                data: { turbo_confirm: "Delete this invoice? This cannot be undone." } %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <% if membership_invoice.payment_in_progress? %>
+    <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+      A customer payment is in progress. This invoice can't be edited or deleted from here until the
+      checkout finishes or expires.
+    </div>
+  <% end %>
+
+  <dl class="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+    <div>
+      <dt class="text-xs tracking-wide text-gray-500 uppercase">Period</dt>
+      <dd class="mt-0.5 font-medium text-gray-800"><%= invoice.period_range %></dd>
+    </div>
+    <div>
+      <dt class="text-xs tracking-wide text-gray-500 uppercase">Cost</dt>
+      <dd class="mt-0.5 font-medium text-gray-800"><%= invoice.cost %></dd>
+    </div>
+    <div>
+      <dt class="text-xs tracking-wide text-gray-500 uppercase">Paid</dt>
+      <dd class="mt-0.5 font-medium text-gray-800"><%= invoice.paid %></dd>
+    </div>
+    <% unless invoice.paid_in_full? %>
+      <div>
+        <dt class="text-xs tracking-wide text-gray-500 uppercase">Remaining</dt>
+        <dd class="mt-0.5 font-medium text-gray-800"><%= invoice.remaining %></dd>
+      </div>
+    <% end %>
+  </dl>
+
+  <% if membership_invoice.remaining_cost.positive? %>
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+      <span class="text-xs tracking-wide text-gray-500 uppercase">
+        Payment link
+        <i class="fa-solid fa-circle-info ml-0.5 cursor-help text-[0.65rem] text-gray-400"
+           title="Public link the payer can use to pay this invoice."></i>
+      </span>
+      <% payment_link = memberships_public_invoice_url(membership_invoice.signed_id(purpose: MembershipInvoice::PAYMENT_TOKEN_PURPOSE)) %>
+      <%= link_to payment_link, payment_link, class: "text-primary font-mono text-xs break-all hover:underline" %>
+    </div>
+  <% end %>
+
+  <% if @deletion_blocked_reason %>
+    <p class="mt-3 text-xs text-gray-500">Can't be deleted: <%= @deletion_blocked_reason %>.</p>
+  <% end %>
+
+  <% if membership_invoice.charge_attempts.any? %>
+    <div class="mt-4 border-t border-blue-200 pt-3">
+      <p class="text-xs font-semibold tracking-wide text-gray-600 uppercase">Automatic payment attempts</p>
+      <ul class="mt-2 space-y-1 text-xs text-gray-600">
+        <% membership_invoice.charge_attempts.to_a.last(7).reverse.each do |attempt| %>
+          <li>
+            <span class="font-medium">#<%= attempt.attempt_number %></span>
+            <span class="capitalize"><%= attempt.status.humanize %></span>
+            <% if attempt.error_message.present? %> — <%= attempt.error_message %><% end %>
+            <% if attempt.attempted_at.present? %> · <%= attempt.attempted_at.strftime("%b %-d, %Y %-l:%M %p") %><% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= render "shared/audit_info", resource: membership_invoice %>
+</div>

@@ -1,0 +1,7 @@
+<div class="flex items-center gap-1.5">
+  <%= button_to "Subscribe", membership_autopayments_path(membership),
+        class: button_classes(:primary, size: :sm),
+        title: tooltip, data: { turbo: false } %>
+  <i class="fa-solid fa-circle-info cursor-help text-[0.65rem] text-gray-400"
+     title="<%= tooltip %>" aria-label="<%= tooltip %>"></i>
+</div>

@@ -69,6 +69,8 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
+  def manage_payment_methods? = owner?
+
   def edit?
     admin? || (profiles_visible_to_users? && owner?)
   end

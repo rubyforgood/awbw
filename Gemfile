@@ -67,7 +67,7 @@ gem "active_storage_validations", "~> 3.0"
 gem "solid_cache"
 
 # Payments
-gem "pay", "~> 11.4"
+gem "pay", "~> 11.8"
 gem "stripe", "~> 19.0"
 gem "paper_trail", "~> 17.0"
 

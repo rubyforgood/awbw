@@ -71,7 +71,7 @@
         <% end %>
       </div>
       <div class="flex-1 text-center md:text-left">
-        <h1 class="font-display text-primary text-4xl font-semibold tracking-tight">
+        <h1 class="text-primary font-display text-4xl font-semibold tracking-tight">
           <%= person_name(@person) %><% if @person.license_credentials.present? && @person.profile_show_credentials? %><span class="font-normal text-gray-600">, <%= @person.license_credentials %></span><% end %>
           <% if @person.pronouns.present? && @person.profile_show_pronouns? %>
             <span class="font-sans text-base font-normal text-gray-500 italic">(<%= @person.pronouns %>)</span>
@@ -258,8 +258,10 @@
         </div>
       </div>
     <% end %>
-    <% if @membership && allowed_to?(:show?, @membership) %>
-      <%= render "people/membership_card", person: @person, membership: @membership, autopay: @membership_autopay, autopay_cancelling: @membership_autopay_cancelling, invoices_due: @membership_invoices_due %>
+    <% if @membership && (allowed_to?(:manage_membership?, @membership) || allowed_to?(:show?, @membership)) %>
+      <%= render "people/membership_card", person: @person, membership: @membership,
+            has_card: @membership_has_card,
+            autopay_invoice: @membership_autopay_invoice, invoices: @membership_invoices %>
     <% end %>
     <!-- HIDDEN FROM PROFILE SECTION -->
     <% if allowed_to?(:own_record?, @person) %>

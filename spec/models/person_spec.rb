@@ -1181,30 +1181,22 @@ end
 RSpec.describe Person, "#current_membership" do
   let(:person) { create(:person) }
 
-  def subscribe_to(membership)
-    customer = Pay::Customer.create!(owner: person, processor: "stripe", processor_id: "cus_test", default: true)
-    Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_test",
-      processor_plan: "membership", status: "active", quantity: 1,
-      metadata: { "membership_id" => membership.id })
-  end
-
-  it "prefers the membership the live subscription belongs to over a newer cancelled one" do
+  it "prefers the active membership over a newer renewal-off one" do
     live = create(:membership, person: person)
-    subscribe_to(live)
-    create(:membership, :autorenewal_cancelled, person: person,
+    create(:membership, :renewal_off, person: person,
       start_date: Date.current + 2.years, end_date: Date.current + 3.years)
 
     expect(person.current_membership).to eq(live)
   end
 
-  it "falls back to the active membership when there is no subscription" do
+  it "returns the active membership" do
     active = create(:membership, person: person)
 
     expect(person.current_membership).to eq(active)
   end
 
   it "falls back to the soonest upcoming membership" do
-    create(:membership, :autorenewal_cancelled, person: person,
+    create(:membership, :renewal_off, person: person,
       start_date: Date.current + 2.years, end_date: Date.current + 3.years)
     sooner = create(:membership, person: person,
       start_date: Date.current + 1.month, end_date: Date.current + 1.year)
@@ -1212,20 +1204,19 @@ RSpec.describe Person, "#current_membership" do
     expect(person.current_membership).to eq(sooner)
   end
 
-  it "counts a membership billed for a future period as upcoming" do
-    create(:membership, :autorenewal_cancelled, person: person,
+  it "treats a membership whose term starts in the future as upcoming" do
+    create(:membership, :renewal_off, person: person,
       start_date: Date.current + 2.years, end_date: Date.current + 3.years)
-    billed = create(:membership, person: person).tap { |m| m.update!(start_date: nil, end_date: nil) }
-    create(:membership_invoice, membership: billed,
+    billed = create(:membership, person: person,
       start_date: Date.current + 1.month, end_date: Date.current + 1.year - 1.day)
 
     expect(person.current_membership).to eq(billed)
   end
 
   it "falls back to the most recent membership when all have ended" do
-    create(:membership, :autorenewal_cancelled, person: person,
+    create(:membership, :renewal_off, person: person,
       start_date: Date.current - 3.years, end_date: Date.current - 2.years)
-    newer = create(:membership, :autorenewal_cancelled, person: person,
+    newer = create(:membership, :renewal_off, person: person,
       start_date: Date.current - 1.year, end_date: Date.current - 1.day)
 
     expect(person.current_membership).to eq(newer)
@@ -1233,5 +1224,30 @@ RSpec.describe Person, "#current_membership" do
 
   it "returns nil when the person has no membership" do
     expect(person.current_membership).to be_nil
+  end
+end
+
+RSpec.describe Person, "#stripe_customer" do
+  let(:person) { create(:person) }
+
+  it "returns the default Stripe customer" do
+    stripe = Pay::Stripe::Customer.create!(owner: person, processor: "stripe",
+      processor_id: "cus_stripe", default: true)
+    create(:pay_customer, owner: person, processor: "braintree",
+      processor_id: "cus_braintree", default: false)
+
+    expect(person.stripe_customer).to eq(stripe)
+  end
+
+  it "reuses the default Stripe customer for membership billing" do
+    stripe = Pay::Stripe::Customer.create!(owner: person, processor: "stripe",
+      processor_id: "cus_stripe", default: true)
+
+    expect(person.stripe_payment_processor).to eq(stripe)
+  end
+
+  it "creates a Stripe processor only when no Stripe default exists" do
+    expect { person.stripe_payment_processor }.to change(Pay::Customer, :count).by(1)
+    expect(person.stripe_payment_processor.processor).to eq("stripe")
   end
 end

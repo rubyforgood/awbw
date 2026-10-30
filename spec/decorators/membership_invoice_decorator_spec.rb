@@ -36,8 +36,54 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
       expect(badge.classes).to eq(described_class::BADGE_CLASSES[:red])
     end
 
-    it "reads Overdue with amount for an invoice after a part payment" do
-      expect(invoice(paid: 1_000, start_date: Date.current).status_badge.label).to eq("Overdue · $15")
+    it "reads Partially paid with amount for an invoice after a part payment" do
+      expect(invoice(paid: 1_000, start_date: Date.current).status_badge.label).to eq("Partially paid · $15")
+    end
+
+    it "reads Payment in progress while a checkout is active" do
+      decorated = invoice
+      decorated.object.update_column(:payment_in_progress_at, Time.current)
+
+      badge = decorated.status_badge
+
+      expect(badge.label).to eq("Payment in progress")
+      expect(badge.classes).to eq(described_class::BADGE_CLASSES[:blue])
+    end
+  end
+
+  describe "#autopay_action" do
+    it "offers Pay now when autopay is not ready" do
+      expect(invoice.autopay_action(autopay_ready: false)).to eq(:pay_now)
+    end
+
+    it "offers no action inside the renewal window when autopay is ready" do
+      expect(invoice(start_date: Date.current + 1.day).autopay_action(autopay_ready: true)).to eq(:none)
+    end
+
+    it "is scheduled outside the renewal window" do
+      future = invoice(start_date: Date.current + Membership.renewal_window_days + 1.day)
+      expect(future.autopay_action(autopay_ready: true)).to eq(:scheduled)
+    end
+
+    it "is pay now for an invoice older than the retry window" do
+      past = invoice(start_date: Date.current - MembershipChargeAttempt::RETRY_WINDOW_DAYS - 1.day)
+      expect(past.autopay_action(autopay_ready: true)).to eq(:pay_now)
+    end
+
+    it "is pay now after a failed attempt" do
+      decorated = invoice
+      decorated.object.charge_attempts.create!(
+        attempt_number: 1, status: "failed", amount_cents: 2_500, attempted_at: Time.current
+      )
+
+      expect(decorated.autopay_action(autopay_ready: true)).to eq(:pay_now)
+    end
+
+    it "is pay now when a checkout session is stored" do
+      decorated = invoice
+      decorated.object.update_column(:checkout_session_id, "cs_test_123")
+
+      expect(decorated.autopay_action(autopay_ready: true)).to eq(:pay_now)
     end
   end
 
