@@ -1,0 +1,12 @@
+name: "CE evaluation fills in right on the CE page"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-29
+pr_number: 2910
+action_path: "/registration/sample"
+summary: >-
+  The CE evaluation now opens right on the registrant's CE page, in the same card
+  as other callout forms. While it's open, the training sign-in folds to its total
+  hours and the callout's Details fold away, so the form comes first.
+pro_tips:
+  - "Put the CE evaluation on the built-in CE hours callout, not a separate custom callout — the ticket then shows one CE card."

@@ -21,6 +21,19 @@
      end
    end || {} %>
 
+<%#
+  ?admin=true lets an admin preview the post-payment ("Pending") state of the
+  badge without recording a real payment. Gated on edit access so a registrant
+  can't fake it by editing the URL.
+%>
+<% simulate_ce_paid = params[:admin] == "true" && ce_registration && allowed_to?(:edit?, ce_registration) %>
+<%# The post-training form shows once sign-outs are complete; while it's open to
+    fill, the callout's Details fold away so the form comes first. %>
+<% ce_form_shown = @event_registration.ce_registered? && @ce_form&.present? &&
+     (@ce_form.available? || sample_preview? || simulate_ce_paid) %>
+<% ce_form_open = ce_form_shown && callout_form_fillable?(@ce_form.link, submission: @ce_form.submission,
+     anonymously_completed: @ce_form.completed_anonymously?, editing: @ce_form_editing) %>
+
 <%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_label, **callout_eyebrow } do %>
   <%# Requesting CE flips this frame in place: the POST redirects back here and
       Turbo swaps in the license-entry branch — no full-page reload. %>
@@ -32,12 +45,6 @@
     <% license_issuing_state = license&.issuing_state %>
     <% license_expires_on = license&.expires_on %>
     <% license_on_file = license&.number_known? %>
-    <%#
-      ?admin=true lets an admin preview the post-payment ("Pending") state of the
-      badge without recording a real payment. Gated on edit access so a registrant
-      can't fake it by editing the URL.
-    %>
-    <% simulate_ce_paid = params[:admin] == "true" && ce_registration && allowed_to?(:edit?, ce_registration) %>
     <%#
       Admin-only jump to the management surface for this CE registration. Hidden
       from registrants; opens in a new tab so the registrant view is kept. Carries
@@ -287,14 +294,15 @@
         gone by then, but the sheets are how a registrant fills in what they missed. %>
     <% if @event.ce_timesheets_enabled? && attendance_sheets.any? && sheet.any_days? %>
       <section id="attendance" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
-        <div class="flex flex-wrap items-center justify-between gap-2">
+        <% sign_in_heading = capture do %>
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Training sign-in</h2>
           <%# Admin-only jump to the event's attendance report, mirroring the
               "Edit CE registration" chip up top. %>
           <% if allowed_to?(:attendance?, @event) && !sample_preview? %>
             <%= render "events/callouts/admin_edit_link", path: attendance_event_path(@event, ce: "true"), label: "Attendance report" %>
           <% end %>
-        </div>
+        <% end %>
+        <% sign_in_body = capture do %>
 
         <%# A day left open: its own prompt above today's controls, naming the day and
             the time it will be recorded as, so closing it can't be mistaken for
@@ -398,50 +406,44 @@
             <% end %>
           </p>
         <% end %>
+        <% end %>
+
+        <%# Signing in is done once the post-training form is open, so the sheet folds
+            to its total and the form comes first. Still expandable to fix a time. %>
+        <% if ce_form_open %>
+          <details class="group/sign-in">
+            <summary class="flex cursor-pointer list-none flex-wrap items-center gap-2 select-none [&::-webkit-details-marker]:hidden">
+              <%= sign_in_heading %>
+              <span class="ml-auto text-sm font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(sheet.total_minutes) %> logged</span>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/sign-in:rotate-180" aria-hidden="true"></i>
+            </summary>
+            <%= sign_in_body %>
+          </details>
+        <% else %>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <%= sign_in_heading %>
+          </div>
+          <%= sign_in_body %>
+        <% end %>
       </section>
     <% end %>
 
-    <%# The CE callout's post-training form (e.g. an evaluation). It opens only
-        once the registrant's sign-outs are complete, links to the form on its own
-        page (the generic callout-form flow) and returns here — breaking out of the
-        enclosing frame (_top), since that page has no matching frame. Completing it
-        is required before the CE certificate is issued. %>
-    <% if @ce_form&.present? && (@ce_form.available? || sample_preview? || simulate_ce_paid) %>
+    <%# The CE callout's post-training form (e.g. an evaluation), in the same card
+        as every other callout form (scholarship survey, custom callouts). It opens
+        only once the registrant's sign-outs are complete, and completing it is
+        required before the CE certificate is issued. %>
+    <% if ce_form_shown %>
       <section id="ce-form" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-xs font-semibold tracking-wider text-gray-500 uppercase"><%= @ce_form.form.display_name %></h2>
-          <% if @ce_form.complete? %>
-            <%= render "shared/badge",
-                  label: "Submitted",
-                  classes: "bg-green-50 text-green-700 border-green-200",
-                  icon: "fa-solid fa-circle-check text-2xs" %>
-          <% end %>
-        </div>
-
-        <p class="mt-2 text-sm text-gray-600">
-          <% if @ce_form.completed_anonymously? %>
-            Thanks — your responses were submitted anonymously.
-          <% elsif @ce_form.complete? %>
-            Thanks — your responses are recorded. You can review or update them.
-          <% else %>
-            Please complete this form to receive your CE certificate.
-          <% end %>
-        </p>
-
-        <% unless @ce_form.completed_anonymously? %>
-          <div class="mt-4">
-            <% link_label = @ce_form.complete? ? "Review your responses" : "Complete the form" %>
-            <% if sample_preview? %>
-              <button type="button" disabled
-                      class="cursor-not-allowed rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white opacity-60"><%= link_label %></button>
-            <% else %>
-              <%= link_to link_label,
-                    registration_callout_form_path(@event_registration.slug, @ce_callout, return_to: "ce"),
-                    data: { turbo_frame: "_top" },
-                    class: "inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300" %>
-            <% end %>
-          </div>
+        <% unless @ce_form.complete? %>
+          <p class="mb-3 text-sm text-gray-600">Please complete this form to receive your CE certificate.</p>
         <% end %>
+        <%= render "events/callouts/callout_form",
+              callout: @ce_callout,
+              callout_form: @ce_form.link,
+              submission: @ce_form.submission,
+              anonymously_completed: @ce_form.completed_anonymously?,
+              editing: @ce_form_editing,
+              edit_url: registration_ce_path(@event_registration.slug, edit: @ce_form.form.id, anchor: "ce-form") %>
       </section>
     <% end %>
 
@@ -500,10 +502,10 @@
 
   <% if @ce_callout&.description.present? %>
     <section class="mt-7 border-t border-gray-100 pt-6">
-      <h2 class="text-xs font-semibold tracking-wider text-gray-500 uppercase">Details</h2>
-      <div class="mt-3">
-        <%= render "events/callouts/rich_content", content: @ce_callout.description %>
-      </div>
+      <% unless ce_form_open %>
+        <h2 class="mb-3 text-xs font-semibold tracking-wider text-gray-500 uppercase">Details</h2>
+      <% end %>
+      <%= render "events/callouts/page_content", content: @ce_callout.description, collapsed: ce_form_open %>
     </section>
   <% end %>
 <% end %>
