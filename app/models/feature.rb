@@ -34,7 +34,7 @@ class Feature < ApplicationRecord
   EDIT_GRACE_PERIOD = 1.minute
 
   validates :name, presence: true, length: { maximum: 150 }
-  validates :summary, presence: true
+  validates :summary, presence: true, length: { maximum: 300 }
   validates :area, inclusion: { in: AREA_KEYS }
   validates :display_status, inclusion: { in: DISPLAY_STATUS_KEYS }
   validates :released_on, presence: true

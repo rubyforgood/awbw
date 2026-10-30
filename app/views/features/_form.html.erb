@@ -21,7 +21,7 @@
 
   <%= f.input :summary, as: :text,
               hint: "One or two plain-language sentences shown on the card.",
-              input_html: { rows: 3, class: "w-full" } %>
+              input_html: { rows: 2, class: "w-full", maxlength: 300 } %>
 
   <%= f.input :pro_tips, as: :text,
               hint: "One tip per line.",
