@@ -1,0 +1,6 @@
+<%# locals: (organization:) %>
+<span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
+  <i class="fa-solid fa-globe text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i> <%= link_to organization.website_url, organization.website_link_url,
+                target: "_blank", rel: "noopener noreferrer",
+                class: "hover:text-primary" %>
+</span>

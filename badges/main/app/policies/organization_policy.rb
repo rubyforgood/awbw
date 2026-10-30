@@ -9,8 +9,14 @@ class OrganizationPolicy < ApplicationPolicy
     admin? || (profiles_visible_to_users? && record.published?)
   end
 
-  def show_workshop_logs?
+  def show_submitted_content?
     admin? || member?
+  end
+
+  # The "Show workshop logs" profile toggle hides the org's workshop logs from
+  # members; admins always see them.
+  def show_workshop_logs?
+    admin? || (member? && record.profile_show_workshop_logs?)
   end
 
   def populations_served?

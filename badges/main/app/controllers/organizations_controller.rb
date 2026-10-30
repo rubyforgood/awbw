@@ -1,6 +1,18 @@
 class OrganizationsController < ApplicationController
   include AhoyTracking, Dedupable
-  before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
+  before_action :set_organization, only: [ :edit, :update, :destroy, :populations_served ]
+  before_action :set_profile_organization, only: :show
+
+  # The "Published content" sections, in display order.
+  PUBLISHED_SECTIONS = %w[workshops workshop_variations resources stories community_news].freeze
+  # The sections an org can hide from its profile; the rest always show.
+  PUBLISHED_SECTION_FLAGS = { "workshops" => :profile_show_workshops?, "stories" => :profile_show_stories? }.freeze
+  # The members-and-admins "Submitted content" sections, in display order. Each
+  # model's policy scope narrows them further (most ideas are admin-only).
+  SUBMITTED_SECTIONS = %w[workshop_ideas workshop_variation_ideas story_ideas monthly_reports].freeze
+  # Every image a card might fall back to (ApplicationDecorator#display_image), so a
+  # section's cards don't each query their own.
+  CARD_IMAGE_PRELOADS = %i[primary_asset downloadable_asset gallery_assets].freeze
 
   def index
     authorize!
@@ -36,6 +48,8 @@ class OrganizationsController < ApplicationController
     authorize! @organization
 
     if turbo_frame_request? && params[:section] == "events"
+      # Hidden from the profile means admins only, crafted ?section= requests included.
+      authorize! @organization, to: :manage? unless @organization.profile_show_events_registered?
       events = authorized_scope(
         Event.where(id: @organization.event_registrations.active.select(:event_id))
              .includes(:primary_asset)
@@ -44,45 +58,39 @@ class OrganizationsController < ApplicationController
       return render partial: "organizations/sections/events", locals: { organization: @organization, events: events }
     end
 
+    if turbo_frame_request? && params[:section] == "workshop_logs"
+      authorize! @organization, to: :show_workshop_logs?
+      groups = OrganizationServices::WorkshopLogSummary.new(@organization).groups(page: params[:page])
+      return render partial: "organizations/sections/workshop_log_groups", locals: { organization: @organization, groups: groups }
+    end
+
+    # Later pages of the paged sections swap in through their frames.
+    # The section name comes from the constants, never the param, so the render path is fixed.
+    section = (PUBLISHED_SECTIONS + SUBMITTED_SECTIONS).find { |name| name == params[:section] }
+    if turbo_frame_request? && section
+      # A hidden section stays hidden from a crafted ?section= request.
+      if SUBMITTED_SECTIONS.include?(section)
+        authorize! @organization, to: :show_submitted_content?
+      else
+        authorize! @organization, to: :manage? unless published_section_shown?(section)
+      end
+      return render_section(section, section_records(section, page: params[:page]))
+    end
+
     track_view(@organization)
 
-    workshop_logs = WorkshopLog.where(organization_id: @organization.id)
-    @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
-                                       .select("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m') AS ym,
-       MAX(COALESCE(workshop_held_on, created_at)) AS max_dt")
-                                       .order("max_dt DESC")
-                                       .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
+    @published_sections = loaded_sections(PUBLISHED_SECTIONS.select { |name| published_section_shown?(name) })
+    # What the org hid still reaches admins, in the "Hidden from profile" card.
+    if allowed_to?(:manage?, @organization)
+      @hidden_sections = loaded_sections(PUBLISHED_SECTIONS.reject { |name| published_section_shown?(name) })
+    end
+    return unless allowed_to?(:show_submitted_content?, @organization)
 
-    @year_options = workshop_logs.pluck(
-      Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(workshop_held_on, created_at, NOW()))")
-    ).sort.reverse
-    @organizations = Organization.where(id: @organization.id)
-    @per_page = params[:per_page] || 10
-    @workshop_logs_unpaginated = workshop_logs
-                                 .includes(:workshop, :windows_type, created_by: :person)
-                                 .order(workshop_held_on: :desc, created_at: :desc)
-    @workshop_logs_count = @workshop_logs_unpaginated.count
-    @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
-
-    # Pre-compute grand totals to avoid expensive query in view
-    @grand_totals = @workshop_logs_unpaginated.pick(
-      Arel.sql("COALESCE(SUM(children_ongoing),0)"),
-      Arel.sql("COALESCE(SUM(teens_ongoing),0)"),
-      Arel.sql("COALESCE(SUM(adults_ongoing),0)"),
-      Arel.sql("COALESCE(SUM(children_first_time),0)"),
-      Arel.sql("COALESCE(SUM(teens_first_time),0)"),
-      Arel.sql("COALESCE(SUM(adults_first_time),0)")
-    ) || [ 0, 0, 0, 0, 0, 0 ]
-
-    # Cache filter options to avoid duplicate queries
-    @workshops = Workshop.joins(:windows_type)
-                         .where(id: workshop_logs.where.not(workshop_id: nil).select(:workshop_id))
-                         .select("workshops.id, workshops.title, workshops.windows_type_id, windows_types.name")
-                         .order("workshops.title ASC, windows_types.name ASC")
-    @users = User.where(id: workshop_logs.where.not(created_by_id: nil).select(:created_by_id))
-                  .joins(:person)
-                  .select("users.id, users.person_id, users.email, people.first_name, people.last_name")
-                  .order("people.first_name, people.last_name")
+    @submitted_sections = loaded_sections(SUBMITTED_SECTIONS)
+    if allowed_to?(:show_workshop_logs?, @organization)
+      @workshop_log_summary = OrganizationServices::WorkshopLogSummary.new(@organization)
+      @workshop_log_summary = nil if @workshop_log_summary.totals[:logs].zero?
+    end
   end
 
   def new
@@ -199,7 +207,81 @@ class OrganizationsController < ApplicationController
     @sort = params[:sort].presence_in(Organization::BREAKDOWN_SORTS) || Organization::BREAKDOWN_SORTS.first
   end
 
+  # The org's workshop logs on their own page: the date rows of the one group a
+  # workshop or outside title names, otherwise a page of grouped cards.
+  def workshop_logs
+    @organization = Organization.find(params[:id])
+    authorize! @organization, to: :show_workshop_logs?
+
+    summary = OrganizationServices::WorkshopLogSummary.new(@organization)
+    @filtered_logs = summary.logs_for(workshop_id: params[:workshop_id], external_title: params[:external_title])
+    @groups = summary.groups(page: params[:page]) if @filtered_logs.nil?
+  end
+
   private
+
+  def published_section_shown?(section)
+    flag = PUBLISHED_SECTION_FLAGS[section]
+    flag.nil? || @organization.public_send(flag)
+  end
+
+  # Only sections with something to list, loaded so the view doesn't re-query.
+  def loaded_sections(names)
+    names.each_with_object({}) do |name, sections|
+      records = section_records(name, page: 1).load
+      sections[name] = records if records.any?
+    end
+  end
+
+  def render_section(section, records)
+    partial = section == "monthly_reports" ? "organizations/sections/monthly_reports" : "organizations/sections/cards"
+    render partial: partial, locals: { organization: @organization, section: section, records: records }
+  end
+
+  def section_records(section, page:)
+    if section == "monthly_reports"
+      return authorized_scope(MonthlyReport.where(organization_id: @organization.id))
+               .order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")).paginate(page: page, per_page: 9)
+    end
+
+    records = case section
+    when "workshops"
+      openly_credited(authorized_scope(@organization.credited_workshops.with_author_credit)).includes(created_by: :person)
+    when "workshop_variations"
+      # A variation without its own image shows its workshop's (WorkshopVariationDecorator).
+      authorized_scope(@organization.workshop_variations.with_author_credit).includes(workshop: card_image_preloads(Workshop))
+    when "resources"
+      authorized_scope(@organization.resources.with_author_credit)
+    when "stories"
+      authorized_scope(@organization.stories.with_author_credit)
+    when "community_news"
+      authorized_scope(@organization.community_news.with_author_credit)
+    when "workshop_ideas"
+      authorized_scope(@organization.credited_to_facilitators(WorkshopIdea))
+    when "workshop_variation_ideas"
+      authorized_scope(WorkshopVariationIdea.where(organization_id: @organization.id))
+    when "story_ideas"
+      authorized_scope(StoryIdea.where(organization_id: @organization.id)).includes(story_idea_workshops: :workshop)
+    end
+    # Stories lay out two to a row, everything else three.
+    per_page = section == "stories" ? 8 : 9
+    records.includes(card_image_preloads(records.klass)).order(created_at: :desc).paginate(page: page, per_page: per_page)
+  end
+
+  def card_image_preloads(model)
+    CARD_IMAGE_PRELOADS.filter_map { |name| { name => { file_attachment: :blob } } if model.reflect_on_association(name) }
+  end
+
+  # Non-admins don't see workshops credited anonymously — listing them here would
+  # tie an anonymous author to this organization.
+  def openly_credited(workshops)
+    return workshops if allowed_to?(:manage?, Organization)
+
+    anonymous_people = Person.where(anonymous_contributions: true).select(:id)
+    workshops = workshops.credited_openly
+    workshops.where.not(author_id: anonymous_people)
+             .or(workshops.where(author_id: nil).where.not(created_by_id: User.where(person_id: anonymous_people).select(:id)))
+  end
 
   def set_organization
     @organization = Organization.includes(
@@ -208,6 +290,16 @@ class OrganizationsController < ApplicationController
       { comments: [ :created_by, :updated_by ] },
       affiliations: { person: [ :user, :affiliations, *Organization::PEOPLE_TAGGINGS ] }
     ).find(params[:id])
+  end
+
+  # The profile reads every affiliation's dates (affiliated/facilitators since, program
+  # status) but shows only active facilitators, so it loads people for those alone.
+  def set_profile_organization
+    @organization = Organization.includes(:organization_status, :addresses, :contact_methods, :affiliations).find(params[:id])
+    ActiveRecord::Associations::Preloader.new(
+      records: @organization.affiliations.select(&:active?),
+      associations: { person: [ :user, :affiliations, { avatar_attachment: :blob }, *Organization::PEOPLE_TAGGINGS ] }
+    ).call
   end
 
   # Strong parameters

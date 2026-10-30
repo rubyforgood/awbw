@@ -99,6 +99,10 @@ RSpec.describe "/organizations", type: :request do
 
       organization.update!(profile_show_age_ranges: false)
       get organization_url(organization)
+      expect(Capybara.string(response.body).find("#hidden_from_profile")).to have_text("13-17")
+
+      sign_in user
+      get organization_url(organization)
       expect(response.body).not_to include("13-17")
     end
 

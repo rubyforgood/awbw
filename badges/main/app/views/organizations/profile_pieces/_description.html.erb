@@ -1,0 +1,4 @@
+<%# locals: (organization:) %>
+<div class="leading-relaxed text-gray-700">
+  <%= sanitize(organization.description, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
+</div>

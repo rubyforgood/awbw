@@ -18,7 +18,7 @@
   <!-- Divider -->
   <div class="mt-6 w-full"><hr class="mb-6 border-gray-300"></div>
 
-  <%= render "shared/filtered_to", record: @author, clear_path: resources_path %>
+  <%= render "shared/filtered_to", record: @author || @organization, clear_path: resources_path %>
 
   <!-- Results Table -->
   <% result_src = resources_path + "?" + request.query_string %>

@@ -106,4 +106,23 @@ module OrganizationHelper
   def organization_activity_path(organization)
     admin_activities_events_path(organization_id: organization, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1")
   end
+
+  # The wash for a card holding what an org hid from its profile. The person twin
+  # (profile_hidden_wash_class) is violet because the owner sees it too; an org has
+  # no owner, so this one is the admin-only blue the org's lock chips already use.
+  def org_hidden_wash_class
+    "admin-only #{DomainTheme.bg_class_for(:admin_only, intensity: 100)} #{org_hidden_border_class}"
+  end
+
+  def org_hidden_border_class
+    DomainTheme.border_class_for(:admin_only, intensity: 200)
+  end
+
+  def org_hidden_text_class
+    DomainTheme.text_class_for(:admin_only)
+  end
+
+  def org_hidden_icon_class
+    DomainTheme.text_class_for(:admin_only, intensity: 700)
+  end
 end

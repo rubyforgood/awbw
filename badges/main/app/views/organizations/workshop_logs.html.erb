@@ -1,0 +1,72 @@
+<% content_for(:page_bg_class, "admin-or-owner-or-member") %>
+<div class="admin-or-owner-or-member border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
+  <!-- Header -->
+  <div class="<%= DomainTheme.bg_class_for(:workshop_logs, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:workshop_logs, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-file-lines <%= DomainTheme.text_class_for(:workshop_logs, intensity: 700) %>"></i>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:workshop_logs, intensity: 900) %> tracking-wide uppercase">Workshop logs for <%= @organization.name %></span>
+    </div>
+  </div>
+
+  <div class="p-4 sm:p-8">
+    <div class="mb-6 flex flex-wrap items-center gap-4">
+      <%= link_to organization_path(@organization, anchor: "workshop_logs"), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+        &larr; Back to <%= @organization.name %>
+      <% end %>
+      <% if @filtered_logs %>
+        <%= link_to "All workshop logs", workshop_logs_organization_path(@organization), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <% end %>
+    </div>
+
+    <% if @filtered_logs %>
+      <!-- Single workshop view -->
+      <% if @filtered_logs.any? %>
+        <% first_log = @filtered_logs.first %>
+        <% workshop_name = first_log.workshop_title.presence || "Workshop Log" %>
+        <% workshop_name += " (#{first_log.windows_type_name})" if first_log.windows_type_name.present? %>
+        <h1 class="text-primary mb-6 font-display text-2xl font-bold">
+          <% if first_log.workshop.present? %>
+            <%= link_to workshop_name, workshop_path(first_log.workshop), class: "hover:underline" %>
+          <% else %>
+            <%= workshop_name %>
+          <% end %>
+        </h1>
+
+        <!-- Column headers -->
+        <div class="mb-2 flex items-center gap-2">
+          <div class="grid min-w-0 flex-1 grid-cols-5 gap-2">
+            <div class="px-2.5 pl-6 text-left text-xs font-medium text-gray-400">Date</div>
+            <div class="px-1.5 text-center text-xs font-medium text-gray-400">Total</div>
+            <div class="px-1.5 text-center text-xs font-medium text-gray-400">Adults</div>
+            <div class="px-1.5 text-center text-xs font-medium text-gray-400">Teens</div>
+            <div class="px-1.5 text-center text-xs font-medium text-gray-400">Children</div>
+          </div>
+          <div class="ml-4 w-20 shrink-0"></div>
+        </div>
+
+        <% if @filtered_logs.size > 1 %>
+          <%= render "people/sections/workshop_log_totals_row", logs: @filtered_logs, show_actions: true %>
+          <div class="mb-2 border-b border-gray-200"></div>
+        <% end %>
+
+        <% @filtered_logs.each do |log| %>
+          <%= render "people/sections/workshop_log_date_row", workshop_log: log, show_actions: true %>
+        <% end %>
+      <% else %>
+        <p class="text-gray-500 italic">No logs for this workshop.</p>
+      <% end %>
+    <% elsif @groups.any? %>
+      <!-- All workshops grouped -->
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <% @groups.each do |logs| %>
+          <%= render "organizations/sections/workshop_log_grouped_card", organization: @organization, logs: logs %>
+        <% end %>
+      </div>
+      <div class="mt-6 flex justify-center">
+        <%= tailwind_paginate @groups %>
+      </div>
+    <% else %>
+      <p class="text-gray-500 italic">No workshops logged yet.</p>
+    <% end %>
+  </div>
+</div>

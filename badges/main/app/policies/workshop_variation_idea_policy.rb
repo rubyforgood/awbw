@@ -36,6 +36,6 @@ class WorkshopVariationIdeaPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    authenticated? ? relation.where(created_by_id: created_by_id) : relation.none
+    authenticated? ? relation.where(created_by_id: user.id) : relation.none
   end
 end
