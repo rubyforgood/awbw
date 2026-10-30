@@ -25,8 +25,9 @@ class StoryImporter
   TEMPLATE_HEADERS = %w[
     row_source row_number title status wp_id content published published_date
     organization_name organization_status facilitator_name facilitator_last_name
-    facilitator_email facilitator_job_title author_note name_display anonymous
-    co_facilitator_name co_facilitator_last_name co_facilitator_email co_facilitator_job_title co_name_display co_anonymous
+    facilitator_email facilitator_job_title facilitator_affiliation author_note name_display anonymous
+    co_facilitator_name co_facilitator_last_name co_facilitator_email co_facilitator_job_title co_facilitator_affiliation
+    co_name_display co_anonymous
     workshop sectors primary_sector window_type categories primary_story_population grants
     professional_licenses image_count image_urls image_alt_titles youtube_url featured
   ].freeze
@@ -48,6 +49,7 @@ class StoryImporter
     "last name" => "facilitator_last_name",
     "author email" => "facilitator_email",
     "job title" => "facilitator_job_title",
+    "facilitator affiliation?" => "facilitator_affiliation",
     "author note" => "author_note",
     "name display" => "name_display",
     "anonymous credit?" => "anonymous",
@@ -55,6 +57,7 @@ class StoryImporter
     "coauthor last name" => "co_facilitator_last_name",
     "coauthor email" => "co_facilitator_email",
     "coauthor job title" => "co_facilitator_job_title",
+    "coauthor facilitator affiliation?" => "co_facilitator_affiliation",
     "coauthor name display" => "co_name_display",
     "coauthor anonymous credit?" => "co_anonymous",
     "workshop" => "workshop",
@@ -81,11 +84,13 @@ class StoryImporter
   # author and an optional second (co-author), each with its own name/credit.
   AUTHOR_COLUMNS = {
     name: "facilitator_name", last: "facilitator_last_name", email: "facilitator_email",
-    job_title: "facilitator_job_title", display: "name_display", anonymous: "anonymous"
+    job_title: "facilitator_job_title", facilitator_affiliation: "facilitator_affiliation",
+    display: "name_display", anonymous: "anonymous"
   }.freeze
   CO_AUTHOR_COLUMNS = {
     name: "co_facilitator_name", last: "co_facilitator_last_name", email: "co_facilitator_email",
-    job_title: "co_facilitator_job_title", display: "co_name_display", anonymous: "co_anonymous"
+    job_title: "co_facilitator_job_title", facilitator_affiliation: "co_facilitator_affiliation",
+    display: "co_name_display", anonymous: "co_anonymous"
   }.freeze
 
   Result = Struct.new(
@@ -340,8 +345,8 @@ class StoryImporter
     comment_missing_tags(story, tags)
     apply_grants(row, story, author)
     apply_professional_licenses(row, story, author)
-    create_facilitator_affiliation(author, organization)
-    create_facilitator_affiliation(co_author, organization)
+    create_facilitator_affiliation(author, organization) unless falsy?(row[AUTHOR_COLUMNS[:facilitator_affiliation]])
+    create_facilitator_affiliation(co_author, organization) unless falsy?(row[CO_AUTHOR_COLUMNS[:facilitator_affiliation]])
     create_job_affiliation(author, organization, row, AUTHOR_COLUMNS)
     create_job_affiliation(co_author, organization, row, CO_AUTHOR_COLUMNS)
   end
@@ -943,6 +948,10 @@ class StoryImporter
 
   def truthy?(value)
     %w[1 true yes].include?(clean(value).to_s.downcase)
+  end
+
+  def falsy?(value)
+    %w[0 false no].include?(clean(value).to_s.downcase)
   end
 
   # Values may carry HTML entities (e.g. &amp;) even in plain-text columns.

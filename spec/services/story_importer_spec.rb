@@ -192,18 +192,20 @@ RSpec.describe StoryImporter do
       file.path
     end
 
-    it "reads each author's job title from the review labels" do
+    it "reads each author's job title and facilitator choice from the review labels" do
       path = labeled_csv(
         "Title" => "A labeled story", "Status" => "Published story", "Content" => "<p>Body.</p>",
         "Organization" => "Example Family Services", "Window type" => "Adult",
         "First name" => "Jamie", "Last name" => "Rivera", "Job title" => "Case manager",
-        "Coauthor first name" => "Sam", "Coauthor last name" => "Lee", "Coauthor job title" => "Therapist"
+        "Facilitator affiliation?" => "No",
+        "Coauthor first name" => "Sam", "Coauthor last name" => "Lee", "Coauthor job title" => "Therapist",
+        "Coauthor facilitator affiliation?" => "Yes"
       )
 
       described_class.new(csv_path: path, import_user: import_user).call
 
-      expect(Person.find_by(first_name: "Jamie").affiliations.pluck(:title)).to include("Case manager")
-      expect(Person.find_by(first_name: "Sam").affiliations.pluck(:title)).to include("Therapist")
+      expect(Person.find_by(first_name: "Jamie").affiliations.pluck(:title)).to contain_exactly("Case manager")
+      expect(Person.find_by(first_name: "Sam").affiliations.pluck(:title)).to contain_exactly("Facilitator", "Therapist")
     end
 
     it "imports a sheet that uses the review labels instead of snake_case headers" do
@@ -774,6 +776,21 @@ RSpec.describe StoryImporter do
       import([ base_row("facilitator_job_title" => "program director") ])
 
       expect(author.affiliations.where(organization: org).pluck(:title)).to contain_exactly("Program Director", "Facilitator")
+    end
+
+    it "skips the facilitator affiliation when the row says no, keeping the job one" do
+      import([ base_row("facilitator_affiliation" => "no", "facilitator_job_title" => "Case manager") ])
+
+      author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
+      expect(author.affiliations.pluck(:title)).to contain_exactly("Case manager")
+    end
+
+    it "decides the co-author's facilitator affiliation from their own column" do
+      import([ base_row("co_facilitator_name" => "Sam", "co_facilitator_last_name" => "Lee",
+                        "co_facilitator_affiliation" => "false") ])
+
+      expect(Person.find_by(first_name: "Jamie").affiliations.pluck(:title)).to contain_exactly("Facilitator")
+      expect(Person.find_by(first_name: "Sam").affiliations).to be_empty
     end
 
     it "adds a facilitator affiliation even when the author holds another title there" do

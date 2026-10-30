@@ -8,5 +8,5 @@ summary: >-
   counting them as a facilitator. A blank title now stays blank instead of turning
   back into "Facilitator" on the next save.
 pro_tips:
-  - "The story import gives every author a Facilitator affiliation at the story's organization, unless they already have one there."
+  - "The story import gives every author a Facilitator affiliation at the story's organization, unless they already have one there. Put No in the Facilitator affiliation? (or Coauthor facilitator affiliation?) column to skip it."
   - "The story import sheet takes a Job title (and Coauthor job title) column. Each one adds a job affiliation next to the author's Facilitator one."
