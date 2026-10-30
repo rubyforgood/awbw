@@ -9,6 +9,9 @@ class OrganizationsController < ApplicationController
   # The members-and-admins "Submitted content" sections, in display order. Each
   # model's policy scope narrows them further (most ideas are admin-only).
   SUBMITTED_SECTIONS = %w[workshop_ideas workshop_variation_ideas story_ideas monthly_reports].freeze
+  # Every image a card might fall back to (ApplicationDecorator#display_image), so a
+  # section's cards don't each query their own.
+  CARD_IMAGE_PRELOADS = %i[primary_asset downloadable_asset gallery_assets].freeze
 
   def index
     authorize!
@@ -224,7 +227,8 @@ class OrganizationsController < ApplicationController
     when "workshops"
       openly_credited(authorized_scope(@organization.credited_workshops.with_author_credit)).includes(created_by: :person)
     when "workshop_variations"
-      authorized_scope(@organization.workshop_variations.with_author_credit)
+      # A variation without its own image shows its workshop's (WorkshopVariationDecorator).
+      authorized_scope(@organization.workshop_variations.with_author_credit).includes(workshop: card_image_preloads(Workshop))
     when "resources"
       authorized_scope(@organization.resources.with_author_credit)
     when "stories"
@@ -240,7 +244,11 @@ class OrganizationsController < ApplicationController
     end
     # Stories lay out two to a row, everything else three.
     per_page = section == "stories" ? 8 : 9
-    records.includes(:primary_asset).order(created_at: :desc).paginate(page: page, per_page: per_page)
+    records.includes(card_image_preloads(records.klass)).order(created_at: :desc).paginate(page: page, per_page: per_page)
+  end
+
+  def card_image_preloads(model)
+    CARD_IMAGE_PRELOADS.filter_map { |name| { name => { file_attachment: :blob } } if model.reflect_on_association(name) }
   end
 
   # Non-admins don't see workshops credited anonymously — listing them here would
@@ -259,7 +267,7 @@ class OrganizationsController < ApplicationController
       :organization_status, :windows_type, :addresses, :contact_methods,
       :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
-      affiliations: { person: [ :user, :affiliations, *Organization::PEOPLE_TAGGINGS ] }
+      affiliations: { person: [ :user, :affiliations, { avatar_attachment: :blob }, *Organization::PEOPLE_TAGGINGS ] }
     ).find(params[:id])
   end
 

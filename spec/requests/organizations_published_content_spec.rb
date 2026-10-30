@@ -283,4 +283,33 @@ RSpec.describe "Organization profile published content", type: :request do
       expect(chip).to have_text("123 Sample Street")
     end
   end
+
+  describe "query count" do
+    def profile_queries
+      count = 0
+      counter = ->(*, payload) { count += 1 unless payload[:name].in?(%w[SCHEMA TRANSACTION]) || payload[:cached] }
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { get organization_path(organization) }
+      count
+    end
+
+    def add_content
+      create(:story, :published, organization: organization)
+      create(:community_news, :published, organization: organization)
+      create(:workshop_variation, :published, organization: organization)
+      create(:workshop_log, organization: organization, workshop: create(:workshop))
+      create(:affiliation, organization: organization, person: create(:person))
+    end
+
+    # Cards, logs, and facilitators preload their images and quotes, so more of
+    # them doesn't mean more queries.
+    it "doesn't grow with the number of cards, logs, and facilitators" do
+      sign_in admin
+      add_content
+      get organization_path(organization)
+      baseline = profile_queries
+
+      3.times { add_content }
+      expect(profile_queries).to eq(baseline)
+    end
+  end
 end
