@@ -1164,6 +1164,23 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include("6 hours")
     end
 
+    it "prints the training dates without the weekday" do
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      dates = Nokogiri::HTML(response.body).at_xpath("//p[span[text()='Dates:']]").text
+      expect(dates).to match(/\d{4}/)
+      expect(dates).not_to match(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/)
+    end
+
+    it "links the certificate from the CE page with a preview of it" do
+      ce_registration
+      get registration_ce_path(registration.slug)
+
+      expect(response.body).to include("View your CE certificate")
+      expect(response.body).to include("Continuing Education Confirmation of Attendance")
+      expect(response.body).to include(registration_ce_certificate_path(registration.slug, ce_registration))
+    end
+
     it "prints the issuing address the app settings point at" do
       org = create(:organization)
       Setting.create!(organization: org,

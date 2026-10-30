@@ -23,7 +23,7 @@
       <p class="text-center text-[1.8cqw]">This certifies that the above-named participant attended and completed the course.</p>
       <div class="space-y-[0.4cqw] text-center text-[1.9cqw]">
         <p><span class="text-gray-600">Training Title:</span> <span class="font-bold text-gray-900"><%= event.title %></span></p>
-        <p><span class="text-gray-600">Dates:</span> <span class="font-bold text-gray-900"><%= event.date_range %></span></p>
+        <p><span class="text-gray-600">Dates:</span> <span class="font-bold text-gray-900"><%= event.short_date_range %></span></p>
         <% if facilitator_names.any? %>
           <p><span class="text-gray-600">Facilitators:</span> <span class="font-bold text-gray-900"><%= facilitator_names.to_sentence %></span></p>
         <% end %>
@@ -85,7 +85,7 @@
 
     <div class="space-y-1 text-center">
       <p><span class="text-gray-600">Training Title:</span> <span class="font-bold text-gray-900"><%= event.title %></span></p>
-      <p><span class="text-gray-600">Dates:</span> <span class="font-bold text-gray-900"><%= event.date_range %></span></p>
+      <p><span class="text-gray-600">Dates:</span> <span class="font-bold text-gray-900"><%= event.short_date_range %></span></p>
     </div>
 
     <% if facilitator_names.any? %>
