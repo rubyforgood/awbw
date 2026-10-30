@@ -35,12 +35,12 @@
           <%# Whole row → CE edit page; the name link (z-10, above) → the registrant's
               CE callout page instead. %>
           <% if ce_reg %>
-            <%= link_to "", edit_continuing_education_registration_path(ce_reg, return_to: return_to),
+            <%= link_to "", edit_continuing_education_registration_path(ce_reg, return_to: return_to, ce_payment: params[:ce_payment].presence),
                   class: "absolute inset-0", "aria-label": "Edit CE registration for #{row.name}" %>
           <% end %>
           <div class="relative z-10 min-w-0 justify-self-start">
             <% if ce_reg %>
-              <%= link_to row.name, registration_ce_path(row.registration.slug, return_to: return_to),
+              <%= link_to row.name, registration_ce_path(row.registration.slug, return_to: return_to, ce_payment: params[:ce_payment].presence),
                     class: "font-medium text-gray-900 #{DomainTheme.text_class_for(:events, intensity: 700, hover: true)} hover:underline" %>
             <% else %>
               <%= link_to row.name, edit_event_registration_path(row.registration, return_to: return_to),

@@ -40,7 +40,7 @@
         <p class="font-semibold">These CE hours transferred in from <%= registration.transferred_from_registration.event.title %>.</p>
         <p class="mt-0.5 text-teal-800">
           The cost is the balance carried from the
-          <%= link_to "paid original record", edit_continuing_education_registration_path(origin_ce, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>;
+          <%= link_to "paid original record", edit_continuing_education_registration_path(origin_ce, **ce_registration_return_params), class: "font-medium underline", data: { turbo_frame: "_top" } %>;
           new payments and the certificate are handled here.
         </p>
       </div>
@@ -48,7 +48,7 @@
   <% end %>
 
   <div class="space-y-6">
-    <%= simple_form_for @ce_registration, url: continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
+    <%= simple_form_for @ce_registration, url: continuing_education_registration_path(@ce_registration, **ce_registration_return_params),
           html: { id: "ce_registration_form" } do |f| %>
       <div class="space-y-6">
         <%= render "details_section", f: f, license: license, ce_registration: @ce_registration, event: registration.event %>
@@ -76,7 +76,7 @@
             Not issued yet
           <% end %>
         </p>
-        <%= button_to toggle_certificate_continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
+        <%= button_to toggle_certificate_continuing_education_registration_path(@ce_registration, **ce_registration_return_params),
               method: :patch, class: "rounded-lg border px-3 py-1.5 text-sm font-medium #{@ce_registration.certificate_sent_at.present? ? "border-gray-300 text-gray-600 hover:bg-gray-50" : "#{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations)} #{DomainTheme.text_class_for(:continuing_education_registrations, intensity: 700)} #{DomainTheme.bg_class_for(:continuing_education_registrations, hover: true)}"} cursor-pointer" do %>
           <%= @ce_registration.certificate_sent_at.present? ? "Mark not issued" : "Mark certificate issued" %>
         <% end %>
@@ -85,7 +85,7 @@
 
     <%# ---- Footer actions ---- %>
     <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
-      <%= button_to continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
+      <%= button_to continuing_education_registration_path(@ce_registration, **ce_registration_return_params),
             method: :delete, form: { data: { turbo_confirm: "Remove this CE registration?" } },
             class: button_classes(:danger_outline) do %>
         <i class="fa-solid fa-trash-can"></i>
