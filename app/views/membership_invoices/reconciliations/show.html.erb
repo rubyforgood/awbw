@@ -50,7 +50,7 @@
       <%= link_to "Invoice", membership_invoice_path(@invoice), class: "text-primary hover:underline" %>
       <%= link_to "Membership", membership_path(@invoice.membership), class: "text-primary hover:underline" %>
       <%= link_to "Person", person_path(@invoice.person), class: "text-primary hover:underline" %>
-      <% if @stripe_customer.present? %>
+      <% if @stripe_customer&.processor_id.present? %>
         <%= link_to "Stripe customer", stripe_customer_url(@stripe_customer.processor_id),
               target: "_blank", rel: "noopener", class: "text-primary hover:underline" %>
       <% end %>

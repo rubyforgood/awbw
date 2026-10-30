@@ -25,7 +25,7 @@
           <tr>
             <td class="px-3 py-2">
               <span class="font-medium capitalize"><%= candidate.status.humanize %></span>
-              <%= link_to "Stripe", stripe_payment_intent_url(candidate.payment_intent_id),
+              <%= link_to "Stripe", stripe_payment_url(candidate.payment_intent_id),
                     target: "_blank", rel: "noopener",
                     class: "text-primary ml-1 hover:underline" %>
               <% if candidate.status.in?(%w[requires_action requires_confirmation]) %>
@@ -46,7 +46,7 @@
             <td class="px-3 py-2">
               <% if candidate.payment %>
                 <%= link_to candidate.payment.stripe_charge_id,
-                      stripe_charge_url(candidate.payment.stripe_charge_id),
+                      stripe_payment_url(candidate.payment.stripe_charge_id),
                       target: "_blank", rel: "noopener",
                       class: "text-primary font-mono hover:underline" %>
                 <span class="block text-gray-500">
@@ -103,7 +103,7 @@
     <ul class="mt-2 space-y-2 text-xs text-gray-600">
       <% lookup.local_payments.each do |payment| %>
         <li class="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
-          <%= link_to payment.stripe_charge_id, stripe_charge_url(payment.stripe_charge_id),
+          <%= link_to payment.stripe_charge_id, stripe_payment_url(payment.stripe_charge_id),
                 target: "_blank", rel: "noopener",
                 class: "text-primary font-mono hover:underline" %>
           <span><%= dollars_from_cents(payment.amount_cents_remaining) %> remaining</span>

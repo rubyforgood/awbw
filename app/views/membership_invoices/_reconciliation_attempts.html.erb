@@ -45,13 +45,13 @@
           <% end %>
           <% if attempt.payment_intent_id.present? %>
             <%= link_to "PaymentIntent #{attempt.payment_intent_id}",
-                  stripe_payment_intent_url(attempt.payment_intent_id),
+                  stripe_payment_url(attempt.payment_intent_id),
                   target: "_blank", rel: "noopener",
                   class: "text-primary font-mono hover:underline" %>
           <% end %>
           <% if attempt.pay_charge&.processor_id.present? %>
             <%= link_to "Charge #{attempt.pay_charge.processor_id}",
-                  stripe_charge_url(attempt.pay_charge.processor_id),
+                  stripe_payment_url(attempt.pay_charge.processor_id),
                   target: "_blank", rel: "noopener",
                   class: "text-primary font-mono hover:underline" %>
           <% end %>
