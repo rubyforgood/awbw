@@ -35,6 +35,19 @@ RSpec.describe Membership::Reconcile::Lookup do
     expect(candidate.can_apply?).to be(true)
   end
 
+  it "does not mark a partially applied payment as fully allocated" do
+    payment = create(:external_processor_payment, person:, amount_cents: 1_000,
+      amount_cents_remaining: 1_000, stripe_charge_id: "ch_test")
+    create(:allocation, source: payment, allocatable: invoice, amount: 400)
+    allow(Stripe::PaymentIntent).to receive(:list).and_return(double(data: [ intent ]))
+
+    result = described_class.call(invoice:)
+
+    candidate = result.candidates.first
+    expect(candidate.allocated).to be(false)
+    expect(candidate.can_apply?).to be(true)
+  end
+
   it "ignores intents for other invoices" do
     allow(Stripe::PaymentIntent).to receive(:list).and_return(double(data: [ intent(metadata: {}) ]))
 

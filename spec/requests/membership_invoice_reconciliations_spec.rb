@@ -188,6 +188,20 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
     expect(invoice.reload).to be_paid_in_full
   end
 
+  it "refuses to apply a payment while a checkout is in progress" do
+    payment = create(:external_processor_payment, person:, amount_cents: 1_000,
+      amount_cents_remaining: 1_000, metadata: { "membership_invoice_id" => invoice.id })
+    invoice.update_columns(payment_in_progress_at: Time.current)
+
+    post membership_invoice_reconciliation_path(invoice,
+      operation: "apply_payment", payment_id: payment.id)
+
+    expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
+    expect(flash[:alert]).to match(/already in progress/)
+    expect(invoice.reload).not_to be_paid_in_full
+    expect(payment.reload.amount_cents_remaining).to eq(1_000)
+  end
+
   it "records a manual charge when no local payment exists" do
     charge = Stripe::Charge.construct_from(id: "ch_manual", object: "charge", amount: 1_000,
       currency: "usd", metadata: {})
@@ -198,7 +212,8 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
     )
     attempt.update!(status: "unknown", payment_intent_id: "pi_manual")
     allow(Stripe::PaymentIntent).to receive(:retrieve).and_return(intent)
-    allow(Pay::Stripe::Charge).to receive(:sync_payment_intent).and_return(nil)
+    allow(Pay::Stripe::Charge).to receive(:sync_payment_intent)
+      .and_raise(Stripe::APIConnectionError.new("Pay is down"))
 
     post membership_invoice_reconciliation_path(invoice,
       operation: "record_charge", payment_intent_id: "pi_manual", attempt_id: attempt.id)

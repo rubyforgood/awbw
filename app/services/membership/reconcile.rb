@@ -20,7 +20,7 @@ class Membership::Reconcile
 
     intent = @intent || retrieve_intent
     if intent.blank?
-      return failure("No PaymentIntent is stored for this attempt. Use Find payments in Stripe, " \
+      return failure("No PaymentIntent is stored for this attempt. Review the Stripe payments on this page, " \
                      "or mark it failed if Stripe shows no charge.")
     end
 

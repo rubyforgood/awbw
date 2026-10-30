@@ -28,6 +28,30 @@ RSpec.describe Membership::Reconcile::Payment do
     expect(payment.reload.amount_cents_remaining).to eq(400)
   end
 
+  it "applies the remaining amount after a partial allocation" do
+    create(:allocation, source: payment, allocatable: invoice, amount: 400)
+
+    result = described_class.call(invoice:, payment:)
+
+    expect(result.status).to eq(:applied)
+    expect(result.amount_cents).to eq(600)
+    expect(invoice.reload).to be_paid_in_full
+    expect(payment.reload.amount_cents_remaining).to eq(0)
+  end
+
+  it "applies the remaining amount after an allocation was reverted" do
+    original = create(:allocation, source: payment, allocatable: invoice, amount: 1_000)
+    revert = create(:allocation, source: payment, allocatable: invoice, amount: -1_000)
+    original.update!(reverted_id: revert.id)
+
+    result = described_class.call(invoice:, payment:)
+
+    expect(result.status).to eq(:applied)
+    expect(result.amount_cents).to eq(1_000)
+    expect(invoice.reload).to be_paid_in_full
+    expect(payment.reload.amount_cents_remaining).to eq(0)
+  end
+
   it "is idempotent when the payment is already applied" do
     create(:allocation, source: payment, allocatable: invoice, amount: 1_000)
 

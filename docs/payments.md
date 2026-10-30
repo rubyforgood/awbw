@@ -83,19 +83,23 @@ Concern mixed into `Pay::Charge` in `config/initializers/pay.rb`.
 
 ## Membership reconciliation (admin)
 
-Stripe is authoritative. Reconciliation only reads Stripe and repairs the portal's
-local records; it never creates a charge.
+Stripe is authoritative. Reconciliation reads Stripe and repairs the portal's local
+records; it never creates a card charge. **Cancel payment attempt** is the one explicit
+Stripe write.
 
 - **Data health → Membership invoices with payments to reconcile** lists invoices with
   an unresolved autopay attempt (`pending`, `unknown`, `needs_action`), a checkout
   session whose 31-minute window has passed, or a portal-originated membership
   payment that is unallocated while the invoice still owes.
-- The invoice admin panel shows the attempts, the stored checkout session, and any
-  unallocated Stripe payment. **Find payments in Stripe** is a read-only lookup of
-  the member's recent PaymentIntents for that invoice.
-- A succeeded PaymentIntent is synced through `Pay::Stripe::Charge.sync_payment_intent`.
-  `PayChargeExtensions` remains the only creator of `ExternalProcessorPayment`; the
-  reconciliation service then applies that payment with `Membership::Reconcile::Payment`.
+- The invoice admin panel summarizes unresolved attempts and links to **Reconcile
+  payments**, which lists the attempts, the stored checkout session, and any unallocated
+  Stripe payment. The page performs a read-only lookup of the member's recent
+  PaymentIntents for that invoice.
+- A succeeded PaymentIntent is normally recorded by `PayChargeExtensions` through
+  `Pay::Stripe::Charge.sync_payment_intent`. If no local payment exists, **Record this
+  charge** records one through `PaymentServices::RecordStripeCharge` after the admin
+  confirms it; the reconciliation service then applies it with
+  `Membership::Reconcile::Payment`.
 - A charge that succeeded but could not be applied marks the attempt `succeeded` with
   an `unallocated_payment` note. The invoice stays in Data health while it owes.
 - **Membership credits and overpayments** lists portal-originated membership payments

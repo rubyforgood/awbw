@@ -80,10 +80,12 @@ class Membership::Reconcile::Lookup
   def candidate_for(intent, payment)
     cid = charge_id(intent)
     attempt = find_attempt(intent)
-    allocated = payment.present? && payment.allocations.any? { |allocation|
-      allocation.allocatable_type == @invoice.class.polymorphic_name &&
-        allocation.allocatable_id == @invoice.id
-    }
+    allocated = payment.present? && payment.amount_cents_remaining.to_i.zero? &&
+      payment.allocations.any? { |allocation|
+        allocation.reverted_id.nil? && allocation.amount.to_i.positive? &&
+          allocation.allocatable_type == @invoice.class.polymorphic_name &&
+          allocation.allocatable_id == @invoice.id
+      }
 
     Candidate.new(
       payment_intent_id: intent.id,

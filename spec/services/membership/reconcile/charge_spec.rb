@@ -14,7 +14,7 @@ RSpec.describe Membership::Reconcile::Charge do
   let(:intent) do
     Stripe::PaymentIntent.construct_from(
       id: "pi_test", object: "payment_intent", status: "succeeded", amount: 1_000,
-      currency: "usd", customer: customer.processor_id,
+      currency: "usd", customer: customer.processor_id, latest_charge: "ch_test",
       metadata: { "membership_invoice_id" => invoice.id.to_s }
     )
   end
@@ -32,6 +32,19 @@ RSpec.describe Membership::Reconcile::Charge do
     expect(result).to be_allocated
     expect(invoice.reload).to be_paid_in_full
     expect(attempt.reload).to have_attributes(status: "succeeded", pay_charge:)
+  end
+
+  it "applies an existing local payment when Pay sync fails" do
+    create(:external_processor_payment, person:, amount_cents: 1_000, amount_cents_remaining: 1_000,
+      stripe_charge_id: "ch_test", pay_charge:)
+    allow(Pay::Stripe::Charge).to receive(:sync_payment_intent)
+      .and_raise(Stripe::APIConnectionError.new("Pay is down"))
+
+    result = described_class.call(invoice:, intent:)
+
+    expect(result).to be_success
+    expect(result).to be_allocated
+    expect(invoice.reload).to be_paid_in_full
   end
 
   it "reports when Pay syncs the charge but no local payment exists" do

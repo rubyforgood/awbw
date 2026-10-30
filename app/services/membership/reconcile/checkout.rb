@@ -14,16 +14,18 @@ class Membership::Reconcile::Checkout
   def call
     return failure("This invoice has no checkout session to check.") if @invoice.checkout_session_id.blank?
 
+    session_id = @invoice.checkout_session_id
     session = Stripe::Checkout::Session.retrieve(
-      { id: @invoice.checkout_session_id, expand: [ "payment_intent" ] },
+      { id: session_id, expand: [ "payment_intent" ] },
       stripe_options
     )
 
     case session.status
     when "complete"
-      check_complete(session)
+      check_complete(session, session_id)
     when "expired"
-      clear_checkout_state
+      return checkout_changed unless clear_checkout_state(session_id)
+
       Result.new(status: :expired, session:, payment: nil,
                  message: "This checkout session expired. The invoice can be paid again.", errors: [])
     when "open"
@@ -33,8 +35,8 @@ class Membership::Reconcile::Checkout
     end
   rescue Stripe::InvalidRequestError => e
     return failure("Could not check the checkout session with Stripe: #{e.message}") if @invoice.payment_in_progress?
+    return checkout_changed unless clear_checkout_state(session_id)
 
-    clear_checkout_state
     Result.new(
       status: :cleared,
       session: nil,
@@ -48,7 +50,7 @@ class Membership::Reconcile::Checkout
 
   private
 
-  def check_complete(session)
+  def check_complete(session, session_id)
     unless session.payment_status == "paid"
       return failure("Stripe completed this checkout but the payment is not paid.")
     end
@@ -59,7 +61,7 @@ class Membership::Reconcile::Checkout
     intent = retrieve_intent(intent) if intent.is_a?(String)
     result = Membership::Reconcile::Charge.call(invoice: @invoice, intent:)
 
-    clear_checkout_state if result.success?
+    clear_checkout_state(session_id) if result.success?
     Result.new(status: :complete, session:, payment: result.payment,
                message: result.message, errors: result.errors)
   end
@@ -68,11 +70,19 @@ class Membership::Reconcile::Checkout
     Stripe::PaymentIntent.retrieve({ id: }, stripe_options)
   end
 
-  def clear_checkout_state
+  def clear_checkout_state(session_id)
     @invoice.with_lock do
       @invoice.reload
+      next false if @invoice.checkout_session_id.present? && @invoice.checkout_session_id != session_id
+      next false if @invoice.checkout_session_id.blank? && @invoice.payment_in_progress?
+
       @invoice.clear_payment_in_progress!
+      true
     end
+  end
+
+  def checkout_changed
+    failure("A newer checkout is in progress. Check it before clearing anything.")
   end
 
   def stripe_options = { stripe_account: @invoice.person.stripe_customer&.stripe_account }.compact

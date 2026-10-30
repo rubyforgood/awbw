@@ -21,10 +21,7 @@ class Membership::Reconcile::Charge
 
     return failure("This Stripe payment doesn't belong to this member.") unless related_to_member?
 
-    pay_charge = Pay::Stripe::Charge.sync_payment_intent(
-      @intent.id,
-      stripe_account: stripe_account
-    )
+    pay_charge = sync_pay_charge
 
     payment = pay_charge.present? ? ExternalProcessorPayment.find_by(stripe_charge_id: pay_charge.processor_id) : nil
     payment ||= ExternalProcessorPayment.find_by(stripe_charge_id: charge_id) if charge_id.present?
@@ -37,13 +34,17 @@ class Membership::Reconcile::Charge
 
     Result.new(status: result.status, payment: result.payment, pay_charge:,
                allocation: result.allocation, message: result.message, errors: result.errors)
-  rescue Stripe::StripeError, Pay::Error => e
-    failure("Could not sync this charge with Stripe: #{e.message}")
   end
 
   private
 
   def stripe_account = @invoice.person.stripe_customer&.stripe_account
+
+  def sync_pay_charge
+    Pay::Stripe::Charge.sync_payment_intent(@intent.id, stripe_account:)
+  rescue Stripe::StripeError, Pay::Error
+    nil
+  end
 
   def related_to_member?
     metadata = (@intent.metadata || {}).to_h.stringify_keys

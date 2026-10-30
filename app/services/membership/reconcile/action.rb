@@ -28,7 +28,7 @@ class Membership::Reconcile::Action
     when "clear_checkout"
       clear_checkout
     when "apply_payment"
-      with_payment { |payment| Membership::Reconcile::Payment.call(invoice: @invoice, payment:) }
+      apply_payment
     when "use_intent"
       apply_intent
     when "record_charge"
@@ -65,6 +65,16 @@ class Membership::Reconcile::Action
     return failure("That payment attempt doesn't belong to this invoice.") if attempt.blank?
 
     yield attempt
+  end
+
+  def apply_payment
+    with_payment do |payment|
+      if @invoice.payment_in_progress?
+        failure("A payment is already in progress for this invoice. Wait for it to finish or cancel it first.")
+      else
+        Membership::Reconcile::Payment.call(invoice: @invoice, payment:)
+      end
+    end
   end
 
   def with_payment

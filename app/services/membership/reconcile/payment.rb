@@ -51,14 +51,16 @@ class Membership::Reconcile::Payment
   def payment_remaining = @payment.amount_cents_remaining.to_i
 
   def already_applied?
-    existing_allocation.present?
+    payment_remaining.zero? && existing_allocation.present?
   end
 
   def existing_allocation
-    @payment.allocations.find_by(
-      allocatable_type: @invoice.class.polymorphic_name,
-      allocatable_id: @invoice.id
-    )
+    @payment.allocations
+      .where(reverted_id: nil, amount: 1..)
+      .find_by(
+        allocatable_type: @invoice.class.polymorphic_name,
+        allocatable_id: @invoice.id
+      )
   end
 
   def already_applied_result

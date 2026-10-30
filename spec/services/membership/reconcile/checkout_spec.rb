@@ -38,6 +38,20 @@ RSpec.describe Membership::Reconcile::Checkout do
     expect(invoice.reload.checkout_session_id).to be_nil
   end
 
+  it "does not clear a newer checkout session" do
+    allow(Stripe::Checkout::Session).to receive(:retrieve) do
+      invoice.update_columns(checkout_session_id: "cs_new", payment_in_progress_at: Time.current)
+      double(status: "expired")
+    end
+
+    result = described_class.call(invoice:)
+
+    expect(result).not_to be_success
+    expect(result.errors).to include(/newer checkout/)
+    expect(invoice.reload.checkout_session_id).to eq("cs_new")
+    expect(invoice.payment_in_progress?).to be(true)
+  end
+
   it "leaves an open checkout alone" do
     allow(Stripe::Checkout::Session).to receive(:retrieve)
       .and_return(double(status: "open"))
