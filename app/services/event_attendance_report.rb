@@ -37,17 +37,17 @@ class EventAttendanceReport
       ce_registration&.hours.to_d
     end
 
-    def paid?
-      ce_registration.nil? || ce_registration.paid_in_full?
+    def paying?
+      ce_registration.nil? || ce_registration.payment_access_granted?
     end
   end
 
-  # `paid_only:` narrows the CE report to licences paid in full — the same any-paid
-  # rule that opens the registrant's own sign-in sheet (ce_attendance_offered?).
-  def initialize(event, ce_only: false, paid_only: false)
+  # `paying_only:` narrows the CE report to licences paid or intending to pay — the
+  # same per-licence rule that opens the registrant's own sign-in sheet.
+  def initialize(event, ce_only: false, paying_only: false)
     @event = event
     @ce_only = ce_only
-    @paid_only = ce_only && paid_only
+    @paying_only = ce_only && paying_only
   end
 
   attr_reader :event
@@ -56,8 +56,8 @@ class EventAttendanceReport
     @ce_only
   end
 
-  def paid_only?
-    @paid_only
+  def paying_only?
+    @paying_only
   end
 
   # The event's calendar days — the report's top-level grouping (Day 1, Day 2, …).
@@ -69,7 +69,7 @@ class EventAttendanceReport
   # every CE registration even before anything has been logged (so staff can chase
   # sign-ins during the training); the generic report lists only people who logged time.
   def rows
-    @rows ||= paid_only? ? all_rows.select(&:paid?) : all_rows
+    @rows ||= paying_only? ? all_rows.select(&:paying?) : all_rows
   end
 
   # Every line regardless of payment — what the "All CE" toggle counts.
@@ -79,8 +79,8 @@ class EventAttendanceReport
       .flat_map { |registration| rows_for(registration) }
   end
 
-  def paid_row_count
-    all_rows.count(&:paid?)
+  def paying_row_count
+    all_rows.count(&:paying?)
   end
 
   # The distinct people behind those lines — what the everyone-totals count.

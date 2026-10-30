@@ -136,7 +136,7 @@ class EventsController < ApplicationController
   # their license number and awarded hours.
   def attendance
     authorize! @event
-    @report = EventAttendanceReport.new(@event, ce_only: params[:ce] == "true", paid_only: ce_paid_only?)
+    @report = EventAttendanceReport.new(@event, ce_only: params[:ce] == "true", paying_only: ce_paying_only?)
   end
 
   # Cross-event timesheets: the totals table for each event the report filters reach,
@@ -150,8 +150,8 @@ class EventsController < ApplicationController
     # than reciting every event the portal holds.
     @signins_narrowed = [ @filter_event, @event_type, @event_search ].any?(&:present?)
     @signins_ce = @events.any?(&:ce_eligible?)
-    reports = @events.map { |event| EventAttendanceReport.new(event, ce_only: @signins_ce, paid_only: ce_paid_only?) }
-    @signins_paid_ce_count = reports.sum(&:paid_row_count)
+    reports = @events.map { |event| EventAttendanceReport.new(event, ce_only: @signins_ce, paying_only: ce_paying_only?) }
+    @signins_paying_ce_count = reports.sum(&:paying_row_count)
     @signins_all_ce_count = reports.sum { |report| report.all_rows.size }
     @reports = reports.select(&:any?)
   end
@@ -643,11 +643,11 @@ class EventsController < ApplicationController
 
   private
 
-  # Timesheets list only paid CE licences unless the admin asks for every one.
-  def ce_paid_only?
+  # Timesheets list only CE licences paid or intending to pay unless the admin asks for every one.
+  def ce_paying_only?
     params[:ce_payment] != "all"
   end
-  helper_method :ce_paid_only?
+  helper_method :ce_paying_only?
 
   # Where to land after saving staff: back to the origin the editor was opened
   # from (the sample preview, or a registrant's staff callout page), else the

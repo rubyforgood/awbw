@@ -31,7 +31,7 @@
         <%= render "event_search_filter" %>
         <% if @signins_ce %>
           <div class="ml-auto">
-            <%= render "events/ce_payment_toggle", paid_count: @signins_paid_ce_count, all_count: @signins_all_ce_count %>
+            <%= render "events/ce_payment_toggle", paying_count: @signins_paying_ce_count, all_count: @signins_all_ce_count %>
           </div>
         <% end %>
       </div>
@@ -63,8 +63,8 @@
       <% end %>
     <% else %>
       <div class="text-center py-12 text-gray-500">
-        <% if @signins_ce && ce_paid_only? && @signins_all_ce_count.positive? %>
-          No paid CE registrations on the events in scope yet.
+        <% if @signins_ce && ce_paying_only? && @signins_all_ce_count.positive? %>
+          No CE registrations on the events in scope are paid or intending to pay yet.
         <% else %>
           <%= @signins_ce ? "No CE registrations on the events in scope yet." : "No sign-in time has been logged for the events in scope yet." %>
         <% end %>

@@ -85,7 +85,7 @@ RSpec.describe "Events sign-ins report", type: :request do
     expect(response.body).not_to include("CE timesheets")
   end
 
-  it "defaults to paid CE licences, with a toggle to show every one" do
+  it "defaults to CE licences paid or intending to pay, with a toggle to show every one" do
     ce_event = training(title: "CE training", abbreviation: "CE-1", ce: true)
     log_time!(ce_event, name: "Carol", ce: true)
     log_time!(ce_event, name: "Dana", ce: true, paid: false)
@@ -94,7 +94,7 @@ RSpec.describe "Events sign-ins report", type: :request do
     expect(response.body).to include("LIC-Carol")
     expect(response.body).not_to include("LIC-Dana")
     toggle = Capybara.string(response.body).find("nav[aria-label='CE payment filter']")
-    expect(toggle).to have_link("Paid (1)")
+    expect(toggle).to have_link("Paid or intends to pay (1)")
     expect(toggle).to have_link("All CE (2)", href: signins_events_path(ce_payment: "all"))
 
     get signins_events_path(ce_payment: "all")
@@ -102,10 +102,10 @@ RSpec.describe "Events sign-ins report", type: :request do
     expect(Capybara.string(response.body)).to have_link(href: attendance_event_path(ce_event, ce: "true", ce_payment: "all", return_to: "signins"))
   end
 
-  it "says when no CE registration in scope is paid yet" do
+  it "says when no CE registration in scope is paid or intending to pay yet" do
     log_time!(training(title: "CE training", abbreviation: "CE-1", ce: true), name: "Dana", ce: true, paid: false)
     get signins_events_path
-    expect(response.body).to include("No paid CE registrations on the events in scope yet.")
+    expect(response.body).to include("No CE registrations on the events in scope are paid or intending to pay yet.")
   end
 
   it "says so when nothing in scope has logged time" do

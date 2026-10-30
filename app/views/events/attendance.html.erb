@@ -23,7 +23,7 @@
 
     <% ce_badge = capture do %>
       <% if @report.ce_only? %>
-        <%= render "events/ce_payment_toggle", paid_count: @report.paid_row_count, all_count: @report.all_rows.size %>
+        <%= render "events/ce_payment_toggle", paying_count: @report.paying_row_count, all_count: @report.all_rows.size %>
         <span class="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
           <i class="fa-solid fa-graduation-cap text-2xs"></i>
           Continuing education
@@ -194,8 +194,8 @@
       </p>
     <% else %>
       <div class="py-12 text-center text-gray-500">
-        <% if @report.paid_only? && @report.all_rows.any? %>
-          No one has paid for CE credit on this event yet.
+        <% if @report.paying_only? && @report.all_rows.any? %>
+          No one has paid or said they intend to pay for CE credit on this event yet.
         <% else %>
           <%= @report.ce_only? ? "No one has registered for CE credit on this event yet." : "No attendance has been logged for this event yet." %>
         <% end %>

@@ -1,0 +1,12 @@
+name: "CE timesheets show paid or intending-to-pay registrations by default"
+area: events
+display_status: admin_facing
+released_on: 2026-10-29
+pr_number: 2911
+action_path: "/events/signins"
+summary: >-
+  CE timesheets now list only CE registrations that are paid in full or marked
+  as intending to pay — the people who can sign in. Switch to "All CE" to see
+  everyone who signed up.
+pro_tips:
+  - "Each toggle option shows how many CE registrations it covers."

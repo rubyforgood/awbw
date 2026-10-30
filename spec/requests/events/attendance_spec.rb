@@ -12,7 +12,7 @@ RSpec.describe "Events attendance report", type: :request do
     create(:event_registration, event: event, registrant: create(:person, first_name: "Alice", last_name: "Adams"))
   end
 
-  # The timesheets list paid CE licences by default, so the fixtures pay theirs.
+  # The timesheets list paid (or intending) CE licences by default, so the fixtures pay theirs.
   def paid_ce!(license, **attrs)
     ce = create(:continuing_education_registration, event_registration: registration, professional_license: license, **attrs)
     create(:allocation, source: create(:payment), allocatable: ce, amount: ce.cost_cents)
@@ -38,28 +38,30 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include("AAA111")
     end
 
-    it "lists only paid CE licences by default, with a toggle to show every one" do
+    it "lists only CE licences paid or intending to pay by default, with a toggle to show every one" do
       log_ce_time!
       unpaid = create(:professional_license, person: registration.registrant, number: "UNPAID1")
       create(:continuing_education_registration, event_registration: registration, professional_license: unpaid)
+      intending = create(:professional_license, person: registration.registrant, number: "INTENDS1")
+      create(:continuing_education_registration, event_registration: registration, professional_license: intending, intends_to_pay: true)
 
       get attendance_event_path(event, ce: "true")
-      expect(response.body).to include("AAA111")
+      expect(response.body).to include("AAA111", "INTENDS1")
       expect(response.body).not_to include("UNPAID1")
       toggle = Capybara.string(response.body).find("nav[aria-label='CE payment filter']")
-      expect(toggle).to have_link("Paid (1)", href: attendance_event_path(event, ce: "true"))
-      expect(toggle).to have_link("All CE (2)", href: attendance_event_path(event, ce: "true", ce_payment: "all"))
+      expect(toggle).to have_link("Paid or intends to pay (2)", href: attendance_event_path(event, ce: "true"))
+      expect(toggle).to have_link("All CE (3)", href: attendance_event_path(event, ce: "true", ce_payment: "all"))
 
       get attendance_event_path(event, ce: "true", ce_payment: "all")
       expect(response.body).to include("AAA111", "UNPAID1")
     end
 
-    it "says when nobody has paid for CE yet" do
+    it "says when nobody has paid or intends to pay for CE yet" do
       license = create(:professional_license, person: registration.registrant, number: "UNPAID1")
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
 
       get attendance_event_path(event, ce: "true")
-      expect(response.body).to include("No one has paid for CE credit on this event yet.")
+      expect(response.body).to include("No one has paid or said they intend to pay for CE credit on this event yet.")
     end
 
     it "renders the generic attendance report without CE scoping" do
