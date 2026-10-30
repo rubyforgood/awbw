@@ -38,14 +38,14 @@
 
     <% turn_off_tooltip = "Stops automatic charges. Renewal and already-issued invoices are unchanged." %>
     <% manage_card_tooltip = "Opens Stripe to update the saved card." %>
-    <% autopay_ready = autopay && has_card %>
+    <% autopay_ready = membership.autopay_on? && has_card %>
     <% subscribe_tooltip =
       if has_card
         autopay_invoice ? "Turns on automatic payments and charges any issued invoice." : "Turns on automatic payments for future invoices."
       elsif autopay_invoice
-        autopay ? "Saves your card and pays the issued invoice now. Automatic payments are already on." : "Saves your card, pays the issued invoice now, and turns on automatic payments."
+        membership.autopay_on? ? "Saves your card and pays the issued invoice now. Automatic payments are already on." : "Saves your card, pays the issued invoice now, and turns on automatic payments."
       else
-        autopay ? "Saves your card. Automatic payments are already on." : "Saves your card and turns on automatic payments for future invoices."
+        membership.autopay_on? ? "Saves your card. Automatic payments are already on." : "Saves your card and turns on automatic payments for future invoices."
       end %>
 
     <% if invoices&.any? %>
@@ -83,7 +83,7 @@
             </p>
 
             <% if membership.renewal_off? %>
-              <% if autopay && has_card %>
+              <% if membership.autopay_on? && has_card %>
                 <p class="text-sm text-gray-700">Automatic payments are on for any invoice already issued.</p>
                 <div class="flex flex-wrap items-center gap-2">
                   <%= button_to "Turn off automatic payments", membership_autopayments_path(membership),
@@ -91,7 +91,7 @@
                         title: turn_off_tooltip,
                         data: { turbo_confirm: "Turn off automatic payments for invoices already issued?" } %>
                 </div>
-              <% elsif autopay %>
+              <% elsif membership.autopay_on? %>
                 <p class="text-sm text-gray-700">Automatic payments are marked on, but no card is on file. Existing invoices will need to be paid manually.</p>
                 <div class="flex flex-wrap items-center gap-2">
                   <%= button_to "Turn off automatic payments", membership_autopayments_path(membership),
@@ -99,7 +99,7 @@
                         title: turn_off_tooltip %>
                 </div>
               <% end %>
-            <% elsif autopay && has_card %>
+            <% elsif membership.autopay_on? && has_card %>
               <div class="flex flex-wrap items-center gap-2">
                 <%= button_to "Manage card", person_billing_portal_path(person),
                       class: button_classes(:secondary_outline, size: :sm),
@@ -109,7 +109,7 @@
                       title: turn_off_tooltip,
                       data: { turbo_confirm: "Turn off automatic card payments? Your membership will still renew, and you'll receive invoices to pay manually." } %>
               </div>
-            <% elsif autopay %>
+            <% elsif membership.autopay_on? %>
               <p class="text-sm text-gray-700">Automatic payments need a card.</p>
               <div class="flex flex-wrap items-center gap-2">
                 <%= render "people/autopay_subscribe", membership: membership, tooltip: subscribe_tooltip %>

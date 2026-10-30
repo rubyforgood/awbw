@@ -21,7 +21,6 @@ class MembershipsController < ApplicationController
     authorize! @membership
     @membership_invoices = @membership.membership_invoices.includes(:allocations, :charge_attempts).to_a
     @next_invoice = @membership.next_invoice
-    @autopay_on = @membership.autopay_on?
     @has_card = @person.stripe_customer&.payment_methods&.exists? || false
     @renewal_blocked_reason = @membership.renewal_blocked_reason
     @deletable = @membership.deletable?

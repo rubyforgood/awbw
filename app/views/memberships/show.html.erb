@@ -119,7 +119,7 @@
       </div>
     </dl>
 
-    <% if admin && @autopay_on %>
+    <% if admin && membership.autopay_on? %>
       <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-4">
         <span class="text-xs tracking-wide text-gray-500 uppercase">
           Automatic payments
