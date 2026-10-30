@@ -294,14 +294,15 @@
         gone by then, but the sheets are how a registrant fills in what they missed. %>
     <% if @event.ce_timesheets_enabled? && attendance_sheets.any? && sheet.any_days? %>
       <section id="attendance" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
-        <div class="flex flex-wrap items-center justify-between gap-2">
+        <% sign_in_heading = capture do %>
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Training sign-in</h2>
           <%# Admin-only jump to the event's attendance report, mirroring the
               "Edit CE registration" chip up top. %>
           <% if allowed_to?(:attendance?, @event) && !sample_preview? %>
             <%= render "events/callouts/admin_edit_link", path: attendance_event_path(@event, ce: "true"), label: "Attendance report" %>
           <% end %>
-        </div>
+        <% end %>
+        <% sign_in_body = capture do %>
 
         <%# A day left open: its own prompt above today's controls, naming the day and
             the time it will be recorded as, so closing it can't be mistaken for
@@ -404,6 +405,25 @@
               <span>You can add or correct your times once your timesheet opens on <span class="font-medium text-gray-900"><%= ce_timesheet_time(sheet.opens_at) %></span>.</span>
             <% end %>
           </p>
+        <% end %>
+        <% end %>
+
+        <%# Signing in is done once the post-training form is open, so the sheet folds
+            to its total and the form comes first. Still expandable to fix a time. %>
+        <% if ce_form_open %>
+          <details class="group/sign-in">
+            <summary class="flex cursor-pointer list-none flex-wrap items-center gap-2 select-none [&::-webkit-details-marker]:hidden">
+              <%= sign_in_heading %>
+              <span class="ml-auto text-sm font-medium text-gray-900 tabular-nums"><%= attendance_duration_label(sheet.total_minutes) %> logged</span>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/sign-in:rotate-180" aria-hidden="true"></i>
+            </summary>
+            <%= sign_in_body %>
+          </details>
+        <% else %>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <%= sign_in_heading %>
+          </div>
+          <%= sign_in_body %>
         <% end %>
       </section>
     <% end %>

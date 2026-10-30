@@ -75,6 +75,38 @@ RSpec.describe "Events::Callouts CE form", type: :request do
       expect(Nokogiri::HTML(response.body).css("summary").map(&:text).join).not_to include("Details")
     end
 
+    context "with the CE paid and a day signed in and out" do
+      before do
+        registration.continuing_education_registrations.first.update!(cost_cents: 0)
+        registration.event_attendance_time_entries.create!(signed_in_at: Time.zone.local(2026, 7, 23, 9, 0),
+          signed_out_at: Time.zone.local(2026, 7, 23, 16, 0))
+      end
+
+      def sign_in_toggle
+        Nokogiri::HTML(response.body).at_css("#attendance details")
+      end
+
+      it "folds the training sign-in to its total while the form is open" do
+        travel_to Time.zone.local(2026, 7, 24, 10, 0)
+        get registration_ce_path(registration.slug)
+
+        expect(sign_in_toggle).to be_present
+        expect(sign_in_toggle["open"]).to be_nil
+        expect(sign_in_toggle.at_css("summary").text).to include("Training sign-in").and include("7h 0m logged")
+      end
+
+      it "leaves the training sign-in unfolded once the form is submitted" do
+        travel_to Time.zone.local(2026, 7, 24, 10, 0)
+        post registration_callout_form_submit_path(registration.slug, callout, form),
+          params: { callout_form: { form_fields: { field.id.to_s => "Great" } } }
+
+        get registration_ce_path(registration.slug)
+
+        expect(response.body).to include("Training sign-in")
+        expect(sign_in_toggle).to be_nil
+      end
+    end
+
     it "hides the step during the training" do
       travel_to Time.zone.local(2026, 7, 23, 10, 0)
       get registration_ce_path(registration.slug)
