@@ -19,6 +19,21 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
     end
   end
 
+  describe "#payment_access_granted?" do
+    let(:ce) { create(:continuing_education_registration, cost_cents: 15_000) }
+
+    it "is false while the balance is due" do
+      expect(ce.payment_access_granted?).to be(false)
+    end
+
+    it "is true when it intends to pay, while the status still reads Due" do
+      ce.update!(intends_to_pay: true)
+
+      expect(ce.payment_access_granted?).to be(true)
+      expect(ce.payment_status_label).to eq("Due")
+    end
+  end
+
   describe "validations" do
     it "rejects a license that belongs to someone other than the registrant" do
       registration = create(:event_registration)
