@@ -75,6 +75,14 @@
                     class: button_classes(:danger_outline, size: :sm),
                     title: "Cancels this PaymentIntent in Stripe. No money has moved.",
                     data: { turbo_confirm: "Cancel this PaymentIntent in Stripe? If the member is mid-authentication, their payment will fail. The invoice can then be retried." } %>
+              <%= button_to "Clear missing PaymentIntent",
+                    membership_invoice_reconciliation_path(
+                      membership_invoice, operation: "clear_missing_intent",
+                      attempt_id: attempt.id, **return_params
+                    ),
+                    class: button_classes(:secondary_outline, size: :sm),
+                    title: "Clears a PaymentIntent Stripe no longer has. A live PaymentIntent is refused.",
+                    data: { turbo_confirm: "Only use this if Stripe says the PaymentIntent no longer exists. The attempt will be marked failed and the invoice can retry." } %>
             <% elsif attempt.payment_intent_id.present? %>
               <%= button_to "Reconcile with Stripe",
                     membership_invoice_reconciliation_path(
@@ -91,6 +99,14 @@
                     class: button_classes(:danger_outline, size: :sm),
                     title: "Cancels this PaymentIntent in Stripe. If it already succeeded, it will be reconciled instead.",
                     data: { turbo_confirm: "Cancel this PaymentIntent in Stripe? If it already succeeded, Stripe will refuse and the attempt will be reconciled instead. This does not move money." } %>
+              <%= button_to "Clear missing PaymentIntent",
+                    membership_invoice_reconciliation_path(
+                      membership_invoice, operation: "clear_missing_intent",
+                      attempt_id: attempt.id, **return_params
+                    ),
+                    class: button_classes(:secondary_outline, size: :sm),
+                    title: "Clears a PaymentIntent Stripe no longer has. A live PaymentIntent is refused.",
+                    data: { turbo_confirm: "Only use this if Stripe says the PaymentIntent no longer exists. The attempt will be marked failed and the invoice can retry." } %>
             <% else %>
               <span class="text-xs text-gray-500">No PaymentIntent was stored for this attempt.</span>
               <% if attempt.manual_failure_allowed? %>

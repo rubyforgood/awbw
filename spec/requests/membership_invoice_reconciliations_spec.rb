@@ -153,6 +153,20 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
     expect(response.body).to include("No Stripe payments found for this invoice")
   end
 
+  it "clears a missing PaymentIntent and fails the attempt" do
+    attempt.update!(status: "unknown", payment_intent_id: "pi_missing")
+    allow(Pay::Payment).to receive(:from_id)
+      .and_raise(Stripe::InvalidRequestError.new("No such payment_intent", nil))
+
+    post membership_invoice_reconciliation_path(invoice,
+      operation: "clear_missing_intent", attempt_id: attempt.id)
+
+    expect(response).to redirect_to(membership_invoice_reconciliation_path(invoice))
+    expect(flash[:notice]).to match(/Cleared the missing PaymentIntent/)
+    expect(attempt.reload).to be_failed
+    expect(attempt.payment_intent_id).to be_nil
+  end
+
   it "applies a manually entered PaymentIntent and resolves the attempt" do
     pay_charge = manual_payment
     post membership_invoice_reconciliation_path(invoice,

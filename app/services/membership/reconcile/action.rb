@@ -1,5 +1,8 @@
 class Membership::Reconcile::Action
-  OPERATIONS = %w[reconcile_attempt check_checkout clear_checkout apply_payment use_intent fail_attempt].freeze
+  OPERATIONS = %w[
+    reconcile_attempt check_checkout clear_checkout
+    apply_payment use_intent fail_attempt clear_missing_intent
+  ].freeze
 
   Result = Data.define(:status, :message, :errors) do
     def success? = errors.blank?
@@ -30,6 +33,8 @@ class Membership::Reconcile::Action
       apply_intent
     when "fail_attempt"
       with_attempt { |attempt| Membership::Reconcile::FailAttempt.call(attempt:) }
+    when "clear_missing_intent"
+      with_attempt { |attempt| Membership::Reconcile::ClearMissingIntent.call(attempt:) }
     end
   end
 
