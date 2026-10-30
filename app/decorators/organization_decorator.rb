@@ -248,7 +248,7 @@ class OrganizationDecorator < ApplicationDecorator
     badges << badge("Legacy Organization (10+ years)", :legacy_facilitator) if years && years >= 10
     badges << badge("Seasoned Organization (3-10 years)", :seasoned_facilitator) if years && years.between?(3, 9)
     badges << badge("New Organization (<3 years)", :new_facilitator) if years && years < 3
-    badges << badge("Workshop Author", :workshops) if workshops.any?
+    badges << badge("Workshop Author", :workshops) if credited_workshops.exists?
     badges << badge("Workshop Logs", :workshop_logs) if workshop_logs.any?
     badges
   end

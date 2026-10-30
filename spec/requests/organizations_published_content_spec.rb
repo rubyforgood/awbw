@@ -1,0 +1,121 @@
+require "rails_helper"
+
+RSpec.describe "Organization profile published content", type: :request do
+  let(:admin) { create(:user, :admin) }
+  let(:viewer) { create(:user) }
+  let(:organization) { create(:organization) }
+  let(:facilitator) { create(:person) }
+
+  # An active affiliation publishes the profile so non-admins can view it.
+  before { create(:affiliation, organization: organization, person: facilitator) }
+
+  describe "Stories" do
+    it "lists published stories linked to the organization" do
+      create(:story, :published, organization: organization, title: "Linked Story")
+      create(:story, :published, title: "Other Org Story")
+      sign_in viewer
+
+      get organization_path(organization)
+
+      expect(response.body).to include("Linked Story")
+      expect(response.body).not_to include("Other Org Story")
+    end
+
+    it "hides unpublished stories from non-admins but not admins" do
+      create(:story, :unpublished, organization: organization, title: "Draft Story")
+
+      sign_in viewer
+      get organization_path(organization)
+      expect(response.body).not_to include("Draft Story")
+
+      sign_in admin
+      get organization_path(organization)
+      expect(response.body).to include("Draft Story")
+    end
+
+    it "serves later pages through the section frame" do
+      create(:story, :published, organization: organization, title: "Paged Story")
+      sign_in viewer
+
+      get organization_path(organization, section: "stories"),
+          headers: { "Turbo-Frame" => "organization_stories_section" }
+
+      expect(response.body).to include("organization_stories_section")
+      expect(response.body).to include("Paged Story")
+    end
+
+    it "refuses the section frame to non-admins when the org hides stories" do
+      organization.update!(profile_show_stories: false)
+      create(:story, :published, organization: organization, title: "Hidden Story")
+      sign_in viewer
+
+      get organization_path(organization, section: "stories"),
+          headers: { "Turbo-Frame" => "organization_stories_section" }
+
+      expect(response.body).not_to include("Hidden Story")
+    end
+  end
+
+  describe "Workshops authored" do
+    it "lists published workshops credited to an affiliated person" do
+      create(:workshop, published: true, author: facilitator, title: "Authored Workshop")
+      create(:workshop, published: true, created_by: create(:user, person: facilitator), title: "Legacy Workshop")
+      create(:workshop, published: true, author: create(:person), title: "Outside Workshop")
+      sign_in viewer
+
+      get organization_path(organization)
+
+      expect(response.body).to include("Authored Workshop")
+      expect(response.body).to include("Legacy Workshop")
+      expect(response.body).not_to include("Outside Workshop")
+    end
+
+    it "hides unpublished workshops from non-admins" do
+      create(:workshop, published: false, author: facilitator, title: "Draft Workshop")
+      sign_in viewer
+
+      get organization_path(organization)
+
+      expect(response.body).not_to include("Draft Workshop")
+    end
+
+    it "hides anonymously credited workshops from non-admins but not admins" do
+      anonymous = create(:person, :anonymous_contributions)
+      create(:affiliation, organization: organization, person: anonymous)
+      create(:workshop, published: true, author: anonymous, title: "Profile Anonymous Workshop")
+      create(:workshop, published: true, author: facilitator, author_credit_preference: "anonymous", title: "Item Anonymous Workshop")
+
+      sign_in viewer
+      get organization_path(organization)
+      expect(response.body).not_to include("Profile Anonymous Workshop")
+      expect(response.body).not_to include("Item Anonymous Workshop")
+
+      sign_in admin
+      get organization_path(organization)
+      expect(response.body).to include("Profile Anonymous Workshop")
+      expect(response.body).to include("Item Anonymous Workshop")
+    end
+  end
+
+  describe "Associated records card" do
+    let(:member) { create(:user, person: facilitator) }
+
+    it "shows to members while the workshop logs toggle is on" do
+      sign_in member
+      get organization_path(organization)
+      expect(response.body).to include("Associated records")
+    end
+
+    it "hides from members but not admins when the toggle is off" do
+      organization.update!(profile_show_workshop_logs: false)
+
+      sign_in member
+      get organization_path(organization)
+      expect(response.body).not_to include("Associated records")
+
+      sign_in admin
+      get organization_path(organization)
+      expect(response.body).to include("Associated records")
+    end
+  end
+end

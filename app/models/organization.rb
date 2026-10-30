@@ -39,6 +39,7 @@ class Organization < ApplicationRecord
   end
   has_many :reports
   has_many :workshop_logs
+  has_many :stories
   has_many :grants, as: :funder, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
@@ -46,7 +47,6 @@ class Organization < ApplicationRecord
   # has_many through
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
-  has_many :workshops, through: :users
 
   # Asset associations
   has_one_attached :logo, dependent: :purge do |attachable|
@@ -354,6 +354,14 @@ class Organization < ApplicationRecord
     return affiliations.any?(&:active?) if affiliations.loaded?
 
     affiliations.active.exists?
+  end
+
+  # Workshops credited to anyone ever affiliated here — the explicit author, or the
+  # legacy created_by fallback when no author is named (AuthorCreditable#credited_to_person).
+  def credited_workshops
+    person_ids = affiliations.select(:person_id)
+    Workshop.where(author_id: person_ids)
+            .or(Workshop.where(author_id: nil, created_by_id: User.where(person_id: person_ids).select(:id)))
   end
 
   # Sectors and age groups are never entered on an org — they roll up from the

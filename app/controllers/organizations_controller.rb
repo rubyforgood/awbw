@@ -2,6 +2,9 @@ class OrganizationsController < ApplicationController
   include AhoyTracking, Dedupable
   before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
 
+  # The "Published content" sections, each gated by its profile_show_* flag.
+  PUBLISHED_SECTIONS = %w[workshops stories].freeze
+
   def index
     authorize!
 
@@ -44,7 +47,21 @@ class OrganizationsController < ApplicationController
       return render partial: "organizations/sections/events", locals: { organization: @organization, events: events }
     end
 
+    # Later pages of the published-content sections swap in through their frames.
+    if turbo_frame_request? && PUBLISHED_SECTIONS.include?(params[:section])
+      section = params[:section]
+      # A section the org hid stays hidden from a crafted ?section= request.
+      authorize! @organization, to: :manage? unless @organization.public_send(:"profile_show_#{section}?")
+      records = published_section_records(section, page: params[:page])
+      return render partial: "organizations/sections/#{section}", locals: { section.to_sym => records }
+    end
+
     track_view(@organization)
+
+    PUBLISHED_SECTIONS.each do |section|
+      next unless @organization.public_send(:"profile_show_#{section}?")
+      instance_variable_set(:"@published_#{section}", published_section_records(section, page: 1))
+    end
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
     @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
@@ -200,6 +217,27 @@ class OrganizationsController < ApplicationController
   end
 
   private
+
+  def published_section_records(section, page:)
+    records = case section
+    when "workshops"
+      openly_credited(authorized_scope(@organization.credited_workshops.with_author_credit)).includes(created_by: :person)
+    when "stories"
+      authorized_scope(@organization.stories.with_author_credit)
+    end
+    records.includes(:primary_asset).order(created_at: :desc).paginate(page: page, per_page: 8)
+  end
+
+  # Non-admins don't see workshops credited anonymously — listing them here would
+  # tie an anonymous author to this organization.
+  def openly_credited(workshops)
+    return workshops if allowed_to?(:manage?, Organization)
+
+    anonymous_people = Person.where(anonymous_contributions: true).select(:id)
+    workshops = workshops.credited_openly
+    workshops.where.not(author_id: anonymous_people)
+             .or(workshops.where(author_id: nil).where.not(created_by_id: User.where(person_id: anonymous_people).select(:id)))
+  end
 
   def set_organization
     @organization = Organization.includes(

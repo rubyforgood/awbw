@@ -1,0 +1,18 @@
+<%= turbo_frame_tag "organization_workshops_section" do %>
+  <% if workshops.any? %>
+    <div class="grid grid-cols-1 gap-6 blur-on-submit sm:grid-cols-2 lg:grid-cols-3">
+      <% admin = allowed_to?(:manage?, Organization) %>
+      <% workshops.each do |workshop| %>
+        <% author = workshop.author_person %>
+        <%# Only admins get anonymous credits here, so the marker is theirs alone. %>
+        <%= render "people/show_card", record: workshop.decorate, title_font_size: "text-sm",
+                   anonymous: admin && author.present? && workshop.credit_anonymous?(author) %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate workshops, params: { section: "workshops" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No workshops authored yet.</p>
+  <% end %>
+<% end %>

@@ -237,27 +237,14 @@
           <% if @organization.profile_show_workshops? %>
             <div>
               <h3 class="mb-3 font-display text-xl text-gray-900">Workshops authored</h3>
-              <% if @organization.workshops.any? %>
-                <% @organization.workshops.each do |workshop| %>
-                  <%= link_to workshop.name, workshop_path(workshop), class: button_classes(:secondary_outline) %>
-                <% end %>
-              <% else %>
-                <p class="text-gray-500 italic">No workshops authored yet.</p>
-              <% end %>
+              <%= render "organizations/sections/workshops", workshops: @published_workshops %>
             </div>
           <% end %>
           <!-- Stories authored -->
           <% if @organization.profile_show_stories? %>
             <div>
               <h3 class="mb-3 font-display text-xl text-gray-900">Stories</h3>
-              <%# stories = @organization.stories_as_creator + @organization.stories_as_spotlighted_organization %>
-              <%# if stories.any? %>
-              <%# stories.each do |story| %>
-                <%#= link_to story.title, story_path(story), class: button_classes(:secondary_outline) %>
-                <%# end %>
-                <%# else %>
-                <p class="text-gray-500 italic">No stories yet.</p>
-                <%# end %>
+              <%= render "organizations/sections/stories", stories: @published_stories %>
             </div>
           <% end %>
         </div>
