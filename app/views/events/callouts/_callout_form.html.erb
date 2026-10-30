@@ -64,7 +64,7 @@
             <% if prefill.any? %>
               We filled in your name and email from your registration. To submit this form anonymously, clear your name and email.
             <% else %>
-              This form is anonymous — your answers aren't linked to your name<%= " unless you fill in your first name, last name, and email" if form.asks_identity? %>.
+              This form is anonymous — your answers aren't linked to your profile<%= " unless you fill in your first name, last name, and email" if form.asks_identity? %>.
             <% end %>
             Once submitted, anonymous answers can't be changed.
           </span>

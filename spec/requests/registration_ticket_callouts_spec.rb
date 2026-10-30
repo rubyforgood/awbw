@@ -158,7 +158,7 @@ RSpec.describe "Callout inline form", type: :request do
     it "tells the registrant their answers aren't tied to their name" do
       get registration_callout_form_path(registration.slug, callout)
 
-      expect(response.body).to include("linked to your name")
+      expect(response.body).to include("linked to your profile")
     end
 
     it "stays anonymous when the registrant is logged in" do
