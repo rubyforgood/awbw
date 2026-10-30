@@ -11,12 +11,6 @@
       back_path = sample_preview? ? sample_ce_event_path(@event) : registration_ce_path(@event_registration.slug)
       back_label = "Back to CE credit"
     end
-    license = @ce_registration.professional_license
-    license_label = license&.number_known? ? license.name : "—"
-    hours = @ce_registration.hours.to_d
-    hours_label = hours == hours.to_i ? hours.to_i : hours
-    facilitator_names = @event.facilitator_event_staffs.map { |staff| staff.person.full_name }
-    issued_on = @ce_registration.certificate_sent_at&.to_date || Date.current
   %>
 
   <% content_for :head do %>
@@ -47,15 +41,12 @@
   </div>
 
   <div class="px-4 py-6 sm:px-8 <%= @frame_file.present? ? "print:p-0" : "print:p-[0.4in]" %>">
-    <%= render "events/callouts/ce_confirmation_certificate",
+    <%= render "events/callouts/ce_certificate_document",
           event: event,
+          ce_registration: @ce_registration,
           recipient: @event_registration.registrant.full_name,
-          license_label: license_label,
-          hours_label: hours_label,
-          facilitator_names: facilitator_names,
           signature_file: @signature_file,
-          frame_file: @frame_file,
-          issued_on: issued_on %>
+          frame_file: @frame_file %>
   </div>
 <% else %>
   <%= render layout: "events/callouts/callout_page", locals: { title: "CE confirmation of attendance" } do %>
