@@ -1,0 +1,8 @@
+name: "One sign-in-opens notice on the CE page"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-29
+action_path: "/registration/sample"
+summary: >-
+  Before training sign-in opens, the CE page shows a single full-width notice
+  naming when sign-in opens, instead of two notices repeating the same time.
