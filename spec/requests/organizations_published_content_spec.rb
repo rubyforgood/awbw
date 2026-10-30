@@ -215,6 +215,28 @@ RSpec.describe "Organization profile published content", type: :request do
       expect(response.body).not_to include("Submitted content")
     end
 
+    it "pages workshop-log groups through their frame, for members only" do
+      # Older than a page of newer groups, so "Logged Workshop" lands on page 2.
+      WorkshopLog.where(workshop: workshop).update_all(workshop_held_on: 1.month.ago)
+      create_list(:workshop, OrganizationServices::WorkshopLogSummary::GROUPS_PER_PAGE).each do |extra|
+        create(:workshop_log, organization: organization, workshop: extra, workshop_held_on: Date.current)
+      end
+      frame_page_two = -> {
+        get organization_path(organization, section: "workshop_logs", page: 2),
+            headers: { "Turbo-Frame" => "organization_workshop_logs_section" }
+      }
+
+      sign_in member
+      get organization_path(organization)
+      expect(submitted_card).to have_link(href: organization_path(organization, section: "workshop_logs", page: 2))
+      frame_page_two.call
+      expect(response.body).to include("organization_workshop_logs_section", "Logged Workshop")
+
+      sign_in viewer
+      frame_page_two.call
+      expect(response.body).not_to include("Logged Workshop")
+    end
+
     it "hides workshop logs from members but not admins when the toggle is off" do
       organization.update!(profile_show_workshop_logs: false)
 

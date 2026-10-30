@@ -1,6 +1,7 @@
 class OrganizationsController < ApplicationController
   include AhoyTracking, Dedupable
-  before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
+  before_action :set_organization, only: [ :edit, :update, :destroy, :populations_served ]
+  before_action :set_profile_organization, only: :show
 
   # The "Published content" sections, in display order.
   PUBLISHED_SECTIONS = %w[workshops workshop_variations resources stories community_news].freeze
@@ -57,6 +58,12 @@ class OrganizationsController < ApplicationController
       return render partial: "organizations/sections/events", locals: { organization: @organization, events: events }
     end
 
+    if turbo_frame_request? && params[:section] == "workshop_logs"
+      authorize! @organization, to: :show_workshop_logs?
+      groups = OrganizationServices::WorkshopLogSummary.new(@organization).groups(page: params[:page])
+      return render partial: "organizations/sections/workshop_log_groups", locals: { organization: @organization, groups: groups }
+    end
+
     # Later pages of the paged sections swap in through their frames.
     # The section name comes from the constants, never the param, so the render path is fixed.
     section = (PUBLISHED_SECTIONS + SUBMITTED_SECTIONS).find { |name| name == params[:section] }
@@ -77,9 +84,8 @@ class OrganizationsController < ApplicationController
 
     @submitted_sections = loaded_sections(SUBMITTED_SECTIONS)
     if allowed_to?(:show_workshop_logs?, @organization)
-      @workshop_logs = @organization.affiliated_workshop_logs
-                                    .includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets)
-                                    .order(workshop_held_on: :desc, created_at: :desc).to_a
+      @workshop_log_summary = OrganizationServices::WorkshopLogSummary.new(@organization)
+      @workshop_log_summary = nil if @workshop_log_summary.totals[:logs].zero?
     end
   end
 
@@ -267,8 +273,18 @@ class OrganizationsController < ApplicationController
       :organization_status, :windows_type, :addresses, :contact_methods,
       :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
-      affiliations: { person: [ :user, :affiliations, { avatar_attachment: :blob }, *Organization::PEOPLE_TAGGINGS ] }
+      affiliations: { person: [ :user, :affiliations, *Organization::PEOPLE_TAGGINGS ] }
     ).find(params[:id])
+  end
+
+  # The profile reads every affiliation's dates (affiliated/facilitators since, program
+  # status) but shows only active facilitators, so it loads people for those alone.
+  def set_profile_organization
+    @organization = Organization.includes(:organization_status, :addresses, :contact_methods, :affiliations).find(params[:id])
+    ActiveRecord::Associations::Preloader.new(
+      records: @organization.affiliations.select(&:active?),
+      associations: { person: [ :user, :affiliations, { avatar_attachment: :blob }, *Organization::PEOPLE_TAGGINGS ] }
+    ).call
   end
 
   # Strong parameters

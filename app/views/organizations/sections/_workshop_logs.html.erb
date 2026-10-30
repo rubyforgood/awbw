@@ -1,23 +1,12 @@
 <%# The org's workshop logs grouped by workshop, like the person profile's. Only
     rendered when there are logs. %>
-<%# locals: (organization:, workshop_logs:) %>
-<% sum = ->(*columns) { workshop_logs.sum { |log| columns.sum { |column| log.public_send(column).to_i } } } %>
-<% adults = sum.(:adults_first_time, :adults_ongoing) %>
-<% teens = sum.(:teens_first_time, :teens_ongoing) %>
-<% children = sum.(:children_first_time, :children_ongoing) %>
-<% grouped = workshop_logs.group_by { |log| log.workshop_id || log.external_workshop_title } %>
+<%# locals: (organization:, summary:) %>
+<% totals = summary.totals %>
 <div class="mb-4 flex flex-wrap items-center gap-3 text-sm text-gray-600">
-  <span class="font-semibold text-gray-800">Total participants: <%= adults + teens + children %></span>
-  <span>Adults: <%= adults %></span>
-  <span>Teens: <%= teens %></span>
-  <span>Children: <%= children %></span>
-  <span>Unique workshops: <%= grouped.size %></span>
+  <span class="font-semibold text-gray-800">Total participants: <%= totals[:adults] + totals[:teens] + totals[:children] %></span>
+  <span>Adults: <%= totals[:adults] %></span>
+  <span>Teens: <%= totals[:teens] %></span>
+  <span>Children: <%= totals[:children] %></span>
+  <span>Unique workshops: <%= totals[:workshops] %></span>
 </div>
-<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-  <% grouped.each_value do |logs| %>
-    <% first_log = logs.first %>
-    <%# Logs come newest first, so groups land in order of their latest log. %>
-    <% title_path = first_log.workshop_id? ? workshop_logs_path(organization_id: organization.id, workshop_id: first_log.workshop_id) : workshop_log_path(first_log) %>
-    <%= render "people/sections/workshop_log_grouped_card", logs: logs, title_path: title_path %>
-  <% end %>
-</div>
+<%= render "organizations/sections/workshop_log_groups", organization: organization, groups: summary.groups(page: 1) %>
