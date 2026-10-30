@@ -61,6 +61,18 @@ RSpec.describe "Organization profile published content", type: :request do
       expect(response.body).to include("Draft Story")
     end
 
+    # The first page renders with the profile, so its links must carry the section
+    # themselves — the request that drew them had none.
+    it "points the first page's pagination links at the section frame" do
+      9.times { create(:story, :published, organization: organization) }
+      sign_in viewer
+
+      get organization_path(organization)
+
+      links = Capybara.string(response.body).find("#organization_stories_section")
+      expect(links).to have_link(href: organization_path(organization, section: "stories", page: 2))
+    end
+
     it "serves later pages through the section frame" do
       create(:story, :published, organization: organization, title: "Paged Story")
       sign_in viewer

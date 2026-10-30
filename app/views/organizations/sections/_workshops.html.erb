@@ -10,7 +10,7 @@
       <% end %>
     </div>
     <div class="mt-6 flex justify-center">
-      <%= tailwind_paginate workshops, params: { section: "workshops" } %>
+      <%= tailwind_paginate workshops, url_for_page: ->(page) { organization_path(organization, section: "workshops", page: page) } %>
     </div>
   <% else %>
     <p class="text-gray-500 italic">No workshops authored yet.</p>

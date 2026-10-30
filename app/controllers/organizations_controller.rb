@@ -54,7 +54,7 @@ class OrganizationsController < ApplicationController
       # A section the org hid stays hidden from a crafted ?section= request.
       authorize! @organization, to: :manage? unless @organization.public_send(:"profile_show_#{section}?")
       records = published_section_records(section, page: params[:page])
-      return render partial: "organizations/sections/#{section}", locals: { section.to_sym => records }
+      return render partial: "organizations/sections/#{section}", locals: { organization: @organization, section.to_sym => records }
     end
 
     track_view(@organization)

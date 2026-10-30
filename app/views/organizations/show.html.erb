@@ -238,14 +238,14 @@
           <% if @published_workshops.present? %>
             <div>
               <h3 class="mb-3 font-display text-xl text-gray-900">Workshops authored</h3>
-              <%= render "organizations/sections/workshops", workshops: @published_workshops %>
+              <%= render "organizations/sections/workshops", organization: @organization, workshops: @published_workshops %>
             </div>
           <% end %>
           <!-- Stories authored -->
           <% if @published_stories.present? %>
             <div>
               <h3 class="mb-3 font-display text-xl text-gray-900">Stories</h3>
-              <%= render "organizations/sections/stories", stories: @published_stories %>
+              <%= render "organizations/sections/stories", organization: @organization, stories: @published_stories %>
             </div>
           <% end %>
         </div>

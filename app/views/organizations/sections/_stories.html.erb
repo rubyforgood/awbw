@@ -6,7 +6,7 @@
       <% end %>
     </div>
     <div class="mt-6 flex justify-center">
-      <%= tailwind_paginate stories, params: { section: "stories" } %>
+      <%= tailwind_paginate stories, url_for_page: ->(page) { organization_path(organization, section: "stories", page: page) } %>
     </div>
   <% else %>
     <p class="text-gray-500 italic">No stories yet.</p>
