@@ -67,9 +67,9 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def destroy
     authorize! @ce_registration
-    if @ce_registration.allocations.exists?
+    unless @ce_registration.deletable?
       redirect_to edit_continuing_education_registration_path(@ce_registration, **helpers.ce_registration_return_params),
-        alert: "Can't remove CE — it has payments. Revert the payment first.", status: :see_other
+        alert: @ce_registration.decorate.deletion_blocked_reason, status: :see_other
       return
     end
 

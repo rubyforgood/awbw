@@ -85,11 +85,18 @@
 
     <%# ---- Footer actions ---- %>
     <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
-      <%= button_to continuing_education_registration_path(@ce_registration, **ce_registration_return_params),
-            method: :delete, form: { data: { turbo_confirm: "Remove this CE registration?" } },
-            class: button_classes(:danger_outline) do %>
-        <i class="fa-solid fa-trash-can"></i>
-        Delete
+      <% if @ce_registration.deletable? %>
+        <%= button_to continuing_education_registration_path(@ce_registration, **ce_registration_return_params),
+              method: :delete, form: { data: { turbo_confirm: "Remove this CE registration?" } },
+              class: button_classes(:danger_outline) do %>
+          <i class="fa-solid fa-trash-can"></i>
+          Delete
+        <% end %>
+      <% else %>
+        <span class="inline-flex max-w-md items-start gap-2 text-sm text-gray-500">
+          <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-gray-400"></i>
+          <%= @ce_registration.decorate.deletion_blocked_reason %>
+        </span>
       <% end %>
 
       <div class="ml-auto flex items-center gap-3">
