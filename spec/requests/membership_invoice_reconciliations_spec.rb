@@ -68,6 +68,15 @@ RSpec.describe "Membership invoice reconciliation", type: :request do
     expect(attempt.reload).not_to be_failed
   end
 
+  it "offers to apply a metadata-linked payment without a Stripe lookup" do
+    create(:external_processor_payment, person:, amount_cents: 1_000,
+      amount_cents_remaining: 1_000, metadata: { "membership_invoice_id" => invoice.id })
+
+    get membership_invoice_reconciliation_path(invoice)
+
+    expect(response.body).to include("Apply $10")
+  end
+
   it "shows every unresolved attempt, not just the last seven" do
     invoice.charge_attempts.create!(attempt_number: 1, status: "unknown",
       amount_cents: 1_000, attempted_at: 8.hours.ago,

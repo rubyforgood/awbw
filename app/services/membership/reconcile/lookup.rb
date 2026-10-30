@@ -28,8 +28,7 @@ class Membership::Reconcile::Lookup
   end
 
   def call
-    local_payments = []
-    local_payments = @invoice.stripe_payments_with_remaining.includes(:allocations).to_a
+    local_payments = local_payments_for_invoice
 
     customer = @invoice.person.stripe_customer
     return failure("This member has no Stripe customer.", local_payments:) if customer.blank?
@@ -68,6 +67,15 @@ class Membership::Reconcile::Lookup
   end
 
   private
+
+  def local_payments_for_invoice
+    attempt_linked = @invoice.stripe_payments_with_remaining.includes(:allocations).to_a
+    metadata_linked = ExternalProcessorPayment.membership_originated
+      .where(amount_cents_remaining: 1..)
+      .select { |payment| MembershipPaymentLink.new(payment).invoice == @invoice }
+
+    (attempt_linked + metadata_linked).uniq(&:id)
+  end
 
   def candidate_for(intent, payment)
     cid = charge_id(intent)
