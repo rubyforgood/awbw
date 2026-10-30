@@ -185,6 +185,16 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         issuing_state: "CA", expires_on: Date.new(2027, 1, 31))
     end
 
+    it "saves the intends-to-pay toggle" do
+      patch continuing_education_registration_path(ce_registration),
+            params: { continuing_education_registration: { hours: "6", intends_to_pay: "1" } }
+      expect(ce_registration.reload.intends_to_pay).to be(true)
+
+      patch continuing_education_registration_path(ce_registration),
+            params: { continuing_education_registration: { hours: "6", intends_to_pay: "0" } }
+      expect(ce_registration.reload.intends_to_pay).to be(false)
+    end
+
     it "renders the combined comments and communications section on the edit page" do
       get edit_continuing_education_registration_path(ce_registration)
       expect(response.body).to include("Comments &amp; communications")

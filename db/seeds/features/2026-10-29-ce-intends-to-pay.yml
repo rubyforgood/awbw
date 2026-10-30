@@ -1,0 +1,13 @@
+name: "CE intends to pay unlocks CE-paid callouts"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-29
+pr_number: 2908
+action_path: "/events"
+summary: >-
+  CE registrations get an "Intends to pay" toggle, like event registrations.
+  Ticket callouts set to "Only show if CE hours are paid or intends to pay" now
+  appear for registrants whose CE is paid or marked as intending to pay.
+pro_tips:
+  - "Find the toggle on the CE registration's edit page, under CE payments and allocations."
+  - "Intending to pay doesn't mark CE as paid — the balance, status badge, and certificate still wait on real payment."

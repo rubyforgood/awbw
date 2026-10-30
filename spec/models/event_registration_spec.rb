@@ -323,6 +323,15 @@ RSpec.describe EventRegistration, type: :model do
       it "reads the destination reg as not CE-paid — the origin's partial payment does not settle the remaining balance that rode forward" do
         expect(destination.reload.ce_paid_in_full?).to be(false)
       end
+
+      it "grants CE payment access once the carried balance intends to pay" do
+        expect(destination.reload.ce_payment_access_granted?).to be(false)
+
+        destination.continuing_education_registrations.first.update!(intends_to_pay: true)
+
+        expect(destination.reload.ce_payment_access_granted?).to be(true)
+        expect(destination.ce_paid_in_full?).to be(false)
+      end
     end
 
     context "when no CE was paid at the origin" do

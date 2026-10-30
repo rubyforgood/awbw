@@ -67,5 +67,21 @@
         </dd>
       <% end %>
     </dl>
+
+    <% if local_assigns[:editable] %>
+      <label class="mt-4 flex cursor-pointer items-start gap-2.5 border-t border-gray-100 pt-4">
+        <input type="hidden" name="continuing_education_registration[intends_to_pay]" value="0" autocomplete="off">
+        <input type="checkbox"
+               name="continuing_education_registration[intends_to_pay]"
+               value="1"
+               <%= "checked" if ce_registration.intends_to_pay %>
+               class="peer sr-only">
+        <span class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
+        <span>
+          <span class="block text-sm font-medium text-gray-700">Intends to pay</span>
+          <span class="block text-xs text-gray-400">Show ticket callouts gated on CE payment while the CE balance is still due.</span>
+        </span>
+      </label>
+    <% end %>
   </div>
 </section>
