@@ -48,13 +48,15 @@ class EventRegistrationDecorator < ApplicationDecorator
 
   # Nil when CE isn't in play (so the index can show a "Create" affordance instead).
   # `simulate_paid:` lets the CE callout's ?admin=true preview the post-payment state
-  # without recording a payment.
-  def ce_status_badge(simulate_paid: false)
+  # without recording a payment. `for_registrant:` words the approval wait for the
+  # registrant, who has nothing to do but wait on staff.
+  def ce_status_badge(simulate_paid: false, for_registrant: false)
     return unless ce_registered?
     return ce_badge("Issued", "fa-solid fa-circle-check", :green) if ce_certificate_issued?
     return ce_badge("Needs license #", "fa-solid fa-id-card", :amber) unless ce_license_provided?
     return ce_badge("#{h.dollars_from_cents(ce_amount_due_cents)} due", "fa-solid fa-dollar-sign", :amber) unless ce_paid_in_full? || simulate_paid
     return ce_badge("Approved", "fa-solid fa-thumbs-up", :blue) if ce_approved?
+    return ce_badge("Awaiting approval", "fa-solid fa-hourglass-half", :blue) if for_registrant
 
     ce_badge("Needs approval", "fa-solid fa-hourglass-half", :amber)
   end
