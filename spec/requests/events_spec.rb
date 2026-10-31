@@ -1942,11 +1942,11 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("BUD")
       end
 
-      it "puts the codes in a Pay via column the Pay via switch reveals" do
+      it "puts the codes in a Payment method column its switch reveals" do
         get registrants_event_path(event)
 
         page = Capybara.string(response.body)
-        expect(page).to have_css("th[data-column-toggle-col='payment_method']", text: "Pay via", visible: :all)
+        expect(page).to have_css("th[data-column-toggle-col='payment_method']", text: "Payment method", visible: :all)
         expect(page).to have_css("td[data-column-toggle-col='payment_method']", text: "CCN", visible: :all)
       end
 
