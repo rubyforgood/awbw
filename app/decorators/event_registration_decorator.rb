@@ -11,26 +11,26 @@ class EventRegistrationDecorator < ApplicationDecorator
     amber: "bg-amber-50 text-amber-700 border-amber-200"
   }.freeze
 
-  # Short-code payment indicators in the Payment column, rendered as colored text
-  # (icon + code, like the "Intends to pay" note) rather than a chip. The first
+  # Payment-method indicators in the Payment method column, rendered as colored text
+  # (icon + short label, like the "Intends to pay" note) rather than a chip. The first
   # three are keyed by the stored expected_payment_method string (FormBuilderService
-  # payment options); BUD is the separate someone_else_will_pay boolean (buddy
+  # payment options); Buddy is the separate someone_else_will_pay boolean (buddy
   # system), shown in addition to the method — a registrant can have both. `classes`
   # is the text color.
-  PaymentMethodBadge = Struct.new(:code, :label, :icon, :classes, keyword_init: true)
+  PaymentMethodBadge = Struct.new(:short_label, :label, :icon, :classes, keyword_init: true)
 
   PAYMENT_METHOD_BADGES = {
     FormBuilderService::PAYMENT_METHOD_PAY_NOW =>
-      PaymentMethodBadge.new(code: "CCN", label: "Credit card", icon: "fa-solid fa-credit-card", classes: "text-green-600"),
+      PaymentMethodBadge.new(short_label: "Card", label: "Credit card", icon: "fa-solid fa-credit-card", classes: "text-green-600"),
     "Credit card (later)" =>
-      PaymentMethodBadge.new(code: "CCL", label: "Credit card (later)", icon: "fa-regular fa-credit-card", classes: "text-amber-600"),
+      PaymentMethodBadge.new(short_label: "Card later", label: "Credit card (later)", icon: "fa-regular fa-credit-card", classes: "text-amber-600"),
     "Check" =>
-      PaymentMethodBadge.new(code: "CK", label: "Check", icon: "fa-solid fa-money-check-dollar", classes: "text-sky-600")
+      PaymentMethodBadge.new(short_label: "Check", label: "Check", icon: "fa-solid fa-money-check-dollar", classes: "text-sky-600")
   }.freeze
 
   # Buddy system — someone else covers the cost (the someone_else_will_pay boolean).
   BUDDY_PAYMENT_BADGE = PaymentMethodBadge.new(
-    code: "BUD", label: "Someone else will pay", icon: "fa-solid fa-user-group",
+    short_label: "Buddy", label: "Someone else will pay", icon: "fa-solid fa-user-group",
     classes: "text-purple-600"
   )
 
@@ -70,15 +70,15 @@ class EventRegistrationDecorator < ApplicationDecorator
     2
   end
 
-  # Payment badges shown beside the registrant's name: the expected-payment-method
-  # code (if recorded) plus a BUD badge when someone else will pay. Either, both, or
+  # Payment-method badges for the roster: the expected payment method (if recorded)
+  # plus a Buddy badge when someone else will pay. Either, both, or
   # neither. Unknown/custom method values fall back to a neutral badge so nothing is
   # silently hidden.
   def payment_badges
     badges = []
     if (value = expected_payment_method.presence)
       badges << (PAYMENT_METHOD_BADGES[value] || PaymentMethodBadge.new(
-        code: value.truncate(8),
+        short_label: value.truncate(12),
         label: value,
         icon: "fa-solid fa-money-bill",
         classes: "text-gray-600"
@@ -93,8 +93,8 @@ class EventRegistrationDecorator < ApplicationDecorator
   # status filter). Values are the stored expected_payment_method strings, plus the
   # buddy-system sentinel.
   def self.payment_method_filter_choices
-    PAYMENT_METHOD_BADGES.map { |value, badge| [ "#{badge.label} (#{badge.code})", value ] } +
-      [ [ "#{BUDDY_PAYMENT_BADGE.label} (#{BUDDY_PAYMENT_BADGE.code})", EventRegistration::BUDDY_PAYMENT_FILTER ] ]
+    PAYMENT_METHOD_BADGES.map { |value, badge| [ badge.label, value ] } +
+      [ [ BUDDY_PAYMENT_BADGE.label, EventRegistration::BUDDY_PAYMENT_FILTER ] ]
   end
 
   # Attendance-status pill styling — the single source of truth shared by the

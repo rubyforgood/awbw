@@ -1656,6 +1656,15 @@ RSpec.describe EventRegistration, type: :model do
       end
     end
 
+    describe "#ce_intends_to_pay?" do
+      it "is true while a CE balance is due and the CE intends to pay" do
+        cer = add_ce
+        expect(reg.reload).not_to be_ce_intends_to_pay
+        cer.update!(intends_to_pay: true)
+        expect(reg.reload).to be_ce_intends_to_pay
+      end
+    end
+
     describe "#ce_certificate_issued?" do
       it "is true only once every CE registration's certificate is sent" do
         cer = add_ce
