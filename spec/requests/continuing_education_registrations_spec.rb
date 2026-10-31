@@ -273,21 +273,35 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       end
     end
 
-    it "approves the CE and back to not approved, keeping the timesheet view" do
-      patch toggle_approval_continuing_education_registration_path(ce_registration, return_to: "attendance", ce_approval: "all")
+    it "approves the CE and issues its certificate from the details form, and clears both" do
+      patch continuing_education_registration_path(ce_registration),
+            params: { continuing_education_registration: { hours: "6", approved: "1", certificate_issued: "1" } }
       expect(ce_registration.reload).to be_approved
-      expect(response).to redirect_to(edit_continuing_education_registration_path(ce_registration, return_to: "attendance", ce_approval: "all"))
+      expect(ce_registration.certificate_sent_at).to be_present
 
-      patch toggle_approval_continuing_education_registration_path(ce_registration)
+      patch continuing_education_registration_path(ce_registration),
+            params: { continuing_education_registration: { hours: "6", approved: "0", certificate_issued: "0" } }
       expect(ce_registration.reload.approved_at).to be_nil
+      expect(ce_registration.certificate_sent_at).to be_nil
     end
 
-    it "marks the certificate issued and back to not issued" do
-      patch toggle_certificate_continuing_education_registration_path(ce_registration)
-      expect(ce_registration.reload.certificate_sent_at).to be_present
+    it "keeps the approved and issued dates when the form saves them still on" do
+      on = 2.weeks.ago.change(usec: 0)
+      ce_registration.update!(approved_at: on, certificate_sent_at: on)
 
-      patch toggle_certificate_continuing_education_registration_path(ce_registration)
-      expect(ce_registration.reload.certificate_sent_at).to be_nil
+      patch continuing_education_registration_path(ce_registration),
+            params: { continuing_education_registration: { hours: "6", approved: "1", certificate_issued: "1" } }
+
+      expect(ce_registration.reload.approved_at).to eq(on)
+      expect(ce_registration.certificate_sent_at).to eq(on)
+    end
+
+    it "shows the Approved and CE certificate switches in the details card" do
+      get edit_continuing_education_registration_path(ce_registration)
+      page = Capybara.string(response.body)
+      expect(page).to have_field("continuing_education_registration[approved]", type: "checkbox", visible: :all)
+      expect(page).to have_field("continuing_education_registration[certificate_issued]", type: "checkbox", visible: :all)
+      expect(page).to have_text("CE certificate of completion")
     end
 
     it "renders the new page for a registration" do

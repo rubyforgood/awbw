@@ -60,53 +60,6 @@
       <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.registrant %>
     <% end %>
 
-    <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
-          <i class="fa-solid fa-circle-check"></i>
-        </span>
-        <h2 class="text-sm font-semibold text-gray-700">Approval</h2>
-      </div>
-
-      <div class="flex items-center justify-between gap-3 p-4">
-        <p class="text-sm text-gray-600">
-          <% if @ce_registration.approved? %>
-            Approved <%= @ce_registration.approved_at.to_date.to_fs(:long) %>
-          <% else %>
-            Not approved yet
-            <span class="block text-xs text-gray-500">Approval opens sign-in (once paid or intending to pay) and the certificate.</span>
-          <% end %>
-        </p>
-        <%= button_to toggle_approval_continuing_education_registration_path(@ce_registration, **ce_registration_return_params),
-              method: :patch, class: "rounded-lg border px-3 py-1.5 text-sm font-medium #{@ce_registration.approved? ? "border-gray-300 text-gray-600 hover:bg-gray-50" : "#{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations)} #{DomainTheme.text_class_for(:continuing_education_registrations, intensity: 700)} #{DomainTheme.bg_class_for(:continuing_education_registrations, hover: true)}"} cursor-pointer" do %>
-          <%= @ce_registration.approved? ? "Mark not approved" : "Approve CE" %>
-        <% end %>
-      </div>
-    </section>
-
-    <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
-          <i class="fa-solid fa-award"></i>
-        </span>
-        <h2 class="text-sm font-semibold text-gray-700">Certificate</h2>
-      </div>
-
-      <div class="flex items-center justify-between gap-3 p-4">
-        <p class="text-sm text-gray-600">
-          <% if @ce_registration.certificate_sent_at.present? %>
-            Issued <%= @ce_registration.certificate_sent_at.to_date.to_fs(:long) %>
-          <% else %>
-            Not issued yet
-          <% end %>
-        </p>
-        <%= button_to toggle_certificate_continuing_education_registration_path(@ce_registration, **ce_registration_return_params),
-              method: :patch, class: "rounded-lg border px-3 py-1.5 text-sm font-medium #{@ce_registration.certificate_sent_at.present? ? "border-gray-300 text-gray-600 hover:bg-gray-50" : "#{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations)} #{DomainTheme.text_class_for(:continuing_education_registrations, intensity: 700)} #{DomainTheme.bg_class_for(:continuing_education_registrations, hover: true)}"} cursor-pointer" do %>
-          <%= @ce_registration.certificate_sent_at.present? ? "Mark not issued" : "Mark certificate issued" %>
-        <% end %>
-      </div>
-    </section>
-
     <%# ---- Footer actions ---- %>
     <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
       <% if @ce_registration.deletable? %>
@@ -125,7 +78,7 @@
 
       <div class="ml-auto flex items-center gap-3">
         <%= link_to "Cancel", ce_registration_return_path(registration), class: button_classes(:secondary_outline) %>
-        <%# Submits the CE details form above (which the approval and certificate sections sit outside of). %>
+        <%# Submits the CE details form above, which ends before these footer actions. %>
         <button type="submit" form="ce_registration_form" class="<%= button_classes(:primary) %>" data-turbo-submits-with="Saving…">Save changes</button>
       </div>
     </div>
