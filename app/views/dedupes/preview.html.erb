@@ -43,7 +43,7 @@
       </div>
     <% end %>
 
-    <!-- Model-specific blocks: conditions that make this particular merge unsafe (e.g. both people carry an active pay subscription) -->
+    <!-- Model-specific blocks: conditions that make this particular merge unsafe (e.g. both people already have memberships) -->
     <% if @merge_blocks.present? %>
       <div class="rounded-xl border border-red-300 bg-red-50 p-4">
         <div class="flex items-start gap-3">
