@@ -22,7 +22,7 @@
               <th class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Cost</th>
               <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Payment</th>
               <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Approval</th>
-              <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">CE certificate</th>
+              <th class="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">CE certificate</th>
               <th class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
@@ -35,13 +35,31 @@
               <% approval = ce.approval_badge %>
               <% certificate = ce.certificate_badge %>
               <tr class="transition-colors duration-150 hover:bg-gray-50">
-                <td class="px-4 py-3 text-sm font-medium whitespace-nowrap text-gray-900">
-                  <%= link_to registration.registrant.full_name, continuing_education_registration_path(ce), class: "text-primary hover:text-primary-dark", data: { turbo_frame: "_top" } %>
+                <td class="px-4 py-3">
+                  <% registrant = registration.registrant %>
+                  <%# Same name box as the registrants list, in the CE color. %>
+                  <%= link_to continuing_education_registration_path(ce),
+                        title: [ registrant.full_name, registrant.preferred_email ].compact_blank.join(" — "),
+                        class: "flex w-56 items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 leading-tight shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100, hover: true)}",
+                        data: { turbo_frame: "_top" } do %>
+                    <i class="fa-solid fa-certificate shrink-0 <%= DomainTheme.text_class_for(:continuing_education_registrations) %>"></i>
+                    <span class="flex min-w-0 flex-col justify-center">
+                      <span class="truncate text-xs font-semibold <%= DomainTheme.text_class_for(:continuing_education_registrations) %>"><%= registrant.full_name %></span>
+                      <% if registrant.preferred_email.present? %>
+                        <!--email_off--><span class="truncate text-xs font-normal text-gray-500"><%= registrant.preferred_email %></span><!--email_on-->
+                      <% end %>
+                    </span>
+                  <% end %>
                 </td>
                 <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700">
-                  <%= registration.event.title %>
                   <% if registration.event.start_date.present? %>
-                    <span class="block text-xs text-gray-400"><%= registration.event.decorate.times(display_day: true, display_date: true) %></span>
+                    <%# The date line sets the width; w-0 min-w-full truncates the title to it. %>
+                    <span class="inline-flex max-w-full flex-col">
+                      <span class="w-0 min-w-full truncate" title="<%= registration.event.title %>"><%= registration.event.title %></span>
+                      <span class="text-xs text-gray-400"><%= registration.event.decorate.times(display_day: true, display_date: true) %></span>
+                    </span>
+                  <% else %>
+                    <%= registration.event.title %>
                   <% end %>
                 </td>
                 <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700"><%= ce.license_label %></td>
