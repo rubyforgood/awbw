@@ -92,7 +92,7 @@
               </th>
 
               <% if ce_col %>
-                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="ce">
+                <th class="px-2 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="ce">
                   <%= render "shared/sortable_header", label: "CE", index: ce_index %>
                 </th>
               <% end %>
@@ -266,8 +266,8 @@
                 </td>
 
                 <% if ce_col %>
-                  <td class="px-4 py-2 text-sm text-center" data-column-toggle-col="ce" data-sort-value="<%= registration.decorate.ce_status_sort_key %>">
-                    <%# Canonical CE badge (Requested → License # needed → $X due →
+                  <td class="px-2 py-2 text-center text-sm" data-column-toggle-col="ce" data-sort-value="<%= registration.decorate.ce_status_sort_key %>">
+                    <%# Canonical CE badge (Requested → Needs license # → $X due →
                         Pending → Approved → Issued). Each state links to the connected CE
                         registration's edit page; "Create" opens the new CE form. %>
                     <% ce_registration = registration.continuing_education_registrations.first %>

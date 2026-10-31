@@ -2646,12 +2646,12 @@ RSpec.describe "Events", type: :request do
       expect(ce_chip_text).to eq("Create")
     end
 
-    it "shows License # needed once a CE record exists without a license number" do
+    it "shows Needs license # once a CE record exists without a license number" do
       reg = create(:event_registration, event: event, registrant: person)
       create(:continuing_education_registration, event_registration: reg,
         professional_license: create(:professional_license, :placeholder, person: person))
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("License # needed")
+      expect(ce_chip_text).to eq("Needs license #")
     end
 
     it "shows the balance due once a license is on file but the CE balance is unpaid" do

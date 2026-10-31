@@ -1,7 +1,7 @@
 class EventRegistrationDecorator < ApplicationDecorator
   # The CE lifecycle badge, shared by every surface that shows CE status (the
   # registrants index, the CE callout, the CE card on the registration edit page).
-  # One progression: Requested → License # needed → $X due → Pending → Approved → Issued.
+  # One progression: Requested → Needs license # → $X due → Pending → Approved → Issued.
   # Pending and Approved are blue, Issued is green, every actionable/in-progress state is amber.
   CeBadge = Struct.new(:label, :icon, :classes, keyword_init: true)
 
@@ -52,7 +52,7 @@ class EventRegistrationDecorator < ApplicationDecorator
   def ce_status_badge(simulate_paid: false)
     return unless ce_registered?
     return ce_badge("Issued", "fa-solid fa-circle-check", :green) if ce_certificate_issued?
-    return ce_badge("License # needed", "fa-solid fa-id-card", :amber) unless ce_license_provided?
+    return ce_badge("Needs license #", "fa-solid fa-id-card", :amber) unless ce_license_provided?
     return ce_badge("#{h.dollars_from_cents(ce_amount_due_cents)} due", "fa-solid fa-dollar-sign", :amber) unless ce_paid_in_full? || simulate_paid
     return ce_badge("Approved", "fa-solid fa-thumbs-up", :blue) if ce_approved?
 
