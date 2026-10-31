@@ -63,6 +63,28 @@ RSpec.describe "Comments index", type: :request do
       expect(filter_form).not_to match(/\b(onchange|oninput)=/)
     end
 
+    it "filters the results frame to System or admin-authored comments" do
+      sign_in admin
+      create(:comment, commentable: create(:person), body: "Imported note")
+      create(:comment, commentable: create(:person), body: "Staff note", created_by: admin)
+
+      get comments_path(author_kind: "system"), headers: frame_headers
+      expect(response.body).to include("Imported note")
+      expect(response.body).not_to include("Staff note")
+
+      get comments_path(author_kind: "admin"), headers: frame_headers
+      expect(response.body).to include("Staff note")
+      expect(response.body).not_to include("Imported note")
+    end
+
+    it "offers the author type dropdown" do
+      sign_in admin
+      get comments_path(author_kind: "system")
+
+      expect(response.body).to include('id="author_kind"')
+      expect(response.body).to match(/<option selected="selected" value="system">System<\/option>/)
+    end
+
     it "keeps a per-page size from the URL selected even when it isn't a preset" do
       sign_in admin
       get comments_path(number_of_items_per_page: 12)

@@ -591,7 +591,7 @@ class StoryImporter
   end
 
   def comment(record, body)
-    Comment.create!(commentable: record, body: body, created_by: @import_user)
+    Comment.create_as_system!(commentable: record, body: body)
   end
 
   # Facilitator affiliations connect a non-AWBW author to their organization. An old-app

@@ -517,6 +517,14 @@ RSpec.describe StoryImporter do
       expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/Imported sector not in portal: Imaginary Sector/))
     end
 
+    it "credits the comments it writes to System, not the admin who ran the import" do
+      Current.set(user: import_user) { import([ base_row("sectors" => "Imaginary Sector") ]) }
+
+      comment = Story.sole.comments.find_by!("body LIKE ?", "Imported sector not in portal%")
+      expect(comment.created_by).to be_nil
+      expect(comment.updated_by).to be_nil
+    end
+
     it "tags categories by Type: Name from the categories column" do
       adults = create(:category, category_type: age_range, name: "Adults")
       grief = create(:category, category_type: emotional_theme, name: "Grief")

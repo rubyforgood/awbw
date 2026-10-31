@@ -27,6 +27,12 @@
     </div>
 
     <div class="w-36">
+      <label for="author_kind" class="<%= search_label_class %>">Author type</label>
+      <%= f.select :author_kind, options_for_select([ [ "All authors", "" ] ] + Comment::AUTHOR_KINDS.invert.to_a, params[:author_kind]), {},
+                   class: search_field_class(extra: "bg-white search-select-placeholder") %>
+    </div>
+
+    <div class="w-36">
       <label for="source" class="<%= search_label_class %>">Type</label>
       <%= f.select :source, options_for_select(source_options, params[:source]), {},
                    class: search_field_class(extra: "bg-white search-select-placeholder") %>
