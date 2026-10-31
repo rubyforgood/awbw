@@ -54,10 +54,10 @@
         <%= render "details_section", f: f, license: license, ce_registration: @ce_registration, event: registration.event %>
         <%= render "attendance_entries", registration: registration %>
         <%= render "payment_history", ce_registration: @ce_registration, editable: true %>
-      </div>
 
-      <%# ---- Comments (saved with the CE registration, like the other forms) ---- %>
-      <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.registrant %>
+        <%# ---- Comments (saved with the CE registration, like the other forms) ---- %>
+        <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.registrant %>
+      </div>
     <% end %>
 
     <%# ---- Footer actions ---- %>

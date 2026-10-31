@@ -296,6 +296,13 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(ce_registration.certificate_sent_at).to eq(on)
     end
 
+    it "links the license-on-file hint to the license record, returning here" do
+      ce_registration.professional_license.update!(kind: "LCSW", number: "11223")
+      get edit_continuing_education_registration_path(ce_registration)
+      expect(Capybara.string(response.body)).to have_link("the license record",
+        href: edit_professional_license_path(ce_registration.professional_license, return_to: "ce_registration", ce_registration_id: ce_registration.id))
+    end
+
     it "shows the Approved and CE certificate switches in the details card" do
       get edit_continuing_education_registration_path(ce_registration)
       page = Capybara.string(response.body)
