@@ -30,7 +30,7 @@
         <% end %>
         <%= render "shared/column_toggle_switch", group: "scholarship", label: "Scholarship", on: scholarship_on %>
         <% if @event.cost_cents.to_i > 0 %>
-          <%= render "shared/column_toggle_switch", group: "payment_method", label: "Payment" %>
+          <%= render "shared/column_toggle_switch", group: "payment_method", label: "Pay via" %>
         <% end %>
         <%= render "shared/column_toggle_switch", group: "date", label: "Date registered" %>
         <%= render "shared/column_toggle_switch", group: "attendance", label: "Attendance", on: true %>
@@ -65,8 +65,8 @@
       <div class="overflow-x-auto">
         <% payment_col = @event.cost_cents.to_i > 0 %>
         <% ce_col = @ce_eligible %>
-        <% extra_cols = (payment_col ? 1 : 0) + (ce_col ? 1 : 0) %>
-        <%# Column order: Name, Organization, [CE status], Scholarship, [Payment],
+        <% extra_cols = (payment_col ? 2 : 0) + (ce_col ? 1 : 0) %>
+        <%# Column order: Name, Organization, [CE status], Scholarship, [Payment, Pay via (hidden)],
             Confirmed (hidden), Attendance, Date registered, Progress, Edit (far right).
             The Name button also links to editing the registration. %>
         <% ce_index = 2 %>
@@ -105,6 +105,7 @@
                 <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
                   <%= render "shared/sortable_header", label: "Payment", index: payment_index %>
                 </th>
+                <th class="hidden px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="payment_method">Pay via</th>
               <% end %>
 
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col="confirmed">User account</th>
@@ -384,9 +385,11 @@
                       </div>
                     <% end %>
 
+                  </td>
+                  <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="payment_method">
                     <% payment_badges = registration.decorate.payment_badges %>
                     <% if payment_badges.any? %>
-                      <div class="mt-1 flex hidden flex-wrap items-center justify-center gap-x-2 gap-y-0.5" data-column-toggle-col="payment_method">
+                      <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
                         <% payment_badges.each do |payment_badge| %>
                           <span class="text-2xs inline-flex items-center gap-1 font-medium whitespace-nowrap <%= payment_badge.classes %>"
                                 title="<%= payment_badge.label %>">
@@ -395,6 +398,8 @@
                           </span>
                         <% end %>
                       </div>
+                    <% else %>
+                      <span class="text-gray-300">—</span>
                     <% end %>
                   </td>
                 <% end %>
