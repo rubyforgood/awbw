@@ -152,38 +152,44 @@ RSpec.describe EventAttendanceReport do
     end
   end
 
-  describe "approved-only CE report (approved_only: true)" do
+  describe "paying-only CE report (paying_only: true)" do
     let!(:alice) { registration_for("Alice", "Adams") }
     let!(:bob)   { registration_for("Bob", "Baker") }
 
     before do
-      make_ce(alice, number: "AAA111").update!(approved_at: Time.current)
-      paid = make_ce(bob, number: "BBB222")
+      paid = make_ce(alice, number: "AAA111")
       create(:allocation, source: create(:payment), allocatable: paid, amount: paid.cost_cents)
+      make_ce(bob, number: "BBB222")
     end
 
-    subject(:report) { described_class.new(event, ce_only: true, approved_only: true) }
+    subject(:report) { described_class.new(event, ce_only: true, paying_only: true) }
 
-    it "lists only approved licences, whether or not they're paid" do
+    it "lists only licences paid in full or intending to pay" do
       carol = registration_for("Carol", "Cole")
-      make_ce(carol, number: "CCC333").update!(approved_at: Time.current)
+      make_ce(carol, number: "CCC333").update!(intends_to_pay: true)
       expect(report.rows.map(&:license_number)).to eq(%w[AAA111 CCC333])
       expect(report.reported_registrations).to eq([ alice, carol ])
     end
 
     it "still counts every licence for the All CE toggle" do
       expect(report.all_rows.map(&:license_number)).to eq(%w[AAA111 BBB222])
-      expect(report.approved_row_count).to eq(1)
+      expect(report.paying_row_count).to eq(1)
     end
 
-    it "keeps a person's approved licence when their second isn't approved" do
+    it "drops a paid licence an admin denied" do
+      alice.continuing_education_registrations.first.update!(denied_at: Time.current)
+      expect(report.rows).to be_empty
+      expect(report.all_rows.map(&:license_number)).to eq(%w[AAA111 BBB222])
+    end
+
+    it "keeps a person's paid licence when their second is unpaid" do
       make_ce(alice, number: "AAA999")
       expect(report.rows.map(&:license_number)).to eq([ "AAA111" ])
     end
 
     it "is ignored on the generic report" do
       entry(bob, Time.zone.local(2026, 7, 23, 9, 0), Time.zone.local(2026, 7, 23, 10, 0))
-      expect(described_class.new(event, approved_only: true).rows.map(&:registration)).to eq([ bob ])
+      expect(described_class.new(event, paying_only: true).rows.map(&:registration)).to eq([ bob ])
     end
   end
 

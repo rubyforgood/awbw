@@ -327,12 +327,12 @@ RSpec.describe EventRegistration, type: :model do
         expect(destination.reload.ce_paid_in_full?).to be(true)
       end
 
-      it "offers attendance sign-in on the destination reg once its CE is approved" do
-        expect(destination.reload.ce_attendance_available?).to be(false)
-
-        destination.continuing_education_registrations.first.update!(approved_at: Time.current)
-
+      it "offers attendance sign-in on the destination reg until its CE is denied" do
         expect(destination.reload.ce_attendance_available?).to be(true)
+
+        destination.continuing_education_registrations.first.update!(denied_at: Time.current)
+
+        expect(destination.reload.ce_attendance_available?).to be(false)
       end
 
       it "keeps the paid stub on the source reg CE-paid too" do
@@ -350,15 +350,16 @@ RSpec.describe EventRegistration, type: :model do
         expect(destination.reload.ce_paid_in_full?).to be(false)
       end
 
-      it "grants CE access once the carried balance is approved and intends to pay" do
+      it "grants CE access once the carried balance intends to pay, unless it's denied" do
         carried = destination.continuing_education_registrations.first
-        carried.update!(intends_to_pay: true)
         expect(destination.reload.ce_access_granted?).to be(false)
 
-        carried.update!(approved_at: Time.current)
-
+        carried.update!(intends_to_pay: true)
         expect(destination.reload.ce_access_granted?).to be(true)
         expect(destination.ce_paid_in_full?).to be(false)
+
+        carried.update!(denied_at: Time.current)
+        expect(destination.reload.ce_access_granted?).to be(false)
       end
     end
 
@@ -1059,6 +1060,12 @@ RSpec.describe EventRegistration, type: :model do
           create(:continuing_education_registration, event_registration: r, cost_cents: ce_cost, certificate_sent_at: Time.current)
         end
       end
+      # Denied by an admin, payment aside.
+      let!(:denied_ce) do
+        create(:event_registration, event: event).tap do |r|
+          create(:continuing_education_registration, :denied, event_registration: r, cost_cents: ce_cost)
+        end
+      end
       let!(:no_ce) { create(:event_registration, event: event) }
 
       it "maps 'registered' to everyone signed up for CE, whatever its state" do
@@ -1091,6 +1098,18 @@ RSpec.describe EventRegistration, type: :model do
         expect(results).not_to include(paid_ce, no_ce)
       end
 
+      it "maps 'approved' to every CE registration an admin hasn't denied" do
+        results = EventRegistration.ce_status("approved")
+        expect(results).to include(paid_ce, requested_ce)
+        expect(results).not_to include(denied_ce, no_ce)
+      end
+
+      it "maps 'denied' to CE registrations an admin has denied" do
+        results = EventRegistration.ce_status("denied")
+        expect(results).to include(denied_ce)
+        expect(results).not_to include(paid_ce, requested_ce, no_ce)
+      end
+
       it "maps 'issued' to CE registrations with a delivered certificate" do
         results = EventRegistration.ce_status("issued")
         expect(results).to include(issued_ce)
@@ -1106,7 +1125,7 @@ RSpec.describe EventRegistration, type: :model do
       it "maps 'none' to registrations that never signed up for CE" do
         results = EventRegistration.ce_status(EventRegistration::NO_CE)
         expect(results).to include(no_ce)
-        expect(results).not_to include(paid_ce, requested_ce, needs_license_ce, issued_ce)
+        expect(results).not_to include(paid_ce, requested_ce, needs_license_ce, issued_ce, denied_ce)
       end
 
       # The license join is an inner join, so this only holds because

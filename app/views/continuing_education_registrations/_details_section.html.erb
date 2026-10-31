@@ -109,10 +109,12 @@
       <% if ce_registration.persisted? %>
         <div class="space-y-3">
           <%= render "continuing_education_registrations/status_switch", name: "approved", label: "Approved",
-                on_at: ce_registration.approved_at,
-                title: "Approval opens sign-in (once paid or intending to pay) and the certificate." %>
+                on: ce_registration.approved?,
+                detail: ("Denied #{ce_registration.denied_at.to_date.to_fs(:long)}" if ce_registration.denied?),
+                title: "On by default. Switch off to deny: it closes the registrant's sign-in and certificate." %>
           <%= render "continuing_education_registrations/status_switch", name: "certificate_issued", label: "CE certificate of completion",
-                on_at: ce_registration.certificate_sent_at, on_word: "Issued" %>
+                on: ce_registration.certificate_sent_at.present?,
+                detail: ce_registration.certificate_sent_at ? "Issued #{ce_registration.certificate_sent_at.to_date.to_fs(:long)}" : "Not issued" %>
         </div>
       <% end %>
     </div>

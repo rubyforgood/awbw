@@ -110,7 +110,7 @@ RSpec.describe "Event registration show page", type: :system do
         href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
     end
 
-    it "hides a CE-payment-gated callout until CE hours are paid in full and approved" do
+    it "hides a CE-payment-gated callout until CE hours are paid in full, and again once denied" do
       gated_callout = create(:registration_ticket_callout, :ce_payment_access_gated, event: event, title: "CE evaluation")
       ce_registration = create(:continuing_education_registration, event_registration: registration, cost_cents: 15_000)
 
@@ -122,18 +122,18 @@ RSpec.describe "Event registration show page", type: :system do
       create(:allocation, source: create(:payment), allocatable: ce_registration, amount: ce_registration.cost_cents)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_no_link("CE evaluation")
-
-      ce_registration.update!(approved_at: Time.current)
-      visit registration_ticket_path(registration.slug)
-
       expect(page).to have_link("CE evaluation",
         href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
+
+      ce_registration.update!(denied_at: Time.current)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_no_link("CE evaluation")
     end
 
-    it "shows a CE-payment-gated callout when the approved CE intends to pay" do
+    it "shows a CE-payment-gated callout when the CE intends to pay" do
       gated_callout = create(:registration_ticket_callout, :ce_payment_access_gated, event: event, title: "CE evaluation")
-      create(:continuing_education_registration, :approved, event_registration: registration, cost_cents: 15_000, intends_to_pay: true)
+      create(:continuing_education_registration, event_registration: registration, cost_cents: 15_000, intends_to_pay: true)
 
       sign_in(user)
       visit registration_ticket_path(registration.slug)
@@ -167,7 +167,7 @@ RSpec.describe "Event registration show page", type: :system do
       dest_event = create(:event, :published, cost_cents: 10_000, ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
       destination = create(:event_registration, event: dest_event, registrant: user.person,
         status: "registered", transferred_from_registration: source)
-      create(:continuing_education_registration, :approved, event_registration: destination,
+      create(:continuing_education_registration, event_registration: destination,
         professional_license: source_ce.professional_license, cost_cents: 0, skip_event_defaults: true)
       pay_gated = create(:registration_ticket_callout, :payment_access_gated, event: dest_event, title: "Your workbook")
       ce_gated = create(:registration_ticket_callout, :ce_payment_access_gated, event: dest_event, title: "CE evaluation")

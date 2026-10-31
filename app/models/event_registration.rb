@@ -117,6 +117,8 @@ class EventRegistration < ApplicationRecord
     [ "Not paid yet", "not_paid" ],
     [ "Needs license", "needs_license" ],
     [ "Paid", "paid" ],
+    [ "Approved", "approved" ],
+    [ "Denied", "denied" ],
     [ "Certificate issued", "issued" ],
     [ "Certificate outstanding", "not_issued" ],
     [ "No CE", NO_CE ]
@@ -421,8 +423,10 @@ class EventRegistration < ApplicationRecord
       when "registered" then "TRUE"
       when "needs_license" then "pl.number IS NULL"
       when "paid" then paid_sql
-      # Same rows today: CE has no approval step yet, so "requested" is just unpaid.
+      # Same rows: "requested" reads as the state before payment, which is unpaid.
       when "requested", "not_paid" then "NOT (#{paid_sql})"
+      when "approved" then "cer.denied_at IS NULL"
+      when "denied" then "cer.denied_at IS NOT NULL"
       when "issued" then "cer.certificate_sent_at IS NOT NULL"
       when "not_issued" then "cer.certificate_sent_at IS NULL"
       when NO_CE then "TRUE"
@@ -1018,9 +1022,9 @@ class EventRegistration < ApplicationRecord
     chain.any? && chain.all?(&:paid_in_full?)
   end
 
-  # The CE callout gate: this reg's CE is all approved, and every CE across the
-  # transfer chain is paid or intends to pay. Approval is judged here only — the
-  # origin's paid stub is never certified, so nobody approves it.
+  # The CE callout gate: none of this reg's CE is denied, and every CE across the
+  # transfer chain is paid or intends to pay. Denial is judged here only — the
+  # origin's paid stub is never certified.
   def ce_access_granted?
     chain = continuing_education_registrations_across_transfers
     ce_approved? && chain.all?(&:payment_access_granted?)
@@ -1032,12 +1036,16 @@ class EventRegistration < ApplicationRecord
   end
 
   def ce_approved?
-    continuing_education_registrations.any? && continuing_education_registrations.all?(&:approved?)
+    continuing_education_registrations.any? && !ce_denied?
+  end
+
+  def ce_denied?
+    continuing_education_registrations.any?(&:denied?)
   end
 
   # Whether the attendance sign-in sheet is open to this registrant. Deliberately
   # any-of, not the all-of ce_paid_in_full? the status badge uses: each CE
-  # registration that's approved and paid or intends to pay gets its own sheet, and they all
+  # registration that's paid or intends to pay and not denied gets its own sheet, and they all
   # record the same hours in the same room, so one such licence is enough to justify
   # writing those hours down. Someone part-way through paying for a second licence
   # keeps signing in for the first. Events can switch timesheets off entirely.

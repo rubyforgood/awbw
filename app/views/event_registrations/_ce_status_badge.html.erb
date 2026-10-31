@@ -2,7 +2,7 @@
       registration   – the EventRegistration
       href           – wrap the pill in a link to this path (optional)
       simulate_paid  – preview the post-payment state (CE callout's ?admin=true)
-      for_registrant – word the approval wait for the registrant (their CE page)
+      for_registrant – word a denial for the registrant (their CE page)
     Renders nothing when CE isn't in play; callers handle that case (e.g. the
     registrants index shows a "Create" affordance instead). %>
 <% badge = registration.decorate.ce_status_badge(simulate_paid: local_assigns.fetch(:simulate_paid, false), for_registrant: local_assigns.fetch(:for_registrant, false)) %>

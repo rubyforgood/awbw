@@ -350,8 +350,8 @@ class BuiltinCalloutCards
     ce_form.present? && ce_form.available? && !ce_form.complete?
   end
 
-  # The live attendance nudge for the CE card on a training day, once CE is approved
-  # and paid or intends to pay — :signed_in while an entry is open, :sign_in while sign-in
+  # The live attendance nudge for the CE card on a training day, once CE is paid or
+  # intends to pay and not denied — :signed_in while an entry is open, :sign_in while sign-in
   # is open and they're not signed in, nil otherwise (so the resting CE status chip
   # shows instead).
   # Gated on the same any-licence rule as the sheet itself, not the all-of
@@ -417,21 +417,20 @@ class BuiltinCalloutCards
     "#{NumberFormatter.plain(hours)} hours"
   end
 
-  # "$X due" for the outstanding balance once hours + license are on file, then
-  # "Awaiting approval" until staff approve (no chip after); otherwise an amber
-  # chip naming what's still needed, prefixed with the fee when the hours (and so
-  # the cost) are already known — e.g.
+  # "Not approved" once staff deny the CE; "$X due" for the outstanding balance once
+  # hours + license are on file (no chip once paid in full); otherwise an amber chip
+  # naming what's still needed, prefixed with the fee when the hours (and so the
+  # cost) are already known — e.g.
   # "$250 · License number needed". Each deadline the event sets is appended to the
   # relevant chip while still pending: the payment deadline on the amount-due chip
   # (until paid), the request deadline on the license-needed chip.
   def ce_hours_badge(complete)
     ce_registration = registration.continuing_education_registrations.first
     remaining_cents = ce_registration&.remaining_cost.to_i
+    return "Not approved" if registration.ce_denied?
 
     if complete
-      paid = !remaining_cents.positive?
-      return "Awaiting approval" if paid && !registration.ce_approved?
-      return if paid
+      return unless remaining_cents.positive?
 
       amount = MoneyFormatter.dollars_from_cents(remaining_cents)
       return "#{amount} due" if event.ce_payment_due_deadline.blank?

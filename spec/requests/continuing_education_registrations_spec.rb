@@ -257,42 +257,52 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
         expect(response).to redirect_to(attendance_event_path(event, ce: "true", anchor: "totals"))
       end
 
-      context "from the All CE view (ce_approval=all)" do
+      context "from the All CE view (ce_payment=all)" do
         it "carries the choice through the form and back links" do
-          get edit_continuing_education_registration_path(ce_registration, return_to: "attendance", ce_approval: "all")
+          get edit_continuing_education_registration_path(ce_registration, return_to: "attendance", ce_payment: "all")
           page = Capybara.string(response.body)
-          expect(page).to have_link(href: attendance_event_path(event, ce: "true", ce_approval: "all", anchor: "totals"))
-          expect(page).to have_css("form[action='#{continuing_education_registration_path(ce_registration, return_to: "attendance", ce_approval: "all")}']")
+          expect(page).to have_link(href: attendance_event_path(event, ce: "true", ce_payment: "all", anchor: "totals"))
+          expect(page).to have_css("form[action='#{continuing_education_registration_path(ce_registration, return_to: "attendance", ce_payment: "all")}']")
         end
 
         it "returns to All CE after saving" do
-          patch continuing_education_registration_path(ce_registration, return_to: "attendance", ce_approval: "all"),
+          patch continuing_education_registration_path(ce_registration, return_to: "attendance", ce_payment: "all"),
                 params: { continuing_education_registration: { hours: "6", cost_dollars: "120" } }
-          expect(response).to redirect_to(attendance_event_path(event, ce: "true", ce_approval: "all", anchor: "totals"))
+          expect(response).to redirect_to(attendance_event_path(event, ce: "true", ce_payment: "all", anchor: "totals"))
         end
       end
     end
 
-    it "approves the CE and issues its certificate from the details form, and clears both" do
+    it "denies the CE by switching Approved off, and approves it again by switching it on" do
       patch continuing_education_registration_path(ce_registration),
-            params: { continuing_education_registration: { hours: "6", approved: "1", certificate_issued: "1" } }
-      expect(ce_registration.reload).to be_approved
-      expect(ce_registration.certificate_sent_at).to be_present
+            params: { continuing_education_registration: { hours: "6", approved: "0" } }
+      expect(ce_registration.reload).to be_denied
+      expect(ce_registration.denied_at).to be_present
 
       patch continuing_education_registration_path(ce_registration),
-            params: { continuing_education_registration: { hours: "6", approved: "0", certificate_issued: "0" } }
-      expect(ce_registration.reload.approved_at).to be_nil
-      expect(ce_registration.certificate_sent_at).to be_nil
+            params: { continuing_education_registration: { hours: "6", approved: "1" } }
+      expect(ce_registration.reload).to be_approved
+      expect(ce_registration.denied_at).to be_nil
     end
 
-    it "keeps the approved and issued dates when the form saves them still on" do
-      on = 2.weeks.ago.change(usec: 0)
-      ce_registration.update!(approved_at: on, certificate_sent_at: on)
+    it "issues the certificate from the details form, and clears it" do
+      patch continuing_education_registration_path(ce_registration),
+            params: { continuing_education_registration: { hours: "6", certificate_issued: "1" } }
+      expect(ce_registration.reload.certificate_sent_at).to be_present
 
       patch continuing_education_registration_path(ce_registration),
-            params: { continuing_education_registration: { hours: "6", approved: "1", certificate_issued: "1" } }
+            params: { continuing_education_registration: { hours: "6", certificate_issued: "0" } }
+      expect(ce_registration.reload.certificate_sent_at).to be_nil
+    end
 
-      expect(ce_registration.reload.approved_at).to eq(on)
+    it "keeps the denied and issued dates when the form saves them unchanged" do
+      on = 2.weeks.ago.change(usec: 0)
+      ce_registration.update!(denied_at: on, certificate_sent_at: on)
+
+      patch continuing_education_registration_path(ce_registration),
+            params: { continuing_education_registration: { hours: "6", approved: "0", certificate_issued: "1" } }
+
+      expect(ce_registration.reload.denied_at).to eq(on)
       expect(ce_registration.certificate_sent_at).to eq(on)
     end
 

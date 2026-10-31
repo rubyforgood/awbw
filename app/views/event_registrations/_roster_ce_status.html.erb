@@ -2,10 +2,5 @@
 <div id="<%= dom_id(registration, :ce_status) %>">
   <%= render "event_registrations/ce_status_badge", registration: registration,
         href: edit_continuing_education_registration_path(ce_registration, return_to: "registrants") %>
-  <% if registration.ce_intends_to_pay? %>
-    <div class="text-2xs mt-1 inline-flex items-center gap-1 font-medium whitespace-nowrap text-blue-600">
-      <i class="fa-solid fa-hand-holding-dollar"></i>
-      <span>Intends to pay</span>
-    </div>
-  <% end %>
+  <%= render "shared/intends_to_pay_note" if registration.ce_intends_to_pay? %>
 </div>

@@ -1,15 +1,14 @@
-name: "Approve CE registrations before sign-in and certificates open"
+name: "Deny a CE registration to close its sign-in and certificate"
 area: events
 display_status: admin_facing
 released_on: 2026-10-30
 pr_number: 2921
 action_path: "/continuing_education_registrations"
 summary: >-
-  Turn on Approved beside CE hours on a CE registration and click Save changes.
-  Approval, plus payment or intent to pay, opens the registrant's sign-in sheet,
-  and the certificate needs it too. CE timesheets list approved CE by default.
+  CE registrations are approved by default. To deny one, switch Approved off
+  beside CE hours and click Save changes. That closes the registrant's sign-in
+  sheet and certificate and drops them from the default CE timesheet view.
 pro_tips:
-  - "Approval is your call — payment, attendance, and the CE form never set it."
-  - "Paid but not approved reads Needs approval for you and Awaiting approval for the registrant."
-  - "The CE certificate of completion switch sits beside Approved and also saves with the form."
-  - "Filter the CE registrations list by Approved or Not approved; switch timesheets to All CE to see everyone."
+  - "Staff see a red Denied badge; the registrant sees Not approved."
+  - "The denial date shows under the switch, and switching it back on approves the CE again."
+  - "Filter the CE registrations list by Approved or Denied."

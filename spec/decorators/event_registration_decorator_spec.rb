@@ -162,43 +162,36 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       context "with simulate_paid" do
         let(:opts) { { simulate_paid: true } }
 
-        it "previews the amber Needs approval state" do
-          expect(badge.label).to eq("Needs approval")
-          expect(badge.classes).to include("amber")
+        it "previews the blue Approved state" do
+          expect(badge.label).to eq("Approved")
+          expect(badge.classes).to include("blue")
         end
       end
     end
 
-    context "when paid in full but not approved" do
+    context "when paid in full" do
       before { pay(add_ce(cost_cents: 15_000), 15_000) }
-
-      it "is an amber Needs approval badge" do
-        expect(badge.label).to eq("Needs approval")
-        expect(badge.classes).to include("amber")
-      end
-    end
-
-    context "when paid in full but not approved, shown to the registrant" do
-      let(:opts) { { for_registrant: true } }
-
-      before { pay(add_ce(cost_cents: 15_000), 15_000) }
-
-      it "is a blue Awaiting approval badge" do
-        expect(badge.label).to eq("Awaiting approval")
-        expect(badge.classes).to include("blue")
-      end
-    end
-
-    context "when paid in full and approved but not issued" do
-      before do
-        cer = add_ce(cost_cents: 15_000)
-        pay(cer, 15_000)
-        cer.update!(approved_at: Time.current)
-      end
 
       it "is a blue Approved badge" do
         expect(badge.label).to eq("Approved")
         expect(badge.classes).to include("blue")
+      end
+    end
+
+    context "when an admin denied the CE" do
+      before { add_ce(cost_cents: 15_000).update!(denied_at: Time.current) }
+
+      it "is a red Denied badge, even with a balance due" do
+        expect(badge.label).to eq("Denied")
+        expect(badge.classes).to include("red")
+      end
+
+      context "shown to the registrant" do
+        let(:opts) { { for_registrant: true } }
+
+        it "reads Not approved" do
+          expect(badge.label).to eq("Not approved")
+        end
       end
     end
 
@@ -292,30 +285,26 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       it { is_expected.to eq(0) }
     end
 
-    context "when paid in full and approved but not issued" do
-      before do
-        cer = add_ce
-        pay(cer, 15_000)
-        cer.update!(approved_at: Time.current)
-      end
-
-      it { is_expected.to eq(1) }
-    end
-
-    context "when paid in full but not approved" do
+    context "when paid in full but not issued" do
       before { pay(add_ce, 15_000) }
 
-      it { is_expected.to eq(2) }
+      it { is_expected.to eq(1) }
     end
 
     context "when the license is on file but unpaid" do
       before { add_ce }
 
-      it { is_expected.to eq(3) }
+      it { is_expected.to eq(2) }
     end
 
     context "when the CE registration sits on a placeholder license" do
       before { add_ce(placeholder: true) }
+
+      it { is_expected.to eq(3) }
+    end
+
+    context "when an admin denied the CE" do
+      before { add_ce.update!(denied_at: Time.current) }
 
       it { is_expected.to eq(4) }
     end

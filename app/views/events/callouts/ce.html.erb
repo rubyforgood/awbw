@@ -17,12 +17,12 @@
      end
    when "attendance"
      if allowed_to?(:attendance?, @event)
-       { back_path: attendance_event_path(@event, ce: "true", ce_approval: params[:ce_approval].presence, anchor: "totals"), back_label: "Back to CE timesheets" }
+       { back_path: attendance_event_path(@event, ce: "true", ce_payment: params[:ce_payment].presence, anchor: "totals"), back_label: "Back to CE timesheets" }
      end
    end || {} %>
 
 <%#
-  ?admin=true lets an admin preview the post-payment ("Awaiting approval") state of the
+  ?admin=true lets an admin preview the post-payment ("Approved") state of the
   badge without recording a real payment. Gated on edit access so a registrant
   can't fake it by editing the URL.
 %>
@@ -287,7 +287,7 @@
       the event's timesheet window (see events/callouts/_ce_attendance_sheet), and the
       controls stay singular above them because every sheet shares one set of times.
     %>
-    <%# Gated per licence (approved, and paid or intends to pay), so a second still being paid for
+    <%# Gated per licence (paid or intends to pay, and not denied), so a second still being paid for
         doesn't take the first one's sheet away. The sample preview has no payments behind its built CE
         record, so treat it as paid the way the "Paid in full" badge above does —
         otherwise the section is invisible where it's meant to be previewed. %>

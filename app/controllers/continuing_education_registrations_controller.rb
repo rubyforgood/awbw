@@ -102,6 +102,13 @@ class ContinuingEducationRegistrationsController < ApplicationController
     ActiveModel::Type::Boolean.new.cast(value) ? current || Time.current : nil
   end
 
+  # The Approved switch is on by default; switching it off denies the CE.
+  def denied_param(approved)
+    return if approved.nil?
+
+    !ActiveModel::Type::Boolean.new.cast(approved)
+  end
+
   def apply_ce_params(ce_registration)
     ce_registration.assign_license(number: params.dig(:continuing_education_registration, :license_number),
                                    kind: params.dig(:continuing_education_registration, :license_kind),
@@ -113,7 +120,8 @@ class ContinuingEducationRegistrationsController < ApplicationController
     ce_registration.hours = params.dig(:continuing_education_registration, :hours)
     intends_to_pay = params.dig(:continuing_education_registration, :intends_to_pay)
     ce_registration.intends_to_pay = intends_to_pay unless intends_to_pay.nil?
-    ce_registration.approved_at = switched_timestamp(params.dig(:continuing_education_registration, :approved), ce_registration.approved_at)
+    approved = params.dig(:continuing_education_registration, :approved)
+    ce_registration.denied_at = switched_timestamp(denied_param(approved), ce_registration.denied_at)
     ce_registration.certificate_sent_at = switched_timestamp(params.dig(:continuing_education_registration, :certificate_issued), ce_registration.certificate_sent_at)
     # A transfer-created record's cost is snapshotted from the source's outstanding
     # balance and admin-locked, so ignore any submitted cost for it. (#1944)

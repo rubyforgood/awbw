@@ -584,7 +584,7 @@ class EventRegistrationsController < ApplicationController
     # once per CE licence has one cell per licence, and only that one should reopen.
     cell = helpers.attendance_cell_id(params[:row].presence || @event_registration.id, date)
     attendance_event_path(@event_registration.event,
-      ce: params[:ce].presence, ce_approval: params[:ce_approval].presence, group: params[:group].presence, return_to: params[:return_to].presence,
+      ce: params[:ce].presence, ce_payment: params[:ce_payment].presence, group: params[:group].presence, return_to: params[:return_to].presence,
       edit: (cell if reopen), anchor: cell)
   end
 
