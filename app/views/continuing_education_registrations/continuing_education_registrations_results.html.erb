@@ -40,7 +40,7 @@
                   <%# Same name box as the registrants list, in the CE color. %>
                   <%= link_to continuing_education_registration_path(ce),
                         title: [ registrant.full_name, registrant.preferred_email ].compact_blank.join(" — "),
-                        class: "flex w-56 items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 leading-tight shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100, hover: true)}",
+                        class: "flex w-48 items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 leading-tight shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100, hover: true)}",
                         data: { turbo_frame: "_top" } do %>
                     <i class="fa-solid fa-certificate shrink-0 <%= DomainTheme.text_class_for(:continuing_education_registrations) %>"></i>
                     <span class="flex min-w-0 flex-col justify-center">
