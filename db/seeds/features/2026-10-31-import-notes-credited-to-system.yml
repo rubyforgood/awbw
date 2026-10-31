@@ -1,0 +1,10 @@
+name: "Import notes are credited to System"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-31
+action_path: "/comments"
+pr_number: 2930
+summary: >-
+  Comments that a registrant or story import writes now show "System" as the author, not the admin who ran the import.
+pro_tips:
+  - "The imported records themselves still credit the admin who ran the import."
