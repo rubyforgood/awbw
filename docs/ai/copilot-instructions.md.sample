@@ -50,7 +50,7 @@ When changing a model or controller, check whether these related files need upda
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | `docs/ai/AGENTS.md.sample` — and the live `AGENTS.md`, if this clone has one |
-| Ship a user-facing feature **or improvement/change** | a new file in `db/seeds/features/` (the Features & tips seeds — see below) |
+| Ship a user-facing feature **or improvement/change** | new file(s) in `db/seeds/features/` — one per capability, not one per PR (the Features & tips seeds — see below) |
 
 ## Code Style
 
@@ -403,6 +403,10 @@ column, a reworked flow) belongs here too. If in doubt whether a change is "big
 enough," add it: a short entry is cheap and the page is where non-devs discover
 what changed.
 
+- **One entry per capability, not per PR — consider whether it should be several.**
+  Staff search this page to answer "can the portal do X?", so a PR shipping several
+  distinct capabilities gets one file each (own `name`/`summary`/`action_path`, same
+  `pr_number`/`released_on`) — never buried in another entry's `description`/`pro_tips`.
 - **The seeds hydrate the `features` table; they are not the table.** Sync never
   regenerates or deletes records from the folder — removing a file leaves its
   record, and renaming an entry's `name` creates a new record.
