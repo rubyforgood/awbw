@@ -1,6 +1,6 @@
 <%= turbo_frame_tag "comments_results" do %>
   <div class="mb-3 border-t border-gray-100 pt-4">
-    <h2 class="text-sm font-semibold text-gray-700">Comments <span class="font-normal text-gray-400">· <%= @count_display %> shown</span></h2>
+    <h2 class="text-sm font-semibold text-gray-700">Comments <span class="font-normal text-gray-600">· <%= @count_display %> shown</span></h2>
   </div>
   <%= render "comments/feed",
              comments: @comments,
