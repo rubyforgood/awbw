@@ -1,9 +1,9 @@
 <%# A single column-toggle slide switch (see column_toggle_controller.js). Shows/
     hides every cell tagged data-column-toggle-col="<group>" under the nearest
     [data-column-toggle-root]. Locals: group, label, on (default false),
-    stacked (default false) — puts a two-word label's words on separate lines. %>
+    stacked (default false) — moves a multi-word label's last word onto a second line. %>
 <% on = local_assigns.fetch(:on, false) %>
-<% label_lines = local_assigns.fetch(:stacked, false) ? label.split(" ", 2) : [ label ] %>
+<% label_lines = local_assigns.fetch(:stacked, false) ? label.rpartition(" ").values_at(0, 2).compact_blank : [ label ] %>
 <label class="inline-flex shrink-0 cursor-pointer items-center gap-2 select-none"
        data-controller="column-toggle" data-column-toggle-group-value="<%= group %>">
   <span class="text-sm leading-tight whitespace-nowrap text-gray-500"><%= safe_join(label_lines, tag.br) %></span>
