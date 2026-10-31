@@ -730,6 +730,133 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("merged successfully")
         expect(invoice.reload.invoicee).to eq(keep)
       end
+
+      describe "memberships" do
+        it "blocks the merge when both people have memberships" do
+          create(:membership, person: keep)
+          create(:membership, person: delete_rec)
+
+          get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+          expect(response.body).to include("Merge blocked")
+          expect(response.body).to include("Both people have memberships")
+          expect(response.body).to include("Merge disabled")
+
+          expect {
+            post dedupe_perform_people_path, params: {
+              person_to_delete_id: delete_rec.id,
+              person_to_keep_id: keep.id
+            }
+          }.not_to change(Person, :count)
+
+          expect(response).to redirect_to(dedupe_index_people_path)
+          follow_redirect!
+          expect(response.body).to include("Both people have memberships")
+        end
+
+        it "blocks even when one side's memberships are locked history" do
+          create(:membership, person: keep)
+          create(:membership, :renewal_off, person: delete_rec,
+            start_date: Date.current - 2.years, end_date: Date.current - 1.year - 1.day,
+            locked_at: Time.current)
+
+          expect {
+            post dedupe_perform_people_path, params: {
+              person_to_delete_id: delete_rec.id,
+              person_to_keep_id: keep.id
+            }
+          }.not_to change(Person, :count)
+        end
+
+        it "moves the duplicate's membership, invoice, and payment to the keeper" do
+          membership = create(:membership, person: delete_rec)
+          invoice = create(:membership_invoice, membership: membership)
+          payment = create(:payment, person: delete_rec,
+            amount_cents: invoice.cost_cents, amount_cents_remaining: invoice.cost_cents)
+          allocation = create(:allocation, source: payment, allocatable: invoice, amount: invoice.cost_cents)
+
+          expect {
+            post dedupe_perform_people_path, params: {
+              person_to_delete_id: delete_rec.id,
+              person_to_keep_id: keep.id
+            }
+          }.to change(Person, :count).by(-1)
+
+          expect(membership.reload.person_id).to eq(keep.id)
+          expect(keep.memberships.reload).to contain_exactly(membership)
+          expect(invoice.reload.membership_id).to eq(membership.id)
+          expect(allocation.reload).to have_attributes(allocatable: invoice, amount: invoice.cost_cents)
+        end
+
+        it "moves every membership when they all belong to the duplicate" do
+          old = create(:membership, person: delete_rec,
+            start_date: Date.current - 2.years, end_date: Date.current - 1.year - 1.day)
+          current = create(:membership, person: delete_rec)
+
+          post dedupe_perform_people_path, params: {
+            person_to_delete_id: delete_rec.id,
+            person_to_keep_id: keep.id
+          }
+
+          expect(keep.memberships.reload).to contain_exactly(old, current)
+        end
+
+        it "merges when only the keeper has memberships" do
+          membership = create(:membership, person: keep)
+
+          expect {
+            post dedupe_perform_people_path, params: {
+              person_to_delete_id: delete_rec.id,
+              person_to_keep_id: keep.id
+            }
+          }.to change(Person, :count).by(-1)
+
+          expect(membership.reload.person_id).to eq(keep.id)
+          expect(keep.memberships.reload).to contain_exactly(membership)
+        end
+
+        it "repoints a membership invoice's invoicee to the keeper" do
+          membership = create(:membership, person: keep)
+          invoice = create(:membership_invoice, membership: membership, invoicee: delete_rec)
+
+          post dedupe_perform_people_path, params: {
+            person_to_delete_id: delete_rec.id,
+            person_to_keep_id: keep.id
+          }
+
+          expect(invoice.reload.invoicee).to eq(keep)
+        end
+
+        it "repoints a membership invoice's attention person to the keeper" do
+          membership = create(:membership, person: keep)
+          invoice = create(:membership_invoice, membership: membership, attention_person: delete_rec)
+
+          post dedupe_perform_people_path, params: {
+            person_to_delete_id: delete_rec.id,
+            person_to_keep_id: keep.id
+          }
+
+          expect(invoice.reload.attention_person).to eq(keep)
+        end
+
+        it "repoints a membership invoice billed to the duplicate's address" do
+          membership = create(:membership, person: keep)
+          address_attrs = {
+            street_address: "1 Main St", city: "Springfield", state: "CA", zip_code: "90001",
+            country: "United States", county: "LA", locality: "LA City", address_type: "personal"
+          }
+          keep_address = create(:address, addressable: keep, primary: true, **address_attrs)
+          delete_address = create(:address, addressable: delete_rec, **address_attrs)
+          invoice = create(:membership_invoice, membership: membership, bill_to_address: delete_address)
+
+          post dedupe_perform_people_path, params: {
+            person_to_delete_id: delete_rec.id,
+            person_to_keep_id: keep.id
+          }
+
+          expect(invoice.reload.bill_to_address_id).to eq(keep_address.id)
+        end
+      end
     end
 
     describe "when both people have a linked login" do

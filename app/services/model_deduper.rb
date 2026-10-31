@@ -114,10 +114,11 @@ class ModelDeduper
   LOST_POLYMORPHIC_REFERENCES = { "active_storage_attachments" => %w[record_type record_id] }.freeze
 
   # pay_customers is a polymorphic `has_many :as` on the billable model, so it's
-  # reassigned to the survivor by the reflection-driven pass (its charges/subscriptions/
-  # payment_methods follow via customer_id) — a merge never orphans billing. The rest
-  # reference a pay_customer/merchant, not a dedupable owner, so they need no handling
-  # here; they stay listed only to keep the safeguard quiet (rubyforgood/awbw#2378).
+  # reassigned to the survivor by the reflection-driven pass (its charges and
+  # payment methods follow via customer_id) — a merge never orphans billing. The rest
+  # are pay-gem tables that reference a pay_customer/merchant, not a dedupable owner,
+  # so they need no handling here; they stay listed only to keep the safeguard quiet
+  # (rubyforgood/awbw#2378).
   DEFERRED_REFERENCE_TABLES = %w[
     pay_merchants pay_subscriptions pay_charges pay_payment_methods pay_webhooks
   ].freeze

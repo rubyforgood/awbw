@@ -400,6 +400,7 @@ class PeopleController < ApplicationController
       merge_notes: ->(keep, delete) {
         [ dropped_email_note(keep, delete), login_merge_note(keep, delete) ].compact
       },
+      merge_blocks: ->(keep, delete) { membership_merge_blocks(keep, delete) },
       # Before the merge moves the deleted person's taggings onto the keeper (where
       # they become indistinguishable), capture which primary sector + age range to
       # keep: the survivor's own, or — when it has none — the deleted person's.
@@ -446,6 +447,14 @@ class PeopleController < ApplicationController
       },
       record_partial: "people/dedupe_record"
     }
+  end
+
+  def membership_merge_blocks(keep, delete)
+    return [] unless keep.memberships.exists? && delete.memberships.exists?
+
+    [ "Both people have memberships (#{keep.memberships.count} on #{keep.full_name} and " \
+      "#{delete.memberships.count} on #{delete.full_name}). Move or delete one person's " \
+      "memberships before merging, so all memberships are on one person." ]
   end
 
   # The primary login's email becomes the keeper's primary, so it isn't dropped.

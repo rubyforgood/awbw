@@ -1,7 +1,11 @@
 require "rails_helper"
 
 RSpec.describe "Membership renewal", type: :request do
-  let(:admin) { create(:user, :admin) }
+  around do |example|
+    Time.use_zone("Pacific Time (US & Canada)") { freeze_time { example.run } }
+  end
+
+  let(:admin) { create(:user, :admin, time_zone: "Pacific Time (US & Canada)") }
   let(:person) { create(:person, :without_audit) }
 
   before { sign_in admin }
