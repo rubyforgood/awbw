@@ -345,28 +345,51 @@ RSpec.describe "EventRegistrations", type: :request do
 
       it "marks the registration's certificate issued" do
         toggle_certificate("1")
-        expect(registration.reload.certificate_issued?).to be(true)
+        expect(registration.reload).to be_certificate_sent
       end
 
       it "clears the certificate when unchecked" do
         registration.mark_certificate_sent!
         toggle_certificate("0")
-        expect(registration.reload.certificate_issued?).to be(false)
+        expect(registration.reload).not_to be_certificate_sent
       end
 
-      it "drives the CE certificate for a CE registration, so it stays in sync with the CE edit page" do
+      it "leaves a CE registrant's CE certificate alone" do
         ce = create(:continuing_education_registration, event_registration: registration)
 
         toggle_certificate("1")
-        expect(ce.reload.certificate_sent_at).to be_present
 
-        toggle_certificate("0")
+        expect(registration.reload).to be_certificate_sent
+        expect(ce.reload.certificate_sent_at).to be_nil
+      end
+    end
+
+    describe "PATCH /event_registrations/:id/toggle_ce_certificate_issued" do
+      let(:registration) { create(:event_registration, event: event) }
+      let!(:ce) { create(:continuing_education_registration, event_registration: registration) }
+
+      def toggle_ce_certificate(value)
+        patch toggle_ce_certificate_issued_event_registration_path(registration),
+              params: { value: value },
+              headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      end
+
+      it "drives the CE certificate, so it stays in sync with the CE edit page" do
+        toggle_ce_certificate("1")
+        expect(ce.reload.certificate_sent_at).to be_present
+        expect(registration.reload).not_to be_certificate_sent
+
+        toggle_ce_certificate("0")
         expect(ce.reload.certificate_sent_at).to be_nil
       end
 
-      it "replaces just the toggled cell in the turbo stream" do
-        toggle_certificate("1")
-        expect(response.body).to include("certificate_issued_event_registration_#{registration.id}")
+      it "refreshes the row's CE badge alongside the slider" do
+        toggle_ce_certificate("1")
+
+        stream = Capybara.string(response.body)
+        expect(stream).to have_css("turbo-stream[action='replace'][target='#{ActionView::RecordIdentifier.dom_id(registration, :ce_certificate_issued)}']")
+        expect(stream).to have_css("turbo-stream[action='replace'][target='#{ActionView::RecordIdentifier.dom_id(registration, :ce_status)}']")
+        expect(response.body).to include("Issued")
       end
     end
 
@@ -956,7 +979,7 @@ RSpec.describe "EventRegistrations", type: :request do
       it "blocks toggle_certificate_issued with a warning" do
         patch toggle_certificate_issued_event_registration_path(locked), params: { value: "1" }
 
-        expect(locked.reload.certificate_issued?).to be(false)
+        expect(locked.reload).not_to be_certificate_sent
         expect(flash[:alert]).to match(/locked/i)
       end
 
@@ -2466,7 +2489,7 @@ RSpec.describe "EventRegistrations", type: :request do
       it "is forbidden for the registrant themselves" do
         patch toggle_certificate_issued_event_registration_path(existing_registration), params: { value: "1" }
         expect(response).to redirect_to(root_path)
-        expect(existing_registration.reload.certificate_issued?).to be(false)
+        expect(existing_registration.reload).not_to be_certificate_sent
       end
     end
 

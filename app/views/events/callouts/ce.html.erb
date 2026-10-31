@@ -22,7 +22,7 @@
    end || {} %>
 
 <%#
-  ?admin=true lets an admin preview the post-payment ("Pending") state of the
+  ?admin=true lets an admin preview the post-payment ("Approved") state of the
   badge without recording a real payment. Gated on edit access so a registrant
   can't fake it by editing the URL.
 %>
@@ -64,7 +64,7 @@
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Your CE credit</h2>
           <div class="flex items-center gap-3">
             <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</span>
-            <%= render "event_registrations/ce_status_badge", registration: @event_registration, simulate_paid: simulate_ce_paid %>
+            <%= render "event_registrations/ce_status_badge", registration: @event_registration, simulate_paid: simulate_ce_paid, for_registrant: true %>
           </div>
         </div>
 
@@ -152,7 +152,7 @@
         <%# Until a number is on file, the title bar says why the card needs filling in. %>
         <% license_needed_chip = capture do %>
           <% unless license_on_file || license_locked %>
-            <%= render "shared/badge", label: "License # needed",
+            <%= render "shared/badge", label: "Needs license #",
                   classes: "bg-amber-50 text-amber-700 border-amber-200",
                   icon: "fa-solid fa-circle-exclamation text-2xs", extra: "shrink-0",
                   title: "We need your license type and number to issue your CE certificate." %>
@@ -287,12 +287,12 @@
       the event's timesheet window (see events/callouts/_ce_attendance_sheet), and the
       controls stay singular above them because every sheet shares one set of times.
     %>
-    <%# Gated per licence (paid or intends to pay), so a second still being paid for
+    <%# Gated per licence (paid or intends to pay, and not denied), so a second still being paid for
         doesn't take the first one's sheet away. The sample preview has no payments behind its built CE
         record, so treat it as paid the way the "Paid in full" badge above does —
         otherwise the section is invisible where it's meant to be previewed. %>
     <% attendance_sheets = @event_registration.continuing_education_registrations
-         .select { |ce| ce.payment_access_granted? || simulate_ce_paid || sample_preview? } %>
+         .select { |ce| ce.access_granted? || simulate_ce_paid || sample_preview? } %>
     <% sheet = RegistrantAttendanceSheet.new(@event_registration) %>
     <% signed_in = sheet.signed_in? %>
     <% forgotten_entry = sheet.forgotten_entry %>

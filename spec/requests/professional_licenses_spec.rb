@@ -195,6 +195,28 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response).to redirect_to(edit_person_path(person, anchor: "professional-licenses"))
     end
 
+    context "reached from a CE registration" do
+      let(:ce_registration) do
+        create(:continuing_education_registration, professional_license: license,
+          event_registration: create(:event_registration, registrant: person))
+      end
+
+      it "returns to that CE registration" do
+        get edit_professional_license_path(license, return_to: "ce_registration", ce_registration_id: ce_registration.id)
+
+        expect(response.body).to include(edit_continuing_education_registration_path(ce_registration))
+        expect(response.body).to include("CE registration")
+      end
+
+      it "redirects back to the CE registration after saving" do
+        patch professional_license_path(license, return_to: "ce_registration", ce_registration_id: ce_registration.id), params: {
+          professional_license: { number: "LIC-556", kind: "LCSW" }
+        }
+
+        expect(response).to redirect_to(edit_continuing_education_registration_path(ce_registration))
+      end
+    end
+
     it "updates the license fields" do
       patch professional_license_path(license), params: {
         professional_license: { number: "LIC-556", kind: "LCSW", issuing_state: "NY" }

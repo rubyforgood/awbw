@@ -176,6 +176,10 @@ RSpec.describe BuiltinCalloutCards do
       paid = card(registration.reload, event.ce_hours_label)
       expect(paid.theme).to eq(DomainTheme.swatch("teal"))
       expect(paid.badge).to be_nil
+
+      # Denied by an admin: a Not approved chip.
+      ce.update!(denied_at: Time.current)
+      expect(card(registration.reload, event.ce_hours_label).badge).to eq("Not approved")
     end
 
     it "names the CE request deadline on the license-needed badge" do

@@ -9,22 +9,16 @@
 <div class="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
   <%= render "shared/filtered_to", record: scoped_license,
         clear_path: continuing_education_registrations_path(request.query_parameters.except("professional_license_id")) %>
-  <%= form_tag continuing_education_registrations_path, method: :get, class: "space-y-4",
+  <%= form_tag continuing_education_registrations_path, method: :get,
     data: {
       controller: "collection",
       turbo_frame: "continuing_education_registrations_results"
     }, autocomplete: "off" do %>
     <%= hidden_field_tag "professional_license_id", params[:professional_license_id] if params[:professional_license_id].present? %>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <div>
-        <label for="event_id" class="<%= label_class %>">Event</label>
-        <%= select_tag "event_id",
-          options_for_select(ce_events.map { |e| [ e.title, e.id ] }, params[:event_id]),
-          include_blank: "All events",
-          class: placeholder_select_class %>
-      </div>
-
-      <div>
+    <%# One wrapping row (the collection controller submits on change, so no Search
+        button): Registrant first, then Event takes the space the fixed-width filters leave. %>
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="w-full md:w-44">
         <label for="person_id" class="<%= label_class %>">Registrant</label>
         <%= select_tag "person_id",
           options_for_select(Person.where(id: params[:person_id]).map { |p| [ p.full_name, p.id ] }, params[:person_id]),
@@ -34,32 +28,42 @@
             controller: "remote-select",
             remote_select_model_value: "person"
           },
-          prompt: "Search for a person" %>
+          prompt: "Search people" %>
       </div>
 
-      <div>
-        <label for="certificate" class="<%= label_class %>">Certificate</label>
+      <div class="w-full md:min-w-40 md:flex-1">
+        <label for="event_id" class="<%= label_class %>">Event</label>
+        <%= select_tag "event_id",
+          options_for_select(ce_events.map { |e| [ e.title, e.id ] }, params[:event_id]),
+          include_blank: "All events",
+          class: placeholder_select_class %>
+      </div>
+
+      <div class="w-full md:w-28">
+        <label for="approval" class="<%= label_class %>">Approval</label>
+        <%= select_tag "approval",
+          options_for_select({ "All" => "", "Approved" => "approved", "Denied" => "denied" }, params[:approval]),
+          class: placeholder_select_class %>
+      </div>
+
+      <div class="w-full md:w-28">
+        <label for="certificate" class="<%= label_class %>">CE certificate</label>
         <%= select_tag "certificate",
           options_for_select({ "All" => "", "Issued" => "issued", "Not issued" => "pending" }, params[:certificate]),
           class: placeholder_select_class %>
       </div>
-    </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <div>
+      <div class="w-full md:w-36">
         <label for="issued_from" class="<%= label_class %>">Issued from</label>
         <%= date_field_tag "issued_from", params[:issued_from], class: date_filter_class(field_class, params[:issued_from]) %>
       </div>
 
-      <div>
+      <div class="w-full md:w-36">
         <label for="issued_to" class="<%= label_class %>">Issued to</label>
         <%= date_field_tag "issued_to", params[:issued_to], class: date_filter_class(field_class, params[:issued_to]) %>
       </div>
-    </div>
 
-    <div class="flex justify-end gap-2 md:col-span-3">
-      <%= submit_tag "Search", class: button_classes(:primary) %>
-      <%= render "shared/search_clear", url: continuing_education_registrations_path %>
+      <%= render "shared/search_clear", url: continuing_education_registrations_path, label: "Clear" %>
     </div>
   <% end %>
 </div>

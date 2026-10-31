@@ -4,11 +4,11 @@ class EventRegistrationsController < ApplicationController
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
-  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance, :toggle_post_survey, :transfer, :process_transfer, :revert_transfer ]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :toggle_ce_certificate_issued, :update_attendance, :toggle_post_survey, :transfer, :process_transfer, :revert_transfer ]
   # A transferred-out reg is locked (issue #1944): its inline write endpoints are
   # blocked with a warning rather than silently ignored. The full-form `update` is
   # handled separately (it keeps comments/communications editable).
-  before_action :block_locked_registration, only: [ :update_onboarding, :toggle_certificate_issued, :update_attendance, :toggle_post_survey ]
+  before_action :block_locked_registration, only: [ :update_onboarding, :toggle_certificate_issued, :toggle_ce_certificate_issued, :update_attendance, :toggle_post_survey ]
 
   def index
     authorize!
@@ -177,15 +177,18 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
-  # Inline toggle of the "certificate issued" flag from the registrants roster.
-  # Replaces just the cell so the whole roster doesn't re-render on every toggle.
+  # Inline toggles of the event and CE "certificate issued" flags from the registrants
+  # roster. Each replaces just its cell so the whole roster doesn't re-render.
   def toggle_certificate_issued
-    authorize! @event_registration, to: :toggle_certificate_issued?
+    authorize! @event_registration
     @event_registration.mark_certificate_issued!(ActiveModel::Type::Boolean.new.cast(params[:value]))
-    respond_to do |format|
-      format.turbo_stream
-      format.html { redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id) }
-    end
+    respond_to_certificate_toggle
+  end
+
+  def toggle_ce_certificate_issued
+    authorize! @event_registration, to: :toggle_certificate_issued?
+    @event_registration.mark_ce_certificate_issued!(ActiveModel::Type::Boolean.new.cast(params[:value]))
+    respond_to_certificate_toggle
   end
 
   # Inline correction of one registrant's sign-in/out times for one training day, from
@@ -502,6 +505,13 @@ class EventRegistrationsController < ApplicationController
   end
 
   private
+
+  def respond_to_certificate_toggle
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id) }
+    end
+  end
 
   def set_registration_form_submissions
     registration_form = @event_registration.event&.registration_form

@@ -29,6 +29,14 @@ class ContinuingEducationRegistrationDecorator < ApplicationDecorator
     "Can't be deleted — this CE registration has payment records (reverted payments still count), which stay linked to it."
   end
 
+  def approval_badge
+    if approved?
+      Badge.new(label: "Approved", icon: "fa-solid fa-circle-check", classes: "bg-green-50 text-green-700 border-green-200")
+    else
+      Badge.new(label: "Denied", icon: "fa-solid fa-ban", classes: "bg-red-50 text-red-700 border-red-200")
+    end
+  end
+
   # Pill for whether the completion certificate has been issued.
   def certificate_badge
     if certificate_sent_at.present?
@@ -46,7 +54,8 @@ class ContinuingEducationRegistrationDecorator < ApplicationDecorator
     conditions = [
       Condition.new(label: ended_label, met: event.end_date&.past?),
       Condition.new(label: "your attendance is confirmed", met: event_registration.attended?),
-      Condition.new(label: "your CE payment is received in full", met: paid_in_full?)
+      Condition.new(label: "your CE payment is received in full", met: paid_in_full?),
+      Condition.new(label: "your CE is approved", met: approved?)
     ]
     conditions << Condition.new(label: "#{ce_form.form.display_name} is complete", met: ce_form.complete?) if ce_form.form
     if event_registration.attendance_minutes_total.positive?

@@ -1615,7 +1615,7 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include("Feedback")
-        expect(response.body).to include("Ticket forms")
+        expect(Capybara.string(response.body)).to have_css("label[data-column-toggle-group-value='ticket_forms']", text: /Ticket\s*forms/)
         expect(response.body).to include(registration_callout_form_path(registration.slug, callout))
       end
 
@@ -1868,10 +1868,25 @@ RSpec.describe "Events", type: :request do
       free_event = create(:event, cost_cents: 0)
       get registrants_event_path(free_event)
 
-      expect(response.body).not_to include("Any payment status")
+      expect(Capybara.string(response.body)).to have_no_css("select#payment_status", visible: :all)
       expect(response.body).not_to include("Any payment method")
       expect(response.body).not_to include("Funder name")
       expect(response.body).not_to include("Any status")
+    end
+
+    it "notes Intends to pay under the CE badge while the CE balance is due" do
+      event.update!(ce_hours_offered: 6)
+      registration = create(:event_registration, event: event)
+      ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 15_000, intends_to_pay: true)
+
+      get registrants_event_path(event)
+
+      expect(Capybara.string(response.body).find("##{ActionView::RecordIdentifier.dom_id(registration, :ce_status)}")).to have_text("Intends to pay")
+
+      create(:allocation, source: create(:payment), allocatable: ce, amount: ce.cost_cents)
+      get registrants_event_path(event)
+
+      expect(Capybara.string(response.body).find("##{ActionView::RecordIdentifier.dom_id(registration, :ce_status)}")).to have_no_text("Intends to pay")
     end
 
     context "CE timesheets link in bulk actions" do
@@ -1935,19 +1950,22 @@ RSpec.describe "Events", type: :request do
           registrant: create(:person, first_name: "Sponsored", last_name: "Buddy"))
       end
 
-      it "shows a short-code badge beside the registrant's name" do
+      it "names each method in a Payment method column its switch reveals" do
         get registrants_event_path(event)
 
-        expect(response.body).to include("CCN")
-        expect(response.body).to include("BUD")
+        page = Capybara.string(response.body)
+        expect(page).to have_css("th[data-column-toggle-col='payment_method']", text: "Payment method", visible: :all)
+        cells = page.all("td[data-column-toggle-col='payment_method']", visible: :all).map { |td| td.text(:all).squish }
+        expect(cells).to include("Card", "Check", "Buddy")
       end
 
       it "offers every method plus the buddy option in the filter" do
         get registrants_event_path(event)
 
-        expect(response.body).to include("Credit card (CCN)")
-        expect(response.body).to include("Check (CK)")
-        expect(response.body).to include("Someone else will pay (BUD)")
+        page = Capybara.string(response.body)
+        expect(page).to have_css("option", exact_text: "Credit card", visible: :all)
+        expect(page).to have_css("option", exact_text: "Check", visible: :all)
+        expect(page).to have_css("option", exact_text: "Someone else will pay", visible: :all)
       end
 
       it "narrows the roster to the chosen method" do
@@ -2628,12 +2646,12 @@ RSpec.describe "Events", type: :request do
       expect(ce_chip_text).to eq("Create")
     end
 
-    it "shows License # needed once a CE record exists without a license number" do
+    it "shows Needs license # once a CE record exists without a license number" do
       reg = create(:event_registration, event: event, registrant: person)
       create(:continuing_education_registration, event_registration: reg,
         professional_license: create(:professional_license, :placeholder, person: person))
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("License # needed")
+      expect(ce_chip_text).to eq("Needs license #")
     end
 
     it "shows the balance due once a license is on file but the CE balance is unpaid" do
@@ -2644,14 +2662,14 @@ RSpec.describe "Events", type: :request do
       expect(ce_chip_text).to eq("$150 due")
     end
 
-    it "shows Pending when the CE balance is paid but the certificate isn't issued" do
+    it "shows Approved when the CE balance is paid but the certificate isn't issued" do
       reg = create(:event_registration, event: event, registrant: person)
       cer = create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
         professional_license: create(:professional_license, person: person))
       create(:allocation, source: create(:payment, amount_cents: 15_000, amount_cents_remaining: 15_000),
         allocatable: cer, amount: 15_000)
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("Pending")
+      expect(ce_chip_text).to eq("Approved")
     end
 
     it "shows Issued once the CE certificate has been delivered" do

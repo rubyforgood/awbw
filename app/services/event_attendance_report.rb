@@ -38,12 +38,12 @@ class EventAttendanceReport
     end
 
     def paying?
-      ce_registration.nil? || ce_registration.payment_access_granted?
+      ce_registration.nil? || ce_registration.access_granted?
     end
   end
 
-  # `paying_only:` narrows the CE report to licences paid or intending to pay — the
-  # same per-licence rule that opens the registrant's own sign-in sheet.
+  # `paying_only:` narrows the CE report to licences paid or intending to pay and not
+  # denied — the same per-licence rule that opens the registrant's own sign-in sheet.
   def initialize(event, ce_only: false, paying_only: false)
     @event = event
     @ce_only = ce_only

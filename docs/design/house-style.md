@@ -66,9 +66,14 @@ client-side. Render the shared partial rather than copying its markup:
 </div>
 ```
 
-- `shared/_column_toggle_switch.html.erb` takes `group`, `label`, and `on`
-  (default `false`). A visually-hidden checkbox drives the track + knob; the
-  track is `bg-blue-600` when on and `bg-gray-300` when off.
+- `shared/_column_toggle_switch.html.erb` takes `group`, `label`, `on`
+  (default `false`), and `stacked` (default `false`). A visually-hidden checkbox
+  drives the track + knob; the track is `bg-blue-600` when on and `bg-gray-300`
+  when off.
+- On a crowded switch row, pass `stacked: true` on every switch: a multi-word
+  label breaks before its last word, so labels stay as narrow as possible and
+  each slider sits right after its label (a label left to wrap on its own keeps
+  its one-line width and leaves a gap). Example: the event registrants list.
 - Backed by the **`column-toggle`** Stimulus controller
   (`app/frontend/javascript/controllers/column_toggle_controller.js`): it
   shows/hides every cell whose `data-column-toggle-col` matches the switch's

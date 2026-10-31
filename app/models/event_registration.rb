@@ -117,6 +117,8 @@ class EventRegistration < ApplicationRecord
     [ "Not paid yet", "not_paid" ],
     [ "Needs license", "needs_license" ],
     [ "Paid", "paid" ],
+    [ "Approved", "approved" ],
+    [ "Denied", "denied" ],
     [ "Certificate issued", "issued" ],
     [ "Certificate outstanding", "not_issued" ],
     [ "No CE", NO_CE ]
@@ -421,8 +423,10 @@ class EventRegistration < ApplicationRecord
       when "registered" then "TRUE"
       when "needs_license" then "pl.number IS NULL"
       when "paid" then paid_sql
-      # Same rows today: CE has no approval step yet, so "requested" is just unpaid.
+      # Same rows: "requested" reads as the state before payment, which is unpaid.
       when "requested", "not_paid" then "NOT (#{paid_sql})"
+      when "approved" then "cer.denied_at IS NULL"
+      when "denied" then "cer.denied_at IS NOT NULL"
       when "issued" then "cer.certificate_sent_at IS NOT NULL"
       when "not_issued" then "cer.certificate_sent_at IS NULL"
       when NO_CE then "TRUE"
@@ -995,21 +999,16 @@ class EventRegistration < ApplicationRecord
     continuing_education_registrations.all? { |c| c.certificate_sent_at.present? }
   end
 
-  # The registration's completion certificate, as shown by the registrants-roster
-  # toggle. For a registration that has CE that's the CE certificate
-  # (certificate_sent_at on its CE registrations, so it stays in sync with the CE
-  # edit page); otherwise the registration's own certificate_sent_at.
-  def certificate_issued?
-    continuing_education_registrations.any? ? ce_certificate_issued? : certificate_sent?
+  # Issuing keeps an existing issued date — it's printed on the certificate.
+  def mark_certificate_issued!(issued)
+    update!(certificate_sent_at: issued ? certificate_sent_at || Time.current : nil)
   end
 
-  def mark_certificate_issued!(issued)
-    at = issued ? Time.current : nil
-    ce = continuing_education_registrations
-    if ce.any?
-      ce.each { |c| c.update!(certificate_sent_at: at) }
-    else
-      update!(certificate_sent_at: at)
+  # Writes certificate_sent_at on each CE registration, so it stays in sync with the CE
+  # edit page; a licence already issued keeps its date, which feeds its yearly CE hours.
+  def mark_ce_certificate_issued!(issued)
+    continuing_education_registrations.each do |c|
+      c.update!(certificate_sent_at: issued ? c.certificate_sent_at || Time.current : nil)
     end
   end
 
@@ -1023,22 +1022,37 @@ class EventRegistration < ApplicationRecord
     chain.any? && chain.all?(&:paid_in_full?)
   end
 
-  # The CE-paid callout gate: every CE across the transfer chain is paid or intends to pay.
-  def ce_payment_access_granted?
+  # The CE callout gate: none of this reg's CE is denied, and every CE across the
+  # transfer chain is paid or intends to pay. Denial is judged here only — the
+  # origin's paid stub is never certified.
+  def ce_access_granted?
     chain = continuing_education_registrations_across_transfers
-    chain.any? && chain.all?(&:payment_access_granted?)
+    ce_approved? && chain.all?(&:payment_access_granted?)
+  end
+
+  # A CE balance still due that the registrant has said they'll pay — the roster's CE note.
+  def ce_intends_to_pay?
+    !ce_paid_in_full? && continuing_education_registrations.any?(&:intends_to_pay?)
+  end
+
+  def ce_approved?
+    continuing_education_registrations.any? && !ce_denied?
+  end
+
+  def ce_denied?
+    continuing_education_registrations.any?(&:denied?)
   end
 
   # Whether the attendance sign-in sheet is open to this registrant. Deliberately
   # any-of, not the all-of ce_paid_in_full? the status badge uses: each CE
-  # registration that's paid or intends to pay gets its own sheet, and they all
+  # registration that's paid or intends to pay and not denied gets its own sheet, and they all
   # record the same hours in the same room, so one such licence is enough to justify
   # writing those hours down. Someone part-way through paying for a second licence
   # keeps signing in for the first. Events can switch timesheets off entirely.
   def ce_attendance_available?
     return false unless event&.ce_timesheets_enabled?
 
-    continuing_education_registrations.any?(&:payment_access_granted?)
+    continuing_education_registrations.any?(&:access_granted?)
   end
 
   # License numbers on file across this registration's CE registrations.

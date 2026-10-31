@@ -5,6 +5,18 @@ RSpec.describe ContinuingEducationRegistrationDecorator do
   let(:registration) { create(:event_registration, event: event, status: "attended") }
   let(:ce_registration) { create(:continuing_education_registration, event_registration: registration, hours: 6, cost_cents: 0) }
 
+  describe "#approval_badge" do
+    it "reads Approved by default, whatever the payment" do
+      ce_registration.update!(cost_cents: 15_000)
+      expect(ce_registration.decorate.approval_badge.label).to eq("Approved")
+    end
+
+    it "reads Denied once an admin denies it" do
+      ce_registration.update!(denied_at: Time.current)
+      expect(ce_registration.decorate.approval_badge.label).to eq("Denied")
+    end
+  end
+
   describe "#certificate_locked_reason" do
     it "is nil once the certificate is earned" do
       expect(ce_registration.decorate.certificate_locked_reason).to be_nil
@@ -33,6 +45,11 @@ RSpec.describe ContinuingEducationRegistrationDecorator do
   end
 
   describe "#certificate_conditions" do
+    it "lists approval as unmet once an admin denies the CE" do
+      ce_registration.update!(denied_at: Time.current)
+      expect(ce_registration.decorate.certificate_locked_reason).to eq("Unlocks once your CE is approved")
+    end
+
     it "leaves off the signed-in time condition when no time was logged" do
       labels = ce_registration.decorate.certificate_conditions.map(&:label)
 

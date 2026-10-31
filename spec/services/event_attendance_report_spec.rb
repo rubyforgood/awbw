@@ -176,6 +176,12 @@ RSpec.describe EventAttendanceReport do
       expect(report.paying_row_count).to eq(1)
     end
 
+    it "drops a paid licence an admin denied" do
+      alice.continuing_education_registrations.first.update!(denied_at: Time.current)
+      expect(report.rows).to be_empty
+      expect(report.all_rows.map(&:license_number)).to eq(%w[AAA111 BBB222])
+    end
+
     it "keeps a person's paid licence when their second is unpaid" do
       make_ce(alice, number: "AAA999")
       expect(report.rows.map(&:license_number)).to eq([ "AAA111" ])

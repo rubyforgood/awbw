@@ -252,9 +252,31 @@ RSpec.describe EventRegistration, type: :model do
       dest_ce = destination.continuing_education_registrations.create!(
         professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
 
-      destination.mark_certificate_issued!(true)
+      destination.mark_ce_certificate_issued!(true)
       expect(dest_ce.reload.certificate_sent?).to be(true)
-      expect(destination.reload.certificate_issued?).to be(true)
+      expect(destination.reload.ce_certificate_issued?).to be(true)
+    end
+
+    it "keeps an already-issued CE certificate's date when issuing the rest" do
+      issued_on = 2.weeks.ago.change(usec: 0)
+      issued = destination.continuing_education_registrations.create!(
+        professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true, certificate_sent_at: issued_on)
+      pending = destination.continuing_education_registrations.create!(
+        professional_license: create(:professional_license, person: person), hours: 6, cost_cents: 0, skip_event_defaults: true)
+
+      destination.mark_ce_certificate_issued!(true)
+
+      expect(issued.reload.certificate_sent_at).to eq(issued_on)
+      expect(pending.reload.certificate_sent_at).to be_present
+    end
+
+    it "keeps the event certificate's date when it's already issued" do
+      issued_on = 2.weeks.ago.change(usec: 0)
+      destination.update!(certificate_sent_at: issued_on)
+
+      destination.mark_certificate_issued!(true)
+
+      expect(destination.reload.certificate_sent_at).to eq(issued_on)
     end
 
     it "does not reach across the transfer link to the other reg's CE" do
@@ -263,7 +285,7 @@ RSpec.describe EventRegistration, type: :model do
       dest_ce = destination.continuing_education_registrations.create!(
         professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true)
 
-      destination.mark_certificate_issued!(true)
+      destination.mark_ce_certificate_issued!(true)
       expect(dest_ce.reload.certificate_sent?).to be(true)
       expect(source_stub.reload.certificate_sent?).to be(false)
     end
@@ -305,8 +327,12 @@ RSpec.describe EventRegistration, type: :model do
         expect(destination.reload.ce_paid_in_full?).to be(true)
       end
 
-      it "offers attendance sign-in on the destination reg" do
+      it "offers attendance sign-in on the destination reg until its CE is denied" do
         expect(destination.reload.ce_attendance_available?).to be(true)
+
+        destination.continuing_education_registrations.first.update!(denied_at: Time.current)
+
+        expect(destination.reload.ce_attendance_available?).to be(false)
       end
 
       it "keeps the paid stub on the source reg CE-paid too" do
@@ -324,13 +350,16 @@ RSpec.describe EventRegistration, type: :model do
         expect(destination.reload.ce_paid_in_full?).to be(false)
       end
 
-      it "grants CE payment access once the carried balance intends to pay" do
-        expect(destination.reload.ce_payment_access_granted?).to be(false)
+      it "grants CE access once the carried balance intends to pay, unless it's denied" do
+        carried = destination.continuing_education_registrations.first
+        expect(destination.reload.ce_access_granted?).to be(false)
 
-        destination.continuing_education_registrations.first.update!(intends_to_pay: true)
-
-        expect(destination.reload.ce_payment_access_granted?).to be(true)
+        carried.update!(intends_to_pay: true)
+        expect(destination.reload.ce_access_granted?).to be(true)
         expect(destination.ce_paid_in_full?).to be(false)
+
+        carried.update!(denied_at: Time.current)
+        expect(destination.reload.ce_access_granted?).to be(false)
       end
     end
 
@@ -1031,6 +1060,12 @@ RSpec.describe EventRegistration, type: :model do
           create(:continuing_education_registration, event_registration: r, cost_cents: ce_cost, certificate_sent_at: Time.current)
         end
       end
+      # Denied by an admin, payment aside.
+      let!(:denied_ce) do
+        create(:event_registration, event: event).tap do |r|
+          create(:continuing_education_registration, :denied, event_registration: r, cost_cents: ce_cost)
+        end
+      end
       let!(:no_ce) { create(:event_registration, event: event) }
 
       it "maps 'registered' to everyone signed up for CE, whatever its state" do
@@ -1063,6 +1098,18 @@ RSpec.describe EventRegistration, type: :model do
         expect(results).not_to include(paid_ce, no_ce)
       end
 
+      it "maps 'approved' to every CE registration an admin hasn't denied" do
+        results = EventRegistration.ce_status("approved")
+        expect(results).to include(paid_ce, requested_ce)
+        expect(results).not_to include(denied_ce, no_ce)
+      end
+
+      it "maps 'denied' to CE registrations an admin has denied" do
+        results = EventRegistration.ce_status("denied")
+        expect(results).to include(denied_ce)
+        expect(results).not_to include(paid_ce, requested_ce, no_ce)
+      end
+
       it "maps 'issued' to CE registrations with a delivered certificate" do
         results = EventRegistration.ce_status("issued")
         expect(results).to include(issued_ce)
@@ -1078,7 +1125,7 @@ RSpec.describe EventRegistration, type: :model do
       it "maps 'none' to registrations that never signed up for CE" do
         results = EventRegistration.ce_status(EventRegistration::NO_CE)
         expect(results).to include(no_ce)
-        expect(results).not_to include(paid_ce, requested_ce, needs_license_ce, issued_ce)
+        expect(results).not_to include(paid_ce, requested_ce, needs_license_ce, issued_ce, denied_ce)
       end
 
       # The license join is an inner join, so this only holds because
@@ -1647,6 +1694,15 @@ RSpec.describe EventRegistration, type: :model do
         payment = create(:payment, person: reg.registrant, amount_cents: 15_000, amount_cents_remaining: nil)
         create(:allocation, source: payment, allocatable: cer, amount: 15_000)
         expect(reg.reload.ce_amount_due_cents).to eq(0)
+      end
+    end
+
+    describe "#ce_intends_to_pay?" do
+      it "is true while a CE balance is due and the CE intends to pay" do
+        cer = add_ce
+        expect(reg.reload).not_to be_ce_intends_to_pay
+        cer.update!(intends_to_pay: true)
+        expect(reg.reload).to be_ce_intends_to_pay
       end
     end
 
