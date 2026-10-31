@@ -210,7 +210,7 @@ module Dedupable
   #                       records: { record => text } } — what the merge changes beyond keeping the keeper's
   #                       values, flagged beside that field or moving record (optional)
   #   merge_blocks:       Lambda(keep, delete) returning an array of reasons this particular merge is
-  #                       unsafe (e.g. both people carry an active pay subscription). Any reason disables
+  #                       unsafe (e.g. both people already have memberships). Any reason disables
   #                       the preview's merge button and refuses the POST (optional)
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
   #   record_partial:     Partial rendering a record's whole line on the index (local: record), in place
