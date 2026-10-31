@@ -11,10 +11,6 @@ ENV RAILS_ENV=production \
   BUNDLE_BIN=/gems/bin \
   PATH="/gems/bin:$PATH"
 
-# Install bundler
-RUN gem install bundler -v 4.0.4
-
-
 FROM base AS assets
 
 # Install basic Linux packages

@@ -26,6 +26,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+          bundler: "4.0.20"
       - name: Prepare RuboCop cache
         uses: actions/cache@v6
         env:

@@ -1,5 +1,8 @@
 name: Build and run tests
 
+env:
+  BUNDLER_VERSION_PIN: "4.0.20"
+
 on:
   pull_request:
     types:
@@ -19,6 +22,16 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+          bundler: ${{ env.BUNDLER_VERSION_PIN }}
+
+      - name: Check Bundler version matches lockfile
+        run: |
+          locked=$(sed -n '/^BUNDLED WITH$/{n;s/^ *//;p;}' Gemfile.lock)
+          echo "Gemfile.lock: $locked / CI pin: $BUNDLER_VERSION_PIN"
+          if [ "$locked" != "$BUNDLER_VERSION_PIN" ]; then
+            echo "::error file=Gemfile.lock::BUNDLED WITH is $locked but CI pins Bundler $BUNDLER_VERSION_PIN"
+            exit 1
+          fi
 
       - name: Scan for common Rails security vulnerabilities using static analysis
         run: bin/brakeman --no-pager
@@ -53,6 +66,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+          bundler: ${{ env.BUNDLER_VERSION_PIN }}
 
       - uses: actions/setup-node@v7
         with:
