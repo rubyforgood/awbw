@@ -1,0 +1,13 @@
+name: "Toggle event and CE certificates from the registrants list"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2921
+action_path: "/events"
+summary: >-
+  The registrants list's Certificate of completion switch now opens two columns
+  on a CE event: the event certificate and the CE certificate, each with its own
+  slider you can flip without leaving the list.
+pro_tips:
+  - "The two certificates are separate now — issuing the event one no longer touches CE."
+  - "A registrant with no CE registration shows a dash in the CE certificate column."
