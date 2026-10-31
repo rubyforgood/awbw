@@ -1,0 +1,15 @@
+name: "Issue certificates and see payment methods on the registrants list"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2921
+action_path: "/events"
+summary: >-
+  The Certificate of completion switch opens a slider column for the event
+  certificate and, on CE events, one for the CE certificate. The Payment method
+  switch opens its own column, naming each method instead of a short code.
+pro_tips:
+  - "Turning a certificate slider on keeps an issued date already on file; turning it off clears it."
+  - "Payment methods read Card, Card later, Check, or Buddy (someone else will pay)."
+  - "The CE column notes Intends to pay under the badge while a CE balance is due."
+  - "Organization linking now sits right beside the search box."

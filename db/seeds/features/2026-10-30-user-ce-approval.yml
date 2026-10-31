@@ -1,0 +1,11 @@
+name: "Staff approve your CE before sign-in opens"
+area: events
+display_status: user_facing
+released_on: 2026-10-30
+pr_number: 2921
+summary: >-
+  Once you've paid for CE or said you'll pay, our staff approve your CE
+  registration. Approval opens your training sign-in and, after the training,
+  your CE certificate.
+pro_tips:
+  - "Your CE badge reads Needs approval until staff approve it, then Approved."
