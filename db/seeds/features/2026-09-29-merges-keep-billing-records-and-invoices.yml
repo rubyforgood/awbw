@@ -1,0 +1,15 @@
+name: "Merges keep billing records and invoices"
+area: people
+display_status: admin_facing
+released_on: 2026-09-29
+pr_number: 2531
+action_path: "/people/dedupe_index"
+summary: >-
+  Merging two people carries their Stripe billing onto the kept person and
+  settles it on one active payment record, and invoices follow the merge instead
+  of stopping it.
+description: >-
+  Payment history from both people — customers, charges, and saved cards — moves
+  to the kept person. One payment record stays active; the redundant one is
+  hidden rather than deleted, so its charge history is still on file. Invoices
+  addressed to either person or organization move to the kept record.

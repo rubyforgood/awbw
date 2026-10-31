@@ -1,0 +1,12 @@
+name: "Merging two people who both have memberships is blocked"
+area: people
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2924
+action_path: "/people/dedupe_index"
+summary: >-
+  A person merge now stops when both people have memberships, so memberships
+  never end up split across one person. When only one side has them, the
+  memberships, their invoices, and payments move to the kept person.
+pro_tips:
+  - "Move or delete one person's memberships first, then merge. The merge preview tells you before you commit."

@@ -8,8 +8,9 @@ doc links). An admin clicks **Sync latest updates** on `/features`
 (`FeatureCatalog#import!`) to hydrate the table from these files:
 
 - Creates a record for any seed whose `name` isn't in the table yet.
-- Overwrites a same-name record with the seed's fields when nobody has edited
-  it in-app. A field the seed leaves blank keeps its value.
+- Makes a same-name record match its seed when nobody has edited it in-app:
+  a field the seed leaves blank is cleared, and `published` and the name's
+  capitalization follow the seed too.
 - Never touches a record an admin has edited.
 
 The table is never regenerated from this folder. Deleting or renaming a file
