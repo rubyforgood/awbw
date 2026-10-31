@@ -87,7 +87,7 @@
               </th>
               <%# Extra left padding lines the header up with the org pill's text (the
                   pill is inset from the cell edge by its own px-3), not the cell edge. %>
-              <th class="pl-7 pr-4 py-2 text-left text-sm font-semibold text-gray-700 w-full" aria-sort="none" data-column-toggle-col="organization">
+              <th class="w-full py-2 pr-4 pl-5 text-left text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="organization">
                 <%= render "shared/sortable_header", label: "Linked organization", index: 1 %>
               </th>
 
@@ -97,19 +97,19 @@
                 </th>
               <% end %>
 
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 <%= "hidden" unless scholarship_on %>" aria-sort="none" data-column-toggle-col="scholarship">
+              <th class="px-2 py-2 text-center text-sm font-semibold text-gray-700 <%= "hidden" unless scholarship_on %>" aria-sort="none" data-column-toggle-col="scholarship">
                 <%= render "shared/sortable_header", label: "Scholarship", index: scholarship_index %>
               </th>
 
               <% if payment_col %>
-                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
+                <th class="px-2 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
                   <%= render "shared/sortable_header", label: "Payment", index: payment_index %>
                 </th>
                 <th class="hidden px-4 py-2 text-center text-sm font-semibold text-gray-700" data-column-toggle-col="payment_method">Payment method</th>
               <% end %>
 
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col="confirmed">User account</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="attendance">
+              <th class="px-2 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="attendance">
                 <%= render "shared/sortable_header", label: "Attendance", index: attendance_index %>
               </th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" aria-sort="none" data-column-toggle-col="date">
@@ -142,7 +142,7 @@
 
               <% highlighted = params[:highlight].to_s == registration.id.to_s %>
               <tr id="<%= registrant_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "hover:bg-gray-50" %>">
-                <td class="px-4 py-2" data-sort-first="<%= person.first_name.to_s.downcase %>" data-sort-last="<%= person.last_name.to_s.downcase %>">
+                <td class="py-2 pr-1 pl-4" data-sort-first="<%= person.first_name.to_s.downcase %>" data-sort-last="<%= person.last_name.to_s.downcase %>">
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 
                   <div class="flex items-center gap-1">
@@ -211,7 +211,7 @@
                   </div>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-gray-800" data-column-toggle-col="organization">
+                <td class="py-2 pr-4 pl-2 text-sm text-gray-800" data-column-toggle-col="organization">
                   <% linked_orgs = registration.organizations %>
                   <% submitted_org_name = @submitted_org_names[registration.registrant_id].to_s.strip %>
                   <%# A submitted org name needs admin attention only while nothing is linked
@@ -302,7 +302,7 @@
                    else
                      3
                    end %>
-                <td class="px-4 py-2 text-center text-sm <%= "hidden" unless scholarship_on %>" data-column-toggle-col="scholarship" data-sort-value="<%= scholarship_sort %>">
+                <td class="px-2 py-2 text-center text-sm <%= "hidden" unless scholarship_on %>" data-column-toggle-col="scholarship" data-sort-value="<%= scholarship_sort %>">
                   <% if (s = scholarship) %>
                     <%# A transferred-in reg's award lives on its source registration —
                         open it in a new tab and flag that it's on the original. %>
@@ -337,7 +337,7 @@
                 <% if @event.cost_cents.to_i > 0 %>
                   <% paid_cents = registration.allocations_sum %>
                   <% due_cents = @event.cost_cents - paid_cents %>
-                  <td class="px-4 py-2 text-center text-sm" data-sort-value="<%= due_cents %>">
+                  <td class="px-2 py-2 text-center text-sm" data-sort-value="<%= due_cents %>">
                     <% is_paid = registration.paid_in_full? %>
                     <% is_discounted = !is_paid && registration.discounted? %>
                     <% is_partial = !is_discounted && registration.partially_paid? %>
@@ -415,7 +415,7 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-center text-sm text-nowrap" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration, return_to: "registrants" %></td>
+                <td class="px-2 py-2 text-center text-sm text-nowrap" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration, return_to: "registrants" %></td>
                 <td class="hidden px-4 py-2 text-center text-sm text-nowrap text-gray-600" data-column-toggle-col="date" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%A, %B %-d, %Y at %-l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
                 <% readiness = @readiness[registration.id] %>
                 <td class="px-4 py-2 text-center text-sm" data-sort-value="<%= readiness.status_sort_key %>">
