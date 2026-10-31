@@ -1874,6 +1874,21 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("Any status")
     end
 
+    it "notes Intends to pay under the CE badge while the CE balance is due" do
+      event.update!(ce_hours_offered: 6)
+      registration = create(:event_registration, event: event)
+      ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 15_000, intends_to_pay: true)
+
+      get registrants_event_path(event)
+
+      expect(Capybara.string(response.body).find("##{ActionView::RecordIdentifier.dom_id(registration, :ce_status)}")).to have_text("Intends to pay")
+
+      create(:allocation, source: create(:payment), allocatable: ce, amount: ce.cost_cents)
+      get registrants_event_path(event)
+
+      expect(Capybara.string(response.body).find("##{ActionView::RecordIdentifier.dom_id(registration, :ce_status)}")).to have_no_text("Intends to pay")
+    end
+
     context "CE timesheets link in bulk actions" do
       it "links to the CE attendance report for a CE-eligible event" do
         event.update!(ce_hours_offered: 6)
@@ -1935,27 +1950,22 @@ RSpec.describe "Events", type: :request do
           registrant: create(:person, first_name: "Sponsored", last_name: "Buddy"))
       end
 
-      it "shows a short-code badge beside the registrant's name" do
-        get registrants_event_path(event)
-
-        expect(response.body).to include("CCN")
-        expect(response.body).to include("BUD")
-      end
-
-      it "puts the codes in a Payment method column its switch reveals" do
+      it "names each method in a Payment method column its switch reveals" do
         get registrants_event_path(event)
 
         page = Capybara.string(response.body)
         expect(page).to have_css("th[data-column-toggle-col='payment_method']", text: "Payment method", visible: :all)
-        expect(page).to have_css("td[data-column-toggle-col='payment_method']", text: "CCN", visible: :all)
+        cells = page.all("td[data-column-toggle-col='payment_method']", visible: :all).map { |td| td.text(:all).squish }
+        expect(cells).to include("Card", "Check", "Buddy")
       end
 
       it "offers every method plus the buddy option in the filter" do
         get registrants_event_path(event)
 
-        expect(response.body).to include("Credit card (CCN)")
-        expect(response.body).to include("Check (CK)")
-        expect(response.body).to include("Someone else will pay (BUD)")
+        page = Capybara.string(response.body)
+        expect(page).to have_css("option", exact_text: "Credit card", visible: :all)
+        expect(page).to have_css("option", exact_text: "Check", visible: :all)
+        expect(page).to have_css("option", exact_text: "Someone else will pay", visible: :all)
       end
 
       it "narrows the roster to the chosen method" do

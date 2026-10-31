@@ -13,4 +13,6 @@ pro_tips:
   - "Paid but not approved shows the registrant a blue Pending badge; approved shows Approved."
   - "Switch timesheets to All CE to see everyone who signed up."
   - "Filter the CE registrations list by Approved or Not approved."
-  - "Mark certificates issued straight from the registrants list — the Certificate switch shows a Certificate column and, for CE events, a CE certificate column, each with its own slider."
+  - "Mark certificates issued straight from the registrants list: turn on the Certificate of completion switch for a certificate column and, on CE events, a CE certificate column, each with its own slider."
+  - "The CE column notes Intends to pay under the badge while a CE balance is due."
+  - "The Payment method switch now opens its own column, naming each method (Card, Card later, Check, Buddy) instead of a short code."

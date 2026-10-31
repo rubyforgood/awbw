@@ -35,7 +35,7 @@
         <%= render "shared/column_toggle_switch", group: "date", label: "Date", stacked: true %>
         <%= render "shared/column_toggle_switch", group: "attendance", label: "Attendance", on: true, stacked: true %>
         <%= render "shared/column_toggle_switch", group: "confirmed", label: "User", stacked: true %>
-        <%= render "shared/column_toggle_switch", group: "certificate", label: "Certificate of completion", on: true, stacked: true %>
+        <%= render "shared/column_toggle_switch", group: "certificate", label: "Certificate of completion", stacked: true %>
         <% if survey_roles.any? %>
           <%= render "shared/column_toggle_switch", group: "surveys", label: "Surveys", stacked: true %>
         <% end %>
@@ -123,10 +123,10 @@
                   <%= render "shared/sortable_header", label: Form.role_label(role), index: status_index + 1 + offset %>
                 </th>
               <% end %>
-              <%# Kept out of the sortable index range (last data columns); one switch shows both. %>
-              <th class="px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="certificate">Certificate of<br>completion</th>
+              <%# Off by default; kept out of the sortable index range (last data columns); one switch shows both. %>
+              <th class="hidden px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="certificate">Certificate of<br>completion</th>
               <% if ce_col %>
-                <th class="px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="certificate">CE certificate<br>of completion</th>
+                <th class="hidden px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="certificate">CE certificate<br>of completion</th>
               <% end %>
               <%# One completion column per form callout, revealed together by the Ticket forms switch. %>
               <% form_columns.each do |callout, form| %>
@@ -394,7 +394,7 @@
                           <span class="text-2xs inline-flex items-center gap-1 font-medium whitespace-nowrap <%= payment_badge.classes %>"
                                 title="<%= payment_badge.label %>">
                             <i class="<%= payment_badge.icon %>" aria-hidden="true"></i>
-                            <%= payment_badge.code %>
+                            <%= payment_badge.short_label %>
                           </span>
                         <% end %>
                       </div>
@@ -446,11 +446,11 @@
                     <% end %>
                   </td>
                 <% end %>
-                <td class="px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
+                <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
                   <%= render "event_registrations/certificate_issued_toggle", registration: registration %>
                 </td>
                 <% if ce_col %>
-                  <td class="px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
+                  <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
                     <% if registration.continuing_education_registrations.any? %>
                       <%= render "event_registrations/certificate_issued_toggle", registration: registration, ce: true %>
                     <% else %>

@@ -215,22 +215,22 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       expect(badges_for).to be_empty
     end
 
-    it "maps a known method to its short code, icon, and classes" do
+    it "maps a known method to its short label, icon, and classes" do
       badge = badges_for(expected: "Credit card (now)").sole
-      expect(badge.code).to eq("CCN")
+      expect(badge.short_label).to eq("Card")
       expect(badge.label).to eq("Credit card")
       expect(badge.classes).to include("green")
     end
 
-    it "shows a BUD badge when someone else will pay" do
+    it "shows a Buddy badge when someone else will pay" do
       badge = badges_for(buddy: true).sole
-      expect(badge.code).to eq("BUD")
+      expect(badge.short_label).to eq("Buddy")
       expect(badge.classes).to include("purple")
     end
 
-    it "shows both the method and BUD when both apply" do
-      codes = badges_for(expected: "Check", buddy: true).map(&:code)
-      expect(codes).to eq(%w[ CK BUD ])
+    it "shows both the method and Buddy when both apply" do
+      labels = badges_for(expected: "Check", buddy: true).map(&:short_label)
+      expect(labels).to eq(%w[ Check Buddy ])
     end
 
     it "falls back to a neutral badge showing an unknown/custom value" do
@@ -241,13 +241,13 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
   end
 
   describe ".payment_method_filter_choices" do
-    it "lists every method (code-labeled) plus the buddy-system sentinel" do
+    it "lists every method plus the buddy-system sentinel" do
       expect(described_class.payment_method_filter_choices).to eq(
         [
-          [ "Credit card (CCN)", "Credit card (now)" ],
-          [ "Credit card (later) (CCL)", "Credit card (later)" ],
-          [ "Check (CK)", "Check" ],
-          [ "Someone else will pay (BUD)", "someone_else_will_pay" ]
+          [ "Credit card", "Credit card (now)" ],
+          [ "Credit card (later)", "Credit card (later)" ],
+          [ "Check", "Check" ],
+          [ "Someone else will pay", "someone_else_will_pay" ]
         ]
       )
     end

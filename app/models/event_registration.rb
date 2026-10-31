@@ -1023,6 +1023,11 @@ class EventRegistration < ApplicationRecord
     ce_approved? && chain.all?(&:payment_access_granted?)
   end
 
+  # A CE balance still due that the registrant has said they'll pay — the roster's CE note.
+  def ce_intends_to_pay?
+    !ce_paid_in_full? && continuing_education_registrations.any?(&:intends_to_pay?)
+  end
+
   def ce_approved?
     continuing_education_registrations.any? && continuing_education_registrations.all?(&:approved?)
   end

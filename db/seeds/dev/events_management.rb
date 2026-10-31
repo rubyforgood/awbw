@@ -808,7 +808,7 @@ registrations_data = []
 # --- Facilitator Training: multiple registrations from different people, extended form ---
 # Amy: registered, with form submission, scholarship recipient, requested W-9 and invoice
 # Each scenario also carries a payment method (or buddy pay) for the roster's Payment method column.
-# Maria Johnson: registered, with form submission (has user), requested an invoice; CE approved
+# Maria Johnson: registered, with form submission (has user), requested an invoice; CE approved, intends to pay
 # Anna Garcia: attended, with form submission (has user); CE approved and issued
 # Mario Johnson: registered, no form submission (no user)
 # Kim Davis: cancelled (has user)
@@ -819,7 +819,7 @@ if facilitator_training
   facilitator_training.update!(ce_hours_offered: 12, ce_hours_cost_cents: 12_000)
   [
     { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true, ce_credit_requested: true, ce_license_kind: "LMFT", ce_license_number: "90210", expected_payment_method: "Check" },
-    { person: maria_j, status: "registered", invoice_requested: true, ce_credit_requested: true, intends_to_pay: true, ce_approved: true, expected_payment_method: "Credit card (later)" },
+    { person: maria_j, status: "registered", invoice_requested: true, ce_credit_requested: true, intends_to_pay: true, ce_approved: true, ce_intends_to_pay: true, expected_payment_method: "Credit card (later)" },
     { person: anna_g, status: "attended", ce_credit_requested: true, intends_to_pay: true, ce_license_kind: "LCSW", ce_license_number: "11223", ce_status: "issued", ce_approved: true, expected_payment_method: FormBuilderService::PAYMENT_METHOD_PAY_NOW },
     { person: mario_j, status: "registered" },
     { person: kim_d, status: "cancelled" },
@@ -920,10 +920,11 @@ registrations_data.each do |data|
     # "issued" in the seed data means the CE certificate was delivered.
     ce_registration.mark_certificate_sent! if data[:ce_status] == "issued"
   end
-  # Synced on re-seed too, so an existing DB picks up the approved scenarios.
+  # Synced on re-seed too, so an existing DB picks up the approved and intending-to-pay scenarios.
   if data[:ce_approved]
     registration.continuing_education_registrations.not_approved.each { |ce| ce.update!(approved_at: Time.current) }
   end
+  registration.continuing_education_registrations.each { |ce| ce.update!(intends_to_pay: true) } if data[:ce_intends_to_pay]
 end
 
 # Connect each multi-affiliation registrant's registration to a single one of
@@ -1849,4 +1850,16 @@ Event.where("cost_cents > ?", 0).find_each do |paid_event|
   next unless paid_event.facilitator_training?
   scholarship_callout = paid_event.registration_ticket_callouts.find_by(builtin_key: "scholarship")
   scholarship_callout.update!(hidden: false) if scholarship_callout&.hidden?
+end
+
+# Give the rest of each paid event's registrants a payment method (or buddy pay),
+# picked by id so a re-seed keeps the same answers; every fifth stays blank, as when
+# someone skips the question. Named scenarios above already set theirs.
+seed_payment_answers = FormBuilderService::PAYMENT_METHOD_OPTIONS + [ :buddy, nil ]
+EventRegistration.joins(:event).where("events.cost_cents > 0")
+  .where(expected_payment_method: [ nil, "" ], someone_else_will_pay: false).find_each do |registration|
+  case (answer = seed_payment_answers[registration.id % seed_payment_answers.size])
+  when :buddy then registration.update!(someone_else_will_pay: true)
+  when String then registration.update!(expected_payment_method: answer)
+  end
 end
