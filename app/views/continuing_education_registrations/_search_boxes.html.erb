@@ -47,7 +47,7 @@
       </div>
 
       <div>
-        <label for="certificate" class="<%= label_class %>">Certificate</label>
+        <label for="certificate" class="<%= label_class %>">CE certificate</label>
         <%= select_tag "certificate",
           options_for_select({ "All" => "", "Issued" => "issued", "Not issued" => "pending" }, params[:certificate]),
           class: placeholder_select_class %>
