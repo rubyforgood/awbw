@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "Membership tooltips", type: :request do
+  around { |example| Time.use_zone("Pacific Time (US & Canada)") { example.run } }
+
   let(:person) { create(:person, :without_audit) }
   let(:membership) { create(:membership, person: person) }
 

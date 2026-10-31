@@ -17,6 +17,10 @@ class Person < ApplicationRecord
   has_many :profile_change_requests, dependent: :destroy
   has_many :memberships
   has_many :membership_invoices, through: :memberships
+  has_many :invoiced_membership_invoices, as: :invoicee, class_name: "MembershipInvoice",
+           dependent: :restrict_with_error
+  has_many :attention_membership_invoices, class_name: "MembershipInvoice",
+           foreign_key: :attention_person_id, dependent: :nullify
   has_many :communal_reports, through: :organizations, source: :reports
   has_many :windows_types, through: :organizations
 
