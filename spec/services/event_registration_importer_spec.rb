@@ -398,6 +398,25 @@ RSpec.describe EventRegistrationImporter do
         expect(registration.comments.pluck(:body)).to contain_exactly("Arrived late day 1", "Paid at the door")
       end
 
+      it "credits the comments it writes to System, not the admin who ran the import" do
+        admin = create(:user, :admin)
+        Current.set(user: admin) do
+          file = Tempfile.new([ "registrants", ".csv" ])
+          file.write(CSV.generate do |csv|
+            csv << %w[FirstName LastName EMail Notes]
+            csv << [ "Pat", "Example", "pat@example.org", "Arrived late day 1" ]
+          end)
+          file.close
+          described_class.call(file_path: file.path, event: event, import_user: admin)
+        ensure
+          file&.unlink
+        end
+
+        comment = registration_of(Person.find_by(email: "pat@example.org")).comments.sole
+        expect(comment.created_by).to be_nil
+        expect(comment.updated_by).to be_nil
+      end
+
       it "sets the registration date from RegisteredOn" do
         import_rows(%w[FirstName LastName EMail RegisteredOn], %w[Pat Example pat@example.org 3/14/2024])
 

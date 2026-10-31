@@ -74,5 +74,16 @@ RSpec.describe Comment, type: :model do
       expect(Comment.flagged).to include(flagged)
       expect(Comment.flagged).not_to include(old_comment, new_comment)
     end
+
+    it "splits System comments (no author) from admin-authored ones with authored_by_kind" do
+      system_note = create(:comment, commentable: user)
+      admin_note = create(:comment, commentable: user, created_by: create(:user, :admin))
+
+      expect(Comment.authored_by_kind("system")).to include(system_note)
+      expect(Comment.authored_by_kind("system")).not_to include(admin_note)
+      expect(Comment.authored_by_kind("admin")).to include(admin_note)
+      expect(Comment.authored_by_kind("admin")).not_to include(system_note)
+      expect(Comment.authored_by_kind("bogus")).to include(system_note, admin_note)
+    end
   end
 end
