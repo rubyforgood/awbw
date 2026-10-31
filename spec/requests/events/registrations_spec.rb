@@ -462,14 +462,14 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include(edit_continuing_education_registration_path(ce))
     end
 
-    it "lets an admin preview the paid (Needs approval) state with ?admin=true" do
+    it "lets an admin preview the paid (Awaiting approval) state with ?admin=true" do
       event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
       create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
 
       sign_in create(:user, :with_person, super_user: true)
       get registration_ce_path(registration.slug, admin: "true")
-      expect(response.body).to include("Needs approval")
+      expect(response.body).to include("Awaiting approval")
       expect(response.body).not_to include("$150 due")
     end
 
@@ -480,7 +480,7 @@ RSpec.describe "Events::Registrations", type: :request do
 
       get registration_ce_path(registration.slug, admin: "true")
       expect(response.body).to include("$150 due")
-      expect(response.body).not_to include("Needs approval")
+      expect(response.body).not_to include("Awaiting approval")
     end
 
     it "points the eyebrow back to the CE registration when reached from there" do

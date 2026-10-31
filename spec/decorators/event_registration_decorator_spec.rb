@@ -178,6 +178,17 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       end
     end
 
+    context "when paid in full but not approved, shown to the registrant" do
+      let(:opts) { { for_registrant: true } }
+
+      before { pay(add_ce(cost_cents: 15_000), 15_000) }
+
+      it "is a blue Awaiting approval badge" do
+        expect(badge.label).to eq("Awaiting approval")
+        expect(badge.classes).to include("blue")
+      end
+    end
+
     context "when paid in full and approved but not issued" do
       before do
         cer = add_ce(cost_cents: 15_000)

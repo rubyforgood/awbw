@@ -1,14 +1,15 @@
-name: "Approve CE registrations, and timesheets show approved CE by default"
+name: "Approve CE registrations before sign-in and certificates open"
 area: events
 display_status: admin_facing
 released_on: 2026-10-30
 pr_number: 2921
 action_path: "/continuing_education_registrations"
 summary: >-
-  Each CE registration now has an Approved switch. Approval, plus payment or
-  intent to pay, opens the registrant's sign-in sheet; the certificate needs it
-  too. CE timesheets list approved registrations by default.
+  Turn on Approved beside CE hours on a CE registration and click Save changes.
+  Approval, plus payment or intent to pay, opens the registrant's sign-in sheet,
+  and the certificate needs it too. CE timesheets list approved CE by default.
 pro_tips:
   - "Approval is your call — payment, attendance, and the CE form never set it."
-  - "Paid but not approved reads Needs approval; approved reads Approved until the certificate is issued."
-  - "Switch timesheets to All CE to see everyone who signed up."
+  - "Paid but not approved reads Needs approval for you and Awaiting approval for the registrant."
+  - "The CE certificate of completion switch sits beside Approved and also saves with the form."
+  - "Filter the CE registrations list by Approved or Not approved; switch timesheets to All CE to see everyone."

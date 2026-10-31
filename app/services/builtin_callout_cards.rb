@@ -417,9 +417,10 @@ class BuiltinCalloutCards
     "#{NumberFormatter.plain(hours)} hours"
   end
 
-  # "$X due" for the outstanding balance once hours + license are on file (no chip
-  # once paid in full); otherwise an amber chip naming what's still needed, prefixed
-  # with the fee when the hours (and so the cost) are already known — e.g.
+  # "$X due" for the outstanding balance once hours + license are on file, then
+  # "Awaiting approval" until staff approve (no chip after); otherwise an amber
+  # chip naming what's still needed, prefixed with the fee when the hours (and so
+  # the cost) are already known — e.g.
   # "$250 · License number needed". Each deadline the event sets is appended to the
   # relevant chip while still pending: the payment deadline on the amount-due chip
   # (until paid), the request deadline on the license-needed chip.
@@ -428,7 +429,10 @@ class BuiltinCalloutCards
     remaining_cents = ce_registration&.remaining_cost.to_i
 
     if complete
-      return unless remaining_cents.positive?
+      paid = !remaining_cents.positive?
+      return "Awaiting approval" if paid && !registration.ce_approved?
+      return if paid
+
       amount = MoneyFormatter.dollars_from_cents(remaining_cents)
       return "#{amount} due" if event.ce_payment_due_deadline.blank?
       return "#{amount} due by #{ce_deadline_text(event.ce_payment_due_deadline)}"

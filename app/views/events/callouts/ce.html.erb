@@ -22,7 +22,7 @@
    end || {} %>
 
 <%#
-  ?admin=true lets an admin preview the post-payment ("Needs approval") state of the
+  ?admin=true lets an admin preview the post-payment ("Awaiting approval") state of the
   badge without recording a real payment. Gated on edit access so a registrant
   can't fake it by editing the URL.
 %>
@@ -64,7 +64,7 @@
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Your CE credit</h2>
           <div class="flex items-center gap-3">
             <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</span>
-            <%= render "event_registrations/ce_status_badge", registration: @event_registration, simulate_paid: simulate_ce_paid %>
+            <%= render "event_registrations/ce_status_badge", registration: @event_registration, simulate_paid: simulate_ce_paid, for_registrant: true %>
           </div>
         </div>
 

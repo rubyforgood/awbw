@@ -5,9 +5,9 @@ released_on: 2026-10-30
 pr_number: 2921
 action_path: "/events"
 summary: >-
-  The Certificate of completion switch opens a slider column for the event
-  certificate and, on CE events, one for the CE certificate. The Payment method
-  switch opens its own column, naming each method instead of a short code.
+  On an event's registrants list, the Certificate of completion switch shows
+  slider columns that issue the event and CE certificates right away, no save
+  needed. The Payment method switch shows a column naming each method.
 pro_tips:
   - "Turning a certificate slider on keeps an issued date already on file; turning it off clears it."
   - "Payment methods read Card, Card later, Check, or Buddy (someone else will pay)."

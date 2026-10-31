@@ -171,11 +171,15 @@ RSpec.describe BuiltinCalloutCards do
       expect(due.badge).to eq("$150 due")
       expect(due.badge_classes).to be_nil
 
-      # Paid in full: resting teal card, no "due" chip.
+      # Paid in full but not approved: resting teal card, waiting on staff.
       create(:allocation, allocatable: ce, amount: 15_000)
       paid = card(registration.reload, event.ce_hours_label)
       expect(paid.theme).to eq(DomainTheme.swatch("teal"))
-      expect(paid.badge).to be_nil
+      expect(paid.badge).to eq("Awaiting approval")
+
+      # Approved: no chip.
+      ce.update!(approved_at: Time.current)
+      expect(card(registration.reload, event.ce_hours_label).badge).to be_nil
     end
 
     it "names the CE request deadline on the license-needed badge" do
@@ -192,7 +196,7 @@ RSpec.describe BuiltinCalloutCards do
       expect(card(registration.reload, event.ce_hours_label).badge).to eq("$150 due by Aug 15")
 
       create(:allocation, source: create(:payment), allocatable: ce_reg, amount: ce_reg.cost_cents)
-      expect(card(registration.reload, event.ce_hours_label).badge).to be_nil
+      expect(card(registration.reload, event.ce_hours_label).badge).to eq("Awaiting approval")
     end
 
     it "shows the scholarship card only when requested, without an amount chip until awarded" do
