@@ -26,16 +26,16 @@
       <div class="flex min-w-0 items-center gap-x-4">
         <%= render "shared/column_toggle_switch", group: "organization", label: "Linked org", on: true, stacked: true %>
         <% if @ce_eligible %>
-          <%= render "shared/column_toggle_switch", group: "ce", label: "CE", on: true, stacked: true %>
+          <%= render "shared/column_toggle_switch", group: "ce", label: "CE requests", on: true, stacked: true %>
         <% end %>
-        <%= render "shared/column_toggle_switch", group: "scholarship", label: "Scholarship", on: scholarship_on, stacked: true %>
+        <%= render "shared/column_toggle_switch", group: "scholarship", label: "Scholarship requests", on: scholarship_on, stacked: true %>
         <% if @event.cost_cents.to_i > 0 %>
           <%= render "shared/column_toggle_switch", group: "payment_method", label: "Payment method", stacked: true %>
         <% end %>
         <%= render "shared/column_toggle_switch", group: "date", label: "Date registered", stacked: true %>
-        <%= render "shared/column_toggle_switch", group: "attendance", label: "Attendance", on: true, stacked: true %>
-        <%= render "shared/column_toggle_switch", group: "confirmed", label: "User", stacked: true %>
-        <%= render "shared/column_toggle_switch", group: "certificate", label: "Certificate", on: true, stacked: true %>
+        <%= render "shared/column_toggle_switch", group: "attendance", label: "Attendance tracking", on: true, stacked: true %>
+        <%= render "shared/column_toggle_switch", group: "confirmed", label: "User account", stacked: true %>
+        <%= render "shared/column_toggle_switch", group: "certificate", label: "Certificate of completion", on: true, stacked: true %>
         <% if survey_roles.any? %>
           <%= render "shared/column_toggle_switch", group: "surveys", label: "Surveys", stacked: true %>
         <% end %>
@@ -124,9 +124,9 @@
                 </th>
               <% end %>
               <%# Kept out of the sortable index range (last data columns); one switch shows both. %>
-              <th class="px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="certificate">Certificate</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="certificate">Certificate of<br>completion</th>
               <% if ce_col %>
-                <th class="px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="certificate">CE certificate</th>
+                <th class="px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-gray-700" data-column-toggle-col="certificate">CE certificate<br>of completion</th>
               <% end %>
               <%# One completion column per form callout, revealed together by the Ticket forms switch. %>
               <% form_columns.each do |callout, form| %>

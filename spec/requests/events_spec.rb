@@ -1615,7 +1615,7 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include("Feedback")
-        expect(response.body).to include("Ticket forms")
+        expect(Capybara.string(response.body)).to have_css("label[data-column-toggle-group-value='ticket_forms']", text: /Ticket\s*forms/)
         expect(response.body).to include(registration_callout_form_path(registration.slug, callout))
       end
 
