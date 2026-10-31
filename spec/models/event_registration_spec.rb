@@ -257,6 +257,28 @@ RSpec.describe EventRegistration, type: :model do
       expect(destination.reload.ce_certificate_issued?).to be(true)
     end
 
+    it "keeps an already-issued CE certificate's date when issuing the rest" do
+      issued_on = 2.weeks.ago.change(usec: 0)
+      issued = destination.continuing_education_registrations.create!(
+        professional_license: license, hours: 6, cost_cents: 0, skip_event_defaults: true, certificate_sent_at: issued_on)
+      pending = destination.continuing_education_registrations.create!(
+        professional_license: create(:professional_license, person: person), hours: 6, cost_cents: 0, skip_event_defaults: true)
+
+      destination.mark_ce_certificate_issued!(true)
+
+      expect(issued.reload.certificate_sent_at).to eq(issued_on)
+      expect(pending.reload.certificate_sent_at).to be_present
+    end
+
+    it "keeps the event certificate's date when it's already issued" do
+      issued_on = 2.weeks.ago.change(usec: 0)
+      destination.update!(certificate_sent_at: issued_on)
+
+      destination.mark_certificate_issued!(true)
+
+      expect(destination.reload.certificate_sent_at).to eq(issued_on)
+    end
+
     it "does not reach across the transfer link to the other reg's CE" do
       source_stub = source.continuing_education_registrations.create!(
         professional_license: license, hours: 0, cost_cents: 0, skip_event_defaults: true)
