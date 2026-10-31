@@ -1868,7 +1868,7 @@ RSpec.describe "Events", type: :request do
       free_event = create(:event, cost_cents: 0)
       get registrants_event_path(free_event)
 
-      expect(response.body).not_to include("Any payment status")
+      expect(Capybara.string(response.body)).to have_no_css("select#payment_status", visible: :all)
       expect(response.body).not_to include("Any payment method")
       expect(response.body).not_to include("Funder name")
       expect(response.body).not_to include("Any status")

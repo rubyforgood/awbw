@@ -25,7 +25,7 @@
 <% primary_text, more_text = Array(text_fields).partition { |f| f[:primary] } %>
 <%# Open the collapsed section on load when any control inside it already carries
     a value, so an active filter is never hidden behind the toggle. %>
-<% collapsed_keys = %i[submission_status payment_method org_status scholarship funder_name ce_status city state county account_status comment_status comment topic_subscription registered_from registered_to] %>
+<% collapsed_keys = %i[submission_status payment_method scholarship funder_name ce_status city state county account_status comment_status comment topic_subscription registered_from registered_to] %>
 <% more_active = more_text.any? { |f| params[f[:param]].present? } || collapsed_keys.any? { |k| params[k].present? } %>
 
 <% hidden = capture do %>
@@ -45,8 +45,13 @@
           wrapper_class: f[:search] ? "w-full md:flex-1 md:min-w-0" : "w-full md:w-48" %>
   <% end %>
 
-  <%# Top three, in the order an admin works a registration: overall progress,
-      are they coming, did they pay. %>
+  <%# Org linking sits beside the search, then the top three in the order an admin
+      works a registration: overall progress, are they coming, did they pay. %>
+  <%= render "shared/filter_select", param: :org_status, label: "Organization linking",
+        options: [ [ "Pending", "pending" ], [ "Linked", "linked" ], [ "Unlinked", "unlinked" ],
+                   [ "No org provided", "none" ] ],
+        selected: params[:org_status], blank: "Any linking", field_class: field_class %>
+
   <% if include_readiness %>
     <%# Mirrors the far-right Progress column: Not ready → Ready → Certificate
         pending → Completed. Param stays :readiness (backed by
@@ -63,7 +68,7 @@
   <% if has_cost %>
     <%= render "shared/filter_select", param: :payment_status, label: "Payment status",
           options: EventRegistration::PAYMENT_STATUS_FILTER_OPTIONS,
-          selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
+          selected: params[:payment_status], blank: "Any status", field_class: field_class, wrapper_class: "w-full md:w-36" %>
   <% end %>
 <% end %>
 
@@ -76,7 +81,7 @@
   <% end %>
 
   <%# Ordered by how a registration is worked after the top three: how they pay,
-      whether they submitted, their org, scholarship and funder, CE, then portal
+      whether they submitted, scholarship and funder, CE, then portal
       access and location — with comments handled last. %>
   <% if has_cost %>
     <%= render "shared/filter_select", param: :payment_method, label: "Payment method",
@@ -87,11 +92,6 @@
   <%= render "shared/filter_select", param: :submission_status, label: "Submission status",
         options: [ [ "No submission", "none" ], [ "Has form submission", "has" ], [ "Multiple form submissions", "multiple" ] ],
         selected: params[:submission_status], blank: "All statuses", field_class: field_class %>
-
-  <%= render "shared/filter_select", param: :org_status, label: "Organization linking",
-        options: [ [ "Pending", "pending" ], [ "Linked", "linked" ], [ "Unlinked", "unlinked" ],
-                   [ "No org provided", "none" ] ],
-        selected: params[:org_status], blank: "Any linking", field_class: field_class %>
 
   <% if has_cost %>
     <%= render "shared/filter_select", param: :scholarship, label: "Scholarship",
