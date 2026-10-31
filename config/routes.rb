@@ -74,6 +74,8 @@ Rails.application.routes.draw do
     post "data_health/retry_interrupted_jobs", to: "data_health#retry_interrupted_jobs", as: "data_health_retry_interrupted_jobs"
     get "resource_roles",            to: "resource_roles#show", as: "resource_roles"
     patch "resource_roles",          to: "resource_roles#update"
+    get "resource_roles/:slot/preview", to: "resource_roles#preview", as: "resource_role_preview"
+    patch "resource_roles/:slot/preview", to: "resource_roles#save_preview"
     get "certificate_settings",      to: redirect("/admin/resource_roles")
   end
 

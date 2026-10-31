@@ -14,13 +14,13 @@ module Admin
     SLOTS = {
       "training_frame" => { section: "Certificate artwork", label: "Facilitator training frame",
                             description: "Full-bleed frame for the live facilitator-training certificate. Falls back to the built-in painted border when empty.",
-                            preview_partial: "events/callouts/training_certificate" },
+                            preview_partial: "events/callouts/training_certificate", signature_role: "training_signatures" },
       "on_demand_frame" => { section: "Certificate artwork", label: "On-demand training frame",
                              description: "Full-bleed frame for on-demand (self-paced) facilitator-training certificates. On-demand certificates never show signatures.",
                              preview_partial: "events/callouts/ondemand_certificate" },
       "ce_frame" => { section: "Certificate artwork", label: "CE certificate frame",
                       description: "Full-bleed frame for the CE Confirmation of Attendance certificate. Falls back to the default purple/gold design when empty.",
-                      preview_partial: "events/callouts/ce_confirmation_certificate" },
+                      preview_partial: "events/callouts/ce_confirmation_certificate", signature_role: "ce_signatures" },
       "other_frame" => { section: "Certificate artwork", label: "Other events frame",
                          description: "Full-bleed frame for every non-training event certificate. Falls back to the default purple/gold design when empty.",
                          preview_partial: "events/callouts/completion_certificate" },
@@ -47,10 +47,41 @@ module Admin
     def show
       authorize! :resource_roles
       @sections = SLOTS.map { |role, config| slot_view(role, config) }.group_by { |slot| slot[:section] }
-      # Sample content for the live certificate mini-previews.
-      @preview_event = Event.new(title: "Spring Facilitator Training",
-                                 start_date: Date.new(2026, 3, 2), end_date: Date.new(2026, 3, 4)).decorate
-      @preview_recipient = "Jordan Rivera"
+      set_preview_sample
+    end
+
+    # The full-size certificate for one frame slot, with sample content. frame_id /
+    # signature_id try another resource without saving; absent means the saved one.
+    def preview
+      authorize! :resource_roles
+      role = params[:slot].to_s
+      config = SLOTS[role]
+      return redirect_to(admin_resource_roles_path, alert: "Unknown setting.", status: :see_other) unless config&.dig(:preview_partial)
+
+      @slot = slot_view(role, config)
+      @frame = chosen_resource(:frame_id, @slot[:resource])
+      if config[:signature_role]
+        @saved_signature = Resource.for_role(config[:signature_role])
+        @signature = chosen_resource(:signature_id, @saved_signature)
+      end
+      @unsaved = @frame != @slot[:resource] || @signature != @saved_signature
+      set_preview_sample
+    end
+
+    # Connects the frame (and signature) tried on the preview page.
+    def save_preview
+      authorize! :resource_roles, to: :update?
+      role = params[:slot].to_s
+      config = SLOTS[role]
+      return redirect_to(admin_resource_roles_path, alert: "Unknown setting.", status: :see_other) unless config&.dig(:preview_partial)
+
+      Resource.transaction do
+        assign_slot(role, params[:frame_id])
+        assign_slot(config[:signature_role], params[:signature_id]) if config[:signature_role]
+      end
+      redirect_to admin_resource_role_preview_path(role), notice: "#{config[:label]} saved.", status: :see_other
+    rescue ActiveRecord::RecordNotUnique
+      redirect_to admin_resource_role_preview_path(role), alert: "That slot just changed. Please try again.", status: :see_other
     end
 
     def update
@@ -74,6 +105,12 @@ module Admin
 
     private
 
+    def set_preview_sample
+      @preview_event = Event.new(title: "Spring Facilitator Training",
+                                 start_date: Date.new(2026, 3, 2), end_date: Date.new(2026, 3, 4)).decorate
+      @preview_recipient = "Jordan Rivera"
+    end
+
     # One resource per role: clear whoever holds it (the unique index forbids two),
     # then stamp the chosen one.
     def connect(resource, role)
@@ -84,8 +121,26 @@ module Admin
     end
 
     def disconnect(role, config)
-      Resource.where(role:).find_each { |held| assign_role(held, nil) }
+      clear_role(role)
       redirect_to admin_resource_roles_path, notice: "#{config[:label]} disconnected.", status: :see_other
+    end
+
+    def clear_role(role)
+      Resource.where(role:).find_each { |held| assign_role(held, nil) }
+    end
+
+    # A blank id disconnects the role (the built-in design / no signature).
+    def assign_slot(role, resource_id)
+      return clear_role(role) if resource_id.blank?
+
+      resource = Resource.find_by(id: resource_id)
+      connect(resource, role) if resource
+    end
+
+    def chosen_resource(key, saved)
+      return saved unless params.key?(key)
+
+      Resource.find_by(id: params[key].presence)
     end
 
     # The role is a pointer (SLOTS + the unique index guard it), so an older record's

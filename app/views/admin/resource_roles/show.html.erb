@@ -20,7 +20,7 @@
 
         <div class="space-y-4">
           <% slots.each do |slot| %>
-            <div id="<%= slot[:role] %>" class="rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div id="<%= slot[:role] %>" class="scroll-mt-24 rounded-xl border border-gray-200 bg-white shadow-sm">
               <div class="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
                 <div class="min-w-0 sm:flex-1">
                   <h3 class="text-sm font-semibold text-gray-800"><%= slot[:label] %></h3>
@@ -63,12 +63,13 @@
                 </div>
 
                 <% if slot[:preview_partial] %>
-                  <div class="sm:w-60 sm:shrink-0">
+                  <%= link_to admin_resource_role_preview_path(slot[:role]),
+                        class: "group block sm:w-60 sm:shrink-0", title: "View the full-size certificate" do %>
                     <%# A true miniature of the final certificate: the real partial rendered
                         at full size, scaled down by transform so the committed-PNG and
                         CSS-drawn frames both read accurately. frame_file is the connected
                         upload (else nil → the built-in design). %>
-                    <div class="mx-auto h-[136px] w-[192px] overflow-hidden rounded-lg border border-gray-200 bg-white">
+                    <div class="mx-auto h-[136px] w-[192px] overflow-hidden rounded-lg border border-gray-200 bg-white transition-shadow group-hover:border-gray-400 group-hover:shadow-md">
                       <div class="w-[1024px] origin-top-left scale-[0.1875]">
                         <%= render slot[:preview_partial],
                               event: @preview_event, recipient: @preview_recipient,
@@ -80,7 +81,8 @@
                     <p class="mt-2 text-center text-xs text-gray-400">
                       <% if slot[:resource] %>Preview<% else %>Built-in design — none connected<% end %>
                     </p>
-                  </div>
+                    <p class="text-center text-xs font-medium text-gray-700 underline group-hover:text-gray-900">View full size</p>
+                  <% end %>
                 <% elsif slot[:image_preview] %>
                   <div class="sm:w-60 sm:shrink-0">
                     <% if slot[:resource] %>

@@ -67,6 +67,115 @@ RSpec.describe "Admin::ResourceRoles", type: :request do
 
       expect(response.body).to include("Training frame art")
     end
+
+    it "links each certificate mini-preview to its full-size preview" do
+      get admin_resource_roles_path
+
+      %w[training_frame on_demand_frame ce_frame other_frame].each do |role|
+        expect(response.body).to include(admin_resource_role_preview_path(role))
+      end
+      expect(response.body).not_to include(admin_resource_role_preview_path("training_signatures"))
+    end
+  end
+
+  describe "GET preview" do
+    before { sign_in admin }
+
+    it "renders the full-size certificate with sample content" do
+      get admin_resource_role_preview_path("training_frame")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Facilitator training frame")
+      expect(response.body).to include("Jordan Rivera")
+      expect(response.body).to include("certificate-training-border")
+      expect(response.body).to include(admin_resource_roles_path(anchor: "training_frame"))
+    end
+
+    it "renders the CE certificate with its sample license" do
+      get admin_resource_role_preview_path("ce_frame")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("LMFT 00000")
+    end
+
+    it "includes the signature the certificate prints with" do
+      resource = create(:resource, role: "training_signatures")
+      create(:primary_asset, :with_file, owner: resource)
+
+      get admin_resource_role_preview_path("training_frame")
+
+      expect(response.body).to include(resource.signature_file.filename.to_s)
+    end
+
+    it "redirects for a slot with no certificate" do
+      get admin_resource_role_preview_path("w9")
+
+      expect(response).to redirect_to(admin_resource_roles_path)
+    end
+
+    it "says when no signature is connected" do
+      get admin_resource_role_preview_path("training_frame")
+
+      expect(response.body).to include("No signature connected")
+      expect(response.body).not_to include("Previewing unsaved choices")
+    end
+
+    it "tries another frame and signature without saving them" do
+      frame = create(:resource, title: "Spring frame art")
+      create(:primary_asset, :with_file, owner: frame)
+      signature = create(:resource, title: "New signatures")
+      create(:primary_asset, :with_file, owner: signature)
+
+      get admin_resource_role_preview_path("training_frame", frame_id: frame.id, signature_id: signature.id)
+
+      expect(response.body).to include("Spring frame art")
+      expect(response.body).to include(signature.signature_file.filename.to_s)
+      expect(response.body).to include("Previewing unsaved choices")
+      expect(frame.reload.role).to be_nil
+      expect(signature.reload.role).to be_nil
+    end
+
+    it "previews the built-in design when the frame picker is cleared" do
+      create(:resource, title: "Saved frame", role: "training_frame")
+
+      get admin_resource_role_preview_path("training_frame", frame_id: "")
+
+      expect(response.body).to include("certificate-training-border")
+      expect(response.body).to include("Previewing unsaved choices")
+    end
+  end
+
+  describe "PATCH save_preview" do
+    before { sign_in admin }
+
+    it "connects the previewed frame and signature" do
+      frame = create(:resource)
+      signature = create(:resource)
+
+      patch admin_resource_role_preview_path("training_frame"), params: { frame_id: frame.id, signature_id: signature.id }
+
+      expect(response).to redirect_to(admin_resource_role_preview_path("training_frame"))
+      expect(frame.reload.role).to eq("training_frame")
+      expect(signature.reload.role).to eq("training_signatures")
+    end
+
+    it "disconnects a slot saved blank" do
+      frame = create(:resource, role: "training_frame")
+      signature = create(:resource, role: "training_signatures")
+
+      patch admin_resource_role_preview_path("training_frame"), params: { frame_id: "", signature_id: signature.id }
+
+      expect(frame.reload.role).to be_nil
+      expect(signature.reload.role).to eq("training_signatures")
+    end
+
+    it "leaves the signature alone for a certificate without one" do
+      signature = create(:resource, role: "training_signatures")
+
+      patch admin_resource_role_preview_path("on_demand_frame"), params: { frame_id: "", signature_id: "" }
+
+      expect(signature.reload.role).to eq("training_signatures")
+    end
   end
 
   describe "PATCH update" do
@@ -243,6 +352,23 @@ RSpec.describe "Admin::ResourceRoles", type: :request do
       get admin_resource_roles_path
 
       expect(response).not_to have_http_status(:ok)
+    end
+
+    it "denies a non-admin the certificate preview" do
+      sign_in create(:user)
+
+      get admin_resource_role_preview_path("training_frame")
+
+      expect(response).not_to have_http_status(:ok)
+    end
+
+    it "denies a non-admin a preview save, changing nothing" do
+      resource = create(:resource)
+      sign_in create(:user)
+
+      patch admin_resource_role_preview_path("training_frame"), params: { frame_id: resource.id }
+
+      expect(resource.reload.role).to be_nil
     end
 
     it "denies a non-admin a connect, changing nothing" do
