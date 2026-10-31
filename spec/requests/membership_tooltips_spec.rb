@@ -1,9 +1,13 @@
 require "rails_helper"
 
 RSpec.describe "Membership tooltips", type: :request do
-  around { |example| Time.use_zone("Pacific Time (US & Canada)") { example.run } }
+  around do |example|
+    Time.use_zone("Pacific Time (US & Canada)") { freeze_time { example.run } }
+  end
 
   let(:person) { create(:person, :without_audit) }
+  let(:admin) { create(:user, :admin, time_zone: "Pacific Time (US & Canada)") }
+  let(:member) { create(:user, person: person, time_zone: "Pacific Time (US & Canada)") }
   let(:membership) { create(:membership, person: person) }
 
   def add_card
@@ -16,7 +20,7 @@ RSpec.describe "Membership tooltips", type: :request do
   end
 
   it "shows action and status tooltips to an admin" do
-    sign_in create(:user, :admin)
+    sign_in admin
 
     get membership_path(membership)
 
@@ -30,7 +34,7 @@ RSpec.describe "Membership tooltips", type: :request do
   it "shows payment and autopay tooltips to the member" do
     create(:membership_invoice, membership: membership, start_date: Date.current,
       end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
-    sign_in create(:user, person: person)
+    sign_in member
 
     get person_path(person)
 
@@ -46,7 +50,7 @@ RSpec.describe "Membership tooltips", type: :request do
     create(:membership_invoice, membership: membership, start_date: Date.current,
       end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
     add_card
-    sign_in create(:user, person: person)
+    sign_in member
 
     get person_path(person)
 
@@ -57,7 +61,7 @@ RSpec.describe "Membership tooltips", type: :request do
     invoice = create(:membership_invoice, membership: membership, start_date: Date.current,
       end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
     invoice.mark_payment_in_progress!
-    sign_in create(:user, person: person)
+    sign_in member
 
     get person_path(person)
 
