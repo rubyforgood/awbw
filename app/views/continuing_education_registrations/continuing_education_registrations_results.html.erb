@@ -15,15 +15,15 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Registrant</th>
-              <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Event</th>
-              <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">License</th>
-              <th class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Hours</th>
-              <th class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Cost</th>
-              <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Payment</th>
-              <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Approval</th>
-              <th class="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">CE certificate</th>
-              <th class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Actions</th>
+              <th class="py-3 pr-2 pl-4 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Registrant</th>
+              <th class="px-2 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Event</th>
+              <th class="px-2 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">License</th>
+              <th class="px-2 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Hours</th>
+              <th class="px-2 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Cost</th>
+              <th class="px-2 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Payment</th>
+              <th class="px-2 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Approval</th>
+              <th class="px-2 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">CE certificate</th>
+              <th class="py-3 pr-4 pl-2 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
 
@@ -35,12 +35,12 @@
               <% approval = ce.approval_badge %>
               <% certificate = ce.certificate_badge %>
               <tr class="transition-colors duration-150 hover:bg-gray-50">
-                <td class="px-4 py-3">
+                <td class="py-3 pr-2 pl-4">
                   <% registrant = registration.registrant %>
                   <%# Same name box as the registrants list, in the CE color. %>
                   <%= link_to continuing_education_registration_path(ce),
                         title: [ registrant.full_name, registrant.preferred_email ].compact_blank.join(" — "),
-                        class: "flex w-48 items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 leading-tight shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100, hover: true)}",
+                        class: "flex w-56 items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 leading-tight shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100, hover: true)}",
                         data: { turbo_frame: "_top" } do %>
                     <i class="fa-solid fa-certificate shrink-0 <%= DomainTheme.text_class_for(:continuing_education_registrations) %>"></i>
                     <span class="flex min-w-0 flex-col justify-center">
@@ -51,7 +51,7 @@
                     </span>
                   <% end %>
                 </td>
-                <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700">
+                <td class="px-2 py-3 text-sm whitespace-nowrap text-gray-700">
                   <% if registration.event.start_date.present? %>
                     <%# The date line sets the width; w-0 min-w-full truncates the title to it. %>
                     <span class="inline-flex max-w-full flex-col">
@@ -62,22 +62,22 @@
                     <%= registration.event.title %>
                   <% end %>
                 </td>
-                <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700"><%= ce.license_label %></td>
-                <td class="px-4 py-3 text-right text-sm whitespace-nowrap text-gray-700 tabular-nums"><%= number_with_precision(ce.hours, precision: 1, strip_insignificant_zeros: true) %></td>
-                <td class="px-4 py-3 text-right text-sm whitespace-nowrap text-gray-900 tabular-nums"><%= dollars_from_cents(ce.cost_cents) %></td>
-                <td class="px-4 py-3 text-sm whitespace-nowrap">
+                <td class="px-2 py-3 text-sm whitespace-nowrap text-gray-700"><%= ce.license_label %></td>
+                <td class="px-2 py-3 text-right text-sm whitespace-nowrap text-gray-700 tabular-nums"><%= number_with_precision(ce.hours, precision: 1, strip_insignificant_zeros: true) %></td>
+                <td class="px-2 py-3 text-right text-sm whitespace-nowrap text-gray-900 tabular-nums"><%= dollars_from_cents(ce.cost_cents) %></td>
+                <td class="px-2 py-3 text-sm whitespace-nowrap">
                   <%= render "shared/badge", label: payment.label, classes: payment.classes, icon: payment.icon %>
                   <% if (overpayment = ce.overpayment_badge) %>
                     <%= render "shared/badge", label: overpayment.label, classes: overpayment.classes, icon: overpayment.icon %>
                   <% end %>
                 </td>
-                <td class="px-4 py-3 text-sm whitespace-nowrap">
+                <td class="px-2 py-3 text-sm whitespace-nowrap">
                   <%= render "shared/badge", label: approval.label, classes: approval.classes, icon: approval.icon %>
                 </td>
-                <td class="px-4 py-3 text-sm whitespace-nowrap">
+                <td class="px-2 py-3 text-sm whitespace-nowrap">
                   <%= render "shared/badge", label: certificate.label, classes: certificate.classes, icon: certificate.icon %>
                 </td>
-                <td class="px-4 py-3 text-right text-sm font-medium whitespace-nowrap">
+                <td class="py-3 pr-4 pl-2 text-right text-sm font-medium whitespace-nowrap">
                   <%= link_to "Edit", edit_continuing_education_registration_path(ce, return_to: "ce_index"), class: "text-primary hover:text-primary-dark", data: { turbo_frame: "_top" } %>
                 </td>
               </tr>
