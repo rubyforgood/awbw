@@ -145,8 +145,8 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
           professional_license: create(:professional_license, :placeholder, person: registration.registrant))
       end
 
-      it "is an amber License # needed badge" do
-        expect(badge.label).to eq("License # needed")
+      it "is an amber Needs license # badge" do
+        expect(badge.label).to eq("Needs license #")
         expect(badge.classes).to include("amber")
       end
     end
