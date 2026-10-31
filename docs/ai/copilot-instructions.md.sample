@@ -438,8 +438,8 @@ what changed.
 
 Admins click **Sync latest updates** on `/features` (`FeatureCatalog#import!`,
 matched by `name`) to add newly-shipped features and **overwrite existing same-name
-records with the seed** (`SYNCED_FIELDS` — classification plus summary, tips, guide,
-description; a field the seed leaves blank keeps its value). A feature edited in-app
+records with the seed** (`SYNCED_FIELDS` — name casing, classification, summary, tips,
+guide, description, published; a field the seed leaves blank is cleared). A feature edited in-app
 since creation (`Feature#edited?`) is skipped entirely. New area → add it to
 `Feature::AREAS` (label + FA icon + safelisted Tailwind hue).
 
