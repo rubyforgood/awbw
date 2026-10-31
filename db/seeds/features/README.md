@@ -23,6 +23,13 @@ When you ship a user-facing feature **or** improvement, add a new file:
 `YYYY-MM-DD-short-slug.yml`, named with the ship date and a slug of the name.
 One file per feature keeps parallel PRs from conflicting.
 
+**Consider whether it should be several entries.** Staff search this page when they
+have a question about what the portal can do, so each capability needs its own entry.
+If a change ships several distinct things (e.g. a new filter, a new export, and a new
+email), add one file per capability with its own `name`, `summary`, and `action_path`
+(same `pr_number` and `released_on` is fine). Don't bury a second capability in
+another entry's `description` or `pro_tips` — it won't be found.
+
 `display_status` is who the **announcement** is for, not who the feature is for.
 
 - Admins see every entry — it's their full changelog.
