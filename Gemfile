@@ -6,7 +6,7 @@ gem "rails", "~> 8.1.0"
 gem "bootsnap", require: false
 
 gem "sprockets-rails", "~> 3.2.2"
-gem "trilogy", "2.9.0"
+gem "trilogy", "~> 2.13", ">= 2.13.2"
 gem "uglifier"
 gem "feature_flipper"
 
