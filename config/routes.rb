@@ -223,10 +223,6 @@ Rails.application.routes.draw do
     resources :comments, only: [ :create, :update ]
   end
   resources :continuing_education_registrations, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
-    member do
-      patch :toggle_approval
-      patch :toggle_certificate
-    end
     resources :comments, only: [ :create, :update ]
   end
   # The admin-only browse index plus standalone new/edit flows. (Licenses can

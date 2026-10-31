@@ -78,22 +78,6 @@ class ContinuingEducationRegistrationsController < ApplicationController
     redirect_to helpers.ce_registration_return_path(registration), notice: "CE registration removed.", status: :see_other
   end
 
-  def toggle_approval
-    authorize! @ce_registration
-    approved = @ce_registration.approved?
-    @ce_registration.update!(approved_at: approved ? nil : Time.current)
-    redirect_to edit_continuing_education_registration_path(@ce_registration, **helpers.ce_registration_return_params),
-      notice: approved ? "CE marked not approved." : "CE approved.", status: :see_other
-  end
-
-  def toggle_certificate
-    authorize! @ce_registration
-    issued = @ce_registration.certificate_sent_at.present?
-    @ce_registration.update!(certificate_sent_at: issued ? nil : Time.current)
-    redirect_to edit_continuing_education_registration_path(@ce_registration, **helpers.ce_registration_return_params),
-      notice: issued ? "Certificate marked not issued." : "Certificate marked issued.", status: :see_other
-  end
-
   private
 
   def set_ce_registration
@@ -111,6 +95,13 @@ class ContinuingEducationRegistrationsController < ApplicationController
       @event_registration.registrant.professional_licenses.build
   end
 
+  # A details-form switch sets or clears its date; a switch saved still on keeps the date it has.
+  def switched_timestamp(value, current)
+    return current if value.nil?
+
+    ActiveModel::Type::Boolean.new.cast(value) ? current || Time.current : nil
+  end
+
   def apply_ce_params(ce_registration)
     ce_registration.assign_license(number: params.dig(:continuing_education_registration, :license_number),
                                    kind: params.dig(:continuing_education_registration, :license_kind),
@@ -122,6 +113,8 @@ class ContinuingEducationRegistrationsController < ApplicationController
     ce_registration.hours = params.dig(:continuing_education_registration, :hours)
     intends_to_pay = params.dig(:continuing_education_registration, :intends_to_pay)
     ce_registration.intends_to_pay = intends_to_pay unless intends_to_pay.nil?
+    ce_registration.approved_at = switched_timestamp(params.dig(:continuing_education_registration, :approved), ce_registration.approved_at)
+    ce_registration.certificate_sent_at = switched_timestamp(params.dig(:continuing_education_registration, :certificate_issued), ce_registration.certificate_sent_at)
     # A transfer-created record's cost is snapshotted from the source's outstanding
     # balance and admin-locked, so ignore any submitted cost for it. (#1944)
     unless ce_registration.transfer_created?

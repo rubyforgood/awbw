@@ -268,7 +268,7 @@
                 <% if ce_col %>
                   <td class="px-2 py-2 text-center text-sm" data-column-toggle-col="ce" data-sort-value="<%= registration.decorate.ce_status_sort_key %>">
                     <%# Canonical CE badge (Requested → Needs license # → $X due →
-                        Pending → Approved → Issued). Each state links to the connected CE
+                        Needs approval → Approved → Issued). Each state links to the connected CE
                         registration's edit page; "Create" opens the new CE form. %>
                     <% ce_registration = registration.continuing_education_registrations.first %>
                     <% if ce_registration %>

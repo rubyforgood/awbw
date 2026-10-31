@@ -79,6 +79,7 @@
       <% end %>
     </div>
 
+    <div class="flex flex-wrap items-start justify-between gap-6">
     <div>
       <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_hours">CE hours</label>
       <%= f.number_field :hours, value: plain_number(ce_registration.hours), min: 0, step: 0.25,
@@ -90,6 +91,17 @@
           Event default: <%= plain_number(event.ce_hours_offered) || "—" %> hrs
         </p>
       <% end %>
+    </div>
+
+    <% if ce_registration.persisted? %>
+      <div class="space-y-3">
+        <%= render "continuing_education_registrations/status_switch", name: "approved", label: "Approved",
+              on_at: ce_registration.approved_at,
+              title: "Approval opens sign-in (once paid or intending to pay) and the certificate." %>
+        <%= render "continuing_education_registrations/status_switch", name: "certificate_issued", label: "CE certificate of completion",
+              on_at: ce_registration.certificate_sent_at, on_word: "Issued" %>
+      </div>
+    <% end %>
     </div>
   </div>
 </section>

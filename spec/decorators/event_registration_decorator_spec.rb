@@ -162,9 +162,9 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       context "with simulate_paid" do
         let(:opts) { { simulate_paid: true } }
 
-        it "previews the blue Pending state" do
-          expect(badge.label).to eq("Pending")
-          expect(badge.classes).to include("blue")
+        it "previews the amber Needs approval state" do
+          expect(badge.label).to eq("Needs approval")
+          expect(badge.classes).to include("amber")
         end
       end
     end
@@ -172,9 +172,9 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
     context "when paid in full but not approved" do
       before { pay(add_ce(cost_cents: 15_000), 15_000) }
 
-      it "is a blue Pending badge" do
-        expect(badge.label).to eq("Pending")
-        expect(badge.classes).to include("blue")
+      it "is an amber Needs approval badge" do
+        expect(badge.label).to eq("Needs approval")
+        expect(badge.classes).to include("amber")
       end
     end
 

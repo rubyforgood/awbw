@@ -925,6 +925,13 @@ registrations_data.each do |data|
     registration.continuing_education_registrations.not_approved.each { |ce| ce.update!(approved_at: Time.current) }
   end
   registration.continuing_education_registrations.each { |ce| ce.update!(intends_to_pay: true) } if data[:ce_intends_to_pay]
+  # An issued certificate was paid for; record that payment so the CE doesn't read as due.
+  if data[:ce_status] == "issued"
+    registration.continuing_education_registrations.reject(&:paid_in_full?).each do |ce|
+      payment = CashPayment.create!(person: data[:person], amount_cents: ce.remaining_cost)
+      Allocation.create!(source: payment, allocatable: ce, amount: ce.remaining_cost)
+    end
+  end
 end
 
 # Connect each multi-affiliation registrant's registration to a single one of

@@ -2662,14 +2662,14 @@ RSpec.describe "Events", type: :request do
       expect(ce_chip_text).to eq("$150 due")
     end
 
-    it "shows Pending when the CE balance is paid but the certificate isn't issued" do
+    it "shows Needs approval when the CE balance is paid but not approved" do
       reg = create(:event_registration, event: event, registrant: person)
       cer = create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
         professional_license: create(:professional_license, person: person))
       create(:allocation, source: create(:payment, amount_cents: 15_000, amount_cents_remaining: 15_000),
         allocatable: cer, amount: 15_000)
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("Pending")
+      expect(ce_chip_text).to eq("Needs approval")
     end
 
     it "shows Issued once the CE certificate has been delivered" do
