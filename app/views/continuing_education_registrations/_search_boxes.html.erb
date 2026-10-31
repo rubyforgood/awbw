@@ -16,17 +16,9 @@
     }, autocomplete: "off" do %>
     <%= hidden_field_tag "professional_license_id", params[:professional_license_id] if params[:professional_license_id].present? %>
     <%# One wrapping row (the collection controller submits on change, so no Search
-        button): Event takes the space the fixed-width filters leave. %>
+        button): Registrant first, then Event takes the space the fixed-width filters leave. %>
     <div class="flex flex-wrap items-end gap-3">
-      <div class="w-full md:min-w-48 md:flex-1">
-        <label for="event_id" class="<%= label_class %>">Event</label>
-        <%= select_tag "event_id",
-          options_for_select(ce_events.map { |e| [ e.title, e.id ] }, params[:event_id]),
-          include_blank: "All events",
-          class: placeholder_select_class %>
-      </div>
-
-      <div class="w-full md:w-48">
+      <div class="w-full md:w-44">
         <label for="person_id" class="<%= label_class %>">Registrant</label>
         <%= select_tag "person_id",
           options_for_select(Person.where(id: params[:person_id]).map { |p| [ p.full_name, p.id ] }, params[:person_id]),
@@ -36,17 +28,25 @@
             controller: "remote-select",
             remote_select_model_value: "person"
           },
-          prompt: "Search for a person" %>
+          prompt: "Search people" %>
       </div>
 
-      <div class="w-full md:w-32">
+      <div class="w-full md:min-w-40 md:flex-1">
+        <label for="event_id" class="<%= label_class %>">Event</label>
+        <%= select_tag "event_id",
+          options_for_select(ce_events.map { |e| [ e.title, e.id ] }, params[:event_id]),
+          include_blank: "All events",
+          class: placeholder_select_class %>
+      </div>
+
+      <div class="w-full md:w-28">
         <label for="approval" class="<%= label_class %>">Approval</label>
         <%= select_tag "approval",
           options_for_select({ "All" => "", "Approved" => "approved", "Not approved" => "pending" }, params[:approval]),
           class: placeholder_select_class %>
       </div>
 
-      <div class="w-full md:w-32">
+      <div class="w-full md:w-28">
         <label for="certificate" class="<%= label_class %>">CE certificate</label>
         <%= select_tag "certificate",
           options_for_select({ "All" => "", "Issued" => "issued", "Not issued" => "pending" }, params[:certificate]),
@@ -63,7 +63,7 @@
         <%= date_field_tag "issued_to", params[:issued_to], class: date_filter_class(field_class, params[:issued_to]) %>
       </div>
 
-      <%= render "shared/search_clear", url: continuing_education_registrations_path %>
+      <%= render "shared/search_clear", url: continuing_education_registrations_path, label: "Clear" %>
     </div>
   <% end %>
 </div>
