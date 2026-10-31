@@ -34,7 +34,7 @@
         <% end %>
         <%= render "shared/column_toggle_switch", group: "date", label: "Date registered" %>
         <%= render "shared/column_toggle_switch", group: "attendance", label: "Attendance", on: true %>
-        <%= render "shared/column_toggle_switch", group: "confirmed", label: "User account" %>
+        <%= render "shared/column_toggle_switch", group: "confirmed", label: "User" %>
         <%= render "shared/column_toggle_switch", group: "certificate", label: "Certificate", on: true %>
         <% if survey_roles.any? %>
           <%= render "shared/column_toggle_switch", group: "surveys", label: "Surveys" %>
