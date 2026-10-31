@@ -5,8 +5,8 @@ FactoryBot.define do
     cost_cents { 15_000 }
     professional_license { association(:professional_license, person: event_registration.registrant) }
 
-    trait :approved do
-      approved_at { Time.current }
+    trait :denied do
+      denied_at { Time.current }
     end
   end
 end

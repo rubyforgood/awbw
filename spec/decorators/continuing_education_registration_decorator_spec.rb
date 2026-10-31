@@ -3,17 +3,17 @@ require "rails_helper"
 RSpec.describe ContinuingEducationRegistrationDecorator do
   let(:event) { create(:event, :ended, ce_hours_offered: 6) }
   let(:registration) { create(:event_registration, event: event, status: "attended") }
-  let(:ce_registration) { create(:continuing_education_registration, :approved, event_registration: registration, hours: 6, cost_cents: 0) }
+  let(:ce_registration) { create(:continuing_education_registration, event_registration: registration, hours: 6, cost_cents: 0) }
 
   describe "#approval_badge" do
-    it "reads Approved once an admin approves, whatever the payment" do
-      ce_registration.update!(cost_cents: 15_000, approved_at: Time.current)
+    it "reads Approved by default, whatever the payment" do
+      ce_registration.update!(cost_cents: 15_000)
       expect(ce_registration.decorate.approval_badge.label).to eq("Approved")
     end
 
-    it "reads Not approved until then" do
-      ce_registration.update!(approved_at: nil)
-      expect(ce_registration.decorate.approval_badge.label).to eq("Not approved")
+    it "reads Denied once an admin denies it" do
+      ce_registration.update!(denied_at: Time.current)
+      expect(ce_registration.decorate.approval_badge.label).to eq("Denied")
     end
   end
 
@@ -45,8 +45,8 @@ RSpec.describe ContinuingEducationRegistrationDecorator do
   end
 
   describe "#certificate_conditions" do
-    it "lists approval as unmet until an admin approves" do
-      ce_registration.update!(approved_at: nil)
+    it "lists approval as unmet once an admin denies the CE" do
+      ce_registration.update!(denied_at: Time.current)
       expect(ce_registration.decorate.certificate_locked_reason).to eq("Unlocks once your CE is approved")
     end
 

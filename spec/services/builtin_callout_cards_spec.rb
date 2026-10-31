@@ -171,15 +171,15 @@ RSpec.describe BuiltinCalloutCards do
       expect(due.badge).to eq("$150 due")
       expect(due.badge_classes).to be_nil
 
-      # Paid in full but not approved: resting teal card, waiting on staff.
+      # Paid in full: resting teal card, no "due" chip.
       create(:allocation, allocatable: ce, amount: 15_000)
       paid = card(registration.reload, event.ce_hours_label)
       expect(paid.theme).to eq(DomainTheme.swatch("teal"))
-      expect(paid.badge).to eq("Awaiting approval")
+      expect(paid.badge).to be_nil
 
-      # Approved: no chip.
-      ce.update!(approved_at: Time.current)
-      expect(card(registration.reload, event.ce_hours_label).badge).to be_nil
+      # Denied by an admin: a Not approved chip.
+      ce.update!(denied_at: Time.current)
+      expect(card(registration.reload, event.ce_hours_label).badge).to eq("Not approved")
     end
 
     it "names the CE request deadline on the license-needed badge" do
@@ -196,7 +196,7 @@ RSpec.describe BuiltinCalloutCards do
       expect(card(registration.reload, event.ce_hours_label).badge).to eq("$150 due by Aug 15")
 
       create(:allocation, source: create(:payment), allocatable: ce_reg, amount: ce_reg.cost_cents)
-      expect(card(registration.reload, event.ce_hours_label).badge).to eq("Awaiting approval")
+      expect(card(registration.reload, event.ce_hours_label).badge).to be_nil
     end
 
     it "shows the scholarship card only when requested, without an amount chip until awarded" do
@@ -423,7 +423,7 @@ RSpec.describe BuiltinCalloutCards do
   end
 
   describe "CE card attendance reminder" do
-    # Approved, paid CE registration on a training day so the sign-in nudge is live.
+    # Paid CE registration on a training day so the sign-in nudge is live.
     let(:event) do
       create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000,
         start_date: Time.zone.local(2026, 7, 23, 9, 0),
@@ -436,7 +436,7 @@ RSpec.describe BuiltinCalloutCards do
 
     def pay_ce!
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
-      ce = create(:continuing_education_registration, :approved, event_registration: registration, professional_license: license)
+      ce = create(:continuing_education_registration, event_registration: registration, professional_license: license)
       create(:allocation, source: create(:payment), allocatable: ce, amount: ce.cost_cents)
       registration.reload
     end

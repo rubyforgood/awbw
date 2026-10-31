@@ -268,7 +268,7 @@
                 <% if ce_col %>
                   <td class="px-2 py-2 text-center text-sm" data-column-toggle-col="ce" data-sort-value="<%= registration.decorate.ce_status_sort_key %>">
                     <%# Canonical CE badge (Requested → Needs license # → $X due →
-                        Needs approval → Approved → Issued). Each state links to the connected CE
+                        Approved → Issued, or Denied). Each state links to the connected CE
                         registration's edit page; "Create" opens the new CE form. %>
                     <% ce_registration = registration.continuing_education_registrations.first %>
                     <% if ce_registration %>
@@ -378,12 +378,7 @@
                       </div>
                     <% end %>
 
-                    <% if !is_paid && registration.intends_to_pay? %>
-                      <div class="text-2xs mt-1 inline-flex items-center gap-1 font-medium whitespace-nowrap text-blue-600">
-                        <i class="fa-solid fa-hand-holding-dollar"></i>
-                        <span>Intends to pay</span>
-                      </div>
-                    <% end %>
+                    <%= render "shared/intends_to_pay_note" if !is_paid && registration.intends_to_pay? %>
 
                   </td>
                   <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="payment_method">

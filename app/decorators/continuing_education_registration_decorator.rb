@@ -33,7 +33,7 @@ class ContinuingEducationRegistrationDecorator < ApplicationDecorator
     if approved?
       Badge.new(label: "Approved", icon: "fa-solid fa-circle-check", classes: "bg-green-50 text-green-700 border-green-200")
     else
-      Badge.new(label: "Not approved", icon: "fa-regular fa-clock", classes: "bg-gray-50 text-gray-500 border-gray-200")
+      Badge.new(label: "Denied", icon: "fa-solid fa-ban", classes: "bg-red-50 text-red-700 border-red-200")
     end
   end
 

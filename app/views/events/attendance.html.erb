@@ -14,7 +14,7 @@
       <% when "registrants" %>
         <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% when "signins" %>
-        <%= link_to "← All timesheets", signins_events_path(report_to_hub_params.except(:period).merge({ ce_approval: params[:ce_approval].presence }.compact)), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <%= link_to "← All timesheets", signins_events_path(report_to_hub_params.except(:period).merge({ ce_payment: params[:ce_payment].presence }.compact)), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% else %>
         <%= link_to "← Events participation", participation_events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% end %>
@@ -23,7 +23,7 @@
 
     <% ce_badge = capture do %>
       <% if @report.ce_only? %>
-        <%= render "events/ce_approval_toggle", approved_count: @report.approved_row_count, all_count: @report.all_rows.size %>
+        <%= render "events/ce_payment_toggle", paying_count: @report.paying_row_count, all_count: @report.all_rows.size %>
         <span class="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
           <i class="fa-solid fa-graduation-cap text-2xs"></i>
           Continuing education
@@ -56,7 +56,7 @@
           registrants page's active/inactive filter — a full-page reload carrying
           the ce/return_to params. %>
       <% group_by_day = params[:group] == "day" %>
-      <% toggle_params = { ce: params[:ce].presence, ce_approval: params[:ce_approval].presence, return_to: params[:return_to].presence }.compact %>
+      <% toggle_params = { ce: params[:ce].presence, ce_payment: params[:ce_payment].presence, return_to: params[:return_to].presence }.compact %>
       <%# The page state every session-cell link has to carry so editing, saving and
           cancelling all land back on the view the admin was looking at. %>
       <% cell_state = toggle_params.merge(group: params[:group].presence).compact %>
@@ -76,7 +76,7 @@
           <%# Whole row → the CE edit page on the CE report, the registration edit
               page otherwise (kept in sync with those pages' return_to handling). %>
           <% row_path = ce_reg ?
-               edit_continuing_education_registration_path(ce_reg, return_to: "attendance", ce_approval: params[:ce_approval].presence) :
+               edit_continuing_education_registration_path(ce_reg, return_to: "attendance", ce_payment: params[:ce_payment].presence) :
                edit_event_registration_path(row.registration, return_to: "attendance") %>
           <section class="mb-8">
             <div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
@@ -147,7 +147,7 @@
                 <% entries = @report.entries_for(row, date) %>
                 <% ce_reg = row.ce_registration %>
                 <% row_path = ce_reg ?
-                     edit_continuing_education_registration_path(ce_reg, return_to: "attendance", ce_approval: params[:ce_approval].presence) :
+                     edit_continuing_education_registration_path(ce_reg, return_to: "attendance", ce_payment: params[:ce_payment].presence) :
                      edit_event_registration_path(row.registration, return_to: "attendance") %>
                 <% editing = params[:edit] == attendance_cell_id(row.key, date) %>
                 <div class="group relative grid items-center gap-x-3 px-4 py-2.5 text-sm hover:bg-gray-50"
@@ -160,7 +160,7 @@
                   <% end %>
                   <div class="relative z-10 min-w-0 justify-self-start">
                     <% if ce_reg %>
-                      <%= link_to row.name, registration_ce_path(row.registration.slug, return_to: "attendance", ce_approval: params[:ce_approval].presence),
+                      <%= link_to row.name, registration_ce_path(row.registration.slug, return_to: "attendance", ce_payment: params[:ce_payment].presence),
                             class: "font-medium text-gray-900 #{DomainTheme.text_class_for(:events, intensity: 700, hover: true)} hover:underline" %>
                     <% else %>
                       <%= link_to row.name, edit_event_registration_path(row.registration, return_to: "attendance"),
@@ -194,8 +194,8 @@
       </p>
     <% else %>
       <div class="py-12 text-center text-gray-500">
-        <% if @report.approved_only? && @report.all_rows.any? %>
-          No CE registrations on this event are approved yet.
+        <% if @report.paying_only? && @report.all_rows.any? %>
+          No one has paid or said they intend to pay for CE credit on this event yet.
         <% else %>
           <%= @report.ce_only? ? "No one has registered for CE credit on this event yet." : "No attendance has been logged for this event yet." %>
         <% end %>

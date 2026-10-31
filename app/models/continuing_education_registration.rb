@@ -45,8 +45,8 @@ class ContinuingEducationRegistration < ApplicationRecord
   scope :for_event, ->(event_id) { joins(:event_registration).where(event_registrations: { event_id: event_id }) }
   scope :for_registrant, ->(person_id) { joins(:event_registration).where(event_registrations: { registrant_id: person_id }) }
   scope :for_license, ->(license_id) { where(professional_license_id: license_id) }
-  scope :approved, -> { where.not(approved_at: nil) }
-  scope :not_approved, -> { where(approved_at: nil) }
+  scope :approved, -> { where(denied_at: nil) }
+  scope :denied, -> { where.not(denied_at: nil) }
   scope :certificate_issued, -> { where.not(certificate_sent_at: nil) }
   scope :certificate_pending, -> { where(certificate_sent_at: nil) }
   scope :issued_on_or_after, ->(date) { where(certificate_sent_at: date.beginning_of_day..) }
@@ -60,7 +60,7 @@ class ContinuingEducationRegistration < ApplicationRecord
     results = results.for_registrant(params[:person_id]) if params[:person_id].present?
     results = results.for_license(params[:professional_license_id]) if params[:professional_license_id].present?
     results = results.approved if params[:approval] == "approved"
-    results = results.not_approved if params[:approval] == "pending"
+    results = results.denied if params[:approval] == "denied"
     results = results.certificate_issued if params[:certificate] == "issued"
     results = results.certificate_pending if params[:certificate] == "pending"
     if (from = parse_iso_date(params[:issued_from]))
@@ -130,7 +130,7 @@ class ContinuingEducationRegistration < ApplicationRecord
   end
 
   # CE certificate eligibility — its own rule (not shared): the event grants CE, an
-  # admin approved this CE, the registrant attended, the training has ended, the CE balance is paid, the
+  # admin hasn't denied this CE, the registrant attended, the training has ended, the CE balance is paid, the
   # CE callout's post-training form (if one is set) is complete, and (when
   # attendance was tracked) the logged time approximately covers the hours.
   # Everything is judged at this record's own event/registration — after a transfer
@@ -223,15 +223,19 @@ class ContinuingEducationRegistration < ApplicationRecord
     save! if changed?
   end
 
-  # The admin's call that this CE is good to go, set by hand whatever the payment state.
-  def approved?
-    approved_at.present?
-  end
-
   # Paid or intends to pay. Mirrors EventRegistration#payment_access_granted?;
   # reporting keeps using paid_in_full?.
   def payment_access_granted?
     paid_in_full? || intends_to_pay?
+  end
+
+  # CE is approved by default; an admin's denial is the exception it records.
+  def approved?
+    denied_at.nil?
+  end
+
+  def denied?
+    denied_at.present?
   end
 
   # Opens this CE's sign-in sheet and CE-gated callouts.

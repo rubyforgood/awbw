@@ -37,16 +37,17 @@ class EventAttendanceReport
       ce_registration&.hours.to_d
     end
 
-    def approved?
-      ce_registration.nil? || ce_registration.approved?
+    def paying?
+      ce_registration.nil? || ce_registration.access_granted?
     end
   end
 
-  # `approved_only:` narrows the CE report to licences an admin has approved, paid or not.
-  def initialize(event, ce_only: false, approved_only: false)
+  # `paying_only:` narrows the CE report to licences paid or intending to pay and not
+  # denied — the same per-licence rule that opens the registrant's own sign-in sheet.
+  def initialize(event, ce_only: false, paying_only: false)
     @event = event
     @ce_only = ce_only
-    @approved_only = ce_only && approved_only
+    @paying_only = ce_only && paying_only
   end
 
   attr_reader :event
@@ -55,8 +56,8 @@ class EventAttendanceReport
     @ce_only
   end
 
-  def approved_only?
-    @approved_only
+  def paying_only?
+    @paying_only
   end
 
   # The event's calendar days — the report's top-level grouping (Day 1, Day 2, …).
@@ -68,18 +69,18 @@ class EventAttendanceReport
   # every CE registration even before anything has been logged (so staff can chase
   # sign-ins during the training); the generic report lists only people who logged time.
   def rows
-    @rows ||= approved_only? ? all_rows.select(&:approved?) : all_rows
+    @rows ||= paying_only? ? all_rows.select(&:paying?) : all_rows
   end
 
-  # Every line regardless of approval — what the "All CE" toggle counts.
+  # Every line regardless of payment — what the "All CE" toggle counts.
   def all_rows
     @all_rows ||= scoped_registrations
       .sort_by { |registration| registration.registrant.full_name.to_s.downcase }
       .flat_map { |registration| rows_for(registration) }
   end
 
-  def approved_row_count
-    all_rows.count(&:approved?)
+  def paying_row_count
+    all_rows.count(&:paying?)
   end
 
   # The distinct people behind those lines — what the everyone-totals count.

@@ -42,7 +42,7 @@
       <div class="w-full md:w-28">
         <label for="approval" class="<%= label_class %>">Approval</label>
         <%= select_tag "approval",
-          options_for_select({ "All" => "", "Approved" => "approved", "Not approved" => "pending" }, params[:approval]),
+          options_for_select({ "All" => "", "Approved" => "approved", "Denied" => "denied" }, params[:approval]),
           class: placeholder_select_class %>
       </div>
 
