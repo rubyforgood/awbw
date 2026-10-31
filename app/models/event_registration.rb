@@ -995,14 +995,17 @@ class EventRegistration < ApplicationRecord
     continuing_education_registrations.all? { |c| c.certificate_sent_at.present? }
   end
 
+  # Issuing keeps an existing issued date — it's printed on the certificate.
   def mark_certificate_issued!(issued)
-    update!(certificate_sent_at: issued ? Time.current : nil)
+    update!(certificate_sent_at: issued ? certificate_sent_at || Time.current : nil)
   end
 
-  # Writes certificate_sent_at on each CE registration, so it stays in sync with the CE edit page.
+  # Writes certificate_sent_at on each CE registration, so it stays in sync with the CE
+  # edit page; a licence already issued keeps its date, which feeds its yearly CE hours.
   def mark_ce_certificate_issued!(issued)
-    at = issued ? Time.current : nil
-    continuing_education_registrations.each { |c| c.update!(certificate_sent_at: at) }
+    continuing_education_registrations.each do |c|
+      c.update!(certificate_sent_at: issued ? c.certificate_sent_at || Time.current : nil)
+    end
   end
 
   # True when the full CE amount due is paid across the whole transfer chain — every
