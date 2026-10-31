@@ -10,7 +10,7 @@
   <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm blur-on-submit" data-column-toggle-root data-column-toggle-scope="event-<%= @event.id %>">
     <div class="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-4">
       <% current_filter = params[:attendance_status].present? ? nil : (params[:status_filter].presence || "active") %>
-      <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Attendance filter">
+      <nav class="inline-flex shrink-0 rounded-lg bg-gray-100 p-0.5 text-sm font-medium whitespace-nowrap" aria-label="Attendance filter">
         <%= link_to registrants_event_path(@event, status_filter: "active", keyword: params[:keyword].presence),
               data: { turbo_frame: "_top" },
               class: "px-3 py-1 rounded-md transition-colors #{current_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "#{eyebrow_link_class}"}" do %>
@@ -23,14 +23,14 @@
         <% end %>
       </nav>
 
-      <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+      <div class="flex min-w-0 items-center gap-x-4">
         <%= render "shared/column_toggle_switch", group: "organization", label: "Linked org", on: true %>
         <% if @ce_eligible %>
           <%= render "shared/column_toggle_switch", group: "ce", label: "CE", on: true %>
         <% end %>
         <%= render "shared/column_toggle_switch", group: "scholarship", label: "Scholarship", on: scholarship_on %>
         <% if @event.cost_cents.to_i > 0 %>
-          <%= render "shared/column_toggle_switch", group: "payment_method", label: "Payment method" %>
+          <%= render "shared/column_toggle_switch", group: "payment_method", label: "Payment" %>
         <% end %>
         <%= render "shared/column_toggle_switch", group: "date", label: "Date registered" %>
         <%= render "shared/column_toggle_switch", group: "attendance", label: "Attendance", on: true %>
