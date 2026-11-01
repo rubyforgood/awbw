@@ -131,8 +131,7 @@ module AffiliationServices
     # Why a row changed, on the affiliation's own comments rather than a dedicated
     # column — the edit page and its history already surface them (ADR-0003 D6b).
     def note(affiliation, body)
-      affiliation.comments.create!(topic: COMMENT_TOPIC, body: body,
-                                   created_by: Current.user, updated_by: Current.user)
+      affiliation.comments.create_as_system!(topic: COMMENT_TOPIC, body: body)
     end
 
     def ended_by_reconciliation?(affiliation)
