@@ -34,6 +34,34 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
     end
   end
 
+  describe "#access_granted?" do
+    let(:ce) { create(:continuing_education_registration, cost_cents: 15_000) }
+
+    it "opens once paid, approved by default" do
+      create(:allocation, source: create(:payment), allocatable: ce, amount: 15_000)
+      expect(ce.access_granted?).to be(true)
+    end
+
+    it "stays closed while neither paid nor intending to pay" do
+      expect(ce.access_granted?).to be(false)
+    end
+
+    it "closes when an admin denies the CE, paid or not" do
+      ce.update!(intends_to_pay: true, denied_at: Time.current)
+      expect(ce.access_granted?).to be(false)
+    end
+  end
+
+  describe ".search_by_params approval filter" do
+    let!(:approved) { create(:continuing_education_registration) }
+    let!(:denied) { create(:continuing_education_registration, :denied) }
+
+    it "narrows to approved or denied CE" do
+      expect(described_class.search_by_params(approval: "approved")).to contain_exactly(approved)
+      expect(described_class.search_by_params(approval: "denied")).to contain_exactly(denied)
+    end
+  end
+
   describe "validations" do
     it "rejects a license that belongs to someone other than the registrant" do
       registration = create(:event_registration)
@@ -283,6 +311,13 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       create(:continuing_education_registration,
         event_registration: registration, cost_cents: cost_cents,
         professional_license: create(:professional_license, person: registration.registrant))
+    end
+
+    it "is unavailable once an admin denies the CE" do
+      event = create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago)
+      ce_reg = ce_reg_for(event: event, status: "attended")
+      ce_reg.update!(denied_at: Time.current)
+      expect(ce_reg.certificate_available?).to be(false)
     end
 
     it "is available once a CE-eligible training has ended, the registrant attended, and it's paid" do

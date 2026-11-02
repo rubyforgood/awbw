@@ -1,0 +1,14 @@
+name: "Deny a CE registration to close its sign-in and certificate"
+area: events
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2921
+action_path: "/continuing_education_registrations"
+summary: >-
+  CE registrations are approved by default. To deny one, switch Approved off
+  beside CE hours and click Save changes. That closes the registrant's sign-in
+  sheet and certificate and drops them from the default CE timesheet view.
+pro_tips:
+  - "Staff see a red Denied badge; the registrant sees Not approved."
+  - "The denial date shows under the switch, and switching it back on approves the CE again."
+  - "Filter the CE registrations list by Approved or Denied."

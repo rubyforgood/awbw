@@ -1,0 +1,13 @@
+name: "See payment methods and CE intent to pay on the registrants list"
+area: payments
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2921
+action_path: "/events"
+summary: >-
+  The Payment method switch on an event's registrants list shows a column naming
+  how each person plans to pay. The CE column notes Intends to pay under the
+  badge while a CE balance is due.
+pro_tips:
+  - "Methods read Card, Card later, Check, or Buddy (someone else will pay)."
+  - "The Payment method filter lists the same methods by name."
