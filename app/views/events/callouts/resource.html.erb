@@ -14,6 +14,8 @@
      [ registration_scholarship_path(@event_registration.slug), "Back to scholarship", "Scholarship detail" ]
    when "certificate"
      [ registration_certificate_path(@event_registration.slug), "Back to certificate", "Certificate detail" ]
+   when "ce_hours"
+     [ registration_ce_path(@event_registration.slug), "Back to #{@event.ce_hours_label}", "#{@event.ce_hours_label} detail" ]
    when "videoconference"
      [ registration_videoconference_path(@event_registration.slug), "Back to videoconference", "Videoconference detail" ]
    when "callout"

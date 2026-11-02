@@ -313,6 +313,24 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  describe "GET /registration/:slug/ce" do
+    let(:event) { create(:event, ce_hours_offered: 6) }
+
+    it "links resources on the CE callout to their own page, returning to the CE page" do
+      resource = create(:resource, title: "CE sign-in instructions")
+      create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE hours", resources: [ resource ])
+      resource_path = registration_resource_path(registration.slug, resource, return_to: "ce_hours")
+
+      get registration_ce_path(registration.slug)
+
+      expect(response.body).to include(resource_path).and include("CE sign-in instructions")
+
+      get resource_path
+
+      expect(response.body).to include(registration_ce_path(registration.slug)).and include("Back to CE hours")
+    end
+  end
+
   describe "GET /registration/:slug/videoconference" do
     let(:event) { create(:event, videoconference_url: "https://example.com/zoom") }
 

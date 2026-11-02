@@ -248,6 +248,8 @@
           <div class="mt-1">
             <% if f.object.single_form? %>
               <p class="text-xs text-gray-500 mb-1">Optional. One form, delivered as the recipients survey on the scholarship page once the recipient has signed their agreement. Set a <strong>display date</strong> to also hold it until that date. The ticket's Scholarship card shows when it opens.</p>
+            <% elsif f.object.ce_config? %>
+              <p class="mb-1 text-xs text-gray-500">Optional. The first form is delivered on the CE page to CE participants, and completing it is required for their CE certificate. Set a <strong>display date</strong> to open it on that date; leave it blank to open it once the training has ended and the participant has signed out.</p>
             <% else %>
               <p class="mb-1 text-xs text-gray-500">Optional. Each form is delivered inline on this callout's page. Set a <strong>display date</strong> to drip it open on that date; leave it blank to open it with the callout. This callout's own display date above always wins, so no form opens before the callout does. Completed forms collapse to a "Completed" toggle.</p>
             <% end %>
