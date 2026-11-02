@@ -222,12 +222,22 @@
                 <i class="fa-solid fa-award"></i>
                 <span>CE fees</span>
               </div>
-              <%= render "shared/badge",
-                    href: registrants_event_path(@event, ce_status: "registered"),
-                    label: pluralize(@dashboard.ce_registrant_count, "registrant"),
-                    classes: "bg-white text-gray-600 border-gray-200",
-                    icon: "fa-solid fa-users text-gray-400",
-                    title: "View registrants with continuing education" %>
+              <div class="flex items-center gap-1.5">
+                <% if @dashboard.ce_denied_count.positive? %>
+                  <%= render "shared/badge",
+                        href: registrants_event_path(@event, ce_status: "denied"),
+                        label: "#{@dashboard.ce_denied_count} denied",
+                        classes: "bg-red-50 text-red-700 border-red-200",
+                        icon: "fa-solid fa-ban text-2xs",
+                        title: "View registrants whose CE an admin denied" %>
+                <% end %>
+                <%= render "shared/badge",
+                      href: registrants_event_path(@event, ce_status: "registered"),
+                      label: pluralize(@dashboard.ce_registrant_count, "registrant"),
+                      classes: "bg-white text-gray-600 border-gray-200",
+                      icon: "fa-solid fa-users text-gray-400",
+                      title: "View registrants with continuing education" %>
+              </div>
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">

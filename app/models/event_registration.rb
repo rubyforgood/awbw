@@ -111,6 +111,7 @@ class EventRegistration < ApplicationRecord
   # CE-status filter options (the .ce_status scope's vocabulary). Issued/not issued
   # are worded as the certificate's state because they read as overlapping
   # otherwise — one person can match both across two registrations.
+  # Approved is every CE an admin hasn't denied, since CE arrives approved.
   CE_STATUS_FILTER_OPTIONS = [
     [ "Registered for CE", "registered" ],
     [ "Requested", "requested" ],

@@ -3093,6 +3093,19 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("$60")
       end
 
+      it "badges denied CE on the CE card, linking to the denied registrants" do
+        ce = create(:continuing_education_registration, event_registration: registration)
+
+        get dashboard_event_path(event)
+        expect(Capybara.string(response.body)).to have_no_link(href: registrants_event_path(event, ce_status: "denied"), visible: :all)
+
+        ce.update!(denied_at: Time.current)
+        get dashboard_event_path(event)
+
+        expect(Capybara.string(response.body)).to have_link("1 denied",
+          href: registrants_event_path(event, ce_status: "denied"), visible: :all)
+      end
+
       it "shows unallocated bulk payments in the equation, linking to the bulk payments page" do
         bulk_form = create(:form)
         create(:event_form, event: event, form: bulk_form, role: "bulk_payment")

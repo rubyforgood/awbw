@@ -876,6 +876,14 @@ RSpec.describe EventDashboard do
       expect(dashboard.ce_registrant_count).to eq(3)
     end
 
+    it "counts only the registrants whose CE an admin denied" do
+      expect(dashboard.ce_denied_count).to eq(0)
+
+      unpaid_reg.continuing_education_registrations.first.update!(denied_at: Time.current)
+
+      expect(described_class.new(event).ce_denied_count).to eq(1)
+    end
+
     it "adds CE fees to the grand total and cash breakdown" do
       expect(dashboard.grand_total_cents).to eq(
         dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents +

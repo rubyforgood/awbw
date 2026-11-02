@@ -676,6 +676,14 @@ class EventDashboard
     ce_registrant_ids.size
   end
 
+  # Distinct registrants an admin has denied CE — the CE card's denial badge. Read
+  # from the already-loaded CE records, so it costs no extra query.
+  def ce_denied_count
+    @ce_denied_count ||= ce_registrations.select(&:denied?)
+      .filter_map { |ce_registration| ce_registrant_id_by_registration[ce_registration.event_registration_id] }
+      .uniq.size
+  end
+
   # First continuing-education registration per registrant (Person id), for the
   # roster's CE column: its icon links to editing this record when present.
   def ce_registration_by_registrant
