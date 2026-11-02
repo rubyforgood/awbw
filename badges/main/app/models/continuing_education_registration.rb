@@ -259,21 +259,9 @@ class ContinuingEducationRegistration < ApplicationRecord
     approved? && !lapsed?
   end
 
-  # Opens this CE's sign-in sheet.
+  # Opens this CE's sign-in sheet and CE-gated callouts.
   def access_granted?
     approved? && payment_access_granted?
-  end
-
-  # Opens CE-gated ticket callouts: an unpaid CE still sees them until the event's
-  # CE payment deadline passes (so the registrant can reach the card to pay); after
-  # that it takes paid or intends to pay. No deadline set → paid or intends to pay.
-  def callout_access_granted?
-    payment_access_granted? || before_payment_deadline?
-  end
-
-  def before_payment_deadline?
-    deadline = event_registration&.event&.ce_payment_due_deadline
-    deadline.present? && deadline.future?
   end
 
   # Any allocation — a payment, a scholarship, or a revert (which adds a negative
