@@ -182,6 +182,12 @@ RSpec.describe EventAttendanceReport do
       expect(report.all_rows.map(&:license_number)).to eq(%w[AAA111 BBB222])
     end
 
+    it "drops a licence still intending to pay once the CE payment deadline passes" do
+      bob.continuing_education_registrations.first.update!(intends_to_pay: true)
+      event.update!(ce_payment_due_deadline: 1.day.ago)
+      expect(described_class.new(event, ce_only: true, paying_only: true).rows.map(&:license_number)).to eq([ "AAA111" ])
+    end
+
     it "keeps a person's paid licence when their second is unpaid" do
       make_ce(alice, number: "AAA999")
       expect(report.rows.map(&:license_number)).to eq([ "AAA111" ])

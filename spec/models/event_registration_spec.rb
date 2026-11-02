@@ -1086,10 +1086,29 @@ RSpec.describe EventRegistration, type: :model do
         expect(results).not_to include(requested_ce, no_ce)
       end
 
-      it "maps 'requested' to CE registrations not yet paid" do
+      it "maps 'requested' to unpaid CE that still counts" do
         results = EventRegistration.ce_status("requested")
         expect(results).to include(requested_ce, needs_license_ce)
-        expect(results).not_to include(paid_ce, no_ce)
+        expect(results).not_to include(paid_ce, no_ce, denied_ce)
+      end
+
+      context "once the CE payment deadline passes" do
+        before { event.update!(ce_payment_due_deadline: 1.day.ago) }
+
+        it "maps 'lapsed' to approved CE still unpaid" do
+          results = EventRegistration.ce_status("lapsed")
+          expect(results).to include(requested_ce, needs_license_ce)
+          expect(results).not_to include(paid_ce, denied_ce, no_ce)
+        end
+
+        it "leaves lapsed CE out of 'requested' but in 'not_paid'" do
+          expect(EventRegistration.ce_status("requested")).not_to include(requested_ce)
+          expect(EventRegistration.ce_status("not_paid")).to include(requested_ce)
+        end
+      end
+
+      it "maps 'lapsed' to nothing before the CE payment deadline" do
+        expect(EventRegistration.ce_status("lapsed")).to be_empty
       end
 
       it "maps 'not_paid' to CE registrations not yet paid" do

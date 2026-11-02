@@ -231,8 +231,16 @@
                         icon: "fa-solid fa-ban text-2xs",
                         title: "View registrants whose CE an admin denied" %>
                 <% end %>
+                <% if @dashboard.ce_lapsed_count.positive? %>
+                  <%= render "shared/badge",
+                        href: registrants_event_path(@event, ce_status: "lapsed"),
+                        label: "#{@dashboard.ce_lapsed_count} lapsed",
+                        classes: "bg-gray-50 text-gray-600 border-gray-200",
+                        icon: "fa-solid fa-calendar-xmark text-2xs",
+                        title: "View registrants whose CE went unpaid past the payment deadline — left out of CE totals" %>
+                <% end %>
                 <%= render "shared/badge",
-                      href: registrants_event_path(@event, ce_status: "registered"),
+                      href: registrants_event_path(@event, registrant_ids: @dashboard.ce_registrant_ids.join("-").presence || "0"),
                       label: pluralize(@dashboard.ce_registrant_count, "registrant"),
                       classes: "bg-white text-gray-600 border-gray-200",
                       icon: "fa-solid fa-users text-gray-400",

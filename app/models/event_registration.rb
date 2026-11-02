@@ -120,6 +120,7 @@ class EventRegistration < ApplicationRecord
     [ "Paid", "paid" ],
     [ "Approved", "approved" ],
     [ "Denied", "denied" ],
+    [ "Past payment deadline", "lapsed" ],
     [ "Certificate issued", "issued" ],
     [ "Certificate outstanding", "not_issued" ],
     [ "No CE", NO_CE ]
@@ -407,8 +408,8 @@ class EventRegistration < ApplicationRecord
       where(expected_payment_method: value)
     end
   }
-  # Filter by CE state. All derived (no stored CE status): payment (requested/paid)
-  # is computed from allocations vs cost like the registration's own payment state;
+  # Filter by CE state. All derived (no stored CE status): payment (requested/paid/
+  # lapsed) is computed from allocations vs cost like the registration's own payment state;
   # issued/not_issued read the certificate delivery; needs_license is a CE
   # registration sitting on a placeholder license. "registered" adds no condition
   # of its own — the EXISTS alone means "signed up for CE, whatever its state".
@@ -419,15 +420,23 @@ class EventRegistration < ApplicationRecord
         WHERE a.allocatable_type = 'ContinuingEducationRegistration'
           AND a.allocatable_id = cer.id), 0) >= cer.cost_cents
     SQL
+    # Approval and the reports' counted seam live on ContinuingEducationRegistration.
+    # Requested is unpaid CE still counted — the dashboard's CE Due row.
+    ce_scope =
+      case value
+      when "requested" then ContinuingEducationRegistration.counted.unpaid
+      when "lapsed" then ContinuingEducationRegistration.approved.lapsed
+      when "approved" then ContinuingEducationRegistration.approved
+      when "denied" then ContinuingEducationRegistration.denied
+      end
+    next where(id: ce_scope.select(:event_registration_id)) if ce_scope
+
     condition =
       case value
       when "registered" then "TRUE"
       when "needs_license" then "pl.number IS NULL"
       when "paid" then paid_sql
-      # Same rows: "requested" reads as the state before payment, which is unpaid.
-      when "requested", "not_paid" then "NOT (#{paid_sql})"
-      when "approved" then "cer.denied_at IS NULL"
-      when "denied" then "cer.denied_at IS NOT NULL"
+      when "not_paid" then "NOT (#{paid_sql})"
       when "issued" then "cer.certificate_sent_at IS NOT NULL"
       when "not_issued" then "cer.certificate_sent_at IS NULL"
       when NO_CE then "TRUE"
