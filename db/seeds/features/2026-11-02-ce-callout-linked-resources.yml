@@ -1,0 +1,9 @@
+name: "Resources linked to the CE hours callout show on the CE page"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-02
+pr_number: 2935
+summary: >-
+  Resources you link to the built-in CE hours callout (like sign-in sheet
+  instructions) now appear on the registrant's CE page, each opening its own page
+  with a way back to CE.

@@ -1,8 +1,8 @@
 # The CE-specific view over the inline form the CE callout carries (the generic
 # callout→form mechanism lives in #2384: RegistrationTicketCallout#form +
 # EventRegistrationServices::CalloutFormSubmission). This adds the two things CE
-# needs on top: the post-training form only surfaces once the registrant's
-# sign-outs are complete, and completing it is a prerequisite for the CE
+# needs on top: the form surfaces on its display date, or (with none) once the
+# registrant's sign-outs are complete, and completing it is a prerequisite for the CE
 # certificate. Built once per registration and read by the CE callout page, the
 # CE card nudge, and the certificate gate.
 class RegistrantCeForm
@@ -11,7 +11,7 @@ class RegistrantCeForm
   end
 
   # The CE callout's linked-form row (form + drip date), or nil when none is set.
-  # The CE callout carries a single form, so this reads the first link.
+  # The CE callout is limited to one form (SINGLE_FORM_BUILTIN_KEYS).
   def link
     return @link if defined?(@link)
 
@@ -28,8 +28,11 @@ class RegistrantCeForm
     answerable_fields.any?
   end
 
-  # Show the step only once the training's sign-outs are done.
+  # A display date opens the step on that date, even mid-training; without one it
+  # opens once the training's sign-outs are done.
   def available?
+    return !link.dripping? if link&.display_from
+
     @event_registration.ce_signouts_complete?
   end
 

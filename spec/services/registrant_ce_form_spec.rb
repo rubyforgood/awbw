@@ -54,6 +54,21 @@ RSpec.describe RegistrantCeForm do
       create(:registration_ticket_callout, event: upcoming.event, builtin_key: "ce_hours", title: "CE hours", form:)
       expect(described_class.new(upcoming)).not_to be_available
     end
+
+    context "with a display date on the form" do
+      let(:upcoming) { create(:event_registration, event: create(:event)) }
+      let(:upcoming_callout) { create(:registration_ticket_callout, event: upcoming.event, builtin_key: "ce_hours", title: "CE hours", form:) }
+
+      it "is true before the event has ended once the display date has passed" do
+        upcoming_callout.registration_ticket_callout_forms.first.update!(display_from: 1.hour.ago)
+        expect(described_class.new(upcoming)).to be_available
+      end
+
+      it "is false while the display date is still ahead, even with sign-outs complete" do
+        callout.registration_ticket_callout_forms.first.update!(display_from: 1.day.from_now)
+        expect(described_class.new(registration)).not_to be_available
+      end
+    end
   end
 
   describe "#complete?" do

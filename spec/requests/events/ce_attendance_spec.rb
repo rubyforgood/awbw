@@ -487,6 +487,23 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       end
     end
 
+    context "once the timesheet is open, before the first day's sign-in" do
+      before do
+        event.update!(ce_timesheet_opens_offset_minutes: -4_320)
+        pay_ce!
+        travel_to Time.zone.local(2026, 7, 21, 10, 0)
+      end
+
+      it "names the first sign-in day without saying sign-in hasn't opened or showing midnight" do
+        get registration_ce_path(registration.slug)
+        expect(response.body).to include("Sign in on each training day, starting")
+        expect(response.body).to include("Thursday, July 23</time>.")
+        expect(response.body).to include("That day's training begins at 2:00 AM PDT.")
+        expect(response.body).not_to include("Sign-in opens")
+        expect(response.body).not_to include("12:00 AM")
+      end
+    end
+
     context "before the timesheet opens" do
       before do
         event.update!(ce_timesheet_opens_offset_minutes: 60)

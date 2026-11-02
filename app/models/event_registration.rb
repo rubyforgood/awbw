@@ -918,9 +918,8 @@ class EventRegistration < ApplicationRecord
   end
 
   # Whether the training's sign-in/out phase is finished for this registrant: the
-  # event has ended and no attendance entry is still open. Gates when the CE
-  # callout's post-training form surfaces (see RegistrantCeForm) so it's filled at
-  # the end of the training rather than earlier.
+  # event has ended and no attendance entry is still open. Opens a CE callout form
+  # that has no display date (see RegistrantCeForm).
   def ce_signouts_complete?
     event.ended? && event_attendance_time_entries.none?(&:open?)
   end

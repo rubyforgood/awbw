@@ -1,0 +1,11 @@
+name: "Open the CE evaluation on a display date"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-02
+pr_number: 2935
+summary: >-
+  Give the CE hours callout's form a display date to open it for CE participants
+  on that date, even during the training. Leave it blank to open it once the
+  training ends and the participant has signed out.
+pro_tips:
+  - "Completing the form is still required before the CE certificate is issued."
