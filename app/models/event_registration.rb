@@ -420,20 +420,23 @@ class EventRegistration < ApplicationRecord
         WHERE a.allocatable_type = 'ContinuingEducationRegistration'
           AND a.allocatable_id = cer.id), 0) >= cer.cost_cents
     SQL
-    approved_sql = "cer.denied_at IS NULL"
-    deadline_sql = "(SELECT e.ce_payment_due_deadline FROM events e WHERE e.id = event_registrations.event_id)"
-    lapsed_sql = ContinuingEducationRegistration.lapsed_sql(ce: "cer", deadline: deadline_sql)
+    # Approval and the reports' counted seam live on ContinuingEducationRegistration.
+    # Requested is unpaid CE still counted — the dashboard's CE Due row.
+    ce_scope =
+      case value
+      when "requested" then ContinuingEducationRegistration.counted.unpaid
+      when "lapsed" then ContinuingEducationRegistration.approved.lapsed
+      when "approved" then ContinuingEducationRegistration.approved
+      when "denied" then ContinuingEducationRegistration.denied
+      end
+    next where(id: ce_scope.select(:event_registration_id)) if ce_scope
+
     condition =
       case value
       when "registered" then "TRUE"
       when "needs_license" then "pl.number IS NULL"
       when "paid" then paid_sql
-      # Requested is unpaid CE still counted — the dashboard's CE Due row.
-      when "requested" then "#{approved_sql} AND NOT (#{paid_sql}) AND NOT (#{lapsed_sql})"
       when "not_paid" then "NOT (#{paid_sql})"
-      when "approved" then approved_sql
-      when "denied" then "NOT (#{approved_sql})"
-      when "lapsed" then "#{approved_sql} AND #{lapsed_sql}"
       when "issued" then "cer.certificate_sent_at IS NOT NULL"
       when "not_issued" then "cer.certificate_sent_at IS NULL"
       when NO_CE then "TRUE"
