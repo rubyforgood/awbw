@@ -130,8 +130,9 @@ class AttendeesBreakdowns
     scholarship_recipient_ids.size
   end
 
+  # Counted CE only (approved, not lapsed past its payment deadline), matching EventDashboard.
   def ce_registrant_ids
-    @ce_registrant_ids ||= ContinuingEducationRegistration
+    @ce_registrant_ids ||= ContinuingEducationRegistration.counted
       .joins(:event_registration)
       .where(event_registration_id: registration_ids)
       .distinct
