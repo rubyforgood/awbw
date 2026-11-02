@@ -11,7 +11,7 @@ class RegistrantCeForm
   end
 
   # The CE callout's linked-form row (form + drip date), or nil when none is set.
-  # The CE callout carries a single form, so this reads the first link.
+  # The CE callout is limited to one form (SINGLE_FORM_BUILTIN_KEYS).
   def link
     return @link if defined?(@link)
 

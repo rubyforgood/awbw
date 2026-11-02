@@ -213,6 +213,16 @@ RSpec.describe RegistrationTicketCallout, type: :model do
       expect(callout.errors.full_messages).to include("Linked forms on the Scholarship callout are limited to one")
     end
 
+    it "limits the CE hours built-in to one form" do
+      callout = create(:registration_ticket_callout, builtin_key: "ce_hours", title: "CE hours")
+      callout.registration_ticket_callout_forms.build(form: create(:form, anonymous: true))
+      expect(callout).to be_valid
+
+      callout.registration_ticket_callout_forms.build(form: create(:form, anonymous: true))
+      expect(callout).not_to be_valid
+      expect(callout.errors.full_messages).to include("Linked forms on the CE hours callout are limited to one")
+    end
+
     it "lets a Scholarship callout swap its form by removing the old one in the same save" do
       callout = create(:registration_ticket_callout, builtin_key: "scholarship", title: "Scholarship")
       old_link = callout.registration_ticket_callout_forms.create!(form: create(:form))
