@@ -62,11 +62,11 @@ RSpec.describe FeatureCatalog do
       expect(feature.rhino_description.to_plain_text).to include("Longer write-up")
     end
 
-    it "matches an existing feature whose name differs only in case" do
+    it "matches an existing feature whose name differs only in case, taking the seed's casing" do
       existing = create(:feature, name: "SEED FEATURE ONE")
 
       expect { catalog.import! }.to change(Feature, :count).by(1)
-      expect(existing.reload.pr_number).to eq(1234)
+      expect(existing.reload).to have_attributes(pr_number: 1234, name: "Seed feature one")
     end
 
     it "overwrites content on a same-name feature nobody edited" do
@@ -82,16 +82,31 @@ RSpec.describe FeatureCatalog do
       expect(existing.rhino_description.to_plain_text).to eq("Longer write-up.")
     end
 
-    it "keeps fields the seed leaves out" do
-      existing = create(:feature, name: "Seed feature two", pro_tips: "Kept tip",
-                                  external_url: "https://docs.example.com/kept",
-                                  rhino_description: "<p>Kept write-up.</p>")
+    it "clears fields the seed leaves out" do
+      existing = create(:feature, name: "Seed feature two", pro_tips: "Old tip",
+                                  external_url: "https://docs.example.com/old", action_path: "/old",
+                                  pr_number: 99, rhino_description: "<p>Old write-up.</p>")
 
       catalog.import!
 
-      expect(existing.reload.pro_tips_list).to eq([ "Kept tip" ])
-      expect(existing.external_url).to eq("https://docs.example.com/kept")
-      expect(existing.rhino_description.to_plain_text).to eq("Kept write-up.")
+      expect(existing.reload).to have_attributes(pro_tips: "", external_url: nil, action_path: nil, pr_number: nil)
+      expect(existing.rhino_description.to_plain_text).to be_blank
+    end
+
+    it "syncs published from the seed" do
+      seed_dir.join("2026-08-05-seed-feature-two.yml").write(<<~YAML)
+        name: "Seed feature two"
+        area: scholarships
+        display_status: admin_facing
+        summary: "Second seeded feature."
+        released_on: 2026-08-05
+        published: false
+      YAML
+      existing = create(:feature, name: "Seed feature two", published: true)
+
+      catalog.import!
+
+      expect(existing.reload.published).to be(false)
     end
 
     it "re-syncs catalog classification (audience/area/links) that has drifted from the seed" do
@@ -111,14 +126,16 @@ RSpec.describe FeatureCatalog do
     end
 
     it "leaves a feature edited in-app untouched, even blank fields and drifted classification" do
-      existing = create(:feature, name: "Seed feature one", area: "reporting", external_url: nil,
-                                  summary: "Admin summary", created_at: 2.days.ago, updated_at: 1.day.ago)
+      existing = create(:feature, name: "SEED FEATURE ONE", area: "reporting", external_url: nil,
+                                  summary: "Admin summary", published: false,
+                                  created_at: 2.days.ago, updated_at: 1.day.ago)
 
       result = catalog.import!
 
       expect(result.updated).to eq(0)
       expect(result.skipped).to eq(1)
-      expect(existing.reload).to have_attributes(area: "reporting", external_url: nil, summary: "Admin summary")
+      expect(existing.reload).to have_attributes(name: "SEED FEATURE ONE", area: "reporting", external_url: nil,
+                                                 summary: "Admin summary", published: false)
     end
 
     it "does not count its own sync as an in-app edit" do
