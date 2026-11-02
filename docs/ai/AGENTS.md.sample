@@ -50,21 +50,21 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~146 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~168 files |
+| `app/models/` | ActiveRecord models | ~149 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~192 files |
 | `app/jobs/` | SolidQueue background jobs (incl. `JobRunnerCheckInJob`, a 10-minute Honeybadger check-in that alerts when no worker runs jobs, and `StuckEmailsAlertJob`, an hourly Honeybadger alert when portal emails from the last day are stuck pending per `DataHealth::StuckNotifications`) | 9 files |
-| `app/models/concerns/` | Shared model modules | 25 concerns |
+| `app/models/concerns/` | Shared model modules | 26 concerns |
 
 ### Presentation
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/, home/) | ~110 files |
-| `app/views/` | ERB templates | ~824 files |
-| `app/decorators/` | Draper decorators for view logic | ~60 files |
-| `app/policies/` | ActionPolicy authorization rules | ~75 files |
-| `app/presenters/` | Presentation objects | 8 files |
-| `app/helpers/` | View helpers | ~50 files |
+| `app/controllers/` | Rails controllers (admin/, events/, home/) | ~121 files |
+| `app/views/` | ERB templates | ~1145 files |
+| `app/decorators/` | Draper decorators for view logic | ~65 files |
+| `app/policies/` | ActionPolicy authorization rules | ~73 files |
+| `app/presenters/` | Presentation objects | 11 files |
+| `app/helpers/` | View helpers | ~52 files |
 | `app/mailers/` | ActionMailer classes | 6 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -147,19 +147,22 @@ This codebase (Rails 8.1)
 |---|---|
 | `AgeGroupTaggable` | Splits AgeRange category taggings into primary/additional via `categorizable_items.is_primary` (Person). `replace: true` treats the submitted set as the whole truth; demotions save row by row so they reach the change log |
 | `AhoyTrackable` | Event tracking integration. Included by the tag join models (`SectorableItem`, `CategorizableItem`) too, so a submission's tag adds/removals/primary flips reach `FormSubmissionChanges` |
+| `Certifiable` | Certificate issuing (`certificate_sent?`, `mark_certificate_sent!`), with `certificate_sent_at` as the issued marker (EventRegistration, ContinuingEducationRegistration); includers define their own `certificate_available?` |
 | `CategoriesTaggable` | Enforces a single primary category via `categorizable_items.is_primary` (Story, StoryIdea); any type validates, but the story forms and `TagAssignable` star only `AUDIENCE_CATEGORY_TYPES` (AgeRange + StoryPopulation). Also `audience_categories` |
 | `ContactSearchable` | The prefixed "find them by where they are" search, generalised out of the people index's Contact info box (`PeopleController`) and shared by the attendees page and the organizations index. **It does not replace that box** — `Person` keeps `search_contact` exactly as the people index has always had it and takes this one alongside as `search_location` (`searches_contact :contact_methods, :active_addresses, as: :search_location`); `as:` exists for that. `CONTACT_SEARCH_FIELDS` maps the prefix someone types to its column(s) — phone, street, city, state, zip, county, country, locality, district, the three LA districts, and `type:` for work/personal/mailing. SearchCop ANDs the prefixes onto the **same joined address**, so `type: personal city: austin` is how you search a personal city alone. `SCOPING_PREFIXES` stay out of the bare-term catch-all (`type:` is a word streets are called; the LA districts are integer columns). Searches **live addresses only** (`active_addresses`) — a retired address is still the right place to show someone (`Address::STANDING`) but a wrong place to find them. Grammar for the boxes that use it: several words AND (in any word order), `--` means either (`ALTERNATIVE_SEPARATOR`), quotes make a phrase, commas become spaces unless the query is quoted. The two combine — `amy jones--mary davis` is `(amy AND jones) OR (mary AND davis)`, which is why `expand_alternatives` parenthesises each alternative before SearchCop sees it: unparenthesised, `or` binds to the last word alone and the query matches nobody. (For the same reason Oregon has to be asked for as `state: OR`; a bare `or` is the operator.) The non-SearchCop boxes reach the same grammar through `alternatives` (`EventRegistration.keyword` ANDs each word's whole OR block; `ReminderRecipientFilter#any_term?` ANDs the words of each alternative). `SEARCH_SYNTAX_HINT` / `CONTACT_SEARCH_HINT` caption those boxes from these constants so help text can't drift — **the people index keeps its own hardcoded hint**, because its box keeps its own grammar |
 | `Communicable` | Gives a record the `notifications` association, nested attributes, a default `communications_scope`, and a `before_validation` addressing a hand-logged communication to the record's `communications_email`. Included by every model whose form renders `shared/_comments_and_communications` |
 | `AuthorCreditable` | Author attribution. Credits are formatted by the credited **person's profile** (`Person#display_name_preference`), not by the record. The record's `author_credit_preference` is the consent snapshot taken at create time and is human-editable only on the author credit divergences page. Anonymity is a one-way latch: the profile or the record can set it, neither can strip it from the other. `credits_to_org` flips the unattributed label to "AWBW Staff"; `credits_creator` (idea models, workshop logs) credits the submitting account's person when no author is named |
 | `Featureable` | `featured`, `publicly_featured` scopes |
 | `FilemakerCoded` | Reads `filemaker_code` as the trimmed, comma-separated **list** it is (Person, Organization, Affiliation, Payment, Workshop, Resource, Address, ContactMethod): `#filemaker_codes` for the set a record answers to, `.join_filemaker_codes` to combine any mix of strings/lists into one normalized column value (both dedupers union the codes on merge, as do `AddressDeduper` and `ContactMethodDeduper`). `filemaker_archived_in` names the `Fm*` archive table(s) a model's codes point into (`.filemaker_archives`), and `.with_filemaker_code(code)` finds records carrying a code. Nothing should compare the whole column against a single code — `FilemakerHelper#filemaker_code_links` renders one archive link per code, and `fm_archives#show` links back to the portal records carrying its code |
+| `FmArchive` | Shared reader for the `Fm*` FileMaker archive tables: `find_by_fm_id`, `find_by_data` (JSON column lookup), and `grouped_data` laying the JSON `data` out as cards per the model's `FIELD_GROUPS` |
 | `Mentionable` | ActionText mention grouping, plus `connected_records(klass)` — records linked by a mention in either direction (the only Resource↔Workshop link: `Resource#connected_workshops`, `Workshop#connected_resources`) |
 | `NameFilterable` | Name-based filtering |
 | `OutsideUsaTypeable` | `typed_outside_usa :state` adds the `<attribute>_outside_usa` box `shared/_outside_usa` reveals beside a US-state dropdown; a typed value wins whichever is assigned first (ProfessionalLicense, Address, ProfileChangeRequest) |
 | `PayChargeExtensions` | Included into `Pay::Charge` (via `config/initializers/pay.rb`): turns a Stripe charge into an AWBW `Payment` + `Allocation`, resolving the membership invoice it pays |
+| `PersonNameSearchable` | `by_person_name` — space-insensitive first/last/legal-first name search in either order, through the model's `person_name_join` (EventRegistration, Membership, MembershipInvoice) |
 | `Publishable` | `published`, `publicly_visible` scopes |
 | `PunctuationStrippable` | Strips punctuation from strings |
-| `Registerable` | Shared payment (`allocations_sum`/`paid?`/`remaining_cost`/…) + certificate (`certificate_sent?`, `mark_certificate_sent!`) interface for `EventRegistration` and `ContinuingEducationRegistration`; includers supply `cost_cents` + their own `certificate_available?` |
+| `Registerable` | Shared payment interface (`allocations_sum`/`paid?`/`remaining_cost`/…) for `EventRegistration`, `ContinuingEducationRegistration`, and `MembershipInvoice`; includers supply `cost_cents` |
 | `RemoteSearchable` | AJAX remote search by column |
 | `RichTextSearchable` | Full-text search on ActionText rich_text fields |
 | `SectorsTaggable` | Enforces a single primary sector for sector-tagged owners (Person, Story, StoryIdea). `replace: true` treats the submitted set as the whole truth; demotions save row by row so they reach the change log |
@@ -173,7 +176,7 @@ This codebase (Rails 8.1)
 
 ### Namespaces
 
-- **Root level** (~70 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
+- **Root level** (~80 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
@@ -208,7 +211,10 @@ comparison — add a rule if none fits (e.g. `PersonPolicy#own_profile?`). Conve
 - `AhoyTracking` — Event tracking integration
 - `Dedupable` — Data deduplication helpers
 - `ExternallyRedirectable` — External URL redirection
+- `MentionableScopable` — Narrows a record's mention groups to what the user may see (`authorized_scope_mentions`; Workshops, Resources)
+- `SearchEngineHideable` — `noindex!` sends `X-Robots-Tag: noindex, nofollow` on slug/ticket-gated public pages
 - `StoryIdeaFormVariables` — Loads the shared story-idea form variables (StoryIdeasController + the portal's StorySharesController#share)
+- `StripeMetadata` — Truncates Stripe metadata values to Stripe's 500-character cap (included in ApplicationController)
 - `TagAssignable` — Tag assignment helpers
 
 ## Services
@@ -537,17 +543,17 @@ Tailwind only scans the paths listed in the `@source` directives at the top of t
 
 | Directory | Count | Purpose |
 |---|---|---|
-| `spec/models/` | ~86 | Model unit tests |
-| `spec/views/` | ~82 | View template tests |
-| `spec/requests/` | ~137 | HTTP request/integration tests |
-| `spec/system/` | ~37 | End-to-end browser tests (Capybara) |
-| `spec/routing/` | ~18 | Route definition tests |
-| `spec/policies/` | ~26 | Authorization policy tests |
-| `spec/decorators/` | ~29 | Decorator tests |
-| `spec/services/` | ~111 | Service object tests |
-| `spec/mailers/` | ~5 | Mailer tests |
-| `spec/helpers/` | ~5 | Helper tests |
-| `spec/factories/` | ~67 | FactoryBot factory definitions |
+| `spec/models/` | ~105 | Model unit tests |
+| `spec/views/` | ~83 | View template tests |
+| `spec/requests/` | ~201 | HTTP request/integration tests |
+| `spec/system/` | ~50 | End-to-end browser tests (Capybara) |
+| `spec/routing/` | ~20 | Route definition tests |
+| `spec/policies/` | ~29 | Authorization policy tests |
+| `spec/decorators/` | ~44 | Decorator tests |
+| `spec/services/` | ~147 | Service object tests |
+| `spec/mailers/` | ~7 | Mailer tests |
+| `spec/helpers/` | ~19 | Helper tests |
+| `spec/factories/` | ~87 | FactoryBot factory definitions |
 
 ### Configuration
 
@@ -620,7 +626,7 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (19 files):
+Located in `lib/tasks/` (20 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
@@ -636,6 +642,7 @@ Located in `lib/tasks/` (19 files):
 - `fm_import.rake` — Load the FileMaker CSV exports into the `fm_*` archive tables (`fm:import`, reads each CSV from the `FM Archive` resources, batch `insert_all`, skips rows whose key is already stored)
 - `fm_import_people.rake` — Create people from the FileMaker Rolodex archive (`fm:import_people`, via `PersonServices::ImportFromRolodex`, links existing by name + email, idempotent, DRY_RUN; VERBOSE=true lists every row, FM_IDS=a,b re-runs just those rows past the idempotence guard; commits every 1,000 rows, prints progress, saves the full report as an ActiveStorage blob even on a crash, and aborts when no `TagAlias` or `StaffAlias` rows exist or no `Setting.import_user` is chosen; logs every record it creates or fills as activity under a run name (`Current.source = "fm_import_people"`), which `fm:undo_import_people RUN=…` reverses via `PersonServices::UndoRolodexImport`)
 - `fm_import_organizations.rake` — `fm:merge_same_named_organizations` (`OrganizationServices::MergeSameNamed`; run before and after the organizations import; lists every merge, not undoable by `fm:undo_import`), `fm:purge_import_activity RUN=…` (deletes a run's `import_run`/`undone_run`/`merge_run` activity, only once undone unless `FORCE=true`), and two FileMaker archive runs after `fm:import_people`, each reversible on its own (undo affiliations before organizations): `fm:import_organizations` (`OrganizationServices::ImportFromFilemaker` only — every organization, nothing else) and `fm:import_affiliations` (`PersonServices::ImportFromRolodex` over `FmRolodex.agency_cards` — the contact people `fm:import_people` skipped — then `AffiliationServices::ImportFromFilemaker`). Both share one runner: idempotent, DRY_RUN rolls back as a whole while a real run commits per batch, VERBOSE=true lists every row; prints progress, the skipped/failed rows, differences, unmatched org types, unmatched staff names and the Personnel status/role tallies, and saves the report as an ActiveStorage blob; `FM_IDS=…` re-reads just the named rows; aborts with no `Setting.import_user` and with no `StaffAlias` recorded; logs under a run name that `fm:undo_import RUN=…` reverses
+- `create_facilitator_memberships.rake` — Create the 2/1/2027 membership for every active facilitator, priced by how many facilitators their org has (`data:create_facilitator_memberships`, via `Membership::Create`; skips people without an active account or with an existing membership, idempotent, DRY_RUN)
 - `resolve_resource_organizations.rake` — Link resources to organizations from the legacy `agency` free-text name (`data:resolve_resource_organizations`, match-or-create, idempotent, DRY_RUN)
 - `seed_tag_aliases.rake` — Record the legacy sector and age-group terms from ADR-0007 as tag aliases (`data:seed_tag_aliases`, via `TagAliasSeeder`, idempotent; also part of `db:seed`)
 - `load_staff_aliases.rake` — Record FileMaker staff names → portal users as staff aliases from `FILE=` (`data:load_staff_aliases`, via `StaffAliasLoader`, idempotent)
