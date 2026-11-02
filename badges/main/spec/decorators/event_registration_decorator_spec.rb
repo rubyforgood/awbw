@@ -145,8 +145,8 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
           professional_license: create(:professional_license, :placeholder, person: registration.registrant))
       end
 
-      it "is an amber License # needed badge" do
-        expect(badge.label).to eq("License # needed")
+      it "is an amber Needs license # badge" do
+        expect(badge.label).to eq("Needs license #")
         expect(badge.classes).to include("amber")
       end
     end
@@ -162,19 +162,36 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       context "with simulate_paid" do
         let(:opts) { { simulate_paid: true } }
 
-        it "previews the blue Pending state" do
-          expect(badge.label).to eq("Pending")
+        it "previews the blue Approved state" do
+          expect(badge.label).to eq("Approved")
           expect(badge.classes).to include("blue")
         end
       end
     end
 
-    context "when paid in full but not issued" do
+    context "when paid in full" do
       before { pay(add_ce(cost_cents: 15_000), 15_000) }
 
-      it "is a blue Pending badge" do
-        expect(badge.label).to eq("Pending")
+      it "is a blue Approved badge" do
+        expect(badge.label).to eq("Approved")
         expect(badge.classes).to include("blue")
+      end
+    end
+
+    context "when an admin denied the CE" do
+      before { add_ce(cost_cents: 15_000).update!(denied_at: Time.current) }
+
+      it "is a red Denied badge, even with a balance due" do
+        expect(badge.label).to eq("Denied")
+        expect(badge.classes).to include("red")
+      end
+
+      context "shown to the registrant" do
+        let(:opts) { { for_registrant: true } }
+
+        it "reads Not approved" do
+          expect(badge.label).to eq("Not approved")
+        end
       end
     end
 
@@ -202,22 +219,22 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       expect(badges_for).to be_empty
     end
 
-    it "maps a known method to its short code, icon, and classes" do
+    it "maps a known method to its short label, icon, and classes" do
       badge = badges_for(expected: "Credit card (now)").sole
-      expect(badge.code).to eq("CCN")
+      expect(badge.short_label).to eq("Card")
       expect(badge.label).to eq("Credit card")
       expect(badge.classes).to include("green")
     end
 
-    it "shows a BUD badge when someone else will pay" do
+    it "shows a Buddy badge when someone else will pay" do
       badge = badges_for(buddy: true).sole
-      expect(badge.code).to eq("BUD")
+      expect(badge.short_label).to eq("Buddy")
       expect(badge.classes).to include("purple")
     end
 
-    it "shows both the method and BUD when both apply" do
-      codes = badges_for(expected: "Check", buddy: true).map(&:code)
-      expect(codes).to eq(%w[ CK BUD ])
+    it "shows both the method and Buddy when both apply" do
+      labels = badges_for(expected: "Check", buddy: true).map(&:short_label)
+      expect(labels).to eq(%w[ Check Buddy ])
     end
 
     it "falls back to a neutral badge showing an unknown/custom value" do
@@ -228,13 +245,13 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
   end
 
   describe ".payment_method_filter_choices" do
-    it "lists every method (code-labeled) plus the buddy-system sentinel" do
+    it "lists every method plus the buddy-system sentinel" do
       expect(described_class.payment_method_filter_choices).to eq(
         [
-          [ "Credit card (CCN)", "Credit card (now)" ],
-          [ "Credit card (later) (CCL)", "Credit card (later)" ],
-          [ "Check (CK)", "Check" ],
-          [ "Someone else will pay (BUD)", "someone_else_will_pay" ]
+          [ "Credit card", "Credit card (now)" ],
+          [ "Credit card (later)", "Credit card (later)" ],
+          [ "Check", "Check" ],
+          [ "Someone else will pay", "someone_else_will_pay" ]
         ]
       )
     end
@@ -286,8 +303,14 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       it { is_expected.to eq(3) }
     end
 
-    context "when CE isn't in play" do
+    context "when an admin denied the CE" do
+      before { add_ce.update!(denied_at: Time.current) }
+
       it { is_expected.to eq(4) }
+    end
+
+    context "when CE isn't in play" do
+      it { is_expected.to eq(5) }
     end
   end
 

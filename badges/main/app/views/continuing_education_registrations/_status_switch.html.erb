@@ -1,0 +1,15 @@
+<%# A details-form slider for a CE status (approved, certificate issued); saves with
+    the form. Locals: name (the continuing_education_registration[] param), label,
+    on, detail (optional muted line under the label), title. %>
+<label class="flex cursor-pointer items-center justify-end gap-3 select-none" title="<%= local_assigns[:title] %>">
+  <span class="text-right">
+    <span class="block text-sm font-medium text-gray-700"><%= label %></span>
+    <% if local_assigns[:detail].present? %>
+      <span class="block text-xs text-gray-500"><%= local_assigns[:detail] %></span>
+    <% end %>
+  </span>
+  <%= hidden_field_tag "continuing_education_registration[#{name}]", "0", id: nil %>
+  <%= check_box_tag "continuing_education_registration[#{name}]", "1", on,
+        id: "continuing_education_registration_#{name}", class: "peer sr-only" %>
+  <span class="relative inline-block h-5 w-9 shrink-0 rounded-full bg-gray-300 transition-colors peer-checked:bg-teal-600 after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:after:translate-x-4"></span>
+</label>

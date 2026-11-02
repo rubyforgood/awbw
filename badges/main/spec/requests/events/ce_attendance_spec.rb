@@ -17,10 +17,10 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
   after { travel_back }
 
   # A CE registration paid in full — the gate for the whole attendance surface.
-  def pay_ce!(number: "LIC123", hours: 6, paid: true)
+  def pay_ce!(number: "LIC123", hours: 6, paid: true, denied: false)
     license = create(:professional_license, person: registration.registrant, number: number)
     ce = create(:continuing_education_registration, event_registration: registration,
-      professional_license: license, hours: hours)
+      professional_license: license, hours: hours, denied_at: (Time.current if denied))
     create(:allocation, source: create(:payment), allocatable: ce, amount: ce.cost_cents) if paid
     registration.reload
     ce
@@ -46,6 +46,13 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
         post registration_ce_sign_in_path(registration.slug)
       }.not_to change { registration.event_attendance_time_entries.count }
       expect(flash[:alert]).to be_present
+    end
+
+    it "does nothing when paid CE is denied" do
+      pay_ce!(denied: true)
+      expect {
+        post registration_ce_sign_in_path(registration.slug)
+      }.not_to change { registration.event_attendance_time_entries.count }
     end
 
     it "records an entry when unpaid CE intends to pay" do
@@ -268,6 +275,12 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
     it "hides the attendance section until CE is paid in full" do
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      get registration_ce_path(registration.slug)
+      expect(response.body).not_to include("Training sign-in")
+    end
+
+    it "hides the attendance section once paid CE is denied" do
+      pay_ce!(denied: true)
       get registration_ce_path(registration.slug)
       expect(response.body).not_to include("Training sign-in")
     end

@@ -1,7 +1,7 @@
 <% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
 <% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
 
-<% form_url = professional_license.persisted? ? professional_license_path(professional_license, return_to: params[:return_to].presence) : professional_licenses_path %>
+<% form_url = professional_license.persisted? ? professional_license_path(professional_license, return_to: params[:return_to].presence, ce_registration_id: params[:ce_registration_id].presence) : professional_licenses_path %>
 <%= simple_form_for professional_license, url: form_url, html: { class: "space-y-4" } do |f| %>
   <% if professional_license.errors.any? %>
     <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

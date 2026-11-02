@@ -1,0 +1,13 @@
+name: "Issue event and CE certificates from the registrants list"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2921
+action_path: "/events"
+summary: >-
+  On an event's registrants list, turn on the Certificate of completion switch
+  for a slider column per certificate: the event's, and on CE events the CE
+  certificate. Flipping a slider issues it right away, no save needed.
+pro_tips:
+  - "Turning a slider on keeps an issued date already on file; turning it off clears it."
+  - "The CE certificate slider matches the switch on the CE edit page."

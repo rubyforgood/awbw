@@ -167,6 +167,7 @@ Rails.application.routes.draw do
       delete :unlink_organization
       patch :update_onboarding
       patch :toggle_certificate_issued
+      patch :toggle_ce_certificate_issued
       patch :update_attendance
       patch :toggle_post_survey
     end
@@ -222,7 +223,6 @@ Rails.application.routes.draw do
     resources :comments, only: [ :create, :update ]
   end
   resources :continuing_education_registrations, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
-    member { patch :toggle_certificate }
     resources :comments, only: [ :create, :update ]
   end
   # The admin-only browse index plus standalone new/edit flows. (Licenses can
