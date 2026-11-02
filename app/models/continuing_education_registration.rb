@@ -47,6 +47,9 @@ class ContinuingEducationRegistration < ApplicationRecord
   scope :for_license, ->(license_id) { where(professional_license_id: license_id) }
   scope :approved, -> { where(denied_at: nil) }
   scope :denied, -> { where.not(denied_at: nil) }
+  scope :lapsed, -> { joins(event_registration: :event).where(lapsed_sql) }
+  # What CE reports count: approved, and paid in full once the event's payment deadline passes.
+  scope :counted, -> { approved.where.not(id: lapsed.select(:id)) }
   scope :certificate_issued, -> { where.not(certificate_sent_at: nil) }
   scope :certificate_pending, -> { where(certificate_sent_at: nil) }
   scope :issued_on_or_after, ->(date) { where(certificate_sent_at: date.beginning_of_day..) }
@@ -91,6 +94,18 @@ class ContinuingEducationRegistration < ApplicationRecord
       license.update!(attributes) if attributes.any?
       event_registration.continuing_education_registrations.create!(professional_license: license)
     end
+  end
+
+  # Past the event's CE payment deadline with a balance still due. Intending to pay
+  # stops mattering at the deadline. `ce`/`deadline` are SQL for the caller's query.
+  def self.lapsed_sql(ce: table_name, deadline: "events.ce_payment_due_deadline")
+    sanitize_sql_array([ <<~SQL.squish, Time.current ])
+      #{deadline} IS NOT NULL
+        AND #{deadline} < ?
+        AND COALESCE((SELECT SUM(a.amount) FROM allocations a
+          WHERE a.allocatable_type = 'ContinuingEducationRegistration'
+            AND a.allocatable_id = #{ce}.id), 0) < #{ce}.cost_cents
+    SQL
   end
 
   def self.parse_iso_date(value)
@@ -236,6 +251,16 @@ class ContinuingEducationRegistration < ApplicationRecord
 
   def denied?
     denied_at.present?
+  end
+
+  # Mirrors .lapsed_sql.
+  def lapsed?
+    deadline = event_registration&.event&.ce_payment_due_deadline
+    deadline.present? && deadline.past? && !paid_in_full?
+  end
+
+  def counted?
+    approved? && !lapsed?
   end
 
   # Opens this CE's sign-in sheet and CE-gated callouts.

@@ -3106,6 +3106,16 @@ RSpec.describe "Events", type: :request do
           href: registrants_event_path(event, ce_status: "denied"), visible: :all)
       end
 
+      it "badges CE unpaid past the payment deadline, linking to the lapsed registrants" do
+        create(:continuing_education_registration, event_registration: registration, cost_cents: 5_000)
+        event.update!(ce_payment_due_deadline: 1.day.ago)
+
+        get dashboard_event_path(event)
+
+        expect(Capybara.string(response.body)).to have_link("1 lapsed",
+          href: registrants_event_path(event, ce_status: "lapsed"), visible: :all)
+      end
+
       it "shows unallocated bulk payments in the equation, linking to the bulk payments page" do
         bulk_form = create(:form)
         create(:event_form, event: event, form: bulk_form, role: "bulk_payment")

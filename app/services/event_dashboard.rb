@@ -466,6 +466,8 @@ class EventDashboard
   # after every allocation, and the total (paid + outstanding) is the CE addend
   # in the grand total. Scoped to CE registrations tied to an active event
   # registration, so cancelled registrants' CE is ignored like their fees.
+  # Cash collected counts every CE; what's owed and who has CE count only
+  # ContinuingEducationRegistration.counted.
 
   # CE cash collected across this event's active CE registrations.
   def cont_ed_paid_cents
@@ -475,7 +477,7 @@ class EventDashboard
   # CE cost still owed after every allocation (payments and discounts), floored
   # per registration at zero.
   def cont_ed_outstanding_cents
-    ce_registrations.sum { |ce_registration| ce_due_cents(ce_registration) }
+    counted_ce_registrations.sum { |ce_registration| ce_due_cents(ce_registration) }
   end
 
   # CE fee revenue: collected plus outstanding. Mirrors registration_subtotal_cents,
@@ -501,8 +503,10 @@ class EventDashboard
     @cont_ed_unpaid_registrants ||= people_sorted(ce_unpaid_registrant_ids)
   end
 
+  # Everyone with CE cash on file who isn't fully paid — including CE no longer
+  # counted — so the Paid names add up to the Paid amount.
   def cont_ed_partially_paid_registrants
-    @cont_ed_partially_paid_registrants ||= cont_ed_unpaid_registrants.select { |person| cont_ed_paid_by_registrant[person.id].positive? }
+    @cont_ed_partially_paid_registrants ||= people_sorted(cont_ed_paid_by_registrant.keys - ce_paid_registrant_ids)
   end
 
   # Per-registrant CE cash collected / still owed, keyed by Person id — the
@@ -512,7 +516,7 @@ class EventDashboard
   end
 
   def cont_ed_due_by_registrant
-    @cont_ed_due_by_registrant ||= ce_cents_by_registrant { |ce_registration| ce_due_cents(ce_registration) }
+    @cont_ed_due_by_registrant ||= ce_cents_by_registrant(counted_ce_registrations) { |ce_registration| ce_due_cents(ce_registration) }
   end
 
   def free?
@@ -666,9 +670,9 @@ class EventDashboard
     @primary_age_group_names_by_registrant ||= names_by_registrant(age_groups, age_group_registrant_ids_by_category)
   end
 
-  # Registrant (Person) ids with a continuing-education registration this event.
+  # Registrant (Person) ids with counted continuing education this event.
   def ce_registrant_ids
-    @ce_registrant_ids ||= ce_registration_by_registrant.keys
+    @ce_registrant_ids ||= ce_registrant_ids_for(counted_ce_registrations)
   end
 
   # Distinct registrants with continuing education — the CE subtotal + pie share.
@@ -679,9 +683,13 @@ class EventDashboard
   # Distinct registrants an admin has denied CE — the CE card's denial badge. Read
   # from the already-loaded CE records, so it costs no extra query.
   def ce_denied_count
-    @ce_denied_count ||= ce_registrations.select(&:denied?)
-      .filter_map { |ce_registration| ce_registrant_id_by_registration[ce_registration.event_registration_id] }
-      .uniq.size
+    @ce_denied_count ||= ce_registrant_ids_for(ce_registrations.reject(&:approved?)).size
+  end
+
+  # Distinct registrants whose approved CE went unpaid past the payment deadline —
+  # the CE card's lapsed badge.
+  def ce_lapsed_count
+    @ce_lapsed_count ||= ce_registrant_ids_for(ce_registrations.select(&:approved?) - counted_ce_registrations).size
   end
 
   # First continuing-education registration per registrant (Person id), for the
@@ -1204,6 +1212,13 @@ class EventDashboard
       .to_a
   end
 
+  def counted_ce_registrations
+    @counted_ce_registrations ||= begin
+      counted_ids = ContinuingEducationRegistration.counted.where(id: ce_registrations.map(&:id)).pluck(:id).to_set
+      ce_registrations.select { |ce_registration| counted_ids.include?(ce_registration.id) }
+    end
+  end
+
   # Registrant (Person) id per registration in the CE basis. Distinct from
   # #registrant_id_by_registration (active regs only) because CE also counts a
   # transferred-out reg's stub, whose reg is inactive. (#1944)
@@ -1240,24 +1255,26 @@ class EventDashboard
     [ ce_registration.cost_cents.to_i - ce_allocated_by_ce_registration.fetch(ce_registration.id, 0), 0 ].max
   end
 
-  # Registrant (Person) ids with at least one CE registration still owing.
+  # Registrant (Person) ids with counted CE still owing.
   def ce_unpaid_registrant_ids
-    @ce_unpaid_registrant_ids ||= ce_registrations
-      .select { |ce_registration| ce_due_cents(ce_registration).positive? }
-      .filter_map { |ce_registration| ce_registrant_id_by_registration[ce_registration.event_registration_id] }
-      .uniq
+    @ce_unpaid_registrant_ids ||= ce_registrant_ids_for(counted_ce_registrations.select { |ce_registration| ce_due_cents(ce_registration).positive? })
   end
 
-  # Registrants with CE whose whole CE balance is covered — everyone with CE
-  # minus those with any unpaid CE registration.
+  # Registrants whose whole CE balance is covered, counted or not — so a paid CE an
+  # admin later denied still lists beside the cash it brought in.
   def ce_paid_registrant_ids
-    @ce_paid_registrant_ids ||= ce_registrant_ids - ce_unpaid_registrant_ids
+    @ce_paid_registrant_ids ||= ce_registrant_ids_for(ce_registrations) -
+      ce_registrant_ids_for(ce_registrations.select { |ce_registration| ce_due_cents(ce_registration).positive? })
+  end
+
+  def ce_registrant_ids_for(records)
+    records.filter_map { |ce_registration| ce_registrant_id_by_registration[ce_registration.event_registration_id] }.uniq
   end
 
   # Roll a per-CE-registration cents figure (from the block) up to a
   # { Person id => cents } hash, dropping zeros.
-  def ce_cents_by_registrant
-    ce_registrations.each_with_object(Hash.new(0)) do |ce_registration, map|
+  def ce_cents_by_registrant(records = ce_registrations)
+    records.each_with_object(Hash.new(0)) do |ce_registration, map|
       registrant_id = ce_registrant_id_by_registration[ce_registration.event_registration_id]
       next unless registrant_id
       cents = yield(ce_registration)

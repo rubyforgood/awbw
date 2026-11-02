@@ -3,8 +3,9 @@
 # ~8 queries) per event.
 #
 # The definitions mirror EventDashboard's — active registrations only, cost net of
-# every allocation and floored at zero, payment allocations for cash collected —
-# so a row in the report and that event's dashboard can't disagree. A parity spec
+# every allocation and floored at zero (CE owed only on counted CE), payment
+# allocations for cash collected — so a row in the report and that event's
+# dashboard can't disagree. A parity spec
 # holds the two together.
 #
 # One definition is broader than the dashboard's: discounts cover CE registrations
@@ -126,7 +127,7 @@ class EventRevenueFigures
 
       ce_rows_by_registration.fetch(id, []).each do |ce_id, cost|
         ce_paid[registrant_id] += ce_allocations[[ ce_id, "Payment" ]].to_i
-        ce_outstanding[registrant_id] += [ cost.to_i - ce_allocated_total[ce_id], 0 ].max
+        ce_outstanding[registrant_id] += ce_due_cents(ce_id, cost)
         discounts[registrant_id] += ce_allocations[[ ce_id, "Discount" ]].to_i
       end
     end
@@ -180,7 +181,7 @@ class EventRevenueFigures
       discount_cents: registration_ids.sum { |id| registration_allocations[[ id, "Discount" ]].to_i } +
         ce_rows.sum { |ce_id, _cost| ce_allocations[[ ce_id, "Discount" ]].to_i },
       ce_paid_cents: ce_rows.sum { |ce_id, _cost| ce_allocations[[ ce_id, "Payment" ]].to_i },
-      ce_outstanding_cents: ce_rows.sum { |ce_id, cost| [ cost.to_i - ce_allocated_total[ce_id], 0 ].max }
+      ce_outstanding_cents: ce_rows.sum { |ce_id, cost| ce_due_cents(ce_id, cost) }
     )
   end
 
@@ -219,6 +220,19 @@ class EventRevenueFigures
       .where(event_registration_id: registration_ids)
       .pluck(:event_registration_id, :id, :cost_cents)
       .each_with_object({}) { |(registration_id, id, cost), map| (map[registration_id] ||= []) << [ id, cost ] }
+  end
+
+  # CE cost still owed, floored at zero — only on CE that still counts.
+  def ce_due_cents(ce_id, cost)
+    return 0 unless counted_ce_ids.include?(ce_id)
+
+    [ cost.to_i - ce_allocated_total[ce_id], 0 ].max
+  end
+
+  def counted_ce_ids
+    @counted_ce_ids ||= ContinuingEducationRegistration.counted
+      .where(id: ce_rows_by_registration.values.flatten(1).map(&:first))
+      .pluck(:id).to_set
   end
 
   # { registration_id => [ [ grant_id, amount_cents, recipient_id ], ... ] }. The
