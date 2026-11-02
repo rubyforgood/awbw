@@ -123,6 +123,20 @@ RSpec.describe "/stories", type: :request do
         expect(page).to have_css("div[title='Teen variant'] a[href='#{workshop_path(workshop)}']", text: "Teen variant")
       end
 
+      it "marks a video story's still with a play icon" do
+        Story.create!(base_attributes.merge(title: "Video Story", youtube_url: "https://www.youtube.com/watch?v=abc123", published: true))
+
+        get stories_url(title: "Video Story"), headers: { "Turbo-Frame" => "stories_results" }
+
+        expect(Capybara.string(response.body)).to have_css("tbody .fa-play")
+      end
+
+      it "leaves a non-video story's still unmarked" do
+        get stories_url(title: published_story.title), headers: { "Turbo-Frame" => "stories_results" }
+
+        expect(Capybara.string(response.body)).to have_no_css("tbody .fa-play")
+      end
+
       it "shows the empty-state message when no stories match" do
         get stories_url(title: "no-such-story-zzz"), headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include("No stories found")

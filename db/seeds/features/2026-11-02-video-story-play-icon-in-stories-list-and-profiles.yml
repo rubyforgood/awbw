@@ -1,0 +1,8 @@
+name: "Video stories show a play icon in the stories list and on profiles"
+area: stories
+display_status: admin_facing
+released_on: 2026-11-02
+action_path: "/stories"
+summary: >-
+  Video stories now carry a play icon on their image in the stories list and in
+  the Stories section of a person's profile, matching how they look in Story Share.
