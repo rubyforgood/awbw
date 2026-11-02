@@ -60,7 +60,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/controllers/` | Rails controllers (admin/, events/, home/) | ~121 files |
-| `app/views/` | ERB templates | ~1145 files |
+| `app/views/` | ERB templates | ~1149 files |
 | `app/decorators/` | Draper decorators for view logic | ~65 files |
 | `app/policies/` | ActionPolicy authorization rules | ~73 files |
 | `app/presenters/` | Presentation objects | 11 files |
