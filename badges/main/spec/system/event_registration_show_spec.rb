@@ -142,6 +142,40 @@ RSpec.describe "Event registration show page", type: :system do
         href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
     end
 
+    it "shows an unpaid CE-payment-gated callout until the CE payment deadline, then needs intends to pay" do
+      event.update!(ce_payment_due_deadline: 1.day.from_now.change(sec: 0))
+      gated_callout = create(:registration_ticket_callout, :ce_payment_access_gated, event: event, title: "CE evaluation")
+      ce_registration = create(:continuing_education_registration, event_registration: registration, cost_cents: 15_000)
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_link("CE evaluation",
+        href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
+
+      event.update!(ce_payment_due_deadline: 1.day.ago.change(sec: 0))
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_no_link("CE evaluation")
+
+      ce_registration.update!(intends_to_pay: true)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_link("CE evaluation",
+        href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
+    end
+
+    it "hides a CE-payment-gated callout from denied CE even before the CE payment deadline" do
+      event.update!(ce_payment_due_deadline: 1.day.from_now.change(sec: 0))
+      create(:registration_ticket_callout, :ce_payment_access_gated, event: event, title: "CE evaluation")
+      create(:continuing_education_registration, event_registration: registration, cost_cents: 15_000, denied_at: Time.current)
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_no_link("CE evaluation")
+    end
+
     it "hides an attended-gated callout until the registration is marked attended" do
       gated_callout = create(:registration_ticket_callout, :attended_gated, event: event, title: "Certificate of completion")
 

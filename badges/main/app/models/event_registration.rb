@@ -1032,11 +1032,11 @@ class EventRegistration < ApplicationRecord
   end
 
   # The CE callout gate: none of this reg's CE is denied, and every CE across the
-  # transfer chain is paid or intends to pay. Denial is judged here only — the
-  # origin's paid stub is never certified.
+  # transfer chain is paid, intends to pay, or still before its CE payment deadline.
+  # Denial is judged here only — the origin's paid stub is never certified.
   def ce_access_granted?
     chain = continuing_education_registrations_across_transfers
-    ce_approved? && chain.all?(&:payment_access_granted?)
+    ce_approved? && chain.all?(&:callout_access_granted?)
   end
 
   # A CE balance still due that the registrant has said they'll pay — the roster's CE note.

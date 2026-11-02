@@ -39,6 +39,22 @@ RSpec.describe "Person profile stories section", type: :request do
     expect(response.body).not_to include("Only Created Story")
   end
 
+  it "marks a video story's still with a play icon" do
+    create(:story, :published, title: "Video Story", author: person, youtube_url: "https://www.youtube.com/watch?v=abc123")
+
+    get_stories_section
+
+    expect(Capybara.string(response.body)).to have_css(".fa-play")
+  end
+
+  it "leaves a non-video story's still unmarked" do
+    create(:story, :published, title: "Photo Story", author: person)
+
+    get_stories_section
+
+    expect(Capybara.string(response.body)).to have_no_css(".fa-play")
+  end
+
   it "flags an anonymously-credited authored story" do
     create(:story, :published, title: "Hush Story",
                                author: person, author_credit_preference: "anonymous")
