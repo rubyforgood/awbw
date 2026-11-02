@@ -1,0 +1,12 @@
+name: "Find registrants whose CE lapsed past the payment deadline"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-02
+pr_number: 2934
+action_path: "/events"
+summary: >-
+  The registrants list's CE status filter has a Past payment deadline option,
+  and the dashboard's CE fees card badges how many registrants' CE lapsed,
+  linking to them.
+pro_tips:
+  - "The Requested CE status now leaves out lapsed and denied CE, so it matches the dashboard's CE Due row."

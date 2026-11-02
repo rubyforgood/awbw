@@ -52,6 +52,48 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
     end
   end
 
+  describe "lapsed and counted" do
+    let(:event) { create(:event, ce_payment_due_deadline: 1.day.ago) }
+    let(:registration) { create(:event_registration, event: event) }
+    let!(:unpaid) { create(:continuing_education_registration, event_registration: registration, cost_cents: 15_000, intends_to_pay: true) }
+
+    it "lapses unpaid CE once the payment deadline passes, intending to pay or not" do
+      expect(unpaid.lapsed?).to be(true)
+      expect(unpaid.counted?).to be(false)
+      expect(described_class.lapsed).to contain_exactly(unpaid)
+      expect(described_class.counted).to be_empty
+    end
+
+    it "keeps counting CE paid in full by the deadline" do
+      create(:allocation, source: create(:payment), allocatable: unpaid, amount: 15_000)
+
+      expect(unpaid.reload.lapsed?).to be(false)
+      expect(described_class.counted).to contain_exactly(unpaid)
+    end
+
+    it "lapses CE paid only in part" do
+      create(:allocation, source: create(:payment), allocatable: unpaid, amount: 5_000)
+
+      expect(unpaid.reload.lapsed?).to be(true)
+      expect(described_class.counted).to be_empty
+    end
+
+    it "keeps counting unpaid CE before the deadline or with no deadline set" do
+      event.update!(ce_payment_due_deadline: 1.day.from_now)
+      no_deadline = create(:continuing_education_registration, cost_cents: 15_000)
+
+      expect(unpaid.reload.lapsed?).to be(false)
+      expect(described_class.counted).to contain_exactly(unpaid, no_deadline)
+    end
+
+    it "stops counting CE an admin denied" do
+      paid = create(:continuing_education_registration, :denied, cost_cents: 0)
+
+      expect(paid.counted?).to be(false)
+      expect(described_class.counted).not_to include(paid)
+    end
+  end
+
   describe ".search_by_params approval filter" do
     let!(:approved) { create(:continuing_education_registration) }
     let!(:denied) { create(:continuing_education_registration, :denied) }

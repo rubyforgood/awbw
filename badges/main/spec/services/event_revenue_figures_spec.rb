@@ -71,6 +71,14 @@ RSpec.describe EventRevenueFigures do
     expect(figures.registration_outstanding_cents).to eq(4_000)
   end
 
+  it "leaves CE unpaid past its payment deadline out of what's owed, keeping its cash" do
+    event.update!(ce_payment_due_deadline: 1.day.ago)
+
+    expect(figures.ce_paid_cents).to eq(9_500)
+    expect(figures.ce_outstanding_cents).to eq(0)
+    expect(figures.ce_outstanding_cents).to eq(EventDashboard.new(event).cont_ed_outstanding_cents)
+  end
+
   it "counts a comped CE fee as a discount" do
     ce = create(:continuing_education_registration, event_registration: reg2, cost_cents: 5_000)
     create(:allocation, source: create(:discount, amount_cents: 5_000), allocatable: ce, amount: 5_000)
@@ -150,9 +158,9 @@ RSpec.describe EventRevenueFigures do
       events.each { |e| loader.for(e) }
     end
 
-    # 5 batch component queries + 2 constant queries that classify AWBW-donated
-    # grants as subsidy (the AWBW org lookup and its grant ids), regardless of
-    # how many events are loaded.
-    expect(queries).to eq(7)
+    # 6 batch component queries (incl. which CE still counts) + 2 constant queries
+    # that classify AWBW-donated grants as subsidy (the AWBW org lookup and its
+    # grant ids), regardless of how many events are loaded.
+    expect(queries).to eq(8)
   end
 end

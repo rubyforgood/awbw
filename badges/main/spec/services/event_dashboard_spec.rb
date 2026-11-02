@@ -884,6 +884,33 @@ RSpec.describe EventDashboard do
       expect(described_class.new(event).ce_denied_count).to eq(1)
     end
 
+    context "once the CE payment deadline passes" do
+      before { event.update!(ce_payment_due_deadline: 1.day.ago) }
+
+      it "drops unpaid CE from what's owed and who has CE, keeping cash collected" do
+        expect(dashboard.cont_ed_paid_cents).to eq(13_000)
+        expect(dashboard.cont_ed_outstanding_cents).to eq(0)
+        expect(dashboard.cont_ed_total_cents).to eq(13_000)
+        expect(dashboard.ce_registrant_count).to eq(1)
+        expect(dashboard.cont_ed_unpaid_registrants).to be_empty
+        expect(dashboard.ce_lapsed_count).to eq(2)
+      end
+
+      it "still lists a lapsed partial payer beside the cash they paid" do
+        expect(dashboard.cont_ed_paid_registrants).to contain_exactly(paid_person)
+        expect(dashboard.cont_ed_partially_paid_registrants).to contain_exactly(partial_person)
+        expect(dashboard.cont_ed_paid_by_registrant.values.sum).to eq(dashboard.cont_ed_paid_cents)
+      end
+    end
+
+    it "drops denied CE from what's owed without counting it as lapsed" do
+      unpaid_reg.continuing_education_registrations.first.update!(denied_at: Time.current)
+
+      expect(dashboard.cont_ed_outstanding_cents).to eq(5_000)
+      expect(dashboard.ce_registrant_count).to eq(2)
+      expect(dashboard.ce_lapsed_count).to eq(0)
+    end
+
     it "adds CE fees to the grand total and cash breakdown" do
       expect(dashboard.grand_total_cents).to eq(
         dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents +

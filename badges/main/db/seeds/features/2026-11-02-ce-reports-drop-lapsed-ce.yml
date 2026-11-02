@@ -1,0 +1,14 @@
+name: "CE reports drop CE left unpaid past its payment deadline"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-02
+pr_number: 2934
+action_path: "/events"
+summary: >-
+  Once an event's CE payment deadline passes, CE that isn't paid in full stops
+  counting in reports: the CE timesheets, the dashboard's CE fees card and CE
+  pie, and the revenue report. Denied CE is left out the same way.
+pro_tips:
+  - "Money already collected still counts as paid, even on CE that stopped counting."
+  - "Intending to pay keeps CE on the timesheets only until the deadline."
+  - "Events without a CE payment deadline keep counting unpaid CE."

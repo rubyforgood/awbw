@@ -47,6 +47,17 @@ class ContinuingEducationRegistration < ApplicationRecord
   scope :for_license, ->(license_id) { where(professional_license_id: license_id) }
   scope :approved, -> { where(denied_at: nil) }
   scope :denied, -> { where.not(denied_at: nil) }
+  scope :unpaid, -> {
+    where(<<~SQL.squish)
+      COALESCE((SELECT SUM(a.amount) FROM allocations a
+        WHERE a.allocatable_type = 'ContinuingEducationRegistration'
+          AND a.allocatable_id = continuing_education_registrations.id), 0) < continuing_education_registrations.cost_cents
+    SQL
+  }
+  # Past the event's CE payment deadline with a balance still due; intending to pay stops mattering.
+  scope :lapsed, -> { unpaid.joins(event_registration: :event).where(events: { ce_payment_due_deadline: ...Time.current }) }
+  # What CE reports count: approved, and paid in full once the event's payment deadline passes.
+  scope :counted, -> { approved.where.not(id: lapsed.select(:id)) }
   scope :certificate_issued, -> { where.not(certificate_sent_at: nil) }
   scope :certificate_pending, -> { where(certificate_sent_at: nil) }
   scope :issued_on_or_after, ->(date) { where(certificate_sent_at: date.beginning_of_day..) }
@@ -236,6 +247,16 @@ class ContinuingEducationRegistration < ApplicationRecord
 
   def denied?
     denied_at.present?
+  end
+
+  # Mirrors .lapsed.
+  def lapsed?
+    deadline = event_registration&.event&.ce_payment_due_deadline
+    deadline.present? && deadline.past? && !paid_in_full?
+  end
+
+  def counted?
+    approved? && !lapsed?
   end
 
   # Opens this CE's sign-in sheet and CE-gated callouts.
