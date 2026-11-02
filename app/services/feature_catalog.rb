@@ -1,16 +1,17 @@
 require "yaml"
 
 # Syncs the seed files in db/seeds/features/ (one per feature) into the DB behind
-# /features. `import!` creates missing features and overwrites SYNCED_FIELDS on a
-# same-name feature from its seed. A feature edited in-app (Feature#edited?) is
-# left entirely alone.
+# /features. `import!` creates missing features and makes SYNCED_FIELDS on a
+# same-name feature match its seed exactly, clearing fields the seed leaves blank.
+# A feature edited in-app (Feature#edited?) is left entirely alone.
 class FeatureCatalog
   DATA_DIR = Rails.root.join("db/seeds/features")
   RECENT_SEEDS = 20
 
+  # `name` only ever differs by case here, since features are matched case-insensitively.
   SYNCED_FIELDS = %i[
-    area display_status released_on action_path pr_number
-    summary pro_tips external_url rhino_description
+    name area display_status released_on action_path pr_number
+    summary pro_tips external_url rhino_description published
   ].freeze
 
   Result = Struct.new(:created, :updated, :skipped) do
@@ -91,16 +92,25 @@ class FeatureCatalog
   def sync_changes(feature, attributes)
     SYNCED_FIELDS.each_with_object({}) do |field, changes|
       seed_value = attributes[field]
-      next if seed_value.blank? || same_value?(feature, field, seed_value)
+      next if same_value?(feature, field, seed_value)
 
       changes[field] = seed_value
     end
   end
 
   # Rich text is compared as rendered HTML, so the stored copy of an unchanged seed matches it.
+  # Blank strings and nil count as equal; `published` is compared as-is since false is blank.
   def same_value?(feature, field, seed_value)
-    return feature.public_send(field) == seed_value unless field == :rhino_description
+    current = stored_value(feature, field)
+    seed_value = ActionText::Content.new(seed_value).to_html if field == :rhino_description && seed_value
+    return current == seed_value if field == :published
 
-    feature.rhino_description&.body&.to_html == ActionText::Content.new(seed_value).to_html
+    current.presence == seed_value.presence
+  end
+
+  def stored_value(feature, field)
+    return feature.public_send(field) unless field == :rhino_description
+
+    feature.rhino_description&.body&.to_html
   end
 end

@@ -19,7 +19,7 @@
   <% if allowed_to?(:create?, Feature) %>
     <%= button_to import_features_path,
                   class: button_classes(:primary_outline),
-                  form: { data: { turbo_confirm: "Add any newly-shipped features and fill in missing details? Your existing edits are kept." } } do %>
+                  form: { data: { turbo_confirm: "Add any newly-shipped features and update the ones nobody has edited to match? Your edits are kept." } } do %>
       <i class="fa-solid fa-arrows-rotate"></i> Sync features &amp; tips
       <%= render "badge", text: (Admin::HomeController::REVIEW_BADGE if local_assigns[:features_unsynced]) %>
     <% end %>

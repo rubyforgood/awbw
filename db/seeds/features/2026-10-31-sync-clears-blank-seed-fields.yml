@@ -1,0 +1,11 @@
+name: "Syncing features & tips clears what a seed removes"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-31
+action_path: "/features"
+summary: >-
+  On features nobody has edited in the portal, Sync features & tips now clears a
+  tip, link, or description the seed removed, and updates published and name
+  capitalization to match the seed.
+pro_tips:
+  - "Features you've edited in the portal are still never changed by a sync."

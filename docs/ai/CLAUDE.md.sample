@@ -458,10 +458,10 @@ what changed.
 
 An admin clicks **Sync latest updates** on `/features` (`FeatureCatalog#import!`,
 matched by `name`) to pull newly-shipped features from the seed **and overwrite
-existing same-name records with the seed** (`SYNCED_FIELDS` — area, `display_status`,
-`released_on`, `action_path`, `pr_number`, `summary`, `pro_tips`, `external_url`,
-`description`; a field the seed leaves blank keeps its value), so seed fixes and
-trims propagate. **A feature edited in-app since creation (`Feature#edited?`) is skipped
+existing same-name records with the seed** (`SYNCED_FIELDS` — `name` casing, area,
+`display_status`, `released_on`, `action_path`, `pr_number`, `summary`, `pro_tips`,
+`external_url`, `description`, `published`; a field the seed leaves blank is cleared),
+so seed fixes and trims propagate. **A feature edited in-app since creation (`Feature#edited?`) is skipped
 entirely** — sync writes don't bump `updated_at`, so only admin saves count as edits.
 
 - **New area?** Add it to `Feature::AREAS` (label + Font Awesome icon + a Tailwind
