@@ -368,10 +368,13 @@
                 videoconference pending-note style) naming the concrete opening time,
                 with the event's own start beneath it. Shown in the event's zone
                 (Pacific), labeled — no JS to detect the viewer's own zone. %>
+            <%# A window clamped to the day's midnight names just the day. %>
+            <% opens_label = opens_at.strftime(opens_at == opens_at.beginning_of_day ? "%A, %B %-d" : "%A, %B %-d at %-I:%M %p %Z") %>
             <p class="flex w-full items-start gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-gray-700 ring-1 ring-blue-200">
               <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
-              <span>Sign-in opens
-                <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_at.strftime("%A, %B %-d at %-I:%M %p %Z") %></time>.
+              <%# Once the timesheet is open, Edit already works — only the Sign in button waits for the day. %>
+              <span><%= editable ? "Sign in on each training day, starting" : "Sign-in opens" %>
+                <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_label %></time>.
                 <span class="mt-0.5 block text-xs text-gray-500">That day's training begins at <%= @event.daily_start_at(opens_at.in_time_zone(Time.zone).to_date).strftime("%-I:%M %p %Z") %>.</span>
               </span>
             </p>
