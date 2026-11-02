@@ -322,8 +322,7 @@ class BuiltinCalloutCards
     # Once CE is paid, on a training day the badge becomes a live sign-in nudge
     # (like the payment card's "$X due"), overriding the resting CE status chip.
     reminder = ce_attendance_reminder
-    # Once the training's sign-outs are done, an outstanding post-training form
-    # becomes its own action nudge — but never over a live sign-in reminder.
+    # An open, outstanding CE form becomes its own action nudge — never over a live sign-in reminder.
     form_pending = reminder.nil? && ce_form_pending?
     badge = ce_hours_reminder_badge(reminder)
     badge ||= "Complete your form" if form_pending
@@ -340,8 +339,8 @@ class BuiltinCalloutCards
              badge_classes: form_pending ? nil : ce_card_badge_classes(complete, due, reminder))
   end
 
-  # Whether the CE callout's post-training form is outstanding: sign-outs are done
-  # and a form with unanswered required fields is waiting. Skipped in preview — the
+  # Whether the CE callout's form is outstanding: it has opened (see RegistrantCeForm)
+  # and has unanswered required fields. Skipped in preview — the
   # sample ticket's event isn't over, and its unsaved registrant has no submission.
   def ce_form_pending?
     return false if @preview

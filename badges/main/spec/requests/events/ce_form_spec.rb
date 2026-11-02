@@ -112,6 +112,32 @@ RSpec.describe "Events::Callouts CE form", type: :request do
       get registration_ce_path(registration.slug)
       expect(response.body).not_to include("How was the training?")
     end
+
+    context "with a display date that has passed during the training" do
+      before do
+        callout.registration_ticket_callout_forms.first.update!(display_from: Time.zone.local(2026, 7, 23, 9, 0))
+        registration.continuing_education_registrations.first.update!(cost_cents: 0)
+        travel_to Time.zone.local(2026, 7, 23, 10, 0)
+      end
+
+      it "renders the form before the training ends" do
+        get registration_ce_path(registration.slug)
+        expect(response.body).to include("How was the training?")
+      end
+
+      it "keeps the training sign-in unfolded while signing in is still open" do
+        get registration_ce_path(registration.slug)
+        expect(response.body).to include("Training sign-in")
+        expect(Nokogiri::HTML(response.body).at_css("#attendance details")).to be_nil
+      end
+
+      it "accepts a submit before the training ends" do
+        expect {
+          post registration_callout_form_submit_path(registration.slug, callout, form),
+            params: { callout_form: { form_fields: { field.id.to_s => "Great" } } }
+        }.to change { FormSubmission.count }.by(1)
+      end
+    end
   end
 
   describe "submitting the CE form" do

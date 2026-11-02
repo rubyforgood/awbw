@@ -27,8 +27,8 @@
   can't fake it by editing the URL.
 %>
 <% simulate_ce_paid = params[:admin] == "true" && ce_registration && allowed_to?(:edit?, ce_registration) %>
-<%# The post-training form shows once sign-outs are complete; while it's open to
-    fill, the callout's Details fold away so the form comes first. %>
+<%# The form shows on its display date, or once sign-outs are complete when it has
+    none; while it's open to fill, the callout's Details fold away so the form comes first. %>
 <% ce_form_shown = @event_registration.ce_registered? && @ce_form&.present? &&
      (@ce_form.available? || sample_preview? || simulate_ce_paid) %>
 <% ce_form_open = ce_form_shown && callout_form_fillable?(@ce_form.link, submission: @ce_form.submission,
@@ -368,10 +368,13 @@
                 videoconference pending-note style) naming the concrete opening time,
                 with the event's own start beneath it. Shown in the event's zone
                 (Pacific), labeled — no JS to detect the viewer's own zone. %>
+            <%# A window clamped to the day's midnight names just the day. %>
+            <% opens_label = opens_at.strftime(opens_at == opens_at.beginning_of_day ? "%A, %B %-d" : "%A, %B %-d at %-I:%M %p %Z") %>
             <p class="flex w-full items-start gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-gray-700 ring-1 ring-blue-200">
               <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
-              <span>Sign-in opens
-                <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_at.strftime("%A, %B %-d at %-I:%M %p %Z") %></time>.
+              <%# Once the timesheet is open, Edit already works — only the Sign in button waits for the day. %>
+              <span><%= editable ? "Sign in on each training day, starting" : "Sign-in opens" %>
+                <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_label %></time>.
                 <span class="mt-0.5 block text-xs text-gray-500">That day's training begins at <%= @event.daily_start_at(opens_at.in_time_zone(Time.zone).to_date).strftime("%-I:%M %p %Z") %>.</span>
               </span>
             </p>
@@ -420,9 +423,9 @@
         <% end %>
         <% end %>
 
-        <%# Signing in is done once the post-training form is open, so the sheet folds
-            to its total and the form comes first. Still expandable to fix a time. %>
-        <% if ce_form_open %>
+        <%# Once sign-outs are done and the form is open, the sheet folds to its total
+            and the form comes first. Still expandable to fix a time. %>
+        <% if ce_form_open && @event_registration.ce_signouts_complete? %>
           <details class="group/sign-in">
             <summary class="flex cursor-pointer list-none flex-wrap items-center gap-2 select-none [&::-webkit-details-marker]:hidden">
               <%= sign_in_heading %>
@@ -440,10 +443,10 @@
       </section>
     <% end %>
 
-    <%# The CE callout's post-training form (e.g. an evaluation), in the same card
-        as every other callout form (scholarship survey, custom callouts). It opens
-        only once the registrant's sign-outs are complete, and completing it is
-        required before the CE certificate is issued. %>
+    <%# The CE callout's form (e.g. an evaluation), in the same card as every other
+        callout form (scholarship survey, custom callouts). It opens on its display
+        date, or once the registrant's sign-outs are complete when it has none, and
+        completing it is required before the CE certificate is issued. %>
     <% if ce_form_shown %>
       <section id="ce-form" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
         <% unless @ce_form.complete? %>

@@ -158,6 +158,7 @@ module Events
     def ce
       @ce_callout = @event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
       @ce_form = RegistrantCeForm.new(@event_registration)
+      @builtin_resource_cards = resource_cards_for(@ce_callout, icon: "fa-solid fa-file-lines", return_to: "ce_hours")
       @ce_signature_file = Resource.ce_certificate_signature_file
       @ce_frame_file = Resource.ce_certificate_frame_file
       # The CE callout's post-training form renders inline here, in the same card as
@@ -451,13 +452,12 @@ module Events
       registration_callout_form_path(@event_registration.slug, callout, anchor: callout_form && "form-#{callout_form.form_id}")
     end
 
-    # The CE callout's form is a post-training step gated on sign-out completion —
-    # it opens only after the registrant has finished signing out (and is reached
-    # from the CE page). Only the CE callout is gated this way; every other callout
-    # form follows its own drip date. The sample preview bypasses it so an admin can
+    # The CE callout's form opens on its display date, or, with none, only after the
+    # registrant has finished signing out (and is reached from the CE page). Only the
+    # CE callout is gated this way; every other callout form follows its own drip date. The sample preview bypasses it so an admin can
     # see the form on the sample ticket.
     def ce_form_locked?(callout)
-      callout.ce_config? && !sample_preview? && !@event_registration.ce_signouts_complete?
+      callout.ce_config? && !sample_preview? && !RegistrantCeForm.new(@event_registration).available?
     end
 
     def callout_form_params

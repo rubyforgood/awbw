@@ -43,9 +43,10 @@ class RegistrationTicketCallout < ApplicationRecord
   ANONYMOUS_BUILTIN_KEYS = %w[ ce_hours ].freeze
 
   # Built-ins that deliver only one form: Scholarship shows just its first linked
-  # form, as the recipients survey (see Event#recipient_survey_form_link), so the
-  # editor shows one fixed picker and a second is rejected rather than silently ignored.
-  SINGLE_FORM_BUILTIN_KEYS = %w[ scholarship ].freeze
+  # form, as the recipients survey (see Event#recipient_survey_form_link), and CE
+  # hours just its first, on the CE page (see RegistrantCeForm), so the editor shows
+  # one fixed picker and a second is rejected rather than silently ignored.
+  SINGLE_FORM_BUILTIN_KEYS = %w[ scholarship ce_hours ].freeze
 
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
