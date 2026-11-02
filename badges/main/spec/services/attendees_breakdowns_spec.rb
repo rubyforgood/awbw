@@ -64,6 +64,17 @@ RSpec.describe AttendeesBreakdowns do
     expect(breakdowns.ce_registrant_ids).to eq([ person.id ])
   end
 
+  it "leaves denied and lapsed CE out of the CE registrants (matching EventDashboard)" do
+    create(:continuing_education_registration, event_registration: registration, denied_at: Time.current)
+    expect(breakdowns.ce_registrant_ids).to be_empty
+
+    lapsed_person = create(:person)
+    lapsed_training = create(:event, facilitator_training: true, ce_payment_due_deadline: 1.day.ago)
+    lapsed_registration = create(:event_registration, event: lapsed_training, registrant: lapsed_person, status: "attended")
+    create(:continuing_education_registration, event_registration: lapsed_registration, cost_cents: 15_000, intends_to_pay: true)
+    expect(described_class.new(Person.where(id: lapsed_person.id)).ce_registrant_ids).to be_empty
+  end
+
   it "leaves a declined award out of the recipient counts (matching EventDashboard)" do
     scholarship = create(:scholarship, recipient: person, amount_cents: 1_000)
     create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
