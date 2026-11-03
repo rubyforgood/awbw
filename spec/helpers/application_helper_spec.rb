@@ -117,6 +117,15 @@ RSpec.describe ApplicationHelper, type: :helper do
       ).at_css("a")
       expect(link["data-turbo-frame"]).to eq("_top")
     end
+
+    it "renders the participant stand-in as plain text, even to a viewer who can open it" do
+      Setting.create!(participant_credit_person: person)
+      allow(helper).to receive(:allowed_to?).with(:show?, person).and_return(true)
+      workshop = create(:workshop, author_credit_preference: "full_name")
+      allow(workshop).to receive(:author).and_return(person)
+
+      expect(helper.credited_author_link(workshop)).to eq("Ada Lovelace")
+    end
   end
 
   describe "#credited_author_edit_button" do
@@ -148,6 +157,14 @@ RSpec.describe ApplicationHelper, type: :helper do
       allow(anonymous).to receive(:author).and_return(person)
 
       expect(helper.credited_author_edit_button(anonymous)).to eq("AWBW Staff")
+    end
+
+    it "stays plain text for the participant stand-in, even to an admin" do
+      Setting.create!(participant_credit_person: person)
+      allow(helper).to receive(:allowed_to?).with(:manage?, person).and_return(true)
+      allow(helper).to receive(:allowed_to?).with(:show?, person).and_return(true)
+
+      expect(helper.credited_author_edit_button(workshop)).to eq("Ada Lovelace")
     end
   end
 

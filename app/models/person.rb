@@ -628,6 +628,10 @@ class Person < ApplicationRecord
     PlaceholderEmail.match?(email)
   end
 
+  def participant_credit?
+    persisted? && id == Setting.participant_credit_person_id
+  end
+
   # The lowest numbered placeholder nobody with this name is using yet.
   def next_free_placeholder_email
     scope = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)

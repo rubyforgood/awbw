@@ -1,0 +1,8 @@
+name: "Participant stand-in bylines no longer link to a profile"
+area: stories
+display_status: admin_facing
+released_on: 2026-11-03
+action_path: "/admin/settings"
+summary: >-
+  App settings has a new Author credits section where you pick the generic "AWBW Participant"
+  person. Content credited to them shows the name as plain text, like "AWBW Facilitator".
