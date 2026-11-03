@@ -1,0 +1,19 @@
+<% checked = @selected_ids ? @selected_ids.include?(row.id) : row.actionable %>
+
+<label class="flex cursor-pointer flex-wrap items-center gap-3 px-4 py-3 hover:bg-gray-50">
+  <%= check_box_tag "#{@action.param_name}[]", row.id, checked,
+        id: "#{@action.param_name}_#{row.id}", class: "rounded border-gray-300" %>
+
+  <span class="min-w-0 flex-1">
+    <span class="block truncate text-sm font-semibold text-gray-800"><%= row.name %></span>
+    <span class="block truncate text-xs text-gray-500"><%= row.email.presence || "No email" %></span>
+  </span>
+
+  <% if row.detail.present? %>
+    <span class="text-sm whitespace-nowrap text-gray-600"><%= row.detail %></span>
+  <% end %>
+
+  <% row.flags.each do |flag| %>
+    <%= render "shared/badge", label: flag, classes: "bg-gray-50 text-gray-600 border-gray-200" %>
+  <% end %>
+</label>

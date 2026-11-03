@@ -9,6 +9,40 @@
 
   <section class="border-primary/10 rounded-2xl border bg-white shadow-sm">
     <% if @memberships.any? %>
+      <div class="flex flex-wrap items-center gap-2 border-b border-gray-200 px-4 py-3">
+        <span class="text-sm font-medium text-gray-700">
+          <%= number_with_delimiter(@memberships.total_entries) %> <%= "membership".pluralize(@memberships.total_entries) %>
+        </span>
+        <div class="ml-auto flex flex-wrap items-center gap-2">
+          <% Membership::BulkAction.all.each do |action| %>
+            <%= link_to action.label,
+                  bulk_action_memberships_path(action.key, @directory.filter_params),
+                  data: { turbo_frame: "_top" },
+                  class: button_classes(:secondary_outline, size: :sm) %>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @memberships.total_entries > MembershipDirectory::LARGE_SET_THRESHOLD %>
+        <p class="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+          This filter matches a large set. Reviewing every row on the confirm page may be slow —
+          narrow the filter if you can.
+        </p>
+      <% end %>
+
+      <div class="border-b border-gray-200 px-4 py-3">
+        <details class="text-sm">
+          <summary class="cursor-pointer select-none font-medium text-gray-700 hover:text-primary">
+            Email addresses for this filter
+          </summary>
+          <%= turbo_frame_tag :membership_emails,
+                src: memberships_path(@directory.filter_params.merge(emails: 1)),
+                loading: :lazy do %>
+            <p class="mt-2 text-xs text-gray-500">Loading…</p>
+          <% end %>
+        </details>
+      </div>
+
       <div class="divide-y divide-gray-200">
         <% @memberships.each do |membership| %>
           <%= render "memberships/membership_row", membership: membership %>

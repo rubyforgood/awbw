@@ -6,10 +6,10 @@
     <%= link_to "Membership invoices", membership_invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
-  <%= render "memberships/filters", status: @status_filter %>
+  <%= render "memberships/filters" %>
 
   <%= turbo_frame_tag :memberships_results,
-        src: memberships_path(status: @status_filter, person_name: params[:person_name]),
+        src: memberships_path(@directory.filter_params),
         data: { turbo: "temporary" } do %>
     <%= render "memberships/results_skeleton" %>
   <% end %>
