@@ -63,6 +63,12 @@ class EventRegistrationReadiness
     STATUS_LABELS.fetch(status)
   end
 
+  # Heads-ups that don't affect the status — a denied CE is skipped by every CE
+  # check, so the badge just mentions it.
+  def notes
+    registration.continuing_education_registrations.any?(&:denied?) ? [ "CE denied" ] : []
+  end
+
   # Sort key for the roster's Status column: lifecycle order first, then the
   # reason, so same-status rows group by reason (e.g. all "Payment due" together).
   def status_sort_key
@@ -200,15 +206,15 @@ class EventRegistrationReadiness
   end
 
   def ce_unpaid?
-    registration.ce_registered? && !ce_paid?
+    ce_registrations.any? && !ce_paid?
   end
 
   def ce_license_missing?
-    registration.ce_registered? && !registration.ce_license_provided?
+    ce_registrations.any? && !ce_registrations.all? { |c| c.professional_license&.number_known? }
   end
 
   def ce_certificate_pending?
-    certifiable_ce.any? && !registration.ce_certificate_available?
+    certifiable_ce.any? && !certifiable_ce.all?(&:certificate_available?)
   end
 
   # Post-event criteria are only met by a full "attended". "incomplete_attendance"
@@ -220,16 +226,17 @@ class EventRegistrationReadiness
 
   # The admin-created CE billing records homed on this registration (preloaded on
   # the roster). Their PAYMENT + license state drives the CE money/license checks;
-  # these stay on the home reg after a transfer.
+  # these stay on the home reg after a transfer. A denied CE is out of the picture —
+  # it never gets a certificate, so it doesn't hold readiness back (see #notes).
   def ce_registrations
-    registration.continuing_education_registrations
+    registration.continuing_education_registrations.reject(&:denied?)
   end
 
-  # The CE this registration certifies — its own records. After a transfer the
-  # hours ride on the destination reg's own record, so each reg certifies exactly
-  # what it holds. (issue #1944)
+  # The CE this registration certifies — its own (undenied) records. After a
+  # transfer the hours ride on the destination reg's own record, so each reg
+  # certifies exactly what it holds. (issue #1944)
   def certifiable_ce
-    registration.continuing_education_registrations
+    ce_registrations
   end
 
   # CE is paid once every CE registration is paid in full. A requested-but-not-yet

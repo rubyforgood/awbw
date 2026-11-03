@@ -243,6 +243,31 @@ RSpec.describe EventRegistrationReadiness do
     end
   end
 
+  describe "a denied CE" do
+    let(:ce) do
+      create(:continuing_education_registration, event_registration: registration, cost_cents: 5_000,
+        professional_license: create(:professional_license, person: registration.registrant, number: nil))
+    end
+
+    before do
+      pay(registration, 1000)
+      link_org(registration)
+      event.update!(start_date: 3.days.ago, end_date: 2.days.ago)
+      registration.update!(status: "attended")
+      ce.update!(denied_at: Time.current)
+    end
+
+    it "doesn't hold readiness back" do
+      expect(readiness.event_ready_issues).to be_empty
+      expect(readiness.certificate_issues).to be_empty
+      expect(readiness.status).to eq(:completed)
+    end
+
+    it "is noted instead" do
+      expect(readiness.notes).to eq([ "CE denied" ])
+    end
+  end
+
   describe "#status" do
     it "is :not_ready when a pre-event condition is outstanding" do
       # default registrant is unpaid on a paid event

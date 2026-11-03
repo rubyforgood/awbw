@@ -418,7 +418,8 @@
                         status: readiness.status,
                         label: readiness.status_label,
                         issues: readiness.status_issues,
-                        subtext: readiness.status_reason %>
+                        subtext: readiness.status_reason,
+                        notes: readiness.notes %>
                 </td>
                 <% survey_roles.each do |role| %>
                   <% completion = @survey_completions.completion(registration.registrant_id, role) %>
