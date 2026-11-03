@@ -38,11 +38,12 @@ class EventAttendanceReport
     end
 
     def paying?
-      ce_registration.nil? || (ce_registration.counted? && ce_registration.payment_access_granted?)
+      ce_registration.nil? || ce_registration.access_granted?
     end
   end
 
-  # `paying_only:` narrows the CE report to counted licences paid or intending to pay.
+  # `paying_only:` narrows the CE report to licences that can sign in: paid or intending to
+  # pay and not denied, even past the CE payment deadline.
   def initialize(event, ce_only: false, paying_only: false)
     @event = event
     @ce_only = ce_only
