@@ -5,8 +5,9 @@
 # on either state.
 #
 # Reads only already-loaded associations (organizations, allocations,
-# scholarships, continuing_education_registrations) so it adds no per-row queries
-# when the roster preloads them.
+# scholarships, continuing_education_registrations, and — for CE rows — attendance
+# entries and form completions) so it adds no per-row queries when the roster
+# preloads them.
 class EventRegistrationReadiness
   def initialize(registration)
     @registration = registration
@@ -27,14 +28,14 @@ class EventRegistrationReadiness
     event_ready_issues.empty?
   end
 
-  # All post-event work done AND the certificate(s) sent.
+  # All post-event work done AND the certificate(s) available.
   def completed?
     completion_issues.empty?
   end
 
   # All post-event work done (attended, scholarship tasks met, post-event survey in)
-  # — i.e. the only thing left is sending the certificate(s). This is the admin's
-  # "send a certificate" queue.
+  # — i.e. the only thing left is the certificate(s) unlocking (the training ending,
+  # or for CE: payment, the CE form, signed-in time).
   def certifiable?
     (completion_work_issues + survey_issues).empty?
   end
@@ -42,7 +43,7 @@ class EventRegistrationReadiness
   # The registration's single lifecycle state for the roster's one Status column
   # and its matching filter. Completion is the final state and wins; otherwise an
   # outstanding pre-event to-do means "not ready"; a registrant who finished the
-  # post-event work but still needs a certificate is "certificate due"; and a
+  # post-event work but whose certificate isn't available yet is "certificate due"; and a
   # clear pre-event checklist with nothing further done is "ready".
   def status
     return :completed if completed?
@@ -88,9 +89,9 @@ class EventRegistrationReadiness
     end
   end
 
-  # Which certificate(s) still need sending, abbreviated for the badge subtext.
+  # Which certificate(s) aren't available yet, abbreviated for the badge subtext.
   def certificate_due_reason
-    reg_due = !registration_certificate_sent?
+    reg_due = !registration.certificate_available?
     ce_due = ce_certificate_pending?
     return "Reg + CE" if reg_due && ce_due
     return "CE" if ce_due
@@ -141,11 +142,11 @@ class EventRegistrationReadiness
     end
   end
 
-  # The certificate(s) that still need sending once the work above is done.
+  # The certificate(s) not yet available once the work above is done.
   def certificate_issues
     @certificate_issues ||= [].tap do |issues|
-      issues << "Certificate not sent" unless registration_certificate_sent?
-      issues << "CE certificate not sent" if ce_certificate_pending?
+      issues << "Certificate not available" unless registration.certificate_available?
+      issues << "CE certificate not available" if ce_certificate_pending?
     end
   end
 
@@ -207,7 +208,7 @@ class EventRegistrationReadiness
   end
 
   def ce_certificate_pending?
-    certifiable_ce.any? && !ce_certificate_sent?
+    certifiable_ce.any? && !registration.ce_certificate_available?
   end
 
   # Post-event criteria are only met by a full "attended". "incomplete_attendance"
@@ -235,17 +236,5 @@ class EventRegistrationReadiness
   # -created CE registration counts as unpaid (nothing to pay against yet).
   def ce_paid?
     ce_registrations.any? && ce_registrations.all?(&:paid_in_full?)
-  end
-
-  # The registration's own completion certificate (certificate_sent_at, via
-  # Certifiable#certificate_sent?).
-  def registration_certificate_sent?
-    registration.certificate_sent?
-  end
-
-  # CE certificates are sent once every CE registration this reg certifies has
-  # been sent. No certifiable CE means nothing has been issued.
-  def ce_certificate_sent?
-    certifiable_ce.any? && certifiable_ce.all?(&:certificate_sent?)
   end
 end
