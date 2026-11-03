@@ -56,6 +56,20 @@ RSpec.describe "Events attendance report", type: :request do
       expect(response.body).to include("AAA111", "UNPAID1")
     end
 
+    it "keeps CE intending to pay on the default view after the CE payment deadline passes" do
+      event.update!(ce_payment_due_deadline: 1.day.ago)
+      intending = create(:professional_license, person: registration.registrant, number: "INTENDS1")
+      create(:continuing_education_registration, event_registration: registration, professional_license: intending, intends_to_pay: true)
+      unpaid = create(:professional_license, person: registration.registrant, number: "UNPAID1")
+      create(:continuing_education_registration, event_registration: registration, professional_license: unpaid)
+
+      get attendance_event_path(event, ce: "true")
+      expect(response.body).to include("INTENDS1")
+      expect(response.body).not_to include("UNPAID1")
+      toggle = Capybara.string(response.body).find("nav[aria-label='CE payment filter']")
+      expect(toggle).to have_link("Paid or intends to pay (1)")
+    end
+
     it "says when nobody has paid or intends to pay for CE yet" do
       license = create(:professional_license, person: registration.registrant, number: "UNPAID1")
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
