@@ -318,7 +318,7 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       page = Capybara.string(response.body)
       expect(page).to have_field("continuing_education_registration[approved]", type: "checkbox", visible: :all)
       expect(page).to have_field("continuing_education_registration[certificate_issued]", type: "checkbox", visible: :all)
-      expect(page).to have_text("CE certificate of completion")
+      expect(page).to have_text("CE certificate availability")
     end
 
     it "renders the new page for a registration" do

@@ -146,7 +146,10 @@ class ContinuingEducationRegistration < ApplicationRecord
   # attendance was tracked) the logged time approximately covers the hours.
   # Everything is judged at this record's own event/registration — after a transfer
   # the hours ride on the destination reg's own record, so there's nothing to walk.
+  # An admin marking the certificate issued is the override: it unlocks regardless.
   def certificate_available?
+    return true if certificate_sent?
+
     event = event_registration&.event
     return false unless event&.ce_eligible? && approved?
     return false unless event.end_date&.past? && event_registration.attended? && paid_in_full?

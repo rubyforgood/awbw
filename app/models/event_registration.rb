@@ -816,12 +816,13 @@ class EventRegistration < ApplicationRecord
   end
 
   # The certificate of completion unlocks once the training has happened, the
-  # registrant attended, and any scholarship tasks are complete. Issuing a CE
-  # certificate (an admin marking the credit sent) is itself an affirmation that
-  # the registrant completed the training, so it unlocks the certificate too —
-  # even when attendance was never tracked.
+  # registrant attended, and any scholarship tasks are complete. Issuing a
+  # certificate (an admin marking it sent on the roster — the registration's own
+  # or the CE one) is itself an affirmation that the registrant completed the
+  # training, so it unlocks the certificate too — even when attendance was never
+  # tracked.
   def certificate_available?
-    return true if ce_certificate_issued?
+    return true if certificate_sent? || ce_certificate_issued?
 
     event.end_date.present? && event.end_date.past? && attended? && scholarship_tasks_met?
   end
@@ -1006,6 +1007,12 @@ class EventRegistration < ApplicationRecord
     return false unless continuing_education_registrations.any?
 
     continuing_education_registrations.all? { |c| c.certificate_sent_at.present? }
+  end
+
+  # Every CE registration's certificate is available (on its own or because it was
+  # marked issued). Reads the preloaded CE records.
+  def ce_certificate_available?
+    continuing_education_registrations.any? && continuing_education_registrations.all?(&:certificate_available?)
   end
 
   # Issuing keeps an existing issued date — it's printed on the certificate.
