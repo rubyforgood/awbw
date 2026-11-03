@@ -102,6 +102,20 @@ RSpec.describe "Events sign-ins report", type: :request do
     expect(Capybara.string(response.body)).to have_link(href: attendance_event_path(ce_event, ce: "true", ce_payment: "all", return_to: "signins"))
   end
 
+  it "keeps CE intending to pay on the default view after the CE payment deadline passes" do
+    ce_event = training(title: "CE training", abbreviation: "CE-1", ce: true)
+    ce_event.update!(ce_payment_due_deadline: 1.day.ago)
+    log_time!(ce_event, name: "Erin", ce: true, paid: false)
+      .continuing_education_registrations.first.update!(intends_to_pay: true)
+    log_time!(ce_event, name: "Dana", ce: true, paid: false)
+
+    get signins_events_path
+    expect(response.body).to include("LIC-Erin")
+    expect(response.body).not_to include("LIC-Dana")
+    toggle = Capybara.string(response.body).find("nav[aria-label='CE payment filter']")
+    expect(toggle).to have_link("Paid or intends to pay (1)")
+  end
+
   it "says when no CE registration in scope is paid or intending to pay yet" do
     log_time!(training(title: "CE training", abbreviation: "CE-1", ce: true), name: "Dana", ce: true, paid: false)
     get signins_events_path
