@@ -19,7 +19,8 @@ module ApplicationHelper
   end
 
   # Byline for an AuthorCreditable record. Links each credited author to their person
-  # profile when the viewer can open it; anyone else renders as plain text. The
+  # profile when the viewer can open it; anyone else, and the participant stand-in
+  # (Setting.participant_credit_person_id), renders as plain text. The
   # names and the separator come from the record (`credited_name_for_person`,
   # `CREDIT_SEPARATOR`), so this matches the plain-text credit everywhere else. Falls
   # back to the plain author_credit label when the credit resolves to nobody linkable
@@ -30,7 +31,8 @@ module ApplicationHelper
 
     safe_join(people.map { |person|
       name = record.credited_name_for_person(person)
-      allowed_to?(:show?, person) ? link_to(name, person_path(person), **link_options) : name
+      linkable = allowed_to?(:show?, person) && !person.participant_credit?
+      linkable ? link_to(name, person_path(person), **link_options) : name
     }, AuthorCreditable::CREDIT_SEPARATOR)
   end
 
@@ -43,7 +45,7 @@ module ApplicationHelper
   # now also passes.
   def credited_author_edit_button(record)
     person = record.author_credit_person
-    return credited_author_link(record) unless person && allowed_to?(:manage?, person)
+    return credited_author_link(record) unless person && allowed_to?(:manage?, person) && !person.participant_credit?
 
     person_edit_button(person,
                        display_name: record.author_credit,

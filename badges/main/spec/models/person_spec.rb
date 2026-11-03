@@ -383,6 +383,26 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "#participant_credit?" do
+    let(:person) { create(:person) }
+
+    it "is true for the participant stand-in chosen in settings" do
+      Setting.create!(participant_credit_person: person)
+
+      expect(person.participant_credit?).to be(true)
+    end
+
+    it "is false for everyone else" do
+      Setting.create!(participant_credit_person: create(:person))
+
+      expect(person.participant_credit?).to be(false)
+    end
+
+    it "is false when no stand-in is chosen" do
+      expect(person.participant_credit?).to be(false)
+    end
+  end
+
   describe "#effective_author_credit_preference" do
     let(:person) { build(:person, display_name_preference: "first_name_only") }
 

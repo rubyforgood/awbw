@@ -89,6 +89,16 @@ RSpec.describe "Admin::Settings", type: :request do
       expect(options.find { |option| option["selected"] }.text).to include("imports@example.com")
     end
 
+    it "offers the chosen participant stand-in as the picker's current choice" do
+      Setting.create!(participant_credit_person: create(:person, first_name: "AWBW", last_name: "Participant"))
+      sign_in admin
+
+      get admin_settings_path
+
+      options = Nokogiri::HTML(response.body).at_css("select[name='setting[participant_credit_person_id]']").css("option")
+      expect(options.find { |option| option["selected"] }.text).to include("AWBW Participant")
+    end
+
     it "links the deployed build to what's merged on GitHub since" do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("GIT_SHA").and_return("a1b2c3d4e5f6")
@@ -180,6 +190,15 @@ RSpec.describe "Admin::Settings", type: :request do
 
       expect(response).to have_http_status(:see_other)
       expect(Setting.import_user).to eq(user)
+    end
+
+    it "names the participant stand-in whose bylines never link" do
+      person = create(:person)
+
+      patch admin_settings_path, params: { setting: { participant_credit_person_id: person.id } }
+
+      expect(response).to have_http_status(:see_other)
+      expect(Setting.participant_credit_person_id).to eq(person.id)
     end
 
     it "saves the attention line shown on the contact page" do

@@ -24,6 +24,7 @@ module Admin
       params.require(:setting).permit(:organization_id, :info_email, :reply_to_email, :invoice_prefix,
                                       :return_address_id, :remittance_address_id, :contact_attention,
                                       :ce_administrator_id, :ce_administrator_title, :import_user_id,
+                                      :participant_credit_person_id,
                                       :ce_provider_number, :ce_accreditation_abbreviation,
                                       :ce_accreditation_body, :ce_accreditation_url,
                                       :programs_email, :no_reply_email,
