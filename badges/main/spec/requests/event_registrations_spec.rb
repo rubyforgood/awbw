@@ -354,6 +354,30 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(registration.reload).not_to be_certificate_sent
       end
 
+      it "shows Available instead of the slider once the certificate unlocks on its own" do
+        event.update!(start_date: 3.days.ago, end_date: 2.days.ago)
+        registration.update!(status: "attended")
+
+        toggle_certificate("0")
+
+        expect(response.body).to include("Available")
+        expect(response.body).to include("Unlocked: #{EventRegistration::CERTIFICATE_REQUIREMENTS}")
+        expect(response.body).not_to include('type="checkbox"')
+      end
+
+      it "spells out the unlock requirements on the slider" do
+        toggle_certificate("0")
+
+        expect(response.body).to include("Unlocks automatically once #{EventRegistration::CERTIFICATE_REQUIREMENTS}")
+      end
+
+      it "keeps the slider (switched on) once marked available, so it can be switched off" do
+        toggle_certificate("1")
+
+        expect(response.body).to match(/type="checkbox"[^>]*checked="checked"/)
+        expect(response.body).not_to include("Available")
+      end
+
       it "leaves a CE registrant's CE certificate alone" do
         ce = create(:continuing_education_registration, event_registration: registration)
 
@@ -390,6 +414,14 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(stream).to have_css("turbo-stream[action='replace'][target='#{ActionView::RecordIdentifier.dom_id(registration, :ce_certificate_issued)}']")
         expect(stream).to have_css("turbo-stream[action='replace'][target='#{ActionView::RecordIdentifier.dom_id(registration, :ce_status)}']")
         expect(response.body).to include("Issued")
+      end
+
+      it "refreshes the event certificate cell, which an issued CE certificate makes available" do
+        toggle_ce_certificate("1")
+
+        stream = Capybara.string(response.body)
+        expect(stream).to have_css("turbo-stream[action='replace'][target='#{ActionView::RecordIdentifier.dom_id(registration, :certificate_issued)}']")
+        expect(response.body).to include("Available")
       end
     end
 

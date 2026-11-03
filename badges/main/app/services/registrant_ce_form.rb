@@ -15,7 +15,7 @@ class RegistrantCeForm
   def link
     return @link if defined?(@link)
 
-    @link = ce_callout&.registration_ticket_callout_forms&.first
+    @link = ce_callout&.registration_ticket_callout_forms&.to_a&.first
   end
 
   # The form attached to the CE callout, or nil when none is set.
@@ -59,8 +59,7 @@ class RegistrantCeForm
   def completed_anonymously?
     return @completed_anonymously if defined?(@completed_anonymously)
 
-    @completed_anonymously = form.present? && registrant_saved? &&
-      FormCompletion.exists?(person: @event_registration.registrant, form:, event: @event_registration.event)
+    @completed_anonymously = form.present? && registrant_saved? && form_completion_on_file?
   end
 
   private
@@ -69,6 +68,17 @@ class RegistrantCeForm
   # registrants' anonymous (person-less) submissions.
   def registrant_saved?
     @event_registration.registrant&.persisted?
+  end
+
+  # Reads the registrant's preloaded completions when the roster loaded them.
+  def form_completion_on_file?
+    registrant = @event_registration.registrant
+    event = @event_registration.event
+    if registrant.form_completions.loaded?
+      registrant.form_completions.any? { |completion| completion.form_id == form.id && completion.event_id == event.id }
+    else
+      FormCompletion.exists?(person: registrant, form:, event:)
+    end
   end
 
   def answerable_fields
@@ -92,6 +102,6 @@ class RegistrantCeForm
   def ce_callout
     return @ce_callout if defined?(@ce_callout)
 
-    @ce_callout = @event_registration.event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
+    @ce_callout = @event_registration.event.ce_callout
   end
 end

@@ -298,6 +298,14 @@ class Event < ApplicationRecord
       registration_ticket_callouts.detect { |callout| callout.builtin_key == "scholarship" }
   end
 
+  # The CE hours callout (it carries the CE form). Memoized so the roster's per-row
+  # CE certificate checks hit the callouts once per event, not per row.
+  def ce_callout
+    return @ce_callout if defined?(@ce_callout)
+    @ce_callout =
+      registration_ticket_callouts.detect { |callout| callout.builtin_key == "ce_hours" }
+  end
+
   # The recipient's form row on the (published) scholarship callout — whatever form
   # an admin links there gates readiness, no special role needed. nil when the
   # callout carries no form or is hidden.

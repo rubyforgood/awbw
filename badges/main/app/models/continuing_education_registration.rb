@@ -118,6 +118,10 @@ class ContinuingEducationRegistration < ApplicationRecord
   # sign-ins/early sign-outs. You can't certify hours the sign-in sheet doesn't support.
   ATTENDANCE_COVERAGE_THRESHOLD = 0.9
 
+  # What #certificate_available? checks, in words — the admin tooltips spell it out.
+  CERTIFICATE_REQUIREMENTS = "the training has ended, the registrant is marked attended, the CE is approved and paid in full, " \
+    "the CE form is complete (if there is one), and signed-in time covers the CE hours (if time was tracked)".freeze
+
   # This record was created by a transfer — carried onto a transferred-in reg from
   # a matching CE the split left on the source. Identified by that source stub
   # existing (matched by license), NOT merely by the reg being a transfer-in: a CE
@@ -146,7 +150,10 @@ class ContinuingEducationRegistration < ApplicationRecord
   # attendance was tracked) the logged time approximately covers the hours.
   # Everything is judged at this record's own event/registration — after a transfer
   # the hours ride on the destination reg's own record, so there's nothing to walk.
+  # An admin marking the certificate issued is the override: it unlocks regardless.
   def certificate_available?
+    return true if certificate_sent?
+
     event = event_registration&.event
     return false unless event&.ce_eligible? && approved?
     return false unless event.end_date&.past? && event_registration.attended? && paid_in_full?

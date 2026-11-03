@@ -269,6 +269,7 @@ class EventsController < ApplicationController
     @ce_eligible = @event.ce_eligible?
 
     @submitted_org_names = submitted_org_names_for(@event_registrations)
+    preload_ce_certificate_reads(@event_registrations)
     @readiness = @event_registrations.to_h do |registration|
       [ registration.id, EventRegistrationReadiness.new(registration) ]
     end
@@ -1082,6 +1083,17 @@ class EventsController < ApplicationController
       .where(id: allowed_ids)
       .includes(registrant: [ :user, :contact_methods ])
       .select { |r| r.registrant.preferred_email.present? }
+  end
+
+  # CE certificate availability (readiness + the certificate cell) reads each CE
+  # registrant's logged attendance time and CE form completion. Preload both for
+  # the CE rows only, so the roster doesn't query them per row.
+  def preload_ce_certificate_reads(registrations)
+    ce_rows = registrations.select { |r| r.continuing_education_registrations.any? }
+    return if ce_rows.empty?
+
+    ActiveRecord::Associations::Preloader.new(records: ce_rows, associations: :event_attendance_time_entries).call
+    ActiveRecord::Associations::Preloader.new(records: ce_rows.map(&:registrant), associations: :form_completions).call
   end
 
   # Maps registrant person_id => the organization name they typed on the

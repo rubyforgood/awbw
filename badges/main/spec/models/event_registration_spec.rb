@@ -1299,6 +1299,26 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#certificate_available?" do
+    let(:ended_event) { create(:event, start_date: 3.days.ago, end_date: 2.days.ago) }
+
+    it "is false before attendance is recorded" do
+      reg = create(:event_registration, event: ended_event, status: "registered")
+      expect(reg.certificate_available?).to be false
+    end
+
+    it "is true once an ended training is attended with no scholarship" do
+      reg = create(:event_registration, event: ended_event, status: "attended")
+      expect(reg.certificate_available?).to be true
+    end
+
+    it "is true once an admin marks the certificate issued, even without attendance" do
+      reg = create(:event_registration, event: create(:event, start_date: 2.days.from_now, end_date: 3.days.from_now), status: "registered")
+      reg.mark_certificate_issued!(true)
+      expect(reg.reload.certificate_available?).to be true
+    end
+  end
+
   describe "#remaining_cost_without" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:reg) { create(:event_registration, event: event) }
@@ -1722,6 +1742,15 @@ RSpec.describe EventRegistration, type: :model do
         expect(reg.reload).not_to be_ce_intends_to_pay
         cer.update!(intends_to_pay: true)
         expect(reg.reload).to be_ce_intends_to_pay
+      end
+    end
+
+    describe "#ce_certificate_available?" do
+      it "is true once every CE registration's certificate is available" do
+        cer = add_ce
+        expect(reg.reload).not_to be_ce_certificate_available
+        cer.mark_certificate_sent!
+        expect(reg.reload).to be_ce_certificate_available
       end
     end
 

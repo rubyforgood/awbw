@@ -184,30 +184,37 @@ RSpec.describe EventRegistrationReadiness do
       expect(readiness.completion_issues).to include("Scholarship tasks incomplete")
     end
 
-    it "flags the registration certificate as unsent until certificate_sent_at is set" do
+    it "flags the registration certificate as unavailable before the training has ended" do
       registration.update!(status: "attended")
 
-      expect(readiness.completion_issues).to include("Certificate not sent")
+      expect(readiness.completion_issues).to include("Certificate not available")
     end
 
-    it "clears the registration certificate issue once it has been sent" do
+    it "clears the registration certificate issue once an admin marks it available" do
       registration.update!(status: "attended", certificate_sent_at: Time.current)
 
-      expect(readiness.completion_issues).not_to include("Certificate not sent")
+      expect(readiness.completion_issues).not_to include("Certificate not available")
     end
 
-    it "flags the CE certificate as unsent when CE credit was requested" do
+    it "clears the registration certificate issue once the training has ended and they attended" do
+      event.update!(start_date: 3.days.ago, end_date: 2.days.ago)
+      registration.update!(status: "attended")
+
+      expect(readiness.completion_issues).not_to include("Certificate not available")
+    end
+
+    it "flags the CE certificate as unavailable when CE credit was requested" do
       registration.update!(status: "attended")
       create(:continuing_education_registration, event_registration: registration,
         professional_license: create(:professional_license, person: registration.registrant, number: "LIC123"))
 
-      expect(readiness.completion_issues).to include("CE certificate not sent")
+      expect(readiness.completion_issues).to include("CE certificate not available")
     end
 
     it "does not flag a CE certificate when CE credit was not requested" do
       registration.update!(status: "attended")
 
-      expect(readiness.completion_issues).not_to include("CE certificate not sent")
+      expect(readiness.completion_issues).not_to include("CE certificate not available")
     end
   end
 
@@ -223,16 +230,41 @@ RSpec.describe EventRegistrationReadiness do
     end
 
     it "flags the destination reg's roster with its own CE certificate still pending" do
-      expect(described_class.new(destination).completion_issues).to include("CE certificate not sent")
+      expect(described_class.new(destination).completion_issues).to include("CE certificate not available")
     end
 
-    it "clears once the destination reg's CE has been issued" do
+    it "clears once the destination reg's CE has been marked available" do
       ce.mark_certificate_sent!
-      expect(described_class.new(destination).completion_issues).not_to include("CE certificate not sent")
+      expect(described_class.new(destination).completion_issues).not_to include("CE certificate not available")
     end
 
     it "does not flag CE on the source reg, which holds no CE record of its own here" do
-      expect(described_class.new(source).certificate_issues).not_to include("CE certificate not sent")
+      expect(described_class.new(source).certificate_issues).not_to include("CE certificate not available")
+    end
+  end
+
+  describe "a denied CE" do
+    let(:ce) do
+      create(:continuing_education_registration, event_registration: registration, cost_cents: 5_000,
+        professional_license: create(:professional_license, person: registration.registrant, number: nil))
+    end
+
+    before do
+      pay(registration, 1000)
+      link_org(registration)
+      event.update!(start_date: 3.days.ago, end_date: 2.days.ago)
+      registration.update!(status: "attended")
+      ce.update!(denied_at: Time.current)
+    end
+
+    it "doesn't hold readiness back" do
+      expect(readiness.event_ready_issues).to be_empty
+      expect(readiness.certificate_issues).to be_empty
+      expect(readiness.status).to eq(:completed)
+    end
+
+    it "is noted instead" do
+      expect(readiness.notes).to eq([ "CE denied" ])
     end
   end
 
@@ -252,7 +284,7 @@ RSpec.describe EventRegistrationReadiness do
       expect(readiness.status_label).to eq("Ready")
     end
 
-    it "is :certificate_due once the post-event work is done but the certificate is unsent" do
+    it "is :certificate_due once the post-event work is done but the certificate isn't available yet" do
       pay(registration, 1000)
       link_org(registration)
       registration.update!(status: "attended")
@@ -261,12 +293,20 @@ RSpec.describe EventRegistrationReadiness do
       expect(readiness.status_label).to eq("Certificate pending")
     end
 
-    it "is :completed once attended and the certificate has been sent" do
+    it "is :completed once attended and an admin marked the certificate available" do
       pay(registration, 1000)
       registration.update!(status: "attended", certificate_sent_at: Time.current)
 
       expect(readiness.status).to eq(:completed)
       expect(readiness.status_label).to eq("Completed")
+    end
+
+    it "is :completed once the training has ended and they attended" do
+      pay(registration, 1000)
+      event.update!(start_date: 3.days.ago, end_date: 2.days.ago)
+      registration.update!(status: "attended")
+
+      expect(readiness.status).to eq(:completed)
     end
 
     it "prefers :completed over the pre-event checklist when completion is reached" do
