@@ -367,6 +367,14 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg_for(event: event, status: "attended").certificate_available?).to be(true)
     end
 
+    it "is available once an admin marks it issued, even before the training ends and while unpaid" do
+      event = create(:event, ce_hours_offered: 6, start_date: 2.days.from_now, end_date: 3.days.from_now)
+      ce_reg = ce_reg_for(event: event, status: "registered", cost_cents: 5_000)
+      expect(ce_reg.certificate_available?).to be(false)
+      ce_reg.mark_certificate_sent!
+      expect(ce_reg.certificate_available?).to be(true)
+    end
+
     it "is unavailable when the event does not grant CE" do
       event = create(:event, ce_hours_offered: 0, start_date: 3.days.ago, end_date: 1.day.ago)
       expect(ce_reg_for(event: event, status: "attended").certificate_available?).to be(false)

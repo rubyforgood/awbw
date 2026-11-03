@@ -1,6 +1,10 @@
-<%# Replace the toggled cell and the row's CE badge — avoids re-rendering the whole roster. %>
+<%# Replace the toggled cell, the event certificate cell (an issued CE certificate makes
+    it available too), and the row's CE badge — avoids re-rendering the whole roster. %>
 <%= turbo_stream.replace dom_id(@event_registration, :ce_certificate_issued) do %>
   <%= render "event_registrations/certificate_issued_toggle", registration: @event_registration, ce: true %>
+<% end %>
+<%= turbo_stream.replace dom_id(@event_registration, :certificate_issued) do %>
+  <%= render "event_registrations/certificate_issued_toggle", registration: @event_registration %>
 <% end %>
 <% if (ce_registration = @event_registration.continuing_education_registrations.first) %>
   <%= turbo_stream.replace dom_id(@event_registration, :ce_status) do %>

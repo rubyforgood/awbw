@@ -6,9 +6,12 @@
       status  - Symbol (:not_ready, :ready, :certificate_due, :completed)
       label   - display text for the status
       issues  - array of outstanding-condition strings (tooltip, when any)
-      subtext - optional short reason rendered under the badge %>
+      subtext - optional short reason rendered under the badge
+      notes   - optional heads-ups that don't affect the status (tooltip; under the
+                badge when there's no reason) %>
 <%
   subtext = local_assigns[:subtext]
+  notes = local_assigns.fetch(:notes, [])
   style, icon, subtext_color = case status
     when :completed then [ "bg-green-50 text-green-700 border-green-200", "fa-flag-checkered", "text-green-600" ]
     when :certificate_due then [ "bg-purple-50 text-purple-700 border-purple-200", "fa-certificate", "text-purple-600" ]
@@ -16,11 +19,13 @@
     when :ready then [ "bg-blue-50 text-blue-700 border-blue-200", "fa-circle-check", "text-blue-600" ]
     else [ "bg-amber-50 text-amber-700 border-amber-200", "fa-circle-exclamation", "text-amber-600" ]
   end
-  tooltip = issues.any? ? issues.join(" · ") : label
+  tooltip = ((issues.any? ? issues : [ label ]) + notes.map { |note| "Note: #{note}" }).join(" · ")
 %>
 <div class="inline-flex flex-col items-center gap-0.5">
   <%= render "shared/badge", label: label, classes: style, icon: "fas #{icon}", title: tooltip %>
   <% if subtext.present? %>
     <span class="text-2xs font-medium <%= subtext_color %>"><%= subtext %></span>
+  <% elsif notes.any? %>
+    <span class="text-2xs font-medium text-gray-500"><%= notes.to_sentence %></span>
   <% end %>
 </div>
