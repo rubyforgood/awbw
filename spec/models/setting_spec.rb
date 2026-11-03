@@ -253,6 +253,19 @@ RSpec.describe Setting do
     end
   end
 
+  describe ".participant_credit_person_id" do
+    it "is the id of the person the row points at" do
+      person = create(:person)
+      Setting.create!(participant_credit_person: person)
+
+      expect(described_class.participant_credit_person_id).to eq(person.id)
+    end
+
+    it "is blank until an admin picks someone" do
+      expect(described_class.participant_credit_person_id).to be_nil
+    end
+  end
+
   describe ".import_user" do
     it "is the user the row points at" do
       user = create(:user)
