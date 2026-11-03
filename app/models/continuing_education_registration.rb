@@ -118,6 +118,10 @@ class ContinuingEducationRegistration < ApplicationRecord
   # sign-ins/early sign-outs. You can't certify hours the sign-in sheet doesn't support.
   ATTENDANCE_COVERAGE_THRESHOLD = 0.9
 
+  # What #certificate_available? checks, in words — the admin tooltips spell it out.
+  CERTIFICATE_REQUIREMENTS = "the training has ended, the registrant is marked attended, the CE is approved and paid in full, " \
+    "the CE form is complete (if there is one), and signed-in time covers the CE hours (if time was tracked)".freeze
+
   # This record was created by a transfer — carried onto a transferred-in reg from
   # a matching CE the split left on the source. Identified by that source stub
   # existing (matched by license), NOT merely by the reg being a transfer-in: a CE

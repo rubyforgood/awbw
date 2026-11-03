@@ -58,6 +58,9 @@ class EventRegistration < ApplicationRecord
   # Attendance outcomes surfaced as their own participation buckets; every other
   # status falls into "other" (registered, transfers, cancellations).
   NAMED_OUTCOME_STATUSES = %w[ attended incomplete_attendance no_show ].freeze
+
+  # What #certificate_available? checks, in words — the admin tooltips spell it out.
+  CERTIFICATE_REQUIREMENTS = "the training has ended, the registrant is marked attended, and any scholarship tasks are complete".freeze
   # Sentinel filter value meaning "don't narrow on this dimension" — for a filter
   # that defaults to something specific (the attendees index defaults to attended
   # registrations on trainings, so it needs a way to say "all of them").

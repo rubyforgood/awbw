@@ -361,7 +361,14 @@ RSpec.describe "EventRegistrations", type: :request do
         toggle_certificate("0")
 
         expect(response.body).to include("Available")
+        expect(response.body).to include("Unlocked: #{EventRegistration::CERTIFICATE_REQUIREMENTS}")
         expect(response.body).not_to include('type="checkbox"')
+      end
+
+      it "spells out the unlock requirements on the slider" do
+        toggle_certificate("0")
+
+        expect(response.body).to include("Unlocks automatically once #{EventRegistration::CERTIFICATE_REQUIREMENTS}")
       end
 
       it "keeps the slider (switched on) once marked available, so it can be switched off" do

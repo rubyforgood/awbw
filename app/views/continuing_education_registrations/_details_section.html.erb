@@ -115,7 +115,7 @@
           <%= render "continuing_education_registrations/status_switch", name: "certificate_issued", label: "CE certificate availability",
                 on: ce_registration.certificate_sent_at.present?,
                 detail: ce_registration.certificate_sent_at ? "Issued #{ce_registration.certificate_sent_at.to_date.to_fs(:long)}" : "Not issued",
-                title: "Unlocks automatically once requirements are met. Switch on to make it available now." %>
+                title: "Unlocks automatically once #{ContinuingEducationRegistration::CERTIFICATE_REQUIREMENTS}. Switch on to make it available now." %>
         </div>
       <% end %>
     </div>
