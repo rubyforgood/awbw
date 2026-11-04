@@ -86,8 +86,8 @@ RSpec.describe "Comments and communications", type: :request do
       expect(card.text).not_to include("Jan 1")
     end
 
-    it "shows the person's membership status and current invoice in the hover card" do
-      membership = create(:membership, person: person)
+    it "shows the person's membership status, payment, and term in the hover card" do
+      membership = create(:membership, person: person, start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 12, 31))
       create(:membership_invoice, membership: membership, start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 12, 31), cost_cents: 0)
 
       travel_to(Date.new(2026, 10, 21)) { get comments_and_communications_path(person_id: person.id) }

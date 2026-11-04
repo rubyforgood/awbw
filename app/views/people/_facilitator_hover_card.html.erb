@@ -45,14 +45,13 @@
     <span class="<%= empty %>">None</span>
   <% end %>
   <% if Membership.enabled? %>
-    <% membership = person.latest_membership %>
-    <% invoice = membership&.current_invoice&.decorate %>
+    <% membership = person.current_membership&.decorate %>
     <span class="<%= heading %>">Membership</span>
     <% if membership %>
-      <span class="<%= pill_cell %> mt-2"><% if invoice %><%= render "shared/badge", **invoice.status_badge.to_h %><% end %></span>
+      <span class="<%= pill_cell %> mt-2"><% if membership.payment_badge? %><%= render "shared/badge", label: membership.payment_label, classes: membership.payment_classes %><% end %></span>
       <span class="mt-1.5 min-w-0">
         <span class="block font-medium text-gray-900"><%= membership.status_label %></span>
-        <% if invoice %><span class="block text-xs text-gray-500"><%= invoice.period_range %></span><% end %>
+        <span class="block text-xs text-gray-500"><%= membership.period_label %></span>
       </span>
     <% else %>
       <span class="<%= empty %>">None</span>

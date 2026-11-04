@@ -31,13 +31,7 @@ class CommentDecorator < ApplicationDecorator
   # behind any other record it's on (affiliation, author, …). nil for records that
   # belong to no one person, like an event or organization.
   def about_person
-    h.record_chip_person(commentable) || case commentable
-    when User then commentable.person
-    when Affiliation, TopicSubscription, FormSubmission then commentable.person
-    when StaffTagging then commentable.staff_taggable if commentable.staff_taggable.is_a?(Person)
-    when Grant then commentable.funder if commentable.funder.is_a?(Person)
-    else commentable.author_person if commentable.respond_to?(:author_person)
-    end
+    h.record_chip_person(commentable) || person_behind_commentable
   end
 
   def author_name
@@ -69,6 +63,15 @@ class CommentDecorator < ApplicationDecorator
   end
 
   private
+
+  def person_behind_commentable
+    case commentable
+    when User, Affiliation, TopicSubscription, FormSubmission then commentable.person
+    when StaffTagging then commentable.staff_taggable if commentable.staff_taggable.is_a?(Person)
+    when Grant then commentable.funder if commentable.funder.is_a?(Person)
+    else commentable.author_person if commentable.respond_to?(:author_person)
+    end
+  end
 
   # Root record the shared event chip resolves a registration/event from.
   def event_chip_record
