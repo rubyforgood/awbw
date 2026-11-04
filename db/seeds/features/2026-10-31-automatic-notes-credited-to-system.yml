@@ -1,0 +1,11 @@
+name: "Automatic notes are credited to System"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-31
+action_path: "/comments"
+pr_number: 2930
+summary: >-
+  Comments the portal writes on its own now show "System" as the author, not the admin whose action set them off.
+pro_tips:
+  - "Covers notes from registrant and story imports, closing a program, affiliation reconciliation, and a login email replacing someone's primary email."
+  - "The records an import creates still credit the admin who ran it."

@@ -54,12 +54,7 @@ module AffiliationServices
     end
 
     def note(affiliation)
-      affiliation.comments.create!(
-        topic: COMMENT_TOPIC,
-        body: comment_body,
-        created_by: Current.user,
-        updated_by: Current.user
-      )
+      affiliation.comments.create_as_system!(topic: COMMENT_TOPIC, body: comment_body)
     end
 
     def comment_body

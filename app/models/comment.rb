@@ -1,4 +1,6 @@
 class Comment < ApplicationRecord
+  AUTHOR_KINDS = { "admin" => "Admin", "system" => "System" }.freeze
+
   belongs_to :commentable, polymorphic: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
@@ -21,6 +23,16 @@ class Comment < ApplicationRecord
   # a specific user via the remote-select (which searches by person name/email).
   scope :authored_by_user, ->(user_id) {
     where("comments.created_by_id = :id OR comments.updated_by_id = :id", id: user_id)
+  }
+
+  # System comments are the ones no person wrote (imports, background syncs), so
+  # they carry no created_by.
+  scope :authored_by_kind, ->(kind) {
+    case kind.to_s
+    when "system" then where(created_by_id: nil)
+    when "admin" then where.not(created_by_id: nil)
+    else all
+    end
   }
 
   # Topic-only match. The counterpart of a communication's subject line, so one
@@ -82,11 +94,18 @@ class Comment < ApplicationRecord
     scope = scope.matching(params[:query]) if params[:query].present?
     scope = scope.topic_matching(params[:subject]) if params[:subject].present?
     scope = scope.authored_by_user(params[:author_id]) if params[:author_id].present?
+    scope = scope.authored_by_kind(params[:author_kind]) if params[:author_kind].present?
     scope = scope.created_on_or_after(params[:from]) if params[:from].present?
     scope = scope.created_on_or_before(params[:to]) if params[:to].present?
     scope = scope.for_person(params[:person_id]) if params[:person_id].present?
     scope = scope.for_event(params[:event_id]) if params[:event_id].present?
     scope
+  end
+
+  # Writes a note as System even when an admin's request triggered it (e.g. an
+  # import they ran), so machine-written notes never read as theirs.
+  def self.create_as_system!(**attributes)
+    Current.set(user: nil) { create!(**attributes) }
   end
 
   def self.parse_date(value)
