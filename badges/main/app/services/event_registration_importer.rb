@@ -418,8 +418,7 @@ class EventRegistrationImporter
            "“#{status_label(registration.status)}”."
     return if registration.comments.exists?(topic: COMMENT_TOPIC, body: body)
 
-    registration.comments.create!(topic: COMMENT_TOPIC, body: body,
-                                  created_by: @import_user, updated_by: @import_user)
+    registration.comments.create_as_system!(topic: COMMENT_TOPIC, body: body)
   end
 
   # One registration standing for several people, said on the registration itself —
@@ -431,8 +430,7 @@ class EventRegistrationImporter
     body = "Imported sheet says this registration covers #{count} people; only this one is named."
     return if registration.comments.exists?(topic: COMMENT_TOPIC, body: body)
 
-    registration.comments.create!(topic: COMMENT_TOPIC, body: body,
-                                  created_by: @import_user, updated_by: @import_user)
+    registration.comments.create_as_system!(topic: COMMENT_TOPIC, body: body)
   end
 
   # Whatever the sheet's own Notes and Comments say, kept on the registration they
@@ -442,8 +440,7 @@ class EventRegistrationImporter
       body = values[field]
       next if body.blank? || registration.comments.exists?(topic: COMMENT_TOPIC, body: body)
 
-      registration.comments.create!(topic: COMMENT_TOPIC, body: body,
-                                    created_by: @import_user, updated_by: @import_user)
+      registration.comments.create_as_system!(topic: COMMENT_TOPIC, body: body)
     end
   end
 
@@ -830,8 +827,7 @@ class EventRegistrationImporter
       entries.map { |label, submitted, saved| "#{label} “#{submitted}” (kept “#{saved}”)" }.join("; ") + "."
     return if record.comments.exists?(topic: COMMENT_TOPIC, body: body)
 
-    record.comments.create!(topic: COMMENT_TOPIC, body: body,
-                            created_by: @import_user, updated_by: @import_user)
+    record.comments.create_as_system!(topic: COMMENT_TOPIC, body: body)
   end
 
   def capture_organization(person, registration, submission, organization, answers, preview)

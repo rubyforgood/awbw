@@ -41,6 +41,16 @@ RSpec.describe PersonLoginEmailSync do
     expect(person.comments.sole.body).to include("work@example.com")
   end
 
+  it "writes the replaced-address comment as System, not whoever was signed in" do
+    person.update!(email_2: "other@example.com")
+    link
+
+    Current.set(user: user) { described_class.call(user) }
+
+    expect(person.comments.sole.created_by).to be_nil
+    expect(person.comments.sole.updated_by).to be_nil
+  end
+
   it "fills a blank primary email without touching the secondary one" do
     person.update!(email: nil, email_2: "other@example.com")
     link
