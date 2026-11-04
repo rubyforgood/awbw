@@ -75,7 +75,14 @@ module EventRegistrationServices
       user.update!(welcome_instructions_sent_at: Time.current, welcome_instructions_sent_by: @current_user)
       user.send_confirmation_instructions(sender: @current_user)
 
+      Membership::Start.call(person: @person) if live_facilitator_training?
+
       @actions_taken << "System invite sent"
+    end
+
+    def live_facilitator_training?
+      event = @event_registration.event
+      event.facilitator_training? && !event.on_demand?
     end
 
     def send_registration_confirmation
