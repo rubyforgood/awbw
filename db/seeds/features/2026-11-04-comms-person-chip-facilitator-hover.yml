@@ -1,7 +1,7 @@
 name: "See who each comment or communication is about, and their facilitator standing"
 area: communications
 display_status: admin_facing
-released_on: 2026-10-20
+released_on: 2026-11-04
 pr_number: 2766
 summary: >-
   On the everyone view of comments & communications, each row now names the
