@@ -184,7 +184,7 @@ class ReportsController < ApplicationController
 
   def build_new_report
     @report = current_user.reports.build(report_params)
-    @report.image = Image.new(file: params[:image]) unless params[:image].blank?
+    @report.image = params[:image] if params[:image].present?
 
     quotes = []
     quotes_params.each { |q|
