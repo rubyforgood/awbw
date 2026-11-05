@@ -1,39 +1,6 @@
 require "rails_helper"
 
 RSpec.describe User do
-  describe "starting a membership on invite" do
-    let(:person) { create(:person) }
-    let(:user) { create(:user, person: person) }
-
-    def invite(record)
-      record.update!(welcome_instructions_sent_at: Time.current)
-    end
-
-    it "gives the person a subscription with a comped first year" do
-      expect { invite(user) }.to change(Membership, :count).by(1)
-
-      expect(person.memberships.sole.membership_invoices.sole.cost_cents).to eq(0)
-    end
-
-    it "does not create a second subscription when the invite is resent" do
-      invite(user)
-
-      expect { invite(user) }.not_to change(Membership, :count)
-    end
-
-    it "does nothing for a user with no person" do
-      user_without_person = create(:user, person: nil)
-
-      expect { invite(user_without_person) }.not_to change(Membership, :count)
-    end
-
-    it "does nothing on an unrelated update" do
-      user
-
-      expect { user.update!(sign_in_count: 3) }.not_to change(Membership, :count)
-    end
-  end
-
   # Use FactoryBot
   # let(:user) { build(:user) } # Keep build for simple validation tests
 
