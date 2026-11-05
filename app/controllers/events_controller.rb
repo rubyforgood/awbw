@@ -414,18 +414,36 @@ class EventsController < ApplicationController
     @event = @event.decorate
     @invite_mode = invite_mode?
     @ce_eligible = @event.ce_eligible?
-    @event_registrations = @event.event_registrations
+    @comp_membership_on_invite = @invite_mode && @event.facilitator_training? && !@event.on_demand?
+    registrant_includes = [ :user, :contact_methods, :addresses, :topic_subscriptions ]
+    registrant_includes << :memberships if @comp_membership_on_invite
+    all_registrations = @event.event_registrations
       .includes(
         :event, :organizations, :comments,
         { scholarships: { grant: :funder } },
-        registrant: [ :user, :contact_methods, :addresses, :topic_subscriptions ]
+        registrant: registrant_includes
       )
       .joins(:registrant)
-      .select { |r| r.registrant.preferred_email.present? }
+      .to_a
 
-    # Invite mode targets only registrants with no portal account yet — those are
-    # the people a login invite is for.
-    @event_registrations = @event_registrations.select { |r| r.registrant.user.nil? } if @invite_mode
+    @event_registrations = all_registrations.select { |r| r.registrant.preferred_email.present? }
+
+    @not_auto_comped = []
+    if @invite_mode
+      @event_registrations = all_registrations.select do |registration|
+        registration.status.in?(EventRegistration::ACTIVE_STATUSES) &&
+          registration.registrant.preferred_email.present? &&
+          (registration.registrant.user.nil? || registration.registrant.user.confirmed_at.nil?)
+      end
+
+      if @comp_membership_on_invite
+        @not_auto_comped = all_registrations.select do |registration|
+          registration.status.in?(EventRegistration::ACTIVE_STATUSES) &&
+            (registration.registrant.user&.confirmed_at.present? || registration.registrant.preferred_email.blank?) &&
+            registration.registrant.memberships.empty?
+        end
+      end
+    end
 
     # Filters keep every registrant in the list and only flag who still matches,
     # so the recipient checkboxes pre-check the matched set rather than removing
