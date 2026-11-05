@@ -248,14 +248,14 @@ class BuiltinCalloutCards
   def scholarship_status_card
     return if config_gap?("scholarship")
     # A transferred-in recipient's award lives on the source; keep the card so they
-    # can reach it (the page routes to the original registration). (#1944)
+    # can respond to it from this ticket. (#1944)
     return unless registration.scholarship_requested? || registration.scholarship_recipient?
     # Awarded is display-only: the scholarship record exists earlier, but the award
     # is only shown as awarded once the recipient signs the agreement. Until then
     # the card prompts them to accept.
     awarded = registration.scholarship_awarded?
-    declined = registration.scholarships.any?(&:agreement_declined?)
-    needs_agreement = registration.scholarship? && !awarded && !declined
+    declined = registration.scholarship_declined?
+    needs_agreement = registration.scholarship_recipient? && !awarded && !declined
     tasks_outstanding = awarded && !registration.scholarship_tasks_met?
     survey = declined ? nil : recipient_survey_badge
     survey_due = survey == RECIPIENT_SURVEY_DUE
@@ -285,7 +285,7 @@ class BuiltinCalloutCards
   end
 
   def scholarship_badge(awarded, tasks_outstanding, survey)
-    amount = MoneyFormatter.dollars_from_cents(registration.scholarships.not_declined.sum(:amount_cents)) if awarded
+    amount = MoneyFormatter.dollars_from_cents(registration.effective_scholarships.not_declined.sum(:amount_cents)) if awarded
     [ amount, ("Tasks outstanding" if tasks_outstanding), survey ].compact.join(" · ").presence
   end
 
@@ -294,7 +294,7 @@ class BuiltinCalloutCards
   # survey's drip date if one is set. Nil without a survey or award, or once it's in.
   def recipient_survey_badge
     link = event.recipient_survey_form_link
-    return unless link && registration.scholarship?
+    return unless link && registration.scholarship_recipient?
     return if registration.post_survey_completed?
     return "Survey opens once you accept" unless registration.recipient_survey_agreement_signed?
     return "Survey opens #{ce_deadline_text(link.available_from)}" if link.dripping?

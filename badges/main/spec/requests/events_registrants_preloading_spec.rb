@@ -26,6 +26,24 @@ RSpec.describe "Event registrants CE certificate preloading", type: :request do
     end
   end
 
+  def add_transferred_in_recipients(count)
+    count.times do
+      source = create(:event_registration, status: "transferred_out")
+      scholarship = create(:scholarship, recipient: source.registrant, amount_cents: 500)
+      create(:allocation, source: scholarship, allocatable: source, amount: 500)
+      create(:event_registration, event:, registrant: source.registrant, status: "attended",
+        transferred_from_registration: source)
+    end
+  end
+
+  def scholarship_queries_for_roster
+    count = 0
+    counter = ->(*, payload) { count += 1 if payload[:sql].include?("FROM `scholarships`") }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { get registrants_event_path(event) }
+    expect(response).to be_successful
+    count
+  end
+
   def queries_for_roster
     count = 0
     counter = ->(*, payload) { count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) }
@@ -41,6 +59,14 @@ RSpec.describe "Event registrants CE certificate preloading", type: :request do
 
     add_ce_registrants(4)
     expect(queries_for_roster).to eq(baseline)
+  end
+
+  it "does not query scholarships per transferred-in recipient" do
+    add_transferred_in_recipients(2)
+    baseline = scholarship_queries_for_roster
+
+    add_transferred_in_recipients(4)
+    expect(scholarship_queries_for_roster).to eq(baseline)
   end
 
   it "shows their CE certificates as available" do

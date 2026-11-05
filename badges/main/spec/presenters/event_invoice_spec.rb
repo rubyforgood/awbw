@@ -95,6 +95,21 @@ RSpec.describe EventInvoice do
         expect(invoice.amount_applied_cents).to eq(40_000)
         expect(invoice.balance_due_cents).to eq(110_000)
       end
+
+      it "credits payments made on the new registration too" do
+        create(:allocation, source: create(:payment, type: "CashPayment", amount_cents: 40_000),
+          allocatable: registration, amount: 40_000)
+        transferred_in = create(:event_registration, event: new_event, registrant: registrant,
+          transferred_from_registration: registration)
+        create(:allocation, source: create(:payment, type: "CashPayment", amount_cents: 10_000),
+          allocatable: transferred_in, amount: 10_000)
+
+        invoice = described_class.from_registration(transferred_in)
+
+        expect(invoice.amount_applied_cents).to eq(50_000)
+        expect(invoice.entries.size).to eq(2)
+        expect(invoice.balance_due_cents).to eq(100_000)
+      end
     end
   end
 

@@ -39,7 +39,7 @@
                 <% if reg.paid_in_full? %>
                   <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-green-50 text-green-700 border-green-200">Paid</span>
                 <% else %>
-                  <% due_cents = @event.object.cost_cents - reg.allocations_sum %>
+                  <% due_cents = reg.remaining_cost %>
                   <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-amber-50 text-amber-700 border-amber-200"><%= dollars_from_cents(due_cents) %> due</span>
                   <% if reg.intends_to_pay? %>
                     <span class="inline-flex items-center rounded-full text-xs font-medium border px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200" title="Intends to pay"><i class="fa-solid fa-hand-holding-dollar"></i></span>
