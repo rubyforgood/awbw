@@ -31,6 +31,17 @@ RSpec.describe BuiltinCalloutCards do
       expect(card_titles(registration)).not_to include("Payment")
     end
 
+    context "on a transferred-in ticket whose new event is free" do
+      let(:event) { create(:event, cost_cents: 0) }
+      let(:source) { create(:event_registration, event: create(:event, cost_cents: 10_000), status: "transferred_out") }
+
+      before { registration.update!(transferred_from_registration: source) }
+
+      it "shows the balance carried from the original event" do
+        expect(card(registration, "Make your payment").badge).to eq("$100 due")
+      end
+    end
+
     context "on a transferred-out ticket" do
       let(:event) { create(:event, cost_cents: 10_000) }
       let!(:destination) do

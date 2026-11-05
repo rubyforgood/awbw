@@ -7,10 +7,10 @@
   <div class="mb-4 flex items-start gap-3 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">
     <i class="fa-solid fa-right-to-bracket mt-0.5 text-teal-600"></i>
     <div>
-      You transferred into <strong><%= event_registration.event.decorate.title_with_month_year %></strong>. Your earlier
-      payments, scholarship, and continuing-education records stay on your
-      <%= link_to "original registration", registration_ticket_path(source.slug), class: "font-semibold underline" %>
-      — any balance left is paid here, and your attendance and your certificate for these hours are earned at this event.
+      You transferred into <strong><%= event_registration.event.decorate.title_with_month_year %></strong>.<br>
+      Your earlier payments, scholarship, and continuing-education records stay on your
+      <%= link_to "original registration", registration_ticket_path(source.slug), class: "font-semibold underline" %>.<br>
+      Any balance left is paid here, and your attendance and certificate are earned at this event.
     </div>
   </div>
 <% elsif event_registration.transferred_out? && (destination = event_registration.transferred_to_registration) %>
@@ -18,9 +18,9 @@
     <i class="fa-solid fa-right-from-bracket mt-0.5 text-purple-600"></i>
     <div>
       You transferred out of <strong><%= event_registration.event.decorate.title_with_month_year %></strong> to
-      <%= link_to "your new registration", registration_ticket_path(destination.slug), class: "font-semibold underline" %>.
-      Attend there and earn your certificate at that event, and pay any balance left there; your earlier
-      payments, scholarship, and continuing-education records remain here.
+      <%= link_to "your new registration", registration_ticket_path(destination.slug), class: "font-semibold underline" %>.<br>
+      Attend there and earn your certificate at that event, and pay any balance left there.<br>
+      Your earlier payments, scholarship, and continuing-education records remain here.
     </div>
   </div>
 <% end %>
