@@ -30,6 +30,16 @@ RSpec.describe "Events::Registrations", type: :request do
         expect(response.body).to include(registration_ticket_path(destination.slug))
       end
 
+      it "offers the Pay button when a balance carries into a free event" do
+        source = create(:event_registration, event: create(:event, cost_cents: 10_000), registrant: user.person, status: "transferred_out")
+        incoming = create(:event_registration, event: create(:event, cost_cents: 0), registrant: user.person,
+          transferred_from_registration: source)
+
+        get registration_ticket_path(incoming.slug)
+
+        expect(response.body).to include("Pay with Credit Card")
+      end
+
       it "removes the Pay button on a transferred-out ticket (a normal unpaid reg keeps it) (#1944)" do
         paid_event = create(:event, cost_cents: 10_000)
         reg = create(:event_registration, event: paid_event, registrant: user.person)

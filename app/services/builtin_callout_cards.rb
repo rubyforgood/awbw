@@ -182,7 +182,7 @@ class BuiltinCalloutCards
   # preview — a free event truly has no balance to preview, on a real ticket or
   # a sample one, so there's nothing to click through.
   def payment_card
-    return if self.class.config_gap(event, "payment")
+    return unless registration.cost_cents.to_i.positive?
     billing = registration.billing_registration
     due = billing.remaining_cost.to_i.positive?
     Card.new(icon_class: "fa-solid fa-credit-card", color: due ? "orange" : "blue",
