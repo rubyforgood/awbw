@@ -78,7 +78,7 @@
     </div>
   </div>
 
-  <%= form_with url: send_reminder_event_path(@event), method: :post, data: { turbo: false } do |f| %>
+  <%= form_with url: send_reminder_event_path(@event), method: :post do |f| %>
     <% @event_registrations.each do |reg| %>
       <%= hidden_field_tag "registration_ids[]", reg.id %>
     <% end %>
@@ -93,7 +93,9 @@
     <% end %>
     <div class="flex justify-center gap-3">
       <%= link_to "Cancel", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0"), hide_ticket_button: (@hide_ticket_button ? "1" : "0")), class: button_classes(:secondary_outline) %>
-      <%= f.submit(@invite_mode ? "Send invites" : "Send reminder", class: button_classes(:primary)) %>
+      <%= f.submit(@invite_mode ? "Send invites" : "Send reminder",
+            class: button_classes(:primary),
+            data: { turbo_submits_with: "Sending..." }) %>
     </div>
   <% end %>
 </div>
