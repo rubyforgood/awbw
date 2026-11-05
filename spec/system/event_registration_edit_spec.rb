@@ -9,10 +9,12 @@ RSpec.describe "Event registration edit page", type: :system do
     it "keeps the dimmed cards spaced apart like an unlocked form" do
       driven_by(:selenium_chrome_headless)
       locked = create(:event_registration, event: event, status: "transferred_out")
+      # Enough to push the organizations card past its neighbor's minimum height.
+      locked.organizations << create_list(:organization, 8)
 
       sign_in(admin)
       visit edit_event_registration_path(locked)
-      expect(page).to have_css("fieldset[disabled]", count: 4)
+      expect(page).to have_css("fieldset[disabled]", count: 5)
 
       gaps = page.evaluate_script(<<~JS)
         (() => {
@@ -27,6 +29,14 @@ RSpec.describe "Event registration edit page", type: :system do
       JS
 
       expect(gaps).to all(eq(24))
+
+      card_heights = page.evaluate_script(<<~JS)
+        [ ...document.querySelector("#scholarship-card").closest(".gap-6").querySelectorAll("section") ]
+          .map(card => Math.round(card.getBoundingClientRect().height))
+      JS
+
+      expect(card_heights.size).to eq(2)
+      expect(card_heights.uniq.size).to eq(1)
     end
 
     it "marks each dimmed section with a lock that explains why on hover" do
@@ -35,7 +45,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(locked)
 
-      expect(page).to have_css("fieldset[disabled] + [title='#{EventRegistrationsHelper::LOCKED_SECTION_NOTE}'] .fa-lock", count: 4)
+      expect(page).to have_css("fieldset[disabled] + [title='#{EventRegistrationsHelper::LOCKED_SECTION_NOTE}'] .fa-lock", count: 5)
     end
 
     it "shows no locks on an unlocked registration" do

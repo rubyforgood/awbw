@@ -542,6 +542,10 @@ RSpec.describe "EventRegistrations", type: :request do
     end
 
     describe "GET /event_registrations/:id/edit" do
+      def changes_link_dates
+        Nokogiri::HTML(response.body).css("a[href*='/changes'] span.text-xs.font-normal").map(&:text)
+      end
+
       it "stacks the heading, the registrant's name as a person edit link, then the event" do
         get edit_event_registration_path(existing_registration)
 
@@ -588,7 +592,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
         get edit_event_registration_path(existing_registration)
 
-        expect(response.body).to include("What this registration&#39;s form changed (Sep 1, 2026)")
+        expect(changes_link_dates).to eq([ "(Sep 1, 2026)" ])
       end
 
       context "when the registrant submitted the registration form more than once" do
@@ -637,8 +641,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(response.body).to include(CGI.escapeHTML(changes_form_submission_path(first_submission, return_to: "event_registration", event_registration_id: existing_registration.id)))
           expect(response.body).to include(CGI.escapeHTML(changes_form_submission_path(second_submission, return_to: "event_registration", event_registration_id: existing_registration.id)))
-          expect(response.body).to include("What this registration&#39;s form changed (Sep 1, 2026)")
-            .and include("What this registration&#39;s form changed (Oct 2, 2026)")
+          expect(changes_link_dates).to contain_exactly("(Sep 1, 2026)", "(Oct 2, 2026)")
         end
       end
 

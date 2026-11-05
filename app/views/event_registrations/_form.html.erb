@@ -259,8 +259,8 @@
       <% active_orgs = f.object.registrant.affiliations.select(&:active?).map(&:organization).compact.uniq.sort_by(&:name) %>
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
-      <%= locked_fieldset(locked) do %>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <%= locked_fieldset(locked, wrapper_class: org_span_class) do %>
         <section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm <%= org_span_class %>">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:organizations, f.object.organizations.any?) %>">
@@ -339,16 +339,20 @@
             </div>
           </div>
         </section>
+        <% end %>
 
         <% if show_scholarship %>
-          <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
+          <%= locked_fieldset(locked) do %>
+            <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
+          <% end %>
         <% end %>
 
         <% if show_ce %>
-          <%= render "continuing_education", event_registration: f.object, ce_registration: f.object.continuing_education_registrations.first %>
+          <%= locked_fieldset(locked) do %>
+            <%= render "continuing_education", event_registration: f.object, ce_registration: f.object.continuing_education_registrations.first %>
+          <% end %>
         <% end %>
       </div>
-      <% end %>
 
       <%= locked_fieldset(locked) do %>
       <% if transferred_in %>
