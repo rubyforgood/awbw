@@ -1213,7 +1213,7 @@ class EventRegistration < ApplicationRecord
       return none if words.blank?
 
       pattern = "%#{words.join('%')}%"
-      active
+      not_transferred_in
         .joins(:registrant, :event)
         .where(
           "people.first_name LIKE :p
@@ -1229,11 +1229,17 @@ class EventRegistration < ApplicationRecord
   def remote_search_label
     {
       id: id,
-      label: "#{registrant.full_name} - #{event.title} (##{id})"
+      label: "#{registrant.full_name} - #{event.title} (##{id}#{remote_search_status_hint})"
     }
   end
 
   private
+
+  def remote_search_status_hint
+    return "" if active?
+
+    ", #{attendance_status_label.downcase}"
+  end
 
   def generate_slug
     loop do

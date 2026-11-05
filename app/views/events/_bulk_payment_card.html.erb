@@ -18,9 +18,9 @@
   # re-query per registration per card (preloaded by the controller).
   event_registrations ||= @event_registrations || @event.event_registrations.active.includes(:registrant)
   allocated_by_registration ||= {}
-  event_cost_cents = @event.cost_cents.to_i
   linked_ids = submission.linked_registration_ids.to_set
-  linked_regs = event_registrations.select { |r| linked_ids.include?(r.id) }
+  linked_registrations_by_id = local_assigns.fetch(:linked_registrations_by_id)
+  linked_regs = linked_ids.filter_map { |id| linked_registrations_by_id[id] }
   attendee_matches = submission.matched_attendees(event_registrations) %>
 
 <div id="payment-card-<%= submission.id %>" data-controller="dropdown" class="bg-brand-cream border rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow transition-colors duration-150 scroll-mt-4 <%= highlighted ? "border-yellow-500 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200" %>">
@@ -85,15 +85,21 @@
         <div class="px-3 divide-y divide-gray-100">
           <% linked_regs.each do |reg| %>
             <% allocated_cents = allocated_by_registration.fetch(reg.id, 0) %>
-            <% remaining_cents = [event_cost_cents - allocated_cents, 0].max %>
-            <% reg_paid_in_full = allocated_cents >= event_cost_cents %>
+            <% reg_cost_cents = reg.cost_cents.to_i %>
+            <% remaining_cents = [ reg_cost_cents - allocated_cents, 0 ].max %>
+            <% reg_paid_in_full = reg_cost_cents <= 0 || allocated_cents >= reg_cost_cents %>
 
             <div class="grid grid-cols-2 gap-x-4 items-center py-2">
-              <div class="min-w-0"><%= person_edit_button(reg.registrant, subtitle: reg.registrant.preferred_email, data: { turbo_frame: "_top" }, path_params: { return_to: "bulk_payments", event_id: @event.id, expand: submission.id }) %></div>
+              <div class="min-w-0">
+                <%= person_edit_button(reg.registrant, subtitle: reg.registrant.preferred_email, data: { turbo_frame: "_top" }, path_params: { return_to: "bulk_payments", event_id: @event.id, expand: submission.id }) %>
+                <% if reg.event_id != @event.id || !reg.active? %>
+                  <p class="mt-0.5 text-2xs text-gray-500"><%= [ reg.event.title, (reg.attendance_status_label unless reg.active?) ].compact.join(" · ") %></p>
+                <% end %>
+              </div>
 
               <div class="flex flex-wrap items-center gap-4">
                 <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
-                            title: "View #{person_name(reg.registrant)}'s registration for #{@event.title}",
+                            title: "View #{person_name(reg.registrant)}'s registration for #{reg.event.title}",
                             data: { turbo_frame: "_top" },
                             class: "inline-flex items-center w-24 gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                   <i class="fa-solid fa-clipboard-list text-gray-400"></i>
@@ -136,8 +142,8 @@
       </div>
     <% end %>
 
-    <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
-      <div class="grid grid-cols-2 gap-x-4 text-xs font-medium text-gray-400 uppercase tracking-wide bg-gray-100 px-3 py-2"><span>Submitted names</span><span>Potential match</span></div>
+    <div class="border border-gray-200 rounded-lg bg-white">
+      <div class="grid grid-cols-2 gap-x-4 text-xs font-medium text-gray-400 uppercase tracking-wide bg-gray-100 px-3 py-2 rounded-t-lg"><span>Submitted names</span><span>Potential match</span></div>
 
       <% if attendee_matches.present? %>
         <div class="px-3">
@@ -172,17 +178,22 @@
       <% end %>
 
       <div class="px-3 py-2">
-        <h5 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Manually link a registration</h5>
+        <h5 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Manually link a registration</h5>
+        <p class="mb-2 text-2xs text-gray-500">Searches registrations from every event. Already-linked registrations are excluded.</p>
 
         <%= form_tag link_bulk_payment_event_path(@event), class: "flex flex-wrap items-center gap-2" do %>
           <%= hidden_field_tag :submission_id, submission.id %>
-          <% unlinked_regs = event_registrations.reject { |r| linked_ids.include?(r.id) } %>
 
           <div class="w-64">
             <%= select_tag :event_registration_id,
-                   options_from_collection_for_select(unlinked_regs, :id, ->(r) { "#{person_name(r.registrant)} — #{r.registrant.preferred_email}" }),
-                   prompt: "Select registrant...",
-                   class: "w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring focus:ring-blue-200 focus:border-blue-500" %>
+                   nil,
+                   prompt: "Search any registration...",
+                   data: {
+                     controller: "remote-select",
+                     remote_select_model_value: "event_registration",
+                     remote_select_exclude_value: linked_ids.to_a.join(",")
+                   },
+                   class: "bg-white w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
           </div>
 
           <%= button_tag "Link", class: button_classes(:primary) %>

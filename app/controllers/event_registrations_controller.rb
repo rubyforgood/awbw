@@ -124,6 +124,7 @@ class EventRegistrationsController < ApplicationController
           when "recipients" then redirect_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), notice: notice, status: :see_other
           when "recipient_card" then redirect_to helpers.recipients_event_card_path(@event_registration.event, @event_registration.slug), notice: notice, status: :see_other
           when "attendance" then redirect_to attendance_event_path(@event_registration.event), notice: notice, status: :see_other
+          when "bulk_payments" then redirect_to helpers.bulk_payments_return_path(@event_registration.event), notice: notice, status: :see_other
           else
             # No explicit origin: keep admins in the management context (the
             # registrants list) rather than dropping them on the public

@@ -16,14 +16,16 @@ module Events
                            .search_by_params(params)
                            .includes(:person, form_answers: :form_field, payment: :allocations)
                            .order(created_at: :desc)
-      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+      @linked_registrations_by_id = linked_registrations_by_id(@submissions)
+      @allocated_by_registration = allocated_cents_by_registration(
+        @event_registrations.ids + @submissions.flat_map(&:linked_registration_ids)
+      )
       @event = @event.decorate
     end
 
     def create
       authorize! @event
       @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
-      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
 
       submission = @event.form_submissions.find(params[:submission_id])
       payment_type = params[:payment_type]
@@ -56,6 +58,11 @@ module Events
       else
         flash.now[:alert] = payment.errors.full_messages.to_sentence
       end
+
+      @linked_registrations_by_id = linked_registrations_by_id([ submission ])
+      @allocated_by_registration = allocated_cents_by_registration(
+        @event_registrations.ids + submission.linked_registration_ids
+      )
 
       respond_to do |format|
         format.turbo_stream
@@ -107,11 +114,13 @@ module Events
       submission = @event.form_submissions.find(params[:submission_id])
       event_registration = EventRegistration.find_by(id: params[:event_registration_id])
 
-      if event_registration
+      if event_registration.nil?
+        flash.now[:alert] = "Registration not found."
+      elsif submission.linked_registration_ids.include?(event_registration.id)
+        flash.now[:notice] = "#{helpers.person_name(event_registration.registrant)} is already linked."
+      else
         submission.link_registration!(event_registration.id)
         flash.now[:notice] = "Linked #{helpers.person_name(event_registration.registrant)}."
-      else
-        flash.now[:alert] = "Registration not found."
       end
 
       assign_bulk_payment_card_data(submission)
@@ -154,18 +163,29 @@ module Events
       @payment = payment.reload
       @submission = @payment.form_submission
       @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
-      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+      @linked_registrations_by_id = linked_registrations_by_id([ @submission ].compact)
+      @allocated_by_registration = allocated_cents_by_registration(
+        @event_registrations.ids + Array(@submission&.linked_registration_ids)
+      )
     end
 
     def assign_bulk_payment_card_data(submission)
       @submission = submission.reload.decorate
       @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
-      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+      @linked_registrations_by_id = linked_registrations_by_id([ @submission ])
+      @allocated_by_registration = allocated_cents_by_registration(
+        @event_registrations.ids + @submission.linked_registration_ids
+      )
     end
 
-    def allocated_cents_by_registration(registrations)
+    def linked_registrations_by_id(submissions)
+      ids = submissions.to_a.flat_map(&:linked_registration_ids).uniq
+      EventRegistration.where(id: ids).includes(:registrant, :event).index_by(&:id)
+    end
+
+    def allocated_cents_by_registration(registration_ids)
       Allocation
-        .where(allocatable_type: "EventRegistration", allocatable_id: registrations.ids)
+        .where(allocatable_type: "EventRegistration", allocatable_id: registration_ids.uniq)
         .group(:allocatable_id)
         .sum(:amount)
     end
