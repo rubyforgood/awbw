@@ -11,9 +11,7 @@ module EventRegistrationsHelper
     content = capture(&block)
     return content unless locked
 
-    # space-y-6 matches the form's stack, since the cards here are no longer its
-    # direct children. Grid stretches a card to fill its wrapper, keeping cards in a
-    # row equal height. The lock sits outside the fieldset so it isn't dimmed too.
+    # Grid keeps cards in a row equal height; the lock sits outside the fieldset to stay undimmed.
     fieldset = content_tag(:fieldset, content, disabled: true, class: "grid min-w-0 grid-cols-1 space-y-6 border-0 p-0 opacity-60")
     lock = content_tag(:span, tag.i(class: "fa-solid fa-lock"),
                        title: LOCKED_SECTION_NOTE, role: "img", aria: { label: LOCKED_SECTION_NOTE },

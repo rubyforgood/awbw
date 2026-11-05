@@ -1,0 +1,9 @@
+name: "See the registrant's name and what's locked when editing a registration"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-05
+pr_number: 2946
+action_path: "/events"
+summary: >-
+  The registrant's name now links to their person page at the top of the edit registration page.
+  On transferred-out registrations, each greyed-out card has a lock that explains why on hover.
