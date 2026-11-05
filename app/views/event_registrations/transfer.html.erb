@@ -64,7 +64,7 @@
             </p>
             <ul class="list-disc space-y-1 pl-4 text-xs text-gray-600">
               <li>Marked "Transferred out" (not deleted)</li>
-              <li>Payments stay here (registration and ce payments)</li>
+              <li>Payments made so far stay here (registration and ce payments)</li>
               <li>CE hours move to the new registration</li>
               <li>Scholarship stays here</li>
               <li>Attendance is NOT counted here</li>
@@ -79,6 +79,7 @@
               <li>Created fresh — track attendance here</li>
               <li>Gets a copy of the linked organizations</li>
               <li>Shown as a scholarship recipient, if relevant</li>
+              <li>Takes any registration balance left, and new payments land here</li>
               <li>Gets the remaining CE hours, balance, and certificate</li>
             </ul>
           </div>
@@ -95,6 +96,7 @@
               <li>Link the new registration <span class="font-medium">straight back to <%= origin_reg.event.title %></span>, not to this one.</li>
               <li><span class="font-medium">Remove this in-between registration for <%= source.event.title %></span> — its continuing-education record moves forward to the new event first, so nothing is lost.</li>
               <li>Their money and history still trace back to <span class="font-medium"><%= origin_reg.event.title %></span>.</li>
+              <li>Any payment on this in-between registration moves to the new one.</li>
             </ul>
           </div>
         <% end %>

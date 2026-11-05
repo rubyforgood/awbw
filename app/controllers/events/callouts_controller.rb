@@ -32,7 +32,7 @@ module Events
     def payment
       # The sample preview has no ledger or documents to link (its sentinel slug
       # wouldn't resolve), so it just shows the empty structure.
-      @allocations = sample_preview? ? [] : @event_registration.allocations.includes(:source).order(:created_at)
+      @allocations = sample_preview? ? [] : @event_registration.billing_allocations.includes(:source, allocatable: :event).order(:created_at)
       @document_cards = sample_preview? ? [] : payment_document_cards
     end
 

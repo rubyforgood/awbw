@@ -1,0 +1,11 @@
+name: "Transferred registrants pay their balance on the new registration"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-05
+action_path: "/transfer_guide"
+summary: >-
+  A transferred-in registration now shows one balance across both registrations. The payment page
+  lists earlier payments from the original registration, and anything still owed is paid on the new one.
+pro_tips:
+  - "The price stays the original event's price, even if the new event costs a different amount."
+  - "Payments made on the new registration count toward the invoice and the paid-in-full receipt."

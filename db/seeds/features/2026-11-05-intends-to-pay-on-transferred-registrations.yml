@@ -1,0 +1,10 @@
+name: "Mark a transferred registrant as intends to pay"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-05
+action_path: "/transfer_guide"
+summary: >-
+  The new registration of a transferred registrant now has the Intends to pay toggle, so they can see
+  payment-gated ticket callouts while a balance is still due.
+pro_tips:
+  - "Set it on the new registration. The original registration is locked once transferred out."
