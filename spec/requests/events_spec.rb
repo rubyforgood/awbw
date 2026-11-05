@@ -1552,6 +1552,23 @@ RSpec.describe "Events", type: :request do
 
     before { sign_in admin }
 
+    it "shows a transferred-in registrant's balance across both registrations" do
+      paid_event = create(:event, cost_cents: 10_000)
+      new_event = create(:event, cost_cents: 20_000)
+      source = create(:event_registration, event: paid_event, status: "transferred_out")
+      incoming = create(:event_registration, event: new_event, registrant: source.registrant,
+        transferred_from_registration: source)
+      create(:allocation, allocatable: source, amount: 4_000,
+        source: create(:payment, person: source.registrant, amount_cents: 4_000, amount_cents_remaining: 4_000))
+      create(:allocation, allocatable: incoming, amount: 1_000,
+        source: create(:payment, person: source.registrant, amount_cents: 1_000, amount_cents_remaining: 1_000))
+
+      get registrants_event_path(new_event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("$50 due")
+    end
+
     context "eyebrow back link" do
       it "returns to the dashboard by default" do
         get registrants_event_path(event)

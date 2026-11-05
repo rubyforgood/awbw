@@ -36,6 +36,26 @@ RSpec.describe PayChargeExtensions do
   end
 
   describe "charge creation" do
+    context "when the charge is for a transferred-in registration" do
+      let(:source) do
+        create(:event_registration, event: create(:event, cost_cents: 50_00), registrant: person, status: "transferred_out")
+      end
+      let(:registration) do
+        create(:event_registration, event: create(:event, cost_cents: 50_00), registrant: person,
+          transferred_from_registration: source)
+      end
+
+      before do
+        create(:allocation, allocatable: source, amount: 20_00,
+          source: create(:payment, person: person, amount_cents: 20_00, amount_cents_remaining: 20_00))
+      end
+
+      it "clears the balance left after the source's payment" do
+        expect(registration.allocations.sum(:amount)).to eq(30_00)
+        expect(registration.reload).to be_paid_in_full
+      end
+    end
+
     it "creates an ExternalProcessorPayment" do
       payment = ExternalProcessorPayment.last
       expect(payment).to have_attributes(

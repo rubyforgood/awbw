@@ -173,10 +173,7 @@ class EventRegistrationReadiness
   end
 
   def payment_due?
-    # A transferred-in reg's balance is tracked on its source registration, so it
-    # owes nothing for this event and never reads as "Payment due" here.
-    return false if registration.transferred_in?
-    registration.event.cost_cents.to_i > 0 && !registration.paid_in_full?
+    !registration.paid_in_full?
   end
 
   # The organization needs an admin's attention until one is linked to the

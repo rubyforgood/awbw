@@ -238,6 +238,36 @@ RSpec.describe "Events::Callouts", type: :request do
   describe "GET /registration/:slug/payment" do
     let(:event) { create(:event, cost_cents: 10_000) }
 
+    context "on a transferred-in registration" do
+      let(:source_event) { create(:event, title: "Original training", cost_cents: 10_000) }
+      let(:source) { create(:event_registration, event: source_event, registrant: registration.registrant, status: "transferred_out") }
+
+      before do
+        registration.update!(transferred_from_registration: source)
+        create(:allocation, allocatable: source, amount: 4_000,
+          source: create(:payment, person: source.registrant, amount_cents: 4_000, amount_cents_remaining: 4_000))
+      end
+
+      it "shows the original payment, the balance left, and a way to pay here" do
+        get registration_payment_path(registration.slug)
+
+        expect(response.body).to include("$40")
+        expect(response.body).to include("Paid toward Original training")
+        expect(response.body).to include("$60")
+        expect(response.body).to include(registration_pay_path(registration.slug))
+      end
+
+      it "drops the pay action once its own payment clears the balance" do
+        create(:allocation, allocatable: registration, amount: 6_000,
+          source: create(:payment, person: source.registrant, amount_cents: 6_000, amount_cents_remaining: 6_000))
+
+        get registration_payment_path(registration.slug)
+
+        expect(response.body).not_to include(registration_pay_path(registration.slug))
+        expect(response.body).to include("Available once your payment is received in full").or include("Paid-in-full receipt")
+      end
+    end
+
     it "shows the W-9 document's materialized join-row subtitle, not hard-coded copy" do
       callout = create(:registration_ticket_callout, event:, builtin_key: "payment")
       w9 = create(:resource, title: "W-9")

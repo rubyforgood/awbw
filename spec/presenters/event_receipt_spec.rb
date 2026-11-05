@@ -107,6 +107,20 @@ RSpec.describe EventReceipt do
         expect(receipt.amount_paid_cents).to eq(150_000)
         expect(receipt.balance_cents).to eq(0)
       end
+
+      it "reconciles to zero when the balance was finished on the new registration" do
+        create(:allocation, source: create(:payment, type: "CashPayment", amount_cents: 50_000),
+          allocatable: registration, amount: 50_000)
+        transferred_in = create(:event_registration, event: new_event, registrant: registrant,
+          transferred_from_registration: registration)
+        create(:allocation, source: create(:payment, type: "CashPayment", amount_cents: 100_000),
+          allocatable: transferred_in, amount: 100_000)
+
+        receipt = described_class.from_registration(transferred_in)
+
+        expect(receipt.amount_paid_cents).to eq(150_000)
+        expect(receipt.balance_cents).to eq(0)
+      end
     end
   end
 end

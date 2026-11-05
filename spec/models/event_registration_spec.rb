@@ -149,8 +149,8 @@ RSpec.describe EventRegistration, type: :model do
           status: "registered", transferred_from_registration: source)
       end
 
-      it "labels payment status as transferred in rather than Due" do
-        expect(incoming.payment_status_label).to eq("Transferred in")
+      it "labels an unpaid balance as Due, since it's payable on this reg" do
+        expect(incoming.payment_status_label).to eq("Due")
       end
 
       it "derives payment access from the source registration" do
@@ -159,6 +159,81 @@ RSpec.describe EventRegistration, type: :model do
         create(:allocation, allocatable: source, amount: 10_000,
           source: create(:payment, person: source.registrant, amount_cents: 10_000, amount_cents_remaining: nil))
         expect(incoming.reload.payment_access_granted?).to be(true)
+      end
+
+      context "with money on both registrations" do
+        def allocate(registration, amount)
+          create(:allocation, allocatable: registration, amount: amount,
+            source: create(:payment, person: source.registrant, amount_cents: amount, amount_cents_remaining: amount))
+        end
+
+        it "settles one balance from the source's payments and its own" do
+          allocate(source, 4_000)
+          allocate(incoming, 6_000)
+
+          expect(incoming.reload.remaining_cost).to eq(0)
+          expect(incoming).to be_paid_in_full
+          expect(incoming.payment_access_granted?).to be(true)
+          expect(incoming.payment_status_label).to eq("Paid")
+        end
+
+        it "still owes what neither registration has covered" do
+          allocate(source, 4_000)
+          allocate(incoming, 1_000)
+
+          expect(incoming.reload.remaining_cost).to eq(5_000)
+          expect(incoming).to be_partially_paid
+          expect(incoming.payment_status_label).to eq("Due")
+        end
+
+        it "lists the allocations from both registrations" do
+          old_payment = allocate(source, 4_000)
+          new_payment = allocate(incoming, 1_000)
+
+          expect(incoming.billing_allocations).to contain_exactly(old_payment, new_payment)
+        end
+
+        it "rejects an allocation beyond the combined balance" do
+          allocate(source, 8_000)
+
+          overpayment = build(:allocation, allocatable: incoming, amount: 3_000,
+            source: create(:payment, person: source.registrant, amount_cents: 3_000, amount_cents_remaining: 3_000))
+
+          expect(overpayment).not_to be_valid
+          expect(overpayment.errors.full_messages.to_sentence).to include("Remaining: $20")
+        end
+
+        it "puts a split-paid reg in .paid_in_full, not .not_paid_in_full" do
+          allocate(source, 4_000)
+          allocate(incoming, 6_000)
+
+          expect(EventRegistration.paid_in_full).to include(incoming)
+          expect(EventRegistration.not_paid_in_full).not_to include(incoming)
+        end
+
+        it "adds back a source-held scholarship across both registrations" do
+          scholarship = create(:scholarship, recipient: source.registrant, amount_cents: 4_000)
+          create(:allocation, source: scholarship, allocatable: source, amount: 4_000)
+          allocate(incoming, 1_000)
+
+          expect(incoming.reload.remaining_cost_without(scholarship)).to eq(9_000)
+        end
+      end
+
+      it "grants access from its own intends-to-pay flag without marking it paid" do
+        incoming.update!(intends_to_pay: true)
+
+        expect(incoming.payment_access_granted?).to be(true)
+        expect(incoming).not_to be_paid_in_full
+        expect(incoming.payment_status_label).to eq("Intends to pay")
+      end
+
+      it "inherits intends to pay from the locked source" do
+        source.update!(intends_to_pay: true)
+
+        expect(incoming.reload).to be_intends_to_pay
+        expect(incoming.payment_access_granted?).to be(true)
+        expect(EventRegistration.payment_status("intends_to_pay")).to include(incoming)
       end
     end
 

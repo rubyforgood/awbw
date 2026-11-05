@@ -2,14 +2,14 @@
     payment / scholarship / CE-payment records that live on the SOURCE registration
     this person transferred in from. (CE hours are carried onto this reg's own
     record — see its card above; the CE payment stays on the source and is
-    summarized here.) Styled distinctly (teal) so it never reads like a normal
-    registration's editable cards, and every figure links back to the matching
-    section on the source reg. ---- %>
+    summarized here.) The balance across both regs is on the payment card alongside
+    this one. Styled distinctly (teal) so it never reads like a normal registration's
+    editable cards, and every figure links back to the matching section on the source
+    reg. ---- %>
 <% source = event_registration.transferred_from_registration %>
 <% source_link = ->(anchor) { edit_event_registration_path(source, anchor: anchor) } %>
 <% source_cost_cents = source.event.cost_cents.to_i %>
 <% source_paid_cents = source.allocations_sum %>
-<% source_due_cents = [ source_cost_cents - source_paid_cents, 0 ].max %>
 <% source_over_cents = [ source_paid_cents - source_cost_cents, 0 ].max %>
 <section class="overflow-hidden rounded-xl border-2 border-teal-200 bg-teal-50/40 shadow-sm">
   <div class="flex items-center gap-3 border-b border-teal-200 bg-teal-50 px-4 py-3">
@@ -19,8 +19,8 @@
     <div class="min-w-0">
       <h2 class="text-sm font-semibold text-teal-900">Financials on the original registration</h2>
       <p class="text-xs text-teal-700">
-        This registrant transferred in — their scholarship and payments stay on their
-        registration for <span class="font-medium"><%= source.event.title %></span> and aren't billed to this event.
+        This registrant transferred in — earlier payments and any scholarship stay on their
+        registration for <span class="font-medium"><%= source.event.title %></span>. Any balance left is paid on this registration.
       </p>
     </div>
     <%= link_to edit_event_registration_path(source),
@@ -49,8 +49,6 @@
           <div class="flex justify-between"><dt class="text-gray-500">Allocated</dt><dd class="text-gray-900 tabular-nums"><%= dollars_from_cents(source_paid_cents) %></dd></div>
           <% if source_over_cents.positive? %>
             <div class="flex justify-between"><dt class="text-gray-500">Over-allocated</dt><dd class="font-semibold text-red-700 tabular-nums"><%= dollars_from_cents(source_over_cents) %> over</dd></div>
-          <% else %>
-            <div class="flex justify-between"><dt class="text-gray-500">Due</dt><dd class="font-semibold tabular-nums <%= source_due_cents.positive? ? "text-amber-700" : "text-gray-500" %>"><%= dollars_from_cents(source_due_cents) %></dd></div>
           <% end %>
         </dl>
       <% else %>
