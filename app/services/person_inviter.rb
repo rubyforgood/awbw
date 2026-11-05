@@ -26,7 +26,10 @@ class PersonInviter
     return Result.new(invited: false, reason: :already_confirmed) if user.confirmed_at.present?
 
     send_invite(user)
-    Membership::Start.call(person: @person) if @comp_membership
+    if @comp_membership
+      @person.reload if @person.changed?
+      Membership::Start.call(person: @person)
+    end
     Result.new(invited: true, reason: nil)
   end
 
