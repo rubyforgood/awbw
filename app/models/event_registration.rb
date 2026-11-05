@@ -1237,17 +1237,15 @@ class EventRegistration < ApplicationRecord
       return none if words.blank?
 
       pattern = "%#{words.join('%')}%"
-      not_transferred_in
-        .joins(:registrant, :event)
-        .where(
-          "people.first_name LIKE :p
-           OR people.last_name LIKE :p
-           OR people.email LIKE :p
-           OR people.legal_first_name LIKE :p
-           OR people.email_2 LIKE :p
-           OR events.title LIKE :p",
-          p: pattern
-        )
+      joins(:registrant, :event).where(
+        "people.first_name LIKE :p
+         OR people.last_name LIKE :p
+         OR people.email LIKE :p
+         OR people.legal_first_name LIKE :p
+         OR people.email_2 LIKE :p
+         OR events.title LIKE :p",
+        p: pattern
+      )
     }
 
   def remote_search_label

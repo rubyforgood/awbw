@@ -51,13 +51,12 @@ RSpec.describe "Event search", type: :request do
     context "as an admin" do
       before { sign_in admin }
 
-      it "returns every event and status except transferred-in" do
+      it "returns every event and status" do
         get "/search/event_registration", params: { q: "Finder" }
 
         expect(response).to have_http_status(:ok)
         ids = response.parsed_body.map { |row| row["id"] }
-        expect(ids).to include(active_registration.id, transferred_out_registration.id)
-        expect(ids).not_to include(incoming_registration.id)
+        expect(ids).to include(active_registration.id, transferred_out_registration.id, incoming_registration.id)
       end
 
       it "omits excluded ids" do

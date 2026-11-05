@@ -73,11 +73,10 @@ RSpec.describe EventRegistration, type: :model do
              transferred_from_registration: create(:event_registration, status: "transferred_out"))
     end
 
-    it ".remote_search spans every event and every status except transferred-in" do
+    it ".remote_search spans every event and every status" do
       results = EventRegistration.remote_search("Finder")
 
-      expect(results).to include(active_reg, cancelled_reg, transferred_out_reg)
-      expect(results).not_to include(incoming_reg)
+      expect(results).to include(active_reg, cancelled_reg, transferred_out_reg, incoming_reg)
     end
 
     it ".remote_search matches the event title" do
