@@ -97,6 +97,19 @@ RSpec.describe EventScholarshipFigures do
     expect(figures.incomplete_count).to eq(dashboard.attendance_count_for("incomplete_attendance"))
   end
 
+  it "counts an award left on a transferred-out registration at that event (#2947)" do
+    person = create(:person)
+    transferred = create(:event_registration, event: event, registrant: person, status: "transferred_out")
+    create(:event_registration, registrant: person, status: "registered", transferred_from_registration: transferred)
+    award = create(:scholarship, recipient: person, amount_cents: 1_000, grant: create(:grant))
+    create(:allocation, source: award, allocatable: transferred, amount: 1_000)
+
+    expect(figures.funded_cents).to eq(5_000)
+    expect(figures.funded_recipients).to include(person)
+    expect(figures.funded_cents).to eq(EventDashboard.new(event).funded_scholarship_cents)
+    expect(figures.funded_count).to eq(EventDashboard.new(event).funded_scholarship_count)
+  end
+
   it "returns zeros for an event with no registrations" do
     other = create(:event, cost_cents: 10_000)
     expect(described_class.new([ event, other ]).for(other)).to eq(described_class::EMPTY)

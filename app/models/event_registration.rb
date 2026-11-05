@@ -54,6 +54,9 @@ class EventRegistration < ApplicationRecord
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
+  # Money is tracked apart from attendance: a transferred-out reg left the event but
+  # its money stays on the event's books.
+  MONEY_STATUSES = (ACTIVE_STATUSES + %w[ transferred_out ]).freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
   # Attendance outcomes surfaced as their own participation buckets; every other
   # status falls into "other" (registered, transfers, cancellations).
@@ -179,12 +182,11 @@ class EventRegistration < ApplicationRecord
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
+  scope :holding_money, -> { where(status: MONEY_STATUSES) }
   scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
   scope :transferred_in, -> { where.not(transferred_from_registration_id: nil) }
-  # The billable basis for an event's financial reporting: a transferred-in reg's
-  # money lives on its source registration, so it owes nothing here and is
-  # excluded from this event's totals (issue #1944).
+  # Registrations that didn't arrive by transfer. (#1944)
   scope :not_transferred_in, -> { where(transferred_from_registration_id: nil) }
   # "other" = any status outside the named attendance outcomes; the virtual
   # "transferred_in" (an FK-backed dimension, not a status) routes to the

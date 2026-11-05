@@ -61,14 +61,68 @@ RSpec.describe EventRevenueFigures do
     expect(figures.ce_outstanding_cents).to eq(dashboard.cont_ed_outstanding_cents)
   end
 
-  it "excludes a transferred-in registration (its money is on the source event)" do
-    source = create(:event_registration, status: "transferred_out")
-    create(:event_registration, event: event, registrant: create(:person),
-      status: "registered", transferred_from_registration: source)
+  describe "a transfer's money (#2947)" do
+    let(:old_event) { create(:event, cost_cents: 8_000) }
+    let(:person) { create(:person) }
+    let!(:out_reg) { create(:event_registration, event: old_event, registrant: person, status: "transferred_out") }
+    let!(:in_reg) do
+      create(:event_registration, event: event, registrant: person, status: "registered",
+        transferred_from_registration: out_reg)
+    end
+    let(:loader) { described_class.new([ old_event, event ]) }
 
-    # The transferred-in reg owes the full 10_000 here but must not be counted;
-    # outstanding stays at reg1's 4_000, unchanged by the transfer-in.
-    expect(figures.registration_outstanding_cents).to eq(4_000)
+    before do
+      create(:allocation, source: create(:payment, amount_cents: 3_000, amount_cents_remaining: 3_000),
+                          allocatable: out_reg, amount: 3_000)
+      create(:allocation, source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000),
+                          allocatable: in_reg, amount: 1_000)
+      create(:allocation, source: create(:discount, amount_cents: 500), allocatable: out_reg, amount: 500)
+      award = create(:scholarship, recipient: person, amount_cents: 1_500, grant: create(:grant))
+      create(:allocation, source: award, allocatable: out_reg, amount: 1_500)
+      ce = create(:continuing_education_registration, event_registration: in_reg, cost_cents: 2_000)
+      create(:allocation, source: create(:payment, amount_cents: 700, amount_cents_remaining: 700),
+                          allocatable: ce, amount: 700)
+    end
+
+    it "counts the old reg's money at the old event" do
+      old_figures = loader.for(old_event)
+
+      expect(old_figures.registration_payments_cents).to eq(3_000)
+      expect(old_figures.discount_cents).to eq(500)
+      expect(old_figures.funded_scholarship_cents).to eq(1_500)
+      expect(old_figures.registration_outstanding_cents).to eq(0)
+    end
+
+    it "counts the new reg's money and the balance left at the new event" do
+      new_figures = loader.for(event)
+
+      expect(new_figures.registration_payments_cents).to eq(9_000 + 1_000)
+      expect(new_figures.registration_outstanding_cents).to eq(4_000 + 2_000)
+      expect(new_figures.ce_paid_cents).to eq(9_500 + 700)
+    end
+
+    it "agrees with both events' dashboards" do
+      [ old_event, event ].each do |report_event|
+        row = loader.for(report_event)
+        dashboard = EventDashboard.new(report_event)
+
+        expect(row.registration_payments_cents).to eq(dashboard.received_cents)
+        expect(row.registration_outstanding_cents).to eq(dashboard.outstanding_cents)
+        expect(row.funded_scholarship_cents).to eq(dashboard.funded_scholarship_cents)
+        expect(row.ce_paid_cents).to eq(dashboard.cont_ed_paid_cents)
+        expect(row.ce_outstanding_cents).to eq(dashboard.cont_ed_outstanding_cents)
+      end
+    end
+
+    it "names them in each event's drilldown beside the money there" do
+      old_breakdown = loader.breakdown_for(old_event)
+      new_breakdown = loader.breakdown_for(event)
+
+      expect(old_breakdown.registration_payments.find { |c| c.person == person }.cents).to eq(3_000)
+      expect(old_breakdown.registration_outstanding.map(&:person)).not_to include(person)
+      expect(new_breakdown.registration_payments.find { |c| c.person == person }.cents).to eq(1_000)
+      expect(new_breakdown.registration_outstanding.find { |c| c.person == person }.cents).to eq(2_000)
+    end
   end
 
   it "leaves CE unpaid past its payment deadline out of what's owed, keeping its cash" do
@@ -158,9 +212,10 @@ RSpec.describe EventRevenueFigures do
       events.each { |e| loader.for(e) }
     end
 
-    # 6 batch component queries (incl. which CE still counts) + 2 constant queries
-    # that classify AWBW-donated grants as subsidy (the AWBW org lookup and its
-    # grant ids), regardless of how many events are loaded.
-    expect(queries).to eq(8)
+    # 6 batch component queries (incl. which CE still counts) + 2 for what's owed
+    # (RegistrationBalances) + 2 constant queries that classify AWBW-donated grants
+    # as subsidy (the AWBW org lookup and its grant ids), regardless of how many
+    # events are loaded.
+    expect(queries).to eq(10)
   end
 end
