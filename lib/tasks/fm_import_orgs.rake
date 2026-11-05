@@ -27,14 +27,11 @@ namespace :fm do
       end
 
       sections = {
-        "Status disagreements (portal kept its value)" => import.status_disagreements,
-        "Name matches whose project codes sit on another organization" => import.conflicts,
-        "Multi-project organizations whose programs are already in the portal" => import.multi_project_only,
-        "Project codes withheld because another organization holds them" => import.withheld_codes,
+        "Rows whose ORG code lands on more than one organization" => import.multi_org,
+        "Portal organizations receiving ORG codes from more than one FileMaker organization" => import.condensed,
         "Project codes not in the portal (round 2)" => import.unmatched_project_codes,
         "Duplicate names told apart by code" => import.suffixed,
-        "Retired in FileMaker, imported as-is" => import.retired,
-        "Field differences (portal kept its value)" => import.differences
+        "Retired in FileMaker" => import.retired
       }
       sections.each do |heading, lines|
         next if lines.blank?
