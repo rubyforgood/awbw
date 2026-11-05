@@ -2,6 +2,7 @@ name: "Transferred registrants pay their balance on the new registration"
 area: registration
 display_status: admin_facing
 released_on: 2026-11-05
+pr_number: 2945
 action_path: "/transfer_guide"
 summary: >-
   A transferred-in registration now shows one balance across both registrations. The payment page
