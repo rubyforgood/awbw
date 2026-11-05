@@ -63,6 +63,35 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "search" do
+    let(:registrant) { create(:person, first_name: "Fay", last_name: "Finder") }
+    let!(:active_reg) { create(:event_registration, registrant: registrant, status: "registered") }
+    let!(:cancelled_reg) { create(:event_registration, registrant: registrant, status: "cancelled") }
+    let!(:transferred_out_reg) { create(:event_registration, registrant: registrant, status: "transferred_out") }
+    let!(:incoming_reg) do
+      create(:event_registration, registrant: registrant, status: "registered",
+             transferred_from_registration: create(:event_registration, status: "transferred_out"))
+    end
+
+    it ".remote_search spans every event and every status" do
+      results = EventRegistration.remote_search("Finder")
+
+      expect(results).to include(active_reg, cancelled_reg, transferred_out_reg, incoming_reg)
+    end
+
+    it ".remote_search matches the event title" do
+      event = create(:event, title: "Quiet Retreat")
+      registration = create(:event_registration, event: event, registrant: create(:person))
+
+      expect(EventRegistration.remote_search("Retreat")).to include(registration)
+    end
+
+    it "#remote_search_label appends the status only for inactive registrations" do
+      expect(active_reg.remote_search_label[:label]).to end_with("(##{active_reg.id})")
+      expect(cancelled_reg.remote_search_label[:label]).to end_with("(##{cancelled_reg.id}, cancelled)")
+    end
+  end
+
   describe "transfer trail" do
     let(:source) { create(:event_registration, status: "transferred_out") }
     let!(:incoming) { create(:event_registration, status: "registered", transferred_from_registration: source) }

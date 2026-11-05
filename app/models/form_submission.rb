@@ -424,10 +424,6 @@ class FormSubmission < ApplicationRecord
     update!(metadata: (metadata || {}).merge("linked_registration_ids" => ids))
   end
 
-  def linked_registrations
-    EventRegistration.where(id: linked_registration_ids)
-  end
-
   # --- Provenance: how the submission was collected ---
   # A callout submission carries the form's own role (so it aggregates with any
   # other submission of that form), so this metadata flag — not the role — is what
