@@ -131,10 +131,21 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include(registration_ticket_path(destination.slug))
     end
 
-    it "shows the banner exactly once on the payment page (no duplication after consolidating into the wrapper)" do
+    it "sends the old payment page to the new registration's, which holds the balance" do
+      create(:registration_ticket_callout, event:, builtin_key: "payment", hidden: false)
+
       get registration_payment_path(registration.slug)
 
-      expect(response.body.scan("You transferred out").size).to eq(1)
+      expect(response).to redirect_to(registration_payment_path(destination.slug))
+    end
+
+    it "keeps the old payment page while no destination is recorded" do
+      create(:registration_ticket_callout, event:, builtin_key: "payment", hidden: false)
+      destination.update!(transferred_from_registration: nil)
+
+      get registration_payment_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
     end
   end
 
@@ -363,6 +374,23 @@ RSpec.describe "Events::Callouts", type: :request do
 
   describe "GET /registration/:slug/videoconference" do
     let(:event) { create(:event, videoconference_url: "https://example.com/zoom") }
+
+    it "unlocks for a transferred-in registrant whose scholarship and payment span both registrations" do
+      event.update!(cost_cents: 150_000)
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference", hidden: false)
+      source = create(:event_registration, event: create(:event, cost_cents: 150_000),
+        registrant: registration.registrant, status: "transferred_out")
+      registration.update!(transferred_from_registration: source)
+      create(:allocation, allocatable: source, amount: 50_000,
+        source: create(:scholarship, recipient: source.registrant, amount_cents: 50_000))
+      create(:allocation, allocatable: registration, amount: 100_000,
+        source: create(:payment, person: source.registrant, amount_cents: 100_000, amount_cents_remaining: 100_000))
+
+      get registration_videoconference_path(registration.slug)
+
+      expect(response.body).to include("Join on")
+      expect(response.body).not_to include("unlocks once both of these are met")
+    end
 
     it "links resources on the built-in callout to their own page, not inline" do
       resource = create(:resource)

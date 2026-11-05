@@ -30,6 +30,9 @@ module Events
     # the linked documents (the W-9 from the payment callout's resources, and the
     # dynamic invoice/receipt) for paid events.
     def payment
+      billing = @event_registration.billing_registration
+      return redirect_to registration_payment_path(billing.slug) unless billing == @event_registration
+
       # The sample preview has no ledger or documents to link (its sentinel slug
       # wouldn't resolve), so it just shows the empty structure.
       @allocations = sample_preview? ? [] : @event_registration.billing_allocations.includes(:source, allocatable: :event).order(:created_at)

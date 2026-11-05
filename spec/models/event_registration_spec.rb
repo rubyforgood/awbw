@@ -220,6 +220,19 @@ RSpec.describe EventRegistration, type: :model do
         end
       end
 
+      it "points a transferred-out reg's balance at its new registration" do
+        source.update!(status: "transferred_out")
+
+        expect(source.reload.billing_registration).to eq(incoming)
+        expect(incoming.billing_registration).to eq(incoming)
+      end
+
+      it "keeps its own balance while the transfer has no destination" do
+        pending_out = create(:event_registration, status: "transferred_out")
+
+        expect(pending_out.billing_registration).to eq(pending_out)
+      end
+
       it "grants access from its own intends-to-pay flag without marking it paid" do
         incoming.update!(intends_to_pay: true)
 
