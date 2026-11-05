@@ -191,11 +191,11 @@ class EventRegistrationReadiness
   end
 
   def scholarship_uncreated?
-    registration.scholarship_requested? && !registration.scholarship?
+    registration.scholarship_requested? && !registration.scholarship_recipient?
   end
 
   def scholarship_tasks_incomplete?
-    registration.scholarship? && !registration.scholarship_tasks_met?
+    !registration.scholarship_tasks_met?
   end
 
   # Recipients only, once the survey is available (agreement signed, drip passed). Reads preloaded scholarships + the event's memoized callout, so

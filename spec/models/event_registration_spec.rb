@@ -197,6 +197,86 @@ RSpec.describe EventRegistration, type: :model do
         expect(own.effective_scholarship).to eq(scholarship)
         expect(own).to be_scholarship_recipient
       end
+
+      it "prefers a transferred-in reg's own award over the source's" do
+        source_award = create(:scholarship, recipient: source.registrant, amount_cents: 5_000)
+        create(:allocation, source: source_award, allocatable: source, amount: 5_000)
+        own_award = create(:scholarship, recipient: incoming.registrant, amount_cents: 1_000)
+        create(:allocation, source: own_award, allocatable: incoming, amount: 1_000)
+
+        expect(incoming.reload.effective_scholarships).to contain_exactly(own_award)
+      end
+
+      it "walks a chain of transfers back to the award" do
+        scholarship = create(:scholarship, recipient: source.registrant, amount_cents: 5_000)
+        create(:allocation, source: scholarship, allocatable: source, amount: 5_000)
+        incoming.update!(status: "transferred_out")
+        latest = create(:event_registration, status: "registered", transferred_from_registration: incoming)
+
+        expect(latest.effective_scholarships).to contain_exactly(scholarship)
+      end
+
+      context "with the award on the source" do
+        let!(:scholarship) { create(:scholarship, recipient: source.registrant, amount_cents: 5_000, tasks_completed: false) }
+
+        before { create(:allocation, source: scholarship, allocatable: source, amount: 5_000) }
+
+        it "shows the award as awarded only once its agreement is signed" do
+          expect(incoming.scholarship_awarded?).to be(false)
+
+          scholarship.accept_agreement!
+
+          expect(incoming.reload.scholarship_awarded?).to be(true)
+        end
+
+        it "reads a decline on the source" do
+          expect(incoming.scholarship_declined?).to be(false)
+
+          scholarship.decline_agreement!("Timing no longer works")
+
+          expect(incoming.reload.scholarship_declined?).to be(true)
+        end
+
+        it "opens the survey gate once the source agreement is signed" do
+          expect(incoming.recipient_survey_agreement_signed?).to be(false)
+
+          scholarship.accept_agreement!
+
+          expect(incoming.reload.recipient_survey_agreement_signed?).to be(true)
+        end
+
+        it "holds scholarship tasks open until they are done on the source" do
+          expect(incoming.scholarship_tasks_met?).to be(false)
+
+          scholarship.update!(tasks_completed: true)
+
+          expect(incoming.reload.scholarship_tasks_met?).to be(true)
+        end
+
+        it "lets a declined source award release the tasks" do
+          scholarship.decline_agreement!("Timing no longer works")
+
+          expect(incoming.reload.scholarship_tasks_met?).to be(true)
+        end
+
+        context "at an ended event the registrant attended" do
+          before { incoming.update!(event: create(:event, :ended), status: "attended") }
+
+          it "waits for the source award's tasks before unlocking the certificate" do
+            expect(incoming.certificate_available?).to be(false)
+
+            scholarship.update!(tasks_completed: true)
+
+            expect(incoming.reload.certificate_available?).to be(true)
+          end
+
+          it "keeps a certificate that was already issued available" do
+            incoming.update!(certificate_sent_at: Time.current)
+
+            expect(incoming.reload.certificate_available?).to be(true)
+          end
+        end
+      end
     end
   end
 
