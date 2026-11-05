@@ -141,6 +141,14 @@ RSpec.describe EventRegistration, type: :model do
       expect(EventRegistration.not_transferred_in).not_to include(incoming)
     end
 
+    it "scopes .holding_money to both halves of a transfer, not cancelled or no-show regs" do
+      cancelled = create(:event_registration, status: "cancelled")
+      no_show = create(:event_registration, status: "no_show")
+
+      expect(EventRegistration.holding_money).to include(source, incoming)
+      expect(EventRegistration.holding_money).not_to include(cancelled, no_show)
+    end
+
     describe "financials live on the source" do
       let(:paid_event) { create(:event, cost_cents: 10_000) }
       let(:source) { create(:event_registration, event: paid_event, status: "transferred_out") }
