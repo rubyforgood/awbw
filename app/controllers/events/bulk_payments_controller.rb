@@ -8,7 +8,7 @@ module Events
       # Skip on the filter turbo-frame reload so filtering doesn't double-count views.
       track_view("events.bulk_payments", { event_id: @event.id }) unless turbo_frame_request?
 
-      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
       # Same filter set as the global bulk payments index (search + method +
       # status + dates), applied to this event's submissions.
       @submissions = @event.form_submissions
@@ -25,7 +25,7 @@ module Events
 
     def create
       authorize! @event
-      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
 
       submission = @event.form_submissions.find(params[:submission_id])
       payment_type = params[:payment_type]
@@ -162,7 +162,7 @@ module Events
     def assign_allocation_card_data(payment)
       @payment = payment.reload
       @submission = @payment.form_submission
-      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
       @linked_registrations_by_id = linked_registrations_by_id([ @submission ].compact)
       @allocated_by_registration = allocated_cents_by_registration(
         @event_registrations.map(&:id) + Array(@submission&.linked_registration_ids)
@@ -171,7 +171,7 @@ module Events
 
     def assign_bulk_payment_card_data(submission)
       @submission = submission.reload.decorate
-      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
       @linked_registrations_by_id = linked_registrations_by_id([ @submission ])
       @allocated_by_registration = allocated_cents_by_registration(
         @event_registrations.map(&:id) + @submission.linked_registration_ids
