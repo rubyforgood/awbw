@@ -31,6 +31,35 @@ RSpec.describe BuiltinCalloutCards do
       expect(card_titles(registration)).not_to include("Payment")
     end
 
+    context "on a transferred-out ticket" do
+      let(:event) { create(:event, cost_cents: 10_000) }
+      let!(:destination) do
+        create(:event_registration, event: create(:event, cost_cents: 10_000, payment_due_deadline: nil),
+          registrant: registration.registrant, transferred_from_registration: registration)
+      end
+
+      before { registration.update!(status: "transferred_out") }
+
+      def allocate(reg, amount)
+        create(:allocation, allocatable: reg, amount: amount,
+          source: create(:payment, person: reg.registrant, amount_cents: amount, amount_cents_remaining: amount))
+      end
+
+      it "reads Paid once the new registration clears the balance" do
+        allocate(registration, 4_000)
+        allocate(destination, 6_000)
+
+        expect(card(registration.reload, "Payment").badge).to eq("Paid")
+      end
+
+      it "shows what's left across both registrations" do
+        allocate(registration, 4_000)
+        allocate(destination, 1_000)
+
+        expect(card(registration.reload, "Make your payment").badge).to eq("$50 due")
+      end
+    end
+
     it "hides participation cards but keeps financial ones once transferred out" do
       event.update!(videoconference_url: "https://example.zoom.us/j/1")
       create(:event_staff, event:)

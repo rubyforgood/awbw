@@ -1,0 +1,8 @@
+name: "Old tickets show a transferred registrant's current balance"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-05
+action_path: "/transfer_guide"
+summary: >-
+  A transferred-out ticket now shows the balance on the new registration. Its payment card reads Paid
+  once that balance clears, and opening it goes to the new registration's payment page.

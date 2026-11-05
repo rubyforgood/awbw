@@ -886,6 +886,11 @@ class EventRegistration < ApplicationRecord
     super + transferred_from_registration&.allocated_from(source).to_i
   end
 
+  # The reg holding this balance now: a transfer's new reg once one is recorded.
+  def billing_registration
+    (transferred_out? && transferred_to_registration) || self
+  end
+
   # Every allocation settling this reg's balance, across the transfer.
   def billing_allocations
     Allocation.where(allocatable_type: self.class.polymorphic_name, allocatable_id: billing_registration_ids)
