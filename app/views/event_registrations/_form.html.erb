@@ -17,7 +17,8 @@
           <div>
             <p class="font-semibold">This registration was transferred out and is locked.</p>
             <p class="mt-0.5 text-purple-800">
-              Only comments and communications can be edited here. To change anything else,
+              Only comments and communications can be edited here.<br>
+              To change anything else,
               <%= link_to "manage the transfer", transfer_event_registration_path(f.object, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>.
             </p>
           </div>
@@ -347,7 +348,9 @@
           <%= render "continuing_education", event_registration: f.object, ce_registration: f.object.continuing_education_registrations.first %>
         <% end %>
       </div>
+      <% end %>
 
+      <%= locked_fieldset(locked) do %>
       <% if transferred_in %>
         <%= render "transferred_in_financials", event_registration: f.object %>
       <% else %>

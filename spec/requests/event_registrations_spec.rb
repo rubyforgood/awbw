@@ -542,6 +542,17 @@ RSpec.describe "EventRegistrations", type: :request do
     end
 
     describe "GET /event_registrations/:id/edit" do
+      it "stacks the heading, the registrant's name as a person edit link, then the event" do
+        get edit_event_registration_path(existing_registration)
+
+        heading = Nokogiri::HTML(response.body).at_xpath("//h1[contains(., 'Edit registration')]")
+        name_line, event_line = heading.xpath("following-sibling::p")
+        link = name_line.at_css("a[href='#{edit_person_path(existing_registration.registrant)}']")
+
+        expect(link.text).to eq(existing_registration.registrant.full_name)
+        expect(event_line.text).to include(existing_registration.event.title)
+      end
+
       it "renders the expected payment method as an editable select with the registrant's answer selected" do
         existing_registration.update!(expected_payment_method: "Check")
 
@@ -563,6 +574,21 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("Over-allocated")
         expect(response.body).to include("$4 over")
         expect(response.body).to include("text-red-700")
+      end
+
+      it "dates the form-changes link even when there was only one submission" do
+        reg_form = create(:form, name: "Reg form")
+        create(:event_form, :registration, event: event, form: reg_form)
+        submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event, role: "registration", created_at: Time.zone.local(2026, 9, 1, 10))
+        create(:ahoy_event, name: "update.organization", properties: {
+          "resource_type" => "Organization", "resource_id" => create(:organization).id,
+          "form_submission_id" => submission.id,
+          "changes" => { "website_url" => { "before" => "old.com", "after" => "new.com" } }
+        })
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("What this registration&#39;s form changed (Sep 1, 2026)")
       end
 
       context "when the registrant submitted the registration form more than once" do

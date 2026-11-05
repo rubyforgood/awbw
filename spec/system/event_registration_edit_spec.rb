@@ -5,6 +5,47 @@ RSpec.describe "Event registration edit page", type: :system do
   let(:event) { create(:event, :published, title: "Test Event") }
   let!(:registration) { create(:event_registration, event: event, registrant: admin.person) }
 
+  describe "a locked registration" do
+    it "keeps the dimmed cards spaced apart like an unlocked form" do
+      driven_by(:selenium_chrome_headless)
+      locked = create(:event_registration, event: event, status: "transferred_out")
+
+      sign_in(admin)
+      visit edit_event_registration_path(locked)
+      expect(page).to have_css("fieldset[disabled]", count: 4)
+
+      gaps = page.evaluate_script(<<~JS)
+        (() => {
+          const stack = document.querySelector('[data-controller="org-toggle"]');
+          const cards = [ ...stack.children ].flatMap(el => {
+            const fieldset = el.querySelector(":scope > fieldset");
+            return fieldset ? [ ...fieldset.children ] : [ el ];
+          });
+          return cards.slice(1).map((card, i) =>
+            Math.round(card.getBoundingClientRect().top - cards[i].getBoundingClientRect().bottom));
+        })()
+      JS
+
+      expect(gaps).to all(eq(24))
+    end
+
+    it "marks each dimmed section with a lock that explains why on hover" do
+      locked = create(:event_registration, event: event, status: "transferred_out")
+
+      sign_in(admin)
+      visit edit_event_registration_path(locked)
+
+      expect(page).to have_css("fieldset[disabled] + [title='#{EventRegistrationsHelper::LOCKED_SECTION_NOTE}'] .fa-lock", count: 4)
+    end
+
+    it "shows no locks on an unlocked registration" do
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      expect(page).to have_no_css("[title='#{EventRegistrationsHelper::LOCKED_SECTION_NOTE}']")
+    end
+  end
+
   describe "user account square" do
     it "links to the registrant's user account" do
       sign_in(admin)
