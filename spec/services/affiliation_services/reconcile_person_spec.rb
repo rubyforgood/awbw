@@ -217,7 +217,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
   end
 
   describe "the comment reconciliation leaves behind" do
-    it "records why an older row was ended, and who did it" do
+    it "records why an older row was ended, as System even when an admin triggered it" do
       user = create(:user, :admin)
       Current.user = user
       reg = training_registration(status: "no_show")
@@ -230,7 +230,8 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(comment.topic).to eq(described_class::COMMENT_TOPIC)
       expect(comment.body).to include("marked inactive by reconciliation")
       expect(comment.body).to include(reg.event.title)
-      expect(comment.created_by).to eq(user)
+      expect(comment.created_by).to be_nil
+      expect(comment.updated_by).to be_nil
     ensure
       Current.user = nil
     end

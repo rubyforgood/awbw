@@ -12,10 +12,12 @@ class Membership::Start
     return if @person.blank?
     return if @person.memberships.exists?
 
-    Membership::Create.call(
-      person: @person,
-      start_date: Date.current,
-      invoice_cost_cents: 0
-    ).membership
+    Time.use_zone(Membership::TIME_ZONE) do
+      Membership::Create.call(
+        person: @person,
+        start_date: Date.current,
+        invoice_cost_cents: 0
+      ).membership
+    end
   end
 end

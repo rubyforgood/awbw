@@ -24,6 +24,15 @@ RSpec.describe AffiliationServices::CloseProgram do
     expect(comment.body).to include(effective_date.to_fs(:long))
   end
 
+  it "writes its comment as System, not the admin who closed the program" do
+    facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+
+    Current.set(user: create(:user, :admin)) { call_with(leaving_job: false) }
+
+    expect(facilitator.comments.last.created_by).to be_nil
+    expect(facilitator.comments.last.updated_by).to be_nil
+  end
+
   it "leaves the job affiliation alone when they aren't leaving the job" do
     facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
     job = create(:affiliation, person: person, organization: organization, title: "Program Director")

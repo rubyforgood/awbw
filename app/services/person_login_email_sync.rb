@@ -33,7 +33,7 @@ class PersonLoginEmailSync
   private
 
   def note_replaced_email(address)
-    @person.comments.create!(
+    @person.comments.create_as_system!(
       topic: "Email replaced",
       body: "#{address} was the primary email until the login email #{@user.email} replaced it. " \
             "The secondary email already held #{@person.email_2}, so it is recorded here."

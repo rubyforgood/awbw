@@ -4,9 +4,7 @@ class Membership < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
-  def self.enabled?
-    !Rails.env.production?
-  end
+  def self.enabled? = true
 
   TIME_ZONE = "Pacific Time (US & Canada)".freeze
   CURRENCY = "usd".freeze
