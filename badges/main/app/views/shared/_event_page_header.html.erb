@@ -4,20 +4,29 @@
   centered. Keeps the scholarship, registration, and allocations pages aligned.
 
   Locals:
-    title:    heading text (e.g. "Edit scholarship")
-    icon:     Font Awesome classes (e.g. "fa-solid fa-graduation-cap")
-    color:    DomainTheme key for the icon tint (e.g. :scholarships)
-    event:    optional Event for context (title + training date)
-    person:   optional Person, shown as an edit-card button to their edit page
-    trailing: optional pre-rendered HTML shown under the context (e.g. a badge)
+    title:       heading text (e.g. "Edit scholarship")
+    icon:        Font Awesome classes (e.g. "fa-solid fa-graduation-cap")
+    color:       DomainTheme key for the icon tint (e.g. :scholarships)
+    person_link: optional Person, shown as a text link to their edit page, directly
+                 under the heading (for pages that already show the edit-card button)
+    event:       optional Event for context (title + training date)
+    person:      optional Person, shown as an edit-card button to their edit page
+    trailing:    optional pre-rendered HTML shown under the context (e.g. a badge)
 %>
 <% event = local_assigns[:event] %>
 <% person = local_assigns[:person] %>
+<% person_link = local_assigns[:person_link] %>
 <div class="mb-8 text-center">
   <h1 class="flex items-center justify-center gap-3 text-3xl font-extrabold text-black sm:text-4xl">
     <i class="<%= icon %> <%= DomainTheme.text_class_for(color, intensity: 600) %>"></i>
     <%= title %>
   </h1>
+
+  <% if person_link.present? %>
+    <p class="mt-2 text-sm">
+      <%= link_to person_name(person_link), edit_person_path(person_link), class: "font-semibold text-gray-600 hover:underline", data: { turbo_prefetch: false } %>
+    </p>
+  <% end %>
 
   <% if event.present? %>
     <p class="mt-2 text-sm text-gray-500">
