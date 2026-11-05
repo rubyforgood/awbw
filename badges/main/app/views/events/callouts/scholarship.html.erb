@@ -33,7 +33,7 @@
       <%# What the registrant owes. The award is allocated before it's accepted, so
           while the agreement is pending this frames the balance as the choice the
           buttons below are asking for rather than asserting the accepted one. %>
-      <% if @event.cost_cents.to_i.positive? && !@scholarship.agreement_declined? %>
+      <% if @event_registration.cost_cents.to_i.positive? && !@scholarship.agreement_declined? %>
         <% owed = @event_registration.remaining_cost %>
         <%# Support-requested is waiting on us, not an open accept/decline choice, so
             state the balance plainly rather than framing it as the buttons' question. %>
