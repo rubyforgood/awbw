@@ -138,10 +138,6 @@ RSpec.describe EventDashboard do
         expect(dashboard.outstanding_cents).to eq(7_000)
       end
 
-      it "reports total as full-price value of active registrations" do
-        expect(dashboard.total_cents).to eq(20_000)
-      end
-
       it "reports registration subtotal as received plus outstanding" do
         expect(dashboard.registration_subtotal_cents).to eq(16_000)
       end
@@ -978,7 +974,6 @@ RSpec.describe EventDashboard do
     end
 
     it "does not let the grand total exceed the full-price total" do
-      expect(dashboard.grand_total_cents).to eq(dashboard.total_cents)
       expect(dashboard.grand_total_cents).to eq(10_000)
     end
   end
@@ -1008,9 +1003,8 @@ RSpec.describe EventDashboard do
   context "with a free event" do
     let(:event) { create(:event, cost_cents: 0) }
 
-    it "is free and has no total or outstanding cost" do
+    it "is free and has no outstanding cost" do
       expect(dashboard.free?).to be(true)
-      expect(dashboard.total_cents).to eq(0)
       expect(dashboard.outstanding_cents).to eq(0)
     end
   end
@@ -1021,7 +1015,6 @@ RSpec.describe EventDashboard do
     it "reports zeros and empty collections" do
       expect(dashboard.registrant_count).to eq(0)
       expect(dashboard.registrants).to be_empty
-      expect(dashboard.total_cents).to eq(0)
       expect(dashboard.received_cents).to eq(0)
       expect(dashboard.outstanding_cents).to eq(0)
       expect(dashboard.scholarship_total_cents).to eq(0)
@@ -1486,8 +1479,13 @@ RSpec.describe EventDashboard do
                           allocatable: reg, amount: 10_000)
       reg
     end
-    # A transferred-in registrant whose money lives on the source (another event).
-    let(:source) { create(:event_registration, status: "transferred_out") }
+    # A transferred-in registrant paid in full on the source (another event).
+    let(:source) do
+      reg = create(:event_registration, event: create(:event, cost_cents: 10_000), status: "transferred_out")
+      create(:allocation, source: create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000),
+                          allocatable: reg, amount: 10_000)
+      reg
+    end
     let!(:incoming) do
       create(:event_registration, event: event, registrant: create(:person),
         status: "registered", transferred_from_registration: source)
@@ -1509,15 +1507,94 @@ RSpec.describe EventDashboard do
       )
     end
 
-    it "excludes the transferred-in registrant from every financial total" do
-      # Only the fully-paid registrant is billable here; the transferred-in one
-      # owes nothing to this event (its balance is on the source registration).
-      expect(dashboard.total_cents).to eq(10_000)
+    it "leaves a transfer paid at the old event out of this event's money" do
       expect(dashboard.outstanding_cents).to eq(0)
       expect(dashboard.received_cents).to eq(10_000)
       expect(dashboard.paid_count).to eq(1)
+      expect(dashboard.paid_registrants).to contain_exactly(paid_person)
       expect(dashboard.unpaid_count).to eq(0)
       expect(dashboard.unpaid_registrants).to be_empty
+    end
+  end
+
+  describe "a transfer's money (#2947)" do
+    let(:old_event) { create(:event, cost_cents: 10_000) }
+    let(:new_event) { create(:event, cost_cents: 25_000) }
+    let(:person) { create(:person) }
+    let!(:out_reg) { create(:event_registration, event: old_event, registrant: person, status: "transferred_out") }
+    let!(:in_reg) do
+      create(:event_registration, event: new_event, registrant: person, status: "registered",
+        transferred_from_registration: out_reg)
+    end
+    let(:old_dashboard) { described_class.new(old_event) }
+    let(:new_dashboard) { described_class.new(new_event) }
+
+    before do
+      create(:allocation, source: create(:payment, amount_cents: 6_000, amount_cents_remaining: 6_000),
+                          allocatable: out_reg, amount: 6_000)
+      create(:allocation, source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000),
+                          allocatable: in_reg, amount: 1_000)
+    end
+
+    it "counts each payment once, at the event of the reg holding it" do
+      expect(old_dashboard.received_cents).to eq(6_000)
+      expect(new_dashboard.received_cents).to eq(1_000)
+    end
+
+    it "owes the balance left at the new event, at the old event's price" do
+      expect(new_dashboard.outstanding_cents).to eq(3_000)
+      expect(new_dashboard.registration_due_by_registrant).to eq(person.id => 3_000)
+      expect(new_dashboard.unpaid_registrants).to contain_exactly(person)
+      expect(new_dashboard.partially_paid_registrants).to contain_exactly(person)
+    end
+
+    it "owes nothing at the old event, listing them beside the money there" do
+      expect(old_dashboard.outstanding_cents).to eq(0)
+      expect(old_dashboard.unpaid_count).to eq(0)
+      expect(old_dashboard.paid_registrants).to contain_exactly(person)
+      expect(old_dashboard.registration_paid_by_registrant).to eq(person.id => 6_000)
+    end
+
+    it "keeps the transferred-out person out of the old event's headcount" do
+      expect(old_dashboard.registrant_count).to eq(0)
+    end
+
+    it "counts a balance transferred onto a free event" do
+      new_event.update!(cost_cents: 0)
+
+      expect(new_dashboard.outstanding_cents).to eq(3_000)
+      expect(new_dashboard.unpaid_count).to eq(1)
+    end
+
+    context "with a scholarship left on the old reg" do
+      let(:other_person) { create(:person) }
+
+      before do
+        award = create(:scholarship, recipient: person, amount_cents: 2_000, grant: create(:grant))
+        create(:allocation, source: award, allocatable: out_reg, amount: 2_000)
+      end
+
+      it "counts its dollars at the old event only, and settles the balance" do
+        expect(old_dashboard.scholarship_total_cents).to eq(2_000)
+        expect(old_dashboard.funded_scholarship_cents).to eq(2_000)
+        expect(old_dashboard.money_scholarship_registrants).to contain_exactly(person)
+        expect(new_dashboard.scholarship_total_cents).to eq(0)
+        expect(new_dashboard.outstanding_cents).to eq(1_000)
+      end
+
+      it "keeps recognizing them as a recipient at the new event, not the old" do
+        expect(old_dashboard.scholarship_recipient_count).to eq(0)
+        expect(old_dashboard.scholarship_registrants).to be_empty
+        expect(new_dashboard.scholarship_recipient_count).to eq(1)
+      end
+    end
+
+    it "still ignores money on a cancelled registration" do
+      cancelled = create(:event_registration, event: old_event, registrant: create(:person), status: "cancelled")
+      create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
+                          allocatable: cancelled, amount: 5_000)
+
+      expect(old_dashboard.received_cents).to eq(6_000)
     end
   end
 end

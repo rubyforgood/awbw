@@ -1,0 +1,14 @@
+name: "Transfer money shows on event reports"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-05
+pr_number: 2952
+action_path: "/events"
+summary: >-
+  Money on a transferred registration now counts at that registration's event, even
+  after they leave it. The event dashboard, revenue report, and scholarship report
+  all agree, and a balance left after a transfer shows as owed at the new event.
+pro_tips:
+  - "Attendance is separate: a transferred-out person leaves the headcount, but their money stays on the old event."
+  - "Each payment counts once, at the event of the registration it's on, so a transfer's money can be split across two events."
+  - "Someone paid in full at the old event doesn't show under Paid at the new one."
