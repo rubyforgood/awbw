@@ -8,6 +8,7 @@
   <%= turbo_stream.replace "payment-card-#{@submission.id}" do %>
     <%= render "events/bulk_payment_card", submission: @submission,
           event_registrations: @event_registrations,
+          linked_registrations_by_id: @linked_registrations_by_id,
           allocated_by_registration: @allocated_by_registration,
           expanded: true %>
   <% end %>

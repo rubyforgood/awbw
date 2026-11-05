@@ -426,19 +426,6 @@ RSpec.describe FormSubmission do
         expect(submission.reload.linked_registration_ids).to eq([ reg1.id ])
       end
     end
-
-    describe "#linked_registrations" do
-      it "returns event registrations matching linked ids" do
-        submission.link_registration!(reg1.id)
-        submission.link_registration!(reg2.id)
-
-        expect(submission.linked_registrations).to contain_exactly(reg1, reg2)
-      end
-
-      it "returns empty relation when nothing is linked" do
-        expect(submission.linked_registrations).to be_empty
-      end
-    end
   end
 
   describe "#persist_answer" do
