@@ -118,7 +118,7 @@
           <i class="fa-solid <%= attended ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
           Your attendance is confirmed
         </li>
-        <% if @event_registration.scholarships.any? %>
+        <% if @event_registration.scholarship_recipient? %>
           <li class="flex items-center gap-2">
             <i class="fa-solid <%= @event_registration.scholarship_tasks_met? ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
             Your scholarship tasks are complete

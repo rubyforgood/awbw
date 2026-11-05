@@ -797,6 +797,73 @@ RSpec.describe "Events::Callouts", type: :request do
       end
     end
 
+    context "on a transferred-in ticket with the award on the original registration" do
+      let(:new_event) { create(:event) }
+      let(:incoming) do
+        create(:event_registration, event: new_event, registrant: registration.registrant,
+          transferred_from_registration: registration)
+      end
+
+      before { registration.update!(status: "transferred_out") }
+
+      it "records Agree on the award and emails the team and recipient" do
+        expect {
+          post registration_scholarship_agreement_path(incoming.slug), params: { agreement: "yes" }
+        }.to have_enqueued_mail(ScholarshipMailer, :accepted_fyi)
+          .and have_enqueued_mail(ScholarshipMailer, :accepted_confirmation)
+
+        expect(response).to redirect_to(registration_scholarship_path(incoming.slug))
+        expect(scholarship.reload.agreement_signed?).to be(true)
+      end
+
+      it "records Decline on the award and releases its allocation" do
+        expect {
+          post registration_scholarship_decline_path(incoming.slug), params: { decline_reason: "Timing no longer works" }
+        }.to have_enqueued_mail(ScholarshipMailer, :declined_fyi)
+
+        expect(response).to redirect_to(registration_scholarship_path(incoming.slug))
+        expect(scholarship.reload.agreement_declined?).to be(true)
+        expect(allocation.reload.amount).to eq(0)
+      end
+
+      it "records a support request on the award" do
+        expect {
+          post registration_scholarship_request_support_path(incoming.slug), params: { contribution_amount: "50" }
+        }.to have_enqueued_mail(ScholarshipMailer, :additional_support_requested_fyi)
+
+        expect(response).to redirect_to(registration_scholarship_path(incoming.slug))
+        expect(scholarship.reload.agreement_support_requested?).to be(true)
+      end
+
+      describe "the recipients survey" do
+        let(:survey) { create(:form, name: "Recipients survey", role: "recipient_survey") }
+        let!(:survey_field) { create(:form_field, form: survey, name: "What did you take away?") }
+        let(:scholarship_callout) { create(:registration_ticket_callout, event: new_event, builtin_key: "scholarship") }
+
+        before do
+          scholarship_callout.update!(hidden: false)
+          scholarship_callout.registration_ticket_callout_forms.create!(form: survey)
+        end
+
+        it "stays closed until the agreement is signed" do
+          get registration_scholarship_path(incoming.slug)
+
+          expect(response.body).not_to include("callout_form[form_fields][#{survey_field.id}]")
+        end
+
+        it "opens and accepts a submission once the agreement is signed" do
+          post registration_scholarship_agreement_path(incoming.slug), params: { agreement: "yes" }
+
+          get registration_scholarship_path(incoming.slug)
+          expect(response.body).to include("callout_form[form_fields][#{survey_field.id}]")
+
+          post registration_callout_form_submit_path(incoming.slug, scholarship_callout, survey),
+            params: { callout_form: { form_fields: { survey_field.id.to_s => "So much" } } }
+          expect(incoming.reload.post_survey_completed?).to be(true)
+        end
+      end
+    end
+
     describe "POST /registration/:slug/scholarship/agreement" do
       it "signs the agreement and stamps the time when Agree is submitted" do
         expect(scholarship.agreement_signed?).to be(false)
@@ -948,6 +1015,18 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("unlocks once these are met")
       expect(response.body).to include("Your attendance is confirmed")
+      expect(response.body).not_to include("This certifies that")
+    end
+
+    it "waits on a transferred-in recipient's tasks and lists them among the unlock conditions" do
+      source = create(:event_registration, registrant: registration.registrant, status: "transferred_out")
+      registration.update!(transferred_from_registration: source)
+      scholarship = create(:scholarship, recipient: source.registrant, tasks_completed: false)
+      create(:allocation, source: scholarship, allocatable: source, amount: 1_000)
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("Your scholarship tasks are complete")
       expect(response.body).not_to include("This certifies that")
     end
 

@@ -401,6 +401,19 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
       end
     end
 
+    it "stamps a transferred-in recipient whose award is on the original registration" do
+      source = create(:event_registration, registrant: person, status: "transferred_out")
+      create(:allocation,
+        source: create(:scholarship, recipient: person, tasks_completed: true, amount_cents: 100),
+        allocatable: source, amount: 100)
+      registration.update!(transferred_from_registration: source)
+      scholarship_callout = create(:registration_ticket_callout, event:, builtin_key: "scholarship", form:)
+
+      described_class.call(registration:, callout: scholarship_callout, form:, form_params: { field.id.to_s => "Great" })
+
+      expect(registration.reload.post_survey_completed?).to be(true)
+    end
+
     it "still stamps a scholarship recipient's survey completion" do
       create(:allocation,
         source: create(:scholarship, recipient: person, tasks_completed: true, amount_cents: 100),

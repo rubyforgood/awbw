@@ -743,13 +743,19 @@ class EventRegistration < ApplicationRecord
     scholarships.any?
   end
 
-  # The scholarship that designates this registrant a recipient at THIS event: its
-  # own award, or — for a transferred-in reg — the award on the source
+  # The scholarships that designate this registrant a recipient at THIS event: their
+  # own awards, or — for a transferred-in reg — the awards on the source
   # registration it came from (walking the transfer chain). The dollars stay on
-  # the source (see EventDashboard's billable basis); this is recognition only, so
-  # a transferred-in registrant still "gets the hat" at the event they attend. (#1944)
+  # the source (see EventDashboard's billable basis), but the recipient responds to
+  # the award and completes its tasks from whichever ticket they hold. (#1944)
+  def effective_scholarships
+    return scholarships if scholarships.any? || transferred_from_registration.nil?
+
+    transferred_from_registration.effective_scholarships
+  end
+
   def effective_scholarship
-    scholarships.first || transferred_from_registration&.effective_scholarship
+    effective_scholarships.first
   end
 
   def scholarship_recipient?
@@ -769,7 +775,7 @@ class EventRegistration < ApplicationRecord
   # A declined award carries no tasks, so it can't hold the certificate or the
   # readiness checklist open.
   def scholarship_tasks_met?
-    live = scholarships.reject(&:agreement_declined?)
+    live = effective_scholarships.reject(&:agreement_declined?)
     return true if live.empty?
     live.all?(&:tasks_completed?)
   end
@@ -785,19 +791,19 @@ class EventRegistration < ApplicationRecord
 
   # The per-recipient half of the survey gate: every live (undeclined) award signed.
   def recipient_survey_agreement_signed?
-    live = scholarships.reject(&:agreement_declined?)
+    live = effective_scholarships.reject(&:agreement_declined?)
     live.any? && live.all?(&:agreement_signed?)
   end
 
   def scholarship_declined?
-    scholarships.any?(&:agreement_declined?)
+    effective_scholarships.any?(&:agreement_declined?)
   end
 
   # Display-only: a scholarship is only *shown* as awarded once the recipient has
   # signed the agreement. The record and its allocation exist beforehand (the data
   # is unchanged) — the award is just presented as pending acceptance until signed.
   def scholarship_awarded?
-    scholarship? && scholarships.all?(&:agreement_signed?)
+    scholarship_recipient? && effective_scholarships.all?(&:agreement_signed?)
   end
 
   def attended?

@@ -1,0 +1,9 @@
+name: "Transferred recipients respond to their scholarship from the new ticket"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-05
+action_path: "/transfer_guide"
+summary: >-
+  Registrants who transfer can now accept, decline, or request support on their new
+  ticket, and the recipients survey opens there. Outstanding scholarship tasks hold
+  the new event's certificate and show on its readiness.

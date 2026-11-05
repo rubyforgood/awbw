@@ -100,6 +100,30 @@ RSpec.describe EventRegistrationReadiness do
         expect(readiness.event_ready_issues).to include("Scholarship not created")
       end
 
+      context "when transferred in with the award on the original registration" do
+        let(:source) { create(:event_registration, registrant: registration.registrant, status: "transferred_out") }
+
+        before { registration.update!(transferred_from_registration: source, scholarship_requested: true) }
+
+        it "flags tasks still outstanding on the award" do
+          award_scholarship(source, tasks_completed: false)
+
+          expect(described_class.new(registration.reload).event_ready_issues).to include("Scholarship tasks incomplete")
+        end
+
+        it "flags a declined award" do
+          award_scholarship(source, tasks_completed: false).decline_agreement!("Timing no longer works")
+
+          expect(described_class.new(registration.reload).event_ready_issues).to include("Scholarship declined — respond to the decline")
+        end
+
+        it "does not ask for a scholarship to be created" do
+          award_scholarship(source, tasks_completed: true)
+
+          expect(described_class.new(registration.reload).event_ready_issues).not_to include("Scholarship not created")
+        end
+      end
+
       it "flags an awarded scholarship whose tasks are incomplete" do
         award_scholarship(registration, tasks_completed: false, amount: 1000)
 

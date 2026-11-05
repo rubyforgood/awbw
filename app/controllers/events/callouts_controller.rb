@@ -90,7 +90,7 @@ module Events
 
     # The Agree button (agreement=yes) records an "accepted" response.
     def sign_agreement
-      scholarship = @event_registration.scholarships.first
+      scholarship = @event_registration.effective_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return
@@ -112,7 +112,7 @@ module Events
     # Record the recipient's decline (drops the award from all totals). A repeat
     # decline is a no-op.
     def decline_agreement
-      scholarship = @event_registration.scholarships.first
+      scholarship = @event_registration.effective_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return
@@ -133,7 +133,7 @@ module Events
     # The award stays live; we record the amount they can contribute and notify the
     # trainings team so they can revisit the award. A repeat request just updates.
     def request_scholarship_support
-      scholarship = @event_registration.scholarships.first
+      scholarship = @event_registration.effective_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return

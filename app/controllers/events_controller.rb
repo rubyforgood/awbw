@@ -234,7 +234,7 @@ class EventsController < ApplicationController
     registrant_includes = [ :user, { avatar_attachment: :blob } ]
     registrant_includes += [ :contact_methods, { affiliations: :organization } ] if request.format.csv?
     scope = @event.event_registrations
-      .includes(:comments, :organizations, :allocations, :scholarships, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: registrant_includes)
+      .includes(:comments, :organizations, :allocations, :scholarships, { transferred_from_registration: :scholarships }, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: registrant_includes)
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
