@@ -7,7 +7,7 @@
 <%= render "shared/errors", resource: f.object if f.object.errors.any? %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          data-controller="scholarship-preview"
-          data-scholarship-preview-event-cost-value="<%= @allocatable.respond_to?(:event) ? @allocatable.event.cost_cents.to_i : 0 %>"
+          data-scholarship-preview-event-cost-value="<%= @allocatable.respond_to?(:event) ? @allocatable.cost_cents.to_i : 0 %>"
           data-scholarship-preview-other-allocated-value="<%= @allocatable.respond_to?(:event) ? (@allocatable.allocations_sum.to_i - f.object.allocation&.amount.to_i) : 0 %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
@@ -20,7 +20,7 @@
 
   <div class="space-y-6 p-4">
     <% if @allocatable.respond_to?(:event) %>
-      <% owed_cents = [ @allocatable.event.cost_cents.to_i - @allocatable.allocations_sum.to_i, 0 ].max %>
+      <% owed_cents = [ @allocatable.cost_cents.to_i - @allocatable.allocations_sum.to_i, 0 ].max %>
       <% allocated_cents = f.object.amount_cents.to_i %>
       <% paid = owed_cents <= 0 %>
       <div class="space-y-4">

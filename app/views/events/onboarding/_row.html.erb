@@ -72,7 +72,7 @@
 
     <% when :payment %>
       <% paid_cents = registration.allocations_sum %>
-      <% due_cents = event.cost_cents.to_i - paid_cents %>
+      <% due_cents = registration.cost_cents.to_i - paid_cents %>
       <% is_paid = registration.paid_in_full? %>
       <% is_discounted = !is_paid && registration.discounted? %>
       <% is_partial = !is_discounted && registration.partially_paid? %>
@@ -186,7 +186,7 @@
       </td>
 
     <% when :fees_due %>
-      <% due_cents = [ event.cost_cents.to_i - registration.allocations_sum, 0 ].max %>
+      <% due_cents = registration.remaining_cost %>
       <td class="<%= td_classes.join(" ") %> font-medium" data-sort-value="<%= due_cents %>">
         <%= link_to dollars_from_cents(due_cents),
               edit_event_registration_path(registration, return_to: "onboarding", anchor: "allocations-card"),

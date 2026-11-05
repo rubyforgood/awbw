@@ -42,13 +42,22 @@ RSpec.describe EventRegistrationReadiness do
       expect(readiness.event_ready_issues).not_to include("Payment due")
     end
 
-    it "does not flag payment for a transferred-in registration (paid on the source)" do
-      source = create(:event_registration, status: "transferred_out")
+    it "does not flag payment for a transferred-in registration paid on the source" do
+      source = create(:event_registration, event: event, status: "transferred_out")
+      create(:allocation, allocatable: source, amount: 1000,
+        source: create(:payment, person: source.registrant, amount_cents: 1000, amount_cents_remaining: 1000))
       registration.update!(transferred_from_registration: source)
       link_org(registration)
 
       expect(readiness.event_ready_issues).not_to include("Payment due")
       expect(readiness.event_ready?).to be(true)
+    end
+
+    it "flags payment for a transferred-in registration with a balance left" do
+      source = create(:event_registration, event: create(:event, cost_cents: 10_000), status: "transferred_out")
+      registration.update!(transferred_from_registration: source)
+
+      expect(readiness.event_ready_issues).to include("Payment due")
     end
 
     it "ignores the intends-to-pay flag (access only, not readiness)" do
@@ -98,6 +107,30 @@ RSpec.describe EventRegistrationReadiness do
         registration.update!(scholarship_requested: true)
 
         expect(readiness.event_ready_issues).to include("Scholarship not created")
+      end
+
+      context "when transferred in with the award on the original registration" do
+        let(:source) { create(:event_registration, registrant: registration.registrant, status: "transferred_out") }
+
+        before { registration.update!(transferred_from_registration: source, scholarship_requested: true) }
+
+        it "flags tasks still outstanding on the award" do
+          award_scholarship(source, tasks_completed: false)
+
+          expect(described_class.new(registration.reload).event_ready_issues).to include("Scholarship tasks incomplete")
+        end
+
+        it "flags a declined award" do
+          award_scholarship(source, tasks_completed: false).decline_agreement!("Timing no longer works")
+
+          expect(described_class.new(registration.reload).event_ready_issues).to include("Scholarship declined — respond to the decline")
+        end
+
+        it "does not ask for a scholarship to be created" do
+          award_scholarship(source, tasks_completed: true)
+
+          expect(described_class.new(registration.reload).event_ready_issues).not_to include("Scholarship not created")
+        end
       end
 
       it "flags an awarded scholarship whose tasks are incomplete" do

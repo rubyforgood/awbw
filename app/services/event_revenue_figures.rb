@@ -2,11 +2,10 @@
 # once in a fixed number of grouped queries instead of an EventDashboard (and its
 # ~8 queries) per event.
 #
-# The definitions mirror EventDashboard's — active registrations only, cost net of
-# every allocation and floored at zero (CE owed only on counted CE), payment
-# allocations for cash collected — so a row in the report and that event's
-# dashboard can't disagree. A parity spec
-# holds the two together.
+# The definitions mirror EventDashboard's — money counted at the event of the
+# registration holding it, what's owed read from RegistrationBalances (CE owed only
+# on counted CE), payment allocations for cash collected — so a row in the report
+# and that event's dashboard can't disagree. A parity spec holds the two together.
 #
 # One definition is broader than the dashboard's: discounts cover CE registrations
 # too, not just event registrations. CE cost is only ever paid, discounted, or
@@ -101,7 +100,6 @@ class EventRevenueFigures
   # registrant; scholarships key by their recipient.
   def build_breakdown(event)
     registration_ids = registration_ids_by_event.fetch(event.id, [])
-    cost_cents = event.cost_cents.to_i
 
     registration_payments = Hash.new(0)
     registration_outstanding = Hash.new(0)
@@ -116,7 +114,7 @@ class EventRevenueFigures
       next unless registrant_id
 
       registration_payments[registrant_id] += registration_allocations[[ id, "Payment" ]].to_i
-      registration_outstanding[registrant_id] += [ cost_cents - registration_allocated_total[id], 0 ].max
+      registration_outstanding[registrant_id] += due_cents_by_registration[id]
       discounts[registrant_id] += registration_allocations[[ id, "Discount" ]].to_i
 
       scholarship_rows_by_registration.fetch(id, []).each do |grant_id, amount_cents, recipient_id|
@@ -169,13 +167,12 @@ class EventRevenueFigures
 
   def build(event)
     registration_ids = registration_ids_by_event.fetch(event.id, [])
-    cost_cents = event.cost_cents.to_i
     ce_rows = registration_ids.flat_map { |id| ce_rows_by_registration.fetch(id, []) }
     scholarships = registration_ids.flat_map { |id| scholarship_rows_by_registration.fetch(id, []) }
 
     Figures.new(
       registration_payments_cents: registration_ids.sum { |id| registration_allocations[[ id, "Payment" ]].to_i },
-      registration_outstanding_cents: registration_ids.sum { |id| [ cost_cents - registration_allocated_total[id], 0 ].max },
+      registration_outstanding_cents: registration_ids.sum { |id| due_cents_by_registration[id] },
       funded_scholarship_cents: scholarships.sum { |grant_id, amount_cents| external_grant?(grant_id) ? amount_cents : 0 },
       unfunded_scholarship_cents: scholarships.sum { |grant_id, amount_cents| external_grant?(grant_id) ? 0 : amount_cents },
       discount_cents: registration_ids.sum { |id| registration_allocations[[ id, "Discount" ]].to_i } +
@@ -185,23 +182,32 @@ class EventRevenueFigures
     )
   end
 
-  # [ event_id, registration_id, registrant_id ] for every active registration in
-  # the report — the basis for both the per-event grouping and the drilldowns'
-  # registrant lookup, loaded in one query. Transferred-in regs are excluded:
-  # their money lives on the source event, so counting them here would inflate the
-  # new event's totals (mirrors EventDashboard#billable_registration_ids). (#1944)
+  # [ event_id, registration_id, registrant_id, status ] for every registration in
+  # the report holding money — the basis for both the per-event grouping and the
+  # drilldowns' registrant lookup, loaded in one query. Both halves of a transfer are
+  # here, each counting its own money (mirrors EventDashboard#money_registrations). (#2947)
   def registration_rows
     @registration_rows ||= EventRegistration
-      .active
-      .not_transferred_in
+      .holding_money
       .where(event_id: @events.map(&:id))
-      .pluck(:event_id, :id, :registrant_id)
+      .pluck(:event_id, :id, :registrant_id, :status)
+  end
+
+  # What each active registration still owes.
+  def due_cents_by_registration
+    @due_cents_by_registration ||= RegistrationBalances.new(active_registration_ids).due_cents_by_id
+  end
+
+  def active_registration_ids
+    registration_rows
+      .select { |_event_id, _id, _registrant_id, status| status.in?(EventRegistration::ACTIVE_STATUSES) }
+      .map(&:second)
   end
 
   # { event_id => [ registration_id, ... ] } across every event in the report.
   def registration_ids_by_event
     @registration_ids_by_event ||= registration_rows
-      .each_with_object({}) { |(event_id, id, _registrant_id), map| (map[event_id] ||= []) << id }
+      .each_with_object({}) { |(event_id, id), map| (map[event_id] ||= []) << id }
   end
 
   # { registration_id => registrant_id (Person id) } for the drilldowns.
@@ -254,10 +260,6 @@ class EventRevenueFigures
 
   def ce_allocations
     @ce_allocations ||= allocation_sums("ContinuingEducationRegistration", ce_rows_by_registration.values.flatten(1).map(&:first))
-  end
-
-  def registration_allocated_total
-    @registration_allocated_total ||= totals_by_allocatable(registration_allocations)
   end
 
   def ce_allocated_total

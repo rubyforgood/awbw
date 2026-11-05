@@ -54,6 +54,9 @@ class EventRegistration < ApplicationRecord
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
+  # Money is tracked apart from attendance: a transferred-out reg left the event but
+  # its money stays on the event's books.
+  MONEY_STATUSES = (ACTIVE_STATUSES + %w[ transferred_out ]).freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
   # Attendance outcomes surfaced as their own participation buckets; every other
   # status falls into "other" (registered, transfers, cancellations).
@@ -179,12 +182,11 @@ class EventRegistration < ApplicationRecord
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
+  scope :holding_money, -> { where(status: MONEY_STATUSES) }
   scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
   scope :transferred_in, -> { where.not(transferred_from_registration_id: nil) }
-  # The billable basis for an event's financial reporting: a transferred-in reg's
-  # money lives on its source registration, so it owes nothing here and is
-  # excluded from this event's totals (issue #1944).
+  # Registrations that didn't arrive by transfer. (#1944)
   scope :not_transferred_in, -> { where(transferred_from_registration_id: nil) }
   # "other" = any status outside the named attendance outcomes; the virtual
   # "transferred_in" (an FK-backed dimension, not a status) routes to the
@@ -368,16 +370,14 @@ class EventRegistration < ApplicationRecord
       )
     SQL
   }
-  # Payment-status filters evaluate the "billing" registration: a transferred-in
-  # reg carries no money of its own, so its paid status is the source reg's (they
-  # paid at the old event). For a normal reg the billing reg is itself. Both the
-  # amount applied and the cost owed are read from that billing reg. (#1944)
+  # Payment-status filters mirror #cost_cents and #allocations_sum: a transferred-in
+  # reg is priced at its source's event and settled by money on both regs. (#1944)
   BILLING_REGISTRATION_ID_SQL = "COALESCE(event_registrations.transferred_from_registration_id, event_registrations.id)".freeze
   BILLING_ALLOCATIONS_SUM_SQL = <<~SQL.squish.freeze
     COALESCE((
       SELECT SUM(allocations.amount) FROM allocations
       WHERE allocations.allocatable_type = 'EventRegistration'
-        AND allocations.allocatable_id = #{BILLING_REGISTRATION_ID_SQL}
+        AND allocations.allocatable_id IN (event_registrations.id, event_registrations.transferred_from_registration_id)
     ), 0)
   SQL
   BILLING_COST_CENTS_SQL = <<~SQL.squish.freeze
@@ -397,7 +397,14 @@ class EventRegistration < ApplicationRecord
     case value
     when "paid" then paid_in_full
     when "unpaid" then not_paid_in_full
-    when "intends_to_pay" then where(intends_to_pay: true)
+    when "intends_to_pay"
+      where(<<~SQL.squish)
+        event_registrations.intends_to_pay = TRUE
+        OR event_registrations.transferred_from_registration_id IN (
+          SELECT intending_source.id FROM event_registrations intending_source
+          WHERE intending_source.intends_to_pay = TRUE
+        )
+      SQL
     else all
     end
   }
@@ -720,18 +727,17 @@ class EventRegistration < ApplicationRecord
   # Reporting surfaces (rosters, CSV exports, dashboard metrics) must keep using
   # `paid_in_full?` so they still reflect the real balance owed.
   def payment_access_granted?
-    # A transferred-in reg's payment lives on its source, so access to this
-    # event's paid content follows whatever the source registration grants.
-    return transferred_from_registration.payment_access_granted? if transferred_in?
     paid_in_full? || intends_to_pay?
+  end
+
+  # A transferred-out reg is locked, so a commitment made there still counts here.
+  def intends_to_pay?
+    super || transferred_from_registration&.intends_to_pay? || false
   end
 
   # Human-readable payment status for rosters and CSV exports. Assumes the event
   # has a cost — callers show nothing for free events.
   def payment_status_label
-    # A transferred-in reg owes nothing here — its balance is tracked on the
-    # source registration — so it never reads as Paid/Due for this event.
-    return "Transferred in" if transferred_in?
     return "Paid" if paid_in_full?
     return "Intends to pay" if intends_to_pay?
     "Due"
@@ -743,13 +749,19 @@ class EventRegistration < ApplicationRecord
     scholarships.any?
   end
 
-  # The scholarship that designates this registrant a recipient at THIS event: its
-  # own award, or — for a transferred-in reg — the award on the source
+  # The scholarships that designate this registrant a recipient at THIS event: their
+  # own awards, or — for a transferred-in reg — the awards on the source
   # registration it came from (walking the transfer chain). The dollars stay on
-  # the source (see EventDashboard's billable basis); this is recognition only, so
-  # a transferred-in registrant still "gets the hat" at the event they attend. (#1944)
+  # the source (see EventDashboard's billable basis), but the recipient responds to
+  # the award and completes its tasks from whichever ticket they hold. (#1944)
+  def effective_scholarships
+    return scholarships if scholarships.any? || transferred_from_registration.nil?
+
+    transferred_from_registration.effective_scholarships
+  end
+
   def effective_scholarship
-    scholarships.first || transferred_from_registration&.effective_scholarship
+    effective_scholarships.first
   end
 
   def scholarship_recipient?
@@ -769,7 +781,7 @@ class EventRegistration < ApplicationRecord
   # A declined award carries no tasks, so it can't hold the certificate or the
   # readiness checklist open.
   def scholarship_tasks_met?
-    live = scholarships.reject(&:agreement_declined?)
+    live = effective_scholarships.reject(&:agreement_declined?)
     return true if live.empty?
     live.all?(&:tasks_completed?)
   end
@@ -785,19 +797,19 @@ class EventRegistration < ApplicationRecord
 
   # The per-recipient half of the survey gate: every live (undeclined) award signed.
   def recipient_survey_agreement_signed?
-    live = scholarships.reject(&:agreement_declined?)
+    live = effective_scholarships.reject(&:agreement_declined?)
     live.any? && live.all?(&:agreement_signed?)
   end
 
   def scholarship_declined?
-    scholarships.any?(&:agreement_declined?)
+    effective_scholarships.any?(&:agreement_declined?)
   end
 
   # Display-only: a scholarship is only *shown* as awarded once the recipient has
   # signed the agreement. The record and its allocation exist beforehand (the data
   # is unchanged) — the award is just presented as pending acceptance until signed.
   def scholarship_awarded?
-    scholarship? && scholarships.all?(&:agreement_signed?)
+    scholarship_recipient? && effective_scholarships.all?(&:agreement_signed?)
   end
 
   def attended?
@@ -845,30 +857,42 @@ class EventRegistration < ApplicationRecord
     invoice_available? && remaining_cost.zero? && payment_received?
   end
 
-  # Cost source for the Registerable payment interface: the event's price.
+  # Cost source for the Registerable payment interface: the event's price. A
+  # transferred-in reg keeps the price of the event it was bought for. (#1944)
   def cost_cents
+    return transferred_from_registration.cost_cents if transferred_in?
     event.cost_cents
   end
 
-  # A transferred-in reg carries no money of its own — its balance and payments
-  # live on the source registration (the old event, where they actually paid). Its
-  # remaining balance, paid status, and payment-on-file therefore mirror the
-  # source, so the ticket never re-bills a paid transfer and the invoice/receipt
-  # (built from the source) reflect the old cost. Reached through this ticket, but
-  # the money is the source's. (#1944)
-  def remaining_cost
-    return transferred_from_registration.remaining_cost if transferred_in?
-    super
+  # A transfer keeps one balance: money already on the source counts here, and a
+  # balance left over is paid on this reg, so these sums span both. (#1944)
+  def allocations_sum
+    super + transferred_from_registration&.allocations_sum.to_i
   end
 
-  def paid_in_full?
-    return transferred_from_registration.paid_in_full? if transferred_in?
-    super
+  def payments_sum
+    super + transferred_from_registration&.payments_sum.to_i
   end
 
-  def payment_received?
-    return transferred_from_registration.payment_received? if transferred_in?
-    super
+  def discount_sum
+    super + transferred_from_registration&.discount_sum.to_i
+  end
+
+  def discounted?
+    super || transferred_from_registration&.discounted? || false
+  end
+
+  def allocated_from(source)
+    super + transferred_from_registration&.allocated_from(source).to_i
+  end
+
+  # Every allocation settling this reg's balance, across the transfer.
+  def billing_allocations
+    Allocation.where(allocatable_type: self.class.polymorphic_name, allocatable_id: billing_registration_ids)
+  end
+
+  def billing_registration_ids
+    [ id, *transferred_from_registration&.billing_registration_ids ]
   end
 
   # The registrant's currently-open attendance entry (signed in, not yet out) for

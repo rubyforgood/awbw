@@ -234,7 +234,7 @@ class EventsController < ApplicationController
     registrant_includes = [ :user, { avatar_attachment: :blob } ]
     registrant_includes += [ :contact_methods, { affiliations: :organization } ] if request.format.csv?
     scope = @event.event_registrations
-      .includes(:comments, :organizations, :allocations, :scholarships, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: registrant_includes)
+      .includes(:comments, :organizations, :allocations, :scholarships, { transferred_from_registration: [ :event, :allocations, :scholarships ] }, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: registrant_includes)
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
@@ -303,7 +303,7 @@ class EventsController < ApplicationController
       # Preload each org's affiliations: the row's program-status badge classifies
       # them via Organization#facilitator_status_on, which filters the loaded
       # association — unloaded, that's a per-org query pulling every affiliation row.
-      .includes(:checklist_completions, { organizations: :affiliations }, :allocations, :scholarships, :comments, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, { affiliations: :organization } ])
+      .includes(:checklist_completions, { organizations: :affiliations }, :allocations, :scholarships, :comments, { transferred_from_registration: [ :event, :allocations ] }, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
 
@@ -1229,7 +1229,7 @@ class EventsController < ApplicationController
       statuses
     ]
     if cost_required
-      due_cents = [ @event.cost_cents.to_i - registration.allocations_sum, 0 ].max
+      due_cents = registration.remaining_cost
       row << registration.payment_status_label
       row << helpers.dollars_from_cents(due_cents)
       row << helpers.dollars_from_cents(registration.payments_sum)

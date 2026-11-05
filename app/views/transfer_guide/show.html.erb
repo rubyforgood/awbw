@@ -20,8 +20,8 @@
         desc: "How money shows on the staff registration page.",
         out_text: "The normal payment history and allocations — payments listed, the amount due, and an editable expected payment method.",
         out_mock: %(<div class="rounded-2xl border border-primary/10 p-2.5 text-xs"><div class="text-[0.55rem] uppercase tracking-wide text-gray-400">Payment history</div><div class="mt-1 flex justify-between text-gray-800"><span>Scholarship</span><span class="font-semibold tabular-nums">$50</span></div><div class="mt-1.5 flex items-center justify-between border-t border-gray-100 pt-1.5"><span class="text-[0.55rem] uppercase text-gray-400">Amount due</span><span class="font-bold tabular-nums text-amber-700">$50</span></div></div>),
-        in_text: "No own billing cards. Instead a read-only “Financials on the original registration” summary that links back to the source.",
-        in_mock: %(<div class="rounded-lg border-2 border-teal-200 bg-teal-50/40 p-2.5 text-xs"><div class="font-semibold text-teal-900"><i class="fa-solid fa-right-to-bracket"></i> Financials on the original registration</div><div class="mt-1 text-[0.65rem] text-teal-700">Payments &amp; scholarship stay on Origin Training &middot; <u>View original registration</u></div></div>) },
+        in_text: "The payment card shows the balance across both registrations, with Intends to pay and Expected payment method. A read-only “Financials on the original registration” summary links back to the earlier payments.",
+        in_mock: %(<div class="rounded-lg border-2 border-teal-200 bg-teal-50/40 p-2.5 text-xs"><div class="font-semibold text-teal-900"><i class="fa-solid fa-right-to-bracket"></i> Financials on the original registration</div><div class="mt-1 text-[0.65rem] text-teal-700">Earlier payments &amp; scholarship stay on Origin Training &middot; <u>View original registration</u></div></div>) },
       { title: "Attendance (days)",
         desc: "Which days the person attended.",
         out_text: "The day check-boxes marked on the original event.",
@@ -58,13 +58,13 @@
         desc: "Where a balance is paid.",
         out_text: "The “Pay” button is hidden — they pay at the new event. The balance still shows for reference.",
         out_mock: %(<div class="rounded-2xl border border-primary/10 p-2.5">#{due_badge}<p class="mt-2 text-center text-[0.65rem] italic text-gray-400">No pay button — paid at the new event</p></div>),
-        in_text: "Shows the balance and the “Pay” button.",
+        in_text: "Shows earlier payments from the original registration, the balance left, and the “Pay” button. New payments land on this registration.",
         in_mock: %(<div class="rounded-2xl border border-primary/10 p-2.5">#{due_badge}<div class="mt-2 text-center"><span class="inline-block rounded bg-red-800 px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white">Pay with credit card</span></div></div>) },
       { title: "Scholarship",
         desc: "The registrant's scholarship details.",
         out_text: "Shows the award (it lives here).",
         out_mock: nil,
-        in_text: "Still shows the scholarship, linking back to the award on the original registration.",
+        in_text: "Shows the award's real status. The registrant can accept, decline, or request support here, and the recipients survey opens here once they accept. The award itself stays on the original registration.",
         in_mock: nil },
       { title: "Continuing education & certificate",
         desc: "CE hours, balance, and the completion certificate.",
@@ -88,9 +88,9 @@
         in_mock: %(<div class="flex flex-wrap gap-1.5">#{pill.("border-blue-200 bg-blue-50 text-blue-700", "fa-clipboard-list", "Registered")} #{pill.("border-teal-200 bg-teal-50 text-teal-700", "fa-right-to-bracket", "In")}</div>) },
       { title: "Reporting totals",
         desc: "How the transfer counts in dashboards and reports.",
-        out_text: "Counts toward this (original) event's registration and financial totals.",
+        out_text: "Left out of headcount and attendance. Money on this registration stays in this event's financial totals.",
         out_mock: nil,
-        in_text: "Counted in headcount and attendance, but left out of the new event's financial/registration totals — so nothing is double-counted.",
+        in_text: "Counted in headcount and attendance. Money on this registration, and any balance left, count in this event's financial totals — each payment counts once, at the event of the registration holding it.",
         in_mock: nil },
       { title: "Recipients page",
         desc: "Where a shout-out appears.",
@@ -104,7 +104,7 @@
         desc: "The registrant's billing documents.",
         out_text: "Document this event's cost and the payments made here.",
         out_mock: nil,
-        in_text: "Reached through the new ticket, but still document the original event's cost/payments.",
+        in_text: "Reached through the new ticket. They document the original event's cost, with payments from both registrations.",
         in_mock: nil }
     ] ]
   ]
@@ -133,13 +133,13 @@
       <p class="flex items-center gap-2 text-sm font-semibold text-purple-900">
         <i class="fa-solid fa-right-from-bracket text-purple-600"></i> Original registration &mdash; transferred out
       </p>
-      <p class="mt-1 text-sm text-purple-800">The event they left. Keeps their <strong>payments, scholarship, and CE money</strong>; locked from editing.</p>
+      <p class="mt-1 text-sm text-purple-800">The event they left. Keeps their <strong>earlier payments, scholarship, and CE money</strong>; locked from editing.</p>
     </div>
     <div class="rounded-xl border border-teal-200 bg-teal-50 p-4">
       <p class="flex items-center gap-2 text-sm font-semibold text-teal-900">
         <i class="fa-solid fa-right-to-bracket text-teal-600"></i> New registration &mdash; transferred in
       </p>
-      <p class="mt-1 text-sm text-teal-800">The event they'll attend. Tracks <strong>attendance</strong>, carries <strong>CE hours + balance</strong>, and earns the <strong>certificate</strong>.</p>
+      <p class="mt-1 text-sm text-teal-800">The event they'll attend. Tracks <strong>attendance</strong>, takes <strong>any balance left</strong>, carries <strong>CE hours + balance</strong>, and earns the <strong>certificate</strong>.</p>
     </div>
   </div>
 

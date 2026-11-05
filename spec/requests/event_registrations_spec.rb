@@ -833,7 +833,7 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("Day 1 completed in prior training")
       end
 
-      it "shows a source-financials summary (not editable cards) for a transferred-in reg" do
+      it "shows the source-financials summary beside the payment card for a transferred-in reg" do
         paid_event = create(:event, cost_cents: 10_000)
         source = create(:event_registration, event: paid_event, status: "transferred_out")
         create(:allocation, source: create(:payment, person: source.registrant, amount_cents: 4_000, amount_cents_remaining: 4_000),
@@ -851,9 +851,21 @@ RSpec.describe "EventRegistrations", type: :request do
         # Designated a scholarship recipient, linking to the actual award record.
         expect(response.body).to include("Scholarship recipient")
         expect(response.body).to include(edit_scholarship_path(scholarship))
-        # NOT the incoming reg's own editable payment/scholarship cards.
-        expect(response.body).not_to include("Registration payments and allocations")
+        # The balance is payable here, so its payment card shows; the award stays on the source.
+        expect(response.body).to include("Registration payments and allocations")
+        expect(response.body).to include("name=\"event_registration[intends_to_pay]\"")
         expect(response.body).not_to include("name=\"event_registration[scholarship_requested]\"")
+      end
+
+      it "saves intends to pay on a transferred-in reg" do
+        source = create(:event_registration, event: create(:event, cost_cents: 10_000), status: "transferred_out")
+        incoming = create(:event_registration, event: new_event, registrant: source.registrant,
+          transferred_from_registration: source)
+
+        patch event_registration_path(incoming), params: { event_registration: { intends_to_pay: "1" } }
+
+        expect(incoming.reload).to be_intends_to_pay
+        expect(incoming.payment_access_granted?).to be(true)
       end
 
       it "still offers the editable scholarship card when the source had no scholarship (#1944)" do
@@ -1113,7 +1125,7 @@ RSpec.describe "EventRegistrations", type: :request do
           get transfer_event_registration_path(source)
 
           expect(response.body).to include("What recording this transfer will do")
-          expect(response.body).to include("Payments stay here")
+          expect(response.body).to include("Payments made so far stay here")
           expect(response.body).to include("copy of the linked organizations")
           expect(response.body).not_to include("was already transferred in from")
         end
@@ -1221,6 +1233,31 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(EventRegistration.exists?(middle.id)).to be(false)
           expect(original.reload.transferred_to_registration).to eq(final)
           expect(response).to redirect_to(edit_event_registration_path(final))
+        end
+
+        it "moves money paid on the dropped middle registration onto the new one" do
+          original = create(:event_registration, status: "transferred_out")
+          middle = create(:event_registration, registrant: original.registrant,
+            status: "transferred_out", transferred_from_registration: original)
+          allocation = create(:allocation, allocatable: middle, amount: 1_000,
+            source: create(:payment, person: original.registrant, amount_cents: 1_000, amount_cents_remaining: 1_000))
+
+          post process_transfer_event_registration_path(middle),
+               params: { destination_event_id: destination_event.id }
+
+          final = EventRegistration.find_by(registrant: middle.registrant, event: destination_event)
+          expect(allocation.reload.allocatable).to eq(final)
+        end
+
+        it "carries intends to pay from the dropped middle registration onto the new one" do
+          original = create(:event_registration, status: "transferred_out")
+          middle = create(:event_registration, registrant: original.registrant, intends_to_pay: true,
+            status: "transferred_out", transferred_from_registration: original)
+
+          post process_transfer_event_registration_path(middle),
+               params: { destination_event_id: destination_event.id }
+
+          expect(EventRegistration.find_by(registrant: middle.registrant, event: destination_event)).to be_intends_to_pay
         end
 
         it "logs an Ahoy destroy lifecycle capturing the dropped middle registration's data" do

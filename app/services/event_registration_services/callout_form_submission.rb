@@ -131,7 +131,7 @@ module EventRegistrationServices
     # A form delivered on the scholarship callout is a scholarship recipient's final
     # step, so submitting it stamps their readiness for the certificate.
     def stamp_scholarship_form_completion
-      return unless @callout.builtin_key == "scholarship" && @registration.scholarship?
+      return unless @callout.builtin_key == "scholarship" && @registration.scholarship_recipient?
       return if @registration.post_survey_completed?
       @registration.mark_post_survey_completed!
     end
