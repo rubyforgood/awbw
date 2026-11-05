@@ -32,6 +32,7 @@ namespace :db do
       staff_aliases
       fm_archive
       address_duplicates
+      transfers
     ]
 
     desc "Generate representative sample data for development"
@@ -180,6 +181,11 @@ namespace :db do
     desc "Seed addresses that hit every address-dedupe matching rule, plus near-misses that stay separate"
     task address_duplicates: :environment do
       load Rails.root.join("db/seeds/dev/address_duplicates.rb")
+    end
+
+    desc "Seed transferred registrants covering paid, intends-to-pay, and partial balances"
+    task transfers: :environment do
+      load Rails.root.join("db/seeds/dev/transfers.rb")
     end
   end
 end
