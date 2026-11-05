@@ -16,8 +16,8 @@
 
   # Shared across every card so attendee matching and allocated totals don't
   # re-query per registration per card (preloaded by the controller).
-  event_registrations ||= @event_registrations || @event.event_registrations.active.includes(:registrant)
-  allocated_by_registration ||= {}
+  event_registrations = local_assigns.fetch(:event_registrations)
+  allocated_by_registration = local_assigns.fetch(:allocated_by_registration)
   linked_ids = submission.linked_registration_ids.to_set
   linked_registrations_by_id = local_assigns.fetch(:linked_registrations_by_id)
   linked_regs = linked_ids.filter_map { |id| linked_registrations_by_id[id] }

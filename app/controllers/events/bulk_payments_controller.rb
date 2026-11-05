@@ -18,7 +18,7 @@ module Events
                            .order(created_at: :desc)
       @linked_registrations_by_id = linked_registrations_by_id(@submissions)
       @allocated_by_registration = allocated_cents_by_registration(
-        @event_registrations.ids + @submissions.flat_map(&:linked_registration_ids)
+        @event_registrations.map(&:id) + @submissions.flat_map(&:linked_registration_ids)
       )
       @event = @event.decorate
     end
@@ -61,7 +61,7 @@ module Events
 
       @linked_registrations_by_id = linked_registrations_by_id([ submission ])
       @allocated_by_registration = allocated_cents_by_registration(
-        @event_registrations.ids + submission.linked_registration_ids
+        @event_registrations.map(&:id) + submission.linked_registration_ids
       )
 
       respond_to do |format|
@@ -165,7 +165,7 @@ module Events
       @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
       @linked_registrations_by_id = linked_registrations_by_id([ @submission ].compact)
       @allocated_by_registration = allocated_cents_by_registration(
-        @event_registrations.ids + Array(@submission&.linked_registration_ids)
+        @event_registrations.map(&:id) + Array(@submission&.linked_registration_ids)
       )
     end
 
@@ -174,7 +174,7 @@ module Events
       @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
       @linked_registrations_by_id = linked_registrations_by_id([ @submission ])
       @allocated_by_registration = allocated_cents_by_registration(
-        @event_registrations.ids + @submission.linked_registration_ids
+        @event_registrations.map(&:id) + @submission.linked_registration_ids
       )
     end
 
