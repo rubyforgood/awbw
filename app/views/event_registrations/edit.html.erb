@@ -60,7 +60,8 @@
              icon: "fa-solid fa-user-pen",
              color: :event_registrations,
              event: @event_registration.event,
-             event_url: dashboard_event_path(@event_registration.event) %>
+             event_url: dashboard_event_path(@event_registration.event),
+             person_link: @event_registration.registrant %>
 
   <%# Admin-only jump to the audit of the values each registration submission overwrote —
       shown only once it has overwritten something on existing records. %>
@@ -69,7 +70,7 @@
                submission: submission,
                return_to: "event_registration",
                extra_params: { event_registration_id: @event_registration.id },
-               label: @form_submissions.size > 1 ? "What this registration's form changed (#{submission.created_at.strftime("%b %-d, %Y")})" : "What this registration's form changed",
+               label: "What this registration's form changed",
                wrapper_class: "my-4" %>
   <% end %>
 
