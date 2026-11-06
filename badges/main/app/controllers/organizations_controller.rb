@@ -310,7 +310,7 @@ class OrganizationsController < ApplicationController
       :organization_status_id, :location_id, :windows_type_id, :high_profile, :parent_id,
       :tax_id,
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,
-      :profile_show_website, :profile_show_description, :profile_show_workshops,
+      :profile_show_website, :profile_show_workshops,
       :profile_show_stories, :profile_show_events_registered, :profile_show_workshop_logs,
       affiliations_attributes: [
         :id,

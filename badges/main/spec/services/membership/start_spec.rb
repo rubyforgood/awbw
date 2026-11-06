@@ -4,6 +4,7 @@ RSpec.describe Membership::Start do
   let(:person) { create(:person, :without_user) }
 
   it "creates a subscription with a comped first year" do
+    travel_to Time.utc(2026, 11, 6, 3)
     subscription = described_class.call(person: person)
 
     expect(subscription.person).to eq(person)
@@ -13,8 +14,8 @@ RSpec.describe Membership::Start do
     invoice = subscription.membership_invoices.sole
     expect(invoice.cost_cents).to eq(0)
     expect(invoice).to be_paid_in_full
-    expect(invoice.start_date).to eq(Date.current)
-    expect(invoice.end_date).to eq(Date.current + 1.year - 1.day)
+    expect(invoice.start_date).to eq(Date.new(2026, 11, 5))
+    expect(invoice.end_date).to eq(Date.new(2027, 11, 4))
   end
 
   it "leaves the person membership current straight away" do

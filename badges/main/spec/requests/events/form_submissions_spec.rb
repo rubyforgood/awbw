@@ -35,6 +35,7 @@ RSpec.describe "Events::FormSubmissions", type: :request do
       end
 
       it "links a submission to its changes audit once it has overwritten a value" do
+        submission.update!(created_at: Time.utc(2026, 11, 6, 3))
         org = create(:organization)
         create(:ahoy_event, name: "update.organization", properties: {
           "resource_type" => "Organization", "resource_id" => org.id,
@@ -46,7 +47,7 @@ RSpec.describe "Events::FormSubmissions", type: :request do
 
         expect(response.body).to include(changes_form_submission_path(submission))
         expect(response.body).to include("What this submission changed")
-        expect(response.body).to include("(#{submission.created_at.strftime("%b %-d, %Y")})")
+        expect(response.body).to include("(Nov 5, 2026)")
       end
 
       it "omits the changes link for a submission that only created new data" do

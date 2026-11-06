@@ -45,12 +45,6 @@
         <% end %>
       </div>
     <% end %>
-    <% if pieces.include?(:profile_show_description) %>
-      <div>
-        <h3 class="mb-3 font-display text-xl text-gray-900">Description</h3>
-        <%= render "organizations/profile_pieces/description", organization: organization %>
-      </div>
-    <% end %>
     <% if pieces.include?(:profile_show_sectors) %>
       <div>
         <h3 class="mb-3 font-display text-xl text-gray-900">Sectors</h3>
