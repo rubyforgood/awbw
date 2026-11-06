@@ -7,10 +7,10 @@ class MembershipsController < ApplicationController
     @directory = directory
     @status_filter = directory.status
 
-    if params[:emails].present? && turbo_frame_request?
+    if turbo_frame_request_id == "membership_emails"
       @email_addresses = directory.email_addresses
       render :emails
-    elsif turbo_frame_request?
+    elsif turbo_frame_request_id == "memberships_results"
       @memberships = directory.scope
         .includes(person: :user, membership_invoices: :allocations)
         .order(start_date: :desc)
