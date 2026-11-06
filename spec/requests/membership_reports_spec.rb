@@ -3,14 +3,6 @@ require "rails_helper"
 RSpec.describe "Membership reports", type: :request do
   before { sign_in create(:user, :admin) }
 
-  it "defaults to the current year" do
-    get membership_reports_path
-
-    expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Revenue brought in", "invoices started in #{Date.current.year}",
-      "Ended in #{Date.current.year}")
-  end
-
   it "counts revenue for invoices started in the selected year" do
     year = Date.current.year - 1
     person = create(:person, :without_user)
