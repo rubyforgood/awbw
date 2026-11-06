@@ -3,7 +3,10 @@
 <div class="mx-auto max-w-6xl">
   <div class="mb-6 flex items-center justify-between">
     <h1 class="text-primary font-display text-2xl font-bold">Memberships</h1>
-    <%= link_to "Membership invoices", membership_invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <div class="flex items-center gap-2">
+      <%= link_to "Year report", membership_reports_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <%= link_to "Membership invoices", membership_invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    </div>
   </div>
 
   <%= render "memberships/filters" %>

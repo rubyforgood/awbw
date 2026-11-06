@@ -25,6 +25,10 @@ class MembershipDirectory
       .uniq
   end
 
+  def selected_organizations
+    Organization.where(id: organization_ids).order(:name).to_a
+  end
+
   def scope
     @scope ||= begin
       relation = Membership.all

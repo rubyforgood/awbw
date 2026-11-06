@@ -15,8 +15,11 @@ class MembershipsController < ApplicationController
         .includes(person: :user, membership_invoices: :allocations)
         .order(start_date: :desc)
         .paginate(page: params[:page], per_page: 25)
+      @memberships.total_entries
+      @memberships.load
       render "memberships/memberships_results"
     else
+      @selected_organizations = directory.selected_organizations
       render :index
     end
   end

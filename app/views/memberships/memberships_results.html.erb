@@ -35,7 +35,7 @@
                 This filter's email list is really long — loading it may take a while.
               </span>
             <% end %>
-            <i class="fa-solid fa-chevron-down w-3 h-3 text-gray-400"></i>
+            <i class="fa-solid fa-chevron-down h-3 w-3 text-gray-400"></i>
           </summary>
           <%= turbo_frame_tag :membership_emails,
                 src: memberships_path(@directory.filter_params.merge(emails: 1)),

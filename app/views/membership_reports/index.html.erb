@@ -1,0 +1,45 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-6xl">
+  <div class="mb-6">
+    <%= link_to "← Memberships", memberships_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <h1 class="text-primary mt-2 font-display text-2xl font-bold">Membership report</h1>
+  </div>
+
+  <%= form_with url: membership_reports_path, method: :get,
+        data: { controller: "collection" },
+        autocomplete: "off", class: "mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" do %>
+    <%= render "shared/filter_select",
+          param: :year,
+          label: "Year",
+          options: [ [ "All time", "all" ] ] + @year_options.map { |year| [ year.to_s, year.to_s ] },
+          selected: (@report.year || "all").to_s,
+          blank: nil,
+          field_class: search_field_class(extra: "bg-white"),
+          wrapper_class: "w-full md:w-40" %>
+  <% end %>
+
+  <%= render "membership_reports/summary", summary: @summary, year: @report.year, view: @view %>
+
+  <% invoice_period = @report.year ? "started in #{@report.year}" : "all time" %>
+  <% membership_period = @report.year ? "ended in #{@report.year}" : "all time" %>
+  <% ended_period = @report.year || "all time" %>
+
+  <% case @view %>
+  <% when "collected" %>
+    <%= render "membership_reports/invoices", invoices: @invoices,
+          title: "Collected invoices — #{invoice_period}" %>
+  <% when "outstanding" %>
+    <%= render "membership_reports/invoices", invoices: @invoices,
+          title: "Outstanding invoices — #{invoice_period}" %>
+  <% when "closed_out" %>
+    <%= render "membership_reports/memberships", memberships: @memberships,
+          title: "Closed out — #{membership_period}" %>
+  <% when "still_owing" %>
+    <%= render "membership_reports/memberships", memberships: @memberships,
+          title: "Still owing — #{membership_period}" %>
+  <% when "ended" %>
+    <%= render "membership_reports/memberships", memberships: @memberships,
+          title: "All ended — #{ended_period}" %>
+  <% end %>
+</div>
