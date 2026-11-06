@@ -3,13 +3,16 @@ class Membership::BulkAction
     def actionable? = actionable
   end
 
-  Result = Data.define(:changed, :skipped, :failed) do
-    def any? = changed.positive? || skipped.positive? || failed.positive?
-  end
+  Result = Data.define(:changed, :skipped, :failed)
 
-  def self.for(key) = Registry.for(key)
+  ACTIONS = [
+    Membership::BulkAction::SetFee,
+    Membership::BulkAction::LockAccount
+  ].freeze
 
-  def self.all = Registry.all
+  def self.all = ACTIONS.map(&:new)
+
+  def self.for(key) = all.find { |action| action.key == key.to_s }
 
   def key = raise NotImplementedError
   def label = raise NotImplementedError
@@ -21,8 +24,6 @@ class Membership::BulkAction
   def notice(result) = raise NotImplementedError
 
   private
-
-  def dollars(cents) = cents.nil? ? "Standard" : MoneyFormatter.dollars_from_cents(cents)
 
   def pluralized(count, noun) = "#{count} #{noun.pluralize(count)}"
 end
