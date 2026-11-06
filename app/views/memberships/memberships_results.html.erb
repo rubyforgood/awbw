@@ -38,7 +38,7 @@
             <i class="fa-solid fa-chevron-down h-3 w-3 text-gray-400"></i>
           </summary>
           <%= turbo_frame_tag :membership_emails,
-                src: memberships_path(@directory.filter_params.merge(emails: 1)),
+                src: memberships_path(@directory.filter_params),
                 loading: :lazy do %>
             <p class="mt-2 text-xs text-gray-500">Loading…</p>
           <% end %>
