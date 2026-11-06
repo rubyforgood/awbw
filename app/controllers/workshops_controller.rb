@@ -154,6 +154,7 @@ class WorkshopsController < ApplicationController
     potential_series = potential_series.where.not(id: @workshop.id) if @workshop.persisted?
     @potential_series_workshops = authorized_scope(potential_series).order(:title)
     @windows_types = WindowsType.all
+    @organizations = authorized_scope(Organization.all, as: :currently_affiliated).order(:name)
     @workshop_ideas = authorized_scope(WorkshopIdea.order(created_at: :desc))
                                   .map { |wi|
                                     [ "#{wi.created_at.strftime("%Y-%m-%d")
@@ -206,7 +207,7 @@ class WorkshopsController < ApplicationController
   def workshop_params
     params.require(:workshop).permit(
       :title, :featured, :published,
-      :full_name, :author_id, :windows_type_id, :workshop_idea_id, :author_credit_preference,
+      :full_name, :author_id, :windows_type_id, :workshop_idea_id, :organization_id, :author_credit_preference,
       :month, :year, :filemaker_code,
       :publicly_visible,
       :publicly_featured,
