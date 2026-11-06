@@ -380,7 +380,16 @@ Rails.application.routes.draw do
     post :revert, on: :member
   end
 
+  resources :membership_reports, only: :index
+
   resources :memberships, only: [ :index, :show, :edit, :update, :destroy ] do
+    collection do
+      get "bulk_actions/:action_key", to: "memberships/bulk_actions#new",
+          as: :bulk_action
+      post "bulk_actions/:action_key", to: "memberships/bulk_actions#create",
+           as: :perform_bulk_action
+    end
+
     resources :membership_invoices, only: [ :new, :create ]
     resource :renewal, only: [ :update ], controller: "memberships/renewals"
     resource :next_year, only: [ :destroy ], controller: "memberships/next_years"

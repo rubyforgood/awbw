@@ -3,16 +3,23 @@ class MembershipsController < ApplicationController
 
   def index
     authorize!
-    @status_filter = params[:status].presence_in(Membership::DIRECTORY_STATUSES) || "active"
+    directory = MembershipDirectory.new(params)
+    @directory = directory
+    @bulk_actions = Membership::BulkAction.all
 
-    if turbo_frame_request?
-      scope = Membership.all
+    if turbo_frame_request_id == "membership_emails"
+      @email_addresses = directory.email_addresses
+      render :emails
+    elsif turbo_frame_request_id == "memberships_results"
+      @memberships = directory.scope
         .includes(person: :user, membership_invoices: :allocations)
-        .by_person_name(params[:person_name])
-      scope = scope.public_send(@status_filter) unless @status_filter == "all"
-      @memberships = scope.order(start_date: :desc).paginate(page: params[:page], per_page: 25)
+        .order(start_date: :desc)
+        .paginate(page: params[:page], per_page: 25)
+      @memberships.total_entries
+      @memberships.load
       render "memberships/memberships_results"
     else
+      @selected_organizations = directory.selected_organizations
       render :index
     end
   end

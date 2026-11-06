@@ -6,14 +6,15 @@
   <%= form_with url: memberships_path, method: :get,
         data: { controller: "collection", turbo_frame: "memberships_results" },
         autocomplete: "off", class: "flex flex-wrap items-end gap-4" do %>
-    <div class="w-full md:w-44"><%= render "shared/filter_select",
-            param: :status,
-            label: "Coverage",
-            options: Membership::DIRECTORY_STATUSES.map { |status| [ status.capitalize, status ] },
-            selected: status,
-            blank: nil,
-            clear_to: "active",
-            field_class: select_class %></div>
+    <%= render "shared/filter_select",
+          param: :status,
+          label: "Coverage",
+          options: Membership::DIRECTORY_STATUSES.map { |status| [ status.capitalize, status ] },
+          selected: @directory.status,
+          blank: nil,
+          clear_to: "all",
+          field_class: select_class,
+          wrapper_class: "w-full md:w-44" %>
 
     <div class="min-w-[200px] flex-1">
       <%= label_tag :person_name, "Person name", class: label_class %>
@@ -21,6 +22,31 @@
       <div class="relative"><%= text_field_tag :person_name, params[:person_name],
               placeholder: "e.g. Jane Doe",
               class: input_class %><%= render "shared/search_submit" %></div>
+    </div>
+
+    <div class="w-full md:w-64">
+      <%= label_tag :organization_ids, "Organization", class: label_class %>
+      <%= select_tag "organization_ids[]",
+            options_for_select(@selected_organizations.map { |org| [ org.name, org.id ] }, @directory.organization_ids),
+            id: :organization_ids,
+            multiple: true,
+            include_blank: false,
+            class: search_field_class,
+            data: { controller: "remote-select", remote_select_model_value: "organization" } %>
+    </div>
+
+    <%= render "shared/filter_select",
+          param: :payment,
+          label: "Payment",
+          options: [ [ "Any", "any" ], [ "Balance due", "overdue" ], [ "Paid", "paid" ] ],
+          selected: @directory.payment,
+          blank: nil,
+          clear_to: "any",
+          field_class: select_class,
+          wrapper_class: "w-full md:w-44" %>
+
+    <div class="w-full md:ml-auto md:w-auto">
+      <%= render "shared/search_clear", url: memberships_path %>
     </div>
   <% end %>
 </div>
