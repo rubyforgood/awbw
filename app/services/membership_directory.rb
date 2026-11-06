@@ -41,10 +41,6 @@ class MembershipDirectory
     end
   end
 
-  def count = scope.count
-
-  def large? = count > LARGE_SET_THRESHOLD
-
   def email_addresses
     Person.where(id: scope.select(:person_id))
       .includes(:user)
