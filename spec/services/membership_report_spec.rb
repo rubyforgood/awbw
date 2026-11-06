@@ -61,4 +61,26 @@ RSpec.describe MembershipReport do
     expect(summary.revenue_cents).to eq(5_000)
     expect(summary.outstanding_cents).to eq(0)
   end
+
+  it "splits a person's memberships by their own balances" do
+    person = create(:person, :without_user)
+    paid = create(:membership, person:,
+      start_date: Date.new(2025, 1, 1), end_date: Date.new(2025, 6, 30))
+    paid_invoice = create(:membership_invoice, membership: paid, cost_cents: 5_000,
+      start_date: Date.new(2025, 1, 1), end_date: Date.new(2025, 6, 30))
+    pay(paid_invoice, 5_000)
+
+    owing = create(:membership, person:,
+      start_date: Date.new(2025, 7, 1), end_date: Date.new(2025, 12, 31))
+    create(:membership_invoice, membership: owing, cost_cents: 3_000,
+      start_date: Date.new(2025, 7, 1), end_date: Date.new(2025, 12, 31))
+
+    report = described_class.new(year: 2025)
+
+    expect(report.summary.ended_count).to eq(2)
+    expect(report.summary.closed_out_count).to eq(1)
+    expect(report.summary.still_owing_count).to eq(1)
+    expect(report.closed_out_memberships).to contain_exactly(paid)
+    expect(report.still_owing_memberships).to contain_exactly(owing)
+  end
 end

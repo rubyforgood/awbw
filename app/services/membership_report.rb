@@ -56,14 +56,14 @@ class MembershipReport
 
   def closed_out_memberships
     ended_scope
-      .where.not(person_id: owing_person_ids)
+      .where.not(id: owing_membership_ids)
       .includes(person: :user, membership_invoices: :allocations)
       .order(end_date: :desc)
   end
 
   def still_owing_memberships
     ended_scope
-      .where(person_id: owing_person_ids)
+      .where(id: owing_membership_ids)
       .includes(person: :user, membership_invoices: :allocations)
       .order(end_date: :desc)
   end
@@ -88,15 +88,15 @@ class MembershipReport
   end
 
   def ended_count
-    ended_person_ids.size
+    ended_scope.count
   end
 
   def closed_out_count
-    closed_out_person_ids.size
+    ended_count - still_owing_count
   end
 
   def still_owing_count
-    ended_count - closed_out_count
+    ended_scope.where(id: owing_membership_ids).count
   end
 
   def invoices_in_scope
@@ -138,19 +138,8 @@ class MembershipReport
     @ended_scope ||= year ? Membership.where(end_date: year_range) : Membership.ended
   end
 
-  def ended_person_ids
-    @ended_person_ids ||= ended_scope.distinct.pluck(:person_id)
-  end
-
-  def owing_person_ids
-    @owing_person_ids ||= ended_scope
-      .where(id: started_unpaid_invoices.select(:membership_id))
-      .distinct
-      .pluck(:person_id)
-  end
-
-  def closed_out_person_ids
-    @closed_out_person_ids ||= ended_person_ids - owing_person_ids
+  def owing_membership_ids
+    @owing_membership_ids ||= started_unpaid_invoices.select(:membership_id)
   end
 
   def started_unpaid_invoices
