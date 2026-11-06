@@ -208,14 +208,6 @@
         </div>
       </div>
     <% end %>
-    <!-- Description -->
-    <% if @organization.profile_show_description? && @organization.description.present? %>
-      <div class="<%= DomainTheme.bg_class_for(:organizations, intensity: 50) %>
-          border-2 <%= DomainTheme.border_class_for(:organizations) %> rounded-2xl p-5 sm:p-6">
-        <h2 class="mb-3 font-display text-2xl text-gray-900">Description</h2>
-        <%= render "organizations/profile_pieces/description", organization: @organization %>
-      </div>
-    <% end %>
     <!-- AUTHORED SECTION -->
     <%# A section (and the card) only shows when it's enabled and has something to list. %>
     <% if @published_sections.any? %>

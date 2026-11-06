@@ -1,0 +1,8 @@
+name: "Organization profiles no longer show the description"
+area: people
+display_status: admin_facing
+released_on: 2026-11-05
+action_path: "/organizations"
+summary: >-
+  An organization's description no longer appears on its profile, for anyone. The "Show description"
+  sharing toggle is gone too. Admins can still read and edit the description on the edit page.

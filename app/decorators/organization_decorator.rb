@@ -267,7 +267,7 @@ class OrganizationDecorator < ApplicationDecorator
   # whether each has anything to list.
   PROFILE_PIECE_FLAGS = %i[
     profile_show_email profile_show_phone profile_show_website
-    profile_show_description profile_show_sectors profile_show_age_ranges
+    profile_show_sectors profile_show_age_ranges
   ].freeze
 
   # Pieces the org turned off that still have something to show.
@@ -282,7 +282,6 @@ class OrganizationDecorator < ApplicationDecorator
     when :profile_show_email then email.present?
     when :profile_show_phone then phone_number.present?
     when :profile_show_website then website_link_url.present?
-    when :profile_show_description then description.present?
     when :profile_show_sectors then active_facilitator_sectors.any?
     when :profile_show_age_ranges then active_facilitator_age_groups.any?
     end
