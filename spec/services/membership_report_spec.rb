@@ -36,13 +36,13 @@ RSpec.describe MembershipReport do
     create(:membership_invoice, membership: owing,
       cost_cents: 2_000, start_date: Date.new(2024, 1, 1), end_date: Date.new(2024, 12, 31))
 
-    report = described_class.new(year: 2025)
+    summary = described_class.new(year: 2025).summary
 
-    expect(report.revenue_cents).to eq(7_000)
-    expect(report.outstanding_cents).to eq(6_000)
-    expect(report.ended_count).to eq(2)
-    expect(report.closed_out_count).to eq(1)
-    expect(report.still_owing_count).to eq(1)
+    expect(summary.revenue_cents).to eq(7_000)
+    expect(summary.outstanding_cents).to eq(6_000)
+    expect(summary.ended_count).to eq(2)
+    expect(summary.closed_out_count).to eq(1)
+    expect(summary.still_owing_count).to eq(1)
   end
 
   it "attributes revenue to the invoice start year" do
@@ -56,9 +56,9 @@ RSpec.describe MembershipReport do
       pay(invoice, 5_000)
     end
 
-    report = described_class.new(year: 2025)
+    summary = described_class.new(year: 2025).summary
 
-    expect(report.revenue_cents).to eq(5_000)
-    expect(report.outstanding_cents).to eq(0)
+    expect(summary.revenue_cents).to eq(5_000)
+    expect(summary.outstanding_cents).to eq(0)
   end
 end

@@ -1,22 +1,23 @@
 class MembershipReportsController < ApplicationController
   def index
     authorize! :membership
-    @report = MembershipReport.new(year: params[:year])
-    @year_options = @report.year_options
-    @summary = @report.summary
-    @view = MembershipReport.view(params[:view])
-    load_results
+    report = MembershipReport.new(year: params[:year])
+    @year = report.year
+    @year_options = report.year_options
+    @summary = report.summary
+    @view = params[:view].presence_in(MembershipReport::VIEWS)
+    load_results(report)
   end
 
   private
 
-  def load_results
+  def load_results(report)
     case @view
-    when "collected" then @invoices = load_page(@report.collected_invoices)
-    when "outstanding" then @invoices = load_page(@report.outstanding_invoices)
-    when "closed_out" then @memberships = load_page(@report.closed_out_memberships)
-    when "still_owing" then @memberships = load_page(@report.still_owing_memberships)
-    when "ended" then @memberships = load_page(@report.all_ended_memberships)
+    when "collected" then @invoices = load_page(report.collected_invoices)
+    when "outstanding" then @invoices = load_page(report.outstanding_invoices)
+    when "closed_out" then @memberships = load_page(report.closed_out_memberships)
+    when "still_owing" then @memberships = load_page(report.still_owing_memberships)
+    when "ended" then @memberships = load_page(report.ended_memberships)
     end
   end
 

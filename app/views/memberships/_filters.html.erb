@@ -1,7 +1,6 @@
 <% select_class = search_field_class(extra: "bg-white") %>
 <% input_class = search_field_class(extra: "bg-white pr-10") %>
 <% label_class = search_label_class %>
-<% selected_orgs = @selected_organizations %>
 
 <div class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
   <%= form_with url: memberships_path, method: :get,
@@ -28,7 +27,7 @@
     <div class="w-full md:w-64">
       <%= label_tag :organization_ids, "Organization", class: label_class %>
       <%= select_tag "organization_ids[]",
-            options_for_select(selected_orgs.map { |org| [ org.name, org.id ] }, @directory.organization_ids),
+            options_for_select(@selected_organizations.map { |org| [ org.name, org.id ] }, @directory.organization_ids),
             id: :organization_ids,
             multiple: true,
             include_blank: false,
