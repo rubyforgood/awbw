@@ -1,0 +1,18 @@
+<%# Who an everyone-feed row is about: a link to edit that person, with their
+    facilitator hover card, or a plain email chip when no person is on
+    file. Locals: person (may be nil), email. %>
+<% chip_class = "inline-flex max-w-48 shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium #{DomainTheme.border_class_for(:people, intensity: 200)} #{DomainTheme.bg_class_for(:people, intensity: 50)} #{DomainTheme.text_class_for(:people)}" %>
+<% if person %>
+  <span class="group/person relative inline-flex">
+    <%= link_to feed_person_edit_path(person), target: "_blank", rel: "noopener", class: "#{chip_class} hover:underline" do %>
+      <i class="fa-solid fa-user text-2xs" aria-hidden="true"></i>
+      <span class="truncate"><%= person.full_name %></span>
+    <% end %>
+    <%= facilitator_hover_card(person, header: true) %>
+  </span>
+<% else %>
+  <span class="<%= chip_class %>" title="No person on file for this email">
+    <i class="fa-solid fa-envelope text-2xs" aria-hidden="true"></i>
+    <span class="truncate"><!--email_off--><%= email %><!--email_on--></span>
+  </span>
+<% end %>
