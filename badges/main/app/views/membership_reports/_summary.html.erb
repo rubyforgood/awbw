@@ -1,0 +1,58 @@
+<% year = local_assigns[:year] %>
+<% year_param = year || "all" %>
+<% view = local_assigns[:view] %>
+
+<div class="mb-4 grid gap-3 sm:grid-cols-3">
+  <%= link_to membership_reports_path(year: year_param, view: "collected"),
+        class: class_names("relative flex h-full flex-col rounded-xl border border-green-300 bg-green-50 p-3 transition-shadow hover:shadow-md",
+                           "ring-2 ring-green-500": view == "collected") do %>
+    <div class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Revenue brought in</div>
+
+    <div class="flex flex-1 items-center">
+      <div class="text-3xl font-bold text-green-700 tabular-nums"><%= dollars_from_cents(summary.revenue_cents) %></div>
+    </div>
+
+    <div class="border-t border-green-200 pt-1 text-xs text-gray-400 italic"><%= year ? "payments applied to invoices started in #{year}" : "payments applied to date" %></div>
+  <% end %>
+
+  <%= link_to membership_reports_path(year: year_param, view: "outstanding"),
+        class: class_names("relative flex h-full flex-col rounded-xl border border-orange-300 bg-orange-50 p-3 transition-shadow hover:shadow-md",
+                           "ring-2 ring-orange-500": view == "outstanding") do %>
+    <div class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Revenue outstanding</div>
+
+    <div class="flex flex-1 items-center">
+      <div class="text-3xl font-bold text-orange-600 tabular-nums"><%= dollars_from_cents(summary.outstanding_cents) %></div>
+    </div>
+
+    <div class="border-t border-orange-200 pt-1 text-xs text-gray-400 italic"><%= year ? "today's balance on invoices started in #{year}" : "started invoices still owing" %></div>
+  <% end %>
+
+  <div class="flex h-full flex-col rounded-xl border border-blue-300 bg-blue-50 p-3 <%= "ring-2 ring-blue-500" if %w[closed_out still_owing ended].include?(view) %>">
+    <div class="text-xs font-semibold tracking-wide text-gray-500 uppercase"><%= year ? "Memerships ended in #{year}" : "memberships ended" %></div>
+
+    <div class="mt-1 space-y-0.5 text-sm">
+      <%= link_to membership_reports_path(year: year_param, view: "closed_out"),
+            class: class_names("flex items-center justify-between rounded px-1.5 py-0.5 hover:bg-green-100",
+                               "bg-green-100": view == "closed_out") do %>
+        <span class="text-gray-500 italic">closed out</span>
+        <span class="text-base font-semibold text-green-700 tabular-nums"><%= number_with_delimiter(summary.closed_out_count) %></span>
+      <% end %>
+
+      <%= link_to membership_reports_path(year: year_param, view: "still_owing"),
+            class: class_names("flex items-center justify-between rounded px-1.5 py-0.5 hover:bg-amber-100",
+                               "bg-amber-100": view == "still_owing") do %>
+        <span class="text-gray-500 italic">still owing</span>
+        <span class="text-base font-semibold text-amber-700 tabular-nums"><%= number_with_delimiter(summary.still_owing_count) %></span>
+      <% end %>
+    </div>
+
+    <div class="mt-auto border-t border-blue-300 pt-1">
+      <%= link_to membership_reports_path(year: year_param, view: "ended"),
+            class: class_names("flex items-center justify-between rounded px-1.5 py-0.5 hover:bg-blue-100",
+                               "bg-blue-100": view == "ended") do %>
+        <span class="font-semibold text-gray-700">Total</span>
+        <span class="text-2xl font-bold text-blue-700 tabular-nums"><%= number_with_delimiter(summary.ended_count) %></span>
+      <% end %>
+    </div>
+  </div>
+</div>

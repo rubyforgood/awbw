@@ -1,0 +1,17 @@
+<section class="border-primary/10 rounded-2xl border bg-white shadow-sm">
+  <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+    <h2 class="text-sm font-semibold text-gray-700"><%= title %></h2>
+    <span class="text-sm text-gray-500"><%= number_with_delimiter(memberships.total_entries) %></span>
+  </div>
+
+  <% if memberships.any? %>
+    <div class="divide-y divide-gray-200">
+      <% memberships.each do |membership| %>
+        <%= render "memberships/membership_row", membership: membership %>
+      <% end %>
+    </div>
+    <div class="pagination flex justify-center px-4 py-4"><%= tailwind_paginate memberships %></div>
+  <% else %>
+    <p class="p-6 text-gray-500 italic">No memberships match this criteria.</p>
+  <% end %>
+</section>

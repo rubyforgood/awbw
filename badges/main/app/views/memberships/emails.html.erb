@@ -1,0 +1,8 @@
+<%= turbo_frame_tag :membership_emails do %>
+  <div class="mt-2">
+    <p class="mb-2 text-xs text-gray-500">
+      <%= pluralize(@email_addresses.size, "unique email address") %> from the current filter.
+    </p>
+    <%= render "shared/email_address_list", emails: @email_addresses %>
+  </div>
+<% end %>

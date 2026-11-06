@@ -1,0 +1,78 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-4xl">
+  <div class="mb-6">
+    <%= link_to "← Memberships", memberships_path(@directory.filter_params),
+          class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  </div>
+
+  <h1 class="text-primary font-display text-2xl font-bold"><%= @action.label %></h1>
+  <p class="mt-1 text-sm text-gray-600">
+    <% if @result %>
+      Only the records that failed are shown below. Review and retry them.
+    <% else %>
+      <%= number_with_delimiter(@rows.size) %> <%= @action.unit.pluralize(@rows.size) %> match this filter.
+      Only checked rows will change.
+    <% end %>
+  </p>
+
+  <% if @error %>
+    <p class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"><%= @error %></p>
+  <% end %>
+
+  <% if @result&.failed_ids&.any? %>
+    <div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+      <p class="font-medium"><%= pluralize(@result.failed_ids.size, "record") %> could not be updated:</p>
+      <ul class="mt-1 list-inside list-disc space-y-1">
+        <% @result.errors.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if @rows.any? %>
+    <%= form_with url: perform_bulk_action_memberships_path(@action.key), method: :post,
+          id: "membership_bulk_action_form", class: "mt-6" do %>
+      <%= hidden_filter_fields(@directory.filter_params) %>
+
+      <div class="rounded-xl border border-gray-200 bg-white">
+        <% if @action.key == "set_fee" %>
+          <div class="border-b border-gray-200 p-4">
+            <div class="w-full md:w-56">
+              <%= label_tag :cost_dollars, "Locked price ($ per year)", class: search_label_class %>
+              <%= text_field_tag :cost_dollars, params[:cost_dollars], placeholder: "Standard",
+                    class: search_field_class(extra: "bg-white") %>
+              <p class="mt-1 text-xs text-gray-500">
+                Blank = standard (<%= dollars_from_cents(Membership.annual_cost_cents) %>). Applies to future
+                invoices only — invoices already issued keep their amount.
+              </p>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">
+          <span class="text-sm text-gray-600">
+            <span class="font-medium text-gray-800"><%= @selected_count %></span>
+            of <%= @rows.size %> selected
+          </span>
+          <div class="flex items-center gap-3">
+            <%= link_to "Cancel", memberships_path(@directory.filter_params),
+                  class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+            <%= submit_tag "Apply", class: button_classes(:primary) %>
+          </div>
+        </div>
+
+        <div class="divide-y divide-gray-200">
+          <% @rows.each do |row| %>
+            <%= render "memberships/bulk_actions/row", row: row %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <p class="mt-6 rounded-xl border border-gray-200 bg-white p-6 text-gray-500 italic">
+      <%= @result ? "The failed records are no longer in this filter." : "No #{@action.unit.pluralize} match this filter." %>
+    </p>
+  <% end %>
+</div>

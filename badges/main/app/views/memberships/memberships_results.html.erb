@@ -5,10 +5,46 @@
     "upcoming" => "No upcoming memberships.",
     "ended" => "No ended memberships.",
     "all" => "No memberships yet."
-  }.fetch(@status_filter, "No memberships.") %>
+  }.fetch(@directory.status, "No memberships.") %>
 
   <section class="border-primary/10 rounded-2xl border bg-white shadow-sm">
     <% if @memberships.any? %>
+      <div class="flex flex-wrap items-center gap-2 border-b border-gray-200 px-4 py-3">
+        <span class="text-sm font-medium text-gray-700">
+          <%= number_with_delimiter(@memberships.total_entries) %> <%= "membership".pluralize(@memberships.total_entries) %>
+        </span>
+        <div class="ml-auto flex flex-wrap items-center gap-2">
+          <%= render "memberships/bulk_actions_menu" %>
+        </div>
+      </div>
+
+      <% if @memberships.total_entries > MembershipDirectory::LARGE_SET_THRESHOLD %>
+        <p class="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+          This filter matches a large set. Reviewing every row on the confirm page may be slow —
+          narrow the filter if you can.
+        </p>
+      <% end %>
+
+      <div class="border-b border-gray-200 px-4 py-3">
+        <details class="text-sm">
+          <summary class="<%= button_classes(:secondary_outline, size: :sm, extra: "group relative cursor-pointer list-none [&::-webkit-details-marker]:hidden") %>">
+            <span>Load email addresses for this filter</span>
+            <% if @memberships.total_entries > MembershipDirectory::LARGE_SET_THRESHOLD %>
+              <i class="fa-solid fa-triangle-exclamation text-red-600"></i>
+              <span class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-64 -translate-x-1/2 rounded-md bg-red-600 px-3 py-2 text-xs font-normal text-white shadow-lg group-hover:block">
+                This filter's email list is really long — loading it may take a while.
+              </span>
+            <% end %>
+            <i class="fa-solid fa-chevron-down h-3 w-3 text-gray-400"></i>
+          </summary>
+          <%= turbo_frame_tag :membership_emails,
+                src: memberships_path(@directory.filter_params),
+                loading: :lazy do %>
+            <p class="mt-2 text-xs text-gray-500">Loading…</p>
+          <% end %>
+        </details>
+      </div>
+
       <div class="divide-y divide-gray-200">
         <% @memberships.each do |membership| %>
           <%= render "memberships/membership_row", membership: membership %>
