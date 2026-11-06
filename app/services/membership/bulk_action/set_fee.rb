@@ -43,13 +43,13 @@ class Membership::BulkAction::SetFee < Membership::BulkAction
       end
     end
 
-    Result.new(changed:, skipped:, failed:, errors:, failed_ids:)
+    Result.new(changed:, skipped:, failed_ids:, errors:)
   end
 
   def notice(result)
     parts = [ "Updated the fee on #{pluralized(result.changed, 'membership')}." ]
     parts << "#{result.skipped} skipped (locked or already at that price)." if result.skipped.positive?
-    parts << "#{result.failed} failed." if result.failed.positive?
+    parts << "#{result.failed_ids.size} failed." if result.failed_ids.any?
     parts.join(" ")
   end
 

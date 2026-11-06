@@ -5,7 +5,7 @@
     "upcoming" => "No upcoming memberships.",
     "ended" => "No ended memberships.",
     "all" => "No memberships yet."
-  }.fetch(@status_filter, "No memberships.") %>
+  }.fetch(@directory.status, "No memberships.") %>
 
   <section class="border-primary/10 rounded-2xl border bg-white shadow-sm">
     <% if @memberships.any? %>

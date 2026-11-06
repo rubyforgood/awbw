@@ -11,7 +11,7 @@
   <div id="membership-bulk-actions"
        data-dropdown-target="content"
        class="absolute right-0 z-10 mt-1 hidden min-w-[200px] rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-    <% Membership::BulkAction.all.each do |action| %>
+    <% @bulk_actions.each do |action| %>
       <%= link_to action.label,
             bulk_action_memberships_path(action.key, @directory.filter_params),
             data: { turbo_frame: "_top" },

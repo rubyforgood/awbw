@@ -55,13 +55,13 @@ class Membership::BulkAction::LockAccount < Membership::BulkAction
         end
       end
 
-    Result.new(changed:, skipped:, failed:, errors:, failed_ids:)
+    Result.new(changed:, skipped:, failed_ids:, errors:)
   end
 
   def notice(result)
     parts = [ "Locked #{pluralized(result.changed, 'user account')}." ]
     parts << "#{result.skipped} skipped (no login or already locked)." if result.skipped.positive?
-    parts << "#{result.failed} failed." if result.failed.positive?
+    parts << "#{result.failed_ids.size} failed." if result.failed_ids.any?
     parts.join(" ")
   end
 end

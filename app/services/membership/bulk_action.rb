@@ -1,9 +1,7 @@
 class Membership::BulkAction
-  Row = Data.define(:id, :name, :email, :detail, :flags, :actionable) do
-    def actionable? = actionable
-  end
+  Row = Data.define(:id, :name, :email, :detail, :flags, :actionable)
 
-  Result = Data.define(:changed, :skipped, :failed, :errors, :failed_ids)
+  Result = Data.define(:changed, :skipped, :failed_ids, :errors)
 
   ACTIONS = [
     Membership::BulkAction::SetFee,
@@ -14,14 +12,14 @@ class Membership::BulkAction
 
   def self.for(key) = all.find { |action| action.key == key.to_s }
 
-  def key = raise NotImplementedError
-  def label = raise NotImplementedError
-  def unit = raise NotImplementedError
-  def param_name = raise NotImplementedError
-
-  def preview_rows(directory, **options) = raise NotImplementedError
-  def perform(directory, ids:, **options) = raise NotImplementedError
-  def notice(result) = raise NotImplementedError
+  # Each action requires the following:
+  # key
+  # label
+  # unit
+  # param_name
+  # preview_rows(directory, ids: nil)
+  # perform(directory, ids:, ...)
+  # notice(result)
 
   private
 

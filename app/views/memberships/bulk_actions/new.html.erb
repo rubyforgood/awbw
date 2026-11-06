@@ -20,9 +20,9 @@
     <p class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"><%= @error %></p>
   <% end %>
 
-  <% if @result&.failed&.positive? %>
+  <% if @result&.failed_ids&.any? %>
     <div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-      <p class="font-medium"><%= pluralize(@result.failed, "record") %> could not be updated:</p>
+      <p class="font-medium"><%= pluralize(@result.failed_ids.size, "record") %> could not be updated:</p>
       <ul class="mt-1 list-inside list-disc space-y-1">
         <% @result.errors.each do |message| %>
           <li><%= message %></li>

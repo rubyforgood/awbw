@@ -5,7 +5,7 @@ class MembershipsController < ApplicationController
     authorize!
     directory = MembershipDirectory.new(params)
     @directory = directory
-    @status_filter = directory.status
+    @bulk_actions = Membership::BulkAction.all
 
     if turbo_frame_request_id == "membership_emails"
       @email_addresses = directory.email_addresses

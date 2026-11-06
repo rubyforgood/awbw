@@ -23,7 +23,7 @@ module Memberships
 
       result = @action.perform(@directory, ids: ids, cost_cents: @cost_cents)
 
-      if result.failed.positive?
+      if result.failed_ids.any?
         @result = result
         @selected_ids = result.failed_ids
         flash.now[:notice] = @action.notice(result)
@@ -52,7 +52,7 @@ module Memberships
 
     def prepare_confirm(only_ids: nil)
       @rows = @action.preview_rows(@directory, ids: only_ids)
-      @selected_count = @selected_ids ? @selected_ids.size : @rows.count(&:actionable?)
+      @selected_count = @selected_ids ? @selected_ids.size : @rows.count(&:actionable)
     end
 
     def render_confirm_error(message)
