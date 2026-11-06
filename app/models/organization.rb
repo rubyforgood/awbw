@@ -45,6 +45,10 @@ class Organization < ApplicationRecord
   has_many :community_news
   has_many :resources
   has_many :workshop_variations
+  has_many :workshop_ideas
+  has_many :workshops
+  has_many :workshops_as_author, through: :people, source: :workshops_as_author
+  has_many :workshop_ideas_as_author, through: :people, source: :workshop_ideas_as_author
   has_many :grants, as: :funder, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
@@ -265,6 +269,21 @@ class Organization < ApplicationRecord
     direct.or(legacy).distinct
   end
 
+  def affiliated_workshops
+    return Workshop.none unless persisted?
+
+    workshops.or(credited_to_facilitators(Workshop)).distinct
+  end
+  alias_method :all_workshops, :affiliated_workshops
+  alias_method :credited_workshops, :affiliated_workshops
+
+  def affiliated_workshop_ideas
+    return WorkshopIdea.none unless persisted?
+
+    workshop_ideas.or(credited_to_facilitators(WorkshopIdea)).distinct
+  end
+  alias_method :all_workshop_ideas, :affiliated_workshop_ideas
+
   # Display order, and what the attendees index filters on.
   FACILITATOR_PROGRAM_STATUSES = FacilitatorProgramStatus::STATUSES
 
@@ -370,10 +389,6 @@ class Organization < ApplicationRecord
     person_ids = affiliations.active.facilitators.select(:person_id)
     model.where(author_id: person_ids)
          .or(model.where(author_id: nil, created_by_id: User.where(person_id: person_ids).select(:id)))
-  end
-
-  def credited_workshops
-    credited_to_facilitators(Workshop)
   end
 
   # Sectors and age groups are never entered on an org — they roll up from the

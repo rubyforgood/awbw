@@ -7,10 +7,10 @@ class WorkshopIdeasController < ApplicationController
     base_scope = authorized_scope(WorkshopIdea.with_author_credit.includes(:workshops))
     filtered = base_scope.search(params.slice(:title, :author_name))
     filtered = filtered.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
-    # Ideas carry no organization; credit them through the org's active facilitators.
+    # Ideas carry an organization directly or credit through the org's active facilitators.
     if params[:organization_id].present?
       organization = Organization.find_by(id: params[:organization_id])
-      filtered = organization ? filtered.merge(organization.credited_to_facilitators(WorkshopIdea)) : filtered.none
+      filtered = organization ? filtered.merge(organization.affiliated_workshop_ideas) : filtered.none
     end
     @workshop_ideas_count = filtered.size
     @workshop_ideas = filtered.paginate(page: params[:page], per_page: per_page).decorate
@@ -91,6 +91,7 @@ class WorkshopIdeasController < ApplicationController
     @potential_series_workshops = authorized_scope(Workshop.published).includes(:windows_type).order(:title)
     @sectors = Sector.published
     @windows_types = WindowsType.all
+    @organizations = authorized_scope(Organization.all, as: :currently_affiliated).order(:name)
     @users = User.has_access.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
     @categories_grouped =
       Category
@@ -114,7 +115,7 @@ class WorkshopIdeasController < ApplicationController
   def workshop_idea_params
     params.require(:workshop_idea).permit(
       :title, :staff_notes, :author_credit_preference,
-      :created_by_id, :updated_by_id, :windows_type_id,
+      :created_by_id, :updated_by_id, :windows_type_id, :organization_id,
       :time_closing, :time_creation, :time_demonstration,
       :time_hours, :time_intro, :time_minutes,
       :time_opening, :time_opening_circle, :time_warm_up,

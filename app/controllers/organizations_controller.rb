@@ -257,7 +257,7 @@ class OrganizationsController < ApplicationController
     when "community_news"
       authorized_scope(@organization.community_news.with_author_credit)
     when "workshop_ideas"
-      authorized_scope(@organization.credited_to_facilitators(WorkshopIdea))
+      authorized_scope(@organization.affiliated_workshop_ideas)
     when "workshop_variation_ideas"
       authorized_scope(WorkshopVariationIdea.where(organization_id: @organization.id))
     when "story_ideas"

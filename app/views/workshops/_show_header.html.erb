@@ -20,7 +20,14 @@
         <span class="text-lg text-red-300">(Unpublished)</span>
       <% end %>
     </h1>
-    <div class="mt-3 flex flex-wrap gap-4 text-sm text-gray-200"><span>Author: <%= credited_author_link(workshop, class: "hover:underline") %></span><span>Category: <%= workshop.windows_type&.short_name %></span><span>Added: <%= workshop.date %></span></div>
+    <div class="mt-3 flex flex-wrap gap-4 text-sm text-gray-200">
+      <span>Author: <%= credited_author_link(workshop, class: "hover:underline") %></span>
+      <% if workshop.organization.present? %>
+        <span>Organization: <%= link_to_if allowed_to?(:show?, workshop.organization), workshop.organization.name, organization_path(workshop.organization), class: "hover:underline" %></span>
+      <% end %>
+      <span>Category: <%= workshop.windows_type&.short_name %></span>
+      <span>Added: <%= workshop.date %></span>
+    </div>
   </div>
   <%= render "assets/primary_image_picker", owner: workshop %>
 </div>
