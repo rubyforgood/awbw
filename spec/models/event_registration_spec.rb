@@ -63,6 +63,35 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "search" do
+    let(:registrant) { create(:person, first_name: "Fay", last_name: "Finder") }
+    let!(:active_reg) { create(:event_registration, registrant: registrant, status: "registered") }
+    let!(:cancelled_reg) { create(:event_registration, registrant: registrant, status: "cancelled") }
+    let!(:transferred_out_reg) { create(:event_registration, registrant: registrant, status: "transferred_out") }
+    let!(:incoming_reg) do
+      create(:event_registration, registrant: registrant, status: "registered",
+             transferred_from_registration: create(:event_registration, status: "transferred_out"))
+    end
+
+    it ".remote_search spans every event and every status" do
+      results = EventRegistration.remote_search("Finder")
+
+      expect(results).to include(active_reg, cancelled_reg, transferred_out_reg, incoming_reg)
+    end
+
+    it ".remote_search matches the event title" do
+      event = create(:event, title: "Quiet Retreat")
+      registration = create(:event_registration, event: event, registrant: create(:person))
+
+      expect(EventRegistration.remote_search("Retreat")).to include(registration)
+    end
+
+    it "#remote_search_label appends the status only for inactive registrations" do
+      expect(active_reg.remote_search_label[:label]).to end_with("(##{active_reg.id})")
+      expect(cancelled_reg.remote_search_label[:label]).to end_with("(##{cancelled_reg.id}, cancelled)")
+    end
+  end
+
   describe "transfer trail" do
     let(:source) { create(:event_registration, status: "transferred_out") }
     let!(:incoming) { create(:event_registration, status: "registered", transferred_from_registration: source) }
@@ -141,6 +170,14 @@ RSpec.describe EventRegistration, type: :model do
       expect(EventRegistration.not_transferred_in).not_to include(incoming)
     end
 
+    it "scopes .holding_money to both halves of a transfer, not cancelled or no-show regs" do
+      cancelled = create(:event_registration, status: "cancelled")
+      no_show = create(:event_registration, status: "no_show")
+
+      expect(EventRegistration.holding_money).to include(source, incoming)
+      expect(EventRegistration.holding_money).not_to include(cancelled, no_show)
+    end
+
     describe "financials live on the source" do
       let(:paid_event) { create(:event, cost_cents: 10_000) }
       let(:source) { create(:event_registration, event: paid_event, status: "transferred_out") }
@@ -149,8 +186,8 @@ RSpec.describe EventRegistration, type: :model do
           status: "registered", transferred_from_registration: source)
       end
 
-      it "labels payment status as transferred in rather than Due" do
-        expect(incoming.payment_status_label).to eq("Transferred in")
+      it "labels an unpaid balance as Due, since it's payable on this reg" do
+        expect(incoming.payment_status_label).to eq("Due")
       end
 
       it "derives payment access from the source registration" do
@@ -159,6 +196,94 @@ RSpec.describe EventRegistration, type: :model do
         create(:allocation, allocatable: source, amount: 10_000,
           source: create(:payment, person: source.registrant, amount_cents: 10_000, amount_cents_remaining: nil))
         expect(incoming.reload.payment_access_granted?).to be(true)
+      end
+
+      context "with money on both registrations" do
+        def allocate(registration, amount)
+          create(:allocation, allocatable: registration, amount: amount,
+            source: create(:payment, person: source.registrant, amount_cents: amount, amount_cents_remaining: amount))
+        end
+
+        it "settles one balance from the source's payments and its own" do
+          allocate(source, 4_000)
+          allocate(incoming, 6_000)
+
+          expect(incoming.reload.remaining_cost).to eq(0)
+          expect(incoming).to be_paid_in_full
+          expect(incoming.payment_access_granted?).to be(true)
+          expect(incoming.payment_status_label).to eq("Paid")
+        end
+
+        it "still owes what neither registration has covered" do
+          allocate(source, 4_000)
+          allocate(incoming, 1_000)
+
+          expect(incoming.reload.remaining_cost).to eq(5_000)
+          expect(incoming).to be_partially_paid
+          expect(incoming.payment_status_label).to eq("Due")
+        end
+
+        it "lists the allocations from both registrations" do
+          old_payment = allocate(source, 4_000)
+          new_payment = allocate(incoming, 1_000)
+
+          expect(incoming.billing_allocations).to contain_exactly(old_payment, new_payment)
+        end
+
+        it "rejects an allocation beyond the combined balance" do
+          allocate(source, 8_000)
+
+          overpayment = build(:allocation, allocatable: incoming, amount: 3_000,
+            source: create(:payment, person: source.registrant, amount_cents: 3_000, amount_cents_remaining: 3_000))
+
+          expect(overpayment).not_to be_valid
+          expect(overpayment.errors.full_messages.to_sentence).to include("Remaining: $20")
+        end
+
+        it "puts a split-paid reg in .paid_in_full, not .not_paid_in_full" do
+          allocate(source, 4_000)
+          allocate(incoming, 6_000)
+
+          expect(EventRegistration.paid_in_full).to include(incoming)
+          expect(EventRegistration.not_paid_in_full).not_to include(incoming)
+        end
+
+        it "adds back a source-held scholarship across both registrations" do
+          scholarship = create(:scholarship, recipient: source.registrant, amount_cents: 4_000)
+          create(:allocation, source: scholarship, allocatable: source, amount: 4_000)
+          allocate(incoming, 1_000)
+
+          expect(incoming.reload.remaining_cost_without(scholarship)).to eq(9_000)
+        end
+      end
+
+      it "points a transferred-out reg's balance at its new registration" do
+        source.update!(status: "transferred_out")
+
+        expect(source.reload.billing_registration).to eq(incoming)
+        expect(incoming.billing_registration).to eq(incoming)
+      end
+
+      it "keeps its own balance while the transfer has no destination" do
+        pending_out = create(:event_registration, status: "transferred_out")
+
+        expect(pending_out.billing_registration).to eq(pending_out)
+      end
+
+      it "grants access from its own intends-to-pay flag without marking it paid" do
+        incoming.update!(intends_to_pay: true)
+
+        expect(incoming.payment_access_granted?).to be(true)
+        expect(incoming).not_to be_paid_in_full
+        expect(incoming.payment_status_label).to eq("Intends to pay")
+      end
+
+      it "inherits intends to pay from the locked source" do
+        source.update!(intends_to_pay: true)
+
+        expect(incoming.reload).to be_intends_to_pay
+        expect(incoming.payment_access_granted?).to be(true)
+        expect(EventRegistration.payment_status("intends_to_pay")).to include(incoming)
       end
     end
 
@@ -188,6 +313,86 @@ RSpec.describe EventRegistration, type: :model do
 
         expect(own.effective_scholarship).to eq(scholarship)
         expect(own).to be_scholarship_recipient
+      end
+
+      it "prefers a transferred-in reg's own award over the source's" do
+        source_award = create(:scholarship, recipient: source.registrant, amount_cents: 4_000)
+        create(:allocation, source: source_award, allocatable: source, amount: 4_000)
+        own_award = create(:scholarship, recipient: incoming.registrant, amount_cents: 1_000)
+        create(:allocation, source: own_award, allocatable: incoming, amount: 1_000)
+
+        expect(incoming.reload.effective_scholarships).to contain_exactly(own_award)
+      end
+
+      it "walks a chain of transfers back to the award" do
+        scholarship = create(:scholarship, recipient: source.registrant, amount_cents: 5_000)
+        create(:allocation, source: scholarship, allocatable: source, amount: 5_000)
+        incoming.update!(status: "transferred_out")
+        latest = create(:event_registration, status: "registered", transferred_from_registration: incoming)
+
+        expect(latest.effective_scholarships).to contain_exactly(scholarship)
+      end
+
+      context "with the award on the source" do
+        let!(:scholarship) { create(:scholarship, recipient: source.registrant, amount_cents: 5_000, tasks_completed: false) }
+
+        before { create(:allocation, source: scholarship, allocatable: source, amount: 5_000) }
+
+        it "shows the award as awarded only once its agreement is signed" do
+          expect(incoming.scholarship_awarded?).to be(false)
+
+          scholarship.accept_agreement!
+
+          expect(incoming.reload.scholarship_awarded?).to be(true)
+        end
+
+        it "reads a decline on the source" do
+          expect(incoming.scholarship_declined?).to be(false)
+
+          scholarship.decline_agreement!("Timing no longer works")
+
+          expect(incoming.reload.scholarship_declined?).to be(true)
+        end
+
+        it "opens the survey gate once the source agreement is signed" do
+          expect(incoming.recipient_survey_agreement_signed?).to be(false)
+
+          scholarship.accept_agreement!
+
+          expect(incoming.reload.recipient_survey_agreement_signed?).to be(true)
+        end
+
+        it "holds scholarship tasks open until they are done on the source" do
+          expect(incoming.scholarship_tasks_met?).to be(false)
+
+          scholarship.update!(tasks_completed: true)
+
+          expect(incoming.reload.scholarship_tasks_met?).to be(true)
+        end
+
+        it "lets a declined source award release the tasks" do
+          scholarship.decline_agreement!("Timing no longer works")
+
+          expect(incoming.reload.scholarship_tasks_met?).to be(true)
+        end
+
+        context "at an ended event the registrant attended" do
+          before { incoming.update!(event: create(:event, :ended), status: "attended") }
+
+          it "waits for the source award's tasks before unlocking the certificate" do
+            expect(incoming.certificate_available?).to be(false)
+
+            scholarship.update!(tasks_completed: true)
+
+            expect(incoming.reload.certificate_available?).to be(true)
+          end
+
+          it "keeps a certificate that was already issued available" do
+            incoming.update!(certificate_sent_at: Time.current)
+
+            expect(incoming.reload.certificate_available?).to be(true)
+          end
+        end
       end
     end
   end

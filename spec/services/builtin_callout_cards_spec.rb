@@ -31,6 +31,46 @@ RSpec.describe BuiltinCalloutCards do
       expect(card_titles(registration)).not_to include("Payment")
     end
 
+    context "on a transferred-in ticket whose new event is free" do
+      let(:event) { create(:event, cost_cents: 0) }
+      let(:source) { create(:event_registration, event: create(:event, cost_cents: 10_000), status: "transferred_out") }
+
+      before { registration.update!(transferred_from_registration: source) }
+
+      it "shows the balance carried from the original event" do
+        expect(card(registration, "Make your payment").badge).to eq("$100 due")
+      end
+    end
+
+    context "on a transferred-out ticket" do
+      let(:event) { create(:event, cost_cents: 10_000) }
+      let!(:destination) do
+        create(:event_registration, event: create(:event, cost_cents: 10_000, payment_due_deadline: nil),
+          registrant: registration.registrant, transferred_from_registration: registration)
+      end
+
+      before { registration.update!(status: "transferred_out") }
+
+      def allocate(reg, amount)
+        create(:allocation, allocatable: reg, amount: amount,
+          source: create(:payment, person: reg.registrant, amount_cents: amount, amount_cents_remaining: amount))
+      end
+
+      it "reads Paid once the new registration clears the balance" do
+        allocate(registration, 4_000)
+        allocate(destination, 6_000)
+
+        expect(card(registration.reload, "Payment").badge).to eq("Paid")
+      end
+
+      it "shows what's left across both registrations" do
+        allocate(registration, 4_000)
+        allocate(destination, 1_000)
+
+        expect(card(registration.reload, "Make your payment").badge).to eq("$50 due")
+      end
+    end
+
     it "hides participation cards but keeps financial ones once transferred out" do
       event.update!(videoconference_url: "https://example.zoom.us/j/1")
       create(:event_staff, event:)
@@ -218,6 +258,57 @@ RSpec.describe BuiltinCalloutCards do
       expect(scholarship_card.subtitle).to eq("Review and accept your scholarship agreement")
       expect(scholarship_card.badge).to be_nil
       expect(scholarship_card.theme).to eq(DomainTheme.swatch("amber"))
+    end
+
+    context "for a transferred-in recipient with the award on the original registration" do
+      let(:source) { create(:event_registration, registrant: registration.registrant, status: "transferred_out") }
+      let(:scholarship) { create(:scholarship, recipient: registration.registrant, amount_cents: 25_000, tasks_completed: true) }
+
+      before do
+        add_scholarship_form(event)
+        create(:allocation, source: scholarship, allocatable: source, amount: 1000)
+        registration.update!(transferred_from_registration: source)
+      end
+
+      it "prompts them to accept until the agreement is signed" do
+        scholarship_card = card(registration, "Scholarship")
+
+        expect(scholarship_card.subtitle).to eq("Review and accept your scholarship agreement")
+        expect(scholarship_card.badge).to be_nil
+        expect(scholarship_card.theme).to eq(DomainTheme.swatch("amber"))
+      end
+
+      it "shows the awarded amount once signed" do
+        scholarship.accept_agreement!
+
+        scholarship_card = card(registration.reload, "Scholarship")
+
+        expect(scholarship_card.subtitle).to eq("Your award — amount, funder, and tasks")
+        expect(scholarship_card.badge).to eq(MoneyFormatter.dollars_from_cents(25_000))
+      end
+
+      it "flags tasks still outstanding on the award" do
+        scholarship.accept_agreement!
+        scholarship.update!(tasks_completed: false)
+
+        expect(card(registration.reload, "Scholarship").badge).to include("Tasks outstanding")
+      end
+
+      it "shows a decline" do
+        scholarship.decline_agreement!("Timing no longer works")
+
+        scholarship_card = card(registration.reload, "Scholarship")
+
+        expect(scholarship_card.subtitle).to eq("You declined this award")
+        expect(scholarship_card.badge).to eq("Declined")
+      end
+
+      it "says the recipients survey waits on their acceptance" do
+        callout = create(:registration_ticket_callout, event:, builtin_key: "scholarship")
+        callout.registration_ticket_callout_forms.create!(form: create(:form, role: "recipient_survey"))
+
+        expect(described_class.new(registration.reload).card_for(callout).badge).to eq("Survey opens once you accept")
+      end
     end
 
     it "turns the scholarship card amber while award tasks are outstanding" do

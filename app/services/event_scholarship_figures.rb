@@ -3,8 +3,8 @@
 # (and its ~8 queries) per event.
 #
 # Mirrors EventDashboard's funded/unfunded split (Scholarship.externally_funded /
-# .org_subsidized) and its active-registrations-only scope, so a report column and
-# that event's dashboard can't disagree — a parity spec holds the two together.
+# .org_subsidized) and its money basis, so a report column and that event's
+# dashboard can't disagree — a parity spec holds the two together.
 #
 # Pass funder: (a Person/Organization) to narrow to scholarships drawn from that
 # funder's grants, matching EventDashboard.new(event, scholarship_funder:).
@@ -108,11 +108,11 @@ class EventScholarshipFigures
     @self_funded_grant_ids ||= Grant.self_funded_ids.to_set
   end
 
-  # { event_id => [ registration_id, ... ] } across every event, active only —
-  # matching EventDashboard, which counts scholarships on active registrations.
+  # { event_id => [ registration_id, ... ] } across every event — the same money
+  # basis as EventDashboard, so an award stays with the event of its registration.
   def registration_ids_by_event
     @registration_ids_by_event ||= EventRegistration
-      .active
+      .holding_money
       .where(event_id: @events.map(&:id))
       .pluck(:event_id, :id)
       .each_with_object({}) { |(event_id, id), map| (map[event_id] ||= []) << id }
@@ -144,7 +144,7 @@ class EventScholarshipFigures
 
   # { event_id => { status => count } } from one grouped query — the attended and
   # incomplete-attendance headcounts both read from it. Deliberately over every
-  # registration, not just the active ones the money figures use: it answers who
+  # registration, not just the ones the money figures use: it answers who
   # completed the training, which is a different question from who was on it.
   def status_counts_by_event
     @status_counts_by_event ||= EventRegistration.status_counts_by_event(@events.map(&:id))

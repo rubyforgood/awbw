@@ -1,0 +1,11 @@
+name: "Transferred registrants can pay a balance on a free event's ticket"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-05
+pr_number: 2951
+action_path: "/transfer_guide"
+summary: >-
+  When someone transfers into a free event with a balance still owed, their new ticket now offers the
+  Pay button, so they can settle it and reach payment-gated callouts.
+pro_tips:
+  - "The payment card only shows on that ticket if the event's Payment callout is published."

@@ -8,7 +8,7 @@ module Events
       # Skip on the filter turbo-frame reload so filtering doesn't double-count views.
       track_view("events.bulk_payments", { event_id: @event.id }) unless turbo_frame_request?
 
-      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
       # Same filter set as the global bulk payments index (search + method +
       # status + dates), applied to this event's submissions.
       @submissions = @event.form_submissions
@@ -16,14 +16,16 @@ module Events
                            .search_by_params(params)
                            .includes(:person, form_answers: :form_field, payment: :allocations)
                            .order(created_at: :desc)
-      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+      @linked_registrations_by_id = linked_registrations_by_id(@submissions)
+      @allocated_by_registration = allocated_cents_by_registration(
+        @event_registrations.map(&:id) + @submissions.flat_map(&:linked_registration_ids)
+      )
       @event = @event.decorate
     end
 
     def create
       authorize! @event
-      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
-      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
 
       submission = @event.form_submissions.find(params[:submission_id])
       payment_type = params[:payment_type]
@@ -56,6 +58,11 @@ module Events
       else
         flash.now[:alert] = payment.errors.full_messages.to_sentence
       end
+
+      @linked_registrations_by_id = linked_registrations_by_id([ submission ])
+      @allocated_by_registration = allocated_cents_by_registration(
+        @event_registrations.map(&:id) + submission.linked_registration_ids
+      )
 
       respond_to do |format|
         format.turbo_stream
@@ -107,11 +114,13 @@ module Events
       submission = @event.form_submissions.find(params[:submission_id])
       event_registration = EventRegistration.find_by(id: params[:event_registration_id])
 
-      if event_registration
+      if event_registration.nil?
+        flash.now[:alert] = "Registration not found."
+      elsif submission.linked_registration_ids.include?(event_registration.id)
+        flash.now[:notice] = "#{helpers.person_name(event_registration.registrant)} is already linked."
+      else
         submission.link_registration!(event_registration.id)
         flash.now[:notice] = "Linked #{helpers.person_name(event_registration.registrant)}."
-      else
-        flash.now[:alert] = "Registration not found."
       end
 
       assign_bulk_payment_card_data(submission)
@@ -153,19 +162,30 @@ module Events
     def assign_allocation_card_data(payment)
       @payment = payment.reload
       @submission = @payment.form_submission
-      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
-      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
+      @linked_registrations_by_id = linked_registrations_by_id([ @submission ].compact)
+      @allocated_by_registration = allocated_cents_by_registration(
+        @event_registrations.map(&:id) + Array(@submission&.linked_registration_ids)
+      )
     end
 
     def assign_bulk_payment_card_data(submission)
       @submission = submission.reload.decorate
-      @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
-      @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+      @event_registrations = @event.event_registrations.active.includes(:registrant)
+      @linked_registrations_by_id = linked_registrations_by_id([ @submission ])
+      @allocated_by_registration = allocated_cents_by_registration(
+        @event_registrations.map(&:id) + @submission.linked_registration_ids
+      )
     end
 
-    def allocated_cents_by_registration(registrations)
+    def linked_registrations_by_id(submissions)
+      ids = submissions.to_a.flat_map(&:linked_registration_ids).uniq
+      EventRegistration.where(id: ids).includes(:registrant, :event).index_by(&:id)
+    end
+
+    def allocated_cents_by_registration(registration_ids)
       Allocation
-        .where(allocatable_type: "EventRegistration", allocatable_id: registrations.ids)
+        .where(allocatable_type: "EventRegistration", allocatable_id: registration_ids.uniq)
         .group(:allocatable_id)
         .sum(:amount)
     end

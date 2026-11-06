@@ -30,9 +30,12 @@ module Events
     # the linked documents (the W-9 from the payment callout's resources, and the
     # dynamic invoice/receipt) for paid events.
     def payment
+      billing = @event_registration.billing_registration
+      return redirect_to registration_payment_path(billing.slug) unless billing == @event_registration
+
       # The sample preview has no ledger or documents to link (its sentinel slug
       # wouldn't resolve), so it just shows the empty structure.
-      @allocations = sample_preview? ? [] : @event_registration.allocations.includes(:source).order(:created_at)
+      @allocations = sample_preview? ? [] : @event_registration.billing_allocations.includes(:source, allocatable: :event).order(:created_at)
       @document_cards = sample_preview? ? [] : payment_document_cards
     end
 
@@ -90,7 +93,7 @@ module Events
 
     # The Agree button (agreement=yes) records an "accepted" response.
     def sign_agreement
-      scholarship = @event_registration.scholarships.first
+      scholarship = @event_registration.effective_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return
@@ -112,7 +115,7 @@ module Events
     # Record the recipient's decline (drops the award from all totals). A repeat
     # decline is a no-op.
     def decline_agreement
-      scholarship = @event_registration.scholarships.first
+      scholarship = @event_registration.effective_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return
@@ -133,7 +136,7 @@ module Events
     # The award stays live; we record the amount they can contribute and notify the
     # trainings team so they can revisit the award. A repeat request just updates.
     def request_scholarship_support
-      scholarship = @event_registration.scholarships.first
+      scholarship = @event_registration.effective_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return

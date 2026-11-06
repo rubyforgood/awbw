@@ -38,4 +38,43 @@ RSpec.describe "Event search", type: :request do
       end
     end
   end
+
+  describe "GET /search/event_registration" do
+    let!(:registrant) { create(:person, first_name: "Fay", last_name: "Finder") }
+    let!(:active_registration) { create(:event_registration, registrant: registrant, status: "registered") }
+    let!(:transferred_out_registration) { create(:event_registration, registrant: registrant, status: "transferred_out") }
+    let!(:incoming_registration) do
+      create(:event_registration, registrant: registrant, status: "registered",
+             transferred_from_registration: create(:event_registration, status: "transferred_out"))
+    end
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "returns every event and status" do
+        get "/search/event_registration", params: { q: "Finder" }
+
+        expect(response).to have_http_status(:ok)
+        ids = response.parsed_body.map { |row| row["id"] }
+        expect(ids).to include(active_registration.id, transferred_out_registration.id, incoming_registration.id)
+      end
+
+      it "omits excluded ids" do
+        get "/search/event_registration",
+            params: { q: "Finder", exclude: active_registration.id.to_s }
+
+        expect(response.parsed_body.map { |row| row["id"] }).not_to include(active_registration.id)
+      end
+    end
+
+    context "as a regular user" do
+      before { sign_in regular_user }
+
+      it "is not authorized" do
+        get "/search/event_registration", params: { q: "Finder" }
+
+        expect(response).to have_http_status(:redirect)
+      end
+    end
+  end
 end

@@ -124,6 +124,7 @@ class EventRegistrationsController < ApplicationController
           when "recipients" then redirect_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), notice: notice, status: :see_other
           when "recipient_card" then redirect_to helpers.recipients_event_card_path(@event_registration.event, @event_registration.slug), notice: notice, status: :see_other
           when "attendance" then redirect_to attendance_event_path(@event_registration.event), notice: notice, status: :see_other
+          when "bulk_payments" then redirect_to helpers.bulk_payments_return_path(@event_registration.event), notice: notice, status: :see_other
           else
             # No explicit origin: keep admins in the management context (the
             # registrants list) rather than dropping them on the public
@@ -245,6 +246,7 @@ class EventRegistrationsController < ApplicationController
     # transferred out is itself a transfer-in, its predecessor is the real origin,
     # so the new reg points straight there and the middle stop is dropped. (#1944)
     source = @event_registration.transferred_from_registration || @event_registration
+    destination.intends_to_pay ||= @event_registration.intends_to_pay?
 
     if destination == source
       # Transferring back to the origin event undoes the whole chain: restore the
@@ -291,7 +293,11 @@ class EventRegistrationsController < ApplicationController
       EventRegistrationServices::TransferContinuingEducation.new(
         transferred_out: @event_registration, destination: destination
       ).call
-      @event_registration.destroy! if @event_registration.transferred_in?
+      if @event_registration.transferred_in?
+        # update_columns so the move isn't re-judged as a new allocation against the balance.
+        @event_registration.allocations.each { |allocation| allocation.update_columns(allocatable_id: destination.id) }
+        @event_registration.destroy!
+      end
       true
     end
 
