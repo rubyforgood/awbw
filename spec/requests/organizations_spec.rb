@@ -106,6 +106,18 @@ RSpec.describe "/organizations", type: :request do
       expect(response.body).not_to include("13-17")
     end
 
+    it "leaves the description off the profile, even for admins" do
+      organization = Organization.create!(valid_attributes)
+
+      get organization_url(organization)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include(valid_attributes[:description])
+
+      organization.update!(profile_show_description: false)
+      get organization_url(organization)
+      expect(response.body).not_to include(valid_attributes[:description])
+    end
+
     context "with contact info hidden from the profile" do
       let(:organization) do
         Organization.create!(valid_attributes.merge(
