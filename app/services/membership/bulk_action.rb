@@ -3,7 +3,7 @@ class Membership::BulkAction
     def actionable? = actionable
   end
 
-  Result = Data.define(:changed, :skipped, :failed)
+  Result = Data.define(:changed, :skipped, :failed, :errors, :failed_ids)
 
   ACTIONS = [
     Membership::BulkAction::SetFee,
@@ -26,4 +26,10 @@ class Membership::BulkAction
   private
 
   def pluralized(count, noun) = "#{count} #{noun.pluralize(count)}"
+
+  def error_message(record, error)
+    messages = record.errors.full_messages
+    messages = [ error.message ] if messages.empty?
+    messages.to_sentence
+  end
 end

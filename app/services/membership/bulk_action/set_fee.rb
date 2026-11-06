@@ -4,8 +4,11 @@ class Membership::BulkAction::SetFee < Membership::BulkAction
   def unit = "membership"
   def param_name = "membership_ids"
 
-  def preview_rows(directory, **)
-    directory.scope.includes(person: :user).order(start_date: :desc).map do |membership|
+  def preview_rows(directory, ids: nil, **)
+    scope = directory.scope.includes(person: :user).order(start_date: :desc)
+    scope = scope.where(id: ids) if ids
+
+    scope.map do |membership|
       locked = membership.locked?
 
       Row.new(
@@ -21,8 +24,10 @@ class Membership::BulkAction::SetFee < Membership::BulkAction
 
   def perform(directory, ids:, cost_cents: nil, **)
     changed = skipped = failed = 0
+    errors = []
+    failed_ids = []
 
-    directory.scope.where(id: ids).find_each do |membership|
+    directory.scope.where(id: ids).includes(person: :user).find_each do |membership|
       if membership.locked? || membership.cost_cents == cost_cents
         skipped += 1
         next
@@ -31,12 +36,14 @@ class Membership::BulkAction::SetFee < Membership::BulkAction
       begin
         membership.update!(cost_cents: cost_cents)
         changed += 1
-      rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved
+      rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
         failed += 1
+        failed_ids << membership.id
+        errors << "#{membership.person.full_name}: #{error_message(membership, e)}"
       end
     end
 
-    Result.new(changed:, skipped:, failed:)
+    Result.new(changed:, skipped:, failed:, errors:, failed_ids:)
   end
 
   def notice(result)

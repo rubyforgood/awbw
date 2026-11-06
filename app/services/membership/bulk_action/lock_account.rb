@@ -4,8 +4,11 @@ class Membership::BulkAction::LockAccount < Membership::BulkAction
   def unit = "person"
   def param_name = "person_ids"
 
-  def preview_rows(directory, **)
-    counts = directory.scope.group(:person_id).count
+  def preview_rows(directory, ids: nil, **)
+    scope = directory.scope
+    scope = scope.where(person_id: ids) if ids
+
+    counts = scope.group(:person_id).count
     people = Person.where(id: counts.keys).includes(:user).order(:first_name, :last_name)
 
     people.map do |person|
@@ -29,6 +32,8 @@ class Membership::BulkAction::LockAccount < Membership::BulkAction
 
   def perform(directory, ids:, **)
     changed = skipped = failed = 0
+    errors = []
+    failed_ids = []
 
     Person.where(id: directory.scope.select(:person_id))
       .where(id: ids)
@@ -43,12 +48,14 @@ class Membership::BulkAction::LockAccount < Membership::BulkAction
         begin
           user.update!(locked_at: Time.current)
           changed += 1
-        rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved
+        rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
           failed += 1
+          failed_ids << person.id
+          errors << "#{person.full_name}: #{error_message(user, e)}"
         end
       end
 
-    Result.new(changed:, skipped:, failed:)
+    Result.new(changed:, skipped:, failed:, errors:, failed_ids:)
   end
 
   def notice(result)

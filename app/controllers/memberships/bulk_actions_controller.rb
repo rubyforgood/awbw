@@ -22,6 +22,15 @@ module Memberships
       end
 
       result = @action.perform(@directory, ids: ids, cost_cents: @cost_cents)
+
+      if result.failed.positive?
+        @result = result
+        @selected_ids = result.failed_ids
+        flash.now[:notice] = @action.notice(result)
+        prepare_confirm(only_ids: result.failed_ids)
+        return render :new, status: :unprocessable_content
+      end
+
       redirect_to memberships_path(@directory.filter_params),
         notice: @action.notice(result), status: :see_other
     end
@@ -41,8 +50,8 @@ module Memberships
       @action.key == "set_fee"
     end
 
-    def prepare_confirm
-      @rows = @action.preview_rows(@directory)
+    def prepare_confirm(only_ids: nil)
+      @rows = @action.preview_rows(@directory, ids: only_ids)
       @selected_count = @selected_ids ? @selected_ids.size : @rows.count(&:actionable?)
     end
 
