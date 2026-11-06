@@ -1552,6 +1552,23 @@ RSpec.describe "Events", type: :request do
 
     before { sign_in admin }
 
+    it "shows a transferred-in registrant's balance across both registrations" do
+      paid_event = create(:event, cost_cents: 10_000)
+      new_event = create(:event, cost_cents: 20_000)
+      source = create(:event_registration, event: paid_event, status: "transferred_out")
+      incoming = create(:event_registration, event: new_event, registrant: source.registrant,
+        transferred_from_registration: source)
+      create(:allocation, allocatable: source, amount: 4_000,
+        source: create(:payment, person: source.registrant, amount_cents: 4_000, amount_cents_remaining: 4_000))
+      create(:allocation, allocatable: incoming, amount: 1_000,
+        source: create(:payment, person: source.registrant, amount_cents: 1_000, amount_cents_remaining: 1_000))
+
+      get registrants_event_path(new_event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("$50 due")
+    end
+
     context "eyebrow back link" do
       it "returns to the dashboard by default" do
         get registrants_event_path(event)
@@ -3020,6 +3037,31 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Dashboard")
         expect(response.body).to include("Overview Org")
+      end
+
+      it "lists a transferred-out registrant beside the money left on this event" do
+        moved = create(:person, first_name: "Moved", last_name: "Registrant")
+        transferred = create(:event_registration, event: event, registrant: moved, status: "transferred_out")
+        create(:allocation, source: create(:payment, amount_cents: 6_000, amount_cents_remaining: 6_000),
+                            allocatable: transferred, amount: 6_000)
+
+        get dashboard_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Moved Registrant")
+        expect(response.body).to include("$60")
+      end
+
+      it "shows the money cards on a free event carrying a transferred-in balance" do
+        free_event = create(:event, cost_cents: 0)
+        source = create(:event_registration, event: event, registrant: create(:person), status: "transferred_out")
+        create(:event_registration, event: free_event, registrant: source.registrant, status: "registered",
+          transferred_from_registration: source)
+
+        get dashboard_event_path(free_event)
+
+        expect(response.body).not_to include("Free event")
+        expect(response.body).to include("$100")
       end
 
       it "drills the active/inactive counts into the matching status filter, not a registrant_ids list" do

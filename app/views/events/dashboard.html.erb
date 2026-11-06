@@ -40,8 +40,8 @@
 
   <%# Money cards — shown first. Hidden only when there's genuinely no money:
       free registration AND no CE fees or scholarships (a free event can still
-      charge for CE). %>
-  <% if @dashboard.free? && @dashboard.cont_ed_total_cents.zero? && @dashboard.scholarship_total_cents.zero? %>
+      charge for CE, or carry a balance transferred in from a paid event). %>
+  <% if @dashboard.free? && @dashboard.registration_subtotal_cents.zero? && @dashboard.cont_ed_total_cents.zero? && @dashboard.scholarship_total_cents.zero? %>
     <div class="border-primary/10 mb-4 rounded-2xl border bg-white p-4 text-center text-sm text-gray-500">
       <i class="fa-solid fa-tag mr-1 text-gray-400"></i> Free event — no payments or scholarships
     </div>
@@ -208,7 +208,7 @@
           <div class="mt-3 space-y-1 border-t border-gray-100 pt-3">
             <%= render "dashboard_money_row", label: "Scholarships", icon: "fa-graduation-cap",
                   amount_cents: @dashboard.scholarship_total_cents,
-                  count: @dashboard.scholarship_registrants.size, registrants: @dashboard.scholarship_registrants,
+                  count: @dashboard.money_scholarship_registrants.size, registrants: @dashboard.money_scholarship_registrants,
                   amounts_by_registrant_id: @dashboard.scholarship_amounts_by_recipient,
                   filter_path: registrants_event_path(@event, scholarship: "yes") %>
           </div>

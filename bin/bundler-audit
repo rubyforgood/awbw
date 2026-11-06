@@ -2,5 +2,14 @@
 require_relative "../config/boot"
 require "bundler/audit/cli"
 
-ARGV.concat %w[ --config config/bundler-audit.yml ] if ARGV.empty? || ARGV.include?("check")
+if ARGV.empty? || ARGV.include?("check")
+  ARGV.concat %w[ --config config/bundler-audit.yml ]
+
+  # Refresh the advisory DB, mirroring CI's fresh clone. Respect an explicit
+  # --update/-u or --no-update from the caller (e.g. offline runs).
+  unless ARGV.any? { |arg| %w[ --update -u --no-update ].include?(arg) }
+    ARGV << "--update"
+  end
+end
+
 Bundler::Audit::CLI.start

@@ -173,10 +173,7 @@ class EventRegistrationReadiness
   end
 
   def payment_due?
-    # A transferred-in reg's balance is tracked on its source registration, so it
-    # owes nothing for this event and never reads as "Payment due" here.
-    return false if registration.transferred_in?
-    registration.event.cost_cents.to_i > 0 && !registration.paid_in_full?
+    !registration.paid_in_full?
   end
 
   # The organization needs an admin's attention until one is linked to the
@@ -191,11 +188,11 @@ class EventRegistrationReadiness
   end
 
   def scholarship_uncreated?
-    registration.scholarship_requested? && !registration.scholarship?
+    registration.scholarship_requested? && !registration.scholarship_recipient?
   end
 
   def scholarship_tasks_incomplete?
-    registration.scholarship? && !registration.scholarship_tasks_met?
+    !registration.scholarship_tasks_met?
   end
 
   # Recipients only, once the survey is available (agreement signed, drip passed). Reads preloaded scholarships + the event's memoized callout, so

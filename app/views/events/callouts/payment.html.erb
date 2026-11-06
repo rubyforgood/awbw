@@ -9,6 +9,9 @@
           <div class="min-w-0">
             <p class="text-sm font-medium text-gray-900"><%= allocation.source_type.titleize %></p>
             <p class="text-xs text-gray-500"><%= allocation.created_at.strftime("%b %-d, %Y · %-l:%M %p") %></p>
+            <% if allocation.allocatable_id != @event_registration.id %>
+              <p class="text-xs text-gray-500">Paid toward <%= allocation.allocatable.event.title %></p>
+            <% end %>
           </div>
           <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(allocation.amount) %></span>
         </div>

@@ -1,7 +1,7 @@
 <%# ---- Allocations — a cost/allocated/due summary (matching the scholarship
     edit page). The per-allocation line items live on the linked allocations
     page; this card shows totals only. ---- %>
-<% cost_cents = event_registration.event.cost_cents.to_i %>
+<% cost_cents = event_registration.cost_cents.to_i %>
 <% paid_cents = event_registration.allocations_sum %>
 <% due_cents = cost_cents - paid_cents %>
 <%# Free event with nothing allocated — nothing to manage, so hide the section. %>
@@ -77,12 +77,15 @@
             <input type="checkbox"
                    name="event_registration[intends_to_pay]"
                    value="1"
-                   <%= "checked" if event_registration.intends_to_pay %>
+                   <%= "checked" if event_registration.intends_to_pay? %>
                    class="sr-only peer">
             <span class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
             <span>
               <span class="block text-sm font-medium text-gray-700">Intends to pay</span>
               <span class="block text-xs text-gray-400">Grant access to training materials and join links while the balance is still due.</span>
+              <% if event_registration.transferred_from_registration&.intends_to_pay? %>
+                <span class="block text-xs text-gray-400">Set on the original registration, so it stays on here.</span>
+              <% end %>
             </span>
           </label>
 

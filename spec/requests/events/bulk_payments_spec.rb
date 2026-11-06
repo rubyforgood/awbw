@@ -312,6 +312,29 @@ RSpec.describe "Events::BulkPayments", type: :request do
       }.not_to change { submission.reload.linked_registration_ids }
     end
 
+    it "says so when the registration is already linked" do
+      submission.link_registration!(event_registration.id)
+
+      post link_bulk_payment_event_path(event),
+           params: { submission_id: submission.id, event_registration_id: event_registration.id },
+           as: :turbo_stream
+
+      expect(response.body).to include("is already linked")
+    end
+
+    it "links a registration from another event and renders it on the card" do
+      other_event = create(:event, title: "Other Training")
+      other_registration = create(:event_registration, event: other_event,
+                              registrant: create(:person, first_name: "Ollie", last_name: "Other"))
+
+      post link_bulk_payment_event_path(event),
+           params: { submission_id: submission.id, event_registration_id: other_registration.id },
+           as: :turbo_stream
+
+      expect(submission.reload.linked_registration_ids).to eq([ other_registration.id ])
+      expect(response.body).to include("Ollie Other", "Other Training")
+    end
+
     it "re-renders the card expanded" do
       post link_bulk_payment_event_path(event),
            params: { submission_id: submission.id, event_registration_id: event_registration.id },

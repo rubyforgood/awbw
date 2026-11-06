@@ -116,7 +116,7 @@ class EventDashboard
   end
 
   def scholarship_total_cents
-    scholarships.sum(:amount_cents)
+    money_scholarships.sum(:amount_cents)
   end
 
   # Scholarship dollars drawn from an EXTERNAL funder/grant — money a grant pays
@@ -327,8 +327,14 @@ class EventDashboard
     @scholarship_registrants ||= people_sorted(scholarships.distinct.pluck(:recipient_id))
   end
 
+  # Everyone behind the scholarship dollars, which can include a transferred-out
+  # recipient who isn't a #scholarship_registrants person here.
+  def money_scholarship_registrants
+    @money_scholarship_registrants ||= people_sorted(money_scholarships.distinct.pluck(:recipient_id))
+  end
+
   def scholarship_amounts_by_recipient
-    @scholarship_amounts_by_recipient ||= scholarships.group(:recipient_id).sum(:amount_cents)
+    @scholarship_amounts_by_recipient ||= money_scholarships.group(:recipient_id).sum(:amount_cents)
   end
 
   # Funded / unfunded scholarship dollars per recipient (Person id => cents) — the
@@ -345,8 +351,8 @@ class EventDashboard
 
   # Scholarship recipients (Person records, name-sorted) with a funded / unfunded
   # award — the people behind each split, for the scholarship report row's expander.
-  # Both reuse the recipients already loaded by #scholarship_registrants, so the
-  # split adds no extra Person query.
+  # Both reuse the recipients already loaded by #money_scholarship_registrants, so
+  # the split adds no extra Person query.
   def funded_scholarship_recipients
     @funded_scholarship_recipients ||= recipients_for(funded_scholarship_cents_by_recipient.keys)
   end
@@ -371,35 +377,28 @@ class EventDashboard
   # Per-registrant cents still owed after payments and scholarships, keyed by
   # Person id. Aggregates across a person's registrations; sums to outstanding_cents.
   def registration_due_by_registrant
-    @registration_due_by_registrant ||= billable_registration_ids.each_with_object(Hash.new(0)) do |id, map|
-      due = [ event.cost_cents.to_i - allocated_by_registration.fetch(id, 0), 0 ].max
+    @registration_due_by_registrant ||= due_cents_by_registration.each_with_object(Hash.new(0)) do |(id, due), map|
       next if due.zero?
       registrant_id = registrant_id_by_registration[id]
       map[registrant_id] += due if registrant_id
     end
   end
 
-  # Real money allocated to this event's registrations from payments.
+  # Real money allocated to this event's registrations from payments, wherever the
+  # registrant ended up: money counts at the event of the reg it sits on.
   def received_cents
     registration_allocations.where(source_type: "Payment").sum(:amount)
   end
 
-  # Still owed across all billable registrations, after payments and scholarships.
+  # Still owed across active registrations, after payments and scholarships. A
+  # transfer's balance is owed here, at the event they attend, not at the one they left.
   def outstanding_cents
-    billable_registration_ids.sum do |id|
-      [ event.cost_cents.to_i - allocated_by_registration.fetch(id, 0), 0 ].max
-    end
-  end
-
-  # Full-price value of all billable registrations (before scholarships/discounts).
-  def total_cents
-    event.cost_cents.to_i * billable_registration_ids.size
+    due_cents_by_registration.values.sum
   end
 
   # Registration-fee subtotal: money received plus money still owed. This is the
   # cash side of registration fees (it excludes scholarship-covered cost), so it
   # reconciles with the Paid + Due breakdown and the grand-total equation.
-  # Differs from total_cents, the full pre-scholarship price.
   def registration_subtotal_cents
     received_cents + outstanding_cents
   end
@@ -434,13 +433,11 @@ class EventDashboard
   end
 
   def paid_count
-    return billable_registration_ids.size if free?
-    billable_registration_ids.count { |id| allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i }
+    paid_registration_ids.size
   end
 
   def unpaid_count
-    return 0 if free?
-    billable_registration_ids.size - paid_count
+    unpaid_registration_ids.size
   end
 
   # Registrants whose cost is fully covered (payments and/or completed
@@ -450,7 +447,7 @@ class EventDashboard
   end
 
   def unpaid_registrants
-    @unpaid_registrants ||= people_sorted(registrants_for(billable_registration_ids - paid_registration_ids))
+    @unpaid_registrants ||= people_sorted(registrants_for(unpaid_registration_ids))
   end
 
   # Registrants still owing who have paid some of it — listed under Paid as well so
@@ -464,8 +461,8 @@ class EventDashboard
   # separate from the registration fee. These mirror the registration-fee
   # methods above: paid is CE cash collected, outstanding is CE cost still owed
   # after every allocation, and the total (paid + outstanding) is the CE addend
-  # in the grand total. Scoped to CE registrations tied to an active event
-  # registration, so cancelled registrants' CE is ignored like their fees.
+  # in the grand total. Scoped to #money_registration_ids, so cancelled
+  # registrants' CE is ignored like their fees.
   # Cash collected counts every CE; what's owed and who has CE count only
   # ContinuingEducationRegistration.counted.
 
@@ -696,7 +693,7 @@ class EventDashboard
   # roster's CE column: its icon links to editing this record when present.
   def ce_registration_by_registrant
     @ce_registration_by_registrant ||= ce_registrations.each_with_object({}) do |ce_registration, map|
-      registrant_id = ce_registrant_id_by_registration[ce_registration.event_registration_id]
+      registrant_id = registrant_id_by_registration[ce_registration.event_registration_id]
       map[registrant_id] ||= ce_registration if registrant_id
     end
   end
@@ -1018,12 +1015,22 @@ class EventDashboard
       .pluck(:event_registration_id)
   end
 
-  # The money basis: active registrations that owe THIS event, i.e. excluding
-  # transferred-in regs (whose balance lives on their source registration). Kept
-  # distinct from registrant_count/active ids — a transferred-in registrant still
-  # counts in the headcount and attendance, just not in the financial totals.
-  def billable_registration_ids
-    @billable_registration_ids ||= active_registrations.not_transferred_in.pluck(:id)
+  # The money basis, kept apart from the people figures: every registration of this
+  # event holding money, including a transferred-out reg no longer in the headcount.
+  # Each allocation counts at the event of the reg it sits on, so a transfer's money
+  # is counted once, split across its two events. (#2947)
+  def money_registrations
+    @money_registrations ||= event.event_registrations.holding_money
+  end
+
+  def money_registration_ids
+    @money_registration_ids ||= money_registrations.pluck(:id)
+  end
+
+  # The two halves of any transfer touching this event.
+  def transfer_registration_ids
+    @transfer_registration_ids ||= money_registrations.where(status: "transferred_out")
+      .or(money_registrations.transferred_in).pluck(:id)
   end
 
   def registrant_ids
@@ -1062,8 +1069,8 @@ class EventDashboard
 
   # Scholarships to RECOGNIZE recipients at this event: awards on this event's own
   # registrations, plus awards on the SOURCE registrations of anyone transferred
-  # in (their dollars stay on the source event — see #scholarships and the
-  # billable basis — but they're still a scholarship recipient here). Recognition
+  # in (their dollars stay on the source event — see #money_scholarships — but
+  # they're still a scholarship recipient here). Recognition
   # only: drives the recipient "hat", the recipient count, and the recipients
   # page; NOT the dollar totals. (#1944)
   def recognized_scholarships
@@ -1188,27 +1195,25 @@ class EventDashboard
   end
 
   def registration_allocations
-    Allocation.where(allocatable_type: "EventRegistration", allocatable_id: active_registration_ids)
+    Allocation.where(allocatable_type: "EventRegistration", allocatable_id: money_registration_ids)
   end
 
   def allocated_by_registration
     @allocated_by_registration ||= registration_allocations.group(:allocatable_id).sum(:amount)
   end
 
-  # CE money/counts follow the CE record, not the registration billing basis: they
-  # count every CE record on a registration of this event that wasn't cancelled or
-  # a no-show — including a transferred-out reg's paid stub (counted here, where it
-  # was paid) and a transferred-in reg's own carried record (counted at the event it
-  # now credits). (#1944)
-  def ce_basis_registration_ids
-    @ce_basis_registration_ids ||= event.event_registrations.where.not(status: %w[ cancelled no_show ]).pluck(:id)
+  # What each active registration still owes.
+  def due_cents_by_registration
+    @due_cents_by_registration ||= RegistrationBalances.new(active_registration_ids).due_cents_by_id
   end
 
   # Continuing-education registrations counted for this event — the basis for every
-  # CE money figure and for the CE registrant counts / pie.
+  # CE money figure and for the CE registrant counts / pie. Includes a
+  # transferred-out reg's paid stub (counted here, where it was paid) and a
+  # transferred-in reg's own carried record (counted at the event it now credits). (#1944)
   def ce_registrations
     @ce_registrations ||= ContinuingEducationRegistration
-      .where(event_registration_id: ce_basis_registration_ids)
+      .where(event_registration_id: money_registration_ids)
       .to_a
   end
 
@@ -1217,15 +1222,6 @@ class EventDashboard
       counted_ids = ContinuingEducationRegistration.counted.where(id: ce_registrations.map(&:id)).pluck(:id).to_set
       ce_registrations.select { |ce_registration| counted_ids.include?(ce_registration.id) }
     end
-  end
-
-  # Registrant (Person) id per registration in the CE basis. Distinct from
-  # #registrant_id_by_registration (active regs only) because CE also counts a
-  # transferred-out reg's stub, whose reg is inactive. (#1944)
-  def ce_registrant_id_by_registration
-    @ce_registrant_id_by_registration ||= event.event_registrations
-      .where(id: ce_registrations.map(&:event_registration_id).uniq)
-      .pluck(:id, :registrant_id).to_h
   end
 
   def ce_allocations
@@ -1268,14 +1264,14 @@ class EventDashboard
   end
 
   def ce_registrant_ids_for(records)
-    records.filter_map { |ce_registration| ce_registrant_id_by_registration[ce_registration.event_registration_id] }.uniq
+    records.filter_map { |ce_registration| registrant_id_by_registration[ce_registration.event_registration_id] }.uniq
   end
 
   # Roll a per-CE-registration cents figure (from the block) up to a
   # { Person id => cents } hash, dropping zeros.
   def ce_cents_by_registrant(records = ce_registrations)
     records.each_with_object(Hash.new(0)) do |ce_registration, map|
-      registrant_id = ce_registrant_id_by_registration[ce_registration.event_registration_id]
+      registrant_id = registrant_id_by_registration[ce_registration.event_registration_id]
       next unless registrant_id
       cents = yield(ce_registration)
       map[registrant_id] += cents if cents.positive?
@@ -1296,17 +1292,26 @@ class EventDashboard
   # display lookups still surface a declined award (badged). Money and counts run
   # off #scholarships, which drops them.
   def all_scholarships
-    @all_scholarships ||= begin
-      scope = Scholarship
-        .joins(:allocation)
-        .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: active_registration_ids })
-      scope = scope.where(grant_id: funder_grant_ids) if @scholarship_funder
-      scope
-    end
+    @all_scholarships ||= scholarships_on(active_registration_ids)
   end
 
   def scholarships
     @scholarships ||= all_scholarships.not_declined
+  end
+
+  # The awards behind the dollar figures. Wider than #scholarships, which answers
+  # who's a recipient at this event: an award stays on the transferred-out reg, so
+  # its dollars count here though the recipient has moved on.
+  def money_scholarships
+    @money_scholarships ||= scholarships_on(money_registration_ids).not_declined
+  end
+
+  def scholarships_on(registration_ids)
+    scope = Scholarship
+      .joins(:allocation)
+      .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids })
+    scope = scope.where(grant_id: funder_grant_ids) if @scholarship_funder
+    scope
   end
 
   # Ids of grants the scoped funder gave — used to narrow scholarships to one
@@ -1317,12 +1322,12 @@ class EventDashboard
 
   # Externally funded = backed by a grant whose funder isn't the org itself.
   def funded_scholarships
-    scholarships.externally_funded(self_funded_grant_ids)
+    money_scholarships.externally_funded(self_funded_grant_ids)
   end
 
   # Org-subsidized = no grant, or a grant the org (AWBW) self-funded.
   def unfunded_scholarships
-    scholarships.org_subsidized(self_funded_grant_ids)
+    money_scholarships.org_subsidized(self_funded_grant_ids)
   end
 
   # Ids of grants the org self-funded; memoized so the funded/unfunded split
@@ -1331,14 +1336,22 @@ class EventDashboard
     @self_funded_grant_ids ||= Grant.self_funded_ids
   end
 
+  # Nothing owed here. A transfer only lists at an event holding some of its money,
+  # so a reg paid in full at the old event doesn't read as paid at the new one too.
   def paid_registration_ids
-    @paid_registration_ids ||= billable_registration_ids.select do |id|
-      allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i
+    @paid_registration_ids ||= money_registration_ids.select do |id|
+      next false if due_cents_by_registration[id].positive?
+
+      transfer_registration_ids.exclude?(id) || allocated_by_registration.fetch(id, 0).positive?
     end
   end
 
+  def unpaid_registration_ids
+    @unpaid_registration_ids ||= due_cents_by_registration.select { |_id, due| due.positive? }.keys
+  end
+
   def registrant_id_by_registration
-    @registrant_id_by_registration ||= active_registrations.pluck(:id, :registrant_id).to_h
+    @registrant_id_by_registration ||= money_registrations.pluck(:id, :registrant_id).to_h
   end
 
   def registrants_for(registration_ids)
@@ -1350,13 +1363,13 @@ class EventDashboard
   end
 
   # Recipient Person records for the given ids, name-sorted, drawn from the
-  # already-loaded scholarship_registrants so a funded/unfunded split reuses one query.
+  # already-loaded money_scholarship_registrants so a funded/unfunded split reuses one query.
   def recipients_for(recipient_ids)
     recipient_ids.filter_map { |id| scholarship_recipients_by_id[id] }.sort_by(&:name)
   end
 
   def scholarship_recipients_by_id
-    @scholarship_recipients_by_id ||= scholarship_registrants.index_by(&:id)
+    @scholarship_recipients_by_id ||= money_scholarship_registrants.index_by(&:id)
   end
 
   def organization_ids

@@ -234,7 +234,7 @@ class EventsController < ApplicationController
     registrant_includes = [ :user, { avatar_attachment: :blob } ]
     registrant_includes += [ :contact_methods, { affiliations: :organization } ] if request.format.csv?
     scope = @event.event_registrations
-      .includes(:comments, :organizations, :allocations, :scholarships, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: registrant_includes)
+      .includes(:comments, :organizations, :allocations, :scholarships, { transferred_from_registration: [ :event, :allocations, :scholarships ] }, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: registrant_includes)
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
@@ -303,7 +303,7 @@ class EventsController < ApplicationController
       # Preload each org's affiliations: the row's program-status badge classifies
       # them via Organization#facilitator_status_on, which filters the loaded
       # association — unloaded, that's a per-org query pulling every affiliation row.
-      .includes(:checklist_completions, { organizations: :affiliations }, :allocations, :scholarships, :comments, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, { affiliations: :organization } ])
+      .includes(:checklist_completions, { organizations: :affiliations }, :allocations, :scholarships, :comments, { transferred_from_registration: [ :event, :allocations ] }, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
 
@@ -414,18 +414,36 @@ class EventsController < ApplicationController
     @event = @event.decorate
     @invite_mode = invite_mode?
     @ce_eligible = @event.ce_eligible?
-    @event_registrations = @event.event_registrations
+    @comp_membership_on_invite = @invite_mode && @event.facilitator_training? && !@event.on_demand?
+    registrant_includes = [ :user, :contact_methods, :addresses, :topic_subscriptions ]
+    registrant_includes << :memberships if @comp_membership_on_invite
+    all_registrations = @event.event_registrations
       .includes(
         :event, :organizations, :comments,
         { scholarships: { grant: :funder } },
-        registrant: [ :user, :contact_methods, :addresses, :topic_subscriptions ]
+        registrant: registrant_includes
       )
       .joins(:registrant)
-      .select { |r| r.registrant.preferred_email.present? }
+      .to_a
 
-    # Invite mode targets only registrants with no portal account yet — those are
-    # the people a login invite is for.
-    @event_registrations = @event_registrations.select { |r| r.registrant.user.nil? } if @invite_mode
+    @event_registrations = all_registrations.select { |r| r.registrant.preferred_email.present? }
+
+    @not_auto_comped = []
+    if @invite_mode
+      @event_registrations = all_registrations.select do |registration|
+        registration.status.in?(EventRegistration::ACTIVE_STATUSES) &&
+          registration.registrant.preferred_email.present? &&
+          (registration.registrant.user.nil? || registration.registrant.user.confirmed_at.nil?)
+      end
+
+      if @comp_membership_on_invite
+        @not_auto_comped = all_registrations.select do |registration|
+          registration.status.in?(EventRegistration::ACTIVE_STATUSES) &&
+            (registration.registrant.user&.confirmed_at.present? || registration.registrant.preferred_email.blank?) &&
+            registration.registrant.memberships.empty?
+        end
+      end
+    end
 
     # Filters keep every registrant in the list and only flag who still matches,
     # so the recipient checkboxes pre-check the matched set rather than removing
@@ -504,7 +522,7 @@ class EventsController < ApplicationController
     registrations = selected_reminder_registrations
 
     if registrations.empty?
-      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s, hide_event_card: (hide_event_card_param ? "1" : "0"), hide_ticket_button: (hide_ticket_button_param ? "1" : "0")), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s, hide_event_card: (hide_event_card_param ? "1" : "0"), hide_ticket_button: (hide_ticket_button_param ? "1" : "0")), alert: "Please select at least one recipient.", status: :see_other
       return
     end
 
@@ -542,7 +560,7 @@ class EventsController < ApplicationController
     EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence, hide_event_card: hide_event_card, hide_ticket_button: hide_ticket_button).deliver_later
 
     track_view("events.send_reminder", { event_id: @event.id, recipient_count: registrations.size })
-    redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
+    redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}.", status: :see_other
   end
 
   def create
@@ -1045,10 +1063,18 @@ class EventsController < ApplicationController
   # its own communication record, so there's no separate per-recipient notification
   # or admin FYI here.
   def send_bulk_invites(registrations)
-    invited = registrations.count { |reg| PersonInviter.call(person: reg.registrant, sender: current_user, bulk: true).invited }
+    comp_membership = @event.facilitator_training? && !@event.on_demand?
+    invited = registrations.count do |reg|
+      PersonInviter.call(
+        person: reg.registrant,
+        sender: current_user,
+        bulk: true,
+        comp_membership: comp_membership
+      ).invited
+    end
 
     track_view("events.send_invites", { event_id: @event.id, recipient_count: invited })
-    redirect_to registrants_event_path(@event), notice: "Portal invite (confirmation) emails are being sent to #{invited} #{'person'.pluralize(invited)}."
+    redirect_to registrants_event_path(@event), notice: "Portal invite (confirmation) emails are being sent to #{invited} #{'person'.pluralize(invited)}.", status: :see_other
   end
 
   # Builds the read-only invite-email preview shown in invite mode. For a registrant
@@ -1203,7 +1229,7 @@ class EventsController < ApplicationController
       statuses
     ]
     if cost_required
-      due_cents = [ @event.cost_cents.to_i - registration.allocations_sum, 0 ].max
+      due_cents = registration.remaining_cost
       row << registration.payment_status_label
       row << helpers.dollars_from_cents(due_cents)
       row << helpers.dollars_from_cents(registration.payments_sum)

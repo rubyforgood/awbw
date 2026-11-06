@@ -6,14 +6,15 @@
 class PersonInviter
   Result = Struct.new(:invited, :reason, keyword_init: true)
 
-  def self.call(person:, sender: nil, bulk: false)
-    new(person: person, sender: sender, bulk: bulk).call
+  def self.call(person:, sender: nil, bulk: false, comp_membership: false)
+    new(person: person, sender: sender, bulk: bulk, comp_membership: comp_membership).call
   end
 
-  def initialize(person:, sender: nil, bulk: false)
+  def initialize(person:, sender: nil, bulk: false, comp_membership: false)
     @person = person
     @sender = sender
     @bulk = bulk
+    @comp_membership = comp_membership
   end
 
   def call
@@ -25,6 +26,10 @@ class PersonInviter
     return Result.new(invited: false, reason: :already_confirmed) if user.confirmed_at.present?
 
     send_invite(user)
+    if @comp_membership
+      @person.reload if @person.changed?
+      Membership::Start.call(person: @person)
+    end
     Result.new(invited: true, reason: nil)
   end
 
