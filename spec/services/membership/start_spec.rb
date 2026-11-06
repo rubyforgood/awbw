@@ -13,8 +13,9 @@ RSpec.describe Membership::Start do
     invoice = subscription.membership_invoices.sole
     expect(invoice.cost_cents).to eq(0)
     expect(invoice).to be_paid_in_full
-    expect(invoice.start_date).to eq(Date.current)
-    expect(invoice.end_date).to eq(Date.current + 1.year - 1.day)
+    expected_start = Time.use_zone(Membership::TIME_ZONE) { Date.current }
+    expect(invoice.start_date).to eq(expected_start)
+    expect(invoice.end_date).to eq(expected_start + 1.year - 1.day)
   end
 
   it "leaves the person membership current straight away" do

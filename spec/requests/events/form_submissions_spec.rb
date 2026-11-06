@@ -46,7 +46,7 @@ RSpec.describe "Events::FormSubmissions", type: :request do
 
         expect(response.body).to include(changes_form_submission_path(submission))
         expect(response.body).to include("What this submission changed")
-        expect(response.body).to include("(#{submission.created_at.strftime("%b %-d, %Y")})")
+        expect(response.body).to include("(#{submission.created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%b %-d, %Y")})")
       end
 
       it "omits the changes link for a submission that only created new data" do
