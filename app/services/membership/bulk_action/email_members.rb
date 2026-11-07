@@ -25,7 +25,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
   end
 
   def perform(directory, ids:, custom_subject: nil, custom_message: nil, **)
-    changed = skipped = failed = 0
+    changed = skipped = 0
     errors = []
     failed_ids = []
 
@@ -53,7 +53,6 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
         )
         changed += 1
       rescue StandardError => e
-        failed += 1
         failed_ids << membership.id
         errors << "#{person.full_name}: #{error_message(membership, e)}"
       end
