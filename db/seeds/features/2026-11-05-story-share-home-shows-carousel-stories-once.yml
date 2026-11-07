@@ -2,6 +2,7 @@ name: "Story Share home shows hand-picked stories once"
 area: stories
 display_status: public_facing
 released_on: 2026-11-05
+pr_number: 2958
 action_path: "/story_share"
 summary: >-
   A story hand-picked for the Story Share home carousel now appears only there,
