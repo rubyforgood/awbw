@@ -279,7 +279,7 @@ class NotificationMailer < ApplicationMailer
 
     mail(
       to: notification.recipient_email,
-      subject: notification.custom_subject.presence || MEMBERSHIP_BULK_INVOICE_SUBJECT
+      subject: MEMBERSHIP_BULK_INVOICE_SUBJECT
     )
   end
 

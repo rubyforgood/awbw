@@ -14,7 +14,6 @@ module Memberships
       ids = Array(params[@action.param_name]).reject(&:blank?).map(&:to_i)
       @selected_ids = ids
       cost_cents = fee_action? ? MoneyParser.cents(params[:cost_dollars]) : nil
-      custom_subject = params[:custom_subject].to_s.strip
       custom_message = params[:custom_message].to_s.strip
 
       return render_confirm_error("Select at least one row.") if ids.empty?
@@ -24,7 +23,7 @@ module Memberships
       end
 
       result = @action.perform(@directory, ids: ids, cost_cents: cost_cents,
-        custom_subject: custom_subject, custom_message: custom_message)
+        custom_message: custom_message)
 
       if result.failed_ids.any?
         @result = result

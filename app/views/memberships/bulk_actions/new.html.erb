@@ -52,13 +52,8 @@
         <% elsif @action.key == "email_members" %>
           <div class="space-y-3 border-b border-gray-200 p-4">
             <div>
-              <%= label_tag :custom_subject, "Subject", class: search_label_class %>
-              <%= text_field_tag :custom_subject, params[:custom_subject],
-                    placeholder: "Leave blank for the default subject",
-                    class: search_field_class(extra: "bg-white") %>
-              <p class="mt-1 text-xs text-gray-500">
-                Default: <%= NotificationMailer::MEMBERSHIP_BULK_INVOICE_SUBJECT %>
-              </p>
+              <p class="<%= search_label_class %>">Subject</p>
+              <p class="text-sm text-gray-800"><%= NotificationMailer::MEMBERSHIP_BULK_INVOICE_SUBJECT %></p>
             </div>
             <div>
               <%= label_tag :custom_message, "Message", class: search_label_class %>
