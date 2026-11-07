@@ -644,6 +644,131 @@ RSpec.describe "/story_share", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("A publicly featured story")
     end
+
+    context "when a hand-picked story also qualifies for other home sections" do
+      let!(:age_range) { create(:category_type, name: "AgeRange") }
+      let!(:sector) { create(:sector, :published, name: "Homelessness", story_share_position: 1) }
+      let!(:audience) { create(:category, :published, name: "Adults", category_type: age_range, story_share_position: 1) }
+      let!(:picked) do
+        create(:story, :published, :publicly_visible, :publicly_featured,
+               title: "The hand-picked lead", story_share_carousel_position: 1).tap do |story|
+          story.sectorable_items.create!(sector: sector, is_primary: true)
+          story.categorizable_items.create!(category: audience, is_primary: true)
+        end
+      end
+
+      def section_for(heading)
+        Capybara.string(response.body).find("h2", exact_text: heading).find(:xpath, "..")
+      end
+
+      it "shows the story only in the carousel" do
+        sector_story = create(:story, :published, :publicly_visible, title: "Another housing story")
+        sector_story.sectorable_items.create!(sector: sector, is_primary: true)
+        audience_story = create(:story, :published, :publicly_visible, title: "Another adult story")
+        audience_story.categorizable_items.create!(category: audience, is_primary: true)
+        create(:ahoy_event, name: "view.story", properties: { resource_type: "Story", resource_id: picked.id })
+
+        get story_shares_path
+
+        expect(Capybara.string(response.body)).to have_css(".swiper-slide", text: picked.title, count: 1)
+        expect(section_for("Homelessness")).to have_text(sector_story.title)
+        expect(section_for("Homelessness")).to have_no_text(picked.title)
+        expect(section_for("Adults")).to have_text(audience_story.title)
+        expect(section_for("Adults")).to have_no_text(picked.title)
+        expect(response.body.split("What others are reading").last).not_to include(picked.title)
+      end
+
+      it "omits a section whose only story is in the carousel" do
+        get story_shares_path
+
+        expect(response.body).not_to include("More Homelessness stories...")
+        expect(response.body).not_to include("More Adults stories...")
+      end
+    end
+  end
+
+  # ==========================================================
+  # HOME HERO PHOTO
+  # ==========================================================
+  describe "home hero photo" do
+    def create_story_with_photo(title, filename, **attributes)
+      create(:story, :published, :publicly_visible, title: title, **attributes).tap do |story|
+        create(:primary_asset, owner: story).file.attach(ActiveStorage::Blob.create_and_upload!(
+          io: StringIO.new("image"), filename: filename, content_type: "image/png",
+          metadata: { width: 1200, height: 800, analyzed: true }
+        ))
+      end
+    end
+
+    def hero_photo_sources
+      Capybara.string(response.body).all("img[alt=''][loading='eager']", visible: :all).map { |image| image[:src] }
+    end
+
+    it "uses a story outside the carousel and keeps it out of the sections below" do
+      sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
+      create_story_with_photo("Carousel lead", "carousel-art.png", story_share_carousel_position: 1)
+      hero = create_story_with_photo("Hero source", "hero-art.png")
+      hero.sectorable_items.create!(sector: sector, is_primary: true)
+
+      get story_shares_path
+
+      expect(hero_photo_sources).to contain_exactly(a_string_including("hero-art.png"))
+      expect(response.body.scan("Hero source").size).to eq(1)
+    end
+
+    it "credits the story with a link" do
+      hero = create_story_with_photo("Hero source", "hero-art.png")
+      create(:story, :published, :publicly_visible, title: "Carousel lead", story_share_carousel_position: 1)
+
+      get story_shares_path
+
+      expect(Capybara.string(response.body)).to have_link("Photo from: Hero source", href: story_share_path(hero))
+    end
+
+    context "when an admin has picked the hero story" do
+      let!(:automatic) { create_story_with_photo("Automatic pick", "automatic-art.png", publicly_featured: true) }
+      let!(:picked) { create_story_with_photo("Admin pick", "picked-art.png", story_share_carousel_position: 1) }
+
+      before { Setting.create!(story_share_hero_story: picked) }
+
+      it "uses its photo and drops it from the carousel" do
+        create(:story, :published, :publicly_visible, title: "Carousel lead", story_share_carousel_position: 2)
+
+        get story_shares_path
+
+        page = Capybara.string(response.body)
+        expect(hero_photo_sources).to contain_exactly(a_string_including("picked-art.png"))
+        expect(page).to have_link("Photo from: Admin pick")
+        expect(page).to have_css(".swiper-slide", text: "Carousel lead")
+        expect(page).to have_no_css(".swiper-slide", text: "Admin pick")
+      end
+
+      it "falls back to the automatic pick when the visitor can't see it" do
+        picked.update!(publicly_visible: false)
+        create(:story, :published, :publicly_visible, title: "Carousel lead", story_share_carousel_position: 2)
+
+        get story_shares_path
+
+        expect(hero_photo_sources).to contain_exactly(a_string_including("automatic-art.png"))
+      end
+
+      it "falls back to the automatic pick when it has lost its photo" do
+        picked.primary_asset.destroy!
+        create(:story, :published, :publicly_visible, title: "Carousel lead", story_share_carousel_position: 2)
+
+        get story_shares_path
+
+        expect(hero_photo_sources).to contain_exactly(a_string_including("automatic-art.png"))
+      end
+    end
+
+    it "shows no photo when every story with one is in the carousel" do
+      create_story_with_photo("Carousel lead", "carousel-art.png", story_share_carousel_position: 1)
+
+      get story_shares_path
+
+      expect(hero_photo_sources).to be_empty
+    end
   end
 
   # ==========================================================

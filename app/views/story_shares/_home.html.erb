@@ -1,11 +1,10 @@
-<%# Hero: full-bleed photo (top featured story) under a navy→purple wash, with the
+<%# Hero: full-bleed photo (from a story outside the carousel) under a navy→purple wash, with the
     marketing site's big serif statement + gold accent + CTAs. %>
-<% hero_story = @featured_stories.first %>
 <section class="relative -mx-2 overflow-hidden sm:-mx-6 lg:-mx-8">
-  <% if hero_story %>
-    <%= image_tag hero_story.display_image, alt: "", loading: "eager", class: "absolute inset-0 h-full w-full object-cover" %>
-    <%= render "story_shares/banner_video", story: hero_story %>
-    <%= render "story_shares/motion_toggle", position_class: "right-4 bottom-4 motion-reduce:hidden" if youtube_video_id(hero_story.youtube_url) %>
+  <% if @hero_story %>
+    <%= image_tag @hero_story.display_image, alt: "", loading: "eager", class: "absolute inset-0 h-full w-full object-cover" %>
+    <%= render "story_shares/banner_video", story: @hero_story %>
+    <%= render "story_shares/motion_toggle", position_class: "right-4 bottom-4 motion-reduce:hidden" if youtube_video_id(@hero_story.youtube_url) %>
   <% end %>
   <div class="from-brand-navy-950/95 via-brand-navy-900/85 to-brand-purple-900/75 absolute inset-0 bg-gradient-to-r"></div>
   <div class="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
@@ -28,6 +27,10 @@
       </div>
     </div>
   </div>
+  <% if @hero_story %>
+    <%= link_to "Photo from: #{@hero_story.title}", story_share_path(@hero_story),
+                class: "absolute right-4 bottom-3 max-w-[60%] truncate text-xs text-white/70 transition-colors hover:text-white hover:underline" %>
+  <% end %>
 </section>
 
 <!-- Featured story carousel -->
