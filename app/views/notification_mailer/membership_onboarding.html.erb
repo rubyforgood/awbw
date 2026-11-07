@@ -4,10 +4,9 @@
   Hello <strong><%= @person.first_name %></strong>,
 </p>
 
-<p style="margin: 0 0 16px; color:#374151;">
-  Your AWBW membership is ready. Set up automatic payments so your annual dues renew
-  without you thinking about it.
-</p>
+<% if @custom_message %>
+  <%= simple_format(@custom_message, { style: "margin: 0 0 16px; color:#374151;" }) %>
+<% end %>
 
 <% if @invoice %>
   <p style="margin: 0 0 16px; color:#374151;">

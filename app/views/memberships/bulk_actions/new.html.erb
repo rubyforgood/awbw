@@ -49,6 +49,23 @@
               </p>
             </div>
           </div>
+        <% elsif @action.key == "email_members" %>
+          <div class="space-y-3 border-b border-gray-200 p-4">
+            <div>
+              <%= label_tag :custom_subject, "Subject", class: search_label_class %>
+              <%= text_field_tag :custom_subject, params[:custom_subject],
+                    placeholder: "Leave blank for the default subject",
+                    class: search_field_class(extra: "bg-white") %>
+            </div>
+            <div>
+              <%= label_tag :custom_message, "Message", class: search_label_class %>
+              <%= text_area_tag :custom_message, params[:custom_message], rows: 6,
+                    class: search_field_class(extra: "bg-white") %>
+              <p class="mt-1 text-xs text-gray-500">
+                Plain text. The greeting, invoice line, and “View your invoice” button are added automatically.
+              </p>
+            </div>
+          </div>
         <% end %>
 
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">

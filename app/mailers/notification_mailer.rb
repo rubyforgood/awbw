@@ -274,10 +274,11 @@ class NotificationMailer < ApplicationMailer
     @person = notification.person || @membership.person
     @invoice = next_invoice(@membership)
     @invoice_url = @invoice ? membership_invoice_url(@invoice) : person_url(@person)
+    @custom_message = notification.custom_message.presence
 
     mail(
       to: notification.recipient_email,
-      subject: "#{SUBJECT_PREFIX} Set up automatic payments for your membership"
+      subject: notification.custom_subject.presence || "#{SUBJECT_PREFIX} Set up automatic payments for your membership"
     )
   end
 

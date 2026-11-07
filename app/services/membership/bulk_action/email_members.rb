@@ -24,7 +24,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
     end
   end
 
-  def perform(directory, ids:, **)
+  def perform(directory, ids:, custom_subject: nil, custom_message: nil, **)
     changed = skipped = failed = 0
     errors = []
     failed_ids = []
@@ -47,7 +47,9 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
           recipient_email: user.email,
           notification_type: 0,
           sender: Current.user,
-          bulk: true
+          bulk: true,
+          custom_subject: custom_subject.presence,
+          custom_message: custom_message.presence
         )
         changed += 1
       rescue StandardError => e
