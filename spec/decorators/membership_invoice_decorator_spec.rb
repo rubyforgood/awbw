@@ -60,7 +60,7 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
       expect(invoice.autopay_action(autopay_ready: false)).to eq(:pay_now)
     end
 
-    it "offers no action inside the autopay window when autopay is ready" do
+    it "returns :none inside the autopay window when autopay is ready" do
       expect(invoice(start_date: Date.current + 1.day).autopay_action(autopay_ready: true)).to eq(:none)
     end
 

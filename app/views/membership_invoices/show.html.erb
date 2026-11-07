@@ -25,7 +25,7 @@
       <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
         <% case @membership_invoice.decorate.autopay_action(autopay_ready: @autopay_ready) %>
         <% when :scheduled %>
-          <p class="text-sm text-gray-600">Scheduled for <%= @membership_invoice.start_date.strftime("%b %-d, %Y") %>.</p>
+          <p class="text-sm text-gray-600">Automatic payment scheduled (generally <%= distance_of_time_in_words(Membership.autopay_window_days.days) %> prior to the due date).</p>
           <%= button_to "Pay now", membership_invoice_checkout_path(@membership_invoice),
                 class: button_classes(:secondary_outline),
                 title: "Pays this invoice once. The card is not saved for automatic payments.",

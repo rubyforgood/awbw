@@ -365,10 +365,10 @@ RSpec.describe MembershipInvoice, type: :model do
       outside = create(:membership_invoice,
         start_date: Date.current + Membership.autopay_window_days + 1.day)
 
-      expect(inside).to be_autopay_issued
-      expect(outside).not_to be_autopay_issued
-      expect(described_class.autopay_issued).to include(inside)
-      expect(described_class.autopay_issued).not_to include(outside)
+      expect(inside).to be_in_autopay_window
+      expect(outside).not_to be_in_autopay_window
+      expect(described_class.autopay_window).to include(inside)
+      expect(described_class.autopay_window).not_to include(outside)
     end
 
     it "is chargeable through the retry window" do

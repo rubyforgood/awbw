@@ -19,7 +19,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
         email: user&.email.presence || person.preferred_email,
         detail: invoice_label(membership),
         flags: flags_for(membership, user),
-        actionable: user.present? && user.has_access? && !membership.locked?
+        actionable: user.present? && user.has_access? && !membership.locked? && membership.cost_cents != 0
       )
     end
   end
@@ -33,7 +33,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
       person = membership.person
       user = person.user
 
-      if membership.locked? || user.nil? || !user.has_access? || user.email.blank?
+      if membership.locked? || membership.cost_cents == 0 || user.nil? || !user.has_access? || user.email.blank?
         skipped += 1
         next
       end
@@ -62,7 +62,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
 
   def notice(result)
     parts = [ "Queued #{pluralized(result.changed, 'membership email')}." ]
-    parts << "#{result.skipped} skipped (no portal access or locked)." if result.skipped.positive?
+    parts << "#{result.skipped} skipped (no portal access, no fee, or locked)." if result.skipped.positive?
     parts << "#{result.failed_ids.size} failed." if result.failed_ids.any?
     parts.join(" ")
   end
@@ -72,6 +72,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
   def flags_for(membership, user)
     flags = []
     flags << "No portal access" unless user&.has_access?
+    flags << "No fee" if membership.cost_cents == 0
     flags << "Locked" if membership.locked?
     flags
   end
