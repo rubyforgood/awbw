@@ -27,7 +27,7 @@
         <% when :scheduled %>
           <p class="text-sm text-gray-600">Automatic payment scheduled (generally <%= distance_of_time_in_words(Membership.autopay_window_days.days) %> prior to the due date).</p>
           <%= button_to "Pay now", membership_invoice_checkout_path(@membership_invoice),
-                class: button_classes(:secondary_outline),
+                class: button_classes(:primary),
                 title: "Pays this invoice once. The card is not saved for automatic payments.",
                 data: { turbo: false } %>
         <% when :pay_now %>
@@ -45,7 +45,7 @@
         <% when :none %>
           <p class="text-sm text-gray-600">Automatic payment scheduled.</p>
           <%= button_to "Pay now", membership_invoice_checkout_path(@membership_invoice),
-                class: button_classes(:secondary_outline),
+                class: button_classes(:primary),
                 title: "Pays this invoice once. The card is not saved for automatic payments.",
                 data: { turbo: false } %>
         <% end %>
