@@ -12,7 +12,7 @@ module MembershipInvoices
       result = Membership::InvoiceCheckout.call(
         invoice:,
         success_url: person_url(invoice.person, membership_invoice_checkout: "success", autopay: "1"),
-        cancel_url: cancel_checkout_membership_invoice_path(invoice),
+        cancel_url: cancel_checkout_membership_invoice_url(invoice),
         save_card: true
       )
 

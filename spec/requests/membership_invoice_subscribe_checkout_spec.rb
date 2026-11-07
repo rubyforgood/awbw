@@ -25,6 +25,7 @@ RSpec.describe "Membership invoice Pay and Subscribe", type: :request do
     expect(response).to redirect_to("https://stripe.test/subscribe")
     expect(checkout_args[:mode]).to eq("payment")
     expect(checkout_args.dig(:payment_intent_data, :setup_future_usage)).to eq("off_session")
+    expect(checkout_args[:cancel_url]).to eq(cancel_checkout_membership_invoice_url(invoice))
     expect(invoice.reload.checkout_session_id).to eq("cs_subscribe")
     expect(session[:autopay_setup_membership_id]).to eq(membership.id)
   end
