@@ -16,7 +16,7 @@
       Your response to <span class="font-semibold text-gray-900"><%= @form.display_name %></span> has been submitted.
     </p>
     <div class="mt-8">
-      <%= link_to "Submit another response", public_form_path(@form.slug),
+      <%= link_to "Submit another response", public_form_path(@form.slug, event: params[:event].presence || params[:event_id].presence),
                   class: "inline-flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
     </div>
     </div>
