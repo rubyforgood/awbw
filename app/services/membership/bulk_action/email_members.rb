@@ -4,6 +4,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
   def unit = "membership"
   def param_name = "membership_ids"
   def submit_label = "Send emails"
+  def failure_verb = "sent"
 
   def preview_rows(directory, ids: nil, **)
     scope = directory.scope.includes(person: :user).order(start_date: :desc)

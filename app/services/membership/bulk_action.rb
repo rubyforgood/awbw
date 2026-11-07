@@ -14,6 +14,7 @@ class Membership::BulkAction
   def self.for(key) = all.find { |action| action.key == key.to_s }
 
   def submit_label = "Apply"
+  def failure_verb = "updated"
 
   # Each action requires the following:
   # key
