@@ -42,7 +42,7 @@ RSpec.describe Membership::BulkAction::EmailMembers do
   describe "#perform" do
     let(:admin) { create(:user, :admin) }
 
-    it "queues an onboarding notification for each member with portal access" do
+    it "queues a membership invoice notification for each member with portal access" do
       membership = membership_for(create(:person))
       result = nil
 

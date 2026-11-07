@@ -36,7 +36,7 @@ RSpec.describe "Memberships bulk actions", type: :request do
     expect(checked_ids).to eq([ failing.id.to_s ])
   end
 
-  it "queues onboarding emails for the selected memberships" do
+  it "queues membership invoice emails for the selected memberships" do
     person = create(:person)
     membership = create(:membership, person:)
 
