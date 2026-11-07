@@ -48,6 +48,6 @@ RSpec.describe "Memberships bulk actions", type: :request do
     }.to have_enqueued_job(NotificationMailerJob)
 
     expect(response).to have_http_status(:see_other)
-    expect(Notification.where(kind: "membership_onboarding").sole.noticeable).to eq(membership)
+    expect(Notification.where(kind: "membership_invoice").sole.noticeable).to eq(membership)
   end
 end

@@ -4,6 +4,7 @@ class NotificationMailer < ApplicationMailer
   default to: -> { Setting.programs_email }
 
   SUBJECT_PREFIX = "AWBW Portal:".freeze
+  MEMBERSHIP_BULK_INVOICE_SUBJECT = "#{SUBJECT_PREFIX} Your membership invoice".freeze
   FYI_PREFIX = "#{SUBJECT_PREFIX} [FYI]".freeze
   PROFILE_CHANGE_REVIEWED_SUBJECT = "#{SUBJECT_PREFIX} Update on your change request".freeze
 
@@ -269,7 +270,7 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
-  def membership_onboarding(notification)
+  def membership_invoice(notification)
     @membership = notification.noticeable
     @person = notification.person || @membership.person
     @invoice = next_invoice(@membership)
@@ -278,7 +279,7 @@ class NotificationMailer < ApplicationMailer
 
     mail(
       to: notification.recipient_email,
-      subject: notification.custom_subject.presence || "#{SUBJECT_PREFIX} Set up automatic payments for your membership"
+      subject: notification.custom_subject.presence || MEMBERSHIP_BULK_INVOICE_SUBJECT
     )
   end
 

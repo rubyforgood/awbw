@@ -64,7 +64,7 @@ RSpec.describe Membership::BulkAction::EmailMembers do
       expect(result.changed).to eq(1)
       expect(result.skipped).to eq(0)
 
-      notification = Notification.where(kind: "membership_onboarding").sole
+      notification = Notification.where(kind: "membership_invoice").sole
       expect(notification.noticeable).to eq(membership)
       expect(notification.person).to eq(membership.person)
       expect(notification.recipient_email).to eq(membership.person.user.email)

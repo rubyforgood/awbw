@@ -52,7 +52,7 @@ class Notification < ApplicationRecord
     profile_change_requested_fyi
     profile_change_reviewed
 
-    membership_onboarding
+    membership_invoice
 
     manual_log
   ].freeze
@@ -130,7 +130,7 @@ class Notification < ApplicationRecord
     [ "Idea: confirmation (all)", "has been received" ],
     [ "Story: promotion confirmation", "is now a story" ],
     [ "Idea: confirmation: workshop log", "workshop log has been received" ],
-    [ "Membership: set up automatic payments", "set up automatic payments" ],
+    [ "Membership: bulk invoice", "Your membership invoice" ],
     [ "User: confirm new email", "Confirm your new email address" ],
     [ "User: password reset", "Password reset request" ],
     [ "User: unlock instructions", "Unlock instructions" ],

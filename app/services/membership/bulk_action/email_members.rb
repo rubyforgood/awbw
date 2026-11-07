@@ -42,7 +42,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
         NotificationServices::CreateNotification.call(
           noticeable: membership,
           person:,
-          kind: :membership_onboarding,
+          kind: :membership_invoice,
           recipient_role: :person,
           recipient_email: user.email,
           notification_type: 0,
