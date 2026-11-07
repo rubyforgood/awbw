@@ -64,7 +64,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
 
   def notice(result)
     parts = [ "Queued #{pluralized(result.changed, 'membership email')}." ]
-    parts << "#{result.skipped} skipped (no portal access, no fee, or locked)." if result.skipped.positive?
+    parts << "#{result.skipped} skipped." if result.skipped.positive?
     parts << "#{result.failed_ids.size} failed." if result.failed_ids.any?
     parts.join(" ")
   end
