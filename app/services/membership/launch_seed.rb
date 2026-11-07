@@ -24,7 +24,6 @@ class Membership::LaunchSeed
   MultiOrg = Data.define(:person, :organization_ids)
 
   Result = Data.define(
-    :run_date, :start_date, :end_date, :dry_run,
     :org_summaries,
     :eligible_zero, :eligible_standard,
     :created, :skipped_existing, :skipped_no_access, :review_fees,
@@ -91,10 +90,6 @@ class Membership::LaunchSeed
     end
 
     result = Result.new(
-      run_date: @run_date,
-      start_date: START_DATE,
-      end_date: TERM_END,
-      dry_run: @dry_run,
       org_summaries: @org_summaries,
       eligible_zero: @zero_people.size,
       eligible_standard: @standard_people.size,
