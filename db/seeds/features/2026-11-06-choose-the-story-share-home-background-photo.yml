@@ -2,6 +2,7 @@ name: "Choose the Story Share home background photo"
 area: stories
 display_status: admin_facing
 released_on: 2026-11-06
+pr_number: 2958
 action_path: "/story_share/admin"
 summary: >-
   Pick which story's photo sits behind the Story Share home headline from the
