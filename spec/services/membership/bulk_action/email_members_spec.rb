@@ -17,7 +17,6 @@ RSpec.describe Membership::BulkAction::EmailMembers do
       expect(row.actionable).to be(true)
       expect(row.email).to eq(membership.person.user.email)
       expect(row.flags).to be_empty
-      expect(row.detail).to eq("No invoice")
     end
 
     it "flags no portal access and leaves the row not actionable" do
@@ -37,16 +36,6 @@ RSpec.describe Membership::BulkAction::EmailMembers do
 
       expect(row.actionable).to be(false)
       expect(row.flags).to include("Locked")
-    end
-
-    it "shows the invoice period when one exists" do
-      membership = membership_for(create(:person))
-      invoice = create(:membership_invoice, membership:, start_date: Date.current,
-        end_date: Date.current + Membership::INVOICE_PERIOD - 1.day, cost_cents: 10_000)
-
-      row = action.preview_rows(directory, ids: [ membership.id ]).sole
-
-      expect(row.detail).to include(invoice.start_date.strftime("%b %-d, %Y"))
     end
   end
 

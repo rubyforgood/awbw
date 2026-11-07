@@ -6,7 +6,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
   def submit_label = "Send emails"
 
   def preview_rows(directory, ids: nil, **)
-    scope = directory.scope.includes(person: :user, membership_invoices: :allocations).order(start_date: :desc)
+    scope = directory.scope.includes(person: :user).order(start_date: :desc)
     scope = scope.where(id: ids) if ids
 
     scope.map do |membership|
@@ -17,7 +17,7 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
         id: membership.id,
         name: person.full_name,
         email: user&.email.presence || person.preferred_email,
-        detail: invoice_label(membership),
+        detail: nil,
         flags: flags_for(membership, user),
         actionable: user.present? && user.has_access? && !membership.locked? && membership.cost_cents != 0
       )
@@ -77,17 +77,5 @@ class Membership::BulkAction::EmailMembers < Membership::BulkAction
     flags << "No fee" if membership.cost_cents == 0
     flags << "Locked" if membership.locked?
     flags
-  end
-
-  def invoice_label(membership)
-    invoice = next_invoice(membership)
-    return "No invoice" if invoice.nil?
-
-    "#{invoice.start_date.strftime('%b %-d, %Y')} – #{invoice.end_date.strftime('%b %-d, %Y')}"
-  end
-
-  def next_invoice(membership)
-    membership.membership_invoices.not_paid_in_full.order(:start_date).first ||
-      membership.membership_invoices.order(start_date: :desc).first
   end
 end
