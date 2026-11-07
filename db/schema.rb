@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_07_024155) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2065,6 +2065,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
     t.string "ce_accreditation_abbreviation"
     t.integer "import_user_id"
     t.integer "home_featured_stories_limit"
+    t.bigint "story_share_hero_story_id"
     t.index ["ce_administrator_id"], name: "index_settings_on_ce_administrator_id"
     t.index ["created_by_id"], name: "index_settings_on_created_by_id"
     t.index ["import_user_id"], name: "index_settings_on_import_user_id"
@@ -2072,6 +2073,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
     t.index ["remittance_address_id"], name: "index_settings_on_remittance_address_id"
     t.index ["return_address_id"], name: "index_settings_on_return_address_id"
     t.index ["singleton"], name: "index_settings_on_singleton", unique: true
+    t.index ["story_share_hero_story_id"], name: "index_settings_on_story_share_hero_story_id"
     t.index ["updated_by_id"], name: "index_settings_on_updated_by_id"
   end
 
@@ -2911,6 +2913,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
   add_foreign_key "settings", "addresses", column: "return_address_id", on_delete: :nullify
   add_foreign_key "settings", "organizations"
   add_foreign_key "settings", "people", column: "ce_administrator_id", on_delete: :nullify
+  add_foreign_key "settings", "stories", column: "story_share_hero_story_id", on_delete: :nullify
   add_foreign_key "settings", "users", column: "import_user_id", on_delete: :nullify
   add_foreign_key "staff_aliases", "users"
   add_foreign_key "staff_taggings", "staff_tags"

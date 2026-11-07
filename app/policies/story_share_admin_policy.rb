@@ -5,4 +5,5 @@ class StoryShareAdminPolicy < ApplicationPolicy
   def reorder? = admin?
   def add?     = admin?
   def remove?  = admin?
+  def update_hero_story? = admin?
 end

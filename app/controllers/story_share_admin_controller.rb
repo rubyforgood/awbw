@@ -16,6 +16,8 @@ class StoryShareAdminController < ApplicationController
         featured: scope.story_share_featured.to_a,
         addable: scope.published.where(story_share_position: nil).ordered_by_position_and_name.to_a }
     end
+    @hero_story = Setting.story_share_hero_story
+    @hero_story_showing = @hero_story.present? && Story.story_share_hero_eligible.exists?(@hero_story.id)
   end
 
   # Drag-and-drop: moves the record to the given 1-based position and renumbers
@@ -76,6 +78,20 @@ class StoryShareAdminController < ApplicationController
                       changes: { story_share_home_section: record.story_share_home_section })
     redirect_to story_share_admin_path,
                 notice: "#{record.name} #{record.story_share_home_section ? "now shows" : "no longer shows"} on the Story Share home."
+  end
+
+  # A request with no story_id clears the pick, returning the background to the automatic choice.
+  def update_hero_story
+    authorize! :story_share_admin
+    story = Story.story_share_hero_eligible.find_by(id: params[:story_id]) if params.key?(:story_id)
+    if params.key?(:story_id) && story.nil?
+      return redirect_to story_share_admin_path, alert: "Choose a published, public story that has a main image."
+    end
+
+    return redirect_to story_share_admin_path, alert: "The home background could not be saved." unless Setting.current.update(story_share_hero_story: story)
+
+    track_event("update.story_share_hero_story", { resource_type: "Story", resource_id: story&.id, resource_title: story&.title })
+    redirect_to story_share_admin_path, notice: story ? "Home background updated." : "Home background set to the automatic pick."
   end
 
   private

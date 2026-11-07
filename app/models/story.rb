@@ -101,6 +101,8 @@ class Story < ApplicationRecord
   # funder — kept out of every general-audience listing (see StoryPolicy,
   # StorySharePolicy, HomePolicy). Admins and the author still see them.
   scope :not_funder_only, -> { where(funder_only: false) }
+  scope :with_primary_photo, -> { joins(primary_asset: :file_attachment) }
+  scope :story_share_hero_eligible, -> { published.publicly_visible.not_funder_only.with_primary_photo }
 
   # Admin hand-picks the Story Share home carousel: lowest number leads, blank = not in it.
   scope :story_share_carousel, -> { where.not(story_share_carousel_position: nil).order(:story_share_carousel_position) }
