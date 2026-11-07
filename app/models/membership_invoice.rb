@@ -34,7 +34,7 @@ class MembershipInvoice < ApplicationRecord
   }
 
   scope :autopay_issued, ->(as_of = Date.current) {
-    where(start_date: ..(as_of + Membership.renewal_window_days))
+    where(start_date: ..(as_of + Membership.autopay_window_days))
   }
 
   scope :autopay_chargeable, ->(as_of = Date.current) {
@@ -122,7 +122,7 @@ class MembershipInvoice < ApplicationRecord
   end
 
   def autopay_issued?(as_of = Date.current)
-    start_date.present? && start_date <= as_of + Membership.renewal_window_days
+    start_date.present? && start_date <= as_of + Membership.autopay_window_days
   end
 
   def autopay_chargeable?(as_of = Date.current)

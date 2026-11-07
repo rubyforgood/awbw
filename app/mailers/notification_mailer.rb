@@ -269,7 +269,24 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def membership_onboarding(notification)
+    @membership = notification.noticeable
+    @person = notification.person || @membership.person
+    @invoice = next_invoice(@membership)
+    @invoice_url = @invoice ? membership_invoice_url(@invoice) : person_url(@person)
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Set up automatic payments for your membership"
+    )
+  end
+
   private
+
+  def next_invoice(membership)
+    membership.membership_invoices.not_paid_in_full.order(:start_date).first ||
+      membership.membership_invoices.order(start_date: :desc).first
+  end
 
   def extract_attachments(noticeable)
     return [] unless noticeable.respond_to?(:primary_asset)

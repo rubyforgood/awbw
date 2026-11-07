@@ -1,0 +1,14 @@
+Set up automatic payments
+
+Hello <%= @person.first_name %>,
+
+Your AWBW membership is ready. Set up automatic payments so your annual dues renew without you thinking about it.
+<% if @invoice -%>
+
+Invoice for <%= @invoice.start_date.strftime("%b %-d, %Y") %> - <%= @invoice.end_date.strftime("%b %-d, %Y") %>: <%= dollars_from_cents(@invoice.cost_cents) %>
+<% end -%>
+
+View your invoice: <%= @invoice_url %>
+
+Thank you,
+AWBW Staff

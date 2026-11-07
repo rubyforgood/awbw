@@ -198,7 +198,7 @@ RSpec.describe Membership::Autopay::Charge do
     end
 
     it "refuses to charge an invoice outside the automatic payment window" do
-      start_date = Date.current + Membership.renewal_window_days + 1.day
+      start_date = Date.current + Membership.autopay_window_days + 1.day
       invoice.update_columns(start_date:, end_date: start_date + 1.year)
 
       result = described_class.call(invoice: invoice)

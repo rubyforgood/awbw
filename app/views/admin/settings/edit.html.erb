@@ -197,6 +197,10 @@
                   label: "Renewal window (days)",
                   placeholder: Setting.membership_renewal_window_days,
                   hint: "How many days before a membership term ends its renewal invoice is generated" %>
+      <%= f.input :membership_autopay_window_days,
+                  label: "Autopay window (days)",
+                  placeholder: Setting.membership_autopay_window_days,
+                  hint: "How many days before an invoice starts automatic payments may charge it. Keep this shorter than the renewal window so members have time to update or cancel." %>
     </section>
 
     <div class="action-buttons flex justify-center gap-3">

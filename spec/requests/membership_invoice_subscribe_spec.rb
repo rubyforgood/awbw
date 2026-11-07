@@ -17,14 +17,14 @@ RSpec.describe "Membership invoice subscribe action", type: :request do
       data: { "brand" => "visa", "last4" => "4242" })
   end
 
-  it "offers Subscribe instead of Pay now to an owner with a balance and no card" do
+  it "offers Pay and Subscribe instead of Pay now to an owner with a balance and no card" do
     sign_in create(:user, person:)
 
     get membership_invoice_path(invoice)
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Subscribe")
-    expect(response.body).to include(membership_autopayments_path(membership))
+    expect(response.body).to include("Pay and Subscribe")
+    expect(response.body).to include(subscribe_membership_invoice_path(invoice))
     expect(response.body).not_to include("Pay now")
   end
 
@@ -44,17 +44,18 @@ RSpec.describe "Membership invoice subscribe action", type: :request do
     get membership_invoice_path(invoice)
 
     expect(response.body).to include("Pay now")
-    expect(response.body).not_to include(membership_autopayments_path(membership))
+    expect(response.body).not_to include(subscribe_membership_invoice_path(invoice))
   end
 
-  it "does not offer Subscribe once autopay is on with a card" do
+  it "shows Pay now without Subscribe once autopay is on with a card" do
     add_card
     membership.update!(autopay_on: true)
     sign_in create(:user, person:)
 
     get membership_invoice_path(invoice)
 
-    expect(response.body).not_to include(membership_autopayments_path(membership))
+    expect(response.body).to include("Pay now")
+    expect(response.body).not_to include(subscribe_membership_invoice_path(invoice))
   end
 
   it "does not offer Subscribe to an admin" do
@@ -63,6 +64,6 @@ RSpec.describe "Membership invoice subscribe action", type: :request do
     get membership_invoice_path(invoice)
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).not_to include(membership_autopayments_path(membership))
+    expect(response.body).not_to include(subscribe_membership_invoice_path(invoice))
   end
 end

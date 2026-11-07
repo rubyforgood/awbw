@@ -33,7 +33,8 @@ class NotificationMailerJob < ApplicationJob
       "form_link_request" => ->(n) { NotificationMailer.form_link_request(n) },
       "profile_change_requested" => ->(n) { NotificationMailer.profile_change_requested(n) },
       "profile_change_requested_fyi" => ->(n) { NotificationMailer.profile_change_requested_fyi(n) },
-      "profile_change_reviewed" => ->(n) { NotificationMailer.profile_change_reviewed(n) }
+      "profile_change_reviewed" => ->(n) { NotificationMailer.profile_change_reviewed(n) },
+      "membership_onboarding" => ->(n) { NotificationMailer.membership_onboarding(n) }
     }
 
     mailer = mailer_map[notification.kind]&.call(notification)

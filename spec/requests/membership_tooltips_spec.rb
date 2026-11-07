@@ -40,7 +40,7 @@ RSpec.describe "Membership tooltips", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Subscribe")
-    expect(response.body).to include("Saves your card, pays the issued invoice now, and turns on automatic payments.")
+    expect(response.body).to include("Saves your card and turns on automatic payments. Invoices are charged automatically before they are due.")
     expect(response.body).to include("Automatic payments are off. Invoices must be paid manually.")
     expect(response.body).not_to include("Manage card")
     expect(response.body).not_to include("Card on file")
@@ -54,7 +54,7 @@ RSpec.describe "Membership tooltips", type: :request do
 
     get person_path(person)
 
-    expect(response.body).to include("Turns on automatic payments and charges any issued invoice.")
+    expect(response.body).to include("Turns on automatic payments. Invoices are charged automatically before they are due.")
   end
 
   it "shows payment in progress on the membership card instead of Pay now" do

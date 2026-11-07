@@ -35,4 +35,19 @@ RSpec.describe "Memberships bulk actions", type: :request do
       .map { |input| input["value"] }
     expect(checked_ids).to eq([ failing.id.to_s ])
   end
+
+  it "queues onboarding emails for the selected memberships" do
+    person = create(:person)
+    membership = create(:membership, person:)
+
+    get bulk_action_memberships_path("email_members")
+    expect(response.body).to include("Send emails")
+
+    expect {
+      post perform_bulk_action_memberships_path("email_members"), params: { membership_ids: [ membership.id ] }
+    }.to have_enqueued_job(NotificationMailerJob)
+
+    expect(response).to have_http_status(:see_other)
+    expect(Notification.where(kind: "membership_onboarding").sole.noticeable).to eq(membership)
+  end
 end

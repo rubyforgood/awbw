@@ -12,7 +12,7 @@
       Only the records that failed are shown below. Review and retry them.
     <% else %>
       <%= number_with_delimiter(@rows.size) %> <%= @action.unit.pluralize(@rows.size) %> match this filter.
-      Only checked rows will change.
+      <%= @action.key == "email_members" ? "Only checked rows will receive an email." : "Only checked rows will change." %>
     <% end %>
   </p>
 
@@ -59,7 +59,7 @@
           <div class="flex items-center gap-3">
             <%= link_to "Cancel", memberships_path(@directory.filter_params),
                   class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-            <%= submit_tag "Apply", class: button_classes(:primary) %>
+            <%= submit_tag @action.submit_label, class: button_classes(:primary) %>
           </div>
         </div>
 

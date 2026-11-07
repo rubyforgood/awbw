@@ -12,6 +12,7 @@ class Membership < ApplicationRecord
 
   def self.annual_cost_cents = Setting.annual_membership_cents
   def self.renewal_window_days = Setting.membership_renewal_window_days
+  def self.autopay_window_days = Setting.membership_autopay_window_days
 
   DIRECTORY_STATUSES = %w[all active ending upcoming ended].freeze
 

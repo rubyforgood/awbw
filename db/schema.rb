@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_122719) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2115,6 +2115,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_122719) do
     t.integer "import_user_id"
     t.integer "home_featured_stories_limit"
     t.bigint "participant_credit_person_id"
+    t.integer "membership_autopay_window_days"
     t.index ["ce_administrator_id"], name: "index_settings_on_ce_administrator_id"
     t.index ["created_by_id"], name: "index_settings_on_created_by_id"
     t.index ["import_user_id"], name: "index_settings_on_import_user_id"

@@ -20,16 +20,21 @@
   <% unless admin %>
     <% if @membership_invoice.remaining_cost.positive? &&
           (!@membership_invoice.payment_in_progress? || @membership_invoice.checkout_session_id.present?) %>
+      <% membership = @membership_invoice.membership %>
+      <% can_subscribe = !@autopay_ready && allowed_to?(:enable_autopay?, membership) %>
       <div class="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-end gap-2 print:hidden">
         <% case @membership_invoice.decorate.autopay_action(autopay_ready: @autopay_ready) %>
         <% when :scheduled %>
           <p class="text-sm text-gray-600">Scheduled for <%= @membership_invoice.start_date.strftime("%b %-d, %Y") %>.</p>
+          <%= button_to "Pay now", membership_invoice_checkout_path(@membership_invoice),
+                class: button_classes(:secondary_outline),
+                title: "Pays this invoice once. The card is not saved for automatic payments.",
+                data: { turbo: false } %>
         <% when :pay_now %>
-          <% membership = @membership_invoice.membership %>
-          <% if !@autopay_ready && allowed_to?(:enable_autopay?, membership) %>
-            <%= button_to "Subscribe", membership_autopayments_path(membership),
+          <% if can_subscribe %>
+            <%= button_to "Pay and Subscribe", subscribe_membership_invoice_path(@membership_invoice),
                   class: button_classes(:primary),
-                  title: "Saves your card and turns on automatic payments.",
+                  title: "Pays this invoice and saves your card for automatic payments.",
                   data: { turbo: false } %>
           <% else %>
             <%= button_to "Pay now", membership_invoice_checkout_path(@membership_invoice),
@@ -37,6 +42,12 @@
                   title: "Pays this invoice once. The card is not saved for automatic payments.",
                   data: { turbo: false } %>
           <% end %>
+        <% when :none %>
+          <p class="text-sm text-gray-600">Automatic payment scheduled.</p>
+          <%= button_to "Pay now", membership_invoice_checkout_path(@membership_invoice),
+                class: button_classes(:secondary_outline),
+                title: "Pays this invoice once. The card is not saved for automatic payments.",
+                data: { turbo: false } %>
         <% end %>
       </div>
     <% end %>

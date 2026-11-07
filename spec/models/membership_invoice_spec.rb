@@ -359,11 +359,11 @@ RSpec.describe MembershipInvoice, type: :model do
   end
 
   describe "autopay windows" do
-    it "is issued through the renewal window" do
+    it "is issued through the autopay window" do
       inside = create(:membership_invoice,
-        start_date: Date.current + Membership.renewal_window_days)
+        start_date: Date.current + Membership.autopay_window_days)
       outside = create(:membership_invoice,
-        start_date: Date.current + Membership.renewal_window_days + 1.day)
+        start_date: Date.current + Membership.autopay_window_days + 1.day)
 
       expect(inside).to be_autopay_issued
       expect(outside).not_to be_autopay_issued

@@ -29,9 +29,9 @@ RSpec.describe MembershipAutopayJob, type: :job do
     expect(invoice.charge_attempts.where(status: "needs_card")).to exist
   end
 
-  it "does not attempt an invoice outside the renewal window" do
+  it "does not attempt an invoice outside the autopay window" do
     invoice = invoice_for(autopay_on: true,
-      start_date: Date.current + Membership.renewal_window_days + 1.day)
+      start_date: Date.current + Membership.autopay_window_days + 1.day)
 
     described_class.perform_now
 
