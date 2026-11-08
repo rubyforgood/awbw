@@ -50,7 +50,7 @@ class FmArchivesController < ApplicationController
   TABLE_COLUMNS = [
     [
       { label: "People", icon: "👥", tables: %w[rolodexes] },
-      { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects personnels] },
+      { label: "Organizations & programs", icon: "🏫", tables: %w[organizations projects people_to_organizations personnels] },
       { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
       { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs services] }
     ],
