@@ -11,13 +11,20 @@ class EventSurveyCompletions
     new(event, []).survey_allowed?(form)
   end
 
+  # The default survey forms (.survey, i.e. the oldest of each role — what the
+  # built-in callouts deliver) that can be handed out as a public link for this
+  # event, in role order. Reads every role's form in one pass and asks one
+  # instance about all of them, so the callout lookup runs once however many
+  # survey forms are published: this renders on the event dashboard and the
+  # registrants roster. The publicly-fillable test is the query form of
+  # Form#publicly_fillable?.
   def self.survey_forms_for(event)
     return [] unless event
 
-    Form::SURVEY_ROLES.filter_map do |role|
-      form = Form.survey(role)
-      form if form&.publicly_fillable? && survey_allowed_for_event?(event, form)
-    end
+    forms = Form.standalone.published.not_event_connected
+      .where(id: Form.survey_default_ids).where.not(slug: [ nil, "" ]).index_by(&:role)
+    completions = new(event, [])
+    Form::SURVEY_ROLES.filter_map { |role| forms[role] if completions.survey_allowed?(forms[role]) }
   end
 
   def initialize(event, person_ids)
@@ -26,10 +33,8 @@ class EventSurveyCompletions
   end
 
   def roles
-    @roles ||= begin
-      delivered = delivered_roles
-      answered = answered_roles
-      Form::SURVEY_ROLES.select { |role| (offered?(role) && delivered.include?(role)) || answered.include?(role) }
+    @roles ||= Form::SURVEY_ROLES.select do |role|
+      (offered?(role) && delivered_roles.include?(role)) || answered_roles.include?(role)
     end
   end
 
@@ -58,14 +63,17 @@ class EventSurveyCompletions
     @event.facilitator_training? && !@event.on_demand?
   end
 
+  # Memoized: both are asked once per survey role — by #roles, and by the
+  # #survey_allowed? .survey_forms_for asks for each role's form.
   def delivered_roles
-    RegistrationTicketCalloutForm.joins(:registration_ticket_callout, :form)
+    @delivered_roles ||= RegistrationTicketCalloutForm.joins(:registration_ticket_callout, :form)
       .where(registration_ticket_callouts: { event_id: @event.id }, forms: { role: Form::SURVEY_ROLES })
       .distinct.pluck("forms.role")
   end
 
   def answered_roles
-    (event_survey_submissions.distinct.pluck("forms.role") + event_survey_form_completions.distinct.pluck("forms.role")).uniq
+    @answered_roles ||=
+      (event_survey_submissions.distinct.pluck("forms.role") + event_survey_form_completions.distinct.pluck("forms.role")).uniq
   end
 
   def completions

@@ -211,5 +211,25 @@ RSpec.describe EventSurveyCompletions do
 
       expect(described_class.survey_forms_for(event)).not_to include(day_1)
     end
+
+    it "keeps the role order" do
+      expect(described_class.survey_forms_for(event)).to eq([ day_1, post_event ])
+    end
+
+    it "costs the same queries however many survey roles are publicly fillable" do
+      survey_forms_queries # warm up: the first call creates the event
+      baseline = survey_forms_queries
+
+      day_2.update!(slug: "day-2", published: true)
+
+      expect(survey_forms_queries).to eq(baseline)
+    end
+
+    def survey_forms_queries
+      count = 0
+      counter = ->(*, payload) { count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) }
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { described_class.survey_forms_for(event) }
+      count
+    end
   end
 end
