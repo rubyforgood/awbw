@@ -92,10 +92,10 @@ class User < ApplicationRecord
 
   SORTS = %w[email person confirmed access admin].freeze
   CONFIRMATION_FILTER_OPTIONS = [
-    [ "Confirmed", "true" ],
-    [ "Not confirmed", "false" ],
+    [ "Not invited", "not_invited" ],
     [ "Invited", "invited" ],
-    [ "Not invited", "not_invited" ]
+    [ "Confirmed", "true" ],
+    [ "Not confirmed", "false" ]
   ].freeze
   HAS_ACCESS_SQL = "users.locked_at IS NULL AND COALESCE(users.inactive, FALSE) = FALSE AND users.confirmed_at IS NOT NULL".freeze
 
