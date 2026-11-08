@@ -47,7 +47,8 @@ class FmArchivesController < ApplicationController
   }
 
   TABLE_GROUPS = [
-    { label: "People", icon: "👥", tables: %w[rolodexes activities ancillary_data contacts group_members groups] },
+    { label: "People", icon: "👥", tables: %w[rolodexes ancillary_data group_members groups] },
+    { label: "Contact history", icon: "🗂️", tables: %w[activities contacts notes] },
     { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects personnels] },
     { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
     { label: "Events", icon: "📆", tables: %w[events participants volunteers] },
@@ -59,8 +60,7 @@ class FmArchivesController < ApplicationController
     { label: "Donor campaigns", icon: "🤝", tables: %w[campaigns donor_developers solicitations] },
     { label: "Grants & funding", icon: "💰", tables: %w[fundings allocations expenditures program_sponsorships reportings] },
     { label: "Forms & letters", icon: "📋", tables: %w[forms_lists form_fields form_letters form_submissions] },
-    { label: "Committees", icon: "🏛️", tables: %w[committees committee_meetings committee_members] },
-    { label: "Other", icon: "📎", tables: %w[notes] }
+    { label: "Committees", icon: "🏛️", tables: %w[committees committee_meetings committee_members] }
   ]
 
   PORTAL_MODELS = [ Person, Organization, Affiliation, Payment, Workshop, Address, ContactMethod ].freeze
