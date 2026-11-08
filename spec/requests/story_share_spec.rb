@@ -930,8 +930,13 @@ RSpec.describe "/story_share", type: :request do
       expect(card).to have_no_css("iframe")
     end
 
-    it "plays the top featured story's video muted behind the home hero" do
-      create(:story, :published, :publicly_visible, title: "Video story", youtube_url: video_url, story_share_carousel_position: 1)
+    it "plays the hero story's video muted behind the home hero" do
+      create(:story, :published, :publicly_visible, title: "Carousel lead", story_share_carousel_position: 1)
+      hero = create(:story, :published, :publicly_visible, title: "Video story", youtube_url: video_url)
+      create(:primary_asset, owner: hero).file.attach(ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("image"), filename: "hero-art.png", content_type: "image/png",
+        metadata: { width: 1200, height: 800, analyzed: true }
+      ))
 
       get story_shares_path
 
