@@ -9,7 +9,7 @@
     <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Forms
     <% end %>
-    <%= form_page_subnav(@form, current: :results) %>
+    <%= form_page_subnav(@form, current: :results, event: @dashboard_event) %>
   </div>
 
   <div class="mb-6 flex items-start gap-4">
@@ -22,12 +22,12 @@
     </div>
   </div>
 
-  <% connected_events = @form.events.distinct.order(:start_date).to_a %>
   <% has_submissions = @form.form_submissions.exists? %>
-  <%# Event filter only earns its place on a form shared by more than one event.
+  <%# Event filter only earns its place on a form with submissions for more than
+      one event (@filterable_events, set by the controller).
       The organization/date filters need submissions to slice — gated on the unscoped
       total so they stay put when a filter empties the current view. %>
-  <% show_event_filter = connected_events.many? %>
+  <% show_event_filter = @filterable_events.many? %>
   <% show_question_filter = has_submissions && @aggregator.question_count.positive? %>
   <% show_org_filter = has_submissions %>
   <% show_date_filter = has_submissions %>
@@ -53,7 +53,7 @@
           <div class="w-full sm:w-44">
             <%= label_tag :event_id, "Event", class: search_label_class %>
             <%= select_tag :event_id,
-                  options_for_select(connected_events.map { |event| [ event.decorate.title_with_month_year, event.id ] }, @selected_event_id),
+                  options_for_select(@filterable_events.map { |event| [ event.decorate.title_with_month_year, event.id ] }, @selected_event_id),
                   include_blank: "All events",
                   class: search_field_class(extra: "search-select-placeholder") %>
           </div>
