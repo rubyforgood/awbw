@@ -90,13 +90,16 @@ class User < ApplicationRecord
     attributes user: "organizations.name"
   end
 
+  SORTS = %w[email person confirmed access admin].freeze
+  HAS_ACCESS_SQL = "users.locked_at IS NULL AND COALESCE(users.inactive, FALSE) = FALSE AND users.confirmed_at IS NOT NULL".freeze
+
   scope :has_access, -> { where(locked_at: nil, inactive: [ false, nil ]).where.not(confirmed_at: nil) }
   scope :invited, -> { where.not(welcome_instructions_sent_at: nil) }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:search]) if params[:search].present?
-    results = results.where(super_user: params[:super_user]) if params[:super_user].present?
+    results = results.where(super_user: params[:super_user] == "true" ? true : [ false, nil ]) if params[:super_user].present?
     if params[:access] == "true"
       results = results.has_access
     elsif params[:access] == "false"
@@ -104,8 +107,24 @@ class User < ApplicationRecord
     end
     results = results.invited if params[:invited] == "true"
     results = results.where.not(confirmed_at: nil) if params[:confirmed] == "true"
+    results = results.where(confirmed_at: nil) if params[:confirmed] == "false"
     results = results.where("users.sign_in_count > 0") if params[:authenticated] == "true"
     results
+  end
+
+  # Email tiebreaks every column sort, so boolean columns page deterministically.
+  # Direction resolves to a symbol here and is never interpolated into raw SQL.
+  def self.sorted_by(sort, direction)
+    direction = direction == "asc" ? :asc : :desc
+    sorted = case sort
+    when "email" then reorder(email: direction)
+    when "person" then left_joins(:person).reorder("people.first_name" => direction, "people.last_name" => direction)
+    when "confirmed" then reorder(confirmed_at: direction, welcome_instructions_sent_at: direction)
+    when "access" then reorder(Arel.sql(HAS_ACCESS_SQL).public_send(direction))
+    when "admin" then reorder(Arel.sql("COALESCE(users.super_user, FALSE)").public_send(direction))
+    else return reorder(:first_name, :last_name)
+    end
+    sorted.order(:email)
   end
 
   remote_searchable_by :email

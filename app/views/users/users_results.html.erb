@@ -1,4 +1,6 @@
 <%= turbo_frame_tag :users_results do %>
+  <% sort_base = params.permit(:search, :access, :confirmed, :super_user, :invited, :authenticated, :number_of_items_per_page).to_h.symbolize_keys %>
+  <% sort_link = sort_header_link(frame: "users_results", path: ->(p) { users_path(p) }, base: sort_base) %>
   <%= turbo_stream.replace("users_count", partial: "users_count") %>
 
   <div class="animate-fade overflow-x-auto rounded bg-white blur-on-submit">
@@ -6,11 +8,11 @@
       <table class="w-full border-collapse border border-gray-200">
         <thead class="bg-gray-100">
         <tr>
-          <th class="w-1/3 px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
-          <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Person</th>
-          <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Confirmed</th>
-          <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Access</th>
-          <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Admin</th>
+          <th class="w-1/3 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("email", "Email") %></th>
+          <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("person", "Person") %></th>
+          <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700"><%= sort_link.call("confirmed", "Confirmed") %></th>
+          <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700"><%= sort_link.call("access", "Access") %></th>
+          <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700"><%= sort_link.call("admin", "Admin") %></th>
           <th class="w-[80px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
         </tr>
         </thead>
@@ -42,6 +44,9 @@
                 search: params[:search],
                 super_user: params[:super_user],
                 access: params[:access],
+                confirmed: params[:confirmed],
+                sort: params[:sort],
+                direction: params[:direction],
                 page: params[:page],
                 number_of_items_per_page: params[:number_of_items_per_page]
               } %>

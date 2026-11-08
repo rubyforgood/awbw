@@ -48,6 +48,39 @@ RSpec.describe "/users", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("users_results")
       end
+
+      it "sorts by a column and offers the reverse direction" do
+        create(:user, email: "aaa-sort@example.com")
+        create(:user, email: "zzz-sort@example.com")
+
+        get users_url(sort: "email", direction: "asc", search: "sort@example"), headers: { "Turbo-Frame" => "users_results" }
+
+        expect(response.body.index("aaa-sort@example.com")).to be < response.body.index("zzz-sort@example.com")
+        expect(response.body).to include("direction=desc&amp;search=sort%40example&amp;sort=email")
+      end
+
+      it "sorts by person alongside a search" do
+        get users_url(sort: "person", search: "example"), headers: { "Turbo-Frame" => "users_results" }
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "ignores an unknown sort" do
+        get users_url(sort: "encrypted_password"), headers: { "Turbo-Frame" => "users_results" }
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "filters by confirmation and keeps it on the sort links" do
+        create(:user, email: "pending-user@example.com", confirmed_at: nil)
+        create(:user, email: "settled-user@example.com")
+
+        get users_url(confirmed: "false"), headers: { "Turbo-Frame" => "users_results" }
+
+        expect(response.body).to include("pending-user@example.com")
+        expect(response.body).not_to include("settled-user@example.com")
+        expect(response.body).to include("confirmed=false")
+      end
     end
 
     context "as regular_user" do
