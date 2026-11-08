@@ -1,8 +1,9 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="space-y-6">
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6">
       <h1 class="text-primary font-display text-2xl font-semibold">FileMaker archive</h1>
+      <p class="text-sm text-gray-500">Select a table to view its records.</p>
     </div>
 
     <div class="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -56,8 +57,6 @@
       </div>
     <% elsif @selected %>
       <p class="text-gray-500">No records found.</p>
-    <% else %>
-      <p class="text-gray-500">Select a table above to view its records.</p>
     <% end %>
   </div>
 </div>
