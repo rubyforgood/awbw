@@ -47,8 +47,8 @@ class FmArchivesController < ApplicationController
   }
 
   TABLE_GROUPS = [
-    { label: "People", icon: "👥", tables: %w[rolodexes ancillary_data group_members groups] },
-    { label: "Contact history", icon: "🗂️", tables: %w[activities contacts notes] },
+    { label: "People", icon: "👥", tables: %w[rolodexes group_members groups] },
+    { label: "Contact history", icon: "🗂️", tables: %w[activities contacts notes ancillary_data] },
     { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects personnels] },
     { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
     { label: "Events", icon: "📆", tables: %w[events participants volunteers] },
