@@ -46,22 +46,32 @@ class FmArchivesController < ApplicationController
     "workshops" => { model: FmWorkshop, label: "Workshops" }
   }
 
-  TABLE_GROUPS = [
-    { label: "People", icon: "👥", tables: %w[rolodexes group_members groups] },
-    { label: "Contact history", icon: "🗂️", tables: %w[activities contacts notes ancillary_data] },
-    { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects personnels] },
-    { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
-    { label: "Events", icon: "📆", tables: %w[events participants volunteers] },
-    { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs services] },
-    { label: "Quotes", icon: "💬", tables: %w[quotations] },
-    { label: "Art", icon: "🖼️", tables: %w[art_registries art_purchases exhibited_items] },
-    { label: "Payments & donations", icon: "💳", tables: %w[payments match_donations] },
-    { label: "Invoicing", icon: "🧾", tables: %w[invoices line_items] },
-    { label: "Donor campaigns", icon: "🤝", tables: %w[campaigns donor_developers solicitations] },
-    { label: "Grants & funding", icon: "💰", tables: %w[fundings allocations expenditures program_sponsorships reportings] },
-    { label: "Forms & letters", icon: "📋", tables: %w[forms_lists form_fields form_letters form_submissions] },
-    { label: "Committees", icon: "🏛️", tables: %w[committees committee_meetings committee_members] }
-  ]
+  # The index's cards, column by column; narrower screens stack the columns in this order.
+  TABLE_COLUMNS = [
+    [
+      { label: "People", icon: "👥", tables: %w[rolodexes] },
+      { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects personnels] },
+      { label: "Quotes", icon: "💬", tables: %w[quotations] }
+    ],
+    [
+      { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
+      { label: "Contact history", icon: "🗂️", tables: %w[activities contacts notes ancillary_data] },
+      { label: "Events", icon: "📆", tables: %w[events participants volunteers] },
+      { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs services] }
+    ],
+    [
+      { label: "Payments & donations", icon: "💳", tables: %w[payments match_donations] },
+      { label: "Invoicing", icon: "🧾", tables: %w[invoices line_items] },
+      { label: "Donor campaigns", icon: "🤝", tables: %w[campaigns donor_developers solicitations] },
+      { label: "Grants & funding", icon: "💰", tables: %w[fundings allocations expenditures program_sponsorships reportings] }
+    ],
+    [
+      { label: "Art", icon: "🖼️", tables: %w[art_registries art_purchases exhibited_items] },
+      { label: "Forms & letters", icon: "📋", tables: %w[forms_lists form_fields form_letters form_submissions] },
+      { label: "Committees & groups", icon: "🏛️", tables: %w[committees committee_meetings committee_members groups group_members] }
+    ]
+  ].freeze
+  TABLE_GROUPS = TABLE_COLUMNS.flatten.freeze
 
   PORTAL_MODELS = [ Person, Organization, Affiliation, Payment, Workshop, Address, ContactMethod ].freeze
 
@@ -69,7 +79,7 @@ class FmArchivesController < ApplicationController
     authorize! :fm_archive
 
     @tables = TABLES
-    @table_groups = TABLE_GROUPS
+    @table_columns = TABLE_COLUMNS
     @selected = params[:table]
 
     if @selected && (config = TABLES[@selected])
