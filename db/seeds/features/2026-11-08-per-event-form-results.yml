@@ -1,0 +1,13 @@
+name: "Roll up form results for one event"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-08
+pr_number: 2965
+action_path: "/forms"
+summary: >-
+  A form's results page can be narrowed to any event its submissions were made for, so a
+  standalone survey shared with an event link rolls up one training's responses on their own.
+pro_tips:
+  - "The Event picker on a form's results page lists every event that form has submissions for — pick one to chart just that training's answers."
+  - "The picker only appears once a form has submissions from more than one event; with a single event the rollup is already that event's."
+  - "Opening results from a form editor you reached from an event keeps that event selected, and the Edit tabs keep it on the way back."
