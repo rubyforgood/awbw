@@ -62,8 +62,8 @@ class FmArchivesController < ApplicationController
     [
       { label: "Payments & donations", icon: "💳", tables: %w[payments match_donations] },
       { label: "Invoicing", icon: "🧾", tables: %w[invoices line_items] },
-      { label: "Donor campaigns", icon: "🤝", tables: %w[campaigns donor_developers solicitations] },
-      { label: "Grants & funding", icon: "💰", tables: %w[fundings allocations expenditures program_sponsorships reportings] }
+      { label: "Grants & funding", icon: "💰", tables: %w[fundings allocations expenditures program_sponsorships reportings] },
+      { label: "Donor campaigns", icon: "🤝", tables: %w[campaigns donor_developers solicitations] }
     ],
     [
       { label: "Art", icon: "🖼️", tables: %w[art_registries art_purchases exhibited_items] },
