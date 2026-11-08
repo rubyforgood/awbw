@@ -55,8 +55,8 @@ class FmArchivesController < ApplicationController
       { label: "Contact history", icon: "🗂️", tables: %w[activities contacts notes ancillary_data] }
     ],
     [
-      { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs services] },
       { label: "Events", icon: "📆", tables: %w[events participants volunteers] },
+      { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs services] },
       { label: "Quotes", icon: "💬", tables: %w[quotations] },
       { label: "Art", icon: "🖼️", tables: %w[art_registries art_purchases exhibited_items] }
     ],
