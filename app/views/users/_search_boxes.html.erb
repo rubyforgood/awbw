@@ -14,7 +14,7 @@
 
     <!-- Confirmation -->
     <%= render "shared/filter_select", param: :confirmed, label: "Confirmation",
-          options: [ [ "Confirmed", "true" ], [ "Unconfirmed", "false" ] ], selected: params[:confirmed],
+          options: User::CONFIRMATION_FILTER_OPTIONS, selected: params[:confirmed],
           blank: "All", field_class: search_field_class, wrapper_class: "w-full lg:w-36" %>
 
     <!-- Admin -->

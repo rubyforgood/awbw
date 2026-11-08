@@ -91,10 +91,17 @@ class User < ApplicationRecord
   end
 
   SORTS = %w[email person confirmed access admin].freeze
+  CONFIRMATION_FILTER_OPTIONS = [
+    [ "Confirmed", "true" ],
+    [ "Not confirmed", "false" ],
+    [ "Invited", "invited" ],
+    [ "Not invited", "not_invited" ]
+  ].freeze
   HAS_ACCESS_SQL = "users.locked_at IS NULL AND COALESCE(users.inactive, FALSE) = FALSE AND users.confirmed_at IS NOT NULL".freeze
 
   scope :has_access, -> { where(locked_at: nil, inactive: [ false, nil ]).where.not(confirmed_at: nil) }
   scope :invited, -> { where.not(welcome_instructions_sent_at: nil) }
+  scope :unconfirmed, -> { where(confirmed_at: nil) }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
@@ -106,8 +113,12 @@ class User < ApplicationRecord
       results = results.where("users.inactive = ? OR users.locked_at IS NOT NULL OR users.confirmed_at IS NULL", true)
     end
     results = results.invited if params[:invited] == "true"
-    results = results.where.not(confirmed_at: nil) if params[:confirmed] == "true"
-    results = results.where(confirmed_at: nil) if params[:confirmed] == "false"
+    case params[:confirmed]
+    when "true" then results = results.where.not(confirmed_at: nil)
+    when "false" then results = results.unconfirmed
+    when "invited" then results = results.unconfirmed.invited
+    when "not_invited" then results = results.unconfirmed.where(welcome_instructions_sent_at: nil)
+    end
     results = results.where("users.sign_in_count > 0") if params[:authenticated] == "true"
     results
   end

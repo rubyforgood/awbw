@@ -370,12 +370,29 @@ RSpec.describe User do
       expect(results).not_to include(unconfirmed_user)
     end
 
-    it 'filters by confirmed false' do
-      unconfirmed_user = create(:user, confirmed_at: nil)
+    context 'with invited and uninvited unconfirmed users' do
+      let!(:invited_user) { create(:user, confirmed_at: nil, welcome_instructions_sent_at: 1.day.ago) }
+      let!(:uninvited_user) { create(:user, confirmed_at: nil, welcome_instructions_sent_at: nil) }
 
-      results = User.search_by_params(confirmed: 'false')
-      expect(results).to include(unconfirmed_user)
-      expect(results).not_to include(admin_user, regular_user)
+      it 'filters by confirmed false to every unconfirmed user' do
+        results = User.search_by_params(confirmed: 'false')
+        expect(results).to include(invited_user, uninvited_user)
+        expect(results).not_to include(admin_user, regular_user)
+      end
+
+      it 'filters to unconfirmed users who were invited' do
+        regular_user.update_columns(welcome_instructions_sent_at: 2.days.ago)
+
+        results = User.search_by_params(confirmed: 'invited')
+        expect(results).to include(invited_user)
+        expect(results).not_to include(uninvited_user, regular_user)
+      end
+
+      it 'filters to unconfirmed users who were never invited' do
+        results = User.search_by_params(confirmed: 'not_invited')
+        expect(results).to include(uninvited_user)
+        expect(results).not_to include(invited_user, admin_user, regular_user)
+      end
     end
 
     it 'filters by access true (has access)' do

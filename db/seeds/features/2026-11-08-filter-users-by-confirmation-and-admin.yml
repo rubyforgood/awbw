@@ -5,7 +5,8 @@ released_on: 2026-11-08
 pr_number: 2971
 action_path: "/users"
 summary: >-
-  The users list can be narrowed to confirmed or unconfirmed accounts, and to admins or non-admins,
-  alongside the existing search and access filters.
+  The users list can be narrowed by confirmation (confirmed, not confirmed, invited, or not invited)
+  and to admins or non-admins, alongside the existing search and access filters.
 pro_tips:
-  - "Pick Unconfirmed to find accounts that still need an invite or a manual confirmation."
+  - "Pick Not invited to find accounts that still need an invite."
+  - "Pick Invited to find people who got an invite but haven't confirmed yet."
