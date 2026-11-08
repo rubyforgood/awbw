@@ -108,11 +108,11 @@ class StorySharesController < ApplicationController
   end
 
   def picked_hero_story
-    preloaded(portal_scope.with_primary_photo).find_by(id: Setting.story_share_hero_story&.id)&.decorate
+    preloaded(portal_scope.with_hero_media).find_by(id: Setting.story_share_hero_story&.id)&.decorate
   end
 
   def automatic_hero_story
-    candidates = portal_scope.with_primary_photo.where.not(id: @featured_stories.map(&:id))
+    candidates = portal_scope.with_hero_media.where.not(id: @featured_stories.map(&:id))
     preloaded(candidates).order(publicly_featured: :desc, created_at: :desc).first&.decorate
   end
 

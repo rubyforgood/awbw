@@ -298,9 +298,18 @@ RSpec.describe "StoryShareAdmin", type: :request do
       expect(Setting.first.story_share_hero_story).to eq(story)
     end
 
-    it "rejects a story without a photo" do
+    it "saves a public story that has only a video" do
       sign_in admin
-      story = create(:story, :published, :publicly_visible)
+      story = create(:story, :published, :publicly_visible, youtube_url: "https://www.youtube.com/watch?v=abc123")
+
+      patch story_share_admin_hero_story_path, params: { story_id: story.id }
+
+      expect(Setting.first.story_share_hero_story).to eq(story)
+    end
+
+    it "rejects a story with neither a photo nor a video" do
+      sign_in admin
+      story = create(:story, :published, :publicly_visible, youtube_url: "")
 
       patch story_share_admin_hero_story_path, params: { story_id: story.id }
 

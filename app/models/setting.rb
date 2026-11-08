@@ -243,7 +243,7 @@ class Setting < ApplicationRecord
       ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS).to_i
   end
 
-  # The story whose photo an admin chose for the Story Share home background.
+  # The story whose photo or video an admin chose for the Story Share home background.
   def self.story_share_hero_story
     stored_association(:story_share_hero_story)
   end

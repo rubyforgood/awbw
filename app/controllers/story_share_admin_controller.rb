@@ -85,7 +85,7 @@ class StoryShareAdminController < ApplicationController
     authorize! :story_share_admin
     story = Story.story_share_hero_eligible.find_by(id: params[:story_id]) if params.key?(:story_id)
     if params.key?(:story_id) && story.nil?
-      return redirect_to story_share_admin_path, alert: "Choose a published, public story that has a main image."
+      return redirect_to story_share_admin_path, alert: "Choose a published, public story that has a main image or video."
     end
 
     return redirect_to story_share_admin_path, alert: "The home background could not be saved." unless Setting.current.update(story_share_hero_story: story)

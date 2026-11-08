@@ -930,13 +930,9 @@ RSpec.describe "/story_share", type: :request do
       expect(card).to have_no_css("iframe")
     end
 
-    it "plays the hero story's video muted behind the home hero" do
+    it "plays a video-only story muted behind the home hero" do
       create(:story, :published, :publicly_visible, title: "Carousel lead", story_share_carousel_position: 1)
-      hero = create(:story, :published, :publicly_visible, title: "Video story", youtube_url: video_url)
-      create(:primary_asset, owner: hero).file.attach(ActiveStorage::Blob.create_and_upload!(
-        io: StringIO.new("image"), filename: "hero-art.png", content_type: "image/png",
-        metadata: { width: 1200, height: 800, analyzed: true }
-      ))
+      create(:story, :published, :publicly_visible, title: "Video story", youtube_url: video_url)
 
       get story_shares_path
 
@@ -944,6 +940,7 @@ RSpec.describe "/story_share", type: :request do
       expect(hero).to have_css(player)
       expect(hero).to have_css(".motion-reduce\\:hidden #{player}")
       expect(hero).to have_css("button[aria-label='Pause videos and slideshows'][data-action='background-video#toggle']")
+      expect(hero).to have_link("Video from: Video story")
     end
 
     it "lets visitors pause the home carousel's videos and slideshow" do
