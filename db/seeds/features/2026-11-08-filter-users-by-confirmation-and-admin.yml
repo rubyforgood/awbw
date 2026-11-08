@@ -1,0 +1,11 @@
+name: "Filter users by confirmation and admin status"
+area: people
+display_status: admin_facing
+released_on: 2026-11-08
+pr_number: 2971
+action_path: "/users"
+summary: >-
+  The users list can be narrowed to confirmed or unconfirmed accounts, and to admins or non-admins,
+  alongside the existing search and access filters.
+pro_tips:
+  - "Pick Unconfirmed to find accounts that still need an invite or a manual confirmation."
