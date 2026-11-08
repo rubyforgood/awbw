@@ -6,6 +6,7 @@ class PublicFormsController < ApplicationController
   skip_before_action :authenticate_user!, only: %i[show create thank_you]
   before_action :noindex!, only: %i[show create thank_you]
   before_action :set_form
+  before_action :set_event, only: %i[show create thank_you]
 
   def show
     authorize! @form, to: :public_show?
@@ -18,7 +19,7 @@ class PublicFormsController < ApplicationController
 
     # A bot that fills the hidden field is silently bounced.
     if Honeypot.tripped?(params, :public_registration)
-      redirect_to public_form_path(@form.slug)
+      redirect_to public_form_path(@form.slug, event: @event&.id)
       return
     end
 
@@ -34,9 +35,9 @@ class PublicFormsController < ApplicationController
     end
 
     Current.source = "public_form"
-    result = PublicFormSubmission.call(form: @form, form_params: form_params, person: current_user&.person)
+    result = PublicFormSubmission.call(form: @form, form_params: form_params, person: current_user&.person, event: @event)
     if result.success?
-      redirect_to thank_you_public_form_path(@form.slug), notice: "Thank you — your response has been submitted!"
+      redirect_to thank_you_public_form_path(@form.slug, event: @event&.id), notice: "Thank you — your response has been submitted!"
     else
       flash.now[:alert] = result.errors.join(", ").presence || "Something went wrong. Please try again."
       render :show, status: :unprocessable_content
@@ -56,6 +57,17 @@ class PublicFormsController < ApplicationController
 
   def public_form_fields
     @public_form_fields ||= PublicFormFields.new(form: @form, person: current_user&.person)
+  end
+
+  def set_event
+    raw_event_id = params[:event].presence || params[:event_id].presence
+    return if raw_event_id.blank?
+
+    candidate_event = Event.find_by(id: raw_event_id)
+    return unless candidate_event
+    return unless EventSurveyCompletions.survey_allowed_for_event?(candidate_event, @form)
+
+    @event = candidate_event
   end
 
   # A file input can't be repopulated, so on re-render after an error fall back to
