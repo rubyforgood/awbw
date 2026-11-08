@@ -2,6 +2,7 @@ name: "FileMaker organization records grouped by topic"
 area: reporting
 display_status: admin_facing
 released_on: 2026-11-08
+pr_number: 2966
 action_path: "/fm_archives?table=organizations"
 summary: >-
   A FileMaker organization record now shows its fields in labeled sections —
