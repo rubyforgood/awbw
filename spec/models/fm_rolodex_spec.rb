@@ -119,8 +119,8 @@ RSpec.describe FmRolodex do
   end
 
   it "leaves tables without field groups as one unlabeled group" do
-    organization = FmOrganization.new(data: { "OrgName" => "Shelter" })
+    project = FmProject.new(data: { "ProjectName" => "Adult Windows" })
 
-    expect(organization.grouped_data).to eq(nil => { nil => { "OrgName" => "Shelter" } })
+    expect(project.grouped_data).to eq(nil => { nil => { "ProjectName" => "Adult Windows" } })
   end
 end

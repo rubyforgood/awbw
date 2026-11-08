@@ -1,0 +1,16 @@
+name: "FileMaker organization records grouped by topic"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-08
+action_path: "/fm_archives?table=organizations"
+summary: >-
+  A FileMaker organization record now shows its fields in labeled sections —
+  organization, hierarchy, about, outreach, notes and record keeping — with a
+  reference at the bottom listing every field it can hold.
+description: >-
+  <ul><li>Blank fields are left out of the cards. The blue section at the bottom
+  still lists every field, grayed out when blank, plus every table that links to
+  the organization.</li><li>Fields the organization import copies into the portal
+  are orange — hover one to see which portal field it fills.</li></ul>
+pro_tips:
+  - "Fields marked * name FileMaker staff, matched to a portal user on import."
