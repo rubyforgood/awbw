@@ -151,6 +151,28 @@ RSpec.describe PublicFormSubmission do
       expect(result.success?).to be(true)
       expect(registration.reload.post_survey_completed?).to be(true)
     end
+
+    # The dollars stay on the source registration, but the recipient responds to
+    # the award — and fills its survey — from whichever ticket they now hold.
+    it "stamps a transferred-in registration whose award sits on the source" do
+      person = create(:person, first_name: "Rowan", last_name: "Okafor", email: "rowan@example.com")
+      source = create(:event_registration, registrant: person, status: "transferred_out")
+      registration = create(:event_registration, event: event, registrant: person,
+        transferred_from_registration: source)
+      scholarship = create(:scholarship, recipient: person, amount_cents: 2000)
+      create(:allocation, source: scholarship, allocatable: source, amount: 1000)
+
+      survey_params = {
+        first_field.id.to_s => "Rowan",
+        last_field.id.to_s => "Okafor",
+        email_field.id.to_s => "rowan@example.com"
+      }
+
+      result = described_class.call(form: survey_form, form_params: survey_params, event: event)
+
+      expect(result.success?).to be(true)
+      expect(registration.reload.post_survey_completed?).to be(true)
+    end
   end
 
   it "reuses an existing person matched on email + last name" do

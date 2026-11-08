@@ -95,11 +95,17 @@ class PublicFormSubmission
     registration
   end
 
+  # The scholarship survey is a recipient's final step, so submitting it stamps
+  # their readiness for the certificate — the same write the scholarship callout
+  # makes (EventRegistrationServices::CalloutFormSubmission). Recipient status
+  # reads through the transfer chain (scholarship_recipient?, not scholarship?):
+  # a transferred-in registration holds no awards of its own, but its registrant
+  # still responds to the award from whichever ticket they hold.
   def stamp_scholarship_form_completion(submission)
     return unless @form.role == "recipient_survey" && @event && submission.person
 
     registration = EventRegistration.find_by(event: @event, registrant: submission.person)
-    return unless registration&.scholarship?
+    return unless registration&.scholarship_recipient?
     return if registration.post_survey_completed?
 
     registration.mark_post_survey_completed!
