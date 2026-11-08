@@ -55,7 +55,8 @@ RSpec.describe "/users", type: :request do
 
         get users_url(sort: "email", direction: "asc", search: "sort@example"), headers: { "Turbo-Frame" => "users_results" }
 
-        expect(response.body.index("aaa-sort@example.com")).to be < response.body.index("zzz-sort@example.com")
+        text = Nokogiri::HTML(response.body).text
+        expect(text.index("aaa-sort@example.com")).to be < text.index("zzz-sort@example.com")
         expect(response.body).to include("direction=desc&amp;search=sort%40example&amp;sort=email")
       end
 
@@ -77,8 +78,9 @@ RSpec.describe "/users", type: :request do
 
         get users_url(confirmed: "false"), headers: { "Turbo-Frame" => "users_results" }
 
-        expect(response.body).to include("pending-user@example.com")
-        expect(response.body).not_to include("settled-user@example.com")
+        text = Nokogiri::HTML(response.body).text
+        expect(text).to include("pending-user@example.com")
+        expect(text).not_to include("settled-user@example.com")
         expect(response.body).to include("confirmed=false")
       end
     end
