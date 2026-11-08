@@ -1,62 +1,66 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="border-primary/10 rounded-2xl border p-6 shadow-sm">
-  <div class="space-y-6">
-    <div class="mb-6">
-      <h1 class="text-primary font-display text-2xl font-semibold">FileMaker archive</h1>
-      <p class="text-sm text-gray-500">Select a table to view its records.</p>
-    </div>
+<% content_for(:full_width, true) %>
+<%# A little wider than the layout's max-w-7xl cap so each card's chips wrap to fewer rows. %>
+<div class="mx-auto max-w-[84rem] px-2 sm:px-6 lg:px-8">
+  <div class="border-primary/10 rounded-2xl border p-6 shadow-sm">
+    <div class="space-y-6">
+      <div class="mb-6">
+        <h1 class="text-primary font-display text-2xl font-semibold">FileMaker archive</h1>
+        <p class="text-sm text-gray-500">Select a table to view its records.</p>
+      </div>
 
-    <div class="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <% @table_columns.each do |groups| %>
-        <div class="space-y-4">
-          <% groups.each do |group| %>
-            <section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-              <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-800">
-                <span aria-hidden="true"><%= group[:icon] %></span>
-                <%= group[:label] %>
-              </h2>
-              <div class="flex flex-wrap gap-2">
-                <% group[:tables].each do |key| %>
-                  <%= link_to @tables.dig(key, :label), fm_archives_path(table: key),
-                        class: button_classes(key == @selected ? :primary : :primary_outline, size: :sm),
-                        aria: { current: (key == @selected ? "page" : nil) } %>
-                <% end %>
-              </div>
-            </section>
-          <% end %>
+      <div class="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <% @table_columns.each do |groups| %>
+          <div class="space-y-4">
+            <% groups.each do |group| %>
+              <section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-800">
+                  <span aria-hidden="true"><%= group[:icon] %></span>
+                  <%= group[:label] %>
+                </h2>
+                <div class="flex flex-wrap gap-2">
+                  <% group[:tables].each do |key| %>
+                    <%= link_to @tables.dig(key, :label), fm_archives_path(table: key),
+                          class: button_classes(key == @selected ? :primary : :primary_outline, size: :sm),
+                          aria: { current: (key == @selected ? "page" : nil) } %>
+                  <% end %>
+                </div>
+              </section>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @records %>
+        <div class="overflow-x-auto rounded-xl bg-white p-6">
+          <table class="w-full border-collapse border border-gray-200 text-sm">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border border-gray-200 px-3 py-2 text-left">FM ID</th>
+                <th class="border border-gray-200 px-3 py-2 text-left">Name</th>
+                <th class="border border-gray-200 px-3 py-2 text-left">Key</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @records.each do |record| %>
+                <tr class="divide-y hover:bg-gray-50">
+                  <td class="border border-gray-200 px-3 py-2 font-mono text-xs">
+                    <%= link_to record.fm_id, fm_archive_path(record.fm_id, table: @selected), class: "text-primary hover:underline" %>
+                  </td>
+                  <td class="border border-gray-200 px-3 py-2"><%= truncate(record.name, length: 100) %></td>
+                  <td class="border border-gray-200 px-3 py-2 font-mono text-xs"><%= record.fm_key_name %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+
+          <div class="pagination mt-8 flex justify-center">
+            <%= tailwind_paginate @records, params: { table: @selected } %>
+          </div>
         </div>
+      <% elsif @selected %>
+        <p class="text-gray-500">No records found.</p>
       <% end %>
     </div>
-
-    <% if @records %>
-      <div class="overflow-x-auto rounded-xl bg-white p-6">
-        <table class="w-full border-collapse border border-gray-200 text-sm">
-          <thead>
-            <tr class="bg-gray-100">
-              <th class="border border-gray-200 px-3 py-2 text-left">FM ID</th>
-              <th class="border border-gray-200 px-3 py-2 text-left">Name</th>
-              <th class="border border-gray-200 px-3 py-2 text-left">Key</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @records.each do |record| %>
-              <tr class="divide-y hover:bg-gray-50">
-                <td class="border border-gray-200 px-3 py-2 font-mono text-xs">
-                  <%= link_to record.fm_id, fm_archive_path(record.fm_id, table: @selected), class: "text-primary hover:underline" %>
-                </td>
-                <td class="border border-gray-200 px-3 py-2"><%= truncate(record.name, length: 100) %></td>
-                <td class="border border-gray-200 px-3 py-2 font-mono text-xs"><%= record.fm_key_name %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-
-        <div class="pagination mt-8 flex justify-center">
-          <%= tailwind_paginate @records, params: { table: @selected } %>
-        </div>
-      </div>
-    <% elsif @selected %>
-      <p class="text-gray-500">No records found.</p>
-    <% end %>
   </div>
 </div>

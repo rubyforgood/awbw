@@ -52,10 +52,10 @@ class FmArchivesController < ApplicationController
       { label: "People", icon: "👥", tables: %w[rolodexes] },
       { label: "Organizations & programs", icon: "🏫", tables: %w[organizations projects people_to_organizations personnels] },
       { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
-      { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs services] }
+      { label: "Contact history", icon: "🗂️", tables: %w[activities contacts notes ancillary_data] }
     ],
     [
-      { label: "Contact history", icon: "🗂️", tables: %w[activities contacts notes ancillary_data] },
+      { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs services] },
       { label: "Events", icon: "📆", tables: %w[events participants volunteers] },
       { label: "Quotes", icon: "💬", tables: %w[quotations] },
       { label: "Art", icon: "🖼️", tables: %w[art_registries art_purchases exhibited_items] }
