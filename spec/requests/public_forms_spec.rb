@@ -472,6 +472,22 @@ RSpec.describe "PublicForms", type: :request do
         expect(response.body).to include(%(action="#{public_form_path(survey.slug, event: training.id)}"))
         expect(response.body).to include(%(<input type="hidden" name="event" id="event" value="#{training.id}"))
       end
+
+      it "carries the event into the admin's Edit form link" do
+        sign_in create(:user, :admin)
+
+        get public_form_path(survey.slug, event: training.id)
+
+        expect(response.body).to include(edit_form_path(survey, event_id: training.id))
+      end
+
+      it "leaves the admin's Edit form link event-less when the event is not allowed" do
+        sign_in create(:user, :admin)
+
+        get public_form_path(survey.slug, event: create(:event, facilitator_training: true, on_demand: true).id)
+
+        expect(response.body).to include(%(href="#{edit_form_path(survey)}"))
+      end
     end
 
     describe "POST /f/:slug with event param" do
