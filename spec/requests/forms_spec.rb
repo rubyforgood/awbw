@@ -1269,10 +1269,14 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).not_to include("Duplicate form")
       end
 
-      it "shows an event filter for a form shared across more than one event" do
+      it "shows an event filter for a form with submissions from more than one event" do
         form = create(:form)
-        create(:event_form, form: form, event: create(:event, title: "Spring Cohort"), role: "registration")
-        create(:event_form, form: form, event: create(:event, title: "Fall Cohort"), role: "registration")
+        spring = create(:event, title: "Spring Cohort")
+        fall = create(:event, title: "Fall Cohort")
+        create(:event_form, form: form, event: spring, role: "registration")
+        create(:event_form, form: form, event: fall, role: "registration")
+        create(:form_submission, form: form, event: spring)
+        create(:form_submission, form: form, event: fall)
 
         get results_form_path(form)
 
@@ -1289,9 +1293,11 @@ RSpec.describe "Forms", type: :request do
         expect(Nokogiri::HTML(response.body).at_css("select#event_id")).to be_nil
       end
 
-      it "omits the event filter for a form connected to a single event" do
+      it "omits the event filter for a form whose submissions all come from one event" do
         form = create(:form)
-        create(:event_form, form: form, event: create(:event), role: "registration")
+        event = create(:event)
+        create(:event_form, form: form, event: event, role: "registration")
+        create(:form_submission, form: form, event: event)
         get results_form_path(form)
         expect(Nokogiri::HTML(response.body).at_css("select#event_id")).to be_nil
       end
@@ -1309,10 +1315,13 @@ RSpec.describe "Forms", type: :request do
 
       it "renders the results filters as question, event, organization, submitted from, submitted to" do
         form = create(:form)
-        create(:event_form, form: form, event: create(:event), role: "registration")
-        create(:event_form, form: form, event: create(:event), role: "continuing_education")
+        registration_event = create(:event)
+        ce_event = create(:event)
+        create(:event_form, form: form, event: registration_event, role: "registration")
+        create(:event_form, form: form, event: ce_event, role: "continuing_education")
         create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
-        create(:form_submission, form: form)
+        create(:form_submission, form: form, event: registration_event)
+        create(:form_submission, form: form, event: ce_event)
 
         get results_form_path(form)
 
@@ -1381,6 +1390,71 @@ RSpec.describe "Forms", type: :request do
 
         expect(response.body).to include("Blue")
         expect(response.body).not_to include("Red")
+      end
+
+      # A standalone survey has no event_forms rows at all: its submissions are
+      # the only thing that says which events it covers.
+      it "narrows a standalone survey's rollup to an event its submissions carry" do
+        survey = create(:form, :standalone, role: "day_1_survey", slug: "eval-day-1", published: true)
+        training = create(:event, facilitator_training: true)
+        other_training = create(:event, facilitator_training: true)
+        color = create(:form_field, form: survey, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: survey, event: training, role: "public"),
+                             form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: create(:form_submission, form: survey, event: other_training, role: "public"),
+                             form_field: color, submitted_answer: "Red")
+
+        get results_form_path(survey, event_id: training.id)
+
+        expect(response.body).to include("Blue")
+        expect(response.body).not_to include("Red")
+      end
+
+      it "offers every event the form has submissions for in the event picker" do
+        survey = create(:form, :standalone, role: "day_1_survey", slug: "eval-day-1", published: true)
+        training = create(:event, facilitator_training: true)
+        other_training = create(:event, facilitator_training: true)
+        create(:form_field, form: survey, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_submission, form: survey, event: training, role: "public")
+        create(:form_submission, form: survey, event: other_training, role: "public")
+
+        get results_form_path(survey)
+
+        expect(response.body).to include("All events")
+        expect(response.body).to include(%(value="#{training.id}"))
+        expect(response.body).to include(%(value="#{other_training.id}"))
+      end
+
+      it "offers no event picker when every submission is event-less" do
+        form = create(:form, :standalone)
+        create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_submission, form: form)
+
+        get results_form_path(form)
+
+        expect(response.body).not_to include("All events")
+      end
+
+      it "ignores an event_id the form has no submissions for" do
+        form = create(:form, :standalone)
+        event = create(:event)
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form), form_field: color,
+                             submitted_answer: "Blue")
+
+        get results_form_path(form, event_id: event.id)
+
+        expect(response.body).to include("Blue")
+      end
+
+      it "keeps the event on the subnav's editor tabs" do
+        survey = create(:form, :standalone, role: "day_1_survey", slug: "eval-day-1", published: true)
+        training = create(:event, facilitator_training: true)
+        create(:form_submission, form: survey, event: training, role: "public")
+
+        get results_form_path(survey, event_id: training.id)
+
+        expect(response.body).to include(edit_form_path(survey, event_id: training.id))
       end
 
       it "narrows the visible question cards to those matching the question filter" do
