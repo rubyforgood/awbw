@@ -51,13 +51,14 @@ class FmArchivesController < ApplicationController
     [
       { label: "People", icon: "👥", tables: %w[rolodexes] },
       { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects personnels] },
+      { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs services] },
       { label: "Quotes", icon: "💬", tables: %w[quotations] }
     ],
     [
       { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
       { label: "Contact history", icon: "🗂️", tables: %w[activities contacts notes ancillary_data] },
       { label: "Events", icon: "📆", tables: %w[events participants volunteers] },
-      { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs services] }
+      { label: "Art", icon: "🖼️", tables: %w[art_registries art_purchases exhibited_items] }
     ],
     [
       { label: "Payments & donations", icon: "💳", tables: %w[payments match_donations] },
@@ -66,7 +67,6 @@ class FmArchivesController < ApplicationController
       { label: "Donor campaigns", icon: "🤝", tables: %w[campaigns donor_developers solicitations] }
     ],
     [
-      { label: "Art", icon: "🖼️", tables: %w[art_registries art_purchases exhibited_items] },
       { label: "Forms & letters", icon: "📋", tables: %w[forms_lists form_fields form_letters form_submissions] },
       { label: "Committees & groups", icon: "🏛️", tables: %w[committees committee_meetings committee_members groups group_members] }
     ]
