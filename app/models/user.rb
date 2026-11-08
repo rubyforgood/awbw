@@ -94,8 +94,8 @@ class User < ApplicationRecord
   CONFIRMATION_FILTER_OPTIONS = [
     [ "Not invited", "not_invited" ],
     [ "Invited", "invited" ],
-    [ "Confirmed", "true" ],
-    [ "Not confirmed", "false" ]
+    [ "Not confirmed", "false" ],
+    [ "Confirmed", "true" ]
   ].freeze
   HAS_ACCESS_SQL = "users.locked_at IS NULL AND COALESCE(users.inactive, FALSE) = FALSE AND users.confirmed_at IS NOT NULL".freeze
 
