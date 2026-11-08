@@ -247,6 +247,21 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to include("Organizations &middot; FM ID: ORG1")
     end
 
+    it "lists every field and association an organization record can hold, marking what the import fills" do
+      FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sunrise Shelter", "Comments" => "Met at a conference" })
+
+      get fm_archive_path("ORG1", table: "organizations")
+
+      cards, reference = response.body.split("Available fields &amp; associations")
+      expect(cards).to match(/Organization.*Sunrise Shelter.*Notes.*Met at a conference/m)
+      expect(cards).not_to include("FundingPriorities")
+      expect(reference).to match(/Record keeping.*ModificationDateTime/m)
+      expect(reference).to match(/<span class="[^"]*bg-orange-100[^"]*text-gray-700[^"]*" title="Imports to organizations.name">OrgName</)
+      expect(reference).to match(/<span class="[^"]*bg-white[^"]*text-gray-400[^"]*"[^>]*>FundingPriorities</)
+      expect(reference).to include("CreatedBy*")
+      expect(reference).to match(/Rolodexes.*\(People\).*via.*OrgID/m)
+    end
+
     it "links back to the portal people carrying the archive code" do
       FmRolodex.create!(fm_id: "00006")
       person = create(:person, first_name: "Archie", last_name: "Coded", filemaker_code: "00012, 00006")
