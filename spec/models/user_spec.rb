@@ -354,9 +354,7 @@ RSpec.describe User do
       expect(results).not_to include(regular_user)
     end
 
-    it 'filters by super_user false, counting a null flag as not admin' do
-      regular_user.update_columns(super_user: nil)
-
+    it 'filters by super_user false' do
       results = User.search_by_params(super_user: 'false')
       expect(results).to include(regular_user, inactive_user)
       expect(results).not_to include(admin_user)
@@ -416,7 +414,7 @@ RSpec.describe User do
 
   describe ".sorted_by" do
     let!(:zed) { create(:user, email: "zed@example.com", super_user: true) }
-    let!(:amy) { create(:user, email: "amy@example.com", confirmed_at: nil, super_user: nil) }
+    let!(:amy) { create(:user, email: "amy@example.com", confirmed_at: nil) }
     let!(:mel) { create(:user, email: "mel@example.com", locked_at: Time.current) }
 
     def emails(sort, direction)
@@ -448,7 +446,7 @@ RSpec.describe User do
       expect(emails("access", "desc")).to eq(%w[zed@example.com amy@example.com mel@example.com])
     end
 
-    it "sorts by admin, counting a null flag as not admin" do
+    it "sorts by admin, breaking ties on email" do
       expect(emails("admin", "desc")).to eq(%w[zed@example.com amy@example.com mel@example.com])
       expect(emails("admin", "asc")).to eq(%w[amy@example.com mel@example.com zed@example.com])
     end

@@ -106,7 +106,7 @@ class User < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:search]) if params[:search].present?
-    results = results.where(super_user: params[:super_user] == "true" ? true : [ false, nil ]) if params[:super_user].present?
+    results = results.where(super_user: params[:super_user] == "true") if params[:super_user].present?
     if params[:access] == "true"
       results = results.has_access
     elsif params[:access] == "false"
@@ -132,7 +132,7 @@ class User < ApplicationRecord
     when "person" then left_joins(:person).reorder("people.first_name" => direction, "people.last_name" => direction)
     when "confirmed" then reorder(confirmed_at: direction, welcome_instructions_sent_at: direction)
     when "access" then reorder(Arel.sql(HAS_ACCESS_SQL).public_send(direction))
-    when "admin" then reorder(Arel.sql("COALESCE(users.super_user, FALSE)").public_send(direction))
+    when "admin" then reorder(super_user: direction)
     else return reorder(:first_name, :last_name)
     end
     sorted.order(:email)
