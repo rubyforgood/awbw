@@ -1,0 +1,8 @@
+name: "Workshops and ideas on organization profiles"
+area: content
+display_status: user_facing
+released_on: 2026-10-22
+action_path: "/organizations"
+summary: >-
+  Workshops and workshop ideas now link to organizations directly and display on
+  organization profiles, including content authored by affiliated facilitators.

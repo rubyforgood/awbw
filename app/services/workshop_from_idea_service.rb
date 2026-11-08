@@ -18,11 +18,12 @@ class WorkshopFromIdeaService
 
   def attributes_from_idea
     workshop_idea.attributes.slice(
-      "title", "windows_type_id", "author_credit_preference",
+      "title", "windows_type_id", "organization_id", "author_credit_preference",
       "time_intro", "time_closing", "time_creation",
       "time_demonstration", "time_warm_up",
       "time_opening", "time_opening_circle"
     ).merge(
+      organization_id: workshop_idea.organization_id,
       rhino_objective: workshop_idea.rhino_objective,
       rhino_materials: workshop_idea.rhino_materials,
       rhino_optional_materials: workshop_idea.rhino_optional_materials,
