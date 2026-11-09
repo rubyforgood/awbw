@@ -267,12 +267,15 @@ class Organization < ApplicationRecord
     direct.or(legacy).distinct
   end
 
+  # The org's own workshops plus those credited to its active facilitators
+  # (#credited_to_facilitators). The profile section, the count button, and the
+  # index's organization filter all read this, so they can't disagree. Ideas below
+  # work the same way.
   def affiliated_workshops
     return Workshop.none unless persisted?
 
     workshops.or(credited_to_facilitators(Workshop)).distinct
   end
-  alias_method :credited_workshops, :affiliated_workshops
 
   def affiliated_workshop_ideas
     return WorkshopIdea.none unless persisted?
