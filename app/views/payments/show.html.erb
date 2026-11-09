@@ -60,6 +60,15 @@
       <dt class="text-sm font-medium text-gray-500">Amount remaining to allocate</dt>
       <dd class="mt-1 text-sm text-gray-900"><%= dollars_from_cents(@payment.amount_cents_remaining) %></dd>
     </div>
+    <% if @payment.filemaker_codes.any? %>
+      <div class="sm:col-span-2">
+        <dt class="text-sm font-medium text-gray-500">FileMaker Codes</dt>
+        <dd class="mt-1 text-sm text-gray-900">
+          <%= filemaker_code_links(@payment, link_class: "text-primary hover:underline") ||
+                @payment.filemaker_code %>
+        </dd>
+      </div>
+    <% end %>
     <% if @payment.check_number.present? %>
       <div>
         <dt class="text-sm font-medium text-gray-500">Check Number</dt>
