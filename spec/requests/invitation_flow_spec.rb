@@ -12,14 +12,20 @@ RSpec.describe "Invitation Flow", type: :request do
     # Step 1: Admin sends invitation
     post send_welcome_instructions_user_path(new_user), params: {
       search: "newuser@example.com",
-      super_user: "0",
-      inactive: "0",
+      super_user: "false",
+      access: "false",
+      confirmed: "not_invited",
+      sort: "email",
+      direction: "asc",
       page: "2",
       number_of_items_per_page: "50"
     }
     expect(response).to redirect_to(users_path(search: "newuser@example.com",
-                                               super_user: "0",
-                                               inactive: "0",
+                                               super_user: "false",
+                                               access: "false",
+                                               confirmed: "not_invited",
+                                               sort: "email",
+                                               direction: "asc",
                                                page: "2",
                                                number_of_items_per_page: "50"))
 

@@ -1,98 +1,81 @@
 <%= turbo_frame_tag :users_results do %>
+  <% sort_base = params.permit(:search, :access, :confirmed, :super_user, :invited, :authenticated, :number_of_items_per_page).to_h.symbolize_keys %>
+  <% sort_link = sort_header_link(frame: "users_results", path: ->(p) { users_path(p) }, base: sort_base) %>
+  <% invite_params = params.permit(:search, :super_user, :access, :confirmed, :sort, :direction, :page, :number_of_items_per_page).to_h.symbolize_keys %>
   <%= turbo_stream.replace("users_count", partial: "users_count") %>
 
-  <div class="animate-fade overflow-x-auto rounded bg-white blur-on-submit">
+  <div class="animate-fade blur-on-submit">
     <% if @users.any? %>
-      <table class="w-full border-collapse border border-gray-200">
-        <thead class="bg-gray-100">
-        <tr>
-          <th class="w-1/3 px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
-          <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Person</th>
-          <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Confirmed</th>
-          <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Access</th>
-          <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Admin</th>
-          <th class="w-[80px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
-        </tr>
-        </thead>
+      <!-- Small screens: one card per user -->
+      <div class="rounded border border-gray-200 bg-white lg:hidden">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 bg-gray-100 px-4 py-2 text-sm font-semibold">
+          <span class="text-gray-500">Sort by</span>
+          <% [ %w[email Email], %w[person Person], %w[confirmed Confirmed], %w[access Access], %w[admin Admin] ].each do |column, label| %>
+            <%= sort_link.call(column, label) %>
+          <% end %>
+        </div>
 
-        <tbody class="divide-y divide-gray-200">
-        <% @users.each do |user| %>
-          <tr class="transition-colors duration-150 hover:bg-gray-50">
-            <!-- Email -->
-            <td class="px-4 py-2 font-semibold break-words text-gray-800"><!--email_off--><%= user.email %><!--email_on--></td>
+        <ul class="divide-y divide-gray-200">
+          <% @users.each do |user| %>
+            <li class="space-y-3 p-4">
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0"><%= render "users/person_cell", user: user, width_class: "w-fit max-w-full" %></div>
+                <div class="flex shrink-0 gap-2"><%= render "users/row_actions", user: user %></div>
+              </div>
 
-            <!-- Person -->
-            <td class="px-4 py-2 text-left">
-              <% if user.person %>
-                <% cache [user.person, "edit_button"] do %>
-                  <% show_email = user.person.profile_show_email? || allowed_to?(:manage?, Person) %>
-                  <%= person_edit_button(user.person, subtitle: (user.person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
-                <% end %>
-              <% else %>
-                <%= link_to "Create person",
-                            new_person_path(user_id: user.id),
-                            data: { turbo_frame: "_top" },
-                            class: button_classes(:warning) %>
-              <% end %>
-            </td>
+              <div class="text-sm font-semibold wrap-anywhere text-gray-800"><%= render "users/email", user: user %></div>
 
-            <!-- Confirmed -->
-            <td class="px-4 py-2 text-center">
-              <%= render "users/confirmed_status", user: user, invite_params: {
-                search: params[:search],
-                super_user: params[:super_user],
-                access: params[:access],
-                page: params[:page],
-                number_of_items_per_page: params[:number_of_items_per_page]
-              } %>
-            </td>
+              <dl class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                <div class="flex items-center gap-2">
+                  <dt class="text-gray-500">Confirmed</dt>
+                  <dd><%= render "users/confirmed_status", user: user, invite_params: invite_params %></dd>
+                </div>
+                <div class="flex items-center gap-2">
+                  <dt class="text-gray-500">Access</dt>
+                  <dd><%= render "users/access_status", user: user %></dd>
+                </div>
+                <div class="flex items-center gap-2">
+                  <dt class="text-gray-500">Admin</dt>
+                  <dd><%= render "users/admin_status", user: user %></dd>
+                </div>
+              </dl>
+            </li>
+          <% end %>
+        </ul>
+      </div>
 
-            <!-- Access -->
-            <td class="px-4 py-2 text-center">
-              <% if user.inactive? %>
-                <span class="fa fa-ban text-red-500"></span>
-              <% end %>
-              <% if user.locked_at.present? %>
-                <%
-                  lock_info = "Locked #{l(user.locked_at, format: :long)}"
-                  if user.failed_attempts >= Devise.maximum_attempts
-                    lock_info += " (too many failed login attempts)"
-                  elsif user.updated_by.present?
-                    lock_info += " by #{person_name(user.updated_by)}"
-                  end
-                %>
-                <i class="fa-solid fa-lock text-red-500" title="<%= lock_info %>"></i>
-              <% end %>
-              <% if user.confirmed_at.nil? %>
-                <i class="fa-solid fa-lock text-red-500" title="Unconfirmed — cannot log in"></i>
-              <% end %>
-              <% if !user.inactive? && !user.locked_at.present? && user.confirmed_at.present? %>
-                <% created_info = user.created_at.present? ? "Created #{l(user.created_at, format: :long)}" : ""
-                  created_info += " by #{person_name(user.created_by)}" if user.created_by.present? %>
-                <span class="fa fa-check-circle text-gray-300" title="<%= created_info %>"></span>
-              <% end %>
-            </td>
-
-            <!-- Admin -->
-            <td class="px-4 py-2 text-center">
-              <% if user.super_user? %>
-                <i class="fa-solid fa-user-shield text-blue-600" title="<%= "Granted at #{l(user.updated_at, format: :long)}" if user.updated_at.present? %><%= " by #{person_name(user.updated_by)}" if user.updated_by.present? %>"></i>
-              <% else %>
-                <span>--</span>
-              <% end %>
-            </td>
-
-            <!-- Actions -->
-            <td class="justify-right flex gap-2 px-4 py-2">
-              <%= link_to "Edit", edit_user_path(user), data: { turbo_frame: "_top" }, class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
-              <%= link_to "View", user_path(user), data: { turbo_frame: "_top" }, class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
-            </td>
+      <!-- Large screens: table -->
+      <div class="hidden overflow-x-auto rounded bg-white lg:block">
+        <table class="w-full border-collapse border border-gray-200">
+          <thead class="bg-gray-100">
+          <tr>
+            <th class="w-1/3 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("email", "Email") %></th>
+            <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("person", "Person") %></th>
+            <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700"><%= sort_link.call("confirmed", "Confirmed") %></th>
+            <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700"><%= sort_link.call("access", "Access") %></th>
+            <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700"><%= sort_link.call("admin", "Admin") %></th>
+            <th class="w-[80px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
           </tr>
-        <% end %>
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody class="divide-y divide-gray-200">
+          <% @users.each do |user| %>
+            <tr class="transition-colors duration-150 hover:bg-gray-50">
+              <td class="px-4 py-2 text-sm font-semibold wrap-anywhere text-gray-800"><%= render "users/email", user: user %></td>
+              <td class="px-4 py-2 text-left"><%= render "users/person_cell", user: user %></td>
+              <td class="px-4 py-2 text-center"><%= render "users/confirmed_status", user: user, invite_params: invite_params %></td>
+              <td class="px-4 py-2 text-center"><%= render "users/access_status", user: user %></td>
+              <td class="px-4 py-2 text-center"><%= render "users/admin_status", user: user %></td>
+              <td class="px-4 py-2">
+                <div class="flex justify-center gap-2"><%= render "users/row_actions", user: user %></div>
+              </td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
     <% else %>
-      <p class="py-6 text-center text-gray-500">
+      <p class="rounded bg-white py-6 text-center text-gray-500">
         No <%= User.model_name.human.pluralize.downcase %> found.
       </p>
     <% end %>

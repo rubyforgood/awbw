@@ -91,3 +91,21 @@ client-side. Render the shared partial rather than copying its markup:
   query param and a full reload.
 - Want it instant and local, hiding a subset of existing columns → **slide
   switch** (`column-toggle`).
+
+## Tables on small screens
+
+When a results table can't fit a phone or tablet, render the same rows twice in
+the results view: a card list for small screens and the table for large ones. The
+users index (`app/views/users/users_results.html.erb`) is the reference.
+
+- Wrap the cards in `lg:hidden` and the table in `hidden lg:block`; pick the
+  breakpoint where the table first fits without horizontal scroll.
+- Extract each cell's content into a partial both layouts render, so a status
+  icon or action button changes in one place.
+- Each card leads with the row's identity card (e.g. the person button) and its
+  actions on one line, then the remaining fields below, ending with a wrapping
+  `<dl>` of muted label + value pairs.
+- Keep sorting on small screens: a "Sort by" bar above the cards calls the same
+  `sort_header_link` generator as the table headers.
+- Let long unbroken values (emails, URLs) wrap with `wrap-anywhere`, plus a
+  `<wbr>` at the natural break (before the `@`).

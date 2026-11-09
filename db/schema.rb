@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_122719) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_233556) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2393,7 +2393,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_122719) do
     t.string "state"
     t.string "state2"
     t.string "subscribecode"
-    t.boolean "super_user", default: false
+    t.boolean "super_user", default: false, null: false
     t.string "time_zone", default: "Pacific Time (US & Canada)"
     t.string "unconfirmed_email"
     t.string "unlock_token"
