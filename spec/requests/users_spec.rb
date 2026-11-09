@@ -66,6 +66,16 @@ RSpec.describe "/users", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it "renders cards for small screens alongside the table" do
+        create(:user, email: "card-user@example.com")
+
+        get users_url, headers: { "Turbo-Frame" => "users_results" }
+
+        page = Nokogiri::HTML(response.body)
+        expect(page.css("div.lg\\:hidden li").text).to include("card-user@example.com")
+        expect(page.css("div.lg\\:block table tbody").text).to include("card-user@example.com")
+      end
+
       it "ignores an unknown sort" do
         get users_url(sort: "encrypted_password"), headers: { "Turbo-Frame" => "users_results" }
 
