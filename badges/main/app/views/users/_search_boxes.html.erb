@@ -2,35 +2,28 @@
   data: { controller: "collection", turbo_frame: "users_results" },
   autocomplete: "off",
   class: "w-full") do %>
-  <div class="mb-6 grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <div class="mb-6 grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:flex">
     <!-- Search -->
     <%= render "shared/filter_text", param: :search, label: "Search", placeholder: "Name, email, or phone", submit: true,
-          wrapper_class: nil %>
+          wrapper_class: "w-full lg:min-w-0 lg:flex-1" %>
 
     <!-- Access -->
-    <div>
-      <%= label_tag :access, "Access", class: search_label_class %>
-      <%= select_tag :access,
-                     options_for_select([["All", ""],
-                                         ["Has access", "true"],
-                                         ["No access", "false"]],
-                                        params[:access]),
-                     class: search_field_class(extra: "search-select-placeholder") %>
-    </div>
+    <%= render "shared/filter_select", param: :access, label: "Access",
+          options: [ [ "Has access", "true" ], [ "No access", "false" ] ], selected: params[:access],
+          blank: "All", field_class: search_field_class, wrapper_class: "w-full lg:w-36" %>
+
+    <!-- Confirmation -->
+    <%= render "shared/filter_select", param: :confirmed, label: "Confirmation",
+          options: User::CONFIRMATION_FILTER_OPTIONS, selected: params[:confirmed],
+          blank: "All", field_class: search_field_class, wrapper_class: "w-full lg:w-36" %>
 
     <!-- Admin -->
-    <div>
-      <%= label_tag :super_user, "Permission level", class: search_label_class %>
-      <%= select_tag :super_user,
-                     options_for_select([["All users", ""],
-                                         ["Admins", true],
-                                         ["Regular users", false]],
-                                        params[:super_user]),
-                     class: search_field_class(extra: "search-select-placeholder") %>
-    </div>
+    <%= render "shared/filter_select", param: :super_user, label: "Admin",
+          options: [ [ "Admins", "true" ], [ "Non-admins", "false" ] ], selected: params[:super_user],
+          blank: "All", field_class: search_field_class, wrapper_class: "w-full lg:w-36" %>
 
     <!-- Clear filters -->
-    <div class="flex items-end sm:justify-end">
+    <div class="flex items-end sm:col-span-2 sm:justify-end">
       <%= render "shared/search_clear", url: users_path %>
     </div>
   </div>

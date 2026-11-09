@@ -90,22 +90,52 @@ class User < ApplicationRecord
     attributes user: "organizations.name"
   end
 
+  SORTS = %w[email person confirmed access admin].freeze
+  CONFIRMATION_FILTER_OPTIONS = [
+    [ "Not invited", "not_invited" ],
+    [ "Invited", "invited" ],
+    [ "Not confirmed", "false" ],
+    [ "Confirmed", "true" ]
+  ].freeze
+  HAS_ACCESS_SQL = "users.locked_at IS NULL AND COALESCE(users.inactive, FALSE) = FALSE AND users.confirmed_at IS NOT NULL".freeze
+
   scope :has_access, -> { where(locked_at: nil, inactive: [ false, nil ]).where.not(confirmed_at: nil) }
   scope :invited, -> { where.not(welcome_instructions_sent_at: nil) }
+  scope :unconfirmed, -> { where(confirmed_at: nil) }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:search]) if params[:search].present?
-    results = results.where(super_user: params[:super_user]) if params[:super_user].present?
+    results = results.where(super_user: params[:super_user] == "true") if params[:super_user].present?
     if params[:access] == "true"
       results = results.has_access
     elsif params[:access] == "false"
       results = results.where("users.inactive = ? OR users.locked_at IS NOT NULL OR users.confirmed_at IS NULL", true)
     end
     results = results.invited if params[:invited] == "true"
-    results = results.where.not(confirmed_at: nil) if params[:confirmed] == "true"
+    case params[:confirmed]
+    when "true" then results = results.where.not(confirmed_at: nil)
+    when "false" then results = results.unconfirmed
+    when "invited" then results = results.unconfirmed.invited
+    when "not_invited" then results = results.unconfirmed.where(welcome_instructions_sent_at: nil)
+    end
     results = results.where("users.sign_in_count > 0") if params[:authenticated] == "true"
     results
+  end
+
+  # Email tiebreaks every column sort, so boolean columns page deterministically.
+  # Direction resolves to a symbol here and is never interpolated into raw SQL.
+  def self.sorted_by(sort, direction)
+    direction = direction == "asc" ? :asc : :desc
+    sorted = case sort
+    when "email" then reorder(email: direction)
+    when "person" then left_joins(:person).reorder("people.first_name" => direction, "people.last_name" => direction)
+    when "confirmed" then reorder(confirmed_at: direction, welcome_instructions_sent_at: direction)
+    when "access" then reorder(Arel.sql(HAS_ACCESS_SQL).public_send(direction))
+    when "admin" then reorder(super_user: direction)
+    else return reorder(:first_name, :last_name)
+    end
+    sorted.order(:email)
   end
 
   remote_searchable_by :email

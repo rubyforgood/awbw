@@ -354,6 +354,45 @@ RSpec.describe User do
       expect(results).not_to include(regular_user)
     end
 
+    it 'filters by super_user false' do
+      results = User.search_by_params(super_user: 'false')
+      expect(results).to include(regular_user, inactive_user)
+      expect(results).not_to include(admin_user)
+    end
+
+    it 'filters by confirmed true' do
+      unconfirmed_user = create(:user, confirmed_at: nil)
+
+      results = User.search_by_params(confirmed: 'true')
+      expect(results).to include(admin_user, regular_user)
+      expect(results).not_to include(unconfirmed_user)
+    end
+
+    context 'with invited and uninvited unconfirmed users' do
+      let!(:invited_user) { create(:user, confirmed_at: nil, welcome_instructions_sent_at: 1.day.ago) }
+      let!(:uninvited_user) { create(:user, confirmed_at: nil, welcome_instructions_sent_at: nil) }
+
+      it 'filters by confirmed false to every unconfirmed user' do
+        results = User.search_by_params(confirmed: 'false')
+        expect(results).to include(invited_user, uninvited_user)
+        expect(results).not_to include(admin_user, regular_user)
+      end
+
+      it 'filters to unconfirmed users who were invited' do
+        regular_user.update_columns(welcome_instructions_sent_at: 2.days.ago)
+
+        results = User.search_by_params(confirmed: 'invited')
+        expect(results).to include(invited_user)
+        expect(results).not_to include(uninvited_user, regular_user)
+      end
+
+      it 'filters to unconfirmed users who were never invited' do
+        results = User.search_by_params(confirmed: 'not_invited')
+        expect(results).to include(uninvited_user)
+        expect(results).not_to include(invited_user, admin_user, regular_user)
+      end
+    end
+
     it 'filters by access true (has access)' do
       results = User.search_by_params(access: 'true')
       expect(results).to include(admin_user, regular_user)
@@ -370,6 +409,50 @@ RSpec.describe User do
       results = User.search_by_params(search: 'alice', super_user: 'true')
       expect(results).to include(admin_user)
       expect(results).not_to include(regular_user, inactive_user)
+    end
+  end
+
+  describe ".sorted_by" do
+    let!(:zed) { create(:user, email: "zed@example.com", super_user: true) }
+    let!(:amy) { create(:user, email: "amy@example.com", confirmed_at: nil) }
+    let!(:mel) { create(:user, email: "mel@example.com", locked_at: Time.current) }
+
+    def emails(sort, direction)
+      User.where(id: [ zed, amy, mel ]).sorted_by(sort, direction).map(&:email)
+    end
+
+    it "sorts by email both ways" do
+      expect(emails("email", "asc")).to eq(%w[amy@example.com mel@example.com zed@example.com])
+      expect(emails("email", "desc")).to eq(%w[zed@example.com mel@example.com amy@example.com])
+    end
+
+    it "sorts by the linked person's name, with unlinked users first ascending" do
+      unlinked = create(:user, email: "unlinked@example.com", person: nil)
+      zed.update!(person: create(:person, first_name: "Aaron", last_name: "Zed"))
+      amy.update!(person: create(:person, first_name: "Zoe", last_name: "Amy"))
+
+      sorted = User.where(id: [ zed, amy, unlinked ]).sorted_by("person", "asc").to_a
+      expect(sorted).to eq([ unlinked, zed, amy ])
+    end
+
+    it "sorts by confirmation, grouping invited users among the unconfirmed" do
+      invited = create(:user, email: "invited@example.com", confirmed_at: nil, welcome_instructions_sent_at: 1.day.ago)
+
+      sorted = User.where(id: [ zed, amy, invited ]).sorted_by("confirmed", "desc").to_a
+      expect(sorted).to eq([ zed, invited, amy ])
+    end
+
+    it "sorts by access, breaking ties on email" do
+      expect(emails("access", "desc")).to eq(%w[zed@example.com amy@example.com mel@example.com])
+    end
+
+    it "sorts by admin, breaking ties on email" do
+      expect(emails("admin", "desc")).to eq(%w[zed@example.com amy@example.com mel@example.com])
+      expect(emails("admin", "asc")).to eq(%w[amy@example.com mel@example.com zed@example.com])
+    end
+
+    it "falls back to name order without a sort" do
+      expect(User.sorted_by(nil, "desc").to_sql).to include("ORDER BY `users`.`first_name` ASC, `users`.`last_name` ASC")
     end
   end
 
