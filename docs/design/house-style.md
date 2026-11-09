@@ -102,8 +102,9 @@ users index (`app/views/users/users_results.html.erb`) is the reference.
   breakpoint where the table first fits without horizontal scroll.
 - Extract each cell's content into a partial both layouts render, so a status
   icon or action button changes in one place.
-- Each card leads with the row's identity (e.g. the email) and its actions, then
-  the remaining fields as a wrapping `<dl>` of muted label + value pairs.
+- Each card leads with the row's identity card (e.g. the person button) and its
+  actions on one line, then the remaining fields below, ending with a wrapping
+  `<dl>` of muted label + value pairs.
 - Keep sorting on small screens: a "Sort by" bar above the cards calls the same
   `sort_header_link` generator as the table headers.
 - Let long unbroken values (emails, URLs) wrap with `wrap-anywhere`, plus a

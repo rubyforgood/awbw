@@ -18,12 +18,12 @@
         <ul class="divide-y divide-gray-200">
           <% @users.each do |user| %>
             <li class="space-y-3 p-4">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0 pt-1 text-sm font-semibold wrap-anywhere text-gray-800"><%= render "users/email", user: user %></div>
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0"><%= render "users/person_cell", user: user, width_class: "w-fit max-w-full" %></div>
                 <div class="flex shrink-0 gap-2"><%= render "users/row_actions", user: user %></div>
               </div>
 
-              <%= render "users/person_cell", user: user, width_class: "w-fit max-w-full" %>
+              <div class="text-sm font-semibold wrap-anywhere text-gray-800"><%= render "users/email", user: user %></div>
 
               <dl class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
                 <div class="flex items-center gap-2">
