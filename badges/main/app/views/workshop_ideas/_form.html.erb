@@ -10,6 +10,7 @@
 
     <% promoted_to_workshop = f.object.workshops.any? %>
     <% if promoted_to_workshop %>
+      <%= f.hidden_field :organization_id, value: f.object.organization_id %>
       <div class="admin-only m-3 bg-yellow-100 p-3">
         This workshops idea has been promoted to a
         <% f.object.workshops.each do |workshop| %>
@@ -59,6 +60,31 @@
         <p class="mt-1 text-sm text-gray-500">
           Automatic total time, in 15min increments
         </p>
+      </div>
+    </div>
+
+    <!-- Organization -->
+    <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div>
+        <% organizations = @organizations || [] %>
+        <% if organizations.size == 1 %>
+          <%= f.hidden_field :organization_id,
+                             value: f.object.organization_id || organizations.first.id %>
+        <% else %>
+          <%= f.input :organization_id,
+                      as: :select,
+                      collection: organizations,
+                      label_method: :type_name,
+                      value_method: :id,
+                      label: "Organization",
+                      required: false,
+                      disabled: promoted_to_workshop,
+                      include_blank: "Select organization",
+                      selected: (params[:organization_id].presence || f.object.organization_id),
+                      hint: "Please contact AWBW if your organization is not listed.",
+                      input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm #{"readonly" if promoted_to_workshop}" },
+                      label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+        <% end %>
       </div>
     </div>
 
