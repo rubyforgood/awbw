@@ -15,8 +15,6 @@ RSpec.describe Organization do
     it { should have_many(:workshop_logs) }
     it { should have_many(:workshop_ideas) }
     it { should have_many(:workshops) }
-    it { should have_many(:workshops_as_author).through(:people) }
-    it { should have_many(:workshop_ideas_as_author).through(:people) }
     it { should have_many(:contact_methods).dependent(:destroy) }
   end
 

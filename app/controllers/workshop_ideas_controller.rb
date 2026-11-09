@@ -4,7 +4,7 @@ class WorkshopIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(WorkshopIdea.with_author_credit.includes(:workshops))
+    base_scope = authorized_scope(WorkshopIdea.with_author_credit.includes(:workshops, :organization))
     filtered = base_scope.search(params.slice(:title, :author_name))
     filtered = filtered.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     # Ideas carry an organization directly or credit through the org's active facilitators.
@@ -91,7 +91,7 @@ class WorkshopIdeasController < ApplicationController
     @potential_series_workshops = authorized_scope(Workshop.published).includes(:windows_type).order(:title)
     @sectors = Sector.published
     @windows_types = WindowsType.all
-    @organizations = authorized_scope(Organization.all, as: :currently_affiliated).order(:name)
+    @organizations = authorized_scope(Organization.all, as: :currently_affiliated).order(:name).includes(:windows_type)
     @users = User.has_access.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
     @categories_grouped =
       Category

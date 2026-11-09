@@ -47,8 +47,6 @@ class Organization < ApplicationRecord
   has_many :workshop_variations
   has_many :workshop_ideas
   has_many :workshops
-  has_many :workshops_as_author, through: :people, source: :workshops_as_author
-  has_many :workshop_ideas_as_author, through: :people, source: :workshop_ideas_as_author
   has_many :grants, as: :funder, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
@@ -274,7 +272,6 @@ class Organization < ApplicationRecord
 
     workshops.or(credited_to_facilitators(Workshop)).distinct
   end
-  alias_method :all_workshops, :affiliated_workshops
   alias_method :credited_workshops, :affiliated_workshops
 
   def affiliated_workshop_ideas
@@ -282,7 +279,6 @@ class Organization < ApplicationRecord
 
     workshop_ideas.or(credited_to_facilitators(WorkshopIdea)).distinct
   end
-  alias_method :all_workshop_ideas, :affiliated_workshop_ideas
 
   # Display order, and what the attendees index filters on.
   FACILITATOR_PROGRAM_STATUSES = FacilitatorProgramStatus::STATUSES
