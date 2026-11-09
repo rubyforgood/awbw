@@ -19,6 +19,7 @@ class Setting < ApplicationRecord
   belongs_to :ce_administrator, class_name: "Person", optional: true
   belongs_to :participant_credit_person, class_name: "Person", optional: true
   belongs_to :import_user, class_name: "User", optional: true
+  belongs_to :story_share_hero_story, class_name: "Story", optional: true
 
   # singleton is a constant true behind a unique index: MySQL has no CHECK-based
   # way to cap a table at one row, but a unique index on a constant does it.
@@ -240,6 +241,11 @@ class Setting < ApplicationRecord
   def self.membership_renewal_window_days
     stored(:membership_renewal_window_days) ||
       ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS).to_i
+  end
+
+  # The story whose photo or video an admin chose for the Story Share home background.
+  def self.story_share_hero_story
+    stored_association(:story_share_hero_story)
   end
 
   # How many featured stories the portal home lists, counted among the stories the

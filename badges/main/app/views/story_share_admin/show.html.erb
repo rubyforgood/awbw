@@ -13,6 +13,31 @@
     to give one its own box of stories on the Story Share home — the boxes appear in this same order.
   </p>
 
+  <section class="mb-8 rounded-lg bg-white p-6 shadow">
+    <h2 class="mb-1 text-lg font-semibold text-gray-900">Home background</h2>
+    <p class="mb-4 text-sm text-gray-600">
+      Choose a published, public story with a main image or video. It leaves the carousel and gets a small credit link on
+      the background. With no choice here, the home picks a story outside the carousel.
+    </p>
+    <% if @hero_story %>
+      <div class="mb-4 flex flex-wrap items-center gap-3 text-sm">
+        <span>Current: <%= link_to @hero_story.title, story_share_path(@hero_story), class: "font-medium text-purple-700 hover:underline" %></span>
+        <%= button_to "Use automatic pick", story_share_admin_hero_story_path, method: :patch,
+                      class: "text-gray-600 underline hover:text-gray-900" %>
+      </div>
+      <% unless @hero_story_showing %>
+        <p class="mb-4 text-sm text-amber-700">This story can't be shown right now, so the home is using the automatic pick.</p>
+      <% end %>
+    <% end %>
+    <%= form_with url: story_share_admin_hero_story_path, method: :patch, class: "flex items-center gap-3" do %>
+      <div class="min-w-0 flex-1">
+        <%= select_tag :story_id, nil, prompt: "Search stories", "aria-label": "Search stories",
+                       data: { controller: "remote-select", remote_select_model_value: "story" } %>
+      </div>
+      <%= submit_tag "Save", class: "rounded bg-purple-700 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-800" %>
+    <% end %>
+  </section>
+
   <%= render "menu_section",
              title: "Top nav — sectors",
              type: "sector",

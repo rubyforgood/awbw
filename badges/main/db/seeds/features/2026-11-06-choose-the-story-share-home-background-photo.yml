@@ -1,0 +1,11 @@
+name: "Choose the Story Share home background"
+area: stories
+display_status: admin_facing
+released_on: 2026-11-06
+pr_number: 2958
+action_path: "/story_share/admin"
+summary: >-
+  Pick which story's photo or video sits behind the Story Share home headline
+  from the Story Share admin page. Leave it unset and the home chooses a story for you.
+pro_tips:
+  - "The story you pick moves out of the carousel so it only shows once."

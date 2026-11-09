@@ -11,8 +11,10 @@ namespace :data do
     # SolidQueue databases that aren't configured in every environment).
     Rails.autoloaders.main.eager_load_dir(Rails.root.join("app/models"))
 
+    # Anonymous classes (e.g. a spec's Class.new(ApplicationRecord)) aren't real models.
     model_classes = ApplicationRecord.descendants.select do |klass|
-      klass == klass.base_class &&
+      klass.name.present? &&
+        klass == klass.base_class &&
         !klass.abstract_class? &&
         klass.table_exists? &&
         (klass.column_names & %w[created_by_id updated_by_id]).any?
