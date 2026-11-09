@@ -1,6 +1,7 @@
+<% width_class = local_assigns.fetch(:width_class, "w-full") %>
 <% if user.person %>
-  <% cache [user.person, "edit_button"] do %>
-    <%= person_edit_button(user.person, data: { turbo_frame: "_top" }) %>
+  <% cache [user.person, "edit_button", width_class] do %>
+    <%= person_edit_button(user.person, width_class: width_class, data: { turbo_frame: "_top" }) %>
   <% end %>
 <% else %>
   <%= link_to "Create person",
