@@ -246,7 +246,7 @@ class OrganizationsController < ApplicationController
 
     records = case section
     when "workshops"
-      openly_credited(authorized_scope(@organization.credited_workshops.with_author_credit)).includes(created_by: :person)
+      openly_credited(authorized_scope(@organization.affiliated_workshops.with_author_credit)).includes(created_by: :person)
     when "workshop_variations"
       # A variation without its own image shows its workshop's (WorkshopVariationDecorator).
       authorized_scope(@organization.workshop_variations.with_author_credit).includes(workshop: card_image_preloads(Workshop))
@@ -257,7 +257,7 @@ class OrganizationsController < ApplicationController
     when "community_news"
       authorized_scope(@organization.community_news.with_author_credit)
     when "workshop_ideas"
-      authorized_scope(@organization.credited_to_facilitators(WorkshopIdea))
+      authorized_scope(@organization.affiliated_workshop_ideas)
     when "workshop_variation_ideas"
       authorized_scope(WorkshopVariationIdea.where(organization_id: @organization.id))
     when "story_ideas"
