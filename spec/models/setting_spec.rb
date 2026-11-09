@@ -1,6 +1,21 @@
 require "rails_helper"
 
 RSpec.describe Setting do
+  describe ".story_share_hero_story" do
+    it "is blank until an admin picks a story" do
+      expect(described_class.story_share_hero_story).to be_nil
+    end
+
+    it "clears the pick when the story is deleted" do
+      story = create(:story)
+      setting = described_class.create!(story_share_hero_story: story)
+
+      story.destroy!
+
+      expect(setting.reload.story_share_hero_story_id).to be_nil
+    end
+  end
+
   describe "the single row" do
     it "answers every reader before a row exists" do
       expect(described_class.count).to eq(0)

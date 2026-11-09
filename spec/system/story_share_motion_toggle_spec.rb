@@ -10,8 +10,8 @@ RSpec.describe "Story Share motion toggle", type: :system, js: true do
 
   it "pauses the hero video and the carousel slideshow from one button" do
     create(:story, :published, :publicly_visible, title: "Video story",
-           youtube_url: "https://www.youtube.com/watch?v=abc123", story_share_carousel_position: 1)
-    create(:story, :published, :publicly_visible, title: "Photo story", story_share_carousel_position: 2)
+           youtube_url: "https://www.youtube.com/watch?v=abc123")
+    create(:story, :published, :publicly_visible, title: "Photo story", story_share_carousel_position: 1)
 
     visit story_shares_path
     expect(page).to have_css(pause_button, count: 2)
