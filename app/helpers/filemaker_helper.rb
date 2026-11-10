@@ -46,6 +46,7 @@ module FilemakerHelper
     when Workshop then [ record.title, workshop_path(record) ]
     when Address then [ "#{record.addressable.name}: #{record.street_address}", polymorphic_path(record.addressable) ]
     when ContactMethod then [ "#{record.contactable.name}: #{record.value}", polymorphic_path(record.contactable) ]
+    when EventRegistration then [ "#{record.registrant&.full_name} — #{record.event&.title}", edit_event_registration_path(record) ]
     end
 
     link_to text, path, class: button_classes(:primary)
