@@ -908,6 +908,22 @@ RSpec.describe "Events::Callouts", type: :request do
           expect(response.body).to include(%(name="scholarship_id" value="#{top_up.id}"))
         end
 
+        it "sums the awards in a banner above them" do
+          get registration_scholarship_path(incoming.slug)
+
+          banner = Nokogiri::HTML(response.body).at_css("#scholarship-total")
+          expect(banner.text.squish).to include("2 scholarships", "$70 total")
+        end
+
+        it "leaves a declined award out of the banner's total" do
+          top_up.reload.decline_agreement!("Timing no longer works")
+
+          get registration_scholarship_path(incoming.slug)
+
+          banner = Nokogiri::HTML(response.body).at_css("#scholarship-total")
+          expect(banner.text.squish).to include("1 scholarship", "$50 total", "1 declined award")
+        end
+
         it "records Agree on the award the recipient chose" do
           post registration_scholarship_agreement_path(incoming.slug), params: { agreement: "yes", scholarship_id: top_up.id }
 

@@ -10,6 +10,22 @@
 <%= render layout: "events/callouts/callout_page", locals: { title: "Scholarship", **eyebrow } do %>
   <div class="space-y-6">
     <% if @scholarships.any? %>
+      <% if @scholarships.size > 1 %>
+        <% live = @scholarships.reject(&:agreement_declined?) %>
+        <% declined_count = @scholarships.size - live.size %>
+        <div id="scholarship-total"
+             class="flex items-start gap-3 rounded-lg border px-4 py-3 <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships) %>">
+          <i class="fa-solid fa-award mt-0.5 <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"></i>
+          <div class="text-sm <%= DomainTheme.text_class_for(:scholarships, intensity: 900) %>">
+            <p class="font-semibold">
+              <%= pluralize(live.size, "scholarship") %> · <%= dollars_from_cents(live.sum(&:amount_cents)) %> total
+            </p>
+            <p class="mt-0.5 <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
+              Each is listed below — respond to each one separately.<% if declined_count.positive? %> Not counting <%= pluralize(declined_count, "declined award") %>.<% end %>
+            </p>
+          </div>
+        </div>
+      <% end %>
       <% @scholarships.each_with_index do |scholarship, index| %>
         <div class="space-y-6 <%= "border-t-2 border-gray-200 pt-6" if index.positive? %>">
           <%= render "events/callouts/scholarship_award", scholarship: %>
