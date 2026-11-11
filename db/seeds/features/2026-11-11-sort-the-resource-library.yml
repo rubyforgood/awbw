@@ -7,3 +7,5 @@ action_path: "/resources"
 summary: >-
   A Sort by control beside the resource count orders the library by featured,
   created date, modified date, title, or kind.
+pro_tips:
+  - "Picking a kind switches the default to Title (A–Z) until you choose a sort yourself."

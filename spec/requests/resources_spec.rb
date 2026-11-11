@@ -107,6 +107,19 @@ RSpec.describe "/resources", type: :request do
       expect(response.body.index("Alpha")).to be < response.body.index("Bravo")
       expect(response.body).to match(/id="sort_title"[^>]*checked/)
     end
+
+    it "defaults to Title once a kind is picked, until a sort is chosen" do
+      create(:resource, :published, :featured, kind: "Handout", title: "Bravo")
+      create(:resource, :published, kind: "Handout", title: "Alpha")
+
+      get resources_url(kinds: [ "Handout" ], sort: ""), headers: { "Turbo-Frame" => "resources_results" }
+      expect(response.body.index("Alpha")).to be < response.body.index("Bravo")
+      title_radio = response.body[/<input[^>]*id="sort_title"[^>]*>/]
+      expect(title_radio).to include('value=""', 'checked="checked"')
+
+      get resources_url(kinds: [ "Handout" ], sort: "featured"), headers: { "Turbo-Frame" => "resources_results" }
+      expect(response.body.index("Bravo")).to be < response.body.index("Alpha")
+    end
   end
 
   describe "GET /show" do

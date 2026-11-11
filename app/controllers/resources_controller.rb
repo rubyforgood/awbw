@@ -15,6 +15,8 @@ class ResourcesController < ApplicationController
     authorize!
     @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     @organization = Organization.find_by(id: params[:organization_id]) if params[:organization_id].present?
+    @default_sort = Resource.default_sort(params[:kinds])
+    @sort = params[:sort].presence_in(Resource::SORT_OPTIONS.values) || @default_sort
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 18
@@ -24,7 +26,7 @@ class ResourcesController < ApplicationController
                                     downloadable_asset: :file_attachment)
       resources = resources.where(kind: Resource::PUBLISHED_KINDS) unless all_kinds
       base_scope = authorized_scope(resources)
-      filtered = base_scope.search_by_params(params).sorted_by(params[:sort])
+      filtered = base_scope.search_by_params(params).sorted_by(@sort)
 
       @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
