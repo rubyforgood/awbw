@@ -63,38 +63,48 @@ RSpec.describe "/resources", type: :request do
     end
   end
 
-  describe "GET /index all kinds" do
+  describe "GET /index legacy chip" do
     let!(:handout) { create(:resource, :published, kind: "Handout", title: "Library Handout") }
-    let!(:story) { create(:resource, :published, kind: "Story", title: "Unlisted Story") }
+    let!(:toolkit) { create(:resource, :published, kind: "Toolkit", title: "Library Toolkit") }
+    let!(:story) { create(:resource, :published, kind: "Story", title: "Legacy Story") }
+    let!(:theme) { create(:resource, :published, kind: "Theme", title: "Legacy Theme") }
 
-    it "hides kinds outside the library by default" do
+    it "hides legacy kinds by default" do
       get resources_url, headers: { "Turbo-Frame" => "resources_results" }
 
       expect(response.body).to include("Library Handout")
-      expect(response.body).not_to include("Unlisted Story")
+      expect(response.body).not_to include("Legacy Story")
     end
 
-    it "shows every kind, tinted admin-only, when an admin asks for all kinds" do
-      get resources_url(all_kinds: "1"), headers: { "Turbo-Frame" => "resources_results" }
+    it "shows only legacy kinds, tinted admin-only, when an admin picks Legacy" do
+      get resources_url(legacy: "1"), headers: { "Turbo-Frame" => "resources_results" }
 
-      expect(response.body).to include("Library Handout", "Unlisted Story")
+      expect(response.body).to include("Legacy Story", "Legacy Theme")
+      expect(response.body).not_to include("Library Handout")
       expect(response.body).to include("admin-only border-blue-200 bg-blue-100")
     end
 
-    it "ignores all kinds for a non-admin" do
-      sign_in create(:user)
-      get resources_url(all_kinds: "1"), headers: { "Turbo-Frame" => "resources_results" }
+    it "adds legacy kinds to the other picked kind chips" do
+      get resources_url(legacy: "1", kinds: [ "Handout" ]), headers: { "Turbo-Frame" => "resources_results" }
 
-      expect(response.body).not_to include("Unlisted Story")
+      expect(response.body).to include("Library Handout", "Legacy Story")
+      expect(response.body).not_to include("Library Toolkit")
     end
 
-    it "offers the All kinds chip only to admins" do
+    it "ignores Legacy for a non-admin" do
+      sign_in create(:user)
+      get resources_url(legacy: "1"), headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).not_to include("Legacy Story")
+    end
+
+    it "offers the Legacy chip only to admins" do
       get resources_url
-      expect(response.body).to include('id="all_kinds"')
+      expect(response.body).to include('id="legacy"')
 
       sign_in create(:user)
       get resources_url
-      expect(response.body).not_to include('id="all_kinds"')
+      expect(response.body).not_to include('id="legacy"')
     end
   end
 

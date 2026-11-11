@@ -13,7 +13,10 @@ class Resource < ApplicationRecord
   end
 
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
-  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
+  # Kinds outside the library: hidden from the index unless an admin picks the
+  # "Legacy" chip, which stands for all of them at once.
+  LEGACY_KINDS = [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
+  KINDS = PUBLISHED_KINDS + LEGACY_KINDS
 
   # Kinds offered in the form's dropdown: the published kinds the library index
   # searches, plus the record's own kind so an unsearchable one (Story, Theme,
@@ -25,8 +28,8 @@ class Resource < ApplicationRecord
     (PUBLISHED_KINDS + [ kind.presence ]).compact.uniq
   end
 
-  # A kind the resource library index searches by default. Admins can widen the
-  # index to every kind; the other kinds then render with admin-only styling.
+  # A kind the resource library index searches by default. Legacy kinds (admin
+  # "Legacy" chip) render with admin-only styling.
   def library_kind?
     PUBLISHED_KINDS.include?(kind)
   end
