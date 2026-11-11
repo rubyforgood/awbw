@@ -1480,15 +1480,13 @@ RSpec.describe EventDashboard do
       expect(dashboard.scholarship_registrants).to be_empty
     end
 
-    it "does not attribute the scholarship dollars to this event (they stay on the source)" do
-      expect(dashboard.scholarship_billed_to_original_event?(recipient.id)).to be(true)
-      expect(dashboard.scholarship_total_cents).to eq(0)
-      expect(dashboard.funded_scholarship_cents).to eq(0)
-      expect(dashboard.unfunded_scholarship_cents).to eq(0)
+    it "counts the scholarship dollars at this event, where they transferred in" do
+      expect(dashboard.scholarship_total_cents).to eq(4_000)
+      expect(described_class.new(source_event).scholarship_total_cents).to eq(0)
     end
   end
 
-  describe "scholarship dollars on a transfer to an earlier training" do
+  describe "scholarship dollars on a transfer" do
     let(:march) { create(:event, start_date: Time.zone.local(2027, 3, 18, 9), end_date: Time.zone.local(2027, 3, 19, 17), cost_cents: 50_000) }
     let(:november) { create(:event, start_date: Time.zone.local(2026, 11, 5, 9), end_date: Time.zone.local(2026, 11, 6, 17)) }
     let(:recipient) { create(:person) }
@@ -1502,12 +1500,11 @@ RSpec.describe EventDashboard do
       create(:allocation, source: create(:scholarship, recipient: recipient, amount_cents: 48_000), allocatable: origin, amount: 48_000)
     end
 
-    it "counts the award at the earlier training they attended" do
+    it "counts the award at the training they transferred into" do
       dashboard = described_class.new(november)
 
       expect(dashboard.scholarship_total_cents).to eq(48_000)
       expect(dashboard.scholarship_amounts_by_recipient).to eq(recipient.id => 48_000)
-      expect(dashboard.scholarship_billed_to_original_event?(recipient.id)).to be(false)
     end
 
     it "takes the award off the original training but leaves the payment there" do
@@ -1622,11 +1619,11 @@ RSpec.describe EventDashboard do
         create(:allocation, source: award, allocatable: out_reg, amount: 2_000)
       end
 
-      it "counts its dollars at the old event only, and settles the balance" do
-        expect(old_dashboard.scholarship_total_cents).to eq(2_000)
-        expect(old_dashboard.funded_scholarship_cents).to eq(2_000)
-        expect(old_dashboard.money_scholarship_registrants).to contain_exactly(person)
-        expect(new_dashboard.scholarship_total_cents).to eq(0)
+      it "counts its dollars at the new event only, and settles the balance" do
+        expect(old_dashboard.scholarship_total_cents).to eq(0)
+        expect(new_dashboard.scholarship_total_cents).to eq(2_000)
+        expect(new_dashboard.funded_scholarship_cents).to eq(2_000)
+        expect(new_dashboard.money_scholarship_registrants).to contain_exactly(person)
         expect(new_dashboard.outstanding_cents).to eq(1_000)
       end
 

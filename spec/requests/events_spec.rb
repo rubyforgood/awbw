@@ -3848,7 +3848,7 @@ RSpec.describe "Events", type: :request do
         get recipients_event_path(event)
 
         expect(response.body).to include("Transo Ferredin")
-        expect(response.body).to include("Billed to original event")
+        expect(response.body).not_to include("Billed to original event")
       end
 
       it "shows a recipient city breakdown, grouped by where they work, in the lazy charts frame" do

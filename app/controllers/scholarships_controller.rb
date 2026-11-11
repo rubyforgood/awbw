@@ -273,8 +273,8 @@ class ScholarshipsController < ApplicationController
   end
 
   # A transferred-in reg carries no scholarship of its own — its recognition comes
-  # from the source it transferred from (see EventRegistration#effective_scholarship)
-  # and the dollars stay there. The UI hides the add link, but block the URL too and
+  # from the source it transferred from (see EventRegistration#effective_scholarship),
+  # which keeps the award's record. The UI hides the add link, but block the URL too and
   # send the admin to the source, where the scholarship belongs. (#1944)
   def redirect_transferred_in_scholarship
     return false unless @allocatable.is_a?(EventRegistration) && @allocatable.transferred_in?

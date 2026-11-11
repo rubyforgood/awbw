@@ -153,13 +153,6 @@
             </span>
           <% end %>
         <% end %>
-        <% if dashboard.scholarship_billed_to_original_event?(person.id) %>
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700"
-                title="This registrant transferred in; the scholarship is billed to their original event.">
-            <i class="fa-solid fa-right-to-bracket"></i>
-            Billed to original event
-          </span>
-        <% end %>
         <%= render "scholarships/tasks_status", scholarship: scholarship %>
         <% if allowed_to?(:edit?, scholarship) %>
           <%= link_to edit_scholarship_path(scholarship, return_to: "recipients", participant: participant_slug),

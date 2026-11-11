@@ -74,12 +74,6 @@ class EventDashboard
     people_sorted(transferred_in_registrant_ids)
   end
 
-  # A transferred-in recipient whose award's dollars count toward the event they
-  # transferred from (see ScholarshipDollarRegistrations).
-  def scholarship_billed_to_original_event?(person_id)
-    transferred_in_registrant_ids.include?(person_id) && !scholarship_amounts_by_recipient.key?(person_id)
-  end
-
   # Registrations with an attendance outcome on record (attended / incomplete /
   # no-show).
   def attendance_outcome_count
@@ -179,8 +173,7 @@ class EventDashboard
   # Person ids of this event's scholarship recipients — the lightweight id list
   # behind #scholarship_applicants (no includes/sort), for scoping the recipients
   # charts frame, which only needs their ids. Public: the controller calls it.
-  # Includes registrants transferred in with an award on their source reg — they
-  # are recognized recipients here even though the dollars stay on the source. (#1944)
+  # Includes registrants transferred in with an award on their source reg. (#1944)
   def scholarship_applicant_ids
     @scholarship_applicant_ids ||= (
       active_registrations.where(scholarship_requested: true).pluck(:registrant_id) +
@@ -1069,10 +1062,8 @@ class EventDashboard
 
   # Scholarships to RECOGNIZE recipients at this event: awards on this event's own
   # registrations, plus awards on the SOURCE registrations of anyone transferred
-  # in (their dollars stay on the source event — see #money_scholarships — but
-  # they're still a scholarship recipient here). Recognition only: drives every
-  # recipient figure (the "hat", count, pie, org and city breakdowns, recipients
-  # page); NOT the dollar totals. (#1944)
+  # in. Drives every recipient figure (the "hat", count, pie, org and city
+  # breakdowns, recipients page); dollar totals read #money_scholarships. (#1944)
   def recognized_scholarships
     @recognized_scholarships ||= scholarships.includes(grant: :funder).to_a +
       transferred_in_source_scholarships.reject(&:agreement_declined?)
@@ -1082,8 +1073,7 @@ class EventDashboard
     @scholarship_recipient_ids ||= recognized_scholarships.map(&:recipient_id).uniq
   end
 
-  # The source registrations' scholarships for everyone transferred into this
-  # event — recognized here, but billed to the source event.
+  # The source registrations' scholarships for everyone transferred into this event.
   def transferred_in_source_scholarships
     source_ids = active_registrations.transferred_in.pluck(:transferred_from_registration_id)
     return [] if source_ids.empty?
@@ -1302,8 +1292,8 @@ class EventDashboard
   end
 
   # The awards behind the dollar figures. Wider than #scholarships, which answers
-  # who's a recipient at this event: a transfer's award counts its dollars at one
-  # of its two events, per ScholarshipDollarRegistrations.
+  # who's a recipient at this event: a transfer's award counts its dollars at the
+  # event transferred into, per ScholarshipDollarRegistrations.
   def money_scholarships
     @money_scholarships ||= scholarships_on(ScholarshipDollarRegistrations.new(money_registration_ids).award_registration_ids).not_declined
   end

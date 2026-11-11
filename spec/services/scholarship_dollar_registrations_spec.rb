@@ -15,12 +15,8 @@ RSpec.describe ScholarshipDollarRegistrations do
     [ origin, destination ]
   end
 
-  context "when the transfer moved to an earlier training" do
-    let!(:registrations) { transfer(from: march, to: november) }
-    let(:origin) { registrations.first }
-    let(:destination) { registrations.last }
-
-    it "counts the origin's awards at the earlier training" do
+  shared_examples "counts the award at the training transferred into" do
+    it "counts the origin's awards at the destination" do
       expect(described_class.new([ destination.id ]).award_registration_ids).to contain_exactly(destination.id, origin.id)
       expect(described_class.new([ destination.id ]).counting_registration_id(origin.id)).to eq(destination.id)
     end
@@ -37,30 +33,31 @@ RSpec.describe ScholarshipDollarRegistrations do
     end
   end
 
-  it "leaves awards at the original when the transfer moved to a later training" do
-    origin, destination = transfer(from: november, to: march)
+  context "when the transfer moved to an earlier training" do
+    let!(:registrations) { transfer(from: march, to: november) }
+    let(:origin) { registrations.first }
+    let(:destination) { registrations.last }
 
-    expect(described_class.new([ origin.id ]).award_registration_ids).to eq([ origin.id ])
-    expect(described_class.new([ destination.id ]).award_registration_ids).to eq([ destination.id ])
+    it_behaves_like "counts the award at the training transferred into"
   end
 
-  it "leaves awards at the original when both trainings start the same day" do
-    same_day = training(march.start_date + 3.hours)
-    origin, = transfer(from: march, to: same_day)
+  context "when the transfer moved to a later training" do
+    let!(:registrations) { transfer(from: november, to: march, status: "registered") }
+    let(:origin) { registrations.first }
+    let(:destination) { registrations.last }
 
-    expect(described_class.new([ origin.id ]).award_registration_ids).to eq([ origin.id ])
+    it_behaves_like "counts the award at the training transferred into"
   end
 
-  it "leaves awards at the original when a training has no start date" do
-    undated = training(november.start_date).tap { |event| event.update_columns(start_date: nil) }
-    origin, = transfer(from: march, to: undated)
-
-    expect(described_class.new([ origin.id ]).award_registration_ids).to eq([ origin.id ])
-  end
-
-  it "leaves awards at the original when the earlier registration was cancelled" do
+  it "leaves awards at the original when the new registration was cancelled" do
     origin, = transfer(from: march, to: november, status: "cancelled")
 
     expect(described_class.new([ origin.id ]).award_registration_ids).to eq([ origin.id ])
+  end
+
+  it "leaves registrations without a transfer alone" do
+    registration = create(:event_registration, event: march, registrant: person, status: "attended")
+
+    expect(described_class.new([ registration.id ]).award_registration_ids).to eq([ registration.id ])
   end
 end

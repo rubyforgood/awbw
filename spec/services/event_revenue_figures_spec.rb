@@ -84,13 +84,14 @@ RSpec.describe EventRevenueFigures do
                           allocatable: ce, amount: 700)
     end
 
-    it "counts the old reg's money at the old event" do
+    it "counts the old reg's payments at the old event and its scholarship at the new one" do
       old_figures = loader.for(old_event)
 
       expect(old_figures.registration_payments_cents).to eq(3_000)
       expect(old_figures.discount_cents).to eq(500)
-      expect(old_figures.funded_scholarship_cents).to eq(1_500)
+      expect(old_figures.funded_scholarship_cents).to eq(0)
       expect(old_figures.registration_outstanding_cents).to eq(0)
+      expect(loader.for(event).funded_scholarship_cents).to eq(4_000 + 1_500)
     end
 
     it "counts the new reg's money and the balance left at the new event" do
