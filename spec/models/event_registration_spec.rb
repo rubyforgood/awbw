@@ -315,13 +315,13 @@ RSpec.describe EventRegistration, type: :model do
         expect(own).to be_scholarship_recipient
       end
 
-      it "prefers a transferred-in reg's own award over the source's" do
+      it "includes both the source's award and one added on the transferred-in reg, oldest first" do
         source_award = create(:scholarship, recipient: source.registrant, amount_cents: 4_000)
         create(:allocation, source: source_award, allocatable: source, amount: 4_000)
         own_award = create(:scholarship, recipient: incoming.registrant, amount_cents: 1_000)
         create(:allocation, source: own_award, allocatable: incoming, amount: 1_000)
 
-        expect(incoming.reload.effective_scholarships).to contain_exactly(own_award)
+        expect(incoming.reload.effective_scholarships).to eq([ source_award, own_award ])
       end
 
       it "walks a chain of transfers back to the award" do

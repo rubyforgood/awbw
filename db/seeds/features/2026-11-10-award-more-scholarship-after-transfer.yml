@@ -1,0 +1,13 @@
+name: "Award more scholarship on a transferred registration"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-10
+pr_number: 2975
+action_path: "/transfer_guide"
+summary: >-
+  Staff can now add a scholarship on the registration someone transferred into, even if their original
+  registration already has one, to give them more.
+pro_tips:
+  - "The award can't exceed what's left of the shared balance across both registrations."
+  - "The original award stays on the original registration."
+  - "The registrant's ticket shows both awards, each with its own Agree / Decline / Request support, and the ticket card totals them. A banner above the awards shows how many there are and their total."

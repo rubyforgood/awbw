@@ -241,15 +241,21 @@ class EventRevenueFigures
       .pluck(:id).to_set
   end
 
-  # { registration_id => [ [ grant_id, amount_cents, recipient_id ], ... ] }. The
-  # recipient id feeds the scholarship drilldowns; #build reads only the first two.
+  # { registration_id => [ [ grant_id, amount_cents, recipient_id ], ... ] }, keyed
+  # by the registration each award's dollars count toward. The recipient id feeds
+  # the scholarship drilldowns; #build reads only the first two.
   def scholarship_rows_by_registration
-    @scholarship_rows_by_registration ||= Scholarship
-      .not_declined
-      .joins(:allocation)
-      .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids })
-      .pluck(Arel.sql("allocations.allocatable_id"), :grant_id, :amount_cents, :recipient_id)
-      .each_with_object({}) { |(registration_id, grant_id, amount, recipient_id), map| (map[registration_id] ||= []) << [ grant_id, amount, recipient_id ] }
+    @scholarship_rows_by_registration ||= begin
+      dollars = ScholarshipDollarRegistrations.new(registration_ids)
+      Scholarship
+        .not_declined
+        .joins(:allocation)
+        .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: dollars.award_registration_ids })
+        .pluck(Arel.sql("allocations.allocatable_id"), :grant_id, :amount_cents, :recipient_id)
+        .each_with_object({}) do |(award_registration_id, grant_id, amount, recipient_id), map|
+          (map[dollars.counting_registration_id(award_registration_id)] ||= []) << [ grant_id, amount, recipient_id ]
+        end
+    end
   end
 
   # { [ allocatable_id, source_type ] => cents } for each allocatable kind, plus

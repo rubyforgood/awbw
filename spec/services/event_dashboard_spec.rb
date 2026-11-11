@@ -1463,10 +1463,55 @@ RSpec.describe EventDashboard do
       expect(dashboard.scholarship_applicants).to include(recipient)
     end
 
-    it "does not attribute the scholarship dollars to this event (they stay on the source)" do
+    it "counts them in the scholarship pie and the organization and city breakdowns" do
+      organization = create(:organization)
+      create(:affiliation, person: recipient, organization: organization)
+      create(:address, addressable: organization, city: "Fresno", state: "CA", country: "United States")
+
+      expect(dashboard.scholarship_registrants).to contain_exactly(recipient)
+      expect(dashboard.scholarship_recipient_count_by_org).to eq(organization.id => 1)
+      expect(dashboard.registrant_city_breakdown.rows.map(&:scholarship_count)).to eq([ 1 ])
+    end
+
+    it "drops a declined source award from recognition" do
+      scholarship.update!(agreement_response_status: "declined")
+
+      expect(dashboard.scholarship_recipient_count).to eq(0)
+      expect(dashboard.scholarship_registrants).to be_empty
+    end
+
+    it "counts the scholarship dollars at this event, where they transferred in" do
+      expect(dashboard.scholarship_total_cents).to eq(4_000)
+      expect(described_class.new(source_event).scholarship_total_cents).to eq(0)
+    end
+  end
+
+  describe "scholarship dollars on a transfer" do
+    let(:march) { create(:event, start_date: Time.zone.local(2027, 3, 18, 9), end_date: Time.zone.local(2027, 3, 19, 17), cost_cents: 50_000) }
+    let(:november) { create(:event, start_date: Time.zone.local(2026, 11, 5, 9), end_date: Time.zone.local(2026, 11, 6, 17)) }
+    let(:recipient) { create(:person) }
+    let(:origin) { create(:event_registration, event: march, registrant: recipient, status: "transferred_out") }
+    let!(:destination) { create(:event_registration, event: november, registrant: recipient, status: "attended", transferred_from_registration: origin) }
+    let!(:payment) do
+      create(:allocation, source: create(:payment, amount_cents: 2_000, amount_cents_remaining: 2_000), allocatable: origin, amount: 2_000)
+    end
+
+    before do
+      create(:allocation, source: create(:scholarship, recipient: recipient, amount_cents: 48_000), allocatable: origin, amount: 48_000)
+    end
+
+    it "counts the award at the training they transferred into" do
+      dashboard = described_class.new(november)
+
+      expect(dashboard.scholarship_total_cents).to eq(48_000)
+      expect(dashboard.scholarship_amounts_by_recipient).to eq(recipient.id => 48_000)
+    end
+
+    it "takes the award off the original training but leaves the payment there" do
+      dashboard = described_class.new(march)
+
       expect(dashboard.scholarship_total_cents).to eq(0)
-      expect(dashboard.funded_scholarship_cents).to eq(0)
-      expect(dashboard.unfunded_scholarship_cents).to eq(0)
+      expect(dashboard.received_cents).to eq(2_000)
     end
   end
 
@@ -1574,11 +1619,11 @@ RSpec.describe EventDashboard do
         create(:allocation, source: award, allocatable: out_reg, amount: 2_000)
       end
 
-      it "counts its dollars at the old event only, and settles the balance" do
-        expect(old_dashboard.scholarship_total_cents).to eq(2_000)
-        expect(old_dashboard.funded_scholarship_cents).to eq(2_000)
-        expect(old_dashboard.money_scholarship_registrants).to contain_exactly(person)
-        expect(new_dashboard.scholarship_total_cents).to eq(0)
+      it "counts its dollars at the new event only, and settles the balance" do
+        expect(old_dashboard.scholarship_total_cents).to eq(0)
+        expect(new_dashboard.scholarship_total_cents).to eq(2_000)
+        expect(new_dashboard.funded_scholarship_cents).to eq(2_000)
+        expect(new_dashboard.money_scholarship_registrants).to contain_exactly(person)
         expect(new_dashboard.outstanding_cents).to eq(1_000)
       end
 
