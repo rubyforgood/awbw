@@ -93,6 +93,15 @@ RSpec.describe "/resources", type: :request do
       expect(response.body).not_to include("Library Toolkit")
     end
 
+    it "searches legacy kinds by keyword when Legacy is on" do
+      get resources_url(legacy: "1", query: "Story"), headers: { "Turbo-Frame" => "resources_results" }
+      expect(response.body).to include("Legacy Story")
+      expect(response.body).not_to include("Legacy Theme")
+
+      get resources_url(query: "Story"), headers: { "Turbo-Frame" => "resources_results" }
+      expect(response.body).not_to include("Legacy Story")
+    end
+
     it "ignores Legacy for a non-admin" do
       sign_in create(:user)
       get resources_url(legacy: "1"), headers: { "Turbo-Frame" => "resources_results" }
