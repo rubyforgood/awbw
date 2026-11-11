@@ -5,6 +5,14 @@ class WorkshopSearchService
 
   TITLE_SORT_SQL = "LOWER(TRIM(#{Workshop.strip_punctuation_sql_spaced('workshops.title')})) ASC".freeze
 
+  # Label => value for the index "Sort by" strip (shared/_sort_strip)
+  SORT_OPTIONS = {
+    "Newest" => "created",
+    "Title" => "title",
+    "Most bookmarked" => "popularity",
+    "Author" => "author"
+  }.freeze
+
   attr_reader :params, :user, :admin
   attr_accessor :workshops, :sort
 

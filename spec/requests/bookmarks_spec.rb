@@ -117,6 +117,16 @@ RSpec.describe "Bookmarks", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "marks the active sort and links it to flip direction" do
+      get personal_bookmarks_path, params: { sort: "title", direction: "desc" },
+          headers: { "Turbo-Frame" => "personal_bookmarks_results" }
+
+      active = Capybara.string(response.body).find("a[aria-current='true']")
+      expect(active).to have_text("Title")
+      expect(active).to have_css("i.fa-arrow-down")
+      expect(active[:href]).to include("direction=asc")
+    end
+
     it "can access personal bookmarks with keyword filter and title sort via turbo frame" do
       get personal_bookmarks_path, params: { sort: "title", keyword: "test" },
           headers: { "Turbo-Frame" => "personal_bookmarks_results" }

@@ -245,6 +245,8 @@
 @source inline("{hover:,}border-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal,brand-coral,brand-olive,brand-pink,brand-amber,brand-cyan,brand-emerald}-{200,300}");
 @source inline("ring-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal,brand-coral,brand-olive,brand-pink,brand-amber,brand-cyan,brand-emerald}-{200,300,400,500}");
 @source inline("{hover:,}text-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal,brand-coral,brand-olive,brand-pink,brand-amber,brand-cyan,brand-emerald}-{50,{100..900..100},950}");
+/* Active segment of shared/_sort_strip (radio mode) */
+@source inline("has-checked:bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink,brand-navy,brand-yellow,brand-green,brand-magenta,brand-orange,brand-purple,brand-teal,brand-coral,brand-olive,brand-pink,brand-amber,brand-cyan,brand-emerald}-700");
 
 /* Per-field form layout widths (generated from FormField::WIDTH_GRID_SPANS, which
    lives in a model file Tailwind does not scan) */
