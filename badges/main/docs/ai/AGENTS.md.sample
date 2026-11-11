@@ -51,7 +51,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~149 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~192 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~200 files |
 | `app/jobs/` | SolidQueue background jobs (incl. `JobRunnerCheckInJob`, a 10-minute Honeybadger check-in that alerts when no worker runs jobs, and `StuckEmailsAlertJob`, an hourly Honeybadger alert when portal emails from the last day are stuck pending per `DataHealth::StuckNotifications`) | 9 files |
 | `app/models/concerns/` | Shared model modules | 26 concerns |
 
@@ -243,6 +243,7 @@ comparison — add a rule if none fits (e.g. `PersonPolicy#own_profile?`). Conve
 - `EventRevenueReport` — Cross-event revenue report grouped by calendar year (money in vs org subsidy vs net, CE fees, chart series) for the CEO revenue page
 - `EventSurveyCompletions` — The survey-role forms (`Form::SURVEY_ROLES`) an event carries — offered to its kind of event (Day 1/Day 2: live facilitator trainings, Day 2 multi-day only; scholarship survey: paid events; post-event: all) and delivered on any of its callouts, or already answered for it (including standalone survey submissions carrying the event) — and each registrant's first submission of each, matched on the form's current role. Backs the Surveys columns on the registrants roster and the onboarding tracker (pages + both CSVs). Exposes `.survey_allowed_for_event?` and `.survey_forms_for` to check event survey eligibility and publicly fillable survey links
 - `RegistrationBalances` — Bulk read of what active registrations still owe, across transfers: priced at the event first bought for, settled by money on every reg in the chain. The single definition `EventDashboard` and `EventRevenueFigures` share
+- `ScholarshipDollarRegistrations` — Which registration a scholarship's dollars count toward: once the registration it was issued on transfers, the one transferred into (unless that one was cancelled / no-show). Payments never move. Shared by `EventDashboard`, `EventScholarshipFigures`, `EventRevenueFigures`, `Scholarship.for_events` / `.event_ids` (the scholarships list filters), and `Scholarship#event` (agreement emails, program-status date) so each award counts once, at one training
 - `EventRevenueFigures` — Batch-loads the per-event money components `EventRevenueReport` rows are built from (registration payments/outstanding, funded/unfunded scholarships, discounts, CE paid/outstanding) in a fixed number of grouped queries; mirrors the `EventDashboard` definitions
 - `EventScholarshipFigures` — Batch-loads the per-event scholarship figures `EventScholarshipReport` columns are built from (funded/unfunded dollars + counts, attended count) in a fixed number of grouped queries; optional `funder:` narrows to a donor's grants. Mirrors the `EventDashboard` funded/unfunded split, replacing the one-dashboard-per-event it used to build
 - `FeedRecordPreloader` — Preloads what a comment/communication record label reads (the person a feed chip names + their account, the event in the label) for a page of feed entries or a person's "Log it against" picker targets, so neither queries per row
@@ -610,7 +611,7 @@ Tailwind only scans the paths listed in the `@source` directives at the top of t
 | `spec/routing/` | ~20 | Route definition tests |
 | `spec/policies/` | ~29 | Authorization policy tests |
 | `spec/decorators/` | ~44 | Decorator tests |
-| `spec/services/` | ~147 | Service object tests |
+| `spec/services/` | ~152 | Service object tests |
 | `spec/mailers/` | ~7 | Mailer tests |
 | `spec/helpers/` | ~19 | Helper tests |
 | `spec/factories/` | ~87 | FactoryBot factory definitions |

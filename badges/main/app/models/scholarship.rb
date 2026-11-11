@@ -40,16 +40,19 @@ class Scholarship < ApplicationRecord
   scope :not_declined, -> { where.not(agreement_response_status: "declined") }
 
   # The training this award paid for: the event behind the registration its
-  # allocation funds. Nil for a grant-first award (no allocation yet) or one
-  # funding a CE registration / membership invoice instead of a training.
-  # Resolved through the recipient's own registrations (guaranteed to include this
-  # one by recipient_must_match_allocation_registrant) so a list page that preloads
-  # event_registrations → event pays no per-row query; walking allocatable.event
-  # would, since a polymorphic preload can't reach the event.
+  # allocation funds, or the one that registration transferred into (where its
+  # dollars count — see ScholarshipDollarRegistrations). Nil for a grant-first
+  # award (no allocation yet) or one funding a CE registration / membership invoice.
+  # Resolved through the recipient's own registrations (a transfer keeps the
+  # registrant) so a list page that preloads event_registrations → event pays no
+  # per-row query; walking allocatable.event would, since a polymorphic preload
+  # can't reach the event.
   def event
     return nil unless allocation&.allocatable_type == "EventRegistration"
 
-    recipient&.event_registrations&.find { |registration| registration.id == allocation.allocatable_id }&.event
+    registrations = recipient&.event_registrations.to_a
+    transferred_into = registrations.find { |registration| registration.transferred_from_registration_id == allocation.allocatable_id && registration.holding_money? }
+    (transferred_into || registrations.find { |registration| registration.id == allocation.allocatable_id })&.event
   end
 
   # Funding split (the app-wide convention, mirrored by EventDashboard and
@@ -65,23 +68,24 @@ class Scholarship < ApplicationRecord
   # "funder" filter. A blank funder matches nothing.
   scope :from_funder, ->(funder) { where(grant_id: Grant.where(funder: funder).select(:id)) }
 
-  # Scholarships awarded at the given events, via the allocation → event
-  # registration chain (a scholarship's allocation is on an EventRegistration).
+  # Scholarships whose dollars count toward the given events (see
+  # ScholarshipDollarRegistrations), matching the scholarship report's totals.
   scope :for_events, ->(event_ids) {
-    registration_ids = EventRegistration.where(event_id: event_ids).select(:id)
+    registration_ids = ScholarshipDollarRegistrations.new(EventRegistration.where(event_id: event_ids).ids).award_registration_ids
     source_ids = Allocation
       .where(allocatable_type: "EventRegistration", allocatable_id: registration_ids, source_type: "Scholarship")
       .select(:source_id)
     where(id: source_ids)
   }
 
-  # Ids of events this relation's scholarships were awarded at — for narrowing an
-  # event report to trainings a funder actually scholarshipped.
+  # Ids of events this relation's scholarships' dollars count toward — for
+  # narrowing an event report to trainings a funder actually scholarshipped.
   def self.event_ids
-    registration_ids = Allocation
+    award_registration_ids = Allocation
       .where(allocatable_type: "EventRegistration", source_type: "Scholarship", source_id: all.select(:id))
-      .select(:allocatable_id)
-    EventRegistration.where(id: registration_ids).distinct.pluck(:event_id)
+      .pluck(:allocatable_id)
+    dollars = ScholarshipDollarRegistrations.new(award_registration_ids)
+    EventRegistration.where(id: award_registration_ids.map { |id| dollars.counting_registration_id(id) }).distinct.pluck(:event_id)
   end
 
   # `agreement_signed` reads/writes as a virtual boolean for the admin checkbox +

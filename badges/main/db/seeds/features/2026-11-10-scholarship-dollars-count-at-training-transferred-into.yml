@@ -1,0 +1,14 @@
+name: "Scholarship dollars count at the training a person transfers into"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-10
+pr_number: 2975
+action_path: "/transfer_guide"
+summary: >-
+  When someone with a scholarship transfers, the award's dollars now count toward the training they
+  transferred into in dashboards and reports, including funder reporting, not the training they left.
+pro_tips:
+  - "Payments always stay with the training they were paid on."
+  - "If the new registration is cancelled or a no-show, the dollars stay at the original training."
+  - "Filtering the scholarships list by training or year follows the same rule, so the list matches the summary above it."
+  - "Scholarship agreement emails name the training transferred into."

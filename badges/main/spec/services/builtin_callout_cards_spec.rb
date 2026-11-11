@@ -287,6 +287,18 @@ RSpec.describe BuiltinCalloutCards do
         expect(scholarship_card.badge).to eq(MoneyFormatter.dollars_from_cents(25_000))
       end
 
+      it "totals the original award and one added after the transfer once both are signed" do
+        top_up = create(:scholarship, recipient: registration.registrant, amount_cents: 99, tasks_completed: true)
+        create(:allocation, source: top_up, allocatable: registration, amount: 99)
+        scholarship.accept_agreement!
+
+        expect(card(registration.reload, "Scholarship").subtitle).to eq("Review and accept your scholarship agreement")
+
+        top_up.accept_agreement!
+
+        expect(card(registration.reload, "Scholarship").badge).to eq(MoneyFormatter.dollars_from_cents(25_099))
+      end
+
       it "flags tasks still outstanding on the award" do
         scholarship.accept_agreement!
         scholarship.update!(tasks_completed: false)

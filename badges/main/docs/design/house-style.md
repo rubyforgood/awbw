@@ -109,3 +109,12 @@ users index (`app/views/users/users_results.html.erb`) is the reference.
   `sort_header_link` generator as the table headers.
 - Let long unbroken values (emails, URLs) wrap with `wrap-anywhere`, plus a
   `<wbr>` at the natural break (before the `@`).
+
+## Toggle chevrons
+
+Show / hide and expand / collapse controls put the chevron **after** the label
+(`Collapse all ⌃`, `Hide recipients ⌃`), sized `text-xs`, pointing down when
+closed and rotating up when open. `events/_charts_toggle_bar` and
+`events/_panel_cta` are the reference. A chevron leads only on a disclosure row
+whose whole row is the click target (an accordion header), where it marks the
+row's state before its title.

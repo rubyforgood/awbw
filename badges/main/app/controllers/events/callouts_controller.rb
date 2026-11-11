@@ -75,7 +75,8 @@ module Events
         return
       end
 
-      @scholarship = @event_registration.effective_scholarship
+      @scholarships = @event_registration.effective_scholarships
+      @scholarship = @scholarships.first
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
 
       # The recipients survey, delivered here once the recipient has signed their
@@ -93,7 +94,7 @@ module Events
 
     # The Agree button (agreement=yes) records an "accepted" response.
     def sign_agreement
-      scholarship = @event_registration.effective_scholarship
+      scholarship = responding_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return
@@ -115,7 +116,7 @@ module Events
     # Record the recipient's decline (drops the award from all totals). A repeat
     # decline is a no-op.
     def decline_agreement
-      scholarship = @event_registration.effective_scholarship
+      scholarship = responding_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return
@@ -136,7 +137,7 @@ module Events
     # The award stays live; we record the amount they can contribute and notify the
     # trainings team so they can revisit the award. A repeat request just updates.
     def request_scholarship_support
-      scholarship = @event_registration.effective_scholarship
+      scholarship = responding_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return
@@ -408,6 +409,15 @@ module Events
     end
 
     private
+
+    # The award a recipient's Agree / Decline / Request support answers: the one the
+    # form names, from this ticket's own awards only.
+    def responding_scholarship
+      scholarships = @event_registration.effective_scholarships
+      return scholarships.first if params[:scholarship_id].blank?
+
+      scholarships.find { |scholarship| scholarship.id.to_s == params[:scholarship_id].to_s }
+    end
 
     # A dollar amount typed into the support-request box ("$1,200", "1200.50") as
     # integer cents. Nil when blank or not a non-negative number, so the action can

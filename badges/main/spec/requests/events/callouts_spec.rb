@@ -893,6 +893,53 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(scholarship.reload.agreement_support_requested?).to be(true)
       end
 
+      context "with another award added on the new registration" do
+        let!(:top_up) do
+          create(:scholarship, recipient: incoming.registrant, amount_cents: 2_000).tap do |award|
+            create(:allocation, source: award, allocatable: incoming, amount: 2_000)
+          end
+        end
+
+        it "shows both awards on the ticket, each with its own agreement" do
+          get registration_scholarship_path(incoming.slug)
+
+          expect(response.body).to include("$50", "$20")
+          expect(response.body.scan(/name="agreement" value="yes"/).size).to eq(2)
+          expect(response.body).to include(%(name="scholarship_id" value="#{top_up.id}"))
+        end
+
+        it "sums the awards in a banner above them" do
+          get registration_scholarship_path(incoming.slug)
+
+          banner = Nokogiri::HTML(response.body).at_css("#scholarship-total")
+          expect(banner.text.squish).to include("2 scholarships", "$70 total")
+        end
+
+        it "leaves a declined award out of the banner's total" do
+          top_up.reload.decline_agreement!("Timing no longer works")
+
+          get registration_scholarship_path(incoming.slug)
+
+          banner = Nokogiri::HTML(response.body).at_css("#scholarship-total")
+          expect(banner.text.squish).to include("1 scholarship", "$50 total", "1 declined award")
+        end
+
+        it "records Agree on the award the recipient chose" do
+          post registration_scholarship_agreement_path(incoming.slug), params: { agreement: "yes", scholarship_id: top_up.id }
+
+          expect(top_up.reload.agreement_signed?).to be(true)
+          expect(scholarship.reload.agreement_signed?).to be(false)
+        end
+
+        it "ignores an award that isn't on this ticket" do
+          stranger = create(:scholarship, recipient: create(:event_registration, event: event).registrant)
+
+          post registration_scholarship_agreement_path(incoming.slug), params: { agreement: "yes", scholarship_id: stranger.id }
+
+          expect(stranger.reload.agreement_signed?).to be(false)
+        end
+      end
+
       describe "the recipients survey" do
         let(:survey) { create(:form, name: "Recipients survey", role: "recipient_survey") }
         let!(:survey_field) { create(:form_field, form: survey, name: "What did you take away?") }
