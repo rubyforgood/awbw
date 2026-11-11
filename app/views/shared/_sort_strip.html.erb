@@ -27,11 +27,10 @@
     <% options.each do |label, value| %>
       <% if href %>
         <% active = value == selected %>
-        <%= link_to href.call(value), data: local_assigns[:link_data], aria: { current: (active ? "true" : nil) },
-                    class: "#{segment} #{active ? "#{active_bg} text-white" : "text-gray-600 hover:bg-gray-100"}" do %>
-          <%= label %>
-          <% if active && active_icon %><i class="fa-solid <%= active_icon %> text-xs"></i><% end %>
-        <% end %>
+        <%# Built inline (not a block) so the link text is exactly the label %>
+        <% text = active && active_icon ? safe_join([ label, tag.i(class: "fa-solid #{active_icon} text-xs") ]) : label %>
+        <%= link_to text, href.call(value), data: local_assigns[:link_data], aria: { current: (active ? "true" : nil) },
+                    class: "#{segment} #{active ? "#{active_bg} text-white" : "text-gray-600 hover:bg-gray-100"}" %>
       <% else %>
         <label class="<%= segment %> has-checked:<%= active_bg %> cursor-pointer text-gray-600 hover:bg-gray-100 has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-indigo-300">
           <%= radio_button_tag :sort, (value == local_assigns[:default] ? "" : value), value == selected,
