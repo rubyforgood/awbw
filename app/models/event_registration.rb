@@ -659,6 +659,10 @@ class EventRegistration < ApplicationRecord
     status.in?(ACTIVE_STATUSES)
   end
 
+  def holding_money?
+    status.in?(MONEY_STATUSES)
+  end
+
   # Cancel this registration. Releasing scholarships and sending cancellation
   # emails hang off the status-change callbacks, so this and every other path to
   # "cancelled" (e.g. the admin edit form's status dropdown) behave identically.

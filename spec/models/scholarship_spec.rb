@@ -22,6 +22,29 @@ RSpec.describe Scholarship, type: :model do
     it "is nil for an award with no allocation behind it" do
       expect(create(:scholarship, recipient: person).event).to be_nil
     end
+
+    context "when the registration transferred" do
+      let(:original) { create(:event, title: "March training", cost_cents: 50_000) }
+      let(:moved_to) { create(:event, title: "November training") }
+      let(:origin) { create(:event_registration, event: original, registrant: person, status: "transferred_out") }
+      let(:scholarship) do
+        create(:scholarship, recipient: person, amount_cents: 50_000).tap do |award|
+          create(:allocation, source: award, allocatable: origin, amount: 50_000)
+        end
+      end
+
+      it "is the training transferred into, where its dollars count" do
+        create(:event_registration, event: moved_to, registrant: person, status: "registered", transferred_from_registration: origin)
+
+        expect(scholarship.reload.event).to eq(moved_to)
+      end
+
+      it "stays the original training when the new registration was cancelled" do
+        create(:event_registration, event: moved_to, registrant: person, status: "cancelled", transferred_from_registration: origin)
+
+        expect(scholarship.reload.event).to eq(original)
+      end
+    end
   end
 
   describe "validations" do

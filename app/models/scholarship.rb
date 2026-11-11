@@ -40,16 +40,19 @@ class Scholarship < ApplicationRecord
   scope :not_declined, -> { where.not(agreement_response_status: "declined") }
 
   # The training this award paid for: the event behind the registration its
-  # allocation funds. Nil for a grant-first award (no allocation yet) or one
-  # funding a CE registration / membership invoice instead of a training.
-  # Resolved through the recipient's own registrations (guaranteed to include this
-  # one by recipient_must_match_allocation_registrant) so a list page that preloads
-  # event_registrations → event pays no per-row query; walking allocatable.event
-  # would, since a polymorphic preload can't reach the event.
+  # allocation funds, or the one that registration transferred into (where its
+  # dollars count — see ScholarshipDollarRegistrations). Nil for a grant-first
+  # award (no allocation yet) or one funding a CE registration / membership invoice.
+  # Resolved through the recipient's own registrations (a transfer keeps the
+  # registrant) so a list page that preloads event_registrations → event pays no
+  # per-row query; walking allocatable.event would, since a polymorphic preload
+  # can't reach the event.
   def event
     return nil unless allocation&.allocatable_type == "EventRegistration"
 
-    recipient&.event_registrations&.find { |registration| registration.id == allocation.allocatable_id }&.event
+    registrations = recipient&.event_registrations.to_a
+    transferred_into = registrations.find { |registration| registration.transferred_from_registration_id == allocation.allocatable_id && registration.holding_money? }
+    (transferred_into || registrations.find { |registration| registration.id == allocation.allocatable_id })&.event
   end
 
   # Funding split (the app-wide convention, mirrored by EventDashboard and
