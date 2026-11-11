@@ -163,6 +163,14 @@ RSpec.describe "/resources", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "offers every kind with admin=true" do
+      resource = Resource.create! valid_attributes
+      get edit_resource_url(resource, admin: true)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('<option value="Theme">Theme</option>')
+    end
+
     it "renders the visibility flags, including hidden from search, with definitions" do
       resource = Resource.create! valid_attributes
       get edit_resource_url(resource)
