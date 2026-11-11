@@ -354,7 +354,7 @@ RSpec.describe BuiltinCalloutCards do
       expect(scholarship_card.theme).to eq(DomainTheme.swatch(DomainTheme.color_for(:scholarships)))
     end
 
-    it "tracks the live award when only one of several is declined" do
+    it "tracks a newer award offered after a decline" do
       add_scholarship_form(event)
       registration.update!(scholarship_requested: true)
       # Decline first: it zeroes the allocation, freeing the cost for the live award.
@@ -368,6 +368,20 @@ RSpec.describe BuiltinCalloutCards do
       expect(scholarship_card.subtitle).to eq("Your award — amount, funder, and tasks")
       expect(scholarship_card.badge).to eq("$250")
       expect(scholarship_card.badge_classes).to include("fuchsia")
+    end
+
+    it "reads as declined when the newest award is declined" do
+      add_scholarship_form(event)
+      registration.update!(scholarship_requested: true)
+      older = create(:scholarship, recipient: registration.registrant, amount_cents: 25_000, tasks_completed: true, agreement_signed: true)
+      create(:allocation, source: older, allocatable: registration, amount: 500)
+      newer = create(:scholarship, recipient: registration.registrant, amount_cents: 10_000)
+      create(:allocation, source: newer, allocatable: registration.reload, amount: 500)
+      newer.reload.decline_agreement!("Timing no longer works")
+
+      scholarship_card = card(registration.reload, "Scholarship")
+      expect(scholarship_card.subtitle).to eq("You declined this award")
+      expect(scholarship_card.badge).to eq("Declined")
     end
 
     it "orders the code-fallback cards from payment downward" do

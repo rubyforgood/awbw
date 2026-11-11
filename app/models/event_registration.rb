@@ -804,17 +804,16 @@ class EventRegistration < ApplicationRecord
     live.any? && live.all?(&:agreement_signed?)
   end
 
-  # Every award declined — the registrant has nothing live left. Declining one of
-  # several awards leaves the rest live, so the ticket card keeps tracking those.
-  def scholarship_declined?
-    awards = effective_scholarships
-    awards.any? && awards.all?(&:agreement_declined?)
+  # Awards go back and forth (a decline, then a fresh offer — or the reverse), so
+  # the newest award speaks for the registration. Reads preloaded scholarships.
+  def latest_scholarship
+    effective_scholarships.max_by { |scholarship| [ scholarship.created_at, scholarship.id ] }
   end
 
-  # Any award declined — the admin still owes that decline a response, even when
-  # another award on the registration stays live.
-  def any_scholarship_declined?
-    effective_scholarships.any?(&:agreement_declined?)
+  # Declined when the newest award is — an older decline is superseded by a newer
+  # offer, and a newer decline wins over an older live award.
+  def scholarship_declined?
+    latest_scholarship&.agreement_declined? || false
   end
 
   # Display-only: a scholarship is only *shown* as awarded once the recipient has

@@ -1577,26 +1577,31 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
-  describe "#scholarship_declined? / #any_scholarship_declined?" do
+  describe "#scholarship_declined?" do
     let(:reg) { create(:event_registration) }
-    let!(:declined) { create(:scholarship, recipient: reg.registrant, amount_cents: 500) }
 
-    before do
-      create(:allocation, source: declined, allocatable: reg, amount: 500)
-      declined.reload.decline_agreement!("Timing no longer works")
+    def award(amount)
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: amount)
+      create(:allocation, source: scholarship, allocatable: reg.reload, amount: amount)
+      scholarship
     end
 
-    it "reads both as declined when every award is declined" do
-      expect(reg.reload.scholarship_declined?).to be true
-      expect(reg.any_scholarship_declined?).to be true
+    it "is false with no scholarship" do
+      expect(reg.scholarship_declined?).to be false
     end
 
-    it "reads a partial decline as not declined, but still any-declined" do
-      live = create(:scholarship, recipient: reg.registrant, amount_cents: 1099)
-      create(:allocation, source: live, allocatable: reg, amount: 1099)
+    it "is false when a newer award follows a decline" do
+      award(500).reload.decline_agreement!("Timing no longer works")
+      award(500)
 
       expect(reg.reload.scholarship_declined?).to be false
-      expect(reg.any_scholarship_declined?).to be true
+    end
+
+    it "is true when the newest award is declined, even with an older live one" do
+      award(500)
+      award(500).reload.decline_agreement!("Timing no longer works")
+
+      expect(reg.reload.scholarship_declined?).to be true
     end
   end
 
