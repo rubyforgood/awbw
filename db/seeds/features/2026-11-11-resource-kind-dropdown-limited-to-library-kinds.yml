@@ -1,0 +1,11 @@
+name: "Resource kind dropdown limited to library kinds"
+area: content
+display_status: admin_facing
+released_on: 2026-11-11
+pr_number: 2980
+action_path: "/resources/new"
+summary: >-
+  The Kind dropdown on a resource now offers only the kinds the resource library
+  searches (Handout, Template, Toolkit, Form), plus the kind a resource already has.
+pro_tips:
+  - "Add ?admin=true to a resource's edit URL to pick from every kind, like Story or Theme."
