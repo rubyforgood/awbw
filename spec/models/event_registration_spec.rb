@@ -1563,6 +1563,46 @@ RSpec.describe EventRegistration, type: :model do
       create(:allocation, source: scholarship, allocatable: reg, amount: 1099)
       expect(reg.scholarship_awarded?).to be true
     end
+
+    it "skips a declined award alongside a signed one" do
+      reg = create(:event_registration)
+      # Decline first: it zeroes the allocation, freeing the cost for the signed award.
+      declined = create(:scholarship, recipient: reg.registrant, amount_cents: 500)
+      create(:allocation, source: declined, allocatable: reg, amount: 500)
+      declined.reload.decline_agreement!("Timing no longer works")
+      signed = create(:scholarship, recipient: reg.registrant, amount_cents: 1099, agreement_signed: true)
+      create(:allocation, source: signed, allocatable: reg.reload, amount: 1099)
+
+      expect(reg.reload.scholarship_awarded?).to be true
+    end
+  end
+
+  describe "#scholarship_declined?" do
+    let(:reg) { create(:event_registration) }
+
+    def award(amount)
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: amount)
+      create(:allocation, source: scholarship, allocatable: reg.reload, amount: amount)
+      scholarship
+    end
+
+    it "is false with no scholarship" do
+      expect(reg.scholarship_declined?).to be false
+    end
+
+    it "is false when a newer award follows a decline" do
+      award(500).reload.decline_agreement!("Timing no longer works")
+      award(500)
+
+      expect(reg.reload.scholarship_declined?).to be false
+    end
+
+    it "is true when the newest award is declined, even with an older live one" do
+      award(500)
+      award(500).reload.decline_agreement!("Timing no longer works")
+
+      expect(reg.reload.scholarship_declined?).to be true
+    end
   end
 
   describe "#joinable?" do
