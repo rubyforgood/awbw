@@ -347,9 +347,15 @@ class AttendeesBreakdowns
     @scholarship_recipient_ids ||= Scholarship
       .not_declined
       .joins(:allocation)
-      .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids })
+      .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids + transferred_from_registration_ids })
       .distinct
       .pluck(:recipient_id)
+  end
+
+  # A transfer's award stays on the registration it came from, matching
+  # EventDashboard#recognized_scholarships.
+  def transferred_from_registration_ids
+    scoped_registrations.transferred_in.pluck(:transferred_from_registration_id)
   end
 
   def other_sector_responses

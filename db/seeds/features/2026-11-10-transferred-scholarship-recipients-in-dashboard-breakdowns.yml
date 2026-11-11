@@ -4,8 +4,8 @@ display_status: admin_facing
 released_on: 2026-11-10
 pr_number: 2975
 summary: >-
-  Someone who transferred into a training with a scholarship now shows as a recipient in that training's
-  scholarship pie, organization and city breakdowns, and recipient lists, not just the recipient count.
+  Someone who transferred into a training with a scholarship now shows as a recipient everywhere: that
+  training's dashboard breakdowns, its recipients-page charts, and the training attendees charts.
 pro_tips:
   - "The scholarship dollars still count toward the training the award was issued on."
   - "A declined award no longer counts them as a recipient at the training they moved to."

@@ -85,6 +85,40 @@ RSpec.describe AttendeesBreakdowns do
     expect(breakdowns.registrant_city_breakdown.rows.sum(&:scholarship_count)).to eq(0)
   end
 
+  describe "a recipient who transferred in (award left on the source registration)" do
+    let(:transferer) { create(:person) }
+    let(:source_event) { create(:event, facilitator_training: true, cost_cents: 50_000) }
+    let(:source) { create(:event_registration, event: source_event, registrant: transferer, status: "transferred_out") }
+    let!(:incoming) do
+      create(:event_registration, event: training, registrant: transferer, status: "attended", transferred_from_registration: source)
+    end
+    let!(:award) do
+      create(:scholarship, recipient: transferer, amount_cents: 50_000).tap do |scholarship|
+        create(:allocation, source: scholarship, allocatable: source, amount: 50_000)
+      end
+    end
+
+    it "counts them as a recipient across events" do
+      breakdowns = described_class.new(Person.where(id: transferer.id), events: Event.where(id: training.id))
+
+      expect(breakdowns.scholarship_recipient_count).to eq(1)
+      expect(breakdowns.scholarship_registrant_ids).to eq([ transferer.id ])
+    end
+
+    it "counts them on the event they transferred into (the recipients charts)" do
+      breakdowns = described_class.new(Person.where(id: transferer.id),
+        events: Event.where(id: training.id), registrations: EventRegistration.active)
+
+      expect(breakdowns.scholarship_recipient_count).to eq(1)
+    end
+
+    it "leaves a declined source award out" do
+      award.reload.decline_agreement!("Timing no longer works")
+
+      expect(described_class.new(Person.where(id: transferer.id)).scholarship_recipient_count).to eq(0)
+    end
+  end
+
   it "classifies program status without a per-org affiliations query" do
     people = 3.times.map do
       registrant = create(:person)
