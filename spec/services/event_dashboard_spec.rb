@@ -1463,6 +1463,23 @@ RSpec.describe EventDashboard do
       expect(dashboard.scholarship_applicants).to include(recipient)
     end
 
+    it "counts them in the scholarship pie and the organization and city breakdowns" do
+      organization = create(:organization)
+      create(:affiliation, person: recipient, organization: organization)
+      create(:address, addressable: organization, city: "Fresno", state: "CA", country: "United States")
+
+      expect(dashboard.scholarship_registrants).to contain_exactly(recipient)
+      expect(dashboard.scholarship_recipient_count_by_org).to eq(organization.id => 1)
+      expect(dashboard.registrant_city_breakdown.rows.map(&:scholarship_count)).to eq([ 1 ])
+    end
+
+    it "drops a declined source award from recognition" do
+      scholarship.update!(agreement_response_status: "declined")
+
+      expect(dashboard.scholarship_recipient_count).to eq(0)
+      expect(dashboard.scholarship_registrants).to be_empty
+    end
+
     it "does not attribute the scholarship dollars to this event (they stay on the source)" do
       expect(dashboard.scholarship_total_cents).to eq(0)
       expect(dashboard.funded_scholarship_cents).to eq(0)

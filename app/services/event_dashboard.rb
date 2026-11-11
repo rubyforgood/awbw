@@ -144,7 +144,7 @@ class EventDashboard
   end
 
   def scholarship_recipient_count
-    recognized_scholarships.map(&:recipient_id).uniq.size
+    scholarship_recipient_ids.size
   end
 
   # This event's registrants grouped by their location's city, with the
@@ -153,7 +153,7 @@ class EventDashboard
   def registrant_city_breakdown
     @registrant_city_breakdown ||= RegistrantCityBreakdown.new(
       city_registrant_pairs: locations.rows.map { |row| [ row.city_label, row.registrant_id ] },
-      scholarship_recipient_ids: scholarships.distinct.pluck(:recipient_id)
+      scholarship_recipient_ids: scholarship_recipient_ids
     )
   end
 
@@ -324,7 +324,7 @@ class EventDashboard
   end
 
   def scholarship_registrants
-    @scholarship_registrants ||= people_sorted(scholarships.distinct.pluck(:recipient_id))
+    @scholarship_registrants ||= people_sorted(scholarship_recipient_ids)
   end
 
   # Everyone behind the scholarship dollars, which can include a transferred-out
@@ -609,7 +609,7 @@ class EventDashboard
   # orgs with at least one recipient appear.
   def scholarship_recipient_count_by_org
     @scholarship_recipient_count_by_org ||= begin
-      recipient_ids = scholarships.distinct.pluck(:recipient_id).to_set
+      recipient_ids = scholarship_recipient_ids.to_set
       organization_registrant_ids_by_org.each_with_object({}) do |(organization_id, person_ids), map|
         count = person_ids.count { |person_id| recipient_ids.include?(person_id) }
         map[organization_id] = count if count.positive?
@@ -1070,11 +1070,16 @@ class EventDashboard
   # Scholarships to RECOGNIZE recipients at this event: awards on this event's own
   # registrations, plus awards on the SOURCE registrations of anyone transferred
   # in (their dollars stay on the source event — see #money_scholarships — but
-  # they're still a scholarship recipient here). Recognition
-  # only: drives the recipient "hat", the recipient count, and the recipients
-  # page; NOT the dollar totals. (#1944)
+  # they're still a scholarship recipient here). Recognition only: drives every
+  # recipient figure (the "hat", count, pie, org and city breakdowns, recipients
+  # page); NOT the dollar totals. (#1944)
   def recognized_scholarships
-    @recognized_scholarships ||= scholarships.includes(grant: :funder).to_a + transferred_in_source_scholarships
+    @recognized_scholarships ||= scholarships.includes(grant: :funder).to_a +
+      transferred_in_source_scholarships.reject(&:agreement_declined?)
+  end
+
+  def scholarship_recipient_ids
+    @scholarship_recipient_ids ||= recognized_scholarships.map(&:recipient_id).uniq
   end
 
   # The source registrations' scholarships for everyone transferred into this
@@ -1083,10 +1088,7 @@ class EventDashboard
     source_ids = active_registrations.transferred_in.pluck(:transferred_from_registration_id)
     return [] if source_ids.empty?
 
-    Scholarship.joins(:allocation)
-      .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: source_ids })
-      .includes(grant: :funder)
-      .to_a
+    scholarships_on(source_ids).includes(grant: :funder).to_a
   end
 
   # Grouping key for an applicant's funder: the funder identity when the
