@@ -82,21 +82,21 @@
           <div class="mt-3" data-controller="panel-toggle">
             <div class="flex flex-wrap items-center gap-3">
               <%= form_with url: registration_scholarship_agreement_path(@event_registration.slug), method: :post do %>
-                <button type="submit" name="agreement" value="yes" class="<%= button_classes(nil, extra: "border border-secondary text-secondary hover:border-success hover:text-success") %>">
+                <button type="submit" name="agreement" value="yes" class="<%= button_classes(nil, extra: "border border-secondary text-secondary hover:border-success hover:bg-success hover:text-white") %>">
                   <i class="fa-solid fa-check"></i> Agree
                 </button>
               <% end %>
 
-              <button type="button" class="<%= button_classes(nil, extra: "border border-secondary text-secondary hover:border-sky-600 hover:text-sky-600") %>" aria-expanded="false"
+              <button type="button" class="<%= button_classes(nil, extra: "group border border-secondary text-secondary hover:border-sky-600 hover:bg-sky-600 hover:text-white") %>" aria-expanded="false"
                       data-panel-toggle-target="button" data-panel-toggle-name="support" data-action="panel-toggle#toggle">
                 <i class="fa-solid fa-hand-holding-dollar"></i> Request additional support
-                <i class="fa-solid fa-chevron-down ml-1 text-xs text-gray-400 transition-transform in-aria-expanded:rotate-180"></i>
+                <i class="fa-solid fa-chevron-down ml-1 text-xs text-gray-400 transition-transform group-hover:text-white in-aria-expanded:rotate-180"></i>
               </button>
 
-              <button type="button" class="<%= button_classes(nil, extra: "border border-secondary text-secondary hover:border-red-600 hover:text-red-600") %>" aria-expanded="false"
+              <button type="button" class="<%= button_classes(nil, extra: "group border border-secondary text-secondary hover:border-red-600 hover:bg-red-600 hover:text-white") %>" aria-expanded="false"
                       data-panel-toggle-target="button" data-panel-toggle-name="decline" data-action="panel-toggle#toggle">
                 <i class="fa-solid fa-xmark"></i> Decline
-                <i class="fa-solid fa-chevron-down ml-1 text-xs text-gray-400 transition-transform in-aria-expanded:rotate-180"></i>
+                <i class="fa-solid fa-chevron-down ml-1 text-xs text-gray-400 transition-transform group-hover:text-white in-aria-expanded:rotate-180"></i>
               </button>
             </div>
 
