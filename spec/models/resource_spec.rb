@@ -51,6 +51,20 @@ RSpec.describe Resource do
     end
   end
 
+  describe "#kind_options" do
+    it "leaves out Resource for a new record" do
+      expect(Resource.new.kind_options).not_to include("Resource")
+    end
+
+    it "keeps Resource when the record is already that kind" do
+      expect(Resource.new(kind: "Resource").kind_options).to include("Resource")
+    end
+
+    it "limits a published kind to the published kinds" do
+      expect(Resource.new(kind: "Handout").kind_options).to eq(Resource::PUBLISHED_KINDS)
+    end
+  end
+
   describe 'validations' do
     # Requires associations for create
     it { should validate_presence_of(:title) }
