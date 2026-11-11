@@ -68,6 +68,7 @@ RSpec.describe "/resources", type: :request do
     let!(:toolkit) { create(:resource, :published, kind: "Toolkit", title: "Library Toolkit") }
     let!(:story) { create(:resource, :published, kind: "Story", title: "Legacy Story") }
     let!(:theme) { create(:resource, :published, kind: "Theme", title: "Legacy Theme") }
+    let!(:fm_archive) { create(:resource, :published, kind: "FM Archive", title: "Archived FM Record") }
 
     it "hides legacy kinds by default" do
       get resources_url, headers: { "Turbo-Frame" => "resources_results" }
@@ -80,7 +81,8 @@ RSpec.describe "/resources", type: :request do
       get resources_url(legacy: "1"), headers: { "Turbo-Frame" => "resources_results" }
 
       expect(response.body).to include("Legacy Story", "Legacy Theme")
-      expect(response.body).not_to include("Library Handout")
+      expect(response.body).not_to include("Library Handout", "Archived FM Record")
+      expect(response.body).to include("Resources (2/4)")
       expect(response.body).to include("admin-only border-blue-200 bg-blue-100")
     end
 
