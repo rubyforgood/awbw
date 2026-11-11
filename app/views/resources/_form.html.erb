@@ -12,7 +12,7 @@
 
       <%= f.input :kind,
                   as: :select,
-                  collection: f.object.kind_options,
+                  collection: f.object.kind_options(all: params[:admin] == "true"),
                   selected: f.object.kind,
                   input_html: { class: "w-full rounded border-gray-300" } %>
 

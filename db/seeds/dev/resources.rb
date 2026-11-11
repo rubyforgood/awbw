@@ -40,7 +40,7 @@ puts "Creating Resources…"
   )
 end
 
-# A legacy kind=Resource record. The form only offers the "Resource" kind to a
+# A legacy kind=Resource record. The form only offers an unsearchable kind to a
 # record that already has it, so this gives dev something to see that case on.
 puts "Creating a legacy kind=Resource record…"
 legacy_body = "A legacy resource still filed under the old catch-all Resource kind."

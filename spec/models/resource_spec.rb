@@ -52,16 +52,20 @@ RSpec.describe Resource do
   end
 
   describe "#kind_options" do
-    it "leaves out Resource for a new record" do
-      expect(Resource.new.kind_options).not_to include("Resource")
+    it "offers only the published kinds for a new record" do
+      expect(Resource.new.kind_options).to eq(Resource::PUBLISHED_KINDS)
     end
 
-    it "keeps Resource when the record is already that kind" do
-      expect(Resource.new(kind: "Resource").kind_options).to include("Resource")
+    it "keeps an unsearchable kind the record already has" do
+      expect(Resource.new(kind: "Story").kind_options).to eq(Resource::PUBLISHED_KINDS + [ "Story" ])
     end
 
-    it "limits a published kind to the published kinds" do
-      expect(Resource.new(kind: "Handout").kind_options).to eq(Resource::PUBLISHED_KINDS)
+    it "leaves out other unsearchable kinds" do
+      expect(Resource.new(kind: "Story").kind_options).not_to include("Resource", "Theme")
+    end
+
+    it "offers every kind when asked for all" do
+      expect(Resource.new(kind: "Handout").kind_options(all: true)).to eq(Resource::KINDS)
     end
   end
 
