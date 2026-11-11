@@ -74,10 +74,10 @@ class EventDashboard
     people_sorted(transferred_in_registrant_ids)
   end
 
-  # Whether a registrant (Person id) transferred into this event — for surfaces
-  # that recognize them but flag that their money is billed to the source event.
-  def transferred_in_recipient?(person_id)
-    transferred_in_registrant_ids.include?(person_id)
+  # A transferred-in recipient whose award's dollars count toward the event they
+  # transferred from (see ScholarshipDollarRegistrations).
+  def scholarship_billed_to_original_event?(person_id)
+    transferred_in_registrant_ids.include?(person_id) && !scholarship_amounts_by_recipient.key?(person_id)
   end
 
   # Registrations with an attendance outcome on record (attended / incomplete /
@@ -1302,10 +1302,10 @@ class EventDashboard
   end
 
   # The awards behind the dollar figures. Wider than #scholarships, which answers
-  # who's a recipient at this event: an award stays on the transferred-out reg, so
-  # its dollars count here though the recipient has moved on.
+  # who's a recipient at this event: a transfer's award counts its dollars at one
+  # of its two events, per ScholarshipDollarRegistrations.
   def money_scholarships
-    @money_scholarships ||= scholarships_on(money_registration_ids).not_declined
+    @money_scholarships ||= scholarships_on(ScholarshipDollarRegistrations.new(money_registration_ids).award_registration_ids).not_declined
   end
 
   def scholarships_on(registration_ids)

@@ -122,18 +122,22 @@ class EventScholarshipFigures
     @registration_ids ||= registration_ids_by_event.values.flatten
   end
 
-  # { registration_id => [ [ grant_id, amount_cents, recipient_id ], ... ] },
-  # optionally narrowed to the funder's grants.
+  # { registration_id => [ [ grant_id, amount_cents, recipient_id ], ... ] }, keyed
+  # by the registration each award's dollars count toward and optionally narrowed
+  # to the funder's grants.
   def scholarship_rows_by_registration
     @scholarship_rows_by_registration ||= begin
+      dollars = ScholarshipDollarRegistrations.new(registration_ids)
       scope = Scholarship
         .not_declined
         .joins(:allocation)
-        .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids })
+        .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: dollars.award_registration_ids })
       scope = scope.where(grant_id: funder_grant_ids) if @funder
       scope
         .pluck(Arel.sql("allocations.allocatable_id"), :grant_id, :amount_cents, :recipient_id)
-        .each_with_object({}) { |(registration_id, grant_id, amount, recipient_id), map| (map[registration_id] ||= []) << [ grant_id, amount, recipient_id ] }
+        .each_with_object({}) do |(award_registration_id, grant_id, amount, recipient_id), map|
+          (map[dollars.counting_registration_id(award_registration_id)] ||= []) << [ grant_id, amount, recipient_id ]
+        end
     end
   end
 

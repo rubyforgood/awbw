@@ -1481,9 +1481,40 @@ RSpec.describe EventDashboard do
     end
 
     it "does not attribute the scholarship dollars to this event (they stay on the source)" do
+      expect(dashboard.scholarship_billed_to_original_event?(recipient.id)).to be(true)
       expect(dashboard.scholarship_total_cents).to eq(0)
       expect(dashboard.funded_scholarship_cents).to eq(0)
       expect(dashboard.unfunded_scholarship_cents).to eq(0)
+    end
+  end
+
+  describe "scholarship dollars on a transfer to an earlier training" do
+    let(:march) { create(:event, start_date: Time.zone.local(2027, 3, 18, 9), end_date: Time.zone.local(2027, 3, 19, 17), cost_cents: 50_000) }
+    let(:november) { create(:event, start_date: Time.zone.local(2026, 11, 5, 9), end_date: Time.zone.local(2026, 11, 6, 17)) }
+    let(:recipient) { create(:person) }
+    let(:origin) { create(:event_registration, event: march, registrant: recipient, status: "transferred_out") }
+    let!(:destination) { create(:event_registration, event: november, registrant: recipient, status: "attended", transferred_from_registration: origin) }
+    let!(:payment) do
+      create(:allocation, source: create(:payment, amount_cents: 2_000, amount_cents_remaining: 2_000), allocatable: origin, amount: 2_000)
+    end
+
+    before do
+      create(:allocation, source: create(:scholarship, recipient: recipient, amount_cents: 48_000), allocatable: origin, amount: 48_000)
+    end
+
+    it "counts the award at the earlier training they attended" do
+      dashboard = described_class.new(november)
+
+      expect(dashboard.scholarship_total_cents).to eq(48_000)
+      expect(dashboard.scholarship_amounts_by_recipient).to eq(recipient.id => 48_000)
+      expect(dashboard.scholarship_billed_to_original_event?(recipient.id)).to be(false)
+    end
+
+    it "takes the award off the original training but leaves the payment there" do
+      dashboard = described_class.new(march)
+
+      expect(dashboard.scholarship_total_cents).to eq(0)
+      expect(dashboard.received_cents).to eq(2_000)
     end
   end
 

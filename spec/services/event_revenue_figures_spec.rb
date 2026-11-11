@@ -213,9 +213,31 @@ RSpec.describe EventRevenueFigures do
     end
 
     # 6 batch component queries (incl. which CE still counts) + 2 for what's owed
-    # (RegistrationBalances) + 2 constant queries that classify AWBW-donated grants
+    # (RegistrationBalances) + 1 transfer lookup (ScholarshipDollarRegistrations) + 2 constant queries that classify AWBW-donated grants
     # as subsidy (the AWBW org lookup and its grant ids), regardless of how many
     # events are loaded.
-    expect(queries).to eq(10)
+    expect(queries).to eq(11)
+  end
+
+  describe "a transfer to an earlier training" do
+    let(:march) { create(:event, start_date: Time.zone.local(2027, 3, 18, 9), end_date: Time.zone.local(2027, 3, 19, 17), cost_cents: 50_000) }
+    let(:november) { create(:event, start_date: Time.zone.local(2026, 11, 5, 9), end_date: Time.zone.local(2026, 11, 6, 17)) }
+    let(:recipient) { create(:person) }
+    let(:origin) { create(:event_registration, event: march, registrant: recipient, status: "transferred_out") }
+
+    before do
+      create(:event_registration, event: november, registrant: recipient, status: "attended", transferred_from_registration: origin)
+      create(:allocation, source: create(:scholarship, recipient: recipient, amount_cents: 48_000, grant: nil), allocatable: origin, amount: 48_000)
+      create(:allocation, source: create(:payment, amount_cents: 2_000, amount_cents_remaining: 2_000), allocatable: origin, amount: 2_000)
+    end
+
+    it "counts the award at the earlier training and the payment where it was made" do
+      figures = described_class.new([ march, november ])
+
+      expect(figures.for(november).unfunded_scholarship_cents).to eq(48_000)
+      expect(figures.breakdown_for(november).unfunded_scholarships.map(&:person)).to eq([ recipient ])
+      expect(figures.for(march).unfunded_scholarship_cents).to eq(0)
+      expect(figures.for(march).registration_payments_cents).to eq(2_000)
+    end
   end
 end

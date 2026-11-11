@@ -135,11 +135,12 @@ RSpec.describe EventScholarshipFigures do
       events.each { |e| loader.for(e) }
     end
 
-    # 3 batch component queries + 1 recipient lookup shared by every event and both
-    # funded/unfunded splits + 2 constant queries classifying AWBW-donated grants as
-    # subsidy (the org lookup + its grant ids). All independent of event count —
-    # that's the point, since this replaced one EventDashboard per event.
-    expect(queries).to eq(6)
+    # 3 batch component queries + 1 transfer lookup (ScholarshipDollarRegistrations)
+    # + 1 recipient lookup shared by every event and both funded/unfunded splits + 2
+    # constant queries classifying AWBW-donated grants as subsidy (the org lookup +
+    # its grant ids). All independent of event count — that's the point, since this
+    # replaced one EventDashboard per event.
+    expect(queries).to eq(7)
   end
 
   # The report rows expand to name the people behind each split, so the loader has
@@ -167,6 +168,27 @@ RSpec.describe EventScholarshipFigures do
 
       expect(empty.funded_recipients).to be_empty
       expect(empty.unfunded_cents_by_recipient).to be_empty
+    end
+  end
+
+  describe "a transfer to an earlier training" do
+    let(:march) { create(:event, start_date: Time.zone.local(2027, 3, 18, 9), end_date: Time.zone.local(2027, 3, 19, 17), cost_cents: 50_000) }
+    let(:november) { create(:event, start_date: Time.zone.local(2026, 11, 5, 9), end_date: Time.zone.local(2026, 11, 6, 17)) }
+    let(:recipient) { create(:person) }
+    let(:origin) { create(:event_registration, event: march, registrant: recipient, status: "transferred_out") }
+
+    before do
+      create(:event_registration, event: november, registrant: recipient, status: "attended", transferred_from_registration: origin)
+      create(:allocation, source: create(:scholarship, recipient: recipient, amount_cents: 50_000, grant: nil), allocatable: origin, amount: 50_000)
+    end
+
+    it "counts the award once, at the earlier training, matching each dashboard" do
+      figures = described_class.new([ march, november ])
+
+      expect(figures.for(november).unfunded_cents).to eq(50_000)
+      expect(figures.for(november).unfunded_cents_by_recipient).to eq(recipient.id => 50_000)
+      expect(figures.for(march).unfunded_cents).to eq(0)
+      expect(figures.for(november).scholarship_cents).to eq(EventDashboard.new(november).scholarship_total_cents)
     end
   end
 end
