@@ -804,15 +804,25 @@ class EventRegistration < ApplicationRecord
     live.any? && live.all?(&:agreement_signed?)
   end
 
+  # Awards go back and forth (a decline, then a fresh offer — or the reverse), so
+  # the newest award speaks for the registration. Reads preloaded scholarships.
+  def latest_scholarship
+    effective_scholarships.max_by { |scholarship| [ scholarship.created_at, scholarship.id ] }
+  end
+
+  # Declined when the newest award is — an older decline is superseded by a newer
+  # offer, and a newer decline wins over an older live award.
   def scholarship_declined?
-    effective_scholarships.any?(&:agreement_declined?)
+    latest_scholarship&.agreement_declined? || false
   end
 
   # Display-only: a scholarship is only *shown* as awarded once the recipient has
   # signed the agreement. The record and its allocation exist beforehand (the data
   # is unchanged) — the award is just presented as pending acceptance until signed.
+  # Declined awards are skipped, so a partial decline doesn't hide a signed award.
   def scholarship_awarded?
-    scholarship_recipient? && effective_scholarships.all?(&:agreement_signed?)
+    live = effective_scholarships.reject(&:agreement_declined?)
+    live.any? && live.all?(&:agreement_signed?)
   end
 
   def attended?

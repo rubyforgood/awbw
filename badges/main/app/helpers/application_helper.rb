@@ -688,10 +688,11 @@ module ApplicationHelper
     if admin
       options << [ "Published", :published, true ]
       options << [ "Unpublished", :unpublished, true ]
+      options << [ "Funder-only", :funder_only, true ] if cols.include?("funder_only")
+      options << [ "Hidden from search", :hidden_from_search, true ] if cols.include?("hidden_from_search")
       options << [ "Featured", :featured, false ]             if cols.include?("featured")
       options << [ "Publicly Visible", :publicly_visible, false ] if cols.include?("publicly_visible")
       options << [ "Publicly Featured", :publicly_featured, false ] if cols.include?("publicly_featured")
-      options << [ "Funder-only", :funder_only, true ] if cols.include?("funder_only")
     elsif authenticated
       options << [ "Not Featured", :not_featured, false ]     if cols.include?("featured")
       options << [ "Featured", :featured, false ]             if cols.include?("featured")
