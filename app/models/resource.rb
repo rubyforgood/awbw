@@ -31,14 +31,20 @@ class Resource < ApplicationRecord
     PUBLISHED_KINDS.include?(kind)
   end
 
-  # Index sort options: label => param. Blank (Featured) keeps the default order.
+  # Index sort options: label => param.
   SORT_OPTIONS = {
-    "Featured" => "",
+    "Featured" => "featured",
     "Created" => "created",
     "Modified" => "modified",
     "Title" => "title",
     "Kind" => "kind"
   }.freeze
+
+  # The sort used when none is chosen: Title once the index is filtered to kinds
+  # (a featured-first mix reads as random there), otherwise Featured.
+  def self.default_sort(kinds)
+    Array(kinds).compact_blank.any? ? "title" : "featured"
+  end
 
   # Each role is a built-in job that one library Resource fills (certificate
   # artwork, the W-9, the training handouts), connected on the admin resource-roles

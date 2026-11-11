@@ -4,13 +4,16 @@
     <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Resources (<%= @count_display %>)</h3>
     <%= render "shared/copy_url" %>
 
-    <%# Radios inside the search form, so a change auto-submits via the collection controller. %>
+    <%# Radios inside the search form, so a change auto-submits via the collection
+        controller. The default option submits blank, so the server re-derives the
+        default (Title once kinds are picked) until someone picks a sort. %>
     <div class="ml-auto flex items-center gap-2 text-sm">
       <span class="text-gray-600">Sort by</span>
       <div class="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 shadow-sm">
         <% Resource::SORT_OPTIONS.each do |label, value| %>
           <label class="has-checked:bg-brand-purple-700 cursor-pointer rounded-md px-3 py-1 font-medium text-gray-600 hover:bg-gray-100 has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-indigo-300">
-            <%= radio_button_tag :sort, value, params[:sort].to_s == value, class: "sr-only" %>
+            <%= radio_button_tag :sort, (value == @default_sort ? "" : value), value == @sort,
+                                 id: "sort_#{value}", class: "sr-only" %>
             <%= label %>
           </label>
         <% end %>
