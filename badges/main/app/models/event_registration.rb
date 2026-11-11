@@ -1,9 +1,12 @@
 class EventRegistration < ApplicationRecord
+  include FilemakerCoded
   include RemoteSearchable
   include Registerable
   include Certifiable
   include Communicable
   include PersonNameSearchable
+
+  filemaker_archived_in FmParticipant
 
   # Sentinel for the roster's Payment method filter that matches buddy-system
   # registrations (someone_else_will_pay), which isn't an expected_payment_method
