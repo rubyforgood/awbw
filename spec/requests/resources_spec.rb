@@ -63,6 +63,52 @@ RSpec.describe "/resources", type: :request do
     end
   end
 
+  describe "GET /index all kinds" do
+    let!(:handout) { create(:resource, :published, kind: "Handout", title: "Library Handout") }
+    let!(:story) { create(:resource, :published, kind: "Story", title: "Unlisted Story") }
+
+    it "hides kinds outside the library by default" do
+      get resources_url, headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).to include("Library Handout")
+      expect(response.body).not_to include("Unlisted Story")
+    end
+
+    it "shows every kind, tinted admin-only, when an admin asks for all kinds" do
+      get resources_url(all_kinds: "1"), headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).to include("Library Handout", "Unlisted Story")
+      expect(response.body).to include("admin-only border-blue-200 bg-blue-100")
+    end
+
+    it "ignores all kinds for a non-admin" do
+      sign_in create(:user)
+      get resources_url(all_kinds: "1"), headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).not_to include("Unlisted Story")
+    end
+
+    it "offers the All kinds chip only to admins" do
+      get resources_url
+      expect(response.body).to include('id="all_kinds"')
+
+      sign_in create(:user)
+      get resources_url
+      expect(response.body).not_to include('id="all_kinds"')
+    end
+  end
+
+  describe "GET /index sort" do
+    it "orders by the chosen sort" do
+      create(:resource, :published, title: "Bravo")
+      create(:resource, :published, title: "Alpha")
+      get resources_url(sort: "title"), headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body.index("Alpha")).to be < response.body.index("Bravo")
+      expect(response.body).to match(/id="sort_title"[^>]*checked/)
+    end
+  end
+
   describe "GET /show" do
     context "when resource has NO external link" do
       let(:resource) do

@@ -18,10 +18,13 @@ class ResourcesController < ApplicationController
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 18
-      base_scope = authorized_scope(Resource.includes(:bookmarks, primary_asset: :file_attachment,
-                                                      downloadable_asset: :file_attachment)
-                                            .where(kind: Resource::PUBLISHED_KINDS)) # TODO - #FIXME brittle
-      filtered = base_scope.search_by_params(params).by_featured_first.order(created_at: :desc)
+      # Admins can widen the index past the library kinds with the "All kinds" chip.
+      all_kinds = params[:all_kinds] == "1" && allowed_to?(:manage?, Resource)
+      resources = Resource.includes(:bookmarks, primary_asset: :file_attachment,
+                                    downloadable_asset: :file_attachment)
+      resources = resources.where(kind: Resource::PUBLISHED_KINDS) unless all_kinds
+      base_scope = authorized_scope(resources)
+      filtered = base_scope.search_by_params(params).sorted_by(params[:sort])
 
       @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
