@@ -54,8 +54,8 @@
         own, so it already carries that panel's control. %>
     <% toggle_bar = capture do %>
       <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-        <%# The list's own controls (scholarship status, group by funder, expand /
-            collapse all) hide with the recipient cards. %>
+        <%# The list's own controls (scholarship status, group by funder, and
+            expand / collapse all at the far right) hide with the recipient cards. %>
         <div data-panel-toggle-target="panel" data-panel-toggle-name="recipients">
           <div class="flex flex-wrap items-center gap-4">
             <%# Show / hide each recipient's awarded amount + tasks-completed status %>
@@ -88,12 +88,6 @@
                 <i class="fa-solid fa-layer-group"></i> Group by funder
               <% end %>
             <% end %>
-            <%# Expand / collapse all %>
-            <button type="button" data-action="expandable-cards#toggleAll"
-                    class="inline-flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> hover:<%= DomainTheme.text_class_for(:scholarships) %>">
-              <i class="fa-solid fa-chevron-down rotate-180 transition-transform" data-expandable-cards-target="icon"></i>
-              <span data-expandable-cards-target="label">Collapse all</span>
-            </button>
           </div>
         </div>
         <%= render "events/charts_toggle_bar", margin: "", buttons: [
@@ -101,6 +95,14 @@
               ({ name: "shoutouts", icon: "fa-bullhorn", shown_label: "Hide shout outs", hidden_label: "Show shout outs", expanded: true } if @dashboard.shoutouts.any?),
               { name: "charts", icon: "fa-chart-column", shown_label: "Hide breakdowns", hidden_label: "Show breakdowns", expanded: charts_open }
             ].compact %>
+        <div data-panel-toggle-target="panel" data-panel-toggle-name="recipients">
+          <%# Expand / collapse all %>
+          <button type="button" data-action="expandable-cards#toggleAll"
+                  class="inline-flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> hover:<%= DomainTheme.text_class_for(:scholarships) %>">
+            <i class="fa-solid fa-chevron-down rotate-180 transition-transform" data-expandable-cards-target="icon"></i>
+            <span data-expandable-cards-target="label">Collapse all</span>
+          </button>
+        </div>
       </div>
     <% end %>
     <div data-controller="expandable-cards scholarship-status-toggle"
