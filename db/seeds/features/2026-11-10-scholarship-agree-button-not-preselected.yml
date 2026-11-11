@@ -1,0 +1,8 @@
+name: "Scholarship Agree button no longer looks already selected"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-10
+action_path: "/scholarships"
+summary: >-
+  On a recipient's scholarship page, Agree is now an outline button like Request additional
+  support and Decline, so it no longer reads as already chosen. It turns green on hover.

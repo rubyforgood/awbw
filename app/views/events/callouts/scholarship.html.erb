@@ -82,7 +82,7 @@
           <div class="mt-3" data-controller="panel-toggle">
             <div class="flex flex-wrap items-center gap-3">
               <%= form_with url: registration_scholarship_agreement_path(@event_registration.slug), method: :post do %>
-                <button type="submit" name="agreement" value="yes" class="<%= button_classes(:success) %>">
+                <button type="submit" name="agreement" value="yes" class="<%= button_classes(nil, extra: "border border-secondary text-secondary hover:border-success hover:text-success") %>">
                   <i class="fa-solid fa-check"></i> Agree
                 </button>
               <% end %>
