@@ -40,6 +40,20 @@ puts "Creating Resources…"
   )
 end
 
+# A legacy kind=Resource record. The form only offers the "Resource" kind to a
+# record that already has it, so this gives dev something to see that case on.
+puts "Creating a legacy kind=Resource record…"
+legacy_body = "A legacy resource still filed under the old catch-all Resource kind."
+Resource.where(title: "Legacy Resource-Kind Example").first_or_create!(
+  body: legacy_body,
+  rhino_body: legacy_body,
+  kind: "Resource",
+  inactive: false,
+  legacy: true,
+  published: true,
+  created_by_id: User.all.sample&.id
+)
+
 # Hidden resources: publicly accessible by direct link, but excluded from
 # non-admin portal searches/listings (hidden_from_search). Each ships with a
 # downloadable PDF stored under db/seeds/dev/files.
