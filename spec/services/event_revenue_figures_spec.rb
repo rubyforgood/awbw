@@ -239,5 +239,22 @@ RSpec.describe EventRevenueFigures do
       expect(figures.for(march).unfunded_scholarship_cents).to eq(0)
       expect(figures.for(march).registration_payments_cents).to eq(2_000)
     end
+
+    it "adds up across both trainings to the price of the training first registered for" do
+      other = create(:person)
+      origin = create(:event_registration, event: march, registrant: other, status: "transferred_out")
+      create(:event_registration, event: november, registrant: other, status: "attended", transferred_from_registration: origin)
+      create(:allocation, source: create(:scholarship, recipient: other, amount_cents: 30_000, grant: nil), allocatable: origin, amount: 30_000)
+      create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000), allocatable: origin, amount: 5_000)
+
+      contributions = [ march, november ].sum do |event|
+        breakdown = described_class.new([ march, november ]).breakdown_for(event)
+        [ breakdown.registration_payments, breakdown.unfunded_scholarships, breakdown.registration_outstanding ]
+          .sum { |contributors| contributors.select { |c| c.person == other }.sum(&:cents) }
+      end
+
+      expect(described_class.new([ november ]).breakdown_for(november).registration_outstanding.find { |c| c.person == other }.cents).to eq(15_000)
+      expect(contributions).to eq(march.cost_cents)
+    end
   end
 end
