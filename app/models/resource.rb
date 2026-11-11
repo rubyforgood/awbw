@@ -15,6 +15,14 @@ class Resource < ApplicationRecord
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
   KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
 
+  # Kinds offered in the form's dropdown. "Resource" is a legacy catch-all, so it
+  # only appears for a record that already has it; published kinds stay locked
+  # to the published set.
+  def kind_options
+    return PUBLISHED_KINDS if PUBLISHED_KINDS.include?(kind)
+    kind == "Resource" ? KINDS : KINDS - [ "Resource" ]
+  end
+
   # Each role is a built-in job that one library Resource fills (certificate
   # artwork, the W-9, the training handouts), connected on the admin resource-roles
   # page. The file lives on a normal Resource, never committed to this public repo.
