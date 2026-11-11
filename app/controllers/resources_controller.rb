@@ -15,18 +15,21 @@ class ResourcesController < ApplicationController
     authorize!
     @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     @organization = Organization.find_by(id: params[:organization_id]) if params[:organization_id].present?
-    @default_sort = Resource.default_sort(params[:kinds])
+    # The admin "Legacy" chip works like the other kind chips, standing for every
+    # legacy kind at once; it also opens the base scope so they can match.
+    legacy = params[:legacy] == "1" && allowed_to?(:manage?, Resource)
+    kinds = Array(params[:kinds]).compact_blank
+    kinds += Resource::LEGACY_KINDS if legacy
+    @default_sort = Resource.default_sort(kinds)
     @sort = params[:sort].presence_in(Resource::SORT_OPTIONS.values) || @default_sort
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 18
-      # Admins can widen the index past the library kinds with the "All kinds" chip.
-      all_kinds = params[:all_kinds] == "1" && allowed_to?(:manage?, Resource)
       resources = Resource.includes(:bookmarks, primary_asset: :file_attachment,
                                     downloadable_asset: :file_attachment)
-      resources = resources.where(kind: Resource::PUBLISHED_KINDS) unless all_kinds
+      resources = resources.where(kind: Resource::PUBLISHED_KINDS) unless legacy
       base_scope = authorized_scope(resources)
-      filtered = base_scope.search_by_params(params).sorted_by(@sort)
+      filtered = base_scope.search_by_params(params.merge(kinds: kinds)).sorted_by(@sort)
 
       @resources = filtered.paginate(page: params[:page], per_page: per_page)
 
