@@ -70,6 +70,24 @@ class EventDashboard
     transferred_in_registrant_ids.size
   end
 
+  # The event each transferred-in registrant came from, keyed by Person id — the
+  # recipient card's "Transferred in from" marker.
+  def transferred_in_source_event_by_registrant
+    @transferred_in_source_event_by_registrant ||= active_registrations.transferred_in
+      .includes(transferred_from_registration: :event)
+      .to_h { |registration| [ registration.registrant_id, registration.transferred_from_registration.event ] }
+  end
+
+  # Scholarship applicants and recipients who transferred out, name-sorted — listed
+  # on the recipients page but counted at the event they moved to.
+  def transferred_out_scholarship_registrations
+    @transferred_out_scholarship_registrations ||= event.event_registrations
+      .where(status: "transferred_out")
+      .includes(:registrant, :scholarships, transferred_to_registration: :event)
+      .select { |registration| registration.scholarship_requested? || registration.scholarships.any? }
+      .sort_by { |registration| registration.registrant.name }
+  end
+
   def transferred_in_registrants
     people_sorted(transferred_in_registrant_ids)
   end

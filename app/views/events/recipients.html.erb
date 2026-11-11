@@ -190,6 +190,32 @@
     </div>
   <% end %>
 
+  <% transferred_out = @dashboard.transferred_out_scholarship_registrations %>
+  <% if transferred_out.any? %>
+    <details id="transferred-out" class="mt-6 scroll-mt-24 overflow-hidden rounded-xl border border-purple-200 bg-white shadow-sm">
+      <summary class="flex cursor-pointer items-center gap-2 bg-purple-50 px-4 py-3 text-sm font-semibold text-purple-800">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Transferred out (<%= transferred_out.size %>)
+        <span class="font-normal text-purple-600">— not counted here; they count at the training they moved to</span>
+      </summary>
+      <ul class="divide-y divide-gray-100">
+        <% transferred_out.each do |registration| %>
+          <% destination = registration.transferred_to_registration&.event %>
+          <li class="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
+            <%= link_to person_name(registration.registrant), edit_event_registration_path(registration),
+                        class: "font-medium text-gray-900 hover:underline" %>
+            <% if destination %>
+              <%= link_to recipients_event_path(destination), class: "inline-flex items-center gap-1.5 text-gray-600 hover:text-gray-800 hover:underline" do %>
+                <i class="fa-solid fa-arrow-right text-gray-400"></i>
+                <%= destination.title %>
+              <% end %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+
   <%# ---- Shout outs: registrants who opted in, with their shout-out text ---- %>
   <% if @dashboard.shoutouts.any? %>
     <div id="shout-outs" class="mt-10 scroll-mt-24 break-inside-avoid">

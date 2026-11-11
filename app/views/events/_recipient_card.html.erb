@@ -78,6 +78,14 @@
               <% end %>
             <% end %>
           </div>
+          <% if (source_event = dashboard.transferred_in_source_event_by_registrant[person.id]) %>
+            <%= link_to recipients_event_path(source_event, anchor: "transferred-out"),
+                        data: { turbo_frame: "_top" },
+                        class: "my-1 inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700 hover:bg-teal-100" do %>
+              <i class="fa-solid fa-right-to-bracket"></i>
+              Transferred in from <%= source_event.title %>
+            <% end %>
+          <% end %>
           <% recipient_affiliations.each do |affiliation| %>
             <div class="text-sm text-gray-600 leading-tight">
               <% if affiliation.organization %>

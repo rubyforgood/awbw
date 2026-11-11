@@ -3836,10 +3836,11 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to match(/line-through[^>]*>\s*<i[^>]*sack-dollar[^>]*><\/i>\s*\$10\b/)
       end
 
-      it "recognizes a transferred-in registrant as a scholarship recipient (award on the source)" do
+      it "recognizes a transferred-in registrant as a scholarship recipient, marked with where they came from" do
         # Same person transfers: source award + incoming reg both belong to them.
         person = create(:person, first_name: "Transo", last_name: "Ferredin")
-        source = create(:event_registration, event: create(:event, cost_cents: 5_000), registrant: person, status: "transferred_out")
+        original_event = create(:event, title: "Spring origin training", cost_cents: 5_000)
+        source = create(:event_registration, event: original_event, registrant: person, status: "transferred_out")
         create(:allocation, source: create(:scholarship, recipient: person, amount_cents: 5_000),
                allocatable: source, amount: 5_000)
         create(:event_registration, event: event, registrant: person, status: "registered",
@@ -3848,7 +3849,26 @@ RSpec.describe "Events", type: :request do
         get recipients_event_path(event)
 
         expect(response.body).to include("Transo Ferredin")
-        expect(response.body).not_to include("Billed to original event")
+        expect(response.body).to include("Transferred in from Spring origin training")
+        expect(response.body).to include(recipients_event_path(original_event, anchor: "transferred-out"))
+      end
+
+      it "lists a recipient who transferred out in a collapsed section, outside the recipient count" do
+        person = create(:person, first_name: "Outbound", last_name: "Awardee")
+        destination_event = create(:event, title: "Autumn destination training")
+        source = create(:event_registration, event: event, registrant: person, status: "transferred_out")
+        create(:allocation, source: create(:scholarship, recipient: person, amount_cents: 500),
+               allocatable: source, amount: 500)
+        create(:event_registration, event: destination_event, registrant: person, status: "registered",
+               transferred_from_registration: source)
+
+        get recipients_event_path(event)
+
+        section = Nokogiri::HTML(response.body).at_css("details#transferred-out")
+        expect(section).to be_present
+        expect(section.text).to include("Outbound Awardee", "Autumn destination training")
+        expect(section.at_css("a[href='#{recipients_event_path(destination_event)}']")).to be_present
+        expect(EventDashboard.new(event).scholarship_recipient_count).to eq(0)
       end
 
       it "shows a recipient city breakdown, grouped by where they work, in the lazy charts frame" do
