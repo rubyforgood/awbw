@@ -851,10 +851,11 @@ RSpec.describe "EventRegistrations", type: :request do
         # Designated a scholarship recipient, linking to the actual award record.
         expect(response.body).to include("Scholarship recipient")
         expect(response.body).to include(edit_scholarship_path(scholarship))
-        # The balance is payable here, so its payment card shows; the award stays on the source.
+        # The balance is payable here, so its payment card shows, and so does the
+        # scholarship card, to award more on top of the original.
         expect(response.body).to include("Registration payments and allocations")
         expect(response.body).to include("name=\"event_registration[intends_to_pay]\"")
-        expect(response.body).not_to include("name=\"event_registration[scholarship_requested]\"")
+        expect(response.body).to include("name=\"event_registration[scholarship_requested]\"")
       end
 
       it "saves intends to pay on a transferred-in reg" do

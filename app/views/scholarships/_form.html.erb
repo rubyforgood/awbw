@@ -30,7 +30,7 @@
         <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
             <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Event cost</dt>
-            <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@allocatable.event.cost_cents) %></dd>
+            <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@allocatable.cost_cents) %></dd>
           </div>
           <%# The amount cell reads neutral grey until "Tasks completed" is on; amber
               while that toggle is changed but unsaved (allocation pending); fuchsia
