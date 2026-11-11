@@ -5,4 +5,4 @@ released_on: 2026-11-10
 action_path: "/scholarships"
 summary: >-
   On a recipient's scholarship page, Agree is now an outline button like Request additional
-  support and Decline, so it no longer reads as already chosen. It turns green on hover.
+  support and Decline, so it no longer reads as already chosen. On hover each button takes its own color.

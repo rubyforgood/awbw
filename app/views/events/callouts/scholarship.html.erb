@@ -87,13 +87,13 @@
                 </button>
               <% end %>
 
-              <button type="button" class="<%= button_classes(:secondary_outline) %>" aria-expanded="false"
+              <button type="button" class="<%= button_classes(nil, extra: "border border-secondary text-secondary hover:border-sky-600 hover:text-sky-600") %>" aria-expanded="false"
                       data-panel-toggle-target="button" data-panel-toggle-name="support" data-action="panel-toggle#toggle">
                 <i class="fa-solid fa-hand-holding-dollar"></i> Request additional support
                 <i class="fa-solid fa-chevron-down ml-1 text-xs text-gray-400 transition-transform in-aria-expanded:rotate-180"></i>
               </button>
 
-              <button type="button" class="<%= button_classes(:secondary_outline) %>" aria-expanded="false"
+              <button type="button" class="<%= button_classes(nil, extra: "border border-secondary text-secondary hover:border-red-600 hover:text-red-600") %>" aria-expanded="false"
                       data-panel-toggle-target="button" data-panel-toggle-name="decline" data-action="panel-toggle#toggle">
                 <i class="fa-solid fa-xmark"></i> Decline
                 <i class="fa-solid fa-chevron-down ml-1 text-xs text-gray-400 transition-transform in-aria-expanded:rotate-180"></i>
