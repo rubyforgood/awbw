@@ -25,6 +25,21 @@ class Resource < ApplicationRecord
     (PUBLISHED_KINDS + [ kind.presence ]).compact.uniq
   end
 
+  # A kind the resource library index searches by default. Admins can widen the
+  # index to every kind; the other kinds then render with admin-only styling.
+  def library_kind?
+    PUBLISHED_KINDS.include?(kind)
+  end
+
+  # Index sort options: label => param. Blank (Featured) keeps the default order.
+  SORT_OPTIONS = {
+    "Featured" => "",
+    "Created" => "created",
+    "Modified" => "modified",
+    "Title" => "title",
+    "Kind" => "kind"
+  }.freeze
+
   # Each role is a built-in job that one library Resource fills (certificate
   # artwork, the W-9, the training handouts), connected on the admin resource-roles
   # page. The file lives on a normal Resource, never committed to this public repo.
@@ -195,6 +210,15 @@ class Resource < ApplicationRecord
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
   scope :by_featured_first, -> { order(featured: :desc, created_at: :desc) }
+  scope :sorted_by, ->(sort) {
+    case sort.to_s
+    when "created" then order(created_at: :desc)
+    when "modified" then order(updated_at: :desc)
+    when "title" then order(:title)
+    when "kind" then order(:kind, :title)
+    else by_featured_first
+    end
+  }
   scope :kinds, ->(kinds) {
     kinds = Array(kinds).flatten.map(&:to_s)
     where(kind: kinds) }

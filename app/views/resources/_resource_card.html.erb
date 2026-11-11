@@ -3,9 +3,11 @@
   <div class="absolute top-3 right-3 z-30">
     <%= render "bookmarks/editable_bookmark_icon", resource: resource.object %>
   </div>
+  <%# Kinds outside the library (shown to admins via "All kinds") get admin-only blue. %>
+  <% card_tone = resource.library_kind? ? "border-gray-200 bg-white" : "admin-only border-blue-200 bg-blue-100" %>
   <!-- CARD -->
   <div
-    class="flex flex-wrap overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md"
+    class="flex flex-wrap overflow-hidden rounded-xl border <%= card_tone %> shadow-sm transition-all hover:shadow-md"
   >
     <!-- LEFT SIDE -->
     <div

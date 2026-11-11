@@ -20,5 +20,18 @@
         <%= name.titleize.pluralize %>
       </label>
     <% end %>
+
+    <% if allowed_to?(:manage?, Resource) %>
+      <%# Outside a <label> wrapper on purpose: the collection controller's class
+          toggle skips it, so peer-checked drives the admin-blue selected state. %>
+      <span class="admin-only">
+        <%= check_box_tag "all_kinds", "1", params[:all_kinds] == "1", id: "all_kinds", class: "peer sr-only" %>
+        <label for="all_kinds"
+               title="Also show Story, Theme, Scholarship, and other kinds the library hides"
+               class="inline-flex cursor-pointer items-center rounded-lg border border-blue-300 bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800 shadow-sm transition-all duration-150 peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-blue-300 hover:bg-blue-200 peer-checked:hover:bg-blue-700">
+          All kinds
+        </label>
+      </span>
+    <% end %>
   </div>
 </div>
