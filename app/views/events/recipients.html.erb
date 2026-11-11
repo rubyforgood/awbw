@@ -53,136 +53,134 @@
         at the right of the Recipients heading's row rather than on a row of its
         own, so it already carries that panel's control. %>
     <% toggle_bar = capture do %>
-      <%= render "events/charts_toggle_bar", margin: "", buttons: [
-            { name: "recipients", icon: "fa-user-graduate", shown_label: "Hide recipients", hidden_label: "Show recipients", expanded: true },
-            ({ name: "shoutouts", icon: "fa-bullhorn", shown_label: "Hide shout outs", hidden_label: "Show shout outs", expanded: true } if @dashboard.shoutouts.any?),
-            { name: "charts", icon: "fa-chart-column", shown_label: "Hide breakdowns", hidden_label: "Show breakdowns", expanded: charts_open }
-          ].compact %>
-    <% end %>
-    <%= render "events/section_heading", title: "Recipients", icon: "fa-user-graduate",
-          theme: :scholarships, toggle: false, actions: toggle_bar %>
-    <%# A breakdown row narrows the cards in place; the chip says what's applied so
-        the shorter list doesn't read as missing data, and clears it. Clearing drops
-        only its own param, so the page's other state (funder grouping, the open
-        charts panel) survives — same rule as the roster's chip. %>
-    <% drill_ins = AttendeesActiveFilters.new(params, chip_params: %w[ registrant_ids ]).chips %>
-    <% if drill_ins.any? %>
-      <div class="mb-4 flex flex-wrap items-center gap-2 print:hidden">
-        <span class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Applied</span>
-        <% drill_ins.each do |filter| %>
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-200 bg-fuchsia-50 px-3 py-1 text-xs font-medium text-fuchsia-700">
-            <%= filter[:label] %>
-            <%= link_to recipients_event_path(@event, request.query_parameters.except(filter[:param])),
-                  class: "text-fuchsia-400 hover:text-fuchsia-700",
-                  aria: { label: "Remove #{filter[:label]} filter" } do %>
-              <i class="fa-solid fa-xmark"></i>
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <%# The list's own controls (scholarship status, group by funder, expand /
+            collapse all) hide with the recipient cards. %>
+        <div data-panel-toggle-target="panel" data-panel-toggle-name="recipients">
+          <div class="flex flex-wrap items-center gap-4">
+            <%# Show / hide each recipient's awarded amount + tasks-completed status %>
+            <button type="button" role="switch" aria-checked="true"
+                    data-action="scholarship-status-toggle#toggle"
+                    data-scholarship-status-toggle-target="switch"
+                    class="group inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800">
+              <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-fuchsia-600 transition-colors"
+                    data-scholarship-status-toggle-target="track">
+                <span class="inline-block h-4 w-4 translate-x-[1.125rem] transform rounded-full bg-white shadow transition-transform"
+                      data-scholarship-status-toggle-target="knob"></span>
+              </span>
+              <span>Show scholarship status</span>
+            </button>
+            <%# Group the roster by funder (the scholarship's grant funder), with a
+                header per funder — or return to the flat, name-ordered list. Both
+                carry the rest of the query through, so grouping composes with an
+                active breakdown drill-in (the funder buckets narrow to it below)
+                instead of silently clearing it. %>
+            <% if params[:group_by] == "funder" %>
+              <%= link_to recipients_event_path(@event, request.query_parameters.except("group_by")),
+                          class: "inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800" do %>
+                <i class="fa-solid fa-layer-group"></i> Ungroup
+              <% end %>
+            <% else %>
+              <%# String key, so it replaces any group_by already in the query rather
+                  than riding alongside it as a second value. %>
+              <%= link_to recipients_event_path(@event, request.query_parameters.merge("group_by" => "funder")),
+                          class: "inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800" do %>
+                <i class="fa-solid fa-layer-group"></i> Group by funder
+              <% end %>
             <% end %>
-          </span>
-        <% end %>
-        <span class="text-xs text-gray-500 tabular-nums">
-          Showing <%= @recipient_applicants.size %> of <%= @dashboard.scholarship_applicants.size %>
-        </span>
+            <%# Expand / collapse all %>
+            <button type="button" data-action="expandable-cards#toggleAll"
+                    class="inline-flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> hover:<%= DomainTheme.text_class_for(:scholarships) %>">
+              <i class="fa-solid fa-chevron-down rotate-180 transition-transform" data-expandable-cards-target="icon"></i>
+              <span data-expandable-cards-target="label">Collapse all</span>
+            </button>
+          </div>
+        </div>
+        <%= render "events/charts_toggle_bar", margin: "", buttons: [
+              { name: "recipients", icon: "fa-user-graduate", shown_label: "Hide recipients", hidden_label: "Show recipients", expanded: true },
+              ({ name: "shoutouts", icon: "fa-bullhorn", shown_label: "Hide shout outs", hidden_label: "Show shout outs", expanded: true } if @dashboard.shoutouts.any?),
+              { name: "charts", icon: "fa-chart-column", shown_label: "Hide breakdowns", hidden_label: "Show breakdowns", expanded: charts_open }
+            ].compact %>
       </div>
     <% end %>
     <div data-controller="expandable-cards scholarship-status-toggle"
-         data-scholarship-status-toggle-shown-value="true"
-         data-panel-toggle-target="panel" data-panel-toggle-name="recipients">
-      <%# Title shares a row with the controls (show/hide scholarship status,
-          group by funder, expand/collapse all). %>
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
-        <h2 class="flex items-center gap-2 text-xl font-bold <%= DomainTheme.text_class_for(:scholarships) %>">
-          <i class="fa-solid fa-user-graduate"></i>
-          Recipients
-        </h2>
-        <div class="flex flex-wrap items-center gap-4 print:hidden">
-          <%# Show / hide each recipient's awarded amount + tasks-completed status %>
-          <button type="button" role="switch" aria-checked="true"
-                  data-action="scholarship-status-toggle#toggle"
-                  data-scholarship-status-toggle-target="switch"
-                  class="group inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800">
-            <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-fuchsia-600 transition-colors"
-                  data-scholarship-status-toggle-target="track">
-              <span class="inline-block h-4 w-4 translate-x-[1.125rem] transform rounded-full bg-white shadow transition-transform"
-                    data-scholarship-status-toggle-target="knob"></span>
+         data-scholarship-status-toggle-shown-value="true">
+      <%= render "events/section_heading", title: "Recipients", icon: "fa-user-graduate",
+            theme: :scholarships, toggle: false, actions: toggle_bar %>
+      <%# A breakdown row narrows the cards in place; the chip says what's applied so
+          the shorter list doesn't read as missing data, and clears it. Clearing drops
+          only its own param, so the page's other state (funder grouping, the open
+          charts panel) survives — same rule as the roster's chip. %>
+      <% drill_ins = AttendeesActiveFilters.new(params, chip_params: %w[ registrant_ids ]).chips %>
+      <% if drill_ins.any? %>
+        <div class="mb-4 flex flex-wrap items-center gap-2 print:hidden">
+          <span class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Applied</span>
+          <% drill_ins.each do |filter| %>
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-200 bg-fuchsia-50 px-3 py-1 text-xs font-medium text-fuchsia-700">
+              <%= filter[:label] %>
+              <%= link_to recipients_event_path(@event, request.query_parameters.except(filter[:param])),
+                    class: "text-fuchsia-400 hover:text-fuchsia-700",
+                    aria: { label: "Remove #{filter[:label]} filter" } do %>
+                <i class="fa-solid fa-xmark"></i>
+              <% end %>
             </span>
-            <span>Show scholarship status</span>
-          </button>
-          <%# Group the roster by funder (the scholarship's grant funder), with a
-              header per funder — or return to the flat, name-ordered list. Both
-              carry the rest of the query through, so grouping composes with an
-              active breakdown drill-in (the funder buckets narrow to it below)
-              instead of silently clearing it. %>
-          <% if params[:group_by] == "funder" %>
-            <%= link_to recipients_event_path(@event, request.query_parameters.except("group_by")),
-                        class: "inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800" do %>
-              <i class="fa-solid fa-layer-group"></i> Ungroup
-            <% end %>
-          <% else %>
-            <%# String key, so it replaces any group_by already in the query rather
-                than riding alongside it as a second value. %>
-            <%= link_to recipients_event_path(@event, request.query_parameters.merge("group_by" => "funder")),
-                        class: "inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800" do %>
-              <i class="fa-solid fa-layer-group"></i> Group by funder
-            <% end %>
           <% end %>
-          <%# Expand / collapse all %>
-          <button type="button" data-action="expandable-cards#toggleAll"
-                  class="inline-flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> hover:<%= DomainTheme.text_class_for(:scholarships) %>">
-            <i class="fa-solid fa-chevron-down rotate-180 transition-transform" data-expandable-cards-target="icon"></i>
-            <span data-expandable-cards-target="label">Collapse all</span>
-          </button>
-        </div>
-      </div>
-
-      <% card_locals = { dashboard: @dashboard, answers_by_applicant: answers_by_applicant,
-                         header_answers: header_answers, event_date: event_date } %>
-      <%# A breakdown drill-in narrows the cards; the funder buckets follow it, and
-          an emptied bucket drops out rather than showing a header with nothing
-          under it. %>
-      <% shown_ids = @recipient_applicants.map(&:id).to_set %>
-      <% if params[:group_by] == "funder" %>
-        <div class="space-y-8">
-          <% @dashboard.scholarship_applicants_by_funder.each do |group| %>
-            <% group_people = group.people.select { |person| shown_ids.include?(person.id) } %>
-            <% next if group_people.empty? %>
-            <section class="break-inside-avoid">
-              <%# Bold, dark-fuchsia funder band so each group's header stands out.
-                  The funder name links to the funder's profile (org or person). %>
-              <div class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-fuchsia-800 px-4 py-2.5 text-white">
-                <i class="fa-solid fa-hand-holding-heart text-fuchsia-200"></i>
-                <h2 class="text-lg font-bold tracking-tight">
-                  <% if group.funder && allowed_to?(:show?, group.funder) %>
-                    <%= link_to polymorphic_path(group.funder), data: { turbo_frame: "_top" },
-                                class: "inline-flex items-center gap-1.5 hover:underline" do %>
-                      <%= group.name %>
-                      <i class="fa-solid fa-arrow-up-right-from-square text-xs text-fuchsia-200"></i>
-                    <% end %>
-                  <% else %>
-                    <%= group.name %>
-                  <% end %>
-                </h2>
-                <% if group.location.present? %>
-                  <span class="inline-flex items-center gap-1 text-sm text-fuchsia-100">
-                    <i class="fa-solid fa-location-dot text-xs text-fuchsia-200"></i><%= group.location %>
-                  </span>
-                <% end %>
-                <span class="ml-auto text-sm font-medium text-fuchsia-100"><%= pluralize(group_people.size, "recipient") %></span>
-              </div>
-              <div class="space-y-6">
-                <% group_people.each do |person| %>
-                  <%= render "events/recipient_card", card_locals.merge(person: person, grouped: true) %>
-                <% end %>
-              </div>
-            </section>
-          <% end %>
-        </div>
-      <% else %>
-        <div class="space-y-6">
-          <% @recipient_applicants.each do |person| %>
-            <%= render "events/recipient_card", card_locals.merge(person: person) %>
-          <% end %>
+          <span class="text-xs text-gray-500 tabular-nums">
+            Showing <%= @recipient_applicants.size %> of <%= @dashboard.scholarship_applicants.size %>
+          </span>
         </div>
       <% end %>
+      <div data-panel-toggle-target="panel" data-panel-toggle-name="recipients">
+        <% card_locals = { dashboard: @dashboard, answers_by_applicant: answers_by_applicant,
+                           header_answers: header_answers, event_date: event_date } %>
+        <%# A breakdown drill-in narrows the cards; the funder buckets follow it, and
+            an emptied bucket drops out rather than showing a header with nothing
+            under it. %>
+        <% shown_ids = @recipient_applicants.map(&:id).to_set %>
+        <% if params[:group_by] == "funder" %>
+          <div class="space-y-8">
+            <% @dashboard.scholarship_applicants_by_funder.each do |group| %>
+              <% group_people = group.people.select { |person| shown_ids.include?(person.id) } %>
+              <% next if group_people.empty? %>
+              <section class="break-inside-avoid">
+                <%# Bold, dark-fuchsia funder band so each group's header stands out.
+                    The funder name links to the funder's profile (org or person). %>
+                <div class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-fuchsia-800 px-4 py-2.5 text-white">
+                  <i class="fa-solid fa-hand-holding-heart text-fuchsia-200"></i>
+                  <h2 class="text-lg font-bold tracking-tight">
+                    <% if group.funder && allowed_to?(:show?, group.funder) %>
+                      <%= link_to polymorphic_path(group.funder), data: { turbo_frame: "_top" },
+                                  class: "inline-flex items-center gap-1.5 hover:underline" do %>
+                        <%= group.name %>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-fuchsia-200"></i>
+                      <% end %>
+                    <% else %>
+                      <%= group.name %>
+                    <% end %>
+                  </h2>
+                  <% if group.location.present? %>
+                    <span class="inline-flex items-center gap-1 text-sm text-fuchsia-100">
+                      <i class="fa-solid fa-location-dot text-xs text-fuchsia-200"></i><%= group.location %>
+                    </span>
+                  <% end %>
+                  <span class="ml-auto text-sm font-medium text-fuchsia-100"><%= pluralize(group_people.size, "recipient") %></span>
+                </div>
+                <div class="space-y-6">
+                  <% group_people.each do |person| %>
+                    <%= render "events/recipient_card", card_locals.merge(person: person, grouped: true) %>
+                  <% end %>
+                </div>
+              </section>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="space-y-6">
+            <% @recipient_applicants.each do |person| %>
+              <%= render "events/recipient_card", card_locals.merge(person: person) %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
     </div>
   <% else %>
     <div class="py-12 text-center text-gray-500">
