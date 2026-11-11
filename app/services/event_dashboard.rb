@@ -291,13 +291,19 @@ class EventDashboard
     end
   end
 
-  # The scholarship record per recipient, keyed by Person id — lets the roster
-  # decide whether to flag a registrant as a scholarship recipient. First
-  # scholarship wins if a person has several, preferring a live award over a
-  # declined one so a re-award isn't hidden behind the decline it replaced.
-  def scholarship_by_recipient
-    @scholarship_by_recipient ||= (all_scholarships.includes(grant: :funder).to_a + transferred_in_source_scholarships)
+  # Every award per recipient, keyed by Person id, oldest first — a transferred-in
+  # recipient's original award plus any added after the transfer.
+  def scholarships_by_recipient
+    @scholarships_by_recipient ||= (all_scholarships.includes(grant: :funder).to_a + transferred_in_source_scholarships)
+      .sort_by { |award| [ award.created_at, award.id ] }
       .group_by(&:recipient_id)
+  end
+
+  # One award per recipient — lets the roster decide whether to flag a registrant
+  # as a scholarship recipient. The oldest live award wins, so a re-award isn't
+  # hidden behind the decline it replaced.
+  def scholarship_by_recipient
+    @scholarship_by_recipient ||= scholarships_by_recipient
       .transform_values { |awards| awards.reject(&:agreement_declined?).first || awards.first }
   end
 

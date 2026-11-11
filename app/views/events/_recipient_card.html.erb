@@ -135,8 +135,7 @@
   <%# Scholarship status — awarded amount + tasks-completed state. Hidden
       until toggled on (page-wide) so it doesn't crowd the application;
       stays visible regardless of the card's expand/collapse state. %>
-  <% scholarship = dashboard.scholarship_by_recipient[person.id] %>
-  <% if scholarship %>
+  <% dashboard.scholarships_by_recipient.fetch(person.id, []).each do |scholarship| %>
     <div class="px-5 py-3 border-b <%= DomainTheme.border_class_for(:scholarships) %> bg-gray-50"
          data-scholarship-status-toggle-target="status">
       <div class="flex flex-wrap items-center gap-3">

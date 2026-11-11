@@ -3853,6 +3853,20 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(recipients_event_path(original_event, anchor: "transferred-out"))
       end
 
+      it "shows both the original award and one added after the transfer on the recipient's card" do
+        person = create(:person, first_name: "Topped", last_name: "Up")
+        source = create(:event_registration, event: create(:event, cost_cents: 5_000), registrant: person, status: "transferred_out")
+        create(:allocation, source: create(:scholarship, recipient: person, amount_cents: 4_800), allocatable: source, amount: 4_800)
+        incoming = create(:event_registration, event: event, registrant: person, status: "registered",
+               transferred_from_registration: source)
+        create(:allocation, source: create(:scholarship, recipient: person, amount_cents: 200), allocatable: incoming, amount: 200)
+
+        get recipients_event_path(event)
+
+        card = Nokogiri::HTML(response.body).at_css("#participant-#{incoming.slug}")
+        expect(card.text).to include("$48", "$2")
+      end
+
       it "lists a recipient who transferred out in a collapsed section, outside the recipient count" do
         person = create(:person, first_name: "Outbound", last_name: "Awardee")
         destination_event = create(:event, title: "Autumn destination training")
