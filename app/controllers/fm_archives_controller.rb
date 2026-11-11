@@ -73,7 +73,7 @@ class FmArchivesController < ApplicationController
   ].freeze
   TABLE_GROUPS = TABLE_COLUMNS.flatten.freeze
 
-  PORTAL_MODELS = [ Person, Organization, Affiliation, Payment, Workshop, Address, ContactMethod ].freeze
+  PORTAL_MODELS = [ Person, Organization, Affiliation, Payment, Workshop, Address, ContactMethod, EventRegistration ].freeze
 
   def index
     authorize! :fm_archive

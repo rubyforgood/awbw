@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_08_233556) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_10_120000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -571,6 +571,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_233556) do
     t.bigint "event_id"
     t.string "expected_payment_method"
     t.text "fee_note"
+    t.string "filemaker_code"
     t.boolean "intends_to_pay", default: false, null: false
     t.boolean "invoice_requested", default: false, null: false
     t.boolean "payment_unresolved"
@@ -589,6 +590,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_233556) do
     t.index ["checkout_session_id"], name: "index_event_registrations_on_checkout_session_id"
     t.index ["created_by_id"], name: "index_event_registrations_on_created_by_id"
     t.index ["event_id"], name: "index_event_registrations_on_event_id"
+    t.index ["filemaker_code"], name: "index_event_registrations_on_filemaker_code"
     t.index ["payment_unresolved"], name: "index_event_registrations_on_payment_unresolved"
     t.index ["registrant_id", "event_id"], name: "index_event_registrations_on_registrant_id_and_event_id", unique: true
     t.index ["registrant_id"], name: "index_event_registrations_on_registrant_id"
