@@ -1563,6 +1563,41 @@ RSpec.describe EventRegistration, type: :model do
       create(:allocation, source: scholarship, allocatable: reg, amount: 1099)
       expect(reg.scholarship_awarded?).to be true
     end
+
+    it "skips a declined award alongside a signed one" do
+      reg = create(:event_registration)
+      # Decline first: it zeroes the allocation, freeing the cost for the signed award.
+      declined = create(:scholarship, recipient: reg.registrant, amount_cents: 500)
+      create(:allocation, source: declined, allocatable: reg, amount: 500)
+      declined.reload.decline_agreement!("Timing no longer works")
+      signed = create(:scholarship, recipient: reg.registrant, amount_cents: 1099, agreement_signed: true)
+      create(:allocation, source: signed, allocatable: reg.reload, amount: 1099)
+
+      expect(reg.reload.scholarship_awarded?).to be true
+    end
+  end
+
+  describe "#scholarship_declined? / #any_scholarship_declined?" do
+    let(:reg) { create(:event_registration) }
+    let!(:declined) { create(:scholarship, recipient: reg.registrant, amount_cents: 500) }
+
+    before do
+      create(:allocation, source: declined, allocatable: reg, amount: 500)
+      declined.reload.decline_agreement!("Timing no longer works")
+    end
+
+    it "reads both as declined when every award is declined" do
+      expect(reg.reload.scholarship_declined?).to be true
+      expect(reg.any_scholarship_declined?).to be true
+    end
+
+    it "reads a partial decline as not declined, but still any-declined" do
+      live = create(:scholarship, recipient: reg.registrant, amount_cents: 1099)
+      create(:allocation, source: live, allocatable: reg, amount: 1099)
+
+      expect(reg.reload.scholarship_declined?).to be false
+      expect(reg.any_scholarship_declined?).to be true
+    end
   end
 
   describe "#joinable?" do

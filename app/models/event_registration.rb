@@ -804,15 +804,26 @@ class EventRegistration < ApplicationRecord
     live.any? && live.all?(&:agreement_signed?)
   end
 
+  # Every award declined — the registrant has nothing live left. Declining one of
+  # several awards leaves the rest live, so the ticket card keeps tracking those.
   def scholarship_declined?
+    awards = effective_scholarships
+    awards.any? && awards.all?(&:agreement_declined?)
+  end
+
+  # Any award declined — the admin still owes that decline a response, even when
+  # another award on the registration stays live.
+  def any_scholarship_declined?
     effective_scholarships.any?(&:agreement_declined?)
   end
 
   # Display-only: a scholarship is only *shown* as awarded once the recipient has
   # signed the agreement. The record and its allocation exist beforehand (the data
   # is unchanged) — the award is just presented as pending acceptance until signed.
+  # Declined awards are skipped, so a partial decline doesn't hide a signed award.
   def scholarship_awarded?
-    scholarship_recipient? && effective_scholarships.all?(&:agreement_signed?)
+    live = effective_scholarships.reject(&:agreement_declined?)
+    live.any? && live.all?(&:agreement_signed?)
   end
 
   def attended?

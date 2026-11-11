@@ -183,8 +183,9 @@ class EventRegistrationReadiness
     registration.organizations.empty?
   end
 
+  # Any decline, not just an all-declined registration — each one needs an answer.
   def scholarship_declined?
-    registration.scholarship_declined?
+    registration.any_scholarship_declined?
   end
 
   def scholarship_uncreated?

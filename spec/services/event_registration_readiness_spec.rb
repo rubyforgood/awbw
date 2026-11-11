@@ -155,6 +155,14 @@ RSpec.describe EventRegistrationReadiness do
         expect(readiness.event_ready_reason).to eq("Award declined")
       end
 
+      it "still flags a decline when another award stays live" do
+        award_scholarship(registration, tasks_completed: true, amount: 500)
+        award_scholarship(registration, tasks_completed: true, amount: 500)
+        registration.scholarships.first.decline_agreement!("Timing no longer works")
+
+        expect(readiness.event_ready_issues).to include("Scholarship declined — respond to the decline")
+      end
+
       it "stops flagging incomplete tasks on a declined award" do
         award_scholarship(registration, tasks_completed: false, amount: 1000)
         registration.scholarships.first.decline_agreement!("Timing no longer works")

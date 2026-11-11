@@ -246,7 +246,8 @@ class BuiltinCalloutCards
   # met shows a fuchsia amount badge. When the event delivers a recipients survey
   # on this callout, the badge also says when it opens or that it's due (amber).
   # A declined award keeps the card — the page behind it holds the decline
-  # confirmation — but with nothing left to act on.
+  # confirmation — but with nothing left to act on. Only an all-declined
+  # registration reads as declined; a partial decline tracks the live awards.
   def scholarship_status_card
     return if config_gap?("scholarship")
     # A transferred-in recipient's award lives on the source; keep the card so they

@@ -354,6 +354,22 @@ RSpec.describe BuiltinCalloutCards do
       expect(scholarship_card.theme).to eq(DomainTheme.swatch(DomainTheme.color_for(:scholarships)))
     end
 
+    it "tracks the live award when only one of several is declined" do
+      add_scholarship_form(event)
+      registration.update!(scholarship_requested: true)
+      # Decline first: it zeroes the allocation, freeing the cost for the live award.
+      declined = create(:scholarship, recipient: registration.registrant, amount_cents: 10_000)
+      create(:allocation, source: declined, allocatable: registration, amount: 1000)
+      declined.reload.decline_agreement!("Timing no longer works")
+      live = create(:scholarship, recipient: registration.registrant, amount_cents: 25_000, tasks_completed: true, agreement_signed: true)
+      create(:allocation, source: live, allocatable: registration.reload, amount: 1000)
+
+      scholarship_card = card(registration.reload, "Scholarship")
+      expect(scholarship_card.subtitle).to eq("Your award — amount, funder, and tasks")
+      expect(scholarship_card.badge).to eq("$250")
+      expect(scholarship_card.badge_classes).to include("fuchsia")
+    end
+
     it "orders the code-fallback cards from payment downward" do
       # Handouts/FAQ/art supplies are row-driven, so they never appear in this fallback.
       event.update!(facilitator_training: true, ce_hours_offered: 6,
