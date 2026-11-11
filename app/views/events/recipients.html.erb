@@ -107,8 +107,9 @@
     <% end %>
     <div data-controller="expandable-cards scholarship-status-toggle"
          data-scholarship-status-toggle-shown-value="true">
+      <%# pr-5 puts Collapse all's chevron in line with each card's own chevron below it. %>
       <%= render "events/section_heading", title: "Recipients", icon: "fa-user-graduate",
-            theme: :scholarships, toggle: false, actions: toggle_bar %>
+            theme: :scholarships, toggle: false, actions: toggle_bar, spacing: "pr-5" %>
       <%# A breakdown row narrows the cards in place; the chip says what's applied so
           the shorter list doesn't read as missing data, and clears it. Clearing drops
           only its own param, so the page's other state (funder grouping, the open
