@@ -65,23 +65,24 @@ class Scholarship < ApplicationRecord
   # "funder" filter. A blank funder matches nothing.
   scope :from_funder, ->(funder) { where(grant_id: Grant.where(funder: funder).select(:id)) }
 
-  # Scholarships awarded at the given events, via the allocation → event
-  # registration chain (a scholarship's allocation is on an EventRegistration).
+  # Scholarships whose dollars count toward the given events (see
+  # ScholarshipDollarRegistrations), matching the scholarship report's totals.
   scope :for_events, ->(event_ids) {
-    registration_ids = EventRegistration.where(event_id: event_ids).select(:id)
+    registration_ids = ScholarshipDollarRegistrations.new(EventRegistration.where(event_id: event_ids).ids).award_registration_ids
     source_ids = Allocation
       .where(allocatable_type: "EventRegistration", allocatable_id: registration_ids, source_type: "Scholarship")
       .select(:source_id)
     where(id: source_ids)
   }
 
-  # Ids of events this relation's scholarships were awarded at — for narrowing an
-  # event report to trainings a funder actually scholarshipped.
+  # Ids of events this relation's scholarships' dollars count toward — for
+  # narrowing an event report to trainings a funder actually scholarshipped.
   def self.event_ids
-    registration_ids = Allocation
+    award_registration_ids = Allocation
       .where(allocatable_type: "EventRegistration", source_type: "Scholarship", source_id: all.select(:id))
-      .select(:allocatable_id)
-    EventRegistration.where(id: registration_ids).distinct.pluck(:event_id)
+      .pluck(:allocatable_id)
+    dollars = ScholarshipDollarRegistrations.new(award_registration_ids)
+    EventRegistration.where(id: award_registration_ids.map { |id| dollars.counting_registration_id(id) }).distinct.pluck(:event_id)
   end
 
   # `agreement_signed` reads/writes as a virtual boolean for the admin checkbox +

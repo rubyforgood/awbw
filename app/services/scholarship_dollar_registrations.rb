@@ -3,7 +3,8 @@
 # earlier training, its dollars count there instead; a transfer to a later (or
 # same-day or undated) training leaves them at the original.
 class ScholarshipDollarRegistrations
-  # registration_ids: the registrations a report counts dollars for.
+  # registration_ids: the registrations a report counts dollars for, or award
+  # registrations to re-key with #counting_registration_id.
   def initialize(registration_ids)
     @registration_ids = registration_ids.to_set
   end

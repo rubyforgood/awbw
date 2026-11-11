@@ -356,5 +356,27 @@ RSpec.describe Scholarship, type: :model do
     it ".event_ids returns the events the scholarships were awarded at" do
       expect(Scholarship.from_funder(funder).event_ids).to contain_exactly(event.id)
     end
+
+    context "when the recipient transferred to an earlier training" do
+      let(:march) { create(:event, start_date: Time.zone.local(2027, 3, 18, 9), end_date: Time.zone.local(2027, 3, 19, 17), cost_cents: 50_000) }
+      let(:november) { create(:event, start_date: Time.zone.local(2026, 11, 5, 9), end_date: Time.zone.local(2026, 11, 6, 17)) }
+      let(:recipient) { create(:person) }
+      let!(:transferred) do
+        origin = create(:event_registration, event: march, registrant: recipient, status: "transferred_out")
+        create(:event_registration, event: november, registrant: recipient, status: "attended", transferred_from_registration: origin)
+        create(:scholarship, recipient: recipient, grant: create(:grant, funder: funder), amount_cents: 50_000).tap do |award|
+          create(:allocation, source: award, allocatable: origin, amount: 50_000)
+        end
+      end
+
+      it ".for_events files the award under the earlier training, where its dollars count" do
+        expect(Scholarship.for_events([ november.id ])).to contain_exactly(transferred)
+        expect(Scholarship.for_events([ march.id ])).to be_empty
+      end
+
+      it ".event_ids names the earlier training" do
+        expect(Scholarship.where(id: transferred.id).event_ids).to eq([ november.id ])
+      end
+    end
   end
 end

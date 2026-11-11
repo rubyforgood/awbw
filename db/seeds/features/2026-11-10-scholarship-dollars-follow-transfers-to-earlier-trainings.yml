@@ -9,4 +9,5 @@ summary: >-
   that earlier training in dashboards and reports. Transfers to a later training keep the dollars at the original.
 pro_tips:
   - "Payments always stay with the training they were paid on."
+  - "Filtering the scholarships list by training or year follows the same rule, so the list matches the summary above it."
   - "The recipient card's \"Billed to original event\" pill only shows when the dollars stayed behind."
