@@ -756,16 +756,16 @@ class EventRegistration < ApplicationRecord
     scholarships.any?
   end
 
-  # The scholarships that designate this registrant a recipient at THIS event: their
-  # own awards, or — for a transferred-in reg — the awards on the source
-  # registration it came from (walking the transfer chain). The award's record
-  # stays on the source (its dollars count here — see ScholarshipDollarRegistrations),
-  # and the recipient responds to it and completes its tasks from whichever ticket
-  # they hold. (#1944)
+  # The scholarships that designate this registrant a recipient at THIS event: for
+  # a transferred-in reg, the awards on the source registration it came from
+  # (walking the transfer chain) followed by any added here. The source award's
+  # record stays on the source (its dollars count here — see
+  # ScholarshipDollarRegistrations), and the recipient responds to each award and
+  # completes its tasks from whichever ticket they hold. (#1944)
   def effective_scholarships
-    return scholarships if scholarships.any? || transferred_from_registration.nil?
+    return scholarships.to_a if transferred_from_registration.nil?
 
-    transferred_from_registration.effective_scholarships
+    transferred_from_registration.effective_scholarships + scholarships.to_a
   end
 
   def effective_scholarship
