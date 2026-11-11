@@ -14,9 +14,10 @@ class Resource < ApplicationRecord
 
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
   # Kinds outside the library: hidden from the index unless an admin picks the
-  # "Legacy" chip, which stands for all of them at once.
-  LEGACY_KINDS = [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
-  KINDS = PUBLISHED_KINDS + LEGACY_KINDS
+  # "Legacy" chip, which stands for all of them at once. FM Archive records are
+  # neither, so the index never lists them.
+  LEGACY_KINDS = [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship" ]
+  KINDS = PUBLISHED_KINDS + LEGACY_KINDS + [ "FM Archive" ]
 
   # Kinds offered in the form's dropdown: the published kinds the library index
   # searches, plus the record's own kind so an unsearchable one (Story, Theme,

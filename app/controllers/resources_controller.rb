@@ -16,7 +16,7 @@ class ResourcesController < ApplicationController
     @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     @organization = Organization.find_by(id: params[:organization_id]) if params[:organization_id].present?
     # The admin "Legacy" chip works like the other kind chips, standing for every
-    # legacy kind at once; it also opens the base scope so they can match.
+    # legacy kind at once; it also opens the base scope to them (never FM Archive).
     legacy = params[:legacy] == "1" && allowed_to?(:manage?, Resource)
     kinds = Array(params[:kinds]).compact_blank
     kinds += Resource::LEGACY_KINDS if legacy
@@ -27,7 +27,7 @@ class ResourcesController < ApplicationController
       per_page = params[:number_of_items_per_page].presence || 18
       resources = Resource.includes(:bookmarks, primary_asset: :file_attachment,
                                     downloadable_asset: :file_attachment)
-      resources = resources.where(kind: Resource::PUBLISHED_KINDS) unless legacy
+      resources = resources.where(kind: legacy ? Resource::PUBLISHED_KINDS + Resource::LEGACY_KINDS : Resource::PUBLISHED_KINDS)
       base_scope = authorized_scope(resources)
       filtered = base_scope.search_by_params(params.merge(kinds: kinds)).sorted_by(@sort)
 
