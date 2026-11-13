@@ -154,6 +154,15 @@ RSpec.describe EventScholarshipReport do
       expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
     end
 
+    it "ignores the recipients' job (non-facilitator) affiliations" do
+      site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
+      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      office = create(:address, addressable: org_a, city: "Chicago", state: "IL")
+      create(:affiliation, person: person2, organization: org_a, organization_address: office, title: "Program Director")
+
+      expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
+    end
+
     it "splits each organization's dollars and counts its recipients and awards" do
       alpha = report.organization_rows.first
       expect(alpha.funded_cents).to eq(4_000)

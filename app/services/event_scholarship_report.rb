@@ -177,9 +177,10 @@ class EventScholarshipReport
 
   private
 
-  # "City, ST" labels, uniqued, for where an org's recipients work: the org
-  # addresses on the recipients' affiliations with it — falling back to every
-  # active address of the org when none of those affiliations names one.
+  # "City, ST" labels, uniqued, for where an org's recipients facilitate: the org
+  # addresses on the recipients' facilitator affiliations with it (job
+  # affiliations don't count) — falling back to every active address of the org
+  # when none of those affiliations names one.
   def locations_for(organization, recipient_ids)
     affiliation_address_ids = affiliation_address_ids_by_org_person
       .slice(*recipient_ids.map { |person_id| [ organization.id, person_id ] })
@@ -193,11 +194,12 @@ class EventScholarshipReport
   end
 
   # { [ organization_id, person_id ] => [ organization_address_id, ... ] } for the
-  # affiliations of every credited recipient with every listed org.
+  # facilitator affiliations of every credited recipient with every listed org.
   def affiliation_address_ids_by_org_person
     @affiliation_address_ids_by_org_person ||= begin
       by_organization = figures.by_organization.except(nil)
       Affiliation
+        .facilitators
         .where(organization_id: by_organization.keys, person_id: by_organization.values.flat_map { |f| f.recipient_ids.to_a }.uniq)
         .where.not(organization_address_id: nil)
         .pluck(:organization_id, :person_id, :organization_address_id)
