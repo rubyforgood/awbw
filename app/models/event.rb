@@ -157,6 +157,9 @@ class Event < ApplicationRecord
   }.freeze
   KINDS = KIND_CONDITIONS.keys.freeze
   KIND_LABELS = { "live" => "Live trainings", "on_demand" => "On-demand trainings", "other" => "Other events" }.freeze
+  # Compact chip labels for the scholarship report's event-type checkboxes, so the
+  # checked kinds fit one line of the filter bar.
+  KIND_SHORT_LABELS = { "live" => "Live", "on_demand" => "On-demand", "other" => "Other events" }.freeze
   # Events of any of the given kinds; no kinds (or every kind) means every event.
   scope :of_kinds, ->(kinds) {
     kinds = Array(kinds) & KINDS
