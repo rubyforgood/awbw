@@ -1,13 +1,14 @@
-name: "What linking an organization changes"
+name: "What form answers change on people and organizations"
 area: people
 display_status: admin_facing
 released_on: 2026-11-13
 pr_number: 2997
 action_path: "/form_submissions"
 summary: >-
-  One place to check exactly what a form's answers change when it's submitted or
-  linked to an organization: the organization's address and phone, the person's
-  affiliations and phone, and what the confirmation message reports.
+  One place to check exactly what a form's answers change: the organization's address
+  and phone, the person's affiliations and phone, and what the message after linking
+  reports. Most of it happens on submit when the organization name matches exactly,
+  and again when you link it.
 pro_tips:
   - "The same rules apply when you link from an event's Registrants page (Link organizations) or from a form submission."
 description: |
