@@ -29,6 +29,7 @@ module OrganizationServices
     end
 
     NOT_A_WEB_ADDRESS = "not a web address".freeze
+    ADDRESS_PARTS = %i[street_address city state zip_code country].freeze
 
     def self.call(organization:, website: nil, organization_type: nil, address: {})
       new(organization:, website:, organization_type:, address:).call
@@ -88,9 +89,12 @@ module OrganizationServices
     # City can differ here because AddressMatcher's last resort matches on
     # street + ZIP across cities — that's exactly the respelled-city case an admin
     # should see rather than have silently normalized away.
+    # With no matching address, the answer is normally added as a new work address
+    # (nothing to reconcile) — unless UpsertAddress can't store it, which is
+    # reported rather than dropped silently.
     def address_discrepancies
       existing = matching_address
-      return [] unless existing
+      return [ unsaved_address_discrepancy ].compact unless existing
 
       [
         field_discrepancy(:address_street, "Address – street", @address[:street_address], existing.street_address,
@@ -100,6 +104,24 @@ module OrganizationServices
         field_discrepancy(:address_zip, "Address – ZIP", @address[:zip_code], existing.zip_code),
         field_discrepancy(:address_country, "Address – country", @address[:country], existing.country)
       ].compact
+    end
+
+    # Mirrors when UpsertAddress saves nothing: no city at all, or no state for an
+    # address the org doesn't already have (a new Address needs both).
+    def unsaved_address_discrepancy
+      submitted = ADDRESS_PARTS.filter_map { |part| address_answer(part) }.join(", ")
+      return if submitted.blank?
+
+      reason = if address_answer(:city).nil? then "no city, so it wasn't saved"
+      elsif address_answer(:state).nil? then "no state, so it wasn't saved"
+      end
+      return unless reason
+
+      Discrepancy.new(field: :address, label: "Address", submitted: submitted, reason: reason)
+    end
+
+    def address_answer(part)
+      @address[part]&.strip.presence
     end
 
     def matching_address

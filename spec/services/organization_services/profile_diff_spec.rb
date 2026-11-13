@@ -156,6 +156,30 @@ RSpec.describe OrganizationServices::ProfileDiff do
       expect(diff).to be_empty
     end
 
+    it "flags an address with no city, which can't be saved" do
+      diff = described_class.call(organization: organization, address: { street_address: "1 Main St", zip_code: "78701" })
+
+      expect(diff.sole).to have_attributes(field: :address, label: "Address", submitted: "1 Main St, 78701", saved: nil,
+                                           reason: "no city, so it wasn't saved")
+    end
+
+    it "flags an address with no state that matches none of the org's addresses, which can't be saved" do
+      create(:address, addressable: organization, city: "Dallas", state: "TX")
+
+      diff = described_class.call(organization: organization, address: { street_address: "1 Main St", city: "Austin" })
+
+      expect(diff.sole).to have_attributes(field: :address, submitted: "1 Main St, Austin", reason: "no state, so it wasn't saved")
+      expect(diff.sole.summary).to eq("form: “1 Main St, Austin” — no state, so it wasn't saved")
+    end
+
+    it "does not flag a stateless address that matches one the org already has (it updates that one)" do
+      create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX")
+
+      diff = described_class.call(organization: organization, address: { street_address: "1 Main St", city: "Austin" })
+
+      expect(diff).to be_empty
+    end
+
     it "does not flag a field that is blank on the org's address" do
       create(:address, addressable: organization, street_address: "", city: "Austin", state: "TX")
 
