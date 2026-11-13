@@ -35,13 +35,18 @@
           rather than the facilitator-trainings default. %>
       <%= hidden_field_tag "event_kinds[]", "", id: nil %>
       <%# One row on desktop: the fields shrink to fit (min-w-0 lets a select go
-          narrower than its longest option) while the event-type chips keep room. %>
+          narrower than its longest option) while the event-type chips keep room.
+          The shared report filters are rendered one by one (rather than via
+          events/_report_filters) so Event type can sit between search and funder. %>
       <div class="flex flex-wrap items-end gap-4 lg:flex-nowrap lg:*:min-w-0">
+        <%= render "events/time_period_filter" %>
+        <%= render "events/event_filter", all_label: scholarship_report_noun == "events" ? "All events" : "All trainings" %>
+        <%= render "events/event_search_filter" %>
         <%= render "shared/filter_multiselect", param: :event_kinds, label: "Event type",
               options: Event::KIND_SHORT_LABELS.map { |kind, label| [ label, kind ] },
               selected: scholarship_event_kinds, placeholder: "All events", hide_placeholder: true,
               wrapper_class: "w-full sm:w-80 lg:shrink-0" %>
-        <%= render "report_filters", event_all_label: scholarship_report_noun == "events" ? "All events" : "All trainings" %>
+        <%= render "events/funder_filter" %>
       </div>
     <% end %>
 
