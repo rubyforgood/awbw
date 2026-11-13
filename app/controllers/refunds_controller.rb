@@ -41,8 +41,8 @@ class RefundsController < ApplicationController
     else
       @refund = Refund.new(
         refundable: @payment,
-        recipient_type: params[:refund][:recipient_type],
-        recipient_id: params[:refund][:recipient_id],
+        # One combined people + organizations picker, so the type comes from who's picked.
+        recipient: GlobalID::Locator.locate_signed(params[:refund][:recipient_sgid].to_s, only: [ Person, Organization ]),
         amount_cents: amount_val,
         method: params[:refund][:method]
       )

@@ -8,6 +8,9 @@ class Refund < ApplicationRecord
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :allocations, as: :source
 
+  # The combined people + organizations picker submits a signed global id.
+  attr_accessor :recipient_sgid
+
   validates :amount_cents, numericality: true
   validates :method, inclusion: { in: METHODS }
   validates :stripe_refund_id, uniqueness: true, allow_nil: true
