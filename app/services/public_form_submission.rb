@@ -127,7 +127,7 @@ class PublicFormSubmission
 
   # An agreement submission whose organization name resolves unambiguously is
   # processed on arrival: the linking core confers the standing Facilitator
-  # affiliation and fills the org's blank profile fields — identical to an admin
+  # affiliation and writes the answers onto the org's profile — identical to an admin
   # linking it by hand, so the two paths can't drift (ADR-0002). Anything the
   # core would have to guess at is left for an admin on the submission's linking
   # page.

@@ -1,10 +1,11 @@
 module OrganizationServices
   # The shared core of the two org-linking editors (event registration and form
   # submission): given the org-related answers a person submitted (an "entry" —
-  # org_name/position/website/organization_type/address), fill the organization's
-  # blank profile fields and work address from them (curated values are kept and
-  # reported as conflicts instead), create the job + facilitator affiliations,
-  # and report what was saved and what conflicted. The callers keep their
+  # org_name/position/website/organization_type/address), write them onto the
+  # organization's profile and work address (a valid answer replaces what's saved;
+  # the prior value stays in the Ahoy audit trail), create the job + facilitator
+  # affiliations, and report what was saved, what it replaced, and what couldn't
+  # be applied. The callers keep their
   # flow-specific wrappers: the registration flow's link row, pinning, and
   # autofill notes; the submission flow's metadata link.
   #
@@ -22,16 +23,33 @@ module OrganizationServices
         text
       end
 
-      # Flash warning listing the submitted answers that differ from values
-      # already on the org (so the fill-blanks sync left them unapplied), or nil
-      # when everything matched.
+      # Flash warning naming the saved values the submission replaced (so the admin
+      # can reapply any newer edits) and the answers that couldn't be applied, or
+      # nil when there's neither.
       def warning(organization:)
+        [ replaced_warning(organization), conflicts_warning(organization) ].compact.join(" ").presence
+      end
+
+      private
+
+      def replaced_warning(organization)
+        replaced = saved.select(&:update?)
+        return if replaced.none?
+
+        descriptions = replaced.map do |change|
+          "#{ERB::Util.html_escape(change.description)} (was “#{ERB::Util.html_escape(change.previous_value)}”)"
+        end
+        "This submission replaced saved values on #{ERB::Util.html_escape(organization.name)}: #{descriptions.to_sentence}. " \
+          "If anyone edited these since it was submitted, reapply their changes — the previous values are in the activity log."
+      end
+
+      def conflicts_warning(organization)
         return if conflicts.none?
 
         descriptions = conflicts.map do |conflict|
           "#{conflict.label} (#{ERB::Util.html_escape(conflict.summary)})"
         end
-        "Some form answers differ from #{ERB::Util.html_escape(organization.name)}’s saved profile and were not applied: #{descriptions.to_sentence}. Edit the organization if they should change."
+        "Some form answers weren't applied to #{ERB::Util.html_escape(organization.name)}: #{descriptions.to_sentence}. Edit the organization if they should change."
       end
     end
 
@@ -81,14 +99,14 @@ module OrganizationServices
       return [] unless @entry
 
       OrganizationServices::SyncProfile.call(
-        organization: @organization, overwrite: false, website: @entry[:website], organization_type: @entry[:organization_type],
+        organization: @organization, website: @entry[:website], organization_type: @entry[:organization_type],
         submission: @entry[:submission]
       ).changes
     end
 
     def upsert_address
       OrganizationServices::UpsertAddress.call(
-        organization: @organization, overwrite: false, **submitted_address
+        organization: @organization, **submitted_address
       )
     end
 

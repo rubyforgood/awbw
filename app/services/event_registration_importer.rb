@@ -841,17 +841,19 @@ class EventRegistrationImporter
   def capture_organization(person, registration, submission, organization, answers, preview)
     return unless organization
 
-    note_declined(organization, organization_declines(person, organization, answers), preview)
     result = OrganizationServices::CaptureFromSubmission.call(
       person: person, answers: answers, organization: organization, submission: submission,
       facilitator_training: @event.facilitator_training, training_date: @event.starts_on,
-      event_registration: registration, overwrite: false
+      event_registration: registration
     )
+    result.autofill.select(&:update?).each do |change|
+      preview.warnings << "Replaced #{change.description.downcase} “#{change.previous_value}” with “#{change.value}”"
+    end
+    note_declined(organization, organization_declines(person, organization, answers), preview)
     registration.link_submitted_organization!(organization, submission: submission, autofill: result.autofill)
   end
 
-  # The org answers fill-blanks won't apply, from the comparison the link-organization
-  # flow already uses.
+  # Run after the capture, so only the answers it couldn't apply remain.
   def organization_declines(person, organization, answers)
     OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: FormSubmission.org_entry_from(answers), person: person)
       .map { |discrepancy| [ discrepancy.label, discrepancy.submitted, discrepancy.saved, discrepancy.reason ] }

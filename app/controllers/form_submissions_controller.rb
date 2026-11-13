@@ -163,7 +163,7 @@ class FormSubmissionsController < ApplicationController
                                                 person: @form_submission.person)
   end
 
-  # Fill the org's blank profile/address fields from the submission, create the
+  # Write the submission's answers onto the org's profile/address, create the
   # affiliations, record the explicit submission -> org link, and build the flash
   # notice — via the linking core shared with the event registration editor.
   # The scenario (from the form's role, or an event registration's event)

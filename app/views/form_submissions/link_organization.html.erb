@@ -94,7 +94,7 @@
                 </div>
               <% end %>
               <%# Persistent flag: submitted type/website/address answers that differ
-                  from this org's saved profile, so the fill-blanks sync left them unapplied. %>
+                  from this org's saved profile, so the sync couldn't apply them. %>
               <% if @profile_conflicts.any? %>
                 <div class="relative z-10 mt-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
                   <p class="flex items-center gap-1.5 font-semibold">

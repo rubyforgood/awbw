@@ -72,5 +72,16 @@ RSpec.describe FormSubmissionDecorator do
 
       expect(submission.link_organization_effects).to eq([ "Adds a “Volunteer” job affiliation there" ])
     end
+
+    it "warns that the submission's org answers replace the saved profile" do
+      form = create(:form)
+      submission = submission_for(form)
+      field = create(:form_field, form: form, field_identifier: "organization_website")
+      submission.form_answers.create!(form_field: field, submitted_answer: "harbor.example.org")
+
+      expect(submission.link_organization_effects).to eq([
+        "Replaces the organization's saved website, type, and work address with this submission's answers — reapply any newer edits afterward"
+      ])
+    end
   end
 end

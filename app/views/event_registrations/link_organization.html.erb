@@ -131,7 +131,7 @@
                   </div>
                 <% end %>
                 <%# Persistent flag: the registrant's submitted type/website differ from what's
-                    saved on this org, so the fill-blanks sync left them unapplied. %>
+                    saved on this org, so the sync couldn't apply them. %>
                 <% conflicts = @profile_conflicts_by_org[org] || [] %>
                 <% if conflicts.any? %>
                   <div class="relative z-10 mt-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">

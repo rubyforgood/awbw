@@ -514,14 +514,14 @@ RSpec.describe EventRegistrationImporter do
         expect(result.rows.first.organization_status).to eq(:linked_by_spelling)
       end
 
-      it "adds the work address and position but keeps the org's own website" do
+      it "adds the work address and position and takes the sheet's website" do
         import_rows(
           %w[FirstName LastName EMail Organization Position OrganizationWebsite OrganizationStreet OrganizationCity OrganizationState OrganizationZip],
           [ "Pat", "Example", "pat@example.org", "Sunrise Center", "Counselor", "https://other.example.org", "1 Main St", "Springfield", "IL", "62701" ]
         )
         person = Person.find_by(email: "pat@example.org")
 
-        expect(organization.reload.website_url).to eq("https://sunrise.example.org")
+        expect(organization.reload.website_url).to eq("https://other.example.org")
         expect(organization.addresses.pluck(:city)).to eq([ "Springfield" ])
         expect(person.affiliations.pluck(:title)).to include("Counselor")
       end
@@ -628,15 +628,16 @@ RSpec.describe EventRegistrationImporter do
         expect(person.comments).to be_empty
       end
 
-      it "reports an organization value it kept rather than overwrote" do
+      it "reports an organization value it replaced" do
         organization = create(:organization, name: "Sunrise Center", website_url: "https://sunrise.example.org")
 
         result = import_rows(%w[FirstName LastName EMail Organization OrganizationWebsite],
                              [ "Pat", "Example", "pat@example.org", "Sunrise Center", "https://other.example.org" ])
 
-        expect(organization.reload.website_url).to eq("https://sunrise.example.org")
-        expect(result.rows.first.warnings.join).to include("sheet said “https://other.example.org”")
-        expect(organization.comments.sole.body).to include("Website “https://other.example.org”")
+        expect(organization.reload.website_url).to eq("https://other.example.org")
+        expect(result.rows.first.warnings)
+          .to include("Replaced website “https://sunrise.example.org” with “https://other.example.org”")
+        expect(organization.comments).to be_empty
       end
 
       it "reports a website that isn't a web address even when the organization has none" do

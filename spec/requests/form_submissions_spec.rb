@@ -658,7 +658,7 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response.body).not_to include("No organization linked")
         end
 
-        it "fills blank org profile fields from the submission and flags conflicting ones" do
+        it "writes the submission's org answers and warns about the values it replaced" do
           add_answer("organization_name", "Harbor Family Shelter")
           add_answer("organization_website", "https://harbor.example.org")
           organization = create(:organization, name: "Harbor Family Shelter", organization_type: "School")
@@ -669,8 +669,8 @@ RSpec.describe "FormSubmissions", type: :request do
           post select_organization_form_submission_path(submission, organization_id: organization.id)
 
           expect(organization.reload.website_url).to eq("https://harbor.example.org")
-          expect(organization.organization_type).to eq("School")
-          expect(flash[:warning]).to include("differ")
+          expect(organization.organization_type).to eq("Government Agency")
+          expect(flash[:warning]).to include("replaced saved values", "was “School”", "reapply")
         end
       end
 

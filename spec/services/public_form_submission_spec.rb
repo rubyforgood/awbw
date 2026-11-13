@@ -438,15 +438,13 @@ RSpec.describe PublicFormSubmission do
           .to include("Facilitator")
       end
 
-      # Fill-blanks, not latest-wins: an agreement runs the admin linking core, so
-      # a curated value is kept and reported as a conflict on the linking page.
-      it "does not overwrite the organization's curated profile" do
+      it "overwrites the organization's saved profile with the latest answer" do
         form.update!(role: "reinstatement")
-        org.update!(website_url: "https://curated.example")
+        org.update!(website_url: "https://old.example")
 
         described_class.call(form: form, form_params: org_params)
 
-        expect(org.reload.website_url).to eq("https://curated.example")
+        expect(org.reload.website_url).to eq("https://helpinghands.org")
       end
     end
   end

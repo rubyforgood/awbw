@@ -1,9 +1,9 @@
 module OrganizationServices
   # Read-only comparison of a registrant's submitted org answers (website,
   # organization type, and work address) against an organization's saved
-  # profile. Surfaces the discrepancies where the submitted value differs from a
-  # value already on the org — i.e. the answers the fill-blanks sync will NOT
-  # apply, so an admin can decide whether to update the org by hand.
+  # profile. Run after the sync, what remains are the answers it couldn't apply
+  # (invalid, unsaveable, or a city/state it won't move an address for), so an
+  # admin can decide whether to update the org by hand.
   #
   # A website answer that isn't a web address is always a discrepancy (with a
   # reason), since the sync never saves it. Otherwise a blank submitted value, or a
@@ -11,7 +11,7 @@ module OrganizationServices
   # reconcile — the latter just gets filled, and
   # EventRegistrationOrganization#form_autofill_changes records that it was).
   # Address is compared against the org's corresponding address (AddressMatcher,
-  # the one the fill-blanks upsert targets); an address the matcher doesn't
+  # the one the upsert targets); an address the matcher doesn't
   # recognize isn't a discrepancy because it's added rather than reconciled.
   # Given the person, it also flags their affiliations here (the submitted
   # position, and Facilitator) already tied to a different org address — the
