@@ -1,79 +1,100 @@
-<div class="mx-auto max-w-2xl" data-controller="search-type-select">
-  <h1 class="text-primary mb-6 font-display text-2xl font-bold">New Refund</h1>
-  <%= simple_form_for @refund, url: refunds_path do |f| %>
-    <%= f.hidden_field :refundable_type %>
-    <%= f.hidden_field :refundable_id %>
-    <% if @payment.present? %>
-      <div class="mb-4 rounded-lg bg-gray-50 p-4">
-        <p class="text-sm font-medium text-gray-700">For Payment</p>
-        <p class="text-lg text-gray-900"><%= dollars_from_cents(@payment.amount_cents) %></p>
-        <p class="text-sm text-gray-500">Remaining: <%= dollars_from_cents(@payment.amount_cents_remaining) %></p>
-      </div>
-    <% else %>
-      <div class="mb-4 rounded-lg bg-red-50 p-4">
-        <p class="text-sm font-medium text-red-700">Error: No payment found</p>
-      </div>
-    <% end %>
-    <% if @payment.is_a?(ExternalProcessorPayment) %>
-      <div class="mb-4 rounded-lg bg-blue-50 p-4">
-        <p class="text-sm text-blue-700">This refund will be processed via Stripe and returned to the original payment method.</p>
-      </div>
-    <% end %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% label_class = "text-xs font-medium tracking-wide text-gray-400 uppercase" %>
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(:payments) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6" data-controller="search-type-select">
+  <div class="mb-4">
+    <%= link_to(@payment ? "← Payment" : "← Payments", @payment ? payment_path(@payment) : payments_path, class: "text-sm #{eyebrow_link_class} px-2 py-1") %>
+  </div>
+  <h1 class="text-primary mb-6 font-display text-2xl font-bold">New refund</h1>
 
-    <% unless @payment.is_a?(ExternalProcessorPayment) %>
-      <%= f.input :recipient_type, as: :select, collection: ["Person", "Organization"], include_blank: true, input_html: { data: { action: "search-type-select#toggle" } } %>
-      <template data-search-type-select-target="template" data-type="Person">
-        <%= f.input :recipient_id,
-          collection: [],
-          include_blank: true,
-          input_html: {
-            data: {
-              controller: "remote-select",
-              remote_select_model_value: "person"
-            }
-          },
-          prompt: "Search for a person",
-          label: "Recipient" %>
-      </template>
-      <template data-search-type-select-target="template" data-type="Organization">
-        <%= f.input :recipient_id,
-          collection: [],
-          include_blank: true,
-          input_html: {
-            data: {
-              controller: "remote-select",
-              remote_select_model_value: "organization"
-            }
-          },
-          prompt: "Search for an organization",
-          label: "Recipient" %>
-      </template>
-      <div data-search-type-select-target="pickerContainer">
-        <div>
-          <label class="mb-1 block text-sm font-medium text-gray-500 italic">Select Recipient Type</label>
-          <div class="min-h-[2.2rem] w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2"></div>
-        </div>
-      </div>
-      <div class="mb-4">
-        <span class="text-sm font-medium text-gray-700">Method</span>
-        <div class="mt-1 flex gap-4">
-          <%= f.collection_radio_buttons :method, [["Check", "check"], ["Cash", "cash"]], :last, :first, checked: "check" do |b| %>
-            <label class="flex items-center gap-2">
-              <%= b.radio_button %> <%= b.text %>
-            </label>
+  <% if @payment.present? %>
+    <dl class="mb-6 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-gray-200 bg-gray-100 shadow-sm sm:grid-cols-3">
+      <div class="bg-white px-4 py-3">
+        <dt class="<%= label_class %>">For payment</dt>
+        <dd class="mt-1 text-sm font-medium text-gray-900">
+          <%= @payment.type.to_s.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %>
+          <% if (payer_name = person_name(@payment.payer)).present? %>
+            <span class="font-normal text-gray-500">· <%= payer_name %></span>
           <% end %>
-        </div>
+        </dd>
       </div>
-    <% end %>
-
-    <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
-    <div class="mt-6">
-      <%= f.button :submit, @payment.is_a?(ExternalProcessorPayment) ? "Refund via Stripe" : "Submit", class: button_classes(:primary) %>
-      <% if @payment.present? %>
-        <%= link_to "Cancel", payment_path(@payment), class: button_classes(:secondary, extra: "ml-2") %>
-      <% else %>
-        <%= link_to "Cancel", payments_path, class: button_classes(:secondary, extra: "ml-2") %>
-      <% end %>
+      <div class="bg-white px-4 py-3">
+        <dt class="<%= label_class %>">Amount</dt>
+        <dd class="mt-1 text-lg font-bold text-gray-900 tabular-nums"><%= dollars_from_cents(@payment.amount_cents) %></dd>
+      </div>
+      <div class="bg-white px-4 py-3">
+        <dt class="<%= label_class %>">Refundable (not allocated)</dt>
+        <dd class="mt-1 text-lg font-bold text-amber-700 tabular-nums"><%= dollars_from_cents(@payment.amount_cents_remaining) %></dd>
+      </div>
+    </dl>
+  <% else %>
+    <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
+      <p class="text-sm font-medium text-red-700">Error: No payment found</p>
     </div>
   <% end %>
+
+  <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <%= simple_form_for @refund, url: refunds_path do |f| %>
+      <%= f.hidden_field :refundable_type %>
+      <%= f.hidden_field :refundable_id %>
+      <% if @payment.is_a?(ExternalProcessorPayment) %>
+        <div class="mb-4 rounded-lg bg-blue-50 p-4">
+          <p class="text-sm text-blue-700">This refund will be processed via Stripe and returned to the original payment method.</p>
+        </div>
+      <% end %>
+
+      <% unless @payment.is_a?(ExternalProcessorPayment) %>
+        <%= f.input :recipient_type, as: :select, collection: ["Person", "Organization"], include_blank: true, input_html: { data: { action: "search-type-select#toggle" } } %>
+        <template data-search-type-select-target="template" data-type="Person">
+          <%= f.input :recipient_id,
+            collection: [],
+            include_blank: true,
+            input_html: {
+              data: {
+                controller: "remote-select",
+                remote_select_model_value: "person"
+              }
+            },
+            prompt: "Search for a person",
+            label: "Recipient" %>
+        </template>
+        <template data-search-type-select-target="template" data-type="Organization">
+          <%= f.input :recipient_id,
+            collection: [],
+            include_blank: true,
+            input_html: {
+              data: {
+                controller: "remote-select",
+                remote_select_model_value: "organization"
+              }
+            },
+            prompt: "Search for an organization",
+            label: "Recipient" %>
+        </template>
+        <div data-search-type-select-target="pickerContainer">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-500 italic">Select Recipient Type</label>
+            <div class="min-h-[2.2rem] w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2"></div>
+          </div>
+        </div>
+        <div class="mb-4">
+          <span class="text-sm font-medium text-gray-700">Method</span>
+          <div class="mt-1 flex gap-4">
+            <%= f.collection_radio_buttons :method, [["Check", "check"], ["Cash", "cash"]], :last, :first, checked: "check" do |b| %>
+              <label class="flex items-center gap-2">
+                <%= b.radio_button %> <%= b.text %>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%= f.input :amount_dollars, label: "Amount ($)", required: true,
+            hint: (@payment ? "Up to #{dollars_from_cents(@payment.amount_cents_remaining)}, the amount not yet allocated. Revert an allocation first to refund more." : nil),
+            input_html: { min: 0, max: (@payment && @payment.amount_cents_remaining.to_d / 100), step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
+      <div class="action-buttons mt-8 flex justify-center gap-3">
+        <%= link_to "Cancel", @payment.present? ? payment_path(@payment) : payments_path, class: button_classes(:secondary_outline) %>
+        <%= f.button :submit, @payment.is_a?(ExternalProcessorPayment) ? "Refund via Stripe" : "Refund", class: button_classes(:primary) %>
+      </div>
+    <% end %>
+  </div>
 </div>
