@@ -80,7 +80,7 @@
              ([ "Form submission", form_submission_show_button(form_submission) ] if form_submission),
              ([ "Event", event_show_button(submission_event, subtitle: submission_event.start_date&.strftime("%b %-d, %Y")) ] if submission_event),
              ([ "Check number", @payment.check_number ] if @payment.check_number.present?),
-             ([ "Memo", tag.span(@payment.memo, class: "whitespace-pre-line") ] if @payment.memo.present?),
+             ([ "Check memo", tag.span(@payment.memo, class: "whitespace-pre-line") ] if @payment.memo.present?),
              ([ "Pay charge ID", @payment.pay_charge_id ] if @payment.pay_charge_id.present?),
              ([ "Stripe receipt", link_to(receipt_url, target: "_blank", rel: "noopener", class: "text-primary hover:text-primary-dark inline-flex items-center gap-1 underline") { safe_join([ "View receipt", tag.i(class: "fa-solid fa-arrow-up-right-from-square h-3 w-3") ], " ") } ] if receipt_url.present?),
              ([ "FileMaker codes", filemaker_code_links(@payment, link_class: "text-primary hover:underline") || @payment.filemaker_code ] if @payment.filemaker_codes.any?)
