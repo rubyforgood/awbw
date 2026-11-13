@@ -484,6 +484,14 @@ RSpec.describe "/workshops", type: :request do
 
         expect(response).to have_http_status(:ok)
       end
+
+      it "checks the chosen sort on the sort strip" do
+        get workshops_url, params: { sort: "popularity" }
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("input[type=radio][name=sort][value=popularity][checked]", visible: :all)
+        expect(page).to have_css("label", text: "Author")
+      end
     end
   end
 end

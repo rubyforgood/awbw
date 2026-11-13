@@ -34,6 +34,7 @@ module DomainTheme
 
     banners:                  :yellow,
     users:                    :rose,
+    bookmarks:                :sky,
     notifications:            :purple,
     comments:                 :blue,
     topic_subscriptions:      :stone,
