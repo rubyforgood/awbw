@@ -237,6 +237,15 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.report_submitted_fyi(notification)
   end
 
+  def account_email_changed
+    user = User.first
+    NotificationMailer.account_email_changed(Notification.new(noticeable: user, kind: "account_email_changed", recipient_email: user.email))
+  end
+
+  def account_email_changed_to_previous_address
+    NotificationMailer.account_email_changed(Notification.new(noticeable: User.first, kind: "account_email_changed", recipient_email: "previous@example.com"))
+  end
+
   def reset_password_fyi
     notification = find_valid_notification("reset_password_fyi") ||
       Notification.create!(
