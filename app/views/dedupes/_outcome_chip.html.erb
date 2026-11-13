@@ -1,0 +1,7 @@
+<%# What the merge does with a value. Locals: kind (:dropped, :fills, :stays). %>
+<% label, classes = {
+     dropped: [ "Will be dropped", "bg-amber-100 text-amber-800" ],
+     fills: [ "Fills the keeper", "bg-emerald-100 text-emerald-800" ],
+     stays: [ "Stays linked", "bg-gray-100 text-gray-500" ]
+   }.fetch(kind) %>
+<span class="rounded px-1.5 py-0.5 text-xs font-semibold <%= classes %>"><%= label %></span>

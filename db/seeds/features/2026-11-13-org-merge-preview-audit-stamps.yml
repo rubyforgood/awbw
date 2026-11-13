@@ -5,7 +5,7 @@ released_on: 2026-11-13
 action_path: "/organizations/dedupe_index"
 pr_number: 2984
 summary: >-
-  When merging two organizations, the preview now shows each one's created and last-updated dates and
-  who made them, and marks the deleted organization's values as "Will be dropped."
+  When merging two organizations, Linked records now lists each one's created and last-updated dates
+  and who made them, and marks the deleted organization's values as "Will be dropped."
 pro_tips:
   - "Use the created date to keep the older record when two organizations are true duplicates."

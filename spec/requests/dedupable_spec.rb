@@ -360,6 +360,24 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(row_for.call("Created by", 1).text).to include("(none)")
         expect(row_for.call("Created by", 1).text).not_to include("Will be dropped")
         expect(page.text).to include("Updated at", "Updated by")
+        expect(response.body.index("Created at")).to be > response.body.index("Linked records")
+      end
+
+      it "marks a deleted organization's link as filling the keeper's empty one, else dropped" do
+        parent = create(:organization, name: "Roof Org")
+        delete_rec.update_columns(parent_id: parent.id)
+        parent_rows = -> { Nokogiri::HTML(response.body).css("span").select { |span| span.text == "Parent" }.map(&:parent) }
+
+        get dedupe_preview_organizations_path(organization_to_keep_id: keep.id, organization_to_delete_id: delete_rec.id)
+        delete_row, keep_row = parent_rows.call
+        expect(delete_row.text).to include("Roof Org", "Fills the keeper")
+        expect(keep_row.text).not_to include("Stays linked")
+
+        keep.update_columns(parent_id: create(:organization, name: "Other Roof").id)
+        get dedupe_preview_organizations_path(organization_to_keep_id: keep.id, organization_to_delete_id: delete_rec.id)
+        delete_row, keep_row = parent_rows.call
+        expect(delete_row.text).to include("Roof Org", "Will be dropped")
+        expect(keep_row.text).to include("Other Roof", "Stays linked")
       end
 
       it "leaves a blank status blank instead of preselecting one" do
@@ -405,6 +423,21 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response).to redirect_to(dedupe_index_organizations_path)
         expect(Organization.exists?(delete_rec.id)).to be false
         expect(report.reload.organization_id).to eq(keep.id)
+      end
+
+      it "fills the keeper's empty links from the duplicate and keeps the ones it has" do
+        keep_wt, delete_wt = create_list(:windows_type, 2)
+        parent = create(:organization)
+        keep.update_columns(windows_type_id: keep_wt.id)
+        delete_rec.update_columns(windows_type_id: delete_wt.id, parent_id: parent.id)
+
+        post dedupe_perform_organizations_path, params: {
+          organization_to_delete_id: delete_rec.id,
+          organization_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.parent).to eq(parent)
+        expect(keep.windows_type).to eq(keep_wt)
       end
 
       it "applies keep-field edits before merging" do
@@ -649,6 +682,16 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response).to redirect_to(dedupe_index_people_path)
         expect(Person.exists?(delete_rec.id)).to be false
         expect(affiliation.reload.person_id).to eq(keep.id)
+      end
+
+      it "leaves the keeper's empty created by alone instead of filling it from the duplicate" do
+        keep.update_columns(created_by_id: nil)
+        delete_rec.update_columns(created_by_id: create(:user).id)
+
+        post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+        expect(Person.exists?(delete_rec.id)).to be false
+        expect(keep.reload.created_by_id).to be_nil
       end
 
       it "lets the keeper adopt the duplicate's name and email despite the uniqueness index" do

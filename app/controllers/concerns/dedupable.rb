@@ -17,6 +17,33 @@ module Dedupable
       .map { |name, records| CandidateGroup.new(label: name, records: records, reasons: []) }
   end
 
+  # belongs_to links not shown as a field: listed read-only on the preview, and the merge
+  # fills the keeper's empty ones from the duplicate.
+  def self.linked_associations(model_class, shown_columns)
+    model_class.reflect_on_all_associations(:belongs_to).select do |assoc|
+      fk = assoc.foreign_key.to_s
+      model_class.column_names.include?(fk) && shown_columns.exclude?(fk)
+    end
+  end
+
+  AUDIT_LINKS = %w[created_by_id updated_by_id].freeze
+
+  # :fills when the keeper's link is empty, :dropped when the keeper has its own (or it's
+  # an audit stamp, which stays with its record), nil when there's nothing to lose.
+  def self.link_outcome(assoc, keep, delete)
+    linked = delete.public_send(assoc.name)
+    return if linked.nil? || linked == keep.public_send(assoc.name)
+    return :dropped if keep.public_send(assoc.name) || linked == keep || AUDIT_LINKS.include?(assoc.foreign_key.to_s)
+
+    :fills
+  end
+
+  def self.fill_empty_links(keep, delete, associations)
+    associations.each do |assoc|
+      keep.public_send("#{assoc.name}=", delete.public_send(assoc.name)) if link_outcome(assoc, keep, delete) == :fills
+    end
+  end
+
   def dedupe_index
     config = dedupe_config
     mc = config[:model_class]
@@ -110,6 +137,8 @@ module Dedupable
       record_to_keep.assign_attributes(params.require(keep_param_key).permit(dedupe_editable_columns(config)))
     end
 
+    Dedupable.fill_empty_links(record_to_keep, record_to_delete, dedupe_linked_associations(config))
+
     # Combine values that must survive the merge rather than be replaced wholesale
     # (e.g. an org's FileMaker codes), so the kept record keeps both records' links.
     config[:merge_keeper]&.call(record_to_keep, record_to_delete)
@@ -164,6 +193,11 @@ module Dedupable
     end
   end
 
+  def dedupe_linked_associations(config)
+    shown = dedupe_editable_columns(config) + Array(config[:read_only_columns]).map(&:to_s) + Array(config[:audit_columns]).map(&:to_s)
+    Dedupable.linked_associations(config[:model_class], shown)
+  end
+
   # The preview only renders editable_columns when a config lists them, so only those are accepted.
   def dedupe_editable_columns(config)
     config[:editable_columns].presence || (config[:model_class].column_names - %w[id created_at updated_at legacy_id])
@@ -194,6 +228,8 @@ module Dedupable
   #                       only these are accepted on save (optional, defaults to every column)
   #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
   #                       e.g. a login's email and sign-in history (optional)
+  #   audit_columns:      Like read_only_columns, but listed at the bottom of Linked records — e.g.
+  #                       created/updated stamps; never filled onto the keeper (optional)
   #   record_label:       Lambda(record) naming a record across the deduper when #name doesn't tell two
   #                       apart, e.g. two logins of one person (optional, defaults to #name)
   #   search_model:       Search model the index pickers query (optional, defaults to the model's own
@@ -253,6 +289,8 @@ module Dedupable
       search_model: config[:search_model] || mn,
       editable_columns: config[:editable_columns],
       read_only_columns: Array(config[:read_only_columns]).map(&:to_s),
+      audit_columns: Array(config[:audit_columns]).map(&:to_s),
+      linked_associations: dedupe_linked_associations(config),
       record_label: config[:record_label] || :name.to_proc,
       union_columns: Array(config[:union_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
