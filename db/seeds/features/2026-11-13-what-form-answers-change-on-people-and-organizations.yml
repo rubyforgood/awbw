@@ -10,7 +10,8 @@ summary: >-
   reports. Most of it happens on submit when the organization name matches exactly,
   and again when you link it.
 pro_tips:
-  - "The same rules apply when you link from an event's Registrants page (Link organizations) or from a form submission."
+  - "Linking an organization? This is the full list of what it changes, whether you link from an event's Registrants page (Link organizations) or from a form submission."
+  - "For how the linking page itself works, see “Clearer organization linking page.”"
 description: |
   <p><strong>Org address</strong></p>
   <ul>
