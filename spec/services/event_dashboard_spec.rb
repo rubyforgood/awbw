@@ -1045,7 +1045,7 @@ RSpec.describe EventDashboard do
       # itself, the way AffiliationServices::CreateFromRegistration mints it. It
       # is NOT excluded from the classification (ADR-0001 D5) — it simply doesn't
       # count as prior history, because "before" is strict.
-      training_date = event.start_date.to_date
+      training_date = event.starts_on
 
       # New program: the registrant's affiliation is the org's first facilitator.
       create(:affiliation, organization: new_org, person: new_facilitator,
@@ -1112,7 +1112,7 @@ RSpec.describe EventDashboard do
       # start == end == the event date: the minted affiliation, not a prior program,
       # so this must NOT read Ongoing.
       create(:affiliation, organization: org, person: facilitator, title: "Facilitator",
-             start_date: event.start_date.to_date, end_date: event.start_date.to_date)
+             start_date: event.starts_on, end_date: event.starts_on)
       create(:event_registration, event: event, registrant: facilitator, status: "registered")
 
       expect(dashboard.program_status_counts).to eq(new: 1, ongoing: 0, reinstated: 0)
@@ -1131,7 +1131,7 @@ RSpec.describe EventDashboard do
              start_date: Date.new(2023, 1, 1), end_date: nil)
       # …plus the registrant's own affiliation minted at the training itself.
       create(:affiliation, organization: org, person: registrant, title: "Facilitator",
-             start_date: event.start_date.to_date)
+             start_date: event.starts_on)
       create(:event_registration, event: event, registrant: registrant, status: "registered")
 
       expect(dashboard.program_status_counts).to eq(new: 0, ongoing: 1, reinstated: 0)

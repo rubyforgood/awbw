@@ -823,7 +823,7 @@ class EventRegistrationsController < ApplicationController
       organization: organization,
       entry: entry,
       scenario: @event_registration.event.linking_scenario,
-      training_date: @event_registration.event.start_date,
+      training_date: @event_registration.event.starts_on,
       event_registration: @event_registration
     )
 

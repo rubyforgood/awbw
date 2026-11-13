@@ -1247,7 +1247,7 @@ class EventRegistration < ApplicationRecord
   # by verdict, and unlike the registrant-wide rollup it ignores affiliations to
   # other organizations.
   def program_statuses
-    reference_date = event&.start_date&.to_date
+    reference_date = event&.starts_on
     organizations.map { |organization| organization.facilitator_program_status(as_of: reference_date) }
                  .uniq(&:status)
   end

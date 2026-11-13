@@ -79,7 +79,7 @@ module EventRegistrationServices
           form_params: @form_params,
           person: person,
           facilitator_training: @event.facilitator_training,
-          training_date: @event.start_date,
+          training_date: @event.starts_on,
           event_registration: event_registration
         )
         organization = org_result.organization
