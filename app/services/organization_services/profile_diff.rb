@@ -42,8 +42,6 @@ module OrganizationServices
       submitted = @website&.strip
       saved = @organization.website_url
       return if submitted.blank? || saved.blank?
-      # A non-address answer is ignored by the sync, so there's nothing to reconcile.
-      return unless Organization.website_address?(submitted)
       return if normalize_url(submitted) == normalize_url(saved)
 
       Discrepancy.new(field: :website_url, label: "Website", submitted: submitted, saved: saved)

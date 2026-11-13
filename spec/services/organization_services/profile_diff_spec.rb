@@ -25,12 +25,13 @@ RSpec.describe OrganizationServices::ProfileDiff do
     expect(diff).to be_empty
   end
 
-  it "does not flag a website answer that isn't a web address (the sync ignores it)" do
+  # The sync never saves a non-address answer, so the admin should see it wasn't applied.
+  it "flags a website answer that isn't a web address" do
     organization.update!(website_url: "https://acme.org")
 
     diff = described_class.call(organization: organization, website: "Acme Unified School District")
 
-    expect(diff).to be_empty
+    expect(diff.first).to have_attributes(field: :website_url, submitted: "Acme Unified School District", saved: "https://acme.org")
   end
 
   it "flags a website that differs from the saved one" do
