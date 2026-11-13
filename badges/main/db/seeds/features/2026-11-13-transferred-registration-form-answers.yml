@@ -1,0 +1,11 @@
+name: "Registration form answers follow a transfer"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-13
+action_path: "/transfer_guide"
+summary: >-
+  A transferred-in registration links to the form answers given on the original
+  registration: on the ticket, the scholarship page, the registrants roster, the
+  registrations list, and the staff registration page. Staff links show in teal.
+pro_tips:
+  - "Hover the teal form icon to see which training the answers came from."

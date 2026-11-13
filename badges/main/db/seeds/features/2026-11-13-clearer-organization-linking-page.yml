@@ -1,0 +1,13 @@
+name: "Clearer organization linking page"
+area: people
+display_status: admin_facing
+released_on: 2026-11-13
+pr_number: 2996
+action_path: "/form_submissions"
+summary: >-
+  The page for linking a registration or form submission to an organization now
+  lists everything linking does, warns while a submitted organization is still
+  unlinked, and marks suggested matches as unconfirmed.
+pro_tips:
+  - "Link organizations here rather than on the person's profile: linking here also links the registration or submission and records the person's affiliation."
+  - "Suggested matches are only similar names. Use “Link this one” only if it's really the same organization; otherwise create the one they typed or search all organizations."

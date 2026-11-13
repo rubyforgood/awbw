@@ -73,6 +73,14 @@ RSpec.describe "Events::FormSubmissions", type: :request do
           expect(response.body).to include("registrant-row-#{registration.id}")
         end
 
+        it "returns to the transferred-in registration's row on its own event's roster" do
+          destination = create(:event_registration, registrant: person, transferred_from_registration: registration)
+
+          get event_registrant_submissions_path(event, person_id: person.id, return_to: "registrants", event_registration_id: destination.id)
+
+          expect(response.body).to include(CGI.escapeHTML(registrants_event_path(destination.event, anchor: "registrant-row-#{destination.id}", highlight: destination.id)))
+        end
+
         it "returns to the edit registration page, keeping its own return_to" do
           get event_registrant_submissions_path(event, person_id: person.id, return_to: "event_registration",
             event_registration_id: registration.id, registration_return_to: "roster")

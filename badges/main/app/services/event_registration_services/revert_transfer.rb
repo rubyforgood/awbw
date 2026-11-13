@@ -26,7 +26,7 @@ module EventRegistrationServices
           TransferContinuingEducation.new(
             transferred_out: @registration, destination: destination
           ).revert
-          destination.update!(transferred_from_registration: nil)
+          destination.detach_from_transfer!
         end
 
         @registration.update!(status: restored_status, status_before_transfer: nil)

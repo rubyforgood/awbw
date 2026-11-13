@@ -35,7 +35,7 @@
         as the source answer admins reconcile against; rendered grey/neutral. A
         registrant can have more than one submission, so each is listed with its
         own green link to that submission's public view. === %>
-    <%# Each submitted org that isn't in the DB gets a "Create and link" row, the
+    <%# Each submitted org that isn't in the DB gets a "Create org and link" row, the
         expected next step — so those take the solid (primary) style and "Link
         organization" is demoted to the outline style. %>
     <details class="mb-8" open>
@@ -159,10 +159,23 @@
           <% end %>
         </ul>
       <% else %>
-        <p class="text-gray-500 mb-4">No linked organizations.</p>
+        <%# Amber warning only while a submitted org is waiting to be linked (the
+            "Pending" state above); with nothing submitted, no link is expected. %>
+        <% if @submitted_org_name.present? %>
+          <div class="mb-4 flex items-start gap-2 text-amber-800">
+            <i class="fa-solid fa-triangle-exclamation mt-1 text-amber-500"></i>
+            <div class="min-w-0">
+              <p>No linked organizations.</p>
+              <p class="text-sm text-amber-700">Until one is linked, this registration won't be counted in reporting or profiles.</p>
+            </div>
+          </div>
+        <% else %>
+          <p class="text-gray-500 mb-4">No linked organizations.</p>
+        <% end %>
       <% end %>
 
       <%# Adding an org is part of managing the links, so it's nested in the same card. %>
+      <%= render "shared/link_organization_effects", effects: @event_registration.decorate.link_organization_effects(position: @submitted_position) %>
       <%= render "shared/link_organization_actions",
                  select_url: select_organization_event_registration_path(@event_registration),
                  create_url: create_organization_event_registration_path(@event_registration),

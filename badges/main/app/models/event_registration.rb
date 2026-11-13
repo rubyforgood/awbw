@@ -713,6 +713,13 @@ class EventRegistration < ApplicationRecord
     transferred_from_registration_id.present?
   end
 
+  # Unlinks a transfer's destination into a standalone registration. A scholarship request moved in by
+  # the transfer goes back with it, unless an award was already made here.
+  def detach_from_transfer!
+    request_moved_in = transferred_from_registration&.scholarship_requested? && scholarships.none?
+    update!(transferred_from_registration: nil, scholarship_requested: scholarship_requested? && !request_moved_in)
+  end
+
   # A transferred-out registration whose destination hasn't been recorded yet.
   # Drives the follow-up prompt to create/link the incoming registration.
   def transfer_destination_pending?
@@ -925,10 +932,26 @@ class EventRegistration < ApplicationRecord
     super + transferred_from_registration&.allocated_from(source).to_i
   end
 
-  # The reg holding this balance now: a transfer's new reg once one is recorded.
-  def billing_registration
+  def registration_form_submitted?
+    form = event.registration_form
+    form.present? && event.form_submissions.exists?(person_id: registrant_id, form: form)
+  end
+
+  # Registration-form answers are filed under the event they were given at, so a transferred-in
+  # registrant who didn't also register at the new event answered on the original.
+  def form_answers_registration
+    return self if !transferred_in? || registration_form_submitted?
+
+    transferred_from_registration
+  end
+
+  # The reg the registrant holds now: a transfer's new reg once one is recorded.
+  def current_registration
     (transferred_out? && transferred_to_registration) || self
   end
+
+  # The balance follows the registrant to the reg they hold now.
+  def billing_registration = current_registration
 
   # Every allocation settling this reg's balance, across the transfer.
   def billing_allocations

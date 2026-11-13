@@ -77,7 +77,8 @@ module Events
 
       @scholarships = @event_registration.effective_scholarships
       @scholarship = @scholarships.first
-      @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
+      answers_registration = @event_registration.form_answers_registration
+      @form_answers_registration = answers_registration if answers_registration.slug.present? && answers_registration.registration_form_submitted?
 
       # The recipients survey, delivered here once the recipient has signed their
       # agreement (and any drip date has passed).

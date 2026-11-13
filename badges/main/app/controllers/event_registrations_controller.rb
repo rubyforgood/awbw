@@ -249,6 +249,7 @@ class EventRegistrationsController < ApplicationController
     # so the new reg points straight there and the middle stop is dropped. (#1944)
     source = @event_registration.transferred_from_registration || @event_registration
     destination.intends_to_pay ||= @event_registration.intends_to_pay?
+    destination.scholarship_requested ||= @event_registration.scholarship_requested?
 
     if destination == source
       # Transferring back to the origin event undoes the whole chain: restore the
@@ -281,7 +282,7 @@ class EventRegistrationsController < ApplicationController
         EventRegistrationServices::TransferContinuingEducation.new(
           transferred_out: @event_registration, destination: previous
         ).revert
-        previous.update!(transferred_from_registration: nil)
+        previous.detach_from_transfer!
       end
       next false unless destination.save
       # Carry the transferring reg's org links onto the destination so the new reg

@@ -623,6 +623,26 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(changes_link_dates).to eq([ "(Sep 1, 2026)" ])
       end
 
+      it "links a transferred-in registration to the answers on the original event, marked in teal" do
+        source_event = create(:event, title: "Origin training")
+        source = create(:event_registration, event: source_event, registrant: regular_user.person, status: "transferred_out")
+        existing_registration.update!(transferred_from_registration: source)
+        reg_form = create(:form, name: "Reg form")
+        create(:event_form, :registration, event: source_event, form: reg_form)
+        submission = create(:form_submission, person: regular_user.person, form: reg_form, event: source_event,
+          role: "registration", created_at: Time.zone.local(2026, 9, 1, 10))
+
+        get edit_event_registration_path(existing_registration, return_to: "roster")
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(source_event, person_id: regular_user.person.id,
+          return_to: "event_registration", event_registration_id: existing_registration.id,
+          registration_return_to: "roster", anchor: "form-submission-#{submission.id}")}']")
+        expect(link).to be_present
+        expect(link.text).to include("Reg form · Sep 1, 2026")
+        expect(link["class"]).to include("text-teal-600")
+        expect(link["title"]).to start_with("From the original registration for Origin training")
+      end
+
       context "when the registrant submitted the registration form more than once" do
         let(:reg_form) { create(:form, name: "Reg form") }
         let!(:first_submission) { create(:form_submission, person: regular_user.person, form: reg_form, event: event, role: "registration", created_at: Time.zone.local(2026, 9, 1, 10)) }
@@ -1227,6 +1247,16 @@ RSpec.describe "EventRegistrations", type: :request do
           )
         end
 
+        it "moves a pending scholarship request to the new registration" do
+          source.update!(scholarship_requested: true)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming).to be_scholarship_requested
+        end
+
         it "compresses carried days and flags the mismatch when the source had more days than the destination" do
           # Mid-month so the month_year asserted below reads the same in UTC and the request's Pacific zone.
           starts = 1.month.from_now.change(day: 15, hour: 12)
@@ -1447,6 +1477,28 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(source.reload.status).to eq("registered")
           expect(EventRegistration.exists?(destination.id)).to be(true)
           expect(destination.reload.transferred_from_registration).to be_nil
+        end
+
+        it "takes back the scholarship request the transfer moved onto the destination" do
+          source.update!(scholarship_requested: true)
+          destination = create(:event_registration, registrant: source.registrant, event: create(:event, published: true),
+            transferred_from_registration: source, scholarship_requested: true)
+
+          patch revert_transfer_event_registration_path(source)
+
+          expect(destination.reload).not_to be_scholarship_requested
+          expect(source.reload).to be_scholarship_requested
+        end
+
+        it "keeps the destination's request once a scholarship was awarded there" do
+          source.update!(scholarship_requested: true)
+          destination = create(:event_registration, registrant: source.registrant, event: create(:event, published: true),
+            transferred_from_registration: source, scholarship_requested: true)
+          create(:allocation, source: create(:scholarship, recipient: source.registrant), allocatable: destination, amount: 1)
+
+          patch revert_transfer_event_registration_path(source)
+
+          expect(destination.reload).to be_scholarship_requested
         end
 
         it "undoes a collapsed chain, re-merging the relocated CE back onto the origin" do
@@ -1864,7 +1916,7 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("#form-submission-#{sub2.id}")
         end
 
-        it "shows a Create and link row for each distinct submitted org not in the database" do
+        it "shows a Create org and link row for each distinct submitted org not in the database" do
           reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
           field = reg_form.form_fields.find_by(field_identifier: "organization_name") ||
@@ -1885,6 +1937,15 @@ RSpec.describe "EventRegistrations", type: :request do
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).to include("No registration form was submitted")
+        end
+
+        it "notes that linking here also updates the registrant's affiliations" do
+          get link_organization_event_registration_path(existing_registration)
+
+          first_name = existing_registration.registrant.first_name
+          expect(response.body).to include("Linking an organization here:")
+          expect(response.body).to include("Links it to this registration")
+          expect(response.body).to include(CGI.escapeHTML("Records it in #{first_name}'s affiliations"))
         end
 
         it "says no organization was submitted when the form was submitted without one" do

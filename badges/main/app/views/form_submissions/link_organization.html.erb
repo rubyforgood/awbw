@@ -110,24 +110,22 @@
           </li>
         </ul>
       <% else %>
-        <p class="text-gray-500 mb-4">No organization linked — the person has no active affiliation matching the submitted name.</p>
+        <%# Amber warning only while a submitted org is waiting to be linked (the
+            "Pending" state above); with nothing submitted, no link is expected. %>
+        <% if @submitted_org_name.present? %>
+          <div class="mb-4 flex items-start gap-2 text-amber-800">
+            <i class="fa-solid fa-triangle-exclamation mt-1 text-amber-500"></i>
+            <div class="min-w-0">
+              <p>No organization linked — the person has no active affiliation matching the submitted name.</p>
+              <p class="text-sm text-amber-700">Until one is linked, this submission won't be counted in reporting or profiles.</p>
+            </div>
+          </div>
+        <% else %>
+          <p class="text-gray-500 mb-4">No organization linked — the person has no active affiliation matching the submitted name.</p>
+        <% end %>
       <% end %>
 
-      <% link_effects = @form_submission.decorate.link_organization_effects %>
-      <% if link_effects.any? %>
-        <div class="mb-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
-          <p class="flex items-center gap-1.5 font-semibold">
-            <i class="fa-solid fa-circle-info"></i>
-            Linking an organization here also:
-          </p>
-          <ul class="mt-1 list-disc list-inside space-y-0.5">
-            <% link_effects.each do |effect| %>
-              <li><%= effect %></li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
-
+      <%= render "shared/link_organization_effects", effects: @form_submission.decorate.link_organization_effects %>
       <%= render "shared/link_organization_actions",
                  select_url: select_organization_form_submission_path(@form_submission),
                  create_url: create_organization_form_submission_path(@form_submission),
