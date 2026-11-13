@@ -1,0 +1,73 @@
+<%# The payment's comments and communications: a read-only list, newest first,
+    plus one form to add a comment. Editing an existing entry happens in the
+    combined comments & communications feed, not here. %>
+<% comments = allowed_to?(:manage?, Comment) ? payment.comments.includes(created_by: :person).to_a : [] %>
+<% communications = authorized_scope(payment.communications_scope, with: NotificationPolicy).includes(:sender).to_a %>
+<% entries = (comments + communications).sort_by(&:created_at).reverse %>
+<section id="payment-comments" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
+      <i class="fa-solid fa-comments"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700"><%= t("communications.section_title") %></h2>
+    <% if payment.person %>
+      <%= link_to comments_and_communications_path(person_id: payment.person.id),
+            class: "ml-auto inline-flex items-center gap-1 text-sm #{eyebrow_link_class}",
+            title: "Edit or log communications in #{person_name(payment.person)}'s feed" do %>
+        View in feed <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if entries.any? %>
+    <ul class="divide-y divide-gray-100">
+      <% entries.each do |entry| %>
+        <% comment = entry.is_a?(Comment) %>
+        <li class="px-4 py-3">
+          <div class="flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
+            <% if comment %>
+              <i class="fa-solid fa-comment text-gray-400" title="Comment" aria-hidden="true"></i>
+            <% else %>
+              <%= entry.decorate.channel_icon %>
+            <% end %>
+            <span><%= entry.created_at.strftime("%b %-d, %Y %-l:%M %p") %></span>
+            <% author = comment ? entry.created_by : entry.sender %>
+            <span>· <%= author ? person_name(author) : "System" %></span>
+            <% if entry.flagged? %>
+              <i class="fa-solid fa-flag text-orange-500" title="Flagged for follow-up"></i>
+            <% end %>
+          </div>
+          <% heading = comment ? entry.topic : entry.email_subject %>
+          <% if heading.present? %>
+            <p class="mt-1 text-sm font-semibold text-gray-900"><%= heading %></p>
+          <% end %>
+          <% body = comment ? entry.body : entry.email_body_text %>
+          <% if body.present? %>
+            <p class="mt-0.5 text-sm whitespace-pre-line text-gray-700"><%= body %></p>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="px-4 py-3 text-sm text-gray-500"><%= t("communications.section_none") %></p>
+  <% end %>
+
+  <% if allowed_to?(:manage?, Comment) %>
+    <%# A plain post-and-redirect back to this page. %>
+    <%= simple_form_for Comment.new, url: payment_comments_path(payment), data: { turbo: false },
+          html: { class: "border-t border-gray-100 bg-gray-50 px-4 py-3" } do |f| %>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <%= f.input :topic, label: "Topic", required: false, input_html: { class: "bg-white" } %>
+        <div class="sm:col-span-2">
+          <%= f.input :body, as: :text, label: "Comment", required: true, input_html: { rows: 2, class: "bg-white" } %>
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-3">
+        <label class="inline-flex cursor-pointer items-center gap-1.5 text-sm text-gray-600">
+          <%= f.check_box :flagged %> Flag for follow-up
+        </label>
+        <%= f.button :submit, "Add comment", class: button_classes(:primary, size: :sm) %>
+      </div>
+    <% end %>
+  <% end %>
+</section>

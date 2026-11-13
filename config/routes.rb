@@ -377,6 +377,7 @@ Rails.application.routes.draw do
     end
     resource :reconciliation_acknowledgement, only: [ :create, :destroy ],
              controller: "payments/reconciliation_acknowledgements"
+    resources :comments, only: [ :create ]
   end
   resources :allocations, only: [ :new, :create, :index ] do
     post :revert, on: :member

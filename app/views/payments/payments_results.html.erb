@@ -34,16 +34,11 @@
                   <i class="fa-solid <%= payer.is_a?(Organization) ? "fa-building" : "fa-user" %> shrink-0 text-xs text-gray-400"></i>
                   <span class="font-medium"><%= person_name(payer).presence || "Unknown payer" %></span>
                 </div>
-                <% if payment.check_number.present? || payment.memo.present? %>
-                  <div class="mt-0.5 max-w-xs truncate pl-5 text-xs text-gray-500" title="<%= payment.memo %>">
-                    <%= [ payment.check_number.presence&.then { "##{it}" }, payment.memo ].compact_blank.join(" · ") %>
-                  </div>
-                <% end %>
               </td>
               <td class="px-6 py-3 text-sm whitespace-nowrap">
                 <%# The amount card opens the payment, like the record cards on other indexes. %>
                 <%= link_to payment_path(payment),
-                      class: "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-base font-bold tabular-nums shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:payments)} #{DomainTheme.bg_class_for(:payments, intensity: 100)} #{DomainTheme.bg_class_for(:payments, intensity: 100, hover: true)} #{DomainTheme.text_class_for(:payments, intensity: 800)}",
+                      class: "inline-flex w-28 items-center justify-between gap-1.5 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums transition-colors duration-200 #{DomainTheme.border_class_for(:payments)} #{DomainTheme.bg_class_for(:payments, intensity: 100)} #{DomainTheme.bg_class_for(:payments, intensity: 100, hover: true)} #{DomainTheme.text_class_for(:payments, intensity: 800)}",
                       data: { turbo_frame: "_top", turbo_prefetch: false } do %>
                   <%= dollars_from_cents(payment.amount_cents) %>
                   <i class="fa-solid fa-chevron-right text-2xs opacity-60"></i>

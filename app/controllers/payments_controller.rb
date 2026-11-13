@@ -194,11 +194,7 @@ class PaymentsController < ApplicationController
   end
 
   def payment_params
-    params.require(:payment).permit(
-      :type, :payer_type, :person_id, :organization_id, :payer_sgid, :additional_designation_sgid, :amount_dollars, :currency, :check_number, :memo, :allocatable_sgid,
-      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES
-    )
+    params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :payer_sgid, :additional_designation_sgid, :amount_dollars, :currency, :check_number, :memo, :allocatable_sgid)
   end
 
   def locate_allocatable
@@ -264,12 +260,7 @@ class PaymentsController < ApplicationController
   end
 
   def edit_payment_params
-    params.require(:payment).permit(
-      :person_id, :organization_id, :form_submission_id, :payer_sgid, :additional_designation_sgid, :filemaker_code,
-      :check_number, :memo,
-      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES
-    )
+    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id, :payer_sgid, :additional_designation_sgid, :filemaker_code, :check_number, :memo)
   end
 
   def redirect_path_for(allocatable)

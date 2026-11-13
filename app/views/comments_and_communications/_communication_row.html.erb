@@ -7,7 +7,7 @@
     Notification). Optional: person (scopes the date link's feed, and rides along
     on the save so the re-rendered row stays scoped to them). %>
 <% person = local_assigns[:person] %>
-<% source_chip = local_assigns.fetch(:source_chip, true) ? feed_source_chip(entry.noticeable, icon: entry.decorate.channel_icon) : entry.decorate.channel_icon %>
+<% source_chip = feed_source_chip(entry.noticeable, icon: entry.decorate.channel_icon) %>
 <% edit_button = content_tag(:button, safe_join([ content_tag(:i, "", class: "fa-solid fa-pen text-2xs"), " Edit" ]),
                               type: "button",
                               class: "shrink-0 text-xs #{eyebrow_link_class}",

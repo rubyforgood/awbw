@@ -6,8 +6,7 @@
     place. Locals: entry (a Comment). Optional: person and record_targets (the
     person feed's records the comment can be moved to). %>
 <% person = local_assigns[:person] %>
-<% comment_icon = content_tag(:i, "", class: "fa-solid fa-comment text-gray-500", "aria-hidden": "true", title: "Comment") %>
-<% source_chip = local_assigns.fetch(:source_chip, true) ? feed_source_chip(entry.commentable, icon: comment_icon) : comment_icon %>
+<% source_chip = feed_source_chip(entry.commentable, icon: content_tag(:i, "", class: "fa-solid fa-comment text-gray-500", "aria-hidden": "true", title: "Comment")) %>
 <% edit_button = content_tag(:button, safe_join([ content_tag(:i, "", class: "fa-solid fa-pen text-2xs"), " Edit" ]),
                               type: "button",
                               class: "ml-auto shrink-0 text-xs #{eyebrow_link_class}",
