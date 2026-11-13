@@ -219,6 +219,15 @@ RSpec.describe "Comments and communications", type: :request do
       expect(labels).to include("Grant · Legacy Circle Fund")
     end
 
+    it "offers the payments naming the person as targets" do
+      CheckPayment.create!(person:, amount_cents: 245_000, check_number: "1234")
+
+      get comments_and_communications_path(person_id: person.id)
+
+      labels = Nokogiri::HTML(response.body).css("select#noticeable_sgid option").map(&:text)
+      expect(labels.any? { |label| label.start_with?("Payment · Check · $2,450") }).to be(true)
+    end
+
     it "offers the reports and workshop records the person is credited on" do
       create(:monthly_report, author: person)
       create(:workshop_idea, author: person)

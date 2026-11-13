@@ -30,6 +30,7 @@ module PeopleHelper
     records.concat(PersonCreditedRecords.stories(person).order(created_at: :desc))
     records.concat(PersonCreditedRecords.story_ideas(person).order(created_at: :desc))
     records.concat(person.grants.includes(:funder).order(created_at: :desc))
+    records.concat(Payment.where(person_id: person.id).order(created_at: :desc))
 
     FeedRecordPreloader.new(records).call.map { |record| { label: commentable_label(record), sgid: record.to_sgid.to_s, gid: record.to_gid_param } }
   end
