@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% label_class = "text-xs font-medium tracking-wide text-gray-400 uppercase" %>
-<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(:payments) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6" data-controller="search-type-select">
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(:payments) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
   <div class="mb-4">
     <%= link_to(@payment ? "← Payment" : "← Payments", @payment ? payment_path(@payment) : payments_path, class: "text-sm #{eyebrow_link_class} px-2 py-1") %>
   </div>
@@ -43,33 +43,23 @@
       <% end %>
 
       <% unless @payment.is_a?(ExternalProcessorPayment) %>
-        <% recipient = @refund.recipient %>
-        <%= f.input :recipient_type, as: :select, collection: ["Person", "Organization"], include_blank: true,
-              hint: ("Defaults to the payer." if recipient),
-              input_html: { class: "bg-white", data: { action: "search-type-select#toggle" } } %>
-        <% { "Person" => [ "person", "Search for a person" ], "Organization" => [ "organization", "Search for an organization" ] }.each do |type, (model, prompt)| %>
-          <% prefill = recipient if recipient.is_a?(type.constantize) %>
-          <template data-search-type-select-target="template" data-type="<%= type %>">
-            <%= f.input :recipient_id,
-              collection: prefill ? [ [ prefill.remote_search_label[:label], prefill.id ] ] : [],
-              selected: prefill&.id,
-              include_blank: true,
-              input_html: {
-                class: "bg-white",
-                data: {
-                  controller: "remote-select",
-                  remote_select_model_value: model
-                }
-              },
-              prompt: prompt,
-              label: "Recipient" %>
-          </template>
-        <% end %>
-        <div class="mb-6" data-search-type-select-target="pickerContainer">
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-500 italic">Choose a recipient type first</label>
-            <div class="min-h-[2.2rem] w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2"></div>
-          </div>
+        <% recipient_label = @refund.recipient&.compound_search_label %>
+        <div class="mb-6">
+          <%= f.input :recipient_sgid,
+                collection: recipient_label ? [ [ recipient_label[:label], recipient_label[:id] ] ] : [],
+                selected: recipient_label&.dig(:id),
+                include_blank: true,
+                required: true,
+                prompt: "Search people and organizations",
+                label: "Refund to",
+                hint: ("Defaults to the payer." if recipient_label),
+                input_html: {
+                  class: "bg-white",
+                  data: {
+                    controller: "remote-select",
+                    remote_select_model_value: "person_or_organization"
+                  }
+                } %>
         </div>
         <div class="mb-6">
           <span class="text-sm font-medium text-gray-700">Method</span>

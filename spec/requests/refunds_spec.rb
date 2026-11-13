@@ -12,12 +12,26 @@ RSpec.describe "Refunds", type: :request do
 
       expect {
         post refunds_path, params: {
-          refund: { refundable_id: payment.id, refundable_type: "Payment", recipient_type: "Person",
-                    recipient_id: person.id, method: "cash", amount_dollars: "9.00" }
+          refund: { refundable_id: payment.id, refundable_type: "Payment", recipient_sgid: person.to_sgid.to_s,
+                    method: "cash", amount_dollars: "9.00" }
         }
       }.not_to change(Refund, :count)
 
       expect(flash[:error]).to include("$0.12 not yet allocated")
+    end
+  end
+
+  describe "POST /refunds recipient" do
+    it "infers the recipient's type from the picked person or organization" do
+      organization = create(:organization)
+      payment = CashPayment.create!(person:, amount_cents: 5_000)
+
+      post refunds_path, params: {
+        refund: { refundable_id: payment.id, refundable_type: "Payment", recipient_sgid: organization.to_sgid.to_s,
+                  method: "cash", amount_dollars: "10.00" }
+      }
+
+      expect(Refund.last.recipient).to eq(organization)
     end
   end
 
@@ -36,9 +50,9 @@ RSpec.describe "Refunds", type: :request do
 
       get new_refund_path(payment_sgid: payment.to_sgid.to_s)
 
-      page = Nokogiri::HTML(response.body)
-      expect(page.at_css("select#refund_recipient_type option[selected]")&.text).to eq("Organization")
-      expect(response.body).to include(%(<option selected="selected" value="#{organization.id}">Sample Unified District</option>))
+      selected = Nokogiri::HTML(response.body).at_css("select#refund_recipient_sgid option[selected]")
+      expect(selected.text).to eq("Sample Unified District · Organization")
+      expect(GlobalID::Locator.locate_signed(selected["value"])).to eq(organization)
     end
   end
 end
