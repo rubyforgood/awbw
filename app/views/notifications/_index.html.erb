@@ -19,7 +19,7 @@
       <!-- Sent -->
       <td class="px-4 py-3 whitespace-nowrap text-gray-700">
         <% if notification.delivered_at.present? %>
-          <%= time_ago_in_words(notification.delivered_at.in_time_zone("Pacific Time (US & Canada)")) %> ago
+          <%= time_ago_in_words(notification.delivered_at) %> ago
         <% elsif notification.failed? %>
           <span class="font-medium text-red-600" title="<%= notification.error_class %>: <%= notification.error_message %>"><%= n.failed_label %></span>
           <%= render "resend_button", notification: notification %>
