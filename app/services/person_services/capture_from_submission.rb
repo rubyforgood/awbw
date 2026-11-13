@@ -72,8 +72,12 @@ module PersonServices
     def note_replaced(record, attribute, submitted, saved)
       return if saved.blank? || submitted.casecmp?(saved.to_s.strip)
 
-      label = record == @person ? attribute.to_s.humanize : "Mailing address #{attribute.to_s.humanize.downcase}"
+      label = record == @person ? attribute.to_s.humanize : "#{record_label(record)} #{attribute.to_s.humanize.downcase}"
       @replaced << Replaced.new(label: label, submitted: submitted, saved: saved)
+    end
+
+    def record_label(record)
+      record.is_a?(Address) ? "Mailing address" : record.model_name.human
     end
 
     def field_value(key)

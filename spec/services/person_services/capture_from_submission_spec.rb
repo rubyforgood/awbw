@@ -3,6 +3,15 @@ require "rails_helper"
 RSpec.describe PersonServices::CaptureFromSubmission do
   let(:person) { create(:person) }
 
+  it "labels a replaced license field as the license's" do
+    create(:professional_license, person: person, number: "LIC-1", kind: nil, issuing_state: "CA")
+
+    capture = described_class.new(person:, answers: { "license_number" => "LIC-1", "license_issuing_state" => "OR" })
+    capture.call
+
+    expect(capture.replaced.sole).to have_attributes(label: "Professional license issuing state", saved: "CA", submitted: "OR")
+  end
+
   describe "the phone" do
     it "reuses the same number on file despite formatting, making it the only primary" do
       other = create(:contact_method, contactable: person, kind: :phone, value: "555-400-2000", primary: true)
