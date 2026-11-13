@@ -1,4 +1,15 @@
 module EventRegistrationsHelper
+  # The registrations index's Event type options, plus — when a report drilled in
+  # with a mix of Event::KINDS (e.g. "live,other") — that mix as its own option, so
+  # the select shows the filter actually applied.
+  def event_type_filter_options(selected)
+    options = EventRegistration::EVENT_TYPE_FILTER_OPTIONS
+    kinds = selected.to_s.split(",") & Event::KINDS
+    return options if kinds.size < 2
+
+    options + [ [ kinds.map { |kind| Event::KIND_LABELS[kind] }.join(" + "), selected ] ]
+  end
+
   LOCKED_SECTION_NOTE = "These are no longer editable for transferred out registrations.".freeze
 
   # Wraps a locked edit-form section in a disabled <fieldset> so its inputs can't be

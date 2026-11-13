@@ -3,11 +3,14 @@
     total for award counts and dollars. A segmented toggle in the card header (see
     _scholarships_report_toggle) swaps the layout via a `view` param — the default
     split view (separate # and $ columns) or a combined view (count over dollars
-    in one cell). Pass `report:` (an EventScholarshipReport). Fuchsia-branded. %>
+    in one cell). A second toggle (_scholarships_funding_toggle, `funding` param)
+    shows or hides the funded/unfunded split. Pass `report:` (an
+    EventScholarshipReport). Fuchsia-branded. %>
 <% if report.any? %>
   <%= render "scholarships_report_table",
         report: report,
         combined: params[:view] == "combined",
+        split: scholarship_funding_split?,
         all_time: @time_period.blank? || @time_period == "all_time" %>
 <% else %>
   <div class="py-8 text-center text-gray-500">

@@ -107,6 +107,23 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe ".of_kinds" do
+    let!(:live) { create(:event, facilitator_training: true, on_demand: false) }
+    let!(:on_demand) { create(:event, facilitator_training: true, on_demand: true) }
+    let!(:other) { create(:event, facilitator_training: false) }
+
+    it "narrows to the given kinds" do
+      expect(described_class.of_kinds(%w[ live other ])).to contain_exactly(live, other)
+      expect(described_class.of_kinds(%w[ on_demand ])).to contain_exactly(on_demand)
+    end
+
+    it "means every event when given none, every kind, or only unknown kinds" do
+      expect(described_class.of_kinds([])).to include(live, on_demand, other)
+      expect(described_class.of_kinds(Event::KINDS)).to include(live, on_demand, other)
+      expect(described_class.of_kinds(%w[ bogus ])).to include(live, on_demand, other)
+    end
+  end
+
   describe "#starts_on" do
     # A training's date is a fact about the training, not about who's looking: an
     # admin in Hawaii and one in New York have to agree, or the dates they store and
