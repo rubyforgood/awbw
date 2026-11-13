@@ -4,8 +4,9 @@
     program-status one (ADR-0001 D8a). %>
 <% registrations.each do |registration| %>
   <% event = registration.event %>
+  <% status_label = registration.decorate.attendance_status_display_label %>
   <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700"
-        title="<%= "#{event.title} — #{registration.attendance_status_label}: no active registration, so no program status." %>">
-    <%= registration.attendance_status_label %><%= " · #{event.start_date.strftime('%b %Y')}" if event.start_date %> · <%= event.decorate.compact_label.truncate(40) %>
+        title="<%= "#{event.title} — #{status_label}: no active registration, so no program status." %>">
+    <%= status_label %><%= " · #{event.start_date.strftime('%b %Y')}" if event.start_date %> · <%= event.decorate.compact_label.truncate(40) %>
   </span>
 <% end %>

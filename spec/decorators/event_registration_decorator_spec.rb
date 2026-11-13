@@ -14,6 +14,18 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       expect(reg.attendance_status_classes).to eq("bg-gray-50 text-gray-500 border-gray-200")
       expect(reg.attendance_status_icon).to eq("fa-question")
     end
+
+    it "annotates a transferred-out no-show in the display label and badge" do
+      reg = create(:event_registration, status: "no_show")
+      reg.update!(status: "transferred_out")
+      expect(reg.decorate.attendance_status_display_label).to eq("Transferred out · was no show")
+      expect(reg.decorate.attendance_status_badge[:label]).to eq("Transferred out · was no show")
+    end
+
+    it "leaves the label plain when there's no prior outcome to note" do
+      expect(create(:event_registration, status: "transferred_out").decorate.attendance_status_display_label).to eq("Transferred out")
+      expect(create(:event_registration, status: "no_show").decorate.attendance_status_display_label).to eq("No show")
+    end
   end
 
   describe "#affiliation_choice_label" do

@@ -217,7 +217,7 @@
                           onclick: "event.stopPropagation()",
                           data: { turbo_frame: "_top" } do %>
                       <i class="fa-solid <%= attendance.attendance_status_icon %>"></i>
-                      <span><%= registration.attendance_status_label %></span>
+                      <span><%= attendance.attendance_status_display_label %></span>
                     <% end %>
                   <% else %>
                     <span class="text-gray-300">—</span>

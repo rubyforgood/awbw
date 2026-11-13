@@ -1,0 +1,9 @@
+name: "Transferred-out registrations keep their no-show"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-13
+action_path: "/transfer_guide"
+summary: >-
+  When someone who was a no-show (or partially attended) transfers to another
+  training, their original registration now reads "Transferred out · was no show"
+  on rosters, the person's profile, organization chips, and exports.
