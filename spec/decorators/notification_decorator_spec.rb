@@ -31,7 +31,17 @@ RSpec.describe NotificationDecorator, type: :decorator do
     it "shows the created date since a pending send has no delivered date" do
       notification = build_stubbed(:notification, created_at: Time.utc(2026, 8, 12, 18))
 
-      expect(notification.decorate.pending_label).to eq("Pending (8/12/26 11:00 AM)")
+      expect(Time.use_zone("Pacific Time (US & Canada)") { notification.decorate.pending_label }).to eq("Pending (8/12/26 11:00 AM)")
+    end
+  end
+
+  describe "queued time zone" do
+    it "shows the queued time in the current user's time zone" do
+      notification = build_stubbed(:notification, created_at: Time.utc(2026, 8, 12, 18))
+
+      label = Time.use_zone("Eastern Time (US & Canada)") { notification.decorate.pending_label }
+
+      expect(label).to eq("Pending (8/12/26 2:00 PM)")
     end
   end
 
@@ -39,7 +49,7 @@ RSpec.describe NotificationDecorator, type: :decorator do
     it "shows the created date, same as a pending send" do
       notification = build_stubbed(:notification, created_at: Time.utc(2026, 8, 12, 18), error_at: Time.utc(2026, 11, 13))
 
-      expect(notification.decorate.failed_label).to eq("Failed (8/12/26 11:00 AM)")
+      expect(Time.use_zone("Pacific Time (US & Canada)") { notification.decorate.failed_label }).to eq("Failed (8/12/26 11:00 AM)")
     end
   end
 

@@ -250,7 +250,7 @@ class NotificationDecorator < ApplicationDecorator
   private
 
   def queued_on
-    created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%-m/%-d/%y %-l:%M %p")
+    created_at.in_time_zone.strftime("%-m/%-d/%y %-l:%M %p")
   end
 
   # Root record the shared event chip resolves a registration/event from.
