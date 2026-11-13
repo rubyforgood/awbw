@@ -2,6 +2,7 @@ class Payment < ApplicationRecord
   def self.policy_class = PaymentPolicy
 
   include FilemakerCoded, PersonNameSearchable
+  include Communicable
 
   filemaker_archived_in FmPayment
   has_paper_trail
@@ -9,6 +10,8 @@ class Payment < ApplicationRecord
 
   has_many :allocations, as: :source
   has_many :refunds, as: :refundable
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   belongs_to :person, optional: true
   belongs_to :organization, optional: true
   belongs_to :form_submission, optional: true
@@ -108,6 +111,12 @@ class Payment < ApplicationRecord
   end
 
 
+
+  # Address a logged communication is "to" — the payer (a Person's preferred
+  # email; an Organization's own communications email).
+  def communications_email
+    payer.try(:communications_email)
+  end
 
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents

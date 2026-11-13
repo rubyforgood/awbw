@@ -1,8 +1,10 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="mx-auto max-w-xl">
-  <%= link_to "← Payment", payment_path(@payment), class: "text-sm #{eyebrow_link_class} mb-2 inline-block" %>
-  <h1 class="text-primary mb-6 font-display text-2xl font-bold">Edit Payment</h1>
-  <div class="rounded border border-gray-200 bg-white p-6">
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(:payments) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
+  <div class="mb-4">
+    <%= link_to "← Payment", payment_path(@payment), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  </div>
+  <h1 class="text-primary mb-6 font-display text-2xl font-bold">Edit payment</h1>
+  <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
     <%= simple_form_for @payment, as: :payment, url: payment_path(@payment), method: :patch do |f| %>
       <% payer_label_data = @payment.selected_payer&.compound_search_label %>
       <% designation_label_data = @payment.selected_additional_designation&.compound_search_label %>
@@ -35,18 +37,32 @@
             }
           },
           prompt: "Search people and organizations",
-          label: "Additional designation" %>
+          label: "Additional designation",
+          hint: "Optional. If the payer is an organization, pick the person; if the payer is a person, pick their organization." %>
 
         <% if @payment.is_a?(CheckPayment) %>
-          <%= f.input :check_number, input_html: { class: "bg-white" } %>
-          <%= f.input :memo, label: "Memo", input_html: { class: "bg-white", placeholder: "Memo line on the check" } %>
+          <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
+            <%= f.input :check_number, hint: "Digits only. Leave off \"Check #\".", input_html: { class: "bg-white", placeholder: "1234" } %>
+            <%= f.input :memo, label: "Memo", hint: "Copy the check's memo line.", input_html: { class: "bg-white", placeholder: "Memo line on the check" } %>
+          </div>
         <% end %>
 
-        <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
-          <div class="pt-3">
+        <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-3">
+          <div class="pt-3 sm:col-span-2">
+            <% submission_label = @payment.form_submission&.remote_search_label %>
             <%= f.input :form_submission_id,
-              input_html: { class: "bg-white" },
-              label: "Form Submission ID" %>
+              collection: submission_label ? [ [ submission_label[:label], submission_label[:id] ] ] : [],
+              selected: submission_label&.dig(:id),
+              include_blank: true,
+              prompt: "Search by name, form, event, or #ID",
+              input_html: {
+                class: "bg-white",
+                data: {
+                  controller: "remote-select",
+                  remote_select_model_value: "form_submission"
+                }
+              },
+              label: "Form submission" %>
           </div>
 
           <div class="admin-only rounded-md bg-blue-100 px-3 pt-3">
@@ -58,6 +74,10 @@
           </div>
         </div>
       </div>
+      <div class="mt-6">
+        <%= render "shared/comments_and_communications", f: f, view_all_person: @payment.person %>
+      </div>
+
       <div class="action-buttons mt-8 flex justify-center gap-3">
         <%= link_to "Cancel", payment_path(@payment), class: button_classes(:secondary_outline) %>
         <%= f.button :submit, "Save", class: button_classes(:primary) %>

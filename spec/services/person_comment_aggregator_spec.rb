@@ -53,6 +53,14 @@ RSpec.describe PersonCommentAggregator do
       expect(aggregator.comments).not_to include(grant_comment)
     end
 
+    it "includes comments on payments naming the person" do
+      payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
+      payment_comment = create(:comment, commentable: payment)
+
+      expect(payment_comment.commentable_type).to eq("Payment")
+      expect(aggregator.comments).to include(payment_comment)
+    end
+
     it "excludes comments left on unrelated records" do
       other_person = create(:person)
       create(:comment, commentable: other_person)

@@ -1,54 +1,89 @@
-<div class="mx-auto max-w-2xl" data-controller="search-type-select">
-  <h1 class="text-primary mb-6 font-display text-2xl font-bold">New Allocation</h1>
-  <%# The origin context rides on the form action so the create redirect can put
-      the admin back where they came from, the way revert does. %>
-  <%= simple_form_for @allocation, url: allocations_path(return_to: params[:return_to], expand: params[:expand]) do |f| %>
-    <%= f.hidden_field :source_type %>
-    <%= f.hidden_field :source_id %>
-    <% source = @source || (@allocation.source if @allocation.source.present?) %>
-    <% if source.present? && source.is_a?(Payment) %>
-      <div class="mb-4 rounded-lg bg-gray-50 p-4">
-        <p class="text-sm font-medium text-gray-700">From Payment</p>
-        <p class="text-lg text-gray-900"><%= dollars_from_cents(source.amount_cents) %></p>
-        <p class="text-sm text-gray-500">Remaining: <%= dollars_from_cents(source.amount_cents_remaining) %></p>
-      </div>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% source = @source || (@allocation.source if @allocation.source.present?) %>
+<% label_class = "text-xs font-medium tracking-wide text-gray-400 uppercase" %>
+
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(:payments) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6" data-controller="search-type-select">
+  <div class="mb-4">
+    <% if source.is_a?(Payment) %>
+      <%= link_to "← Payment", payment_path(source, return_to: params[:return_to], expand: params[:expand]), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% else %>
-      <div class="mb-4 rounded-lg bg-red-50 p-4">
-        <p class="text-sm font-medium text-red-700">Error: No payment source found</p>
-      </div>
+      <%= link_to "← Payments", payments_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% end %>
-    <%= f.input :allocatable_type, as: :select, collection: ["EventRegistration"], 
-        include_blank: true, 
-        required: true,
-        input_html: { data: { action: "search-type-select#toggle" } } %>
-    <template data-search-type-select-target="template" data-type="EventRegistration">
-      <%= f.input :allocatable_id,
-        collection: [],
-        include_blank: true,
-        input_html: {
-          data: {
-            controller: "remote-select",
-            remote_select_model_value: "event_registration"
-          }
-        },
-        prompt: "Search for a Person or Event",
-        label: "Allocatable",
-        required: true %>
-    </template>
-    <div data-search-type-select-target="pickerContainer">
-      <div>
-        <label class="mb-1 block text-sm font-medium text-gray-500 italic">Select Allocatable Type</label>
-        <div class="min-h-[2.2rem] w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2"></div>
+  </div>
+  <h1 class="text-primary mb-6 font-display text-2xl font-bold">New allocation</h1>
+
+  <% if source.is_a?(Payment) %>
+    <%# The payment the money comes from, so the admin sees how much is left to place. %>
+    <dl class="mb-6 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-gray-200 bg-gray-100 shadow-sm sm:grid-cols-3">
+      <div class="bg-white px-4 py-3">
+        <dt class="<%= label_class %>">From payment</dt>
+        <dd class="mt-1 text-sm font-medium text-gray-900">
+          <%= source.type.to_s.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %>
+          <% if (payer_name = person_name(source.payer)).present? %>
+            <span class="font-normal text-gray-500">· <%= payer_name %></span>
+          <% end %>
+        </dd>
       </div>
-    </div>
-    <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
-    <div class="mt-6">
-      <%= f.button :submit, "Submit", class: button_classes(:primary) %>
-      <% if source.present? %>
-        <%= link_to "Cancel", payment_path(source, return_to: params[:return_to], expand: params[:expand]), class: button_classes(:secondary_outline, extra: "ml-2") %>
-      <% else %>
-        <%= link_to "Cancel", payments_path, class: button_classes(:secondary_outline, extra: "ml-2") %>
-      <% end %>
+      <div class="bg-white px-4 py-3">
+        <dt class="<%= label_class %>">Amount</dt>
+        <dd class="mt-1 text-lg font-bold text-gray-900 tabular-nums"><%= dollars_from_cents(source.amount_cents) %></dd>
+      </div>
+      <div class="bg-white px-4 py-3">
+        <dt class="<%= label_class %>">Remaining to allocate</dt>
+        <dd class="mt-1 text-lg font-bold tabular-nums <%= source.amount_cents_remaining.to_i.positive? ? "text-amber-700" : "text-gray-900" %>"><%= dollars_from_cents(source.amount_cents_remaining) %></dd>
+      </div>
+    </dl>
+  <% else %>
+    <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
+      <p class="text-sm font-medium text-red-700">Error: No payment source found</p>
     </div>
   <% end %>
+
+  <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <%# The origin context rides on the form action so the create redirect can put
+        the admin back where they came from, the way revert does. %>
+    <%= simple_form_for @allocation, url: allocations_path(return_to: params[:return_to], expand: params[:expand]) do |f| %>
+      <%= f.hidden_field :source_type %>
+      <%= f.hidden_field :source_id %>
+
+      <div class="space-y-4">
+        <%= f.input :allocatable_type, as: :select, collection: [ [ "Event registration", "EventRegistration" ] ],
+            include_blank: true,
+            required: true,
+            label: "Allocate to",
+            input_html: { class: "bg-white", data: { action: "search-type-select#toggle" } } %>
+        <template data-search-type-select-target="template" data-type="EventRegistration">
+          <%= f.input :allocatable_id,
+            collection: [],
+            include_blank: true,
+            input_html: {
+              class: "bg-white",
+              data: {
+                controller: "remote-select",
+                remote_select_model_value: "event_registration"
+              }
+            },
+            prompt: "Search for a person or event",
+            label: "Registration",
+            required: true %>
+        </template>
+        <div data-search-type-select-target="pickerContainer">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-500 italic">Choose what to allocate to first</label>
+            <div class="min-h-[2.2rem] w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2"></div>
+          </div>
+        </div>
+        <%= f.input :amount_dollars, label: "Amount ($)", required: true, input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
+      </div>
+
+      <div class="action-buttons mt-8 flex justify-center gap-3">
+        <% if source.present? %>
+          <%= link_to "Cancel", payment_path(source, return_to: params[:return_to], expand: params[:expand]), class: button_classes(:secondary_outline) %>
+        <% else %>
+          <%= link_to "Cancel", payments_path, class: button_classes(:secondary_outline) %>
+        <% end %>
+        <%= f.button :submit, "Allocate", class: button_classes(:primary) %>
+      </div>
+    <% end %>
+  </div>
 </div>

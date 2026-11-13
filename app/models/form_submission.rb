@@ -1,5 +1,6 @@
 class FormSubmission < ApplicationRecord
   include Communicable
+  include RemoteSearchable
   # Optional so a public form whose name/email questions are not required can
   # record an anonymous submission with no identity (see PublicFormSubmission).
   belongs_to :person, optional: true
@@ -308,6 +309,31 @@ class FormSubmission < ApplicationRecord
   # matching join role.
   def resolved_event
     event || form.events.find_by(event_forms: { role: role })
+  end
+
+  # Typeahead (e.g. linking a payment to its submission): matches the submitter's
+  # name or email, the form's name, the event's title, or the submission's id.
+  remote_searchable_by :id,
+    scope: ->(query) {
+      words = query.split.flat_map { |w| w.split(/[\s\-]+/) }.reject(&:blank?)
+      next none if words.blank?
+
+      pattern = "%#{words.join('%')}%"
+      matches = left_joins(:person, :form, :event).where(
+        "people.first_name LIKE :p OR people.last_name LIKE :p OR people.email LIKE :p
+         OR forms.name LIKE :p OR events.title LIKE :p",
+        p: pattern
+      )
+      matches = matches.or(left_joins(:person, :form, :event).where(id: query.delete_prefix("#").to_i)) if query.strip.match?(/\A#?\d+\z/)
+      matches.includes(:person, :form, :event).order(created_at: :desc)
+    }
+
+  def remote_search_label
+    who = person&.full_name.presence || "Anonymous"
+    {
+      id: id,
+      label: [ form&.display_name, who, resolved_event&.title, created_at&.strftime("%b %-d, %Y") ].compact_blank.join(" · ") + " (##{id})"
+    }
   end
 
   # Answers keyed by their field's identifier. Bulk payment (and similar) forms

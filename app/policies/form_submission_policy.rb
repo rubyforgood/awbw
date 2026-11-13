@@ -6,6 +6,16 @@ class FormSubmissionPolicy < ApplicationPolicy
     admin?
   end
 
+  # The form-submission typeahead (SearchController) — staff only.
+  def search?
+    admin?
+  end
+
+  relation_scope do |relation|
+    next relation if admin?
+    relation.none
+  end
+
   def show?
     admin? || (slug.present? && record.slug == slug)
   end

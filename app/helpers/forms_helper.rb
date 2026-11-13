@@ -29,6 +29,22 @@ module FormsHelper
       class: "rounded-md px-2.5 py-1 text-sm #{DomainTheme.text_class_for(:forms, intensity: 700)} #{DomainTheme.bg_class_for(:forms, hover: true)}", **link_opts
   end
 
+  # A card linking to a form submission's show page, styled like
+  # event_show_button: the form's name with the submission date beside it.
+  def form_submission_show_button(form_submission)
+    link_to form_submission_path(form_submission),
+            data: { turbo_prefetch: false },
+            class: "group relative flex w-full items-center gap-2 overflow-hidden rounded-lg border px-4 py-2 leading-none font-medium shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:forms)} #{DomainTheme.bg_class_for(:forms)} #{DomainTheme.bg_class_for(:forms, hover: true)}" do
+      name = form_submission.form&.display_name.presence || "Form submission ##{form_submission.id}"
+      parts = [ content_tag(:span, name, title: name, class: "truncate text-sm font-semibold #{DomainTheme.text_class_for(:forms)}") ]
+      parts << content_tag(:span, "·", class: "shrink-0 text-gray-400")
+      parts << content_tag(:span, form_submission.created_at.strftime("%b %-d, %Y"), class: "shrink-0 text-sm font-normal whitespace-nowrap text-gray-500")
+
+      icon = content_tag(:i, "", class: "fa-solid fa-file-lines shrink-0 text-lg #{DomainTheme.text_class_for(:forms)}")
+      icon + content_tag(:div, safe_join(parts), class: "flex min-w-0 items-baseline gap-1.5 text-left leading-none")
+    end
+  end
+
   # "Duplicate form" action button, shown beneath the subnav on the View and
   # Edit pages. Makes a full copy of the form (route stays `copy`); nil when the
   # admin can't copy this form.
