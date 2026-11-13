@@ -160,7 +160,7 @@ class StoryImporter
     "last name only" => "last_name_only",
     "anonymous" => "anonymous"
   }.freeze
-  DEFAULT_AUTHOR_CREDIT = "full_name"
+  DEFAULT_AUTHOR_CREDIT = Person::DEFAULT_DISPLAY_NAME_PREFERENCE
 
   def initialize(csv_path:, import_user:, organization_status: nil, dry_run: false, logger: nil)
     @csv_path = csv_path
@@ -634,7 +634,7 @@ class StoryImporter
   end
 
   def default_display_preference?(author)
-    author.display_name_preference.presence.in?([ nil, "full_name", Person.column_defaults["display_name_preference"] ])
+    author.display_name_preference.in?([ "full_name", Person::DEFAULT_DISPLAY_NAME_PREFERENCE ])
   end
 
   def person_display(row, cols)

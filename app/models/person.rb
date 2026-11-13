@@ -144,6 +144,15 @@ class Person < ApplicationRecord
   # Anonymity isn't one of these — it's the separate `anonymous_contributions` flag,
   # since a person still has to be listed somehow on the people index.
   DISPLAY_NAME_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only].freeze
+  # The one switch for how a person reads when they haven't picked a format.
+  DEFAULT_DISPLAY_NAME_PREFERENCE = "first_name_last_initial"
+
+  # SQL twin of #display_name_preference; bind :default_display_name_preference alongside it.
+  DISPLAY_NAME_PREFERENCE_SQL = "COALESCE(NULLIF(TRIM(people.display_name_preference), ''), :default_display_name_preference)"
+
+  def self.display_name_preference_sql(table_alias)
+    DISPLAY_NAME_PREFERENCE_SQL.sub("people.", "#{table_alias}.")
+  end
 
   DISPLAY_NAME_PREFERENCE_LABELS = {
     "full_name" => "First and last name",
@@ -247,20 +256,20 @@ class Person < ApplicationRecord
   LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
 
   SHARED_CONTACT_MATCH_SQL = <<~SQL.squish
-    (people.first_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden))
-    OR (people.last_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden))
+    (people.first_name LIKE :pattern AND #{DISPLAY_NAME_PREFERENCE_SQL} NOT IN (:first_name_hidden))
+    OR (people.last_name LIKE :pattern AND #{DISPLAY_NAME_PREFERENCE_SQL} NOT IN (:last_name_hidden))
     OR (people.profile_show_email AND (people.email LIKE :pattern OR users.email LIKE :pattern))
   SQL
 
   # Spaces and periods are dropped on both sides so an initialled name ("Cathy S.") finds itself.
   DISPLAYED_NAME_MATCH_SQL = <<~SQL.squish
-    (COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden)
+    (#{DISPLAY_NAME_PREFERENCE_SQL} NOT IN (:first_name_hidden)
       AND LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name)
-    OR (COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden)
+    OR (#{DISPLAY_NAME_PREFERENCE_SQL} NOT IN (:last_name_hidden)
       AND LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name)
-    OR (COALESCE(people.display_name_preference, '') IN ('', 'full_name')
+    OR (#{DISPLAY_NAME_PREFERENCE_SQL} = 'full_name'
       AND LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name)
-    OR (people.display_name_preference = 'first_name_last_initial'
+    OR (#{DISPLAY_NAME_PREFERENCE_SQL} = 'first_name_last_initial'
       AND LOWER(REPLACE(CONCAT(people.first_name, LEFT(people.last_name, 1)), ' ', '')) LIKE :name)
   SQL
 
@@ -271,7 +280,8 @@ class Person < ApplicationRecord
       none
     else
       where(DISPLAYED_NAME_MATCH_SQL, name: "%#{sanitize_sql_like(name)}%",
-            first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES, last_name_hidden: LAST_NAME_HIDDEN_PREFERENCES)
+            first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES, last_name_hidden: LAST_NAME_HIDDEN_PREFERENCES,
+            default_display_name_preference: DEFAULT_DISPLAY_NAME_PREFERENCE)
     end
   }
 
@@ -286,7 +296,8 @@ class Person < ApplicationRecord
         SHARED_CONTACT_MATCH_SQL,
         pattern: "%#{sanitize_sql_like(term)}%",
         first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES,
-        last_name_hidden: LAST_NAME_HIDDEN_PREFERENCES
+        last_name_hidden: LAST_NAME_HIDDEN_PREFERENCES,
+        default_display_name_preference: DEFAULT_DISPLAY_NAME_PREFERENCE
       )
       relation.where(id: matches.select(:id))
     end
@@ -503,7 +514,9 @@ class Person < ApplicationRecord
   # Formats the name by a given preference rather than the profile's, so a record
   # that stored its own credit preference can win over the profile.
   def name_for(preference)
-    case preference
+    case preference.presence_in(DISPLAY_NAME_PREFERENCES) || DEFAULT_DISPLAY_NAME_PREFERENCE
+    when "full_name"
+      full_name
     when "first_name_last_initial"
       initial = last_name&.first
       initial.present? ? "#{first_name} #{initial}." : first_name.to_s
@@ -511,8 +524,6 @@ class Person < ApplicationRecord
       first_name
     when "last_name_only"
       last_name
-    else # full_name — the default, and the fallback for any unknown value
-      full_name
     end
   end
 
@@ -520,7 +531,11 @@ class Person < ApplicationRecord
   # without affecting how they're listed on the people index.
   def effective_author_credit_preference
     return "anonymous" if anonymous_contributions?
-    display_name_preference.presence || "full_name"
+    display_name_preference
+  end
+
+  def display_name_preference
+    super.presence || DEFAULT_DISPLAY_NAME_PREFERENCE
   end
 
   def full_name

@@ -1,0 +1,11 @@
+name: "People with no name format show as first name and last initial"
+area: people
+display_status: admin_facing
+released_on: 2026-11-12
+pr_number: 2988
+summary: >-
+  Profiles that never picked a "Display my name as" option now show as first name and last
+  initial everywhere, matching new profiles. Before, they showed the full name.
+pro_tips:
+  - "Admins still see full names in rosters, payments, and search pickers."
+  - "Pick a format on the person's profile to override it."

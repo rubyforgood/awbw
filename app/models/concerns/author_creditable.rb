@@ -282,7 +282,8 @@ module AuthorCreditable
       clauses += legacy_author_name_columns.map { |col| legacy_author_name_match_sql(col) }
       return none if clauses.empty?
 
-      joins(credited_person_join_sql).where(clauses.join(" OR "), name: "%#{sanitized}%")
+      joins(credited_person_join_sql).where(clauses.join(" OR "), name: "%#{sanitized}%",
+                                            default_display_name_preference: Person::DEFAULT_DISPLAY_NAME_PREFERENCE)
     end
 
     # Orders by the credited author's name, matching `author_person` precedence:
@@ -351,7 +352,7 @@ module AuthorCreditable
     def credited_person_match_sql(sql_alias)
       first = "#{sql_alias}.first_name"
       last = "#{sql_alias}.last_name"
-      preference = "COALESCE(#{sql_alias}.display_name_preference, 'full_name')"
+      preference = Person.display_name_preference_sql(sql_alias)
 
       by_preference = {
         "full_name" => [ "CONCAT(#{first}, #{last})", "CONCAT(#{last}, #{first})", first, last ],
