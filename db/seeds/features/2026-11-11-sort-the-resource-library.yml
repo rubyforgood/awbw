@@ -1,0 +1,11 @@
+name: "Sort the resource library"
+area: content
+display_status: admin_facing
+released_on: 2026-11-11
+pr_number: 2980
+action_path: "/resources"
+summary: >-
+  A Sort by control beside the resource count orders the library by featured,
+  created date, modified date, title, or kind.
+pro_tips:
+  - "Picking a kind switches the default to Title (A–Z) until you choose a sort yourself."

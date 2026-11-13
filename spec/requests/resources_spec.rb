@@ -83,6 +83,86 @@ RSpec.describe "/resources", type: :request do
     end
   end
 
+  describe "GET /index legacy chip" do
+    let!(:handout) { create(:resource, :published, kind: "Handout", title: "Library Handout") }
+    let!(:toolkit) { create(:resource, :published, kind: "Toolkit", title: "Library Toolkit") }
+    let!(:story) { create(:resource, :published, kind: "Story", title: "Legacy Story") }
+    let!(:theme) { create(:resource, :published, kind: "Theme", title: "Legacy Theme") }
+    let!(:fm_archive) { create(:resource, :published, kind: "FM Archive", title: "Archived FM Record") }
+
+    it "hides legacy kinds by default" do
+      get resources_url, headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).to include("Library Handout")
+      expect(response.body).not_to include("Legacy Story")
+    end
+
+    it "shows only legacy kinds, tinted admin-only, when an admin picks Legacy" do
+      get resources_url(legacy: "1"), headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).to include("Legacy Story", "Legacy Theme")
+      expect(response.body).not_to include("Library Handout", "Archived FM Record")
+      expect(response.body).to include("Resources (2/4)")
+      expect(response.body).to include("admin-only border-blue-200 bg-blue-100")
+    end
+
+    it "adds legacy kinds to the other picked kind chips" do
+      get resources_url(legacy: "1", kinds: [ "Handout" ]), headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).to include("Library Handout", "Legacy Story")
+      expect(response.body).not_to include("Library Toolkit")
+    end
+
+    it "searches legacy kinds by keyword when Legacy is on" do
+      get resources_url(legacy: "1", query: "Story"), headers: { "Turbo-Frame" => "resources_results" }
+      expect(response.body).to include("Legacy Story")
+      expect(response.body).not_to include("Legacy Theme")
+
+      get resources_url(query: "Story"), headers: { "Turbo-Frame" => "resources_results" }
+      expect(response.body).not_to include("Legacy Story")
+    end
+
+    it "ignores Legacy for a non-admin" do
+      sign_in create(:user)
+      get resources_url(legacy: "1"), headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).not_to include("Legacy Story")
+    end
+
+    it "offers the Legacy chip only to admins" do
+      get resources_url
+      expect(response.body).to include('id="legacy"')
+
+      sign_in create(:user)
+      get resources_url
+      expect(response.body).not_to include('id="legacy"')
+    end
+  end
+
+  describe "GET /index sort" do
+    it "orders by the chosen sort" do
+      create(:resource, :published, title: "Bravo")
+      create(:resource, :published, title: "Alpha")
+      get resources_url(sort: "title"), headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body.index("Alpha")).to be < response.body.index("Bravo")
+      expect(response.body).to match(/id="sort_title"[^>]*checked/)
+    end
+
+    it "defaults to Title once a kind is picked, until a sort is chosen" do
+      create(:resource, :published, :featured, kind: "Handout", title: "Bravo")
+      create(:resource, :published, kind: "Handout", title: "Alpha")
+
+      get resources_url(kinds: [ "Handout" ], sort: ""), headers: { "Turbo-Frame" => "resources_results" }
+      expect(response.body.index("Alpha")).to be < response.body.index("Bravo")
+      title_radio = response.body[/<input[^>]*id="sort_title"[^>]*>/]
+      expect(title_radio).to include('value=""', 'checked="checked"')
+
+      get resources_url(kinds: [ "Handout" ], sort: "featured"), headers: { "Turbo-Frame" => "resources_results" }
+      expect(response.body.index("Bravo")).to be < response.body.index("Alpha")
+    end
+  end
+
   describe "GET /show" do
     context "when resource has NO external link" do
       let(:resource) do
@@ -181,6 +261,14 @@ RSpec.describe "/resources", type: :request do
       get edit_resource_url(resource)
 
       expect(response).to have_http_status(:ok)
+    end
+
+    it "offers every kind with admin=true" do
+      resource = Resource.create! valid_attributes
+      get edit_resource_url(resource, admin: true)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('<option value="Theme">Theme</option>')
     end
 
     it "renders the visibility flags, including hidden from search, with definitions" do
