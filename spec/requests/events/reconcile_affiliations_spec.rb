@@ -148,7 +148,8 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
 
       get reconcile_affiliations_event_path(event)
 
-      expect(response.body).to include("Move to the new event")
+      expect(response.body).to include(AffiliationServices::ReconcilePerson::TRANSFER_LEFT_BEHIND)
+      expect(response.body).not_to include("Move to the new event")
       expect(response.body).to include("Job affiliation: Counselor")
     end
 

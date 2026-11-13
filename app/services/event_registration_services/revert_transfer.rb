@@ -4,8 +4,9 @@ module EventRegistrationServices
   #
   # Pending (no destination recorded yet): just restore the status. Completed (a
   # destination reg already exists): also unlink that destination — it becomes a
-  # normal standalone registration, nothing deleted — and re-merge its split CE
-  # back onto this source before restoring the status. (#1944)
+  # normal standalone registration, nothing deleted — re-merge its split CE back
+  # onto this source, and move back the facilitator affiliation the transfer moved,
+  # before restoring the status. (#1944, ADR-0003 D6d)
   class RevertTransfer
     def self.call(registration:) = new(registration:).call
 
@@ -23,6 +24,8 @@ module EventRegistrationServices
         # the source's status below, undoing the unlink.
         destination = EventRegistration.find_by(transferred_from_registration_id: @registration.id)
         if destination
+          # The facilitator affiliation the transfer moved comes back with them.
+          AffiliationServices::FollowTransfer.call(to: @registration, moved_only_from: [ destination ], undo: true)
           TransferContinuingEducation.new(
             transferred_out: @registration, destination: destination
           ).revert

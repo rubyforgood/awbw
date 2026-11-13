@@ -53,7 +53,7 @@ module AffiliationServices
 
     # One radio choice per row: the action itself, or "keep".
     ACTION_FOR_CHOICE = { "deactivate" => :deactivate, "delete" => :delete, "create" => :create,
-                          "reactivate" => :reactivate, "retarget" => :retarget }.freeze
+                          "reactivate" => :reactivate }.freeze
 
     # What the `{ row.key => choice }` map will change, for the confirmation screen.
     def planned_changes(outcome:)

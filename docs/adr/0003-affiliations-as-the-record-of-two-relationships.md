@@ -335,23 +335,37 @@ Re-pointing the provenance is not cosmetic. The FK is the auto-vs-manual gate
 registration would not be recognised as "the row this training minted" when the
 destination is reconciled — it would be treated as an older row and end-dated.
 
+It happens **when the transfer is recorded** (`AffiliationServices::FollowTransfer`,
+called from `EventRegistrationsController#process_transfer`), not at reconcile time —
+there is no decision for an admin to make, so the reconcile page only lists a
+transferred-out registration with why it was left alone. (It was first built as a
+"Move to the new event" reconcile option; moved to transfer time in PR #3002.)
+
 The rules:
 
-- **Which row moves** — this person's facilitator affiliation with this organization
-  that has **no end date**. One decision per (person, organization), not one per row.
-- **An already-ended row stays put.** It records a finished stretch. With no open row
-  to move, the destination mints a fresh affiliation instead.
-- **No destination recorded yet** (`transfer_destination_pending?`) — reported, not
-  guessed at. There is no date to move to.
-- **Destination linked to a different organization** — reported. Re-dating this
-  organization's row to a training about another one would assert something false.
-- **Chained transfers need no traversal.** A→B→C collapses when the second transfer
-  is made (`EventRegistrationsController#transfer` points C straight at A), so the
-  source's `transferred_to_registration` is already the final destination.
+- **Which row moves** — the open facilitator affiliation (no end date, not flagged
+  inactive) **the transferring registration created**. An older or hand-entered row
+  records facilitation that already happened; re-dating it would erase those years,
+  so it stays put. An already-ended row is a finished stretch and stays put too.
+- **Only to a facilitator training, only for a linked organization.** A non-training
+  destination confers no facilitation, and re-dating an organization's row to a
+  training about another one would assert something false. Both are reported on the
+  reconcile page for an admin to handle by hand.
+- **No destination recorded yet** (`transfer_destination_pending?`) — nothing moves
+  until one is; reported meanwhile.
+- **Chained transfers.** A→B→C collapses when the second transfer is made (C points
+  straight at A and B is dropped), so B's row moves on to C before B is destroyed. A
+  row A still holds also moves.
+- **Re-pointing or undoing** a transfer gives back only rows a transfer moved — found
+  by the system comment (topic "Transfer") the move leaves, so a destination
+  registration that existed beforehand keeps the row it created for itself. Undoing
+  re-dates the row to the source training.
+- **Transfers recorded before the move existed** left their row behind; the reconcile
+  page flags it for an admin to update by hand (no backfill).
 
 This is deliberately *not* one of `LinkSubmittedOrganization::SCENARIOS`. Those
-describe what kind of linking is happening and run at link time; a transfer is an
-attendance outcome discovered at reconcile time, with nothing being linked.
+describe what kind of linking is happening; a transfer moves an existing row, with
+nothing being linked.
 
 ### D7 — What has to be tested
 
@@ -374,9 +388,10 @@ than inferred from the single-affiliation cases
    minted row is deleted, the older row ended at the training date.
 7. **`registered` after the event is reported, never acted on** — D6c, asserted on
    both the plan's reason and that the row survives.
-8. **A transfer moves the row rather than ending it** — D6d: the open row re-dates
-   and re-points, an ended row is left alone with a fresh one created at the
-   destination, and a pending or differently-linked destination is reported.
+8. **A transfer moves the row rather than ending it** — D6d: recording the transfer
+   re-dates and re-points the row the registration created, older and ended rows stay
+   put, a collapsing chain carries the row on, undoing moves it back, and reconcile
+   reports a pending, non-training, or differently-linked destination.
 9. **A return after a real lapse adds a row and leaves the lapse intact** — D6a,
    asserted on both the row count and the mid-gap verdict.
 10. **A corrected no-show reopens the row this training ended, and adds nothing** —

@@ -32,8 +32,6 @@ description: >-
   kept. Their card shows which days they attended and when they signed in.</li>
   <li><strong>Reactivate</strong>: undoes an ending this page applied, once the
   person is marked attended.</li>
-  <li><strong>Move to the new event</strong>: for someone who transferred to another
-  training. See <a href="/features?query=Facilitator+affiliations+follow+a+transfer">Facilitator affiliations follow a transfer</a>.</li>
   </ul></li>
   <li>Click <strong>Preview changes</strong>. The next screen lists every change,
   grouped by type. <strong>Go back to edit</strong> keeps your choices.</li>
@@ -42,8 +40,8 @@ description: >-
   </ol>
   <p><strong>Not reconciled</strong>, at the bottom, lists the rows left alone and
   why. For example, the training hasn't ended yet, attendance was never recorded,
-  the affiliation has already ended, or the person attended and is already
-  active.</p>
+  the affiliation has already ended, the person attended and is already active, or
+  they transferred out. A transfer moves the affiliation on its own (see <a href="/features?query=Facilitator+affiliations+follow+a+transfer">Facilitator affiliations follow a transfer</a>).</p>
   <p>For an event that isn't a facilitator training, the page only offers to delete
   facilitator affiliations that were created from that event.</p>
   <p><strong>Related:</strong> <a href="/features?query=Reconcile+cancelled+registrants">Reconcile cancelled registrants before the training</a> · <a href="/features?query=Facilitator+affiliations+follow+a+transfer">Facilitator affiliations follow a transfer</a></p>
