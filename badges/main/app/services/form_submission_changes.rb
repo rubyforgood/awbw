@@ -6,7 +6,7 @@
 class FormSubmissionChanges
   # The records whose changes are worth surfacing. Bookkeeping rows a submission
   # also touches (the submission, its answers, the registration link) are noise here.
-  RELEVANT_TYPES = %w[Person Organization Address ContactMethod Affiliation SectorableItem CategorizableItem].freeze
+  RELEVANT_TYPES = %w[Person Organization Address ContactMethod Affiliation ProfessionalLicense SectorableItem CategorizableItem].freeze
   # Tag rows: their changes read as the tag they applied, under the record tagged.
   TAG_TYPES = %w[SectorableItem CategorizableItem].freeze
   TAG_OUTCOMES = { "create" => "Added", "destroy" => "Removed", "update" => "Changed" }.freeze
@@ -17,20 +17,26 @@ class FormSubmissionChanges
     "website_url" => "Website", "organization_type" => "Type",
     "value" => "Phone", "racial_ethnic_identity" => "Racial / ethnic identity",
     "zip_code" => "ZIP", "street_address" => "Street address",
-    "anonymous_contributions" => "Content sharing", "display_name_preference" => "Display name"
+    "anonymous_contributions" => "Content sharing", "display_name_preference" => "Display name",
+    **Person::PROFILE_VISIBILITY_LABELS
+  }.freeze
+  # Columns whose bare name is ambiguous across records (a phone has a "kind" too).
+  TYPE_ATTRIBUTE_LABELS = {
+    "ProfessionalLicense" => { "kind" => "License type", "number" => "License number", "expires_on" => "License expiry" }
   }.freeze
 
   # Columns whose stored value is a code (a boolean, an enum key), mapped to the
   # wording the person actually chose so the page doesn't read "true".
   VALUE_LABELS = {
     "anonymous_contributions" => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS,
-    "display_name_preference" => Person::DISPLAY_NAME_PREFERENCE_LABELS
+    "display_name_preference" => Person::DISPLAY_NAME_PREFERENCE_LABELS,
+    **Person::PROFILE_VISIBILITY_LABELS.keys.index_with { Person::PROFILE_VISIBILITY_OPTIONS }
   }.freeze
 
   # Sub-record attributes edit a section of the owner's edit page rather than a
   # single input; own-record columns anchor to their form input (person_<attr> /
   # organization_<attr>), so a change row can deep-link to where it's edited.
-  SECTION_ANCHORS = { "Address" => "addresses", "ContactMethod" => "phones" }.freeze
+  SECTION_ANCHORS = { "Address" => "addresses", "ContactMethod" => "phones", "ProfessionalLicense" => "professional-licenses" }.freeze
 
   # Rows whose changes group under the record they belong to, keyed to that owner's polymorphic prefix.
   OWNER_PREFIXES = {
@@ -144,7 +150,7 @@ class FormSubmissionChanges
 
       Change.new(
         outcome: replaced?(before, coded) ? "Replaced" : "Filled",
-        label: ATTRIBUTE_LABELS[attribute] || attribute.humanize,
+        label: TYPE_ATTRIBUTE_LABELS.dig(resource_type, attribute) || ATTRIBUTE_LABELS[attribute] || attribute.humanize,
         value: display_value(after, coded),
         previous_value: display_value(before, coded),
         anchor: anchor_for(resource_type, attribute)

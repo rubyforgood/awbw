@@ -35,4 +35,55 @@ RSpec.describe PersonServices::CaptureFromSubmission do
       expect(person.addresses.sole).to have_attributes(country: "United States", county: "Fresno", locality: "Central CA")
     end
   end
+
+  describe "the professional license" do
+    it "adds a license from the answers, moving a typed license type out of the number" do
+      described_class.call(person:, answers: { "license_number" => "LCSW 12345", "license_issuing_state" => "CA",
+                                               "license_expires_on" => "2028-06-30" })
+
+      expect(person.professional_licenses.sole)
+        .to have_attributes(kind: "LCSW", number: "12345", issuing_state: "CA", expires_on: Date.new(2028, 6, 30))
+    end
+
+    it "saves nothing without a license number" do
+      described_class.call(person:, answers: { "license_kind" => "LCSW", "license_issuing_state" => "CA" })
+
+      expect(person.professional_licenses).to be_empty
+    end
+
+    it "updates the license on file with that number rather than adding another" do
+      license = create(:professional_license, person:, kind: "LMFT", number: "999", expires_on: Date.new(2026, 1, 1))
+
+      described_class.call(person:, answers: { "license_number" => "999", "license_expires_on" => "2029-01-01" })
+
+      expect(person.professional_licenses.sole).to eq(license)
+      expect(license.reload.expires_on).to eq(Date.new(2029, 1, 1))
+    end
+
+    it "fills in a number-pending placeholder license" do
+      placeholder = create(:professional_license, person:, kind: nil, number: nil)
+
+      described_class.call(person:, answers: { "license_number" => "555", "license_kind" => "LPCC" })
+
+      expect(person.professional_licenses.sole).to eq(placeholder)
+      expect(placeholder.reload).to have_attributes(kind: "LPCC", number: "555")
+    end
+
+    it "adds a second license for the same number under a different type" do
+      create(:professional_license, person:, kind: "LMFT", number: "999")
+
+      described_class.call(person:, answers: { "license_number" => "999", "license_kind" => "LCSW" })
+
+      expect(person.professional_licenses.pluck(:kind)).to contain_exactly("LMFT", "LCSW")
+    end
+
+    it "reads the license questions off a standalone form" do
+      form = FormBuilderService.new(name: "License", sections: %i[professional_license]).call
+      number_field = form.form_fields.find_by!(field_identifier: "license_number")
+
+      described_class.call(person:, form:, form_params: { number_field.id.to_s => "777" })
+
+      expect(person.professional_licenses.sole.number).to eq("777")
+    end
+  end
 end

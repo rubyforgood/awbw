@@ -427,22 +427,9 @@
 
     <% toggle_wrapper = { class: "mb-0!" } %>
     <div class="grid grid-cols-2 gap-x-4 gap-y-2 md:grid-cols-3 lg:grid-cols-5">
-      <%= f.input :profile_show_credentials, label: "Show credentials", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_pronouns, label: "Show pronouns", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_email, label: "Show email", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_phone, label: "Show phone", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_social_media, label: "Show social media", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_bio, label: "Show bio", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_member_since, label: "Show facilitator since", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_affiliations, label: "Show affiliations", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_sectors, label: "Show sectors", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_age_ranges, label: "Show age ranges", wrapper_html: toggle_wrapper %>
-      <%# Registrations first, then the rest alphabetically by label. %>
-      <%= f.input :profile_show_events_registered, label: "Show registrations", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_resources, label: "Show resources", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_stories, label: "Show stories", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_workshop_variations, label: "Show workshop variations", wrapper_html: toggle_wrapper %>
-      <%= f.input :profile_show_workshops, label: "Show workshops", wrapper_html: toggle_wrapper %>
+      <% Person::PROFILE_VISIBILITY_LABELS.except("profile_is_searchable").each do |flag, label| %>
+        <%= f.input flag, label: label, wrapper_html: toggle_wrapper %>
+      <% end %>
     </div>
   </div>
 
