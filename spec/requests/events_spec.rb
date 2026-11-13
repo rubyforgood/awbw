@@ -930,7 +930,8 @@ RSpec.describe "Events", type: :request do
         get scholarships_events_path
         headers = Nokogiri::HTML(response.body).css("th").map { |th| th.text.strip }
         expect(headers).to include("Funded", "Unfunded", "Total")
-        expect(response.body).to include("Totals only")
+        # One toggle on the training table, one on the organizations table.
+        expect(Nokogiri::HTML(response.body).css("nav[aria-label='Funded vs unfunded']").size).to eq(2)
 
         get scholarships_events_path(funding: "totals")
         page = Nokogiri::HTML(response.body)

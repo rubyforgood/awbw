@@ -15,7 +15,12 @@
         <i class="fa-solid fa-building text-fuchsia-500"></i>
         Organizations with scholarships
       </h3>
-      <span class="text-xs text-gray-500"><%= pluralize(rows.size, "organization") %></span>
+      <div class="flex items-center gap-4">
+        <%# Same `funding` param as the training table's toggle, so flipping
+            either one flips both tables. %>
+        <%= render "scholarships_funding_toggle", split: split %>
+        <span class="text-xs text-gray-500"><%= pluralize(rows.size, "organization") %></span>
+      </div>
     </div>
 
     <div class="overflow-x-auto">
