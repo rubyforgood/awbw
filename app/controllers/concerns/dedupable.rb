@@ -26,14 +26,15 @@ module Dedupable
     end
   end
 
-  AUDIT_LINKS = %w[created_by_id updated_by_id].freeze
+  # Who created/updated a record and when: listed read-only, never edited or filled onto the keeper.
+  AUDIT_COLUMNS = %w[created_by_id updated_by_id created_at updated_at].freeze
 
-  # :fills when the keeper's link is empty, :dropped when the keeper has its own (or it's
-  # an audit stamp, which stays with its record), nil when there's nothing to lose.
+  # :fills when the keeper's link is empty, :dropped when the keeper has its own,
+  # nil when there's nothing to lose.
   def self.link_outcome(assoc, keep, delete)
     linked = delete.public_send(assoc.name)
     return if linked.nil? || linked == keep.public_send(assoc.name)
-    return :dropped if keep.public_send(assoc.name) || linked == keep || AUDIT_LINKS.include?(assoc.foreign_key.to_s)
+    return :dropped if keep.public_send(assoc.name) || linked == keep
 
     :fills
   end
@@ -194,13 +195,17 @@ module Dedupable
   end
 
   def dedupe_linked_associations(config)
-    shown = dedupe_editable_columns(config) + Array(config[:read_only_columns]).map(&:to_s) + Array(config[:audit_columns]).map(&:to_s)
+    shown = dedupe_editable_columns(config) + Array(config[:read_only_columns]).map(&:to_s) + dedupe_audit_columns(config)
     Dedupable.linked_associations(config[:model_class], shown)
   end
 
   # The preview only renders editable_columns when a config lists them, so only those are accepted.
   def dedupe_editable_columns(config)
-    config[:editable_columns].presence || (config[:model_class].column_names - %w[id created_at updated_at legacy_id])
+    config[:editable_columns].presence || (config[:model_class].column_names - %w[id legacy_id] - AUDIT_COLUMNS)
+  end
+
+  def dedupe_audit_columns(config)
+    config.fetch(:audit_columns) { AUDIT_COLUMNS.select { |name| config[:model_class].column_names.include?(name) } }.map(&:to_s)
   end
 
   def dedupe_record_label(config, record)
@@ -228,8 +233,8 @@ module Dedupable
   #                       only these are accepted on save (optional, defaults to every column)
   #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
   #                       e.g. a login's email and sign-in history (optional)
-  #   audit_columns:      Like read_only_columns, but listed at the bottom of Links & history — e.g.
-  #                       created/updated stamps; never filled onto the keeper (optional)
+  #   audit_columns:      Columns listed read-only at the bottom of Links & history and never filled onto
+  #                       the keeper (optional, defaults to whichever AUDIT_COLUMNS the model has)
   #   record_label:       Lambda(record) naming a record across the deduper when #name doesn't tell two
   #                       apart, e.g. two logins of one person (optional, defaults to #name)
   #   search_model:       Search model the index pickers query (optional, defaults to the model's own
@@ -289,7 +294,7 @@ module Dedupable
       search_model: config[:search_model] || mn,
       editable_columns: config[:editable_columns],
       read_only_columns: Array(config[:read_only_columns]).map(&:to_s),
-      audit_columns: Array(config[:audit_columns]).map(&:to_s),
+      audit_columns: dedupe_audit_columns(config),
       linked_associations: dedupe_linked_associations(config),
       record_label: config[:record_label] || :name.to_proc,
       union_columns: Array(config[:union_columns]).map(&:to_s),

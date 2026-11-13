@@ -58,6 +58,16 @@ RSpec.describe "Dedupable concern", type: :request do
           expect(response.body).to include("Delete Me")
         end
 
+        it "lists audit stamps read-only under Links & history instead of as editable fields" do
+          get dedupe_preview_categories_path(
+            category_to_keep_id: keep.id,
+            category_to_delete_id: delete_rec.id
+          )
+
+          expect(response.body).to include("Links &amp; history", "Created by", "Updated at")
+          expect(response.body).not_to include("category_to_keep[created_by_id]")
+        end
+
         it "redirects when keep_id is missing" do
           get dedupe_preview_categories_path(
             category_to_delete_id: delete_rec.id
@@ -1198,14 +1208,17 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Deprecated")
       end
 
-      it "lists belongs_to references not shown as fields in a read-only Linked records section" do
+      it "lists links and audit stamps in Links & history, and chips connected records on both sides" do
+        create(:bookmark, bookmarkable: delete_rec)
+        create(:bookmark, bookmarkable: keep)
+
         get dedupe_preview_workshops_path(
           workshop_to_keep_id: keep.id,
           workshop_to_delete_id: delete_rec.id
         )
 
-        expect(response.body).to include("Linked records")
-        expect(response.body).to include("Created by")
+        expect(response.body).to include("Links &amp; history", "Organization", "Created by", "Updated at")
+        expect(response.body).to include("Moves to keeper", "Stays linked")
       end
 
       it "shows a thumbnail on the deleted workshop as moving to the keeper" do

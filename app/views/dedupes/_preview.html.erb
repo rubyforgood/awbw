@@ -22,7 +22,7 @@
   header_bg = DomainTheme.bg_class_for(domain, intensity: 50)
   model_class = record_to_delete.class
   union_columns ||= []
-  skip_columns = %w[id created_at updated_at legacy_id]
+  skip_columns = %w[id legacy_id] + Dedupable::AUDIT_COLUMNS
   columns =
     if editable_columns.present?
       editable_columns.filter_map { |name| model_class.columns_hash[name.to_s] }
@@ -296,8 +296,8 @@
   <% else %>
     <% labels.each_with_index do |label, index| %>
       <% last = index == labels.size - 1 %>
-      <%= render "dedupes/reassignment_entry", entry: delete_by_label[label], border: border, round: (last ? "rounded-bl-xl" : ""), record_outcomes: record_outcomes %>
-      <%= render "dedupes/reassignment_entry", entry: keep_by_label[label], border: border, round: (last ? "rounded-br-xl" : ""), record_outcomes: record_outcomes %>
+      <%= render "dedupes/reassignment_entry", entry: delete_by_label[label], border: border, round: (last ? "rounded-bl-xl" : ""), record_outcomes: record_outcomes, kind: :moves %>
+      <%= render "dedupes/reassignment_entry", entry: keep_by_label[label], border: border, round: (last ? "rounded-br-xl" : ""), record_outcomes: record_outcomes, kind: :stays %>
     <% end %>
   <% end %>
 </div>

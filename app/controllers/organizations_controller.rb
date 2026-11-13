@@ -360,7 +360,6 @@ class OrganizationsController < ApplicationController
         name filemaker_code email website_url organization_type description
         mission_vision_values notes organization_status_id organization_obligation_id
       ],
-      audit_columns: %w[created_by_id updated_by_id created_at updated_at],
       union_columns: %w[filemaker_code],
       merge_keeper: ->(keep, delete) {
         keep.filemaker_code = Organization.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
