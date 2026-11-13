@@ -1,12 +1,9 @@
 module OrganizationServices
   # Find-or-create an organization's work address from a registrant's submitted
   # organization address fields. When AddressMatcher recognizes one of the org's
-  # addresses as the same place, update it in place; otherwise add a new "work"
-  # address.
-  #
-  # Unlike a person's mailing address, an organization accumulates work addresses
-  # from every registrant, so we never demote its existing primary: a registrant's
-  # address becomes primary only when the org has none yet.
+  # addresses as the same place, update it in place; otherwise add it as a new
+  # "work" address that becomes the org's primary (the latest answer wins), taking
+  # the flag off the old primary — reported as a change so staff can switch back.
   #
   # Shared by the public registration flow and the admin org-linking actions so
   # both build the org address identically. A registrant's optional answers are
@@ -34,18 +31,17 @@ module OrganizationServices
       "locality" => "Locality"
     }.freeze
 
-    def self.call(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil, overwrite: true)
-      new(organization:, city:, state:, street_address:, zip_code:, country:, overwrite:).call
+    def self.call(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil)
+      new(organization:, city:, state:, street_address:, zip_code:, country:).call
     end
 
-    def initialize(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil, overwrite: true)
+    def initialize(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil)
       @organization = organization
       @city = city&.strip
       @state = state&.strip.presence
       @street_address = street_address&.strip
       @zip_code = zip_code&.strip
       @country = country&.strip.presence
-      @overwrite = overwrite
     end
 
     def call
@@ -56,12 +52,15 @@ module OrganizationServices
       )
       return nothing_saved if existing.nil? && !storable?
 
-      make_primary = @organization.addresses.active.where(primary: true).none?
-
       unless existing
-        created = create_address(make_primary)
-        return Result.new(address: created, created: true, changes: [ whole_address_change(created) ])
+        previous_primaries = @organization.addresses.where(primary: true).to_a
+        previous_primaries.each { |address| address.update!(primary: false) }
+        created = create_address
+        changes = [ whole_address_change(created), primary_change(created, previous_primaries.first) ].compact
+        return Result.new(address: created, created: true, changes: changes)
       end
+
+      make_primary = @organization.addresses.active.where(primary: true).none?
 
       existing.assign_attributes(field_updates(existing))
       # Build the changes off `changed` rather than off what we assigned, so a
@@ -82,6 +81,13 @@ module OrganizationServices
       AutofillChange.new(field: "address", label: "Work address in #{address.city}", value: address.name.squish)
     end
 
+    def primary_change(created, previous)
+      return unless previous
+
+      AutofillChange.new(field: "primary_address", label: "Primary work address", value: created.name.squish,
+                         previous_value: previous.name.squish)
+    end
+
     # Called after assign_attributes and before save, so `changes` still holds the
     # [before, after] pair that says whether this filled a blank or replaced a value.
     def field_change(address, attribute)
@@ -98,12 +104,11 @@ module OrganizationServices
       )
     end
 
-    # overwrite: false (admin linking) only fills blank fields, so a discrepancy
-    # between the form and the org's saved address is kept and surfaced by
-    # ProfileDiff instead of being silently replaced. City and state are always
-    # fill-only, in both modes: they're what an address is identified by, and
-    # rewriting them would move a saved address to a different place rather than
-    # correct it. The fill is not dead code even though both columns are NOT NULL
+    # ZIP and country take the submitted value (the prior one survives in the Ahoy
+    # audit trail). Street, city, and state are fill-only: they're what an address
+    # is identified by (a matched address already has the same street), so
+    # rewriting them would move a saved address to a different place —
+    # ProfileDiff flags a differing one instead. The fill is not dead code even though both columns are NOT NULL
     # and validated present — a legacy row can hold "", and AddressMatcher's last
     # resort (street + ZIP, any city) is the one path that reaches such a row, so
     # that's where a blank city/state gets repaired. See the "repairs a legacy
@@ -112,9 +117,9 @@ module OrganizationServices
       updates = {}
       updates[:city] = @city if existing.city.blank?
       updates[:state] = @state if @state.present? && existing.state.blank?
-      updates[:street_address] = @street_address if @street_address.present? && (@overwrite || existing.street_address.blank?)
-      updates[:zip_code] = @zip_code if @zip_code.present? && (@overwrite || existing.zip_code.blank?)
-      updates[:country] = @country if @country.present? && (@overwrite || existing.country.blank?)
+      updates[:street_address] = @street_address if @street_address.present? && existing.street_address.blank?
+      updates[:zip_code] = @zip_code if @zip_code.present?
+      updates[:country] = @country if @country.present?
       updates.merge(filled_defaults(existing, updates))
     end
 
@@ -137,7 +142,7 @@ module OrganizationServices
       @state.present?
     end
 
-    def create_address(make_primary)
+    def create_address
       @organization.addresses.create!(
         # street/ZIP are NOT NULL with no default, so a skipped answer has to
         # land as "" rather than nil.
@@ -147,7 +152,7 @@ module OrganizationServices
         zip_code: @zip_code.to_s,
         **AddressDefaults.for(city: @city, state: @state, zip_code: @zip_code, country: @country),
         address_type: "work",
-        primary: make_primary
+        primary: true
       )
     end
 

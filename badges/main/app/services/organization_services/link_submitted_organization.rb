@@ -1,10 +1,11 @@
 module OrganizationServices
   # The shared core of the two org-linking editors (event registration and form
   # submission): given the org-related answers a person submitted (an "entry" —
-  # org_name/position/website/organization_type/address), fill the organization's
-  # blank profile fields and work address from them (curated values are kept and
-  # reported as conflicts instead), create the job + facilitator affiliations,
-  # and report what was saved and what conflicted. The callers keep their
+  # org_name/position/website/organization_type/address), write them onto the
+  # organization's profile and work address (a valid answer replaces what's saved;
+  # the prior value stays in the Ahoy audit trail), create the job + facilitator
+  # affiliations, and report what was saved, what it replaced, and what couldn't
+  # be applied. The callers keep their
   # flow-specific wrappers: the registration flow's link row, pinning, and
   # autofill notes; the submission flow's metadata link.
   #
@@ -22,16 +23,33 @@ module OrganizationServices
         text
       end
 
-      # Flash warning listing the submitted answers that differ from values
-      # already on the org (so the fill-blanks sync left them unapplied), or nil
-      # when everything matched.
+      # Flash warning naming the saved values the submission replaced (so the admin
+      # can reapply any newer edits) and the answers that couldn't be applied, or
+      # nil when there's neither.
       def warning(organization:)
+        [ replaced_warning(organization), conflicts_warning(organization) ].compact.join(" ").presence
+      end
+
+      private
+
+      def replaced_warning(organization)
+        replaced = saved.select(&:update?)
+        return if replaced.none?
+
+        descriptions = replaced.map do |change|
+          "#{ERB::Util.html_escape(change.description)} (was “#{ERB::Util.html_escape(change.previous_value)}”)"
+        end
+        "This submission replaced saved values on #{ERB::Util.html_escape(organization.name)}: #{descriptions.to_sentence}. " \
+          "If anyone edited these since it was submitted, reapply their changes — the previous values are in the activity log."
+      end
+
+      def conflicts_warning(organization)
         return if conflicts.none?
 
         descriptions = conflicts.map do |conflict|
-          "#{conflict.label} (form: “#{ERB::Util.html_escape(conflict.submitted)}”, saved: “#{ERB::Util.html_escape(conflict.saved)}”)"
+          "#{conflict.label} (#{ERB::Util.html_escape(conflict.summary)})"
         end
-        "Some form answers differ from #{ERB::Util.html_escape(organization.name)}’s saved profile and were not applied: #{descriptions.to_sentence}. Edit the organization if they should change."
+        "Some form answers weren't applied to #{ERB::Util.html_escape(organization.name)}: #{descriptions.to_sentence}. Edit the organization if they should change."
       end
     end
 
@@ -41,6 +59,10 @@ module OrganizationServices
     # shares the submission path's "on_demand" scenario). All but
     # non_facilitator_training confer the standing Facilitator affiliation; a
     # nil scenario (a non-agreement form) confers nothing.
+    # Current.source while an admin links an org, so every write it makes is
+    # stamped as coming from the link (FormSubmissionChanges badges those rows).
+    CHANGE_SOURCE = "Organization linking".freeze
+
     FACILITATOR_CONFERRING_SCENARIOS = %w[on_demand facilitator_training reinstatement].freeze
     SCENARIOS = (FACILITATOR_CONFERRING_SCENARIOS + %w[non_facilitator_training]).freeze
 
@@ -61,17 +83,18 @@ module OrganizationServices
       profile_changes = sync_profile
       address_result = upsert_address
 
-      AffiliationServices::CreateFromRegistration.call(
+      affiliation_changes = AffiliationServices::CreateFromRegistration.call(
         person: @person,
         organization: @organization,
         job_title: @entry && @entry[:position],
         training_date: @training_date,
         organization_address: address_result.address || sole_address,
         facilitator_training: FACILITATOR_CONFERRING_SCENARIOS.include?(@scenario),
-        event_registration: @event_registration
+        event_registration: @event_registration,
+        repoint_address: address_result.address.present?
       )
 
-      Result.new(saved: profile_changes + address_result.changes, conflicts: conflicts,
+      Result.new(saved: profile_changes + address_result.changes + affiliation_changes, conflicts: conflicts,
                  address: address_result.address)
     end
 
@@ -81,14 +104,14 @@ module OrganizationServices
       return [] unless @entry
 
       OrganizationServices::SyncProfile.call(
-        organization: @organization, overwrite: false, website: @entry[:website], organization_type: @entry[:organization_type],
+        organization: @organization, website: @entry[:website], organization_type: @entry[:organization_type],
         submission: @entry[:submission]
       ).changes
     end
 
     def upsert_address
       OrganizationServices::UpsertAddress.call(
-        organization: @organization, overwrite: false, **submitted_address
+        organization: @organization, **submitted_address
       )
     end
 

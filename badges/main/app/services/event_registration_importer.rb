@@ -27,8 +27,9 @@ require "bigdecimal"
 #     the job (+ facilitator, on a training) affiliations. Unmatched names are left
 #     for the link-organization queue, never invented here.
 #   * Profile — mailing address, phone, pronouns, sectors and age groups through
-#     PersonServices::CaptureFromSubmission. A matched person's (and org's) existing
-#     values are kept; the sheet only fills blanks and adds new addresses beside.
+#     PersonServices::CaptureFromSubmission. The sheet's valid answers replace a
+#     matched person's (and org's) saved values; each replacement is listed on the
+#     row, and the prior value stays in the Ahoy audit trail.
 #   * CE — enrolled when the row asks for CE and the event offers hours.
 #   * Money — a Scholarship first, then the AmountPaid payment (registration, then
 #     a CE the row asked for), then a Discount comping whatever a paying row still
@@ -797,7 +798,6 @@ class EventRegistrationImporter
   # ── Persisting ──────────────────────────────────────────────────────────
 
   def persist_registration(person, registration, values, organization, answers, preview)
-    newly_created = person.previously_new_record?
     status_kept = preview.registration_status == :kept
     note_status_conflict(registration, preview) if status_kept
     note_seat_count(registration, values)
@@ -805,26 +805,33 @@ class EventRegistrationImporter
     apply_registration_details(registration, values, apply_days: !status_kept)
     submission = import_submission(person, answers)
     capture_organization(person, registration, submission, organization, answers, preview)
-    capture_person(person, answers, preview, overwrite: newly_created)
+    capture_person(person, answers, preview)
     enroll_ce(registration, values) if preview.ce_status == :will_enroll
     apply_scholarship(person, registration, values)
   end
 
-  # Fill-only mode keeps what the portal already holds. Whatever it declined is
-  # reported on the row and written to the person as a comment, so a curated sheet's
-  # value is reviewable rather than dropped.
-  def capture_person(person, answers, preview, overwrite:)
-    capture = PersonServices::CaptureFromSubmission.new(person: person, answers: answers, overwrite: overwrite)
+  def capture_person(person, answers, preview)
+    capture = PersonServices::CaptureFromSubmission.new(person: person, answers: answers)
     capture.call
-    note_declined(person, capture.declined.map { |d| [ d.attribute.to_s.humanize, d.submitted, d.saved ] }, preview)
+    capture.replaced.each do |change|
+      preview.warnings << "Replaced #{change.label.downcase} “#{change.saved}” with “#{change.submitted}”"
+    end
   end
 
+  # entries: [ label, submitted, saved, reason ] — saved is nil when nothing was on
+  # file (the answer was skipped for `reason`, e.g. a website that isn't a web address).
   def note_declined(record, entries, preview)
-    entries.each { |label, submitted, saved| preview.warnings << "Kept #{label.downcase} “#{saved}” — sheet said “#{submitted}”" }
+    entries.each do |label, submitted, saved, reason|
+      kept = saved.present? ? "Kept #{label.downcase} “#{saved}”" : "Skipped #{label.downcase}"
+      preview.warnings << "#{kept} — sheet said “#{submitted}”#{" (#{reason})" if reason}"
+    end
     return if entries.empty?
 
     body = "Imported sheet disagreed and was not applied: " +
-      entries.map { |label, submitted, saved| "#{label} “#{submitted}” (kept “#{saved}”)" }.join("; ") + "."
+      entries.map { |label, submitted, saved, reason|
+        details = [ ("kept “#{saved}”" if saved.present?), reason ].compact.join(", ")
+        "#{label} “#{submitted}” (#{details})"
+      }.join("; ") + "."
     return if record.comments.exists?(topic: COMMENT_TOPIC, body: body)
 
     record.comments.create_as_system!(topic: COMMENT_TOPIC, body: body)
@@ -833,20 +840,22 @@ class EventRegistrationImporter
   def capture_organization(person, registration, submission, organization, answers, preview)
     return unless organization
 
-    note_declined(organization, organization_declines(organization, answers), preview)
     result = OrganizationServices::CaptureFromSubmission.call(
       person: person, answers: answers, organization: organization, submission: submission,
       facilitator_training: @event.facilitator_training, training_date: @event.starts_on,
-      event_registration: registration, overwrite: false
+      event_registration: registration
     )
+    result.autofill.select(&:update?).each do |change|
+      preview.warnings << "Replaced #{change.description.downcase} “#{change.previous_value}” with “#{change.value}”"
+    end
+    note_declined(organization, organization_declines(organization, answers), preview)
     registration.link_submitted_organization!(organization, submission: submission, autofill: result.autofill)
   end
 
-  # The org answers fill-blanks won't apply, from the comparison the link-organization
-  # flow already uses.
+  # Run after the capture, so only the answers it couldn't apply remain.
   def organization_declines(organization, answers)
     OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: FormSubmission.org_entry_from(answers))
-      .map { |discrepancy| [ discrepancy.label, discrepancy.submitted, discrepancy.saved ] }
+      .map { |discrepancy| [ discrepancy.label, discrepancy.submitted, discrepancy.saved, discrepancy.reason ] }
   end
 
   def enroll_ce(registration, values)

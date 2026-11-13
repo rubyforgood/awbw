@@ -1,0 +1,13 @@
+name: "Form answers update organization and person profiles"
+area: people
+display_status: admin_facing
+released_on: 2026-11-13
+pr_number: 2986
+summary: >-
+  The latest valid answers from any form, link, or spreadsheet import now update the person's and
+  organization's saved details. Answers that can't be applied are listed as not applied.
+pro_tips:
+  - "After linking, the warning names any saved values the form replaced, so you can reapply newer edits. Previous values are in the activity log."
+  - "A website answer that isn't a web address, or an address missing its city or state, is never saved and shows as not applied."
+  - "A new office address becomes the organization's primary, and all of the person's current affiliations there move to it. Both changes are listed so you can switch back."
+  - "The spreadsheet import lists every saved value it replaced on each row."

@@ -18,7 +18,7 @@ RSpec.describe OrganizationServices::SyncProfile do
       expect(organization.reload.website_url).to eq("https://existing.org")
     end
 
-    it "overwrites an existing website by default (latest-wins)" do
+    it "overwrites an existing website with the latest answer" do
       organization.update!(website_url: "https://old.org")
 
       described_class.call(organization: organization, website: "https://new.org")
@@ -26,18 +26,27 @@ RSpec.describe OrganizationServices::SyncProfile do
       expect(organization.reload.website_url).to eq("https://new.org")
     end
 
-    it "fills a blank website but leaves an existing one when overwrite is false" do
-      organization.update!(website_url: "https://curated.org")
+    it "ignores a website answer that isn't a web address" do
+      organization.update!(website_url: "https://acme.org")
 
-      described_class.call(organization: organization, website: "https://new.org", overwrite: false)
+      result = described_class.call(organization: organization, website: "Acme Unified School District")
 
-      expect(organization.reload.website_url).to eq("https://curated.org")
+      expect(organization.reload.website_url).to eq("https://acme.org")
+      expect(result.changes).to be_empty
     end
 
-    it "fills a blank website when overwrite is false" do
+    it "does not fill a blank website with an answer that isn't a web address" do
       organization.update!(website_url: nil)
 
-      described_class.call(organization: organization, website: "https://new.org", overwrite: false)
+      described_class.call(organization: organization, website: "Acme")
+
+      expect(organization.reload.website_url).to be_nil
+    end
+
+    it "fills a blank website" do
+      organization.update!(website_url: nil)
+
+      described_class.call(organization: organization, website: "https://new.org")
 
       expect(organization.reload.website_url).to eq("https://new.org")
     end
@@ -85,18 +94,10 @@ RSpec.describe OrganizationServices::SyncProfile do
       expect(organization.reload.organization_type).to eq("Government agency")
     end
 
-    it "leaves an existing organization_type untouched when overwrite is false" do
-      organization.update!(organization_type: "Government agency")
-
-      described_class.call(organization: organization, organization_type: "For-profit", overwrite: false)
-
-      expect(organization.reload.organization_type).to eq("Government agency")
-    end
-
-    it "fills a blank organization_type when overwrite is false" do
+    it "fills a blank organization_type" do
       organization.update!(organization_type: nil)
 
-      described_class.call(organization: organization, organization_type: "For-profit", overwrite: false)
+      described_class.call(organization: organization, organization_type: "For-profit")
 
       expect(organization.reload.organization_type).to eq("For-profit")
     end
@@ -106,7 +107,7 @@ RSpec.describe OrganizationServices::SyncProfile do
     it "reports the columns it filled" do
       organization.update!(website_url: nil, organization_type: nil)
 
-      result = described_class.call(organization: organization, website: "acme.org", organization_type: "For-profit", overwrite: false)
+      result = described_class.call(organization: organization, website: "acme.org", organization_type: "For-profit")
 
       expect(result.changes.map(&:label)).to contain_exactly("Website", "Type")
     end
@@ -141,12 +142,13 @@ RSpec.describe OrganizationServices::SyncProfile do
       expect(result.changes).to be_empty
     end
 
-    it "reports nothing filled when the blanks were left as conflicts" do
+    it "reports what each replaced value was" do
       organization.update!(website_url: "https://curated.org", organization_type: "For-profit")
 
-      result = described_class.call(organization: organization, website: "https://new.org", organization_type: "Government agency", overwrite: false)
+      result = described_class.call(organization: organization, website: "https://new.org", organization_type: "Government agency")
 
-      expect(result.changes).to be_empty
+      expect(result.changes.map { |change| [ change.label, change.previous_value, change.value ] })
+        .to contain_exactly([ "Website", "https://curated.org", "https://new.org" ], [ "Type", "For-profit", "Government agency" ])
     end
   end
 end

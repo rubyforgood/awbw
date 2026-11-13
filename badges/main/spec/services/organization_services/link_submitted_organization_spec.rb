@@ -52,15 +52,15 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
         .to include("Harbor Family Shelter linked.", "Saved from the form")
     end
 
-    it "keeps a conflicting saved value and reports it as a warning" do
+    it "replaces a saved value and warns the admin to reapply any newer edit" do
       organization.update!(organization_type: "School")
-      conflicting = entry.merge(organization_type: "Government Agency")
+      differing = entry.merge(organization_type: "Government Agency")
 
-      result = described_class.call(person: person, organization: organization, entry: conflicting,
+      result = described_class.call(person: person, organization: organization, entry: differing,
                                     scenario: "on_demand")
 
-      expect(organization.reload.organization_type).to eq("School")
-      expect(result.warning(organization: organization)).to include("differ", "Government Agency")
+      expect(organization.reload.organization_type).to eq("Government Agency")
+      expect(result.warning(organization: organization)).to include("replaced saved values", "was “School”", "reapply")
     end
 
     it "returns no warning when nothing conflicts" do
