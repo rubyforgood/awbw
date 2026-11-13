@@ -1,0 +1,11 @@
+name: "Every person has a name format"
+area: people
+display_status: admin_facing
+released_on: 2026-11-13
+pr_number: 2993
+summary: >-
+  Every profile now always has a "Display name preference" saved. Profiles that never picked one were
+  set to first name and last initial, which is how they already displayed, and new people start there too.
+pro_tips:
+  - "The profile dropdown no longer has a blank choice."
+  - "Admins still see full names in rosters, payments, and search pickers."

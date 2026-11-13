@@ -113,8 +113,7 @@ class AuthorCreditDivergenceQuery
       .joins("INNER JOIN #{Person.table_name} authors ON authors.id = #{table}.author_id")
       .where("TRIM(#{table}.author_credit_preference) <> ''")
       .where("#{table}.author_credit_preference <> CASE WHEN authors.anonymous_contributions THEN 'anonymous' " \
-             "ELSE COALESCE(NULLIF(TRIM(authors.display_name_preference), ''), :default_display_name_preference) END",
-             default_display_name_preference: Person::DEFAULT_DISPLAY_NAME_PREFERENCE)
+             "ELSE authors.display_name_preference END")
     scope = scope.where(author_credit_preference: preference) if preference
     counted_people(scope, :authors)
   end
