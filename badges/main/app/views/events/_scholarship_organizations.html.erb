@@ -1,0 +1,76 @@
+<%# Organizations whose trainees received scholarships at the trainings in scope:
+    where each program is, how many of its people got awards, and the funded /
+    unfunded / total dollars. Awards are credited to the organization(s) linked on
+    the registration; ones linked to none get a leading "No organization" row so
+    the list reconciles with the totals above. Every figure links to the
+    registrations behind it (see scholarship_figure_link). Pass `report:` (an
+    EventScholarshipReport) and `split:` (false hides the funded/unfunded
+    columns — the funding toggle). %>
+<% rows = report.organization_rows %>
+<% unaffiliated = report.unaffiliated_scholarships %>
+<% if rows.any? || unaffiliated %>
+  <section class="mt-8 overflow-hidden rounded-xl border border-fuchsia-300 bg-white">
+    <div class="flex items-center justify-between gap-3 border-b border-fuchsia-300 bg-fuchsia-50 px-4 py-3">
+      <h3 class="flex items-center gap-2 text-base font-semibold text-fuchsia-900">
+        <i class="fa-solid fa-building text-fuchsia-500"></i>
+        Organizations with scholarships
+      </h3>
+      <div class="flex items-center gap-4">
+        <%# Same `funding` param as the training table's toggle, so flipping
+            either one flips both tables. %>
+        <%= render "scholarships_funding_toggle", split: split %>
+        <span class="text-xs text-gray-500"><%= pluralize(rows.size, "organization") %></span>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-sm">
+        <thead>
+          <tr class="bg-fuchsia-50 text-xs text-fuchsia-900">
+            <th class="border border-gray-200 px-3 py-2 text-left font-semibold">Organization</th>
+            <th class="border border-gray-200 px-3 py-2 text-left font-semibold">Location</th>
+            <th class="border border-gray-200 bg-fuchsia-200/70 px-3 py-2 text-right font-semibold">Recipients</th>
+            <th class="border border-gray-200 bg-fuchsia-200/70 px-3 py-2 text-right font-semibold"># of scholarships</th>
+            <% if split %>
+              <th class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-right font-medium">Funded</th>
+              <th class="border border-gray-200 px-3 py-2 text-right font-medium">Unfunded</th>
+            <% end %>
+            <th class="border border-gray-200 bg-fuchsia-200/70 px-3 py-2 text-right font-semibold<%= " border-l-2 border-l-fuchsia-300" unless split %>">Total</th>
+          </tr>
+        </thead>
+        <tbody class="tabular-nums">
+          <% if unaffiliated %>
+            <tr class="bg-gray-50">
+              <td class="border border-gray-200 px-3 py-2 italic text-gray-700">No organization</td>
+              <td class="border border-gray-200 px-3 py-2 text-gray-700">—</td>
+              <%= render "scholarship_organization_figures", figures: unaffiliated, organization_id: EventRegistration::NO_ORGANIZATION, split: split %>
+            </tr>
+          <% end %>
+          <% rows.each do |row| %>
+            <tr>
+              <td class="border border-gray-200 px-3 py-2">
+                <%= link_to row.organization.name, organization_path(row.organization), class: "text-blue-600 hover:text-blue-800 hover:underline" %>
+              </td>
+              <%# One location per line: the recipients' affiliation addresses, else
+                  the org's active addresses (EventScholarshipReport#locations_for). %>
+              <td class="border border-gray-200 px-3 py-2 text-gray-700">
+                <% if row.locations.any? %>
+                  <% row.locations.each do |location| %>
+                    <div><%= location %></div>
+                  <% end %>
+                <% else %>
+                  —
+                <% end %>
+              </td>
+              <%= render "scholarship_organization_figures", figures: row, organization_id: row.organization.id, split: split %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="border-t border-fuchsia-200 bg-fuchsia-50 px-4 py-2 text-xs text-gray-500">
+      Credited to the organization the trainee registered under; a registration linked to more than one organization counts under each.
+    </div>
+  </section>
+<% end %>

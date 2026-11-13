@@ -93,10 +93,40 @@ class EventScholarshipReport
   end
 
   def columns
-    @columns ||= begin
-      figures = EventScholarshipFigures.new(@events, funder: @funder)
-      @events.map { |event| Column.new(event: event, figures: figures.for(event)) }
+    @columns ||= @events.map { |event| Column.new(event: event, figures: figures.for(event)) }
+  end
+
+  # One organization whose trainees received scholarships across the trainings in
+  # scope, with where its program is.
+  OrganizationRow = Struct.new(:organization, :figures, :locations, keyword_init: true) do
+    def funded_cents = figures.funded_cents
+    def unfunded_cents = figures.unfunded_cents
+    def scholarship_cents = figures.scholarship_cents
+    def award_count = figures.award_count
+    def recipient_count = figures.recipient_count
+  end
+
+  # Organizations whose trainees received scholarships, name-sorted. See
+  # EventScholarshipFigures#by_organization for how awards are credited, and
+  # #locations_for for each row's locations.
+  def organization_rows
+    @organization_rows ||= begin
+      by_organization = figures.by_organization
+      organizations = Organization.includes(:addresses).where(id: by_organization.keys.compact)
+      organizations
+        .map do |organization|
+          org_figures = by_organization[organization.id]
+          OrganizationRow.new(organization: organization, figures: org_figures,
+            locations: locations_for(organization, org_figures.recipient_ids))
+        end
+        .sort_by { |row| row.organization.name.to_s.downcase }
     end
+  end
+
+  # Scholarships on registrations linked to no organization (nil when none), so
+  # the organization list reconciles with the totals.
+  def unaffiliated_scholarships
+    figures.by_organization[nil]
   end
 
   def any?
@@ -146,6 +176,70 @@ class EventScholarshipReport
   end
 
   private
+
+  # "City, ST" labels, uniqued, for where an org's recipients facilitate. From
+  # the recipients' facilitator affiliations with the org that were in effect
+  # during the report's timeframe — active, since ended, or upcoming alike (job
+  # affiliations don't count): each contributes the org address picked on it
+  # (even one since made inactive), and one with no address picked contributes
+  # all the org's active addresses. With no such affiliation at all, the org's
+  # active addresses stand in.
+  def locations_for(organization, recipient_ids)
+    picked_ids = affiliation_address_ids_by_org_person
+      .slice(*recipient_ids.map { |person_id| [ organization.id, person_id ] })
+      .values.flatten
+    picked = picked_ids.filter_map { |id| affiliation_addresses_by_id[id] if id }
+    # An affiliation with no address picked (or one since deleted) — or no
+    # affiliation at all — brings in the org's active addresses.
+    unpicked = picked_ids.empty? || picked.size < picked_ids.size
+    addresses = picked + (unpicked ? organization.addresses.reject(&:inactive?) : [])
+    addresses
+      .filter_map { |address| [ address.city, address.state ].compact_blank.join(", ").presence }
+      .uniq(&:downcase)
+      .sort
+  end
+
+  # { [ organization_id, person_id ] => [ organization_address_id or nil, ... ] }
+  # for the facilitator affiliations of every credited recipient with every
+  # listed org — nil where no address was picked.
+  def affiliation_address_ids_by_org_person
+    @affiliation_address_ids_by_org_person ||= begin
+      by_organization = figures.by_organization.except(nil)
+      window = report_window
+      scope = Affiliation.facilitators
+      # In effect at some point in the report's timeframe, judged by dates (not the
+      # inactive flag, which reflects today) — so a recipient who has since left
+      # still shows where they facilitated then.
+      if window
+        scope = scope
+          .where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", window.last)
+          .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", window.first)
+      end
+      scope
+        .where(organization_id: by_organization.keys, person_id: by_organization.values.flat_map { |f| f.recipient_ids.to_a }.uniq)
+        .pluck(:organization_id, :person_id, :organization_address_id)
+        .group_by { |organization_id, person_id, _| [ organization_id, person_id ] }
+        .transform_values { |rows| rows.map(&:last) }
+    end
+  end
+
+  # The report's timeframe: the selected calendar year, else (all time) the span
+  # of the events in scope. Nil when no event has a date.
+  def report_window
+    return Date.new(@featured_year_value, 1, 1)..Date.new(@featured_year_value, 12, 31) if @featured_year_value
+
+    starts = @events.filter_map { |event| event.start_date&.to_date }
+    ends = @events.filter_map { |event| (event.end_date || event.start_date)&.to_date }
+    starts.min..ends.max if starts.any?
+  end
+
+  def affiliation_addresses_by_id
+    @affiliation_addresses_by_id ||= Address.where(id: affiliation_address_ids_by_org_person.values.flatten.compact.uniq).index_by(&:id)
+  end
+
+  def figures
+    @figures ||= EventScholarshipFigures.new(@events, funder: @funder)
+  end
 
   # A zeroed year group for a period with no trainings, so the summary card
   # renders 0 rather than blank.

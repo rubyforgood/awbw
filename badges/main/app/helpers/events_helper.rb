@@ -45,6 +45,61 @@ module EventsHelper
     event_registrations_path(**filters)
   end
 
+  # Where a scholarships-report figure drills in: the registrations behind it.
+  # A figure for one training (a row, or any figure once the report is filtered
+  # to one event) lands on that training's registrants roster; a figure spanning
+  # trainings lands on the registrations index, narrowed to the report's event
+  # type, event search, and `year` (a year subtotal) or the report's selected year.
+  # `filters` are the figure's own (scholarship / funder / organization_id).
+  def scholarship_drilldown_path(filters, event: nil, year: nil)
+    event_id = event&.id || params[:event_id].presence
+    if event_id
+      return registrants_event_path(event_id, **{ **filters, funder_name: @filter_funder&.name.presence }.compact)
+    end
+
+    time_period = params[:time_period].to_s
+    report_year = time_period == "this_year" ? Date.current.year : Integer(time_period, exception: false)
+    event_registrations_path(**{
+      event_type: scholarship_drilldown_event_type,
+      event_year: year || report_year,
+      event_search: params[:search].presence,
+      **filters
+    }.compact)
+  end
+
+  # The scholarships report's funding toggle: true (the default) splits figures
+  # into funded and unfunded; `funding=totals` shows only the totals.
+  SCHOLARSHIP_FUNDING_TOTALS = "totals".freeze
+  def scholarship_funding_split?
+    params[:funding] != SCHOLARSHIP_FUNDING_TOTALS
+  end
+
+  # What the scholarships report's rows are, per its event-type checkboxes:
+  # "facilitator trainings" unless non-training events are in scope (or nothing is
+  # checked, which means every event), then "events".
+  def scholarship_report_noun
+    kinds = scholarship_event_kinds
+    kinds.empty? || kinds.include?("other") ? "events" : "facilitator trainings"
+  end
+
+  # The registrations index's event_type for the report's checked kinds: nothing
+  # (every event) when none or all are checked, "trainings" for live + on-demand,
+  # else the kinds comma-joined (EventRegistration.event_type reads either).
+  def scholarship_drilldown_event_type
+    kinds = scholarship_event_kinds
+    return if kinds.empty? || kinds.size == Event::KINDS.size
+    return "trainings" if kinds.sort == %w[ live on_demand ]
+    kinds.join(",")
+  end
+
+  # A scholarships-report figure as a link to the registrations behind it (see
+  # #scholarship_drilldown_path); plain text when the figure is zero.
+  def scholarship_figure_link(label, amount, filters, event: nil, year: nil)
+    return label unless amount.to_i.positive?
+    link_to label, scholarship_drilldown_path(filters, event: event, year: year),
+      class: "text-blue-600 hover:text-blue-800 hover:underline", title: "View these registrations"
+  end
+
   # Human label for the attendees index's population filters — e.g.
   # "Attended · All trainings". Shown in the page subtitle so the defaults the page
   # applies are visible rather than implied.
@@ -57,7 +112,7 @@ module EventsHelper
   # The scholarships report's filter/toggle state, carried through a drill-in so
   # its eyebrow can rebuild the exact view (period, event type/id, search, funder,
   # split/combined layout, and the report's own origin) the user came from.
-  REPORT_FILTER_KEYS = %i[ time_period event_type event_id search funder_sgid view return_to ].freeze
+  REPORT_FILTER_KEYS = [ :time_period, :event_type, :event_id, :search, :funder_sgid, :view, :funding, :return_to, { event_kinds: [] } ].freeze
 
   # Stable anchor id for a training's row on the scholarships report, so the
   # registrants eyebrow can scroll to and highlight the row drilled in from.
@@ -245,7 +300,7 @@ module EventsHelper
   # event's calendar year) and funding source (funder_sgid names a specific funder;
   # funder is grant-funded vs org-subsidized).
   REPORT_SUBNAV_PARAMS = %i[
-    event_id event_type search funder_sgid time_period view registrant_ids
+    event_id event_type search funder_sgid time_period view funding registrant_ids
     attendance_status payment_status funder scholarship
     sector name_email contact_info work_location affiliation_status organization_id org_city state county
     age_group life_experience country school_district program_status

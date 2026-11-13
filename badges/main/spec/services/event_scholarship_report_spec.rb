@@ -104,6 +104,145 @@ RSpec.describe EventScholarshipReport do
     end
   end
 
+  describe "organizations with scholarships" do
+    let(:event) { create(:event, facilitator_training: true, cost_cents: 50_000, start_date: Date.new(2025, 3, 1)) }
+    let(:org_b) { create(:organization, name: "Bravo Program") }
+    let(:org_a) { create(:organization, name: "Alpha Program") }
+    let(:person1) { create(:person) }
+    let(:person2) { create(:person) }
+    let(:person3) { create(:person) }
+
+    before do
+      create(:address, addressable: org_a, city: "Springfield", state: "IL")
+      reg1 = create(:event_registration, event: event, registrant: person1, status: "attended")
+      reg2 = create(:event_registration, event: event, registrant: person2, status: "attended")
+      reg3 = create(:event_registration, event: event, registrant: person3, status: "attended")
+      create(:event_registration_organization, event_registration: reg1, organization: org_a)
+      create(:event_registration_organization, event_registration: reg2, organization: org_a)
+      create(:event_registration_organization, event_registration: reg2, organization: org_b)
+
+      funded = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant))
+      create(:allocation, source: funded, allocatable: reg1, amount: 4_000)
+      unfunded = create(:scholarship, recipient: person2, amount_cents: 2_000, grant: nil)
+      create(:allocation, source: unfunded, allocatable: reg2, amount: 2_000)
+      unlinked = create(:scholarship, recipient: person3, amount_cents: 1_000, grant: nil)
+      create(:allocation, source: unlinked, allocatable: reg3, amount: 1_000)
+    end
+
+    subject(:report) { described_class.new([ event.decorate ]) }
+
+    it "lists each organization name-sorted with its location" do
+      expect(report.organization_rows.map { |row| row.organization.name }).to eq([ "Alpha Program", "Bravo Program" ])
+      expect(report.organization_rows.first.locations).to eq([ "Springfield, IL" ])
+    end
+
+    it "falls back to every active org address, uniqued, when no recipient affiliation names one" do
+      create(:address, addressable: org_a, city: "Springfield", state: "IL")
+      create(:address, addressable: org_a, city: "Peoria", state: "IL")
+      create(:address, addressable: org_a, city: "Closed", state: "IL", inactive: true)
+
+      expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
+    end
+
+    it "adds the org's active addresses for an affiliation with no address picked" do
+      site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
+      create(:address, addressable: org_a, city: "Closed", state: "IL", inactive: true)
+      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      create(:affiliation, person: person2, organization: org_a, organization_address: nil)
+
+      expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
+    end
+
+    it "keeps a picked address even after it's made inactive" do
+      site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
+      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      site.update!(inactive: true)
+
+      expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
+    end
+
+    it "prefers the org addresses on the recipients' affiliations" do
+      site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
+      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      # Another person's affiliation doesn't count — only the credited recipients'.
+      elsewhere = create(:address, addressable: org_a, city: "Joliet", state: "IL")
+      create(:affiliation, person: create(:person), organization: org_a, organization_address: elsewhere)
+
+      expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
+    end
+
+    context "affiliation timeframe" do
+      let(:event) { create(:event, facilitator_training: true, cost_cents: 50_000, start_date: Date.new(2025, 3, 1), end_date: Date.new(2025, 3, 2)) }
+      let(:site) { create(:address, addressable: org_a, city: "Peoria", state: "IL") }
+
+      it "counts a facilitator affiliation in effect during the training, even one since ended" do
+        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+          start_date: Date.new(2024, 1, 1), end_date: Date.new(2025, 6, 1), inactive: true)
+
+        expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
+      end
+
+      it "skips one that ended before the report's timeframe, falling back to the org's addresses" do
+        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+          start_date: Date.new(2020, 1, 1), end_date: Date.new(2021, 1, 1), inactive: true)
+
+        expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
+      end
+
+      it "skips one that starts after the report's timeframe" do
+        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+          start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 12, 31))
+
+        expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
+      end
+
+      it "uses the selected year as the timeframe" do
+        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+          start_date: Date.new(2025, 11, 1), end_date: Date.new(2025, 12, 31))
+
+        all_time = described_class.new([ event.decorate ])
+        year = described_class.new([ event.decorate ], featured_year: 2025)
+        expect(all_time.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
+        expect(year.organization_rows.first.locations).to eq([ "Peoria, IL" ])
+      end
+    end
+
+    it "ignores the recipients' job (non-facilitator) affiliations" do
+      site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
+      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      office = create(:address, addressable: org_a, city: "Chicago", state: "IL")
+      create(:affiliation, person: person2, organization: org_a, organization_address: office, title: "Program Director")
+
+      expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
+    end
+
+    it "splits each organization's dollars and counts its recipients and awards" do
+      alpha = report.organization_rows.first
+      expect(alpha.funded_cents).to eq(4_000)
+      expect(alpha.unfunded_cents).to eq(2_000)
+      expect(alpha.scholarship_cents).to eq(6_000)
+      expect(alpha.award_count).to eq(2)
+      expect(alpha.recipient_count).to eq(2)
+    end
+
+    it "credits a registration linked to several organizations to each" do
+      bravo = report.organization_rows.last
+      expect(bravo.unfunded_cents).to eq(2_000)
+      expect(bravo.recipient_count).to eq(1)
+    end
+
+    it "summarizes scholarships on registrations with no linked organization" do
+      expect(report.unaffiliated_scholarships.scholarship_cents).to eq(1_000)
+      expect(report.unaffiliated_scholarships.recipient_count).to eq(1)
+    end
+
+    it "follows the funder filter" do
+      scoped = described_class.new([ event.decorate ], funder: create(:organization))
+      expect(scoped.organization_rows).to be_empty
+      expect(scoped.unaffiliated_scholarships).to be_nil
+    end
+  end
+
   describe "attendance split by delivery format" do
     let(:scheduled) { create(:event, facilitator_training: true, on_demand: false, start_date: Date.new(2025, 3, 1)) }
     let(:on_demand) { create(:event, facilitator_training: true, on_demand: true, start_date: Date.new(2025, 7, 1)) }

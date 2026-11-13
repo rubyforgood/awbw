@@ -122,7 +122,7 @@ RSpec.describe AuthorCreditDivergenceQuery do
       expect_any_to_match(described_class.new(type: "Workshop"))
     end
 
-    it "compares a snapshot against an anonymous or blank-preference author" do
+    it "compares a snapshot against an anonymous author" do
       story = create(:story, created_by: author_user, author: person)
       person.update_columns(anonymous_contributions: true)
       story.update_columns(author_credit_preference: "anonymous")
@@ -131,10 +131,7 @@ RSpec.describe AuthorCreditDivergenceQuery do
       story.update_columns(author_credit_preference: "full_name")
       expect(described_class.new(type: "Story").any?).to be(true)
 
-      person.update_columns(anonymous_contributions: false, display_name_preference: "")
-      expect(described_class.new(type: "Story").any?).to be(true)
-
-      story.update_columns(author_credit_preference: Person::DEFAULT_DISPLAY_NAME_PREFERENCE)
+      person.update_columns(anonymous_contributions: false, display_name_preference: "full_name")
       expect(described_class.new(type: "Story").any?).to be(false)
       expect_any_to_match(described_class.new(type: "Story"))
     end

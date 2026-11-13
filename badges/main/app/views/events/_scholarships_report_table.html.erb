@@ -3,20 +3,23 @@
     ending in a grand total. `combined:` false → separate "# of scholarships" and
     "$ of scholarships" column groups; true → a single count-over-dollars group.
     `all_time:` titles the card "All facilitator trainings" (else the single year).
-    Rendered by _scholarships_report and swapped by the view toggle. Pass
-    `report:`, `combined:`, `all_time:`. %>
+    `split:` false shows only totals, dropping the funded/unfunded columns (the
+    funding toggle). Rendered by _scholarships_report and swapped by the view
+    toggles. Pass `report:`, `combined:`, `split:`, `all_time:`. %>
 <% years = report.years %>
 <% multi_year = years.size > 1 %>
-<% col_span = combined ? 5 : 8 %>
+<% group_span = split ? 3 : 1 %>
+<% col_span = 2 + (combined ? group_span : group_span * 2) %>
 <section class="overflow-hidden rounded-xl border border-fuchsia-300 bg-white">
   <div class="flex items-center justify-between gap-3 border-b border-fuchsia-300 bg-fuchsia-50 px-4 py-3">
     <h3 class="flex items-center gap-2 text-base font-semibold text-fuchsia-900">
       <i class="fa-solid fa-graduation-cap text-fuchsia-500"></i>
-      <%= all_time ? "All facilitator trainings" : "#{years.first.year || "Undated"} facilitator trainings" %>
+      <%= all_time ? "All #{scholarship_report_noun}" : "#{years.first.year || "Undated"} #{scholarship_report_noun}" %>
     </h3>
     <div class="flex items-center gap-4">
+      <%= render "scholarships_funding_toggle", split: split %>
       <%= render "scholarships_report_toggle", combined: combined %>
-      <span class="text-xs text-gray-500"><%= pluralize(report.columns.size, "training") %></span>
+      <span class="text-xs text-gray-500"><%= pluralize(report.columns.size, scholarship_report_noun == "events" ? "event" : "training") %></span>
     </div>
   </div>
 
@@ -24,32 +27,31 @@
     <table class="w-full border-collapse text-sm">
       <thead>
         <tr class="bg-fuchsia-50 text-fuchsia-900">
-          <th rowspan="2" class="border border-gray-200 px-3 py-2 text-left align-bottom font-semibold">Training</th>
-          <th rowspan="2" class="border border-gray-200 px-3 py-2 text-right align-bottom font-semibold">
+          <th rowspan="2" class="border border-gray-200 px-3 py-2 text-left align-bottom font-semibold"><%= scholarship_report_noun == "events" ? "Event" : "Training" %></th>
+          <th rowspan="2" class="border border-gray-200 bg-fuchsia-200/70 px-3 py-2 text-right align-bottom font-semibold">
             <i class="fa-solid fa-user-check mr-1 text-fuchsia-500"></i>Registrants attended
           </th>
           <% if combined %>
-            <th colspan="3" class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-center font-semibold whitespace-nowrap">
+            <th colspan="<%= group_span %>" class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-center font-semibold whitespace-nowrap">
               <i class="fa-solid fa-graduation-cap mr-1 text-fuchsia-500"></i>Scholarships
               <span class="font-normal text-gray-500">(#&nbsp;/&nbsp;$)</span>
             </th>
           <% else %>
-            <th colspan="3" class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-center font-semibold whitespace-nowrap">
+            <th colspan="<%= group_span %>" class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-center font-semibold whitespace-nowrap">
               <i class="fa-solid fa-graduation-cap mr-1 text-fuchsia-500"></i># of scholarships
             </th>
-            <th colspan="3" class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-center font-semibold whitespace-nowrap">
+            <th colspan="<%= group_span %>" class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-center font-semibold whitespace-nowrap">
               <i class="fa-solid fa-hand-holding-dollar mr-1 text-fuchsia-500"></i>$ of scholarships
             </th>
           <% end %>
         </tr>
         <tr class="bg-fuchsia-50 text-xs text-fuchsia-900">
-          <th class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-1.5 text-right font-medium">Funded</th>
-          <th class="border border-gray-200 px-3 py-1.5 text-right font-medium">Unfunded</th>
-          <th class="border border-gray-200 px-3 py-1.5 text-right font-semibold">Total</th>
-          <% unless combined %>
-            <th class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-1.5 text-right font-medium">Funded</th>
-            <th class="border border-gray-200 px-3 py-1.5 text-right font-medium">Unfunded</th>
-            <th class="border border-gray-200 px-3 py-1.5 text-right font-semibold">Total</th>
+          <% (combined ? 1 : 2).times do %>
+            <% if split %>
+              <th class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-1.5 text-right font-medium">Funded</th>
+              <th class="border border-gray-200 px-3 py-1.5 text-right font-medium">Unfunded</th>
+            <% end %>
+            <th class="border border-gray-200 bg-fuchsia-200/70 px-3 py-1.5 text-right font-semibold<%= " border-l-2 border-l-fuchsia-300" unless split %>">Total</th>
           <% end %>
         </tr>
       </thead>
@@ -66,19 +68,19 @@
             <% highlighted = params[:highlight].to_s == column.event.id.to_s %>
             <tr id="<%= training_report_row_id(column.event) %>" class="scroll-mt-24 transition-colors duration-150 <%= "bg-yellow-50 ring-2 ring-inset ring-yellow-500" if highlighted %>">
               <%= render "scholarship_recipients_cell", column: column %>
-              <%= render "scholarships_report_figures", source: column, combined: combined, event: column.event %>
+              <%= render "scholarships_report_figures", source: column, combined: combined, split: split, event: column.event %>
             </tr>
           <% end %>
           <% if multi_year %>
             <tr class="bg-gray-50 font-semibold text-gray-900">
               <td class="border border-gray-200 px-3 py-2"><%= group.year || "Undated" %> total</td>
-              <%= render "scholarships_report_figures", source: group, combined: combined, event: nil %>
+              <%= render "scholarships_report_figures", source: group, combined: combined, split: split, event: nil, year: group.year %>
             </tr>
           <% end %>
         <% end %>
         <tr class="bg-gray-100 font-bold text-gray-900">
           <td class="border border-gray-200 px-3 py-2"><%= all_time ? "All-time total" : "Total" %></td>
-          <%= render "scholarships_report_figures", source: report.all_trainings_group, combined: combined, event: nil %>
+          <%= render "scholarships_report_figures", source: report.all_trainings_group, combined: combined, split: split, event: nil %>
         </tr>
       </tbody>
     </table>
