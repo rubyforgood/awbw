@@ -417,9 +417,8 @@
       <%= f.input :display_name_preference,
                   as: :select,
                   collection: Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
-                  include_blank: "Default (#{Person::DISPLAY_NAME_PREFERENCE_LABELS[Person::DEFAULT_DISPLAY_NAME_PREFERENCE]})",
-                  hint: "Sitewide (People/Profile, Stories, Workshop Variations, etc)",
-                  selected: f.object[:display_name_preference] %>
+                  include_blank: false,
+                  hint: "Sitewide (People/Profile, Stories, Workshop Variations, etc)" %>
 
       <%= f.input :anonymous_contributions,
                   label: "Contribute anonymously",

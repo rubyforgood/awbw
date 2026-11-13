@@ -319,19 +319,6 @@ RSpec.describe Person, type: :model do
       end
     end
 
-    context "when display_name_preference is nil or unknown" do
-      it "falls back to the default format" do
-        stub_const("Person::DEFAULT_DISPLAY_NAME_PREFERENCE", "first_name_only")
-        person.display_name_preference = nil
-        expect(person.name).to eq("Jane")
-      end
-
-      it "uses first name and last initial out of the box" do
-        person.display_name_preference = nil
-        expect(person.name).to eq("Jane D.")
-      end
-    end
-
     it "is unaffected by anonymous_contributions" do
       person.display_name_preference = "full_name"
       person.anonymous_contributions = true
@@ -366,14 +353,6 @@ RSpec.describe Person, type: :model do
       expect(described_class.displayed_name_like("Brambleton")).not_to include(initialled)
     end
 
-    it "treats an unset preference as the default format" do
-      unset = create(:person, first_name: "Philippa", last_name: "Quernsby")
-      unset.update_column(:display_name_preference, nil)
-
-      expect(described_class.displayed_name_like("Philippa Q.")).to include(unset)
-      expect(described_class.displayed_name_like("Quernsby")).not_to include(unset)
-    end
-
     it "matches nothing for a blank query" do
       expect(described_class.displayed_name_like(" ")).to be_empty
     end
@@ -386,8 +365,14 @@ RSpec.describe Person, type: :model do
       end
     end
 
-    it "allows blank" do
-      expect(build(:person, display_name_preference: nil)).to be_valid
+    it "rejects blank" do
+      expect(build(:person, display_name_preference: nil)).not_to be_valid
+      expect(build(:person, display_name_preference: "")).not_to be_valid
+    end
+
+    it "is required by the database" do
+      person = create(:person)
+      expect { person.update_column(:display_name_preference, nil) }.to raise_error(ActiveRecord::NotNullViolation)
     end
 
     it "rejects anything else" do
@@ -422,11 +407,6 @@ RSpec.describe Person, type: :model do
 
     it "is the display name preference by default" do
       expect(person.effective_author_credit_preference).to eq("first_name_only")
-    end
-
-    it "falls back to the default format when unset" do
-      person.display_name_preference = nil
-      expect(person.effective_author_credit_preference).to eq(Person::DEFAULT_DISPLAY_NAME_PREFERENCE)
     end
 
     it "is anonymous when contributions are anonymous, whatever the format" do
