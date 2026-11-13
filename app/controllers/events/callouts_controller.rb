@@ -81,8 +81,7 @@ module Events
       answers_registration = @event_registration.form_answers_registration
       @form_answers_registration = answers_registration if answers_registration.slug.present? && answers_registration.registration_form_submitted?
       @scholarship_form = @event.scholarship_form
-      @scholarship_application_completed = @scholarship_form.present? &&
-        ScholarshipApplication.new(event: @event, person: @event_registration.registrant).answered?
+      @scholarship_application_completed = @event_registration.scholarship_application_completed?
 
       # The recipients survey, delivered here once the recipient has signed their
       # agreement (and any drip date has passed).
