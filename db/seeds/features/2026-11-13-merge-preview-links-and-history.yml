@@ -1,0 +1,12 @@
+name: "Merge previews show links, history, and what happens to each"
+area: people
+display_status: admin_facing
+released_on: 2026-11-13
+action_path: "/organizations/dedupe_index"
+pr_number: 2984
+summary: >-
+  Every merge preview now lists each record's links plus who created and last updated it, and
+  chips connected records as "Moves to keeper" or "Stays linked" so you see the outcome before merging.
+pro_tips:
+  - "Use the created date to keep the older record when two records are true duplicates."
+  - "Anything marked \"Will be dropped\" is deleted with the duplicate."
