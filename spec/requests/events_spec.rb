@@ -2612,6 +2612,21 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include('fa-file-lines')
       end
 
+      it "shows a transferred-in registrant's answers from the original event in teal" do
+        source_event = create(:event, title: "Origin training")
+        source = create(:event_registration, event: source_event, registrant: person, status: "transferred_out")
+        registration.update!(transferred_from_registration: source)
+        create(:event_form, event: source_event, form: reg_form, role: "registration")
+        create(:form_submission, person: person, form: reg_form, event: source_event)
+
+        get registrants_event_path(event)
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(source_event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)}']")
+        expect(link).to be_present
+        expect(link["class"]).to include("text-teal-600")
+        expect(link["title"]).to start_with("From the original registration for Origin training")
+      end
+
       it "shows no form icon when the only submission is for a bulk payment form" do
         bulk_payment_form = create(:form, :standalone, name: "Bulk Payment Form")
         create(:event_form, event: event, form: reg_form, role: "registration")

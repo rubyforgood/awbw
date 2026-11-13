@@ -623,6 +623,26 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(changes_link_dates).to eq([ "(Sep 1, 2026)" ])
       end
 
+      it "links a transferred-in registration to the answers on the original event, marked in teal" do
+        source_event = create(:event, title: "Origin training")
+        source = create(:event_registration, event: source_event, registrant: regular_user.person, status: "transferred_out")
+        existing_registration.update!(transferred_from_registration: source)
+        reg_form = create(:form, name: "Reg form")
+        create(:event_form, :registration, event: source_event, form: reg_form)
+        submission = create(:form_submission, person: regular_user.person, form: reg_form, event: source_event,
+          role: "registration", created_at: Time.zone.local(2026, 9, 1, 10))
+
+        get edit_event_registration_path(existing_registration, return_to: "roster")
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(source_event, person_id: regular_user.person.id,
+          return_to: "event_registration", event_registration_id: existing_registration.id,
+          registration_return_to: "roster", anchor: "form-submission-#{submission.id}")}']")
+        expect(link).to be_present
+        expect(link.text).to include("Reg form · Sep 1, 2026")
+        expect(link["class"]).to include("text-teal-600")
+        expect(link["title"]).to start_with("From the original registration for Origin training")
+      end
+
       context "when the registrant submitted the registration form more than once" do
         let(:reg_form) { create(:form, name: "Reg form") }
         let!(:first_submission) { create(:form_submission, person: regular_user.person, form: reg_form, event: event, role: "registration", created_at: Time.zone.local(2026, 9, 1, 10)) }

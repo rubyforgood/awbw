@@ -47,7 +47,7 @@
     </div>
 
     <% event_form_ids = @event.registration_form_ids %>
-    <% form_submissions = event_form_ids.any? ? FormSubmissionSittings.for_events(@event.id, @event_registrations.map(&:registrant_id)).select { |_, sittings| sittings.registered? }.transform_keys(&:first) : {} %>
+    <% form_placements = FormSubmissionSittings.placements_for(@event_registrations.to_a) %>
     <% scholarship_form = @event.scholarship_form %>
     <% scholarship_submitter_ids = scholarship_form ? FormSubmission.where(event_id: @event.id, form_id: scholarship_form.id, role: "scholarship", person_id: @event_registrations.map(&:registrant_id)).joins(:form_answers).distinct.pluck(:person_id).to_set : Set.new %>
     <%# Completion of each callout form, keyed [person_id, form_id] → submitted_at. %>
@@ -172,13 +172,15 @@
                     </div>
 
                     <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
-                    <% if event_form_ids.any? %>
+                    <% form_placement = form_placements[registration.id] %>
+                    <% if event_form_ids.any? || form_placement %>
                       <span class="inline-flex w-4 justify-center">
-                        <% if (sittings = form_submissions[person.id]) %>
+                        <% if form_placement %>
                           <%= render "event_registrations/submissions_icon",
-                                     sittings: sittings,
-                                     path: event_registrant_submissions_path(@event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id),
-                                     scholarship_requested: registration.scholarship_requested? %>
+                                     sittings: form_placement.sittings,
+                                     path: event_registrant_submissions_path(form_placement.event_id, person_id: person.id, return_to: "registrants", event_registration_id: registration.id),
+                                     scholarship_requested: registration.scholarship_requested?,
+                                     original_event_title: form_placement.original_event_title %>
                         <% end %>
                       </span>
                     <% end %>

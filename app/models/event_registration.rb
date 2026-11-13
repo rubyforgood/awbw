@@ -925,10 +925,26 @@ class EventRegistration < ApplicationRecord
     super + transferred_from_registration&.allocated_from(source).to_i
   end
 
-  # The reg holding this balance now: a transfer's new reg once one is recorded.
-  def billing_registration
+  def registration_form_submitted?
+    form = event.registration_form
+    form.present? && event.form_submissions.exists?(person_id: registrant_id, form: form)
+  end
+
+  # Registration-form answers are filed under the event they were given at, so a transferred-in
+  # registrant who didn't also register at the new event answered on the original.
+  def form_answers_registration
+    return self if !transferred_in? || registration_form_submitted?
+
+    transferred_from_registration
+  end
+
+  # The reg the registrant holds now: a transfer's new reg once one is recorded.
+  def current_registration
     (transferred_out? && transferred_to_registration) || self
   end
+
+  # The balance follows the registrant to the reg they hold now.
+  def billing_registration = current_registration
 
   # Every allocation settling this reg's balance, across the transfer.
   def billing_allocations
