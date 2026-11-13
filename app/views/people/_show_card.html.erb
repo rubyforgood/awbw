@@ -46,9 +46,8 @@
       <% end %>
       <% if card_badge %>
         <span class="mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap <%= card_badge[:classes] %>">
-          <i class="fa-solid <%= card_badge[:icon] %>"></i>
-          <%= card_badge[:label] %>
-          <%= render "event_registrations/pre_transfer_outcome_icon", outcome_icon: card_badge[:outcome_icon] %>
+          <%= render "event_registrations/attendance_status_label",
+                icon: card_badge[:icon], label: card_badge[:label], outcome: card_badge[:outcome] %>
         </span>
       <% end %>
       <div class="my-2">

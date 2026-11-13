@@ -1,0 +1,7 @@
+<% if outcome %>
+  <span class="inline-flex items-center gap-1 <%= outcome[:classes] %>"><i class="fa-solid <%= outcome[:icon] %>"></i><%= outcome[:label] %></span>
+  <i class="fa-solid fa-arrow-right text-[10px] opacity-60" aria-hidden="true"></i>
+<% elsif local_assigns[:icon] %>
+  <i class="fa-solid <%= icon %>"></i>
+<% end %>
+<span><%= label %></span>

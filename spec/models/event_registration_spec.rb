@@ -166,8 +166,8 @@ RSpec.describe EventRegistration, type: :model do
       partial = create(:event_registration, status: "incomplete_attendance")
       partial.update!(status: "transferred_out")
       expect(no_show.pre_transfer_outcome_label).to eq("No show")
-      expect(no_show.attendance_status_report_label).to eq("Transferred out (was no show)")
-      expect(partial.pre_transfer_outcome_label).to eq("Incomplete attendance")
+      expect(no_show.attendance_status_report_label).to eq("No show → Transferred out")
+      expect(partial.pre_transfer_outcome_label).to eq("Partial")
     end
 
     it "notes no prior outcome when the reg transferred out while registered or attended" do

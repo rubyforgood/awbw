@@ -15,17 +15,17 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       expect(reg.attendance_status_icon).to eq("fa-question")
     end
 
-    it "marks a transferred-out no-show with the no-show icon in the badge" do
+    it "leads a transferred-out no-show's badge with the no-show outcome" do
       reg = create(:event_registration, status: "no_show")
       reg.update!(status: "transferred_out")
-      expected = { icon: "fa-circle-xmark", classes: "text-red-600", title: "Was no show before transferring out" }
-      expect(reg.decorate.pre_transfer_outcome_icon).to eq(expected)
-      expect(reg.decorate.attendance_status_badge).to include(label: "Transferred out", outcome_icon: expected)
+      expected = { label: "No show", icon: "fa-circle-xmark", classes: "text-red-600" }
+      expect(reg.decorate.pre_transfer_outcome).to eq(expected)
+      expect(reg.decorate.attendance_status_badge).to include(label: "Transferred out", outcome: expected)
     end
 
-    it "adds no outcome icon when there's no prior outcome to note" do
-      expect(create(:event_registration, status: "transferred_out").decorate.pre_transfer_outcome_icon).to be_nil
-      expect(create(:event_registration, status: "no_show").decorate.pre_transfer_outcome_icon).to be_nil
+    it "adds no outcome when there's no prior outcome to note" do
+      expect(create(:event_registration, status: "transferred_out").decorate.pre_transfer_outcome).to be_nil
+      expect(create(:event_registration, status: "no_show").decorate.pre_transfer_outcome).to be_nil
     end
   end
 

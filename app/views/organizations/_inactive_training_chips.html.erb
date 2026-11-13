@@ -6,6 +6,8 @@
   <% event = registration.event %>
   <span class="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700"
         title="<%= "#{event.title} — #{registration.attendance_status_label}: no active registration, so no program status." %>">
-    <%= registration.attendance_status_label %><%= render "event_registrations/pre_transfer_outcome_icon", outcome_icon: registration.decorate.pre_transfer_outcome_icon %><%= " · #{event.start_date.strftime('%b %Y')}" if event.start_date %> · <%= event.decorate.compact_label.truncate(40) %>
+    <%= render "event_registrations/attendance_status_label",
+          label: registration.attendance_status_label, outcome: registration.decorate.pre_transfer_outcome %>
+    <span><%= "· #{event.start_date.strftime('%b %Y')} · " if event.start_date %><%= event.decorate.compact_label.truncate(40) %></span>
   </span>
 <% end %>

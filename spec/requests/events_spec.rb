@@ -2259,7 +2259,8 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event, params: { attendance_status: "transferred_out" })
 
-        expect(response.body).to include("Was no show before transferring out")
+        badge = Capybara.string(response.body).find("##{ActionView::RecordIdentifier.dom_id(reg, :attendance_status)}")
+        expect(badge.text.squish).to include("No show Transferred out")
       end
 
       it "drops the warning once the transfer destination is recorded" do
