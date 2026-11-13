@@ -1023,7 +1023,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
              field_identifier: "primary_age_group", name: "Age group", required: false)
     end
 
-    let!(:organization) { create(:organization, name: "Riverside Community Arts", website_url: "old.example.com") }
+    let!(:organization) { create(:organization, name: "Riverside Community Arts", website_url: nil) }
     let!(:sector) { create(:sector, :published, name: "Healthcare") }
     let!(:age_type) { create(:category_type, :published, name: "AgeRange") }
     let!(:age_group) { create(:category, :published, name: "Adolescents (13-17)", category_type: age_type) }

@@ -81,14 +81,14 @@ module OrganizationServices
       return [] unless @entry
 
       OrganizationServices::SyncProfile.call(
-        organization: @organization, overwrite: false, website: @entry[:website], organization_type: @entry[:organization_type],
+        organization: @organization, website: @entry[:website], organization_type: @entry[:organization_type],
         submission: @entry[:submission]
       ).changes
     end
 
     def upsert_address
       OrganizationServices::UpsertAddress.call(
-        organization: @organization, overwrite: false, **submitted_address
+        organization: @organization, **submitted_address
       )
     end
 
@@ -97,7 +97,7 @@ module OrganizationServices
     def conflicts
       return [] unless @entry
 
-      ProfileDiff.for_entry(organization: @organization, entry: @entry)
+      ProfileDiff.for_entry(organization: @organization, entry: @entry, person: @person)
     end
 
     def submitted_address

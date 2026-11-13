@@ -56,6 +56,11 @@ class FormSubmissionsController < ApplicationController
     # unapplied-answer conflicts, like a linked org on the registration editor.
     @matched_organization = matched_organization
     @profile_conflicts = @matched_organization ? profile_diff_for(@matched_organization) : []
+    # What the submission (public capture or an earlier link here) wrote onto the
+    # org, read back from the stamped audit events — the standalone-form twin of
+    # the registration editor's stored autofill note.
+    @submission_changes = FormSubmissionChanges.new(@form_submission)
+    @organization_fills = @matched_organization ? @submission_changes.organization_edits(@matched_organization) : []
     # The org already shown as linked is left out of the suggestions, so the page
     # can't offer to link what it just linked (as on the registration editor).
     @potential_matches = if @submitted_org_name.present?
@@ -154,7 +159,8 @@ class FormSubmissionsController < ApplicationController
   end
 
   def profile_diff_for(organization)
-    OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: submission_org_entry)
+    OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: submission_org_entry,
+                                                person: @form_submission.person)
   end
 
   # Fill the org's blank profile/address fields from the submission, create the

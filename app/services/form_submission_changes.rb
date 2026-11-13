@@ -52,7 +52,7 @@ class FormSubmissionChanges
   end
 
   def groups
-    relevant_events
+    @groups ||= relevant_events
       .group_by { |event| owner_key(event) }
       .filter_map { |(type, id), events| build_group(type, id, events) }
       .reject { |group| group.changes.empty? }
@@ -82,6 +82,16 @@ class FormSubmissionChanges
 
   def edited?
     edited_count.positive?
+  end
+
+  # What this submission wrote onto one organization (its own columns and its
+  # addresses), for the linking page's "filled from this submission" note. Leaves
+  # out the org's own creation — the card already shows the org.
+  def organization_edits(organization)
+    group = edited_groups.find { |g| g.record_type == "Organization" && g.record_id.to_s == organization.id.to_s }
+    return [] unless group
+
+    group.changes.reject { |change| change.outcome == "Added" && change.label == "Organization" }
   end
 
   private

@@ -389,6 +389,15 @@ RSpec.describe PublicFormSubmission do
       expect(response.source_form_answer.form_submission).to eq(result.form_submission)
     end
 
+    # Fill-blanks in every flow: staff decide what changes; the linking page flags the difference.
+    it "keeps the organization's saved website on an ordinary form" do
+      org.update!(website_url: "https://curated.example")
+
+      described_class.call(form: form, form_params: org_params)
+
+      expect(org.reload.website_url).to eq("https://curated.example")
+    end
+
     it "never creates an organization from an unmatched name — it's left for an admin" do
       expect {
         described_class.call(form: form, form_params: org_params(org_name_field.id.to_s => "Ghost Org"))

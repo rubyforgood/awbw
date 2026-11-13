@@ -7,11 +7,15 @@ module OrganizationServices
   #
   # A website answer that isn't a web address is always a discrepancy (with a
   # reason), since the sync never saves it. Otherwise a blank submitted value, or a
-  # submitted value against a blank org column, is not a discrepancy (nothing to reconcile — the latter just gets filled, and
+  # submitted value against a blank org column, is not a discrepancy (nothing to
+  # reconcile — the latter just gets filled, and
   # EventRegistrationOrganization#form_autofill_changes records that it was).
   # Address is compared against the org's corresponding address (AddressMatcher,
   # the one the fill-blanks upsert targets); an address the matcher doesn't
   # recognize isn't a discrepancy because it's added rather than reconciled.
+  # Given the person, it also flags their affiliations here (the submitted
+  # position, and Facilitator) already tied to a different org address — the
+  # linking core only fills an affiliation's blank address.
   # Powers both the linking flow's flash summary and the linking page's
   # persistent per-org note.
   class ProfileDiff
@@ -31,24 +35,28 @@ module OrganizationServices
     NOT_A_WEB_ADDRESS = "not a web address".freeze
     ADDRESS_PARTS = %i[street_address city state zip_code country].freeze
 
-    def self.call(organization:, website: nil, organization_type: nil, address: {})
-      new(organization:, website:, organization_type:, address:).call
+    def self.call(organization:, website: nil, organization_type: nil, address: {}, person: nil, position: nil)
+      new(organization:, website:, organization_type:, address:, person:, position:).call
     end
 
-    # Compares the website, type, and address of a FormSubmission#org_entry-shaped hash.
-    def self.for_entry(organization:, entry:)
-      call(organization:, website: entry[:website], organization_type: entry[:organization_type], address: entry[:address])
+    # Compares the website, type, and address of a FormSubmission#org_entry-shaped
+    # hash — and, given the person, their affiliations' addresses.
+    def self.for_entry(organization:, entry:, person: nil)
+      call(organization:, website: entry[:website], organization_type: entry[:organization_type], address: entry[:address],
+           person:, position: entry[:position])
     end
 
-    def initialize(organization:, website: nil, organization_type: nil, address: {})
+    def initialize(organization:, website: nil, organization_type: nil, address: {}, person: nil, position: nil)
       @organization = organization
       @website = website
       @organization_type = organization_type
       @address = address || {}
+      @person = person
+      @position = position&.strip.presence
     end
 
     def call
-      [ website_discrepancy, organization_type_discrepancy, *address_discrepancies ].compact
+      [ website_discrepancy, organization_type_discrepancy, *address_discrepancies, *affiliation_address_discrepancies ].compact
     end
 
     private
@@ -124,8 +132,28 @@ module OrganizationServices
       @address[part]&.strip.presence
     end
 
+    # The affiliations AffiliationServices::CreateFromRegistration would anchor to
+    # the submitted address (the job one titled with the position, and the standing
+    # Facilitator one) but won't, because they already point at another address.
+    def affiliation_address_discrepancies
+      return [] unless @person
+
+      address = matching_address
+      return [] unless address
+
+      @person.affiliations.active_or_pending.where(organization: @organization).includes(:organization_address)
+        .select { |affiliation| affiliation.facilitator? || (@position && affiliation.title.to_s.strip == @position) }
+        .select { |affiliation| affiliation.organization_address && affiliation.organization_address_id != address.id }
+        .map do |affiliation|
+          Discrepancy.new(field: :affiliation_address, label: "#{affiliation.title} affiliation – address",
+                          submitted: address.name.squish, saved: affiliation.organization_address.name.squish)
+        end
+    end
+
     def matching_address
-      AddressMatcher.call(
+      return @matching_address if defined?(@matching_address)
+
+      @matching_address = AddressMatcher.call(
         @organization,
         city: @address[:city],
         state: @address[:state],

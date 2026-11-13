@@ -60,7 +60,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
   it "still updates a matching address when the submission skipped the state" do
     existing = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "")
 
-    result = described_class.call(organization: organization, street_address: "5 Oak Ave", city: "Austin", zip_code: "78701", overwrite: false)
+    result = described_class.call(organization: organization, street_address: "5 Oak Ave", city: "Austin", zip_code: "78701")
 
     expect(result).to have_attributes(address: existing, created: false)
     expect(result.changes.map(&:label)).to eq([ "ZIP" ])
@@ -86,13 +86,11 @@ RSpec.describe OrganizationServices::UpsertAddress do
     }.not_to change { organization.addresses.count }
   end
 
-  it "updates the matching city/state address in place instead of duplicating" do
-    # Pin the fields this example expects to change to values distinct from the
-    # upsert below. The factory otherwise fills them from Faker's shared,
-    # order-dependent stream, which can coincidentally match a new value (e.g.
-    # country "Canada") and drop it from the reported changes under some seeds.
+  it "fills the matching city/state address in place instead of duplicating, keeping its saved street" do
+    # Pin every field: the factory otherwise fills them from Faker's shared,
+    # order-dependent stream.
     existing = create(:address, addressable: organization, city: "Austin", state: "TX", primary: true,
-                      street_address: "1 Old St", zip_code: "10001", country: "United States")
+                      street_address: "1 Old St", zip_code: "", country: "")
 
     result = described_class.call(
       organization: organization,
@@ -104,29 +102,28 @@ RSpec.describe OrganizationServices::UpsertAddress do
     )
 
     expect(result).to have_attributes(address: existing, created: false)
-    expect(result.changes.map(&:label)).to contain_exactly("Street", "ZIP", "Country")
+    expect(result.changes.map(&:label)).to contain_exactly("ZIP", "Country")
     expect(organization.addresses.count).to eq(1)
-    expect(existing.reload).to have_attributes(street_address: "2 New Ave", zip_code: "78702", country: "Canada", primary: true, inactive: false)
+    expect(existing.reload).to have_attributes(street_address: "1 Old St", zip_code: "78702", country: "Canada", primary: true, inactive: false)
   end
 
-  # Under the admin flow's fill-blanks rule every write lands in an empty column, so
-  # these should never be reported as replacing anything.
+  # Under the fill-blanks rule every write lands in an empty column, so these
+  # should never be reported as replacing anything.
   it "marks a filled blank as new" do
     create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "")
 
-    result = described_class.call(organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701", overwrite: false)
+    result = described_class.call(organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
 
     expect(result.changes.map(&:change_type)).to eq([ "new" ])
   end
 
-  # The public flow overwrites, so it can displace a value — and that's the case
-  # where an admin needs to see what the registrant's answer pushed out.
-  it "marks an overwritten field as an update carrying what it displaced" do
-    create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+  it "keeps a saved ZIP rather than replacing it with a different answer" do
+    existing = create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
 
     result = described_class.call(organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78702")
 
-    expect(result.changes.first).to have_attributes(label: "ZIP", change_type: "update", previous_value: "78701", value: "78702")
+    expect(result.changes).to be_empty
+    expect(existing.reload.zip_code).to eq("78701")
   end
 
   it "marks a newly created address as new" do
@@ -149,7 +146,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(result).to have_attributes(created: false, changes: [])
   end
 
-  it "fills only blank fields on the matching address when overwrite is false" do
+  it "fills only blank fields on the matching address" do
     existing = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "", country: "", primary: true)
 
     result = described_class.call(
@@ -158,8 +155,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       city: "Austin",
       state: "TX",
       zip_code: "78702",
-      country: "Canada",
-      overwrite: false
+      country: "Canada"
     )
 
     expect(result.changes.map(&:label)).to contain_exactly("ZIP", "Country")
@@ -176,7 +172,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
     existing.update_columns(city: "", state: "")
 
     result = described_class.call(
-      organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701", overwrite: false
+      organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701"
     )
 
     expect(result).to have_attributes(address: existing, created: false)
@@ -185,8 +181,8 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(organization.addresses.count).to eq(1)
   end
 
-  # The public flow overwrites details, but city and state stay fill-only there
-  # too: rewriting them would move a saved address rather than correct it.
+  # City and state especially stay put: rewriting them would move a saved
+  # address rather than correct it.
   it "repairs a legacy blank city without moving an address that already has one" do
     elsewhere = create(:address, addressable: organization, street_address: "1 Main St", city: "Saint Louis", state: "MO", zip_code: "63101")
 
@@ -206,8 +202,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       street_address: "1 Main St",
       city: "Austin",
       state: "TX",
-      country: "USA",
-      overwrite: false
+      country: "USA"
     )
 
     expect(result).to have_attributes(address: existing, created: false)
@@ -225,8 +220,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       city: "St. Louis",
       state: "MO",
       zip_code: "63101",
-      country: "USA",
-      overwrite: false
+      country: "USA"
     )
 
     expect(result).to have_attributes(address: existing, created: false)
@@ -243,8 +237,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
       organization: organization,
       street_address: "1 Main St",
       city: "St. Louis",
-      zip_code: "63101",
-      overwrite: false
+      zip_code: "63101"
     )
 
     expect(result).to have_attributes(address: existing)
@@ -265,7 +258,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
                                 zip_code: "78701", country: nil, locality: Address::UNKNOWN_LOCALITY)
 
     result = described_class.call(organization: organization, street_address: "1 Main St", city: "Austin", state: "TX",
-                                  zip_code: "78701", country: "United States", overwrite: false)
+                                  zip_code: "78701", country: "United States")
 
     expect(existing.reload.locality).to eq(Address::OUTSIDE_CA)
     expect(result.changes.map(&:label)).to include("Locality")
@@ -276,7 +269,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
                                 zip_code: "93701", country: nil, locality: "Central CA")
 
     described_class.call(organization: organization, street_address: "1 Main St", city: "Fresno", state: "CA",
-                         zip_code: "93701", country: "United States", overwrite: false)
+                         zip_code: "93701", country: "United States")
 
     expect(existing.reload.locality).to eq("Central CA")
   end
@@ -295,7 +288,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
                                   zip_code: "93701", country: nil, county: nil, locality: Address::UNKNOWN_LOCALITY)
 
       result = described_class.call(organization: organization, street_address: "1 Main St", city: "Fresno", state: "CA",
-                                    zip_code: "93701", overwrite: false)
+                                    zip_code: "93701")
 
       expect(existing.reload).to have_attributes(county: "Fresno", locality: "Central CA")
       expect(result.changes.map(&:label)).to include("County", "Locality")

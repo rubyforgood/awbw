@@ -35,7 +35,7 @@ class EventRegistrationOrganization < ApplicationRecord
   # Pin the submission this org's answers came from. Without it the linking page
   # re-derives the pairing on every request, and an org linked under a name the
   # registrant didn't type loses its discrepancy note as soon as a second org is
-  # linked. Latest-wins, matching how a resubmission overwrites the org profile.
+  # linked. Latest-wins: the newest submission is the one whose answers are compared.
   def record_form_submission(submission)
     return if submission.nil? || form_submission_id == submission.id
 

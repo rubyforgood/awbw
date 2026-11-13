@@ -540,6 +540,39 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response.body).not_to include("linked to this submission or their registration yet")
         end
 
+        # The standalone-form twin of the registration editor's stored autofill note,
+        # read back from the submission's stamped audit events.
+        it "notes what the submission filled on the linked organization" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          organization = create(:organization, name: "Harbor Family Shelter")
+          submission.link_organization!(organization.id)
+          create(:ahoy_event, name: "update.organization", properties: {
+            "resource_type" => "Organization", "resource_id" => organization.id, "form_submission_id" => submission.id,
+            "changes" => { "website_url" => { "before" => nil, "after" => "harbor.example.org" } }
+          })
+
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("Filled from this submission's form")
+          expect(response.body).to include("harbor.example.org")
+        end
+
+        it "flags the person's affiliation tied to a different org address than the one submitted" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          add_answer("organization_city", "Austin")
+          add_answer("organization_state", "TX")
+          organization = create(:organization, name: "Harbor Family Shelter")
+          submission.link_organization!(organization.id)
+          create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+          dallas = create(:address, addressable: organization, street_address: "9 Elm St", city: "Dallas", state: "TX", zip_code: "75201")
+          create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: dallas)
+
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("Facilitator affiliation – address")
+          expect(response.body).to include("9 Elm St, Dallas, TX 75201")
+        end
+
         it "does not treat a name-matching affiliation as a link" do
           add_answer("organization_name", "Harbor Family Shelter")
           create(:affiliation, person: person, organization: create(:organization, name: "Harbor Family Shelter"))

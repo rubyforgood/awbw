@@ -23,6 +23,20 @@ RSpec.describe FormSubmissionChanges do
     expect(change).to have_attributes(outcome: "Replaced", label: "Website", value: "new.com", previous_value: "old.com")
   end
 
+  it "lists what it wrote onto one organization, leaving out the org's own creation" do
+    org = create(:organization, name: "Riverside Community Arts")
+    stamp("create.organization", resource_type: "Organization", resource_id: org.id, properties: { "resource_title" => org.name })
+    stamp("update.organization", resource_type: "Organization", resource_id: org.id,
+          properties: { "changes" => { "website_url" => { "before" => nil, "after" => "new.com" } } })
+    other = create(:organization)
+    stamp("update.organization", resource_type: "Organization", resource_id: other.id,
+          properties: { "changes" => { "website_url" => { "before" => nil, "after" => "other.com" } } })
+
+    edits = described_class.new(submission).organization_edits(org)
+
+    expect(edits.map { |change| [ change.outcome, change.label, change.value ] }).to eq([ [ "Filled", "Website", "new.com" ] ])
+  end
+
   it "labels a change from blank as filled" do
     person = create(:person)
     stamp("update.person", resource_type: "Person", resource_id: person.id,

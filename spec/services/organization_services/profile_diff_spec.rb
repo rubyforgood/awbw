@@ -180,6 +180,38 @@ RSpec.describe OrganizationServices::ProfileDiff do
       expect(diff).to be_empty
     end
 
+    describe "the person's affiliation addresses" do
+      let(:person) { create(:person) }
+      let!(:austin) { create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701") }
+      let!(:dallas) { create(:address, addressable: organization, street_address: "9 Elm St", city: "Dallas", state: "TX", zip_code: "75201") }
+      let(:entry) { FormSubmission.org_entry_from("organization_position" => "Counselor", "organization_city" => "Austin", "organization_state" => "TX") }
+
+      it "flags the job and Facilitator affiliations tied to a different address than the one submitted" do
+        create(:affiliation, person: person, organization: organization, title: "Counselor", organization_address: dallas)
+        create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: dallas)
+
+        diff = described_class.for_entry(organization: organization, entry: entry, person: person)
+
+        expect(diff.map(&:label)).to contain_exactly("Counselor affiliation – address", "Facilitator affiliation – address")
+        expect(diff.first).to have_attributes(field: :affiliation_address, submitted: "1 Main St, Austin, TX 78701",
+                                              saved: "9 Elm St, Dallas, TX 75201")
+      end
+
+      it "leaves alone affiliations on the submitted address, with no address, or with another title" do
+        create(:affiliation, person: person, organization: organization, title: "Counselor", organization_address: austin)
+        create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: nil)
+        create(:affiliation, person: person, organization: organization, title: "Board member", organization_address: dallas)
+
+        expect(described_class.for_entry(organization: organization, entry: entry, person: person)).to be_empty
+      end
+
+      it "skips the check without a person" do
+        create(:affiliation, person: person, organization: organization, title: "Counselor", organization_address: dallas)
+
+        expect(described_class.for_entry(organization: organization, entry: entry)).to be_empty
+      end
+    end
+
     it "does not flag a field that is blank on the org's address" do
       create(:address, addressable: organization, street_address: "", city: "Austin", state: "TX")
 

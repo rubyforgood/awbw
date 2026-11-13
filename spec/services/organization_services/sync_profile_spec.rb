@@ -18,15 +18,7 @@ RSpec.describe OrganizationServices::SyncProfile do
       expect(organization.reload.website_url).to eq("https://existing.org")
     end
 
-    it "overwrites an existing website by default (latest-wins)" do
-      organization.update!(website_url: "https://old.org")
-
-      described_class.call(organization: organization, website: "https://new.org")
-
-      expect(organization.reload.website_url).to eq("https://new.org")
-    end
-
-    it "ignores a website answer that isn't a web address, even when overwriting" do
+    it "ignores a website answer that isn't a web address" do
       organization.update!(website_url: "https://acme.org")
 
       result = described_class.call(organization: organization, website: "Acme Unified School District")
@@ -38,23 +30,23 @@ RSpec.describe OrganizationServices::SyncProfile do
     it "does not fill a blank website with an answer that isn't a web address" do
       organization.update!(website_url: nil)
 
-      described_class.call(organization: organization, website: "Acme", overwrite: false)
+      described_class.call(organization: organization, website: "Acme")
 
       expect(organization.reload.website_url).to be_nil
     end
 
-    it "fills a blank website but leaves an existing one when overwrite is false" do
+    it "keeps an existing website rather than replacing it (fill-blanks only)" do
       organization.update!(website_url: "https://curated.org")
 
-      described_class.call(organization: organization, website: "https://new.org", overwrite: false)
+      described_class.call(organization: organization, website: "https://new.org")
 
       expect(organization.reload.website_url).to eq("https://curated.org")
     end
 
-    it "fills a blank website when overwrite is false" do
+    it "fills a blank website" do
       organization.update!(website_url: nil)
 
-      described_class.call(organization: organization, website: "https://new.org", overwrite: false)
+      described_class.call(organization: organization, website: "https://new.org")
 
       expect(organization.reload.website_url).to eq("https://new.org")
     end
@@ -85,13 +77,13 @@ RSpec.describe OrganizationServices::SyncProfile do
       expect(response.text).to eq("Equine therapy")
     end
 
-    it "clears a stale organization_type_other when the latest answer is no longer 'Other'" do
+    it "keeps an existing 'Other' type and its text when a different type is submitted" do
       organization.update!(organization_type: "Other", organization_type_other: "Equine therapy")
 
       described_class.call(organization: organization, organization_type: "Government agency")
 
-      expect(organization.reload.organization_type).to eq("Government agency")
-      expect(organization.organization_type_other).to be_nil
+      expect(organization.reload.organization_type).to eq("Other")
+      expect(organization.organization_type_other).to eq("Equine therapy")
     end
 
     it "does not clobber an existing organization_type with a blank answer" do
@@ -102,18 +94,18 @@ RSpec.describe OrganizationServices::SyncProfile do
       expect(organization.reload.organization_type).to eq("Government agency")
     end
 
-    it "leaves an existing organization_type untouched when overwrite is false" do
+    it "leaves an existing organization_type untouched (fill-blanks only)" do
       organization.update!(organization_type: "Government agency")
 
-      described_class.call(organization: organization, organization_type: "For-profit", overwrite: false)
+      described_class.call(organization: organization, organization_type: "For-profit")
 
       expect(organization.reload.organization_type).to eq("Government agency")
     end
 
-    it "fills a blank organization_type when overwrite is false" do
+    it "fills a blank organization_type" do
       organization.update!(organization_type: nil)
 
-      described_class.call(organization: organization, organization_type: "For-profit", overwrite: false)
+      described_class.call(organization: organization, organization_type: "For-profit")
 
       expect(organization.reload.organization_type).to eq("For-profit")
     end
@@ -123,31 +115,19 @@ RSpec.describe OrganizationServices::SyncProfile do
     it "reports the columns it filled" do
       organization.update!(website_url: nil, organization_type: nil)
 
-      result = described_class.call(organization: organization, website: "acme.org", organization_type: "For-profit", overwrite: false)
+      result = described_class.call(organization: organization, website: "acme.org", organization_type: "For-profit")
 
       expect(result.changes.map(&:label)).to contain_exactly("Website", "Type")
     end
 
     # A returning registrant resubmitting what's already on file changed nothing,
     # and the linking page's "filled from the form" note must not claim otherwise.
-    # Filling a blank and overwriting a curated value are different facts about the
-    # org, and only the second one loses something an admin may want back.
     it "marks a filled blank as new, carrying no previous value" do
       organization.update!(website_url: nil)
 
       result = described_class.call(organization: organization, website: "helpinghands.org")
 
       expect(result.changes.first).to have_attributes(change_type: "new", previous_value: nil, value: "helpinghands.org")
-    end
-
-    it "marks a replaced value as an update, carrying what it displaced" do
-      organization.update!(website_url: "https://curated.org")
-
-      result = described_class.call(organization: organization, website: "helpinghands.org")
-
-      expect(result.changes.first).to have_attributes(
-        change_type: "update", previous_value: "https://curated.org", value: "helpinghands.org"
-      )
     end
 
     it "reports nothing filled when the answers match what is already stored" do
@@ -161,7 +141,7 @@ RSpec.describe OrganizationServices::SyncProfile do
     it "reports nothing filled when the blanks were left as conflicts" do
       organization.update!(website_url: "https://curated.org", organization_type: "For-profit")
 
-      result = described_class.call(organization: organization, website: "https://new.org", organization_type: "Government agency", overwrite: false)
+      result = described_class.call(organization: organization, website: "https://new.org", organization_type: "Government agency")
 
       expect(result.changes).to be_empty
     end
