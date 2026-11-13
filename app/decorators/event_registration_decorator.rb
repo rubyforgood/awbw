@@ -155,9 +155,7 @@ class EventRegistrationDecorator < ApplicationDecorator
   def pre_transfer_outcome
     return unless pre_transfer_outcome_label
 
-    { label: pre_transfer_outcome_label,
-      icon: ATTENDANCE_STATUS_ICONS[status_before_transfer],
-      classes: PRE_TRANSFER_OUTCOME_CLASSES[status_before_transfer] }
+    { label: pre_transfer_outcome_label, classes: PRE_TRANSFER_OUTCOME_CLASSES[status_before_transfer] }
   end
 
   def title
