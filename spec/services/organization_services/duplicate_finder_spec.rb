@@ -39,7 +39,39 @@ RSpec.describe OrganizationServices::DuplicateFinder do
       group = described_class.new.groups.first
 
       expect(group.records).to contain_exactly(a, b, c)
-      expect(group.reasons).to include("Same name aside from audience (children's/adult/etc.)")
+      expect(group.reasons).to include("Same name aside from audience (women's/children's/adult/etc.)")
+    end
+
+    it "treats a trailing Women's or Men's as an audience word, but not a bare Women" do
+      a = org(name: "Harbor House Women's")
+      b = org(name: "Harbor House Men's")
+      c = org(name: "Harbor House")
+      org(name: "Harbor House Women") # a real name ending, not a version
+
+      expect(described_class.new.groups.first.records).to contain_exactly(a, b, c)
+    end
+
+    it "groups names that differ only by a trailing FileMaker code" do
+      a = org(name: "Hope Center")
+      b = org(name: "Hope Center (ORG00001)")
+      c = org(name: "Hope Center (P1234)")
+      org(name: "Hope Center 2024") # a number that isn't a FileMaker code
+
+      group = described_class.new.groups.first
+
+      expect(group.records).to contain_exactly(a, b, c)
+      expect(group.reasons).to include("Same name aside from a FileMaker code in the name")
+    end
+
+    it "groups names with a FileMaker code stacked on an audience word or legal suffix" do
+      a = org(name: "Bright Futures Inc")
+      b = org(name: "Bright Futures Women's (ORG00002)")
+      c = org(name: "Bright Futures Combined ORG00003")
+
+      group = described_class.new.groups.first
+
+      expect(group.records).to contain_exactly(a, b, c)
+      expect(group.reasons).to include("Same name aside from audience (women's/children's/adult/etc.)")
     end
 
     it "ignores the audience word regardless of apostrophe or plural form" do
