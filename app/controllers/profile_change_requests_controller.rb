@@ -4,6 +4,7 @@ class ProfileChangeRequestsController < ApplicationController
   def index
     authorize! ProfileChangeRequest
     @status = ProfileChangeRequest::STATUSES.include?(params[:status]) ? params[:status] : "pending"
+    @submitted_by = params[:submitted_by].presence_in(ProfileChangeRequest::SUBMITTERS.keys)
     @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
     # A link to one card (highlight + anchor) loads the queue up front so the card
     # is in the first response for the browser to scroll to.
@@ -92,6 +93,7 @@ class ProfileChangeRequestsController < ApplicationController
 
   def load_requests
     scope = authorized_scope(ProfileChangeRequest.all).where(@person ? { person: @person } : {})
+    scope = scope.submitted_by(@submitted_by) if @submitted_by
     @status_counts = scope.group(:status).count
     @requests = scope.where(status: @status)
                   .includes(:person, :requested_by, :reviewed_by)

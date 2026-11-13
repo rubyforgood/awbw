@@ -226,6 +226,24 @@ RSpec.describe "Profile change requests", type: :request do
       expect(response.body).to include("Requested by #{owner_user.full_name}")
     end
 
+    it "filters the queue to staff-filed or self-submitted requests" do
+      create(:profile_change_request, :primary_email, person: person, requested_by: admin, requested_value: "staff-filed@example.com")
+      create(:profile_change_request, :secondary_email, person: person, requested_by: owner_user, requested_value: "self-sent@example.com")
+      frame = { "Turbo-Frame" => "profile_change_requests_results" }
+
+      get profile_change_requests_path(status: "pending", submitted_by: "staff"), headers: frame
+      expect(response.body).to include("staff-filed@example.com")
+      expect(response.body).not_to include("self-sent@example.com")
+      expect(response.body).to include(ERB::Util.html_escape(profile_change_requests_path(status: "resolved", submitted_by: "staff")))
+
+      get profile_change_requests_path(status: "pending", submitted_by: "person"), headers: frame
+      expect(response.body).to include("self-sent@example.com")
+      expect(response.body).not_to include("staff-filed@example.com")
+
+      get profile_change_requests_path(status: "pending"), headers: frame
+      expect(response.body).to include("self-sent@example.com", "staff-filed@example.com")
+    end
+
     it "sends an admin on the options page back to the profile" do
       create(:affiliation, person: person, organization: create(:organization))
       create(:affiliation, person: person, organization: create(:organization))

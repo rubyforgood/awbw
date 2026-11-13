@@ -1,0 +1,9 @@
+name: "Filter change requests by who sent them"
+area: people
+display_status: admin_facing
+released_on: 2026-11-13
+pr_number: 2994
+action_path: "/profile_change_requests"
+summary: >-
+  The change requests queue has an Anyone / Self-submitted / Staff-filed filter next to the status
+  tabs, so you can see just the requests people sent themselves or just the ones staff filed for them.
