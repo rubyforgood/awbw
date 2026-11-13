@@ -37,6 +37,11 @@
           prompt: "Search people and organizations",
           label: "Additional designation" %>
 
+        <% if @payment.is_a?(CheckPayment) %>
+          <%= f.input :check_number, input_html: { class: "bg-white" } %>
+          <%= f.input :memo, label: "Memo", input_html: { class: "bg-white", placeholder: "Memo line on the check" } %>
+        <% end %>
+
         <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
           <div class="pt-3">
             <%= f.input :form_submission_id,
