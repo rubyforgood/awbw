@@ -36,7 +36,7 @@ class FormResponseAggregator
   # country captured as free text still maps. The map matches full state names or
   # USPS abbreviations / country names, and lists exact counts in the legend for
   # anything it can't place.
-  US_STATE_IDENTIFIERS = %w[mailing_state ce_license_issuing_state organization_state].to_set
+  US_STATE_IDENTIFIERS = %w[mailing_state ce_license_issuing_state license_issuing_state organization_state].to_set
   COUNTRY_IDENTIFIERS = %w[mailing_country organization_country].to_set
 
   def initialize(form, event_id: nil, organization_id: nil, start_date: nil, end_date: nil, question_query: nil)

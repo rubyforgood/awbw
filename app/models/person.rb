@@ -469,6 +469,31 @@ class Person < ApplicationRecord
     true => "Keep all my content anonymous"
   }.freeze
 
+  # The profile's on/off visibility toggles => the label the edit page shows beside
+  # each, in the order it lists them. Each column is also a form smart field (asked
+  # Yes/No; see PersonServices::SyncSharingPreferences).
+  PROFILE_VISIBILITY_LABELS = {
+    "profile_is_searchable" => "Profile is searchable",
+    "profile_show_credentials" => "Show credentials",
+    "profile_show_pronouns" => "Show pronouns",
+    "profile_show_email" => "Show email",
+    "profile_show_phone" => "Show phone",
+    "profile_show_social_media" => "Show social media",
+    "profile_show_bio" => "Show bio",
+    "profile_show_member_since" => "Show facilitator since",
+    "profile_show_affiliations" => "Show affiliations",
+    "profile_show_sectors" => "Show sectors",
+    "profile_show_age_ranges" => "Show age ranges",
+    "profile_show_events_registered" => "Show registrations",
+    "profile_show_resources" => "Show resources",
+    "profile_show_stories" => "Show stories",
+    "profile_show_workshop_variations" => "Show workshop variations",
+    "profile_show_workshops" => "Show workshops"
+  }.freeze
+
+  # A profile visibility toggle's stored boolean => the answer a form asks it with.
+  PROFILE_VISIBILITY_OPTIONS = { true => "Yes", false => "No" }.freeze
+
   # Drives the people index and the profile header. Author credits pass an explicit
   # preference (the record's own, which outranks the profile) through `name_for`.
   def name

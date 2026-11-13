@@ -57,6 +57,22 @@ class SmartFormFields
       ]
     },
     {
+      key: :profile_display,
+      title: "The registrant's profile display",
+      summary: "The same on/off switches as the Profile display preferences on the person's profile, " \
+               "each asked as a Yes/No question named after the switch it sets. A Yes or No answer " \
+               "replaces what is on file; an unanswered question leaves it alone. Also written from a " \
+               "survey delivered on a registration ticket callout.",
+      fields: FormBuilderService::PROFILE_VISIBILITY_QUESTIONS.map do |identifier, question|
+        effect = if identifier == "profile_is_searchable"
+          "Sets whether the person can be found in the people search."
+        else
+          "Sets the profile's \"#{Person::PROFILE_VISIBILITY_LABELS.fetch(identifier)}\" switch."
+        end
+        [ identifier, question, effect ]
+      end
+    },
+    {
       key: :mailing_address,
       title: "The registrant's mailing address",
       summary: "Builds a personal address on the Person, but only when a city is answered. An existing " \
@@ -169,6 +185,23 @@ class SmartFormFields
         [ "ce_license_issuing_state", "License issuing state", "Sets the state that issued the license." ],
         [ "ce_license_issuing_country", "License issuing country", "Sets the country that issued the license. Asked inside the issuing state's \"Not on list?\" box." ],
         [ "ce_license_expires_on", "License expiry", "Sets the license expiry date." ]
+      ]
+    },
+    {
+      key: :professional_license,
+      title: "Professional license",
+      summary: "Saves a professional license on the person's profile from a registration or standalone " \
+               "form — any license, not only one used for CE. Nothing is enrolled in CE; that stays with " \
+               "the ce_license_* questions on the event's continuing education form. A license is " \
+               "identified by its number (plus type): the same license already on file is updated, a " \
+               "number-pending placeholder is filled in, and otherwise a new license is added. No number " \
+               "answered means no license is saved.",
+      fields: [
+        [ "license_number", "License number", "Finds or adds the person's license with this number. A license type typed in front of the number (\"LCSW 12345\") is moved into the type." ],
+        [ "license_kind", "License type", "Sets the license type, e.g. LCSW. Left blank, the number matches a license on file under any type." ],
+        [ "license_issuing_state", "License issuing state", "Sets the state that issued the license." ],
+        [ "license_issuing_country", "License issuing country", "Sets the country that issued the license. Asked inside the issuing state's \"Not on list?\" box." ],
+        [ "license_expires_on", "License expiry", "Sets the license expiry date." ]
       ]
     },
     {

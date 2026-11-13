@@ -50,6 +50,7 @@ module PersonServices
       PersonServices::SyncSharingPreferences.call(person: @person, form: @form, form_params: @form_params) if @form
       capture_mailing_address
       capture_phone
+      capture_license
       apply_tags
       @person
     end
@@ -151,6 +152,32 @@ module PersonServices
         contact_type: contact_type,
         primary: make_primary
       )
+    end
+
+    # A license is identified by its number (plus type), so no number answered means
+    # no license saved. Not every license is for CE: these plain license_* answers only
+    # record it on the person's profile. CE enrollment reads the ce_license_* answers
+    # on the event's CE form instead (ContinuingEducationRegistration.enroll!).
+    def capture_license
+      number = field_value("license_number")&.strip
+      return if number.blank?
+
+      license = find_or_add_license(*ProfessionalLicense.split_kind_from_number(kind: field_value("license_kind")&.strip, number:))
+      apply_value(license, :issuing_state, field_value("license_issuing_state"))
+      apply_value(license, :issuing_country, field_value("license_issuing_country"))
+      apply_value(license, :expires_on, field_value("license_expires_on"))
+      license
+    end
+
+    # The same license already on file (an untyped answer matches the number under
+    # any type), else the number-pending placeholder a CE opt-in left, else a new one.
+    def find_or_add_license(kind, number)
+      licenses = @person.professional_licenses
+      kind = kind.presence
+      licenses.find_by(number:, kind:) ||
+        (licenses.find_by(number:) unless kind) ||
+        licenses.find_by(number: nil)&.tap { |placeholder| placeholder.update!(number:, kind: kind || placeholder.kind) } ||
+        licenses.create!(number:, kind:)
     end
 
     def apply_tags
