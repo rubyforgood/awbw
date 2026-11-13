@@ -924,6 +924,24 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "trainings", funder: "awbw", organization_id: "none")))
       end
 
+      it "lists the No organization row first" do
+        org = create(:organization, name: "Aardvark Program")
+        linked = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        create(:event_registration_organization, event_registration: linked, organization: org)
+        unlinked = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        [ linked, unlinked ].each do |reg|
+          award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_000, grant: nil)
+          create(:allocation, source: award, allocatable: reg, amount: 1_000)
+        end
+
+        sign_in admin
+        get scholarships_events_path
+
+        section = Nokogiri::HTML(response.body).xpath("//section[.//h3[contains(., 'Organizations with scholarships')]]")
+        first_cells = section.css("tbody tr").map { |row| row.at_css("td").text.strip }
+        expect(first_cells).to eq([ "No organization", "Aardvark Program" ])
+      end
+
       it "carries the report's event search into the registrations index links" do
         reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
         award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500, grant: nil)
