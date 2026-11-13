@@ -177,25 +177,31 @@ class EventScholarshipReport
 
   private
 
-  # "City, ST" labels, uniqued, for where an org's recipients facilitate: the org
-  # addresses on the recipients' facilitator affiliations with it that were in
-  # effect during the report's timeframe (job affiliations don't count; an
-  # address since made inactive still does) — falling back to every active
-  # address of the org when none of those affiliations names one.
+  # "City, ST" labels, uniqued, for where an org's recipients facilitate. From
+  # the recipients' facilitator affiliations with the org that were in effect
+  # during the report's timeframe — active, since ended, or upcoming alike (job
+  # affiliations don't count): each contributes the org address picked on it
+  # (even one since made inactive), and one with no address picked contributes
+  # all the org's active addresses. With no such affiliation at all, the org's
+  # active addresses stand in.
   def locations_for(organization, recipient_ids)
-    affiliation_address_ids = affiliation_address_ids_by_org_person
+    picked_ids = affiliation_address_ids_by_org_person
       .slice(*recipient_ids.map { |person_id| [ organization.id, person_id ] })
       .values.flatten
-    addresses = affiliation_address_ids.filter_map { |id| affiliation_addresses_by_id[id] }
-    addresses = organization.addresses.reject(&:inactive?) if addresses.empty?
+    picked = picked_ids.filter_map { |id| affiliation_addresses_by_id[id] if id }
+    # An affiliation with no address picked (or one since deleted) — or no
+    # affiliation at all — brings in the org's active addresses.
+    unpicked = picked_ids.empty? || picked.size < picked_ids.size
+    addresses = picked + (unpicked ? organization.addresses.reject(&:inactive?) : [])
     addresses
       .filter_map { |address| [ address.city, address.state ].compact_blank.join(", ").presence }
       .uniq(&:downcase)
       .sort
   end
 
-  # { [ organization_id, person_id ] => [ organization_address_id, ... ] } for the
-  # facilitator affiliations of every credited recipient with every listed org.
+  # { [ organization_id, person_id ] => [ organization_address_id or nil, ... ] }
+  # for the facilitator affiliations of every credited recipient with every
+  # listed org — nil where no address was picked.
   def affiliation_address_ids_by_org_person
     @affiliation_address_ids_by_org_person ||= begin
       by_organization = figures.by_organization.except(nil)
@@ -211,7 +217,6 @@ class EventScholarshipReport
       end
       scope
         .where(organization_id: by_organization.keys, person_id: by_organization.values.flat_map { |f| f.recipient_ids.to_a }.uniq)
-        .where.not(organization_address_id: nil)
         .pluck(:organization_id, :person_id, :organization_address_id)
         .group_by { |organization_id, person_id, _| [ organization_id, person_id ] }
         .transform_values { |rows| rows.map(&:last) }
@@ -229,7 +234,7 @@ class EventScholarshipReport
   end
 
   def affiliation_addresses_by_id
-    @affiliation_addresses_by_id ||= Address.where(id: affiliation_address_ids_by_org_person.values.flatten.uniq).index_by(&:id)
+    @affiliation_addresses_by_id ||= Address.where(id: affiliation_address_ids_by_org_person.values.flatten.compact.uniq).index_by(&:id)
   end
 
   def figures

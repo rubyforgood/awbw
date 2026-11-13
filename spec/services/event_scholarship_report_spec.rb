@@ -144,6 +144,23 @@ RSpec.describe EventScholarshipReport do
       expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
     end
 
+    it "adds the org's active addresses for an affiliation with no address picked" do
+      site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
+      create(:address, addressable: org_a, city: "Closed", state: "IL", inactive: true)
+      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      create(:affiliation, person: person2, organization: org_a, organization_address: nil)
+
+      expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
+    end
+
+    it "keeps a picked address even after it's made inactive" do
+      site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
+      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      site.update!(inactive: true)
+
+      expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
+    end
+
     it "prefers the org addresses on the recipients' affiliations" do
       site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
       create(:affiliation, person: person1, organization: org_a, organization_address: site)
