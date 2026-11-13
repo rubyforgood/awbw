@@ -51,7 +51,17 @@
               <td class="border border-gray-200 px-3 py-2">
                 <%= link_to row.organization.name, organization_path(row.organization), class: "text-blue-600 hover:text-blue-800 hover:underline" %>
               </td>
-              <td class="border border-gray-200 px-3 py-2 text-gray-700"><%= row.location.presence || "—" %></td>
+              <%# One location per line: the recipients' affiliation addresses, else
+                  the org's active addresses (EventScholarshipReport#locations_for). %>
+              <td class="border border-gray-200 px-3 py-2 text-gray-700">
+                <% if row.locations.any? %>
+                  <% row.locations.each do |location| %>
+                    <div><%= location %></div>
+                  <% end %>
+                <% else %>
+                  —
+                <% end %>
+              </td>
               <%= render "scholarship_organization_figures", figures: row, organization_id: row.organization.id, split: split %>
             </tr>
           <% end %>

@@ -98,23 +98,27 @@ class EventScholarshipReport
 
   # One organization whose trainees received scholarships across the trainings in
   # scope, with where its program is.
-  OrganizationRow = Struct.new(:organization, :figures, keyword_init: true) do
+  OrganizationRow = Struct.new(:organization, :figures, :locations, keyword_init: true) do
     def funded_cents = figures.funded_cents
     def unfunded_cents = figures.unfunded_cents
     def scholarship_cents = figures.scholarship_cents
     def award_count = figures.award_count
     def recipient_count = figures.recipient_count
-    def location = organization.program_location
   end
 
   # Organizations whose trainees received scholarships, name-sorted. See
-  # EventScholarshipFigures#by_organization for how awards are credited.
+  # EventScholarshipFigures#by_organization for how awards are credited, and
+  # #locations_for for each row's locations.
   def organization_rows
     @organization_rows ||= begin
       by_organization = figures.by_organization
       organizations = Organization.includes(:addresses).where(id: by_organization.keys.compact)
       organizations
-        .map { |organization| OrganizationRow.new(organization: organization, figures: by_organization[organization.id]) }
+        .map do |organization|
+          org_figures = by_organization[organization.id]
+          OrganizationRow.new(organization: organization, figures: org_figures,
+            locations: locations_for(organization, org_figures.recipient_ids))
+        end
         .sort_by { |row| row.organization.name.to_s.downcase }
     end
   end
@@ -172,6 +176,39 @@ class EventScholarshipReport
   end
 
   private
+
+  # "City, ST" labels, uniqued, for where an org's recipients work: the org
+  # addresses on the recipients' affiliations with it — falling back to every
+  # active address of the org when none of those affiliations names one.
+  def locations_for(organization, recipient_ids)
+    affiliation_address_ids = affiliation_address_ids_by_org_person
+      .slice(*recipient_ids.map { |person_id| [ organization.id, person_id ] })
+      .values.flatten
+    addresses = affiliation_address_ids.filter_map { |id| affiliation_addresses_by_id[id] }
+    addresses = organization.addresses.reject(&:inactive?) if addresses.empty?
+    addresses
+      .filter_map { |address| [ address.city, address.state ].compact_blank.join(", ").presence }
+      .uniq(&:downcase)
+      .sort
+  end
+
+  # { [ organization_id, person_id ] => [ organization_address_id, ... ] } for the
+  # affiliations of every credited recipient with every listed org.
+  def affiliation_address_ids_by_org_person
+    @affiliation_address_ids_by_org_person ||= begin
+      by_organization = figures.by_organization.except(nil)
+      Affiliation
+        .where(organization_id: by_organization.keys, person_id: by_organization.values.flat_map { |f| f.recipient_ids.to_a }.uniq)
+        .where.not(organization_address_id: nil)
+        .pluck(:organization_id, :person_id, :organization_address_id)
+        .group_by { |organization_id, person_id, _| [ organization_id, person_id ] }
+        .transform_values { |rows| rows.map(&:last) }
+    end
+  end
+
+  def affiliation_addresses_by_id
+    @affiliation_addresses_by_id ||= Address.where(id: affiliation_address_ids_by_org_person.values.flatten.uniq).index_by(&:id)
+  end
 
   def figures
     @figures ||= EventScholarshipFigures.new(@events, funder: @funder)

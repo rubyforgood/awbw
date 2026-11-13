@@ -133,7 +133,25 @@ RSpec.describe EventScholarshipReport do
 
     it "lists each organization name-sorted with its location" do
       expect(report.organization_rows.map { |row| row.organization.name }).to eq([ "Alpha Program", "Bravo Program" ])
-      expect(report.organization_rows.first.location).to eq("Springfield, IL")
+      expect(report.organization_rows.first.locations).to eq([ "Springfield, IL" ])
+    end
+
+    it "falls back to every active org address, uniqued, when no recipient affiliation names one" do
+      create(:address, addressable: org_a, city: "Springfield", state: "IL")
+      create(:address, addressable: org_a, city: "Peoria", state: "IL")
+      create(:address, addressable: org_a, city: "Closed", state: "IL", inactive: true)
+
+      expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
+    end
+
+    it "prefers the org addresses on the recipients' affiliations" do
+      site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
+      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      # Another person's affiliation doesn't count — only the credited recipients'.
+      elsewhere = create(:address, addressable: org_a, city: "Joliet", state: "IL")
+      create(:affiliation, person: create(:person), organization: org_a, organization_address: elsewhere)
+
+      expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
     end
 
     it "splits each organization's dollars and counts its recipients and awards" do
