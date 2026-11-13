@@ -288,8 +288,13 @@ class EventRegistrationsController < ApplicationController
       # Carry the transferring reg's org links onto the destination so the new reg
       # shares the same linked organizations — copied, not moved, so the source
       # keeps its own. Read before the middle reg is dropped below. (#1944)
-      @event_registration.organizations.each do |organization|
-        destination.event_registration_organizations.find_or_create_by!(organization: organization)
+      # The pinned submission and the "filled from the form" note travel with the
+      # link, so the linking page keeps pairing each org with the answers that named it.
+      @event_registration.event_registration_organizations.each do |source_link|
+        destination.event_registration_organizations.find_or_create_by!(organization_id: source_link.organization_id) do |link|
+          link.form_submission_id = source_link.form_submission_id
+          link.form_autofill_changes = source_link.read_attribute(:form_autofill_changes)
+        end
       end
       # Split/relocate CE before dropping a collapsing middle reg, so its record
       # moves forward instead of being cascade-destroyed with the reg. (#1944)
@@ -714,14 +719,17 @@ class EventRegistrationsController < ApplicationController
     @registration_submission_entries[registration.id] ||= build_registration_submission_entries(registration)
   end
 
+  # A transferred-in registrant who didn't also register at the new event
+  # answered on the original, so read the answers from wherever they live. (#1944)
   def build_registration_submission_entries(registration)
-    form = registration.event.registration_form
+    answers_registration = registration.form_answers_registration
+    form = answers_registration.event.registration_form
     return [] unless form
 
     entries = registration.registrant.form_submissions
-      .where(form: form, event: registration.event)
+      .where(form: form, event: answers_registration.event)
       .order(:created_at)
-      .includes(form_answers: :form_field)
+      .includes(:event, form_answers: :form_field)
       .map(&:org_entry)
 
     # Attach the matching DB org (if any) for each submitted name, so the view can
