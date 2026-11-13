@@ -13,9 +13,6 @@ module OrganizationServices
   # Address is compared against the org's corresponding address (AddressMatcher,
   # the one the upsert targets); an address the matcher doesn't
   # recognize isn't a discrepancy because it's added rather than reconciled.
-  # Given the person, it also flags their affiliations here (the submitted
-  # position, and Facilitator) already tied to a different org address — the
-  # linking core only fills an affiliation's blank address.
   # Powers both the linking flow's flash summary and the linking page's
   # persistent per-org note.
   class ProfileDiff
@@ -35,28 +32,24 @@ module OrganizationServices
     NOT_A_WEB_ADDRESS = "not a web address".freeze
     ADDRESS_PARTS = %i[street_address city state zip_code country].freeze
 
-    def self.call(organization:, website: nil, organization_type: nil, address: {}, person: nil, position: nil)
-      new(organization:, website:, organization_type:, address:, person:, position:).call
+    def self.call(organization:, website: nil, organization_type: nil, address: {})
+      new(organization:, website:, organization_type:, address:).call
     end
 
-    # Compares the website, type, and address of a FormSubmission#org_entry-shaped
-    # hash — and, given the person, their affiliations' addresses.
-    def self.for_entry(organization:, entry:, person: nil)
-      call(organization:, website: entry[:website], organization_type: entry[:organization_type], address: entry[:address],
-           person:, position: entry[:position])
+    # Compares the website, type, and address of a FormSubmission#org_entry-shaped hash.
+    def self.for_entry(organization:, entry:)
+      call(organization:, website: entry[:website], organization_type: entry[:organization_type], address: entry[:address])
     end
 
-    def initialize(organization:, website: nil, organization_type: nil, address: {}, person: nil, position: nil)
+    def initialize(organization:, website: nil, organization_type: nil, address: {})
       @organization = organization
       @website = website
       @organization_type = organization_type
       @address = address || {}
-      @person = person
-      @position = position&.strip.presence
     end
 
     def call
-      [ website_discrepancy, organization_type_discrepancy, *address_discrepancies, *affiliation_address_discrepancies ].compact
+      [ website_discrepancy, organization_type_discrepancy, *address_discrepancies ].compact
     end
 
     private
@@ -91,9 +84,8 @@ module OrganizationServices
 
     # Compare every address field against the org's corresponding address. A field
     # blank on either side is skipped (the blank gets filled, not reconciled).
-    # Street compares through AddressNormalizer — the same key AddressMatcher used
-    # to pick this address — so "12 E. Main St" vs "12 East Main Street" isn't
-    # flagged as a difference the matcher already treated as the same place.
+    # Street isn't compared: AddressMatcher only matches an address with the same
+    # (normalized) street or none, and a different street is added as a new one.
     # City can differ here because AddressMatcher's last resort matches on
     # street + ZIP across cities — that's exactly the respelled-city case an admin
     # should see rather than have silently normalized away.
@@ -105,8 +97,6 @@ module OrganizationServices
       return [ unsaved_address_discrepancy ].compact unless existing
 
       [
-        field_discrepancy(:address_street, "Address – street", @address[:street_address], existing.street_address,
-                          normalize: AddressNormalizer.method(:street)),
         field_discrepancy(:address_city, "Address – city", @address[:city], existing.city),
         field_discrepancy(:address_state, "Address – state", @address[:state], existing.state),
         field_discrepancy(:address_zip, "Address – ZIP", @address[:zip_code], existing.zip_code),
@@ -132,24 +122,6 @@ module OrganizationServices
       @address[part]&.strip.presence
     end
 
-    # The affiliations AffiliationServices::CreateFromRegistration would anchor to
-    # the submitted address (the job one titled with the position, and the standing
-    # Facilitator one) but won't, because they already point at another address.
-    def affiliation_address_discrepancies
-      return [] unless @person
-
-      address = matching_address
-      return [] unless address
-
-      @person.affiliations.active_or_pending.where(organization: @organization).includes(:organization_address)
-        .select { |affiliation| affiliation.facilitator? || (@position && affiliation.title.to_s.strip == @position) }
-        .select { |affiliation| affiliation.organization_address && affiliation.organization_address_id != address.id }
-        .map do |affiliation|
-          Discrepancy.new(field: :affiliation_address, label: "#{affiliation.title} affiliation – address",
-                          submitted: address.name.squish, saved: affiliation.organization_address.name.squish)
-        end
-    end
-
     def matching_address
       return @matching_address if defined?(@matching_address)
 
@@ -162,14 +134,13 @@ module OrganizationServices
       )
     end
 
-    def field_discrepancy(field, label, submitted, saved, normalize: nil)
+    def field_discrepancy(field, label, submitted, saved)
       submitted = submitted&.strip.presence
       # Strip both sides: a legacy row can hold a padded street/ZIP, and comparing
       # it raw would flag the address as differing from the answer it came from.
       saved = saved&.strip.presence
       return if submitted.blank? || saved.blank?
       return if submitted.casecmp?(saved)
-      return if normalize && normalize.call(submitted) == normalize.call(saved)
 
       Discrepancy.new(field: field, label: label, submitted: submitted, saved: saved)
     end

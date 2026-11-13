@@ -86,7 +86,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
     }.not_to change { organization.addresses.count }
   end
 
-  it "updates the matching city/state address in place instead of duplicating" do
+  it "updates the same-street city/state address in place instead of duplicating" do
     # Pin the fields this example expects to change to values distinct from the
     # upsert below. The factory otherwise fills them from Faker's shared,
     # order-dependent stream, which can coincidentally match a new value (e.g.
@@ -96,7 +96,7 @@ RSpec.describe OrganizationServices::UpsertAddress do
 
     result = described_class.call(
       organization: organization,
-      street_address: "2 New Ave",
+      street_address: "1 Old Street",
       city: "austin",
       state: "tx",
       zip_code: "78702",
@@ -104,9 +104,21 @@ RSpec.describe OrganizationServices::UpsertAddress do
     )
 
     expect(result).to have_attributes(address: existing, created: false)
-    expect(result.changes.map(&:label)).to contain_exactly("Street", "ZIP", "Country")
+    expect(result.changes.map(&:label)).to contain_exactly("ZIP", "Country")
     expect(organization.addresses.count).to eq(1)
-    expect(existing.reload).to have_attributes(street_address: "2 New Ave", zip_code: "78702", country: "Canada", primary: true, inactive: false)
+    expect(existing.reload).to have_attributes(street_address: "1 Old St", zip_code: "78702", country: "Canada", primary: true, inactive: false)
+  end
+
+  it "adds a different street in the same city as the new primary, taking the flag off the old one" do
+    old_primary = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", primary: true)
+
+    result = described_class.call(organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+
+    expect(result).to have_attributes(created: true)
+    expect(result.address).to have_attributes(street_address: "1 Main St", primary: true)
+    expect(old_primary.reload).to have_attributes(street_address: "5 Oak Ave", primary: false, inactive: false)
+    expect(result.changes.find { |change| change.field == "primary_address" })
+      .to have_attributes(label: "Primary work address", change_type: "update", previous_value: old_primary.name.squish)
   end
 
   # Under the admin flow's fill-blanks rule every write lands in an empty column, so
@@ -148,8 +160,8 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(result).to have_attributes(created: false, changes: [])
   end
 
-  it "replaces the matching address's street, ZIP, and country with the answer" do
-    existing = create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "", country: "", primary: true)
+  it "fills a blank street and replaces the ZIP and country on the matching address" do
+    existing = create(:address, addressable: organization, street_address: "", city: "Austin", state: "TX", zip_code: "78701", country: "USA", primary: true)
 
     result = described_class.call(
       organization: organization,
@@ -245,13 +257,13 @@ RSpec.describe OrganizationServices::UpsertAddress do
     expect(existing.reload.city).to eq("St. Louis")
   end
 
-  it "leaves the org's existing primary intact and adds the new-city address as non-primary" do
+  it "makes a new-city address the primary and keeps the old one as an active work address" do
     old_primary = create(:address, addressable: organization, city: "Dallas", state: "TX", primary: true)
 
     described_class.call(organization: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
 
-    expect(old_primary.reload).to have_attributes(primary: true, inactive: false)
-    expect(organization.addresses.find_by(city: "Austin")).to have_attributes(primary: false)
+    expect(old_primary.reload).to have_attributes(primary: false, inactive: false)
+    expect(organization.addresses.find_by(city: "Austin")).to have_attributes(primary: true)
   end
 
   it "fills an Unknown locality on the matching address from its parts" do

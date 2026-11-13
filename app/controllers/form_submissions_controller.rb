@@ -159,8 +159,7 @@ class FormSubmissionsController < ApplicationController
   end
 
   def profile_diff_for(organization)
-    OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: submission_org_entry,
-                                                person: @form_submission.person)
+    OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: submission_org_entry)
   end
 
   # Write the submission's answers onto the org's profile/address, create the

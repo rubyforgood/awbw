@@ -144,11 +144,22 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
       expect(facilitator.reload.organization_address).to eq(address)
     end
 
-    it "does not overwrite an address the affiliation already has" do
+    it "re-points an affiliation tied to another address at the submitted one and reports it" do
       other = create(:address, addressable: organization)
       facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: other)
 
-      described_class.call(person: person, organization: organization, organization_address: address)
+      changes = described_class.call(person: person, organization: organization, organization_address: address)
+
+      expect(facilitator.reload.organization_address).to eq(address)
+      expect(changes.sole).to have_attributes(label: "Facilitator affiliation address", change_type: "update",
+                                              value: address.name.squish, previous_value: other.name.squish)
+    end
+
+    it "only fills a blank address when the address is a fallback rather than submitted" do
+      other = create(:address, addressable: organization)
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: other)
+
+      described_class.call(person: person, organization: organization, organization_address: address, repoint_address: false)
 
       expect(facilitator.reload.organization_address).to eq(other)
     end

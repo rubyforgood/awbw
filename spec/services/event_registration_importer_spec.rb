@@ -595,28 +595,26 @@ RSpec.describe EventRegistrationImporter do
         expect(person.reload.legal_first_name).to eq("Robert")
       end
 
-      it "keeps a matched person's current primary address and adds the sheet's beside it" do
+      it "makes the sheet's address a matched person's primary and takes its pronouns" do
         person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org", pronouns: "she/her")
         current = person.addresses.create!(street_address: "9 Elm St", city: "Portland", state: "OR", zip_code: "97201",
                                            locality: "Unknown", address_type: "personal", primary: true)
 
         import_rows(header, row)
 
-        expect(current.reload).to be_primary
-        expect(person.addresses.find_by(city: "Springfield")).not_to be_primary
-        expect(person.reload.pronouns).to eq("she/her")
+        expect(current.reload).not_to be_primary
+        expect(person.addresses.find_by(city: "Springfield")).to be_primary
+        expect(person.reload.pronouns).to eq("they/them")
       end
 
-      it "reports and comments a person value it kept rather than overwrote" do
+      it "reports a person value it replaced" do
         person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org", pronouns: "she/her")
 
         result = import_rows(%w[FirstName LastName EMail Pronouns], [ "Pat", "Example", "pat@example.org", "they/them" ])
 
-        expect(person.reload.pronouns).to eq("she/her")
-        expect(result.rows.first.warnings).to include("Kept pronouns “she/her” — sheet said “they/them”")
-        expect(person.comments.sole.body).to eq(
-          "Imported sheet disagreed and was not applied: Pronouns “they/them” (kept “she/her”)."
-        )
+        expect(person.reload.pronouns).to eq("they/them")
+        expect(result.rows.first.warnings).to include("Replaced pronouns “she/her” with “they/them”")
+        expect(person.comments).to be_empty
       end
 
       it "stays quiet when the sheet agrees with what's on file" do

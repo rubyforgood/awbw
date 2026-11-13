@@ -802,7 +802,7 @@ class EventRegistrationsController < ApplicationController
     entry = submission_entry_for(@event_registration, organization, linked_count: linked_count)
     return [] unless entry
 
-    OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: entry, person: @event_registration.registrant)
+    OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: entry)
   end
 
   # Link the org to the registration, write the answers of the submission that

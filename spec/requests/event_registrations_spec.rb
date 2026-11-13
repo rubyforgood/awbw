@@ -1662,20 +1662,21 @@ RSpec.describe "EventRegistrations", type: :request do
 
         it "flags an address discrepancy on a linked org whose saved address differs from the submission" do
           organization.update!(name: "Acme")
-          create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX")
+          create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
-          { "organization_name" => "Acme", "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX" }.each do |identifier, value|
+          { "organization_name" => "Acme", "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX",
+            "organization_zip" => "78702" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Address – street")
-          expect(response.body).to include("1 Main St")
-          expect(response.body).to include("5 Oak Ave")
+          expect(response.body).to include("Address – ZIP")
+          expect(response.body).to include("78702")
+          expect(response.body).to include("78701")
         end
 
         it "shows the affiliation pill inline on the linked org, noting it has no dates" do

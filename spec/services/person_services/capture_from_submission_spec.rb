@@ -10,10 +10,10 @@ RSpec.describe PersonServices::CaptureFromSubmission do
       expect(person.addresses.sole).to have_attributes(city: "Springfield", street_address: "", zip_code: "")
     end
 
-    it "keeps a saved ZIP and street when an overwriting submission skips them" do
+    it "keeps a saved ZIP and street when a submission skips them" do
       address = create(:address, addressable: person, city: "Springfield", state: "IL", street_address: "1 Old Rd", zip_code: "62701")
 
-      described_class.call(person:, answers: { "mailing_city" => "Springfield", "mailing_state" => "IL" }, overwrite: true)
+      described_class.call(person:, answers: { "mailing_city" => "Springfield", "mailing_state" => "IL" })
 
       expect(address.reload).to have_attributes(street_address: "1 Old Rd", zip_code: "62701")
     end
@@ -22,9 +22,22 @@ RSpec.describe PersonServices::CaptureFromSubmission do
       address = create(:address, addressable: person, city: "Springfield", state: "IL", street_address: "1 Old Rd", zip_code: "62701")
 
       described_class.call(person:, answers: { "mailing_city" => "Springfield", "mailing_state" => "IL",
-                                               "mailing_street" => "2 New St", "mailing_zip" => "62702" }, overwrite: true)
+                                               "mailing_street" => "2 New St", "mailing_zip" => "62702" })
 
       expect(address.reload).to have_attributes(street_address: "2 New St", zip_code: "62702")
+    end
+
+    it "reports each saved value it replaced" do
+      create(:address, addressable: person, city: "Springfield", state: "IL", street_address: "1 Old Rd", zip_code: "62701")
+      person.update!(pronouns: "she/her")
+
+      capture = described_class.new(person:, answers: { "mailing_city" => "Springfield", "mailing_state" => "IL",
+                                                        "mailing_street" => "2 New St", "pronouns" => "they/them" })
+      capture.call
+
+      expect(capture.replaced.map { |change| [ change.label, change.saved, change.submitted ] }).to contain_exactly(
+        [ "Mailing address street address", "1 Old Rd", "2 New St" ], [ "Pronouns", "she/her", "they/them" ]
+      )
     end
 
     it "fills a new address's country, county and locality from its state and ZIP" do

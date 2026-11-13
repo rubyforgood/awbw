@@ -79,17 +79,18 @@ module OrganizationServices
       profile_changes = sync_profile
       address_result = upsert_address
 
-      AffiliationServices::CreateFromRegistration.call(
+      affiliation_changes = AffiliationServices::CreateFromRegistration.call(
         person: @person,
         organization: @organization,
         job_title: @entry && @entry[:position],
         training_date: @training_date,
         organization_address: address_result.address || sole_address,
         facilitator_training: FACILITATOR_CONFERRING_SCENARIOS.include?(@scenario),
-        event_registration: @event_registration
+        event_registration: @event_registration,
+        repoint_address: address_result.address.present?
       )
 
-      Result.new(saved: profile_changes + address_result.changes, conflicts: conflicts,
+      Result.new(saved: profile_changes + address_result.changes + affiliation_changes, conflicts: conflicts,
                  address: address_result.address)
     end
 
@@ -115,7 +116,7 @@ module OrganizationServices
     def conflicts
       return [] unless @entry
 
-      ProfileDiff.for_entry(organization: @organization, entry: @entry, person: @person)
+      ProfileDiff.for_entry(organization: @organization, entry: @entry)
     end
 
     def submitted_address

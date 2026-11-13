@@ -57,7 +57,7 @@ module OrganizationServices
 
       address_result = UpsertAddress.call(organization: organization, **entry[:address])
 
-      AffiliationServices::CreateFromRegistration.call(
+      affiliation_changes = AffiliationServices::CreateFromRegistration.call(
         person: @person,
         organization: organization,
         job_title: entry[:position],
@@ -67,7 +67,7 @@ module OrganizationServices
         event_registration: @event_registration
       )
 
-      Result.new(organization: organization, autofill: profile_changes + address_result.changes)
+      Result.new(organization: organization, autofill: profile_changes + address_result.changes + affiliation_changes)
     end
 
     private

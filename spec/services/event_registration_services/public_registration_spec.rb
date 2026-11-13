@@ -529,7 +529,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         expect(organization.addresses.find_by(city: "Reno")).to be_primary
       end
 
-      it "does not demote the org's existing primary when another registrant adds an address" do
+      it "makes a newly added address the org's primary, keeping the old one as an active work address" do
         existing = organization.addresses.create!(
           street_address: "1 First St", city: "Tahoe", state: "CA", zip_code: "96150",
           locality: "Unknown", address_type: "work", primary: true
@@ -542,9 +542,9 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
           field_id("organization_zip") => "89501"
         )
 
-        expect(existing.reload).to be_primary
+        expect(existing.reload).not_to be_primary
         expect(existing).not_to be_inactive
-        expect(organization.addresses.find_by(city: "Reno")).not_to be_primary
+        expect(organization.addresses.find_by(city: "Reno")).to be_primary
       end
     end
   end

@@ -557,22 +557,6 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response.body).to include("harbor.example.org")
         end
 
-        it "flags the person's affiliation tied to a different org address than the one submitted" do
-          add_answer("organization_name", "Harbor Family Shelter")
-          add_answer("organization_city", "Austin")
-          add_answer("organization_state", "TX")
-          organization = create(:organization, name: "Harbor Family Shelter")
-          submission.link_organization!(organization.id)
-          create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
-          dallas = create(:address, addressable: organization, street_address: "9 Elm St", city: "Dallas", state: "TX", zip_code: "75201")
-          create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: dallas)
-
-          get link_organization_form_submission_path(submission)
-
-          expect(response.body).to include("Facilitator affiliation – address")
-          expect(response.body).to include("9 Elm St, Dallas, TX 75201")
-        end
-
         it "does not treat a name-matching affiliation as a link" do
           add_answer("organization_name", "Harbor Family Shelter")
           create(:affiliation, person: person, organization: create(:organization, name: "Harbor Family Shelter"))
@@ -656,6 +640,21 @@ RSpec.describe "FormSubmissions", type: :request do
           get link_organization_form_submission_path(submission)
           expect(response.body).to include("Acme Corporation")
           expect(response.body).not_to include("No organization linked")
+        end
+
+        it "re-points the person's affiliation at the submitted address and names it in the warning" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          add_answer("organization_street", "1 Main St")
+          add_answer("organization_city", "Austin")
+          add_answer("organization_state", "TX")
+          organization = create(:organization, name: "Harbor Family Shelter")
+          dallas = create(:address, addressable: organization, street_address: "9 Elm St", city: "Dallas", state: "TX", zip_code: "75201", primary: true)
+          facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: dallas)
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(facilitator.reload.organization_address).to have_attributes(street_address: "1 Main St", city: "Austin")
+          expect(flash[:warning]).to include("Facilitator affiliation address", "was “9 Elm St, Dallas, TX 75201”", "Primary work address")
         end
 
         it "writes the submission's org answers and warns about the values it replaced" do
