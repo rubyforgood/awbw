@@ -5,7 +5,7 @@ module AffiliationServices
   # the timestamp live here. Job affiliations are never touched.
   class ReconcileEvent
     Row = Struct.new(:person, :registration, :organization, :affiliation, :action, :reason, :key,
-                     :minted_here, :jobs, keyword_init: true) do
+                     :jobs, keyword_init: true) do
       def actionable?
         action != :noop
       end
@@ -95,8 +95,8 @@ module AffiliationServices
 
     def row_for(person, registration, organization, decision)
       Row.new(person:, registration:, organization:, affiliation: decision.affiliation,
-              action: decision.action, reason: decision.reason, minted_here: decision.minted_here,
-              key: row_key(person, organization, decision), jobs: jobs_by_person_org.fetch([ person.id, organization.id ], []))
+              action: decision.action, reason: decision.reason, key: row_key(person, organization, decision),
+              jobs: jobs_by_person_org.fetch([ person.id, organization.id ], []))
     end
 
     # Stable per-row identity for the outcome map: the affiliation itself when there

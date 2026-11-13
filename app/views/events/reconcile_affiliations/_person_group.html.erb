@@ -35,10 +35,7 @@
 
   <div class="divide-y divide-gray-100 border-t border-gray-100">
     <% group[:rows].each do |row| %>
-      <%# A row this training created has nothing to preserve, so Delete leads and
-          Deactivate is shown but not selectable — the tooltip says why. %>
-      <% default_choice = row.action == :deactivate && row.minted_here ? "delete" : row.action.to_s %>
-      <% chosen = pre_outcome&.dig(row.key) || default_choice %>
+      <% chosen = pre_outcome&.dig(row.key) || row.action.to_s %>
       <div class="flex flex-wrap items-center gap-3 py-2">
         <div class="flex-1 min-w-0 text-sm">
           <% if row.affiliation %>
@@ -55,9 +52,8 @@
         </div>
         <div class="flex shrink-0 items-center gap-2">
           <% outcome_options[row.action].each do |value, label, color, hint| %>
-            <% unavailable = value == "deactivate" && row.minted_here %>
-            <label class="<%= button_base %> <%= unavailable ? "opacity-50 cursor-not-allowed" : color_class[color] %>" <%= tag.attributes(title: hint) %>>
-              <%= radio_button_tag "outcome[#{row.key}]", value, chosen == value, id: "outcome_#{row.key}_#{value}", class: "h-4 w-4 border-gray-300", form: "reconcile_form", disabled: unavailable %>
+            <label class="<%= button_base %> <%= color_class[color] %>" <%= tag.attributes(title: hint) %>>
+              <%= radio_button_tag "outcome[#{row.key}]", value, chosen == value, id: "outcome_#{row.key}_#{value}", class: "h-4 w-4 border-gray-300", form: "reconcile_form" %>
               <%= label %>
               <%= render "tooltip", kind: value.to_sym %>
             </label>

@@ -6,7 +6,48 @@ action_path: "/events/1/reconcile_affiliations"
 pr_number: 2195
 summary: >-
   A bulk action on an event that brings facilitator affiliations in line with who
-  attended — creating missing ones, ending them for people who didn't attend, and
-  reactivating anyone later marked attended. Preview every change before applying it.
+  registered and attended. It creates missing ones, removes or ends them for people
+  who didn't attend, and reopens any it ended once attendance is corrected. Preview
+  every change before applying it.
+description: >-
+  <p><strong>How to use it</strong></p>
+  <ol>
+  <li>Open the event's <strong>Registrants</strong> tab and choose <strong>Bulk
+  actions → Reconcile affiliations</strong>.</li>
+  <li>Fix attendance first. You can change each person's attendance chip right on
+  the page. Anyone whose attendance was never recorded has day checkboxes on their
+  row, and ticking the days they came updates their status.</li>
+  <li>Go through <strong>To reconcile</strong>. Cancelled registrants are listed
+  first, in their own section (see <a href="/features?query=Reconcile+cancelled+registrants">Reconcile cancelled registrants before the training</a>). Each person gets a card with one row
+  for each organization they linked. The suggested outcome is already selected, and
+  every row also lets you leave it as it is. Hover an option to see what it does.
+  <ul>
+  <li><strong>Create new FA</strong>: adds a facilitator affiliation for someone who
+  doesn't have one yet.</li>
+  <li><strong>Delete</strong>: removes the affiliation this training created for
+  someone who didn't attend at all.</li>
+  <li><strong>Deactivate</strong>: ends an older affiliation on the day before this
+  training, so the years they did facilitate stay on record. It's also suggested
+  when someone attended only part of the training, so the record that they came is
+  kept. Their card shows which days they attended and when they signed in.</li>
+  <li><strong>Reactivate</strong>: undoes an ending this page applied, once the
+  person is marked attended.</li>
+  <li><strong>Move to the new event</strong>: for someone who transferred to another
+  training. See <a href="/features?query=Facilitator+affiliations+follow+a+transfer">Facilitator affiliations follow a transfer</a>.</li>
+  </ul></li>
+  <li>Click <strong>Preview changes</strong>. The next screen lists every change,
+  grouped by type. <strong>Go back to edit</strong> keeps your choices.</li>
+  <li>Click <strong>Perform changes</strong>. Each changed affiliation gets a
+  "Reconciliation" note saying why it changed.</li>
+  </ol>
+  <p><strong>Not reconciled</strong>, at the bottom, lists the rows left alone and
+  why. For example, the training hasn't ended yet, attendance was never recorded,
+  the affiliation has already ended, or the person attended and is already
+  active.</p>
+  <p>For an event that isn't a facilitator training, the page only offers to delete
+  facilitator affiliations that were created from that event.</p>
+  <p><strong>Related:</strong> <a href="/features?query=Reconcile+cancelled+registrants">Reconcile cancelled registrants before the training</a> · <a href="/features?query=Facilitator+affiliations+follow+a+transfer">Facilitator affiliations follow a transfer</a></p>
 pro_tips:
-  - "Job affiliations are never touched, and any row can be left as-is."
+  - "Job affiliations are never changed. Rows that would remove a facilitator affiliation say whether the person still has a job with that organization."
+  - "It's safe to run again after fixing attendance. The page shows when it was last reconciled and warns you if attendance has changed since."
+  - "Facilitator affiliations entered by hand for a linked organization are included too, not just the ones registration created."

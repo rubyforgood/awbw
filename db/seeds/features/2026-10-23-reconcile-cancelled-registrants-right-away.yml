@@ -8,7 +8,9 @@ summary: >-
   Reconcile affiliations now lists cancelled registrants in their own section, so
   the facilitator affiliation their registration created can be deleted right away
   instead of after the training ends.
+description: >-
+  <p><strong>Related:</strong> <a href="/features?query=Reconcile+affiliations+after+a+training">Reconcile affiliations after a training</a> (how to use the page) · <a href="/features?query=Facilitator+affiliations+follow+a+transfer">Facilitator affiliations follow a transfer</a></p>
 pro_tips:
   - "Someone who cancelled and never trained should have the affiliation deleted, not deactivated — there's no facilitation history to keep."
-  - "Registrants still marked Registered are listed under Not reconciled for reference until the training ends."
+  - "Registrants still marked Registered stay under Not reconciled: \"Training hasn't ended yet\" before the training, then \"Attendance never recorded\" after it. Tick the days they came, or set their status, to move them into To reconcile."
   - "Rows for cancelled, no-show, and transferred registrants — and any row offering Delete — note whether the person still has a job affiliation with that organization."
