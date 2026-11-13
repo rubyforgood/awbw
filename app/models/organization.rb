@@ -456,6 +456,18 @@ class Organization < ApplicationRecord
 
   remote_searchable_by :name
 
+  # Whether a typed answer looks like a web address ("awbw.org",
+  # "https://www.awbw.org/about") rather than something else typed into the
+  # website field — most often the org's own name. Form syncs only take a website
+  # answer that passes, so a misplaced answer can't overwrite a real website.
+  def self.website_address?(value)
+    candidate = value.to_s.strip
+    return false if candidate.blank? || candidate.match?(/\s/)
+    candidate = "https://#{candidate}" unless candidate.match?(/\Ahttps?:\/\//i)
+    uri = URI.parse(candidate) rescue nil
+    uri.is_a?(URI::HTTP) && uri.host.to_s.include?(".")
+  end
+
   # Returns the website as a clickable, scheme-qualified URL — prepending
   # https:// to a bare domain like "awbw.org" — or nil when the value is blank or
   # not a usable web address. Drives the external links on the org profile and

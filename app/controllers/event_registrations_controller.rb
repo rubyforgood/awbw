@@ -8,6 +8,8 @@ class EventRegistrationsController < ApplicationController
   # A transferred-out reg is locked (issue #1944): its inline write endpoints are
   # blocked with a warning rather than silently ignored. The full-form `update` is
   # handled separately (it keeps comments/communications editable).
+  before_action -> { Current.source = OrganizationServices::LinkSubmittedOrganization::CHANGE_SOURCE },
+                only: %i[select_organization create_organization]
   before_action :block_locked_registration, only: [ :update_onboarding, :toggle_certificate_issued, :toggle_ce_certificate_issued, :update_attendance, :toggle_post_survey ]
 
   def index
@@ -805,9 +807,9 @@ class EventRegistrationsController < ApplicationController
     OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: entry)
   end
 
-  # Link the org to the registration, fill what it's missing from the submission
-  # that names it (blanks only — curated values are kept and reported as
-  # discrepancies instead), and build the flash notice — via the linking core
+  # Link the org to the registration, write the answers of the submission that
+  # names it onto the org (a valid answer replaces what's saved; the flash names
+  # what it replaced so newer edits can be reapplied), and build the flash notice — via the linking core
   # shared with the form submission editor. The link row is created first so
   # submission_entry_for counts it when deciding whether the pairing is
   # unambiguous. `record_fills` keeps a persistent note of what the form changed.
@@ -827,8 +829,7 @@ class EventRegistrationsController < ApplicationController
       event_registration: @event_registration
     )
 
-    # Pin the pairing even when nothing was filled — an org whose every answer
-    # conflicts fills nothing, and that's exactly the one whose note has to survive.
+    # Pin the pairing even when nothing was saved, so the per-card notes survive.
     link.record_form_submission(entry[:submission]) if entry
     # Back-apply the resolution onto every submission this org describes, so each
     # reads as linked in its own editor too (even under a name mismatch). A

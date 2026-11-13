@@ -1690,20 +1690,21 @@ RSpec.describe "EventRegistrations", type: :request do
 
         it "flags an address discrepancy on a linked org whose saved address differs from the submission" do
           organization.update!(name: "Acme")
-          create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX")
+          create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
-          { "organization_name" => "Acme", "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX" }.each do |identifier, value|
+          { "organization_name" => "Acme", "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX",
+            "organization_zip" => "78702" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Address – street")
-          expect(response.body).to include("1 Main St")
-          expect(response.body).to include("5 Oak Ave")
+          expect(response.body).to include("Address – ZIP")
+          expect(response.body).to include("78702")
+          expect(response.body).to include("78701")
         end
 
         it "shows the affiliation pill inline on the linked org, noting it has no dates" do
@@ -2229,7 +2230,7 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(regular_user.person.affiliations.where(organization: other).pluck(:title)).to contain_exactly("Facilitator")
         end
 
-        it "keeps curated type/website and warns about the discrepancy" do
+        it "replaces the saved type/website and warns the admin to reapply newer edits" do
           organization.update!(organization_type: "For-profit", website_url: "https://curated.org")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
@@ -2241,20 +2242,19 @@ RSpec.describe "EventRegistrations", type: :request do
 
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
-          expect(organization.reload.organization_type).to eq("For-profit")
-          expect(organization.website_url).to eq("https://curated.org")
-          expect(flash[:warning]).to include("were not applied").and include("Government agency").and include("For-profit")
+          expect(organization.reload.organization_type).to eq("Government agency")
+          expect(organization.website_url).to eq("https://other.org")
+          expect(flash[:warning]).to include("replaced saved values").and include("was “For-profit”").and include("reapply")
         end
 
-        # An org whose every answer conflicts is written nothing at all, and it's
-        # the one whose note matters most — so the pin follows the submission that
-        # describes the org, not the subset of answers that made it onto the record.
-        it "pins the submission even when every answer conflicted and nothing was written" do
+        # The pin follows the submission that describes the org, not the subset of
+        # answers that changed the record.
+        it "pins the submission even when nothing was written" do
           organization.update!(organization_type: "For-profit", website_url: "https://curated.org")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
-          { "organization_website" => "https://other.org", "organization_type" => "Government agency" }.each do |identifier, value|
+          { "organization_website" => "https://curated.org", "organization_type" => "For-profit" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -2339,7 +2339,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
-          { "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701" }.each do |identifier, value|
+          { "organization_street" => "5 Oak Ave", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -2347,7 +2347,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
           expect(flash[:notice]).not_to include("work address")
-          expect(flash[:warning]).to include("Address – street")
+          expect(flash[:warning]).to be_nil
         end
 
         it "reports only the address fields it actually filled" do
@@ -2516,7 +2516,7 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(link.form_submission).to eq(submission)
         end
 
-        it "does not overwrite an existing org's curated website and type" do
+        it "overwrites an existing org's website and type with the submission's answers" do
           existing = create(:organization, name: "Existing Org", website_url: "https://curated.org", organization_type: "For-profit")
           reg_form = create(:form, name: "Reg form")
           name_field = create(:form_field, form: reg_form, field_identifier: "organization_name")
@@ -2530,8 +2530,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
           post create_organization_event_registration_path(existing_registration)
 
-          expect(existing.reload.website_url).to eq("https://curated.org")
-          expect(existing.organization_type).to eq("For-profit")
+          expect(existing.reload.website_url).to eq("helpinghands.org")
+          expect(existing.organization_type).to eq("Government agency")
         end
 
         it "does nothing when no organization name was submitted" do

@@ -22,6 +22,7 @@ class FormSubmissionChanges
   }.freeze
   # Columns whose bare name is ambiguous across records (a phone has a "kind" too).
   TYPE_ATTRIBUTE_LABELS = {
+    "Affiliation" => { "organization_address_id" => "Organization address" },
     "ProfessionalLicense" => { "kind" => "License type", "number" => "License number", "expires_on" => "License expiry" }
   }.freeze
 
@@ -30,8 +31,13 @@ class FormSubmissionChanges
   VALUE_LABELS = {
     "anonymous_contributions" => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS,
     "display_name_preference" => Person::DISPLAY_NAME_PREFERENCE_LABELS,
-    **Person::PROFILE_VISIBILITY_LABELS.keys.index_with { Person::PROFILE_VISIBILITY_OPTIONS }
+    **Person::PROFILE_VISIBILITY_LABELS.keys.index_with { Person::PROFILE_VISIBILITY_OPTIONS },
+    "primary" => { true => "Yes", false => "No" },
+    "inactive" => { true => "Yes", false => "No" }
   }.freeze
+
+  # Columns holding an Address id, shown as that address.
+  ADDRESS_REFERENCES = %w[organization_address_id address_id].freeze
 
   # Sub-record attributes edit a section of the owner's edit page rather than a
   # single input; own-record columns anchor to their form input (person_<attr> /
@@ -44,7 +50,8 @@ class FormSubmissionChanges
     "Address" => "addressable", "ContactMethod" => "contactable"
   }.freeze
 
-  Change = Struct.new(:outcome, :label, :value, :previous_value, :anchor, keyword_init: true)
+  # via_link: written while an admin linked an organization (not by the form itself).
+  Change = Struct.new(:outcome, :label, :value, :previous_value, :anchor, :via_link, keyword_init: true)
   Group = Struct.new(:record_type, :record_id, :title, :changes, keyword_init: true)
 
   def initialize(form_submission)
@@ -52,7 +59,7 @@ class FormSubmissionChanges
   end
 
   def groups
-    relevant_events
+    @groups ||= relevant_events
       .group_by { |event| owner_key(event) }
       .filter_map { |(type, id), events| build_group(type, id, events) }
       .reject { |group| group.changes.empty? }
@@ -82,6 +89,16 @@ class FormSubmissionChanges
 
   def edited?
     edited_count.positive?
+  end
+
+  # What this submission wrote onto one organization (its own columns and its
+  # addresses), for the linking page's "filled from this submission" note. Leaves
+  # out the org's own creation — the card already shows the org.
+  def organization_edits(organization)
+    group = edited_groups.find { |g| g.record_type == "Organization" && g.record_id.to_s == organization.id.to_s }
+    return [] unless group
+
+    group.changes.reject { |change| change.outcome == "Added" && change.label == "Organization" }
   end
 
   private
@@ -132,17 +149,23 @@ class FormSubmissionChanges
   end
 
   def changes_for(event)
+    via_link = event.properties["source"] == OrganizationServices::LinkSubmittedOrganization::CHANGE_SOURCE
+    event_changes(event).each { |change| change.via_link = via_link }
+  end
+
+  def event_changes(event)
     action = event.name.split(".").first
     props = event.properties
 
     return [ tag_change(action, event) ] if props["resource_type"].in?(TAG_TYPES)
-    return attribute_changes(props["changes"], props["resource_type"]) if props["changes"].present?
+    return attribute_changes(props["changes"], event) if props["changes"].present?
     return [ record_change(action, event) ] if action.in?(%w[create destroy])
 
     []
   end
 
-  def attribute_changes(changes, resource_type)
+  def attribute_changes(changes, event)
+    resource_type = event.properties["resource_type"]
     changes.except(*IGNORED_ATTRIBUTES).filter_map do |attribute, before_after|
       before, after = before_after.values_at("before", "after")
       coded = VALUE_LABELS[attribute]
@@ -150,12 +173,22 @@ class FormSubmissionChanges
 
       Change.new(
         outcome: replaced?(before, coded) ? "Replaced" : "Filled",
-        label: TYPE_ATTRIBUTE_LABELS.dig(resource_type, attribute) || ATTRIBUTE_LABELS[attribute] || attribute.humanize,
-        value: display_value(after, coded),
-        previous_value: display_value(before, coded),
+        label: attribute_label(attribute, event),
+        value: display_value(after, coded, attribute),
+        previous_value: display_value(before, coded, attribute),
         anchor: anchor_for(resource_type, attribute)
       )
     end
+  end
+
+  # An address field under an org/person says which of its addresses it's on.
+  def attribute_label(attribute, event)
+    resource_type = event.properties["resource_type"]
+    label = TYPE_ATTRIBUTE_LABELS.dig(resource_type, attribute) || ATTRIBUTE_LABELS[attribute] || attribute.humanize
+    return label unless resource_type == "Address"
+
+    address = Address.find_by(id: event.properties["resource_id"])
+    address ? "#{label} (#{address.name.squish})" : label
   end
 
   # On a coded column `false` is a choice, not an empty column, so whether
@@ -191,10 +224,11 @@ class FormSubmissionChanges
   end
 
   def record_change(action, event)
+    primary = action == "create" && row_attributes(event)["primary"] ? " (primary)" : ""
     Change.new(
       outcome: action == "destroy" ? "Removed" : "Added",
       label: event.properties["resource_type"].underscore.humanize,
-      value: event.properties["resource_title"]
+      value: "#{event.properties["resource_title"]}#{primary}"
     )
   end
 
@@ -202,11 +236,15 @@ class FormSubmissionChanges
     return type.to_s if id.blank?
 
     record = type.safe_constantize&.find_by(id: id)
+    return "#{record.title} at #{record.organization&.name}" if record.is_a?(Affiliation)
+
     record&.try(:full_name).presence || record&.try(:name).presence || "#{type} ##{id}"
   end
 
-  def display_value(value, coded = nil)
+  def display_value(value, coded = nil, attribute = nil)
     return coded.fetch(value, value) if coded
+    return Address.find_by(id: value)&.name&.squish || value if attribute.in?(ADDRESS_REFERENCES) && value.present?
+
     value.is_a?(Array) ? value.join(", ") : value
   end
 end

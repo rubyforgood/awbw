@@ -411,9 +411,10 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(person.addresses.find_by(primary: true).country).to eq("USA")
     end
 
-    it "updates a returning registrant's address when the city and state are spelled differently" do
+    it "updates a returning registrant's address when the city, state, and street are spelled differently" do
       person = create(:person, email: "ada@example.com", first_name: "Ada", last_name: "Lin")
-      existing = create(:address, addressable: person, city: "Saint Louis", state: "Missouri", primary: true)
+      existing = create(:address, addressable: person, street_address: "9 Elm Road", city: "Saint Louis", state: "Missouri",
+                                  zip_code: "", primary: true)
       params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
         field_id("mailing_street") => "9 Elm Rd",
         field_id("mailing_city") => "St. Louis",
@@ -424,7 +425,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       described_class.call(event: event, registration_form: form, form_params: params)
 
       expect(person.addresses.reload).to eq([ existing ])
-      expect(existing.reload.street_address).to eq("9 Elm Rd")
+      expect(existing.reload).to have_attributes(street_address: "9 Elm Road", zip_code: "63101")
     end
 
     context "with a matched organization" do
@@ -529,7 +530,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         expect(organization.addresses.find_by(city: "Reno")).to be_primary
       end
 
-      it "does not demote the org's existing primary when another registrant adds an address" do
+      it "makes a newly added address the org's primary, keeping the old one as an active work address" do
         existing = organization.addresses.create!(
           street_address: "1 First St", city: "Tahoe", state: "CA", zip_code: "96150",
           locality: "Unknown", address_type: "work", primary: true
@@ -542,9 +543,9 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
           field_id("organization_zip") => "89501"
         )
 
-        expect(existing.reload).to be_primary
+        expect(existing.reload).not_to be_primary
         expect(existing).not_to be_inactive
-        expect(organization.addresses.find_by(city: "Reno")).not_to be_primary
+        expect(organization.addresses.find_by(city: "Reno")).to be_primary
       end
     end
   end

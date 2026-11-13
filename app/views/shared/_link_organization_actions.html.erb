@@ -9,6 +9,11 @@
       submitter_noun     – how to refer to the form-filler ("registrant"/"person")
       return_to          – carried through both actions %>
 <% submitter_noun = local_assigns.fetch(:submitter_noun, "registrant") %>
+<% link_confirm = "Linking applies the #{submitter_noun}'s form answers to this organization:\n\n" \
+                  "• Replaces its saved website, type, and matching address details\n" \
+                  "• Adds a new address as its primary (the old one stays, no longer primary)\n" \
+                  "• Moves the #{submitter_noun}'s current affiliations there to that address\n\n" \
+                  "Each change is listed on “What this submission changed”, and previous values stay in the activity log." %>
 <%# Each org the submitter typed that we don't have gets the solid (primary)
     create+link style; "Link organization" is then demoted to the outline style. %>
 <% create_is_primary = creatable_org_names.any? %>
@@ -27,7 +32,7 @@
         <%= button_to create_url,
                       method: :post,
                       params: { organization_name: creatable_name, return_to: return_to },
-                      form: { class: "shrink-0", data: { turbo_frame: "_top" } },
+                      form: { class: "shrink-0", data: { turbo_frame: "_top", turbo_confirm: link_confirm } },
                       class: button_classes(:primary, extra: "shrink-0 w-48 justify-center focus:ring-primary cursor-pointer") do %>
           Create and link
         <% end %>
@@ -42,7 +47,7 @@
       <% potential_matches.each do |org| %>
         <%= form_with url: select_url,
                       method: :post,
-                      data: { turbo_frame: "_top" },
+                      data: { turbo_frame: "_top", turbo_confirm: link_confirm },
                       class: "flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3" do %>
           <%= hidden_field_tag :organization_id, org.id %>
           <%= hidden_field_tag :return_to, return_to %>
@@ -57,7 +62,7 @@
 
   <%= form_with url: select_url,
                 method: :post,
-                data: { turbo_frame: "_top" },
+                data: { turbo_frame: "_top", turbo_confirm: link_confirm },
                 class: "flex items-stretch gap-2" do %>
     <%= hidden_field_tag :return_to, return_to %>
     <div class="flex-1 min-w-0">

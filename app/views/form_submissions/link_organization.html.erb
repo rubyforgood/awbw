@@ -51,6 +51,7 @@
         admin makes the org links/creates that produce those changes. %>
     <%= render "form_submissions/changes_link",
                submission: @form_submission,
+               changes: @submission_changes,
                return_to: "form_submission_link_organization",
                wrapper_class: "-mt-4 mb-8",
                turbo_top: true,
@@ -73,8 +74,25 @@
               <%= render "event_registrations/org_affiliation_pills", org: @matched_organization,
                           affiliations: (@affiliations_by_org[@matched_organization.id] || []),
                           submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
+              <%# What this submission (and linking it) wrote onto the org, read from its audit events. %>
+              <% if @organization_fills.any? %>
+                <div class="relative z-10 mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+                  <p class="flex items-center gap-1.5 font-semibold">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Changed on this organization by this submission:
+                  </p>
+                  <ul class="mt-1 space-y-0.5">
+                    <% @organization_fills.each do |change| %>
+                      <li>
+                        <span class="font-medium"><%= change.label %></span> — “<%= change.value %>”<%
+                        %><% if change.outcome == "Replaced" %> <span class="text-blue-600">(replaced “<%= change.previous_value %>”)</span><% end %>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
               <%# Persistent flag: submitted type/website/address answers that differ
-                  from this org's saved profile, so the fill-blanks sync left them unapplied. %>
+                  from this org's saved profile, so the sync couldn't apply them. %>
               <% if @profile_conflicts.any? %>
                 <div class="relative z-10 mt-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
                   <p class="flex items-center gap-1.5 font-semibold">
@@ -83,7 +101,7 @@
                   </p>
                   <ul class="mt-1 space-y-0.5">
                     <% @profile_conflicts.each do |conflict| %>
-                      <li><span class="font-medium"><%= conflict.label %></span> — form: “<%= conflict.submitted %>”, saved: “<%= conflict.saved %>”</li>
+                      <li><span class="font-medium"><%= conflict.label %></span> — <%= conflict.summary %></li>
                     <% end %>
                   </ul>
                 </div>

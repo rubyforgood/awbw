@@ -540,6 +540,23 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response.body).not_to include("linked to this submission or their registration yet")
         end
 
+        # The standalone-form twin of the registration editor's stored autofill note,
+        # read back from the submission's stamped audit events.
+        it "notes what the submission filled on the linked organization" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          organization = create(:organization, name: "Harbor Family Shelter")
+          submission.link_organization!(organization.id)
+          create(:ahoy_event, name: "update.organization", properties: {
+            "resource_type" => "Organization", "resource_id" => organization.id, "form_submission_id" => submission.id,
+            "changes" => { "website_url" => { "before" => nil, "after" => "harbor.example.org" } }
+          })
+
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("Changed on this organization by this submission")
+          expect(response.body).to include("harbor.example.org")
+        end
+
         it "does not treat a name-matching affiliation as a link" do
           add_answer("organization_name", "Harbor Family Shelter")
           create(:affiliation, person: person, organization: create(:organization, name: "Harbor Family Shelter"))
@@ -625,7 +642,53 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response.body).not_to include("No organization linked")
         end
 
-        it "fills blank org profile fields from the submission and flags conflicting ones" do
+        it "re-points the person's affiliation at the submitted address and names it in the warning" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          add_answer("organization_street", "1 Main St")
+          add_answer("organization_city", "Austin")
+          add_answer("organization_state", "TX")
+          organization = create(:organization, name: "Harbor Family Shelter")
+          dallas = create(:address, addressable: organization, street_address: "9 Elm St", city: "Dallas", state: "TX", zip_code: "75201", primary: true)
+          facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: dallas)
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(facilitator.reload.organization_address).to have_attributes(street_address: "1 Main St", city: "Austin")
+          expect(flash[:warning]).to include("Facilitator affiliation address", "was “9 Elm St, Dallas, TX 75201”", "Primary work address")
+        end
+
+        it "lists the link's changes on the submission's changes page, marked as from linking" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          add_answer("organization_website", "new.example.org")
+          add_answer("organization_street", "1 Main St")
+          add_answer("organization_city", "Austin")
+          add_answer("organization_state", "TX")
+          organization = create(:organization, name: "Harbor Family Shelter", website_url: "old.example.org")
+          dallas = create(:address, addressable: organization, street_address: "9 Elm St", city: "Dallas", state: "TX",
+                                    zip_code: "75201", primary: true)
+          create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: dallas)
+          # The request spec client reads as a bot, which Ahoy skips by default.
+          allow(Ahoy).to receive(:track_bots).and_return(true)
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+          get changes_form_submission_path(submission)
+
+          page = Nokogiri::HTML(response.body).text.squish
+          expect(page).to include("From linking", "new.example.org (replaced “old.example.org”)",
+                                  "Primary (9 Elm St, Dallas, TX 75201) No (replaced “Yes”)",
+                                  "Facilitator at Harbor Family Shelter", "9 Elm St, Dallas, TX 75201")
+          expect(page).not_to include("(replaced “#{dallas.id}”)")
+        end
+
+        it "asks for confirmation before linking, naming what it will change" do
+          add_answer("organization_name", "Harbor Family Shelter")
+
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("data-turbo-confirm=\"Linking applies the person&#39;s form answers to this organization:")
+        end
+
+        it "writes the submission's org answers and warns about the values it replaced" do
           add_answer("organization_name", "Harbor Family Shelter")
           add_answer("organization_website", "https://harbor.example.org")
           organization = create(:organization, name: "Harbor Family Shelter", organization_type: "School")
@@ -636,8 +699,8 @@ RSpec.describe "FormSubmissions", type: :request do
           post select_organization_form_submission_path(submission, organization_id: organization.id)
 
           expect(organization.reload.website_url).to eq("https://harbor.example.org")
-          expect(organization.organization_type).to eq("School")
-          expect(flash[:warning]).to include("differ")
+          expect(organization.organization_type).to eq("Government Agency")
+          expect(flash[:warning]).to include("replaced saved values", "was “School”", "reapply")
         end
       end
 

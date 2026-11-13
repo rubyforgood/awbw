@@ -9,8 +9,13 @@ class FormSubmissionDecorator < ApplicationDecorator
     [
       ("Links it to their #{registration.event.title} registration" if registration),
       ("Adds a “#{position}” job affiliation there" if position),
+      ("Replaces the organization's saved website, type, and work address with this submission's answers — reapply any newer edits afterward" if org_profile_answers?),
       ("Adds a Facilitator affiliation there" if OrganizationServices::LinkSubmittedOrganization::FACILITATOR_CONFERRING_SCENARIOS.include?(link_scenario))
     ].compact
+  end
+
+  def org_profile_answers?
+    org_entry.values_at(:website, :organization_type).any?(&:present?) || org_entry[:address].to_h.values.any?(&:present?)
   end
 
   # The payer's display name/email. Prefer the linked person's account; fall

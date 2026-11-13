@@ -27,11 +27,24 @@ RSpec.describe OrganizationServices::AddressMatcher do
     expect(described_class.call(organization, city: "Austin", state: "TX", street_address: "1 Main St")).to eq(same_street)
   end
 
-  it "prefers a state match over a street match" do
-    create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "Tex")
-    by_state = create(:address, addressable: organization, street_address: "9 Other Rd", city: "Austin", state: "TX")
+  # A different street is a different office, even in the right city and state.
+  it "matches the same street in the city rather than a different street with the right state" do
+    same_street = create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "Tex")
+    create(:address, addressable: organization, street_address: "9 Other Rd", city: "Austin", state: "TX")
 
-    expect(described_class.call(organization, city: "Austin", state: "TX", street_address: "1 Main St")).to eq(by_state)
+    expect(described_class.call(organization, city: "Austin", state: "TX", street_address: "1 Main St")).to eq(same_street)
+  end
+
+  it "matches a same-city/state address with no street on file" do
+    blank_street = create(:address, addressable: organization, street_address: "", city: "Austin", state: "TX")
+
+    expect(described_class.call(organization, city: "Austin", state: "TX", street_address: "1 Main St")).to eq(blank_street)
+  end
+
+  it "does not match a different street in the same city and state" do
+    create(:address, addressable: organization, street_address: "9 Other Rd", city: "Austin", state: "TX")
+
+    expect(described_class.call(organization, city: "Austin", state: "TX", street_address: "1 Main St")).to be_nil
   end
 
   # An org with several offices in one city: the state alone can't tell them
@@ -81,12 +94,12 @@ RSpec.describe OrganizationServices::AddressMatcher do
     expect(described_class.call(organization, city: "Ventura", state: "CA", street_address: "1 Main St")).to be_nil
   end
 
-  it "prefers the in-city match over a cross-city street/ZIP one" do
-    create(:address, addressable: organization, street_address: "1 Main St", city: "San Buenaventura", state: "CA", zip_code: "93001")
-    in_city = create(:address, addressable: organization, street_address: "9 Other Rd", city: "Ventura", state: "CA", zip_code: "93002")
+  it "matches the cross-city same street/ZIP address rather than a different street in the city" do
+    cross_city = create(:address, addressable: organization, street_address: "1 Main St", city: "San Buenaventura", state: "CA", zip_code: "93001")
+    create(:address, addressable: organization, street_address: "9 Other Rd", city: "Ventura", state: "CA", zip_code: "93002")
 
     match = described_class.call(organization, city: "Ventura", state: "CA", street_address: "1 Main St", zip_code: "93001")
 
-    expect(match).to eq(in_city)
+    expect(match).to eq(cross_city)
   end
 end

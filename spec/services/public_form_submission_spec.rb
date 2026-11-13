@@ -389,6 +389,15 @@ RSpec.describe PublicFormSubmission do
       expect(response.source_form_answer.form_submission).to eq(result.form_submission)
     end
 
+    # Latest valid answer wins on an ordinary form, the same as the person's own fields.
+    it "replaces the organization's saved website with the latest answer on an ordinary form" do
+      org.update!(website_url: "https://old.example")
+
+      described_class.call(form: form, form_params: org_params)
+
+      expect(org.reload.website_url).to eq("https://helpinghands.org")
+    end
+
     it "never creates an organization from an unmatched name — it's left for an admin" do
       expect {
         described_class.call(form: form, form_params: org_params(org_name_field.id.to_s => "Ghost Org"))
@@ -429,15 +438,13 @@ RSpec.describe PublicFormSubmission do
           .to include("Facilitator")
       end
 
-      # Fill-blanks, not latest-wins: an agreement runs the admin linking core, so
-      # a curated value is kept and reported as a conflict on the linking page.
-      it "does not overwrite the organization's curated profile" do
+      it "overwrites the organization's saved profile with the latest answer" do
         form.update!(role: "reinstatement")
-        org.update!(website_url: "https://curated.example")
+        org.update!(website_url: "https://old.example")
 
         described_class.call(form: form, form_params: org_params)
 
-        expect(org.reload.website_url).to eq("https://curated.example")
+        expect(org.reload.website_url).to eq("https://helpinghands.org")
       end
     end
   end

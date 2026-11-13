@@ -1,20 +1,36 @@
 module OrganizationServices
   # Read-only comparison of a registrant's submitted org answers (website,
   # organization type, and work address) against an organization's saved
-  # profile. Surfaces the discrepancies where the submitted value differs from a
-  # value already on the org — i.e. the answers the fill-blanks sync will NOT
-  # apply, so an admin can decide whether to update the org by hand.
+  # profile. Run after the sync, what remains are the answers it couldn't apply
+  # (invalid, unsaveable, or a city/state it won't move an address for), so an
+  # admin can decide whether to update the org by hand.
   #
-  # A blank submitted value, or a submitted value against a blank org column, is
-  # not a discrepancy (nothing to reconcile — the latter just gets filled, and
+  # A website answer that isn't a web address is always a discrepancy (with a
+  # reason), since the sync never saves it. Otherwise a blank submitted value, or a
+  # submitted value against a blank org column, is not a discrepancy (nothing to
+  # reconcile — the latter just gets filled, and
   # EventRegistrationOrganization#form_autofill_changes records that it was).
   # Address is compared against the org's corresponding address (AddressMatcher,
-  # the one the fill-blanks upsert targets); an address the matcher doesn't
+  # the one the upsert targets); an address the matcher doesn't
   # recognize isn't a discrepancy because it's added rather than reconciled.
   # Powers both the linking flow's flash summary and the linking page's
   # persistent per-org note.
   class ProfileDiff
-    Discrepancy = Struct.new(:field, :label, :submitted, :saved, keyword_init: true)
+    # reason: why the answer wasn't applied when it isn't simply "differs from what's
+    # saved" — e.g. a website answer that isn't a web address, which is reported even
+    # when the org has no website, so no submitted answer is dropped silently.
+    Discrepancy = Struct.new(:field, :label, :submitted, :saved, :reason, keyword_init: true) do
+      # Plain text (callers escape or let ERB escape it): form: “…”, saved: “…” — reason
+      def summary
+        text = "form: “#{submitted}”"
+        text += ", saved: “#{saved}”" if saved.present?
+        text += " — #{reason}" if reason.present?
+        text
+      end
+    end
+
+    NOT_A_WEB_ADDRESS = "not a web address".freeze
+    ADDRESS_PARTS = %i[street_address city state zip_code country].freeze
 
     def self.call(organization:, website: nil, organization_type: nil, address: {})
       new(organization:, website:, organization_type:, address:).call
@@ -41,7 +57,14 @@ module OrganizationServices
     def website_discrepancy
       submitted = @website&.strip
       saved = @organization.website_url
-      return if submitted.blank? || saved.blank?
+      return if submitted.blank?
+      # SyncProfile never saves a non-address answer, so it's reported whether or
+      # not the org has a website — otherwise it would vanish without a trace.
+      unless Organization.website_address?(submitted)
+        return Discrepancy.new(field: :website_url, label: "Website", submitted: submitted, saved: saved.presence,
+                               reason: NOT_A_WEB_ADDRESS)
+      end
+      return if saved.blank?
       return if normalize_url(submitted) == normalize_url(saved)
 
       Discrepancy.new(field: :website_url, label: "Website", submitted: submitted, saved: saved)
@@ -61,15 +84,19 @@ module OrganizationServices
 
     # Compare every address field against the org's corresponding address. A field
     # blank on either side is skipped (the blank gets filled, not reconciled).
+    # Street isn't compared: AddressMatcher only matches an address with the same
+    # (normalized) street or none, and a different street is added as a new one.
     # City can differ here because AddressMatcher's last resort matches on
     # street + ZIP across cities — that's exactly the respelled-city case an admin
     # should see rather than have silently normalized away.
+    # With no matching address, the answer is normally added as a new work address
+    # (nothing to reconcile) — unless UpsertAddress can't store it, which is
+    # reported rather than dropped silently.
     def address_discrepancies
       existing = matching_address
-      return [] unless existing
+      return [ unsaved_address_discrepancy ].compact unless existing
 
       [
-        field_discrepancy(:address_street, "Address – street", @address[:street_address], existing.street_address),
         field_discrepancy(:address_city, "Address – city", @address[:city], existing.city),
         field_discrepancy(:address_state, "Address – state", @address[:state], existing.state),
         field_discrepancy(:address_zip, "Address – ZIP", @address[:zip_code], existing.zip_code),
@@ -77,8 +104,28 @@ module OrganizationServices
       ].compact
     end
 
+    # Mirrors when UpsertAddress saves nothing: no city at all, or no state for an
+    # address the org doesn't already have (a new Address needs both).
+    def unsaved_address_discrepancy
+      submitted = ADDRESS_PARTS.filter_map { |part| address_answer(part) }.join(", ")
+      return if submitted.blank?
+
+      reason = if address_answer(:city).nil? then "no city, so it wasn't saved"
+      elsif address_answer(:state).nil? then "no state, so it wasn't saved"
+      end
+      return unless reason
+
+      Discrepancy.new(field: :address, label: "Address", submitted: submitted, reason: reason)
+    end
+
+    def address_answer(part)
+      @address[part]&.strip.presence
+    end
+
     def matching_address
-      AddressMatcher.call(
+      return @matching_address if defined?(@matching_address)
+
+      @matching_address = AddressMatcher.call(
         @organization,
         city: @address[:city],
         state: @address[:state],
