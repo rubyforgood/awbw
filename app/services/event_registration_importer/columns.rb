@@ -17,6 +17,7 @@ class EventRegistrationImporter
       position: %w[position title jobtitle positiontitle organizationposition],
       organization_website: %w[organizationwebsite orgwebsite website],
       organization_type: %w[organizationtype orgtype],
+      organization_phone: %w[organizationphone organizationphonenumber orgphone],
       organization_street: %w[organizationstreet organizationstreetaddress organizationaddress orgstreet orgaddress],
       organization_city: %w[organizationcity orgcity],
       organization_state: %w[organizationstate organizationstateprovince orgstate],

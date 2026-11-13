@@ -138,7 +138,8 @@ class FormSubmission < ApplicationRecord
     org_name: FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER,
     position: FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER,
     website: "organization_website",
-    organization_type: "organization_type"
+    organization_type: "organization_type",
+    phone: "organization_phone"
   }.freeze
   ORG_ADDRESS_FIELDS = {
     street_address: "organization_street",
