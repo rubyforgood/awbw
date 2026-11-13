@@ -1,6 +1,45 @@
 require "rails_helper"
 
 RSpec.describe NotificationMailer, type: :mailer do
+  describe "submission times in the recipient's time zone" do
+    let(:submitted_at) { Time.utc(2026, 8, 12, 18) }
+    let(:eastern_user) { create(:user, :with_person, time_zone: "Eastern Time (US & Canada)") }
+
+    def notification_for(kind, noticeable, person)
+      create(:notification, kind: kind, noticeable: noticeable, person: person,
+             recipient_role: "person", recipient_email: person.email.presence || "someone@example.com")
+    end
+
+    it "uses the recipient's time zone for an idea" do
+      idea = create(:story_idea, created_by: eastern_user, created_at: submitted_at)
+      mail = described_class.idea_submitted(notification_for("idea_submitted", idea, eastern_user.person))
+
+      expect(mail.text_part.body.decoded).to include("August 12, 2026 at 2:00 PM EDT")
+    end
+
+    it "uses the recipient's time zone for a workshop log" do
+      log = create(:workshop_log, created_by: eastern_user, created_at: submitted_at)
+      mail = described_class.workshop_log_submitted(notification_for("workshop_log_submitted", log, eastern_user.person))
+
+      expect(mail.text_part.body.decoded).to include("August 12, 2026 at 2:00 PM EDT")
+    end
+
+    it "uses the recipient's time zone for a form submission" do
+      submission = FormSubmission.create!(form: create(:form), person: eastern_user.person, role: "public", created_at: submitted_at)
+      mail = described_class.form_submission_confirmation(notification_for("form_submission_confirmation", submission, eastern_user.person))
+
+      expect(mail.html_part.body.decoded).to include("August 12, 2026 at 2:00 PM EDT")
+    end
+
+    it "falls back to Pacific when the recipient has no account" do
+      person = create(:person, email: "no-account@example.com")
+      submission = FormSubmission.create!(form: create(:form), person: person, role: "public", created_at: submitted_at)
+      mail = described_class.form_submission_confirmation(notification_for("form_submission_confirmation", submission, person))
+
+      expect(mail.text_part.body.decoded).to include("August 12, 2026 at 11:00 AM PDT")
+    end
+  end
+
   describe "#account_email_changed" do
     let(:user) { create(:user, :with_person, email: "new@example.com") }
 

@@ -77,6 +77,7 @@ class NotificationMailer < ApplicationMailer
     @noticeable = notification.noticeable.decorate
     @noticeable_klass = @noticeable.object.class
     @recipient_name = notification.person&.first_name.presence || notification.recipient_email
+    @time_zone = recipient_time_zone(notification.person)
 
     mail(
       to: notification.recipient_email,
@@ -176,6 +177,7 @@ class NotificationMailer < ApplicationMailer
       @user = @noticeable.respond_to?(:created_by) ? @noticeable.created_by : nil
       @report = @noticeable
     end
+    @time_zone = recipient_time_zone(notification.person)
 
     mail(
       to: notification.recipient_email,
@@ -207,6 +209,7 @@ class NotificationMailer < ApplicationMailer
     @submission = notification.noticeable
     @form = @submission.form
     @person = @submission.person
+    @time_zone = recipient_time_zone(notification.person || @person)
 
     mail(
       to: notification.recipient_email,

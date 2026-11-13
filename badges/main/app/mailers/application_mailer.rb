@@ -3,6 +3,7 @@ class ApplicationMailer < ActionMailer::Base
   include Rails.application.routes.url_helpers
 
   FROM_NAME = "AWBW Programs".freeze
+  FALLBACK_TIME_ZONE = "Pacific Time (US & Canada)".freeze
 
   # Wraps the generic mailbox with a friendly display name so recipients see
   # "AWBW Programs" rather than the bare "programs" local part.
@@ -16,4 +17,11 @@ class ApplicationMailer < ActionMailer::Base
   default reply_to: -> { Setting.programs_email }
 
   layout "mailer"
+
+  private
+
+  # Mail renders in a background job with no viewer, so times follow the recipient's own setting.
+  def recipient_time_zone(person)
+    person&.user&.time_zone.presence || FALLBACK_TIME_ZONE
+  end
 end
