@@ -43,40 +43,35 @@
       <% end %>
 
       <% unless @payment.is_a?(ExternalProcessorPayment) %>
-        <%= f.input :recipient_type, as: :select, collection: ["Person", "Organization"], include_blank: true, input_html: { data: { action: "search-type-select#toggle" } } %>
-        <template data-search-type-select-target="template" data-type="Person">
-          <%= f.input :recipient_id,
-            collection: [],
-            include_blank: true,
-            input_html: {
-              data: {
-                controller: "remote-select",
-                remote_select_model_value: "person"
-              }
-            },
-            prompt: "Search for a person",
-            label: "Recipient" %>
-        </template>
-        <template data-search-type-select-target="template" data-type="Organization">
-          <%= f.input :recipient_id,
-            collection: [],
-            include_blank: true,
-            input_html: {
-              data: {
-                controller: "remote-select",
-                remote_select_model_value: "organization"
-              }
-            },
-            prompt: "Search for an organization",
-            label: "Recipient" %>
-        </template>
-        <div data-search-type-select-target="pickerContainer">
+        <% recipient = @refund.recipient %>
+        <%= f.input :recipient_type, as: :select, collection: ["Person", "Organization"], include_blank: true,
+              hint: ("Defaults to the payer." if recipient),
+              input_html: { class: "bg-white", data: { action: "search-type-select#toggle" } } %>
+        <% { "Person" => [ "person", "Search for a person" ], "Organization" => [ "organization", "Search for an organization" ] }.each do |type, (model, prompt)| %>
+          <% prefill = recipient if recipient.is_a?(type.constantize) %>
+          <template data-search-type-select-target="template" data-type="<%= type %>">
+            <%= f.input :recipient_id,
+              collection: prefill ? [ [ prefill.remote_search_label[:label], prefill.id ] ] : [],
+              selected: prefill&.id,
+              include_blank: true,
+              input_html: {
+                class: "bg-white",
+                data: {
+                  controller: "remote-select",
+                  remote_select_model_value: model
+                }
+              },
+              prompt: prompt,
+              label: "Recipient" %>
+          </template>
+        <% end %>
+        <div class="mb-6" data-search-type-select-target="pickerContainer">
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-500 italic">Select Recipient Type</label>
+            <label class="mb-1 block text-sm font-medium text-gray-500 italic">Choose a recipient type first</label>
             <div class="min-h-[2.2rem] w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2"></div>
           </div>
         </div>
-        <div class="mb-4">
+        <div class="mb-6">
           <span class="text-sm font-medium text-gray-700">Method</span>
           <div class="mt-1 flex gap-4">
             <%= f.collection_radio_buttons :method, [["Check", "check"], ["Cash", "cash"]], :last, :first, checked: "check" do |b| %>

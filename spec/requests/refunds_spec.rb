@@ -29,5 +29,16 @@ RSpec.describe "Refunds", type: :request do
 
       expect(response.body).to include("Up to $0.12")
     end
+
+    it "prefills the payer as the recipient" do
+      organization = create(:organization, name: "Sample Unified District")
+      payment = CheckPayment.create!(organization:, payer_type: "Organization", amount_cents: 5_000, check_number: "1")
+
+      get new_refund_path(payment_sgid: payment.to_sgid.to_s)
+
+      page = Nokogiri::HTML(response.body)
+      expect(page.at_css("select#refund_recipient_type option[selected]")&.text).to eq("Organization")
+      expect(response.body).to include(%(<option selected="selected" value="#{organization.id}">Sample Unified District</option>))
+    end
   end
 end
