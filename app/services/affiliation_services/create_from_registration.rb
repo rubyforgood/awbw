@@ -27,8 +27,9 @@ module AffiliationServices
   # with the org for years before this training), and dating it to registration
   # would misrepresent that.
   #
-  # Returns an OrganizationServices::AutofillChange per existing affiliation it
-  # re-pointed at the submitted organization address, so callers can report it.
+  # It then points every current affiliation the person holds at the org at the
+  # submitted organization address, returning an OrganizationServices::AutofillChange
+  # per one it re-pointed so callers can report it.
   class CreateFromRegistration
     # repoint_address: false when organization_address is a fallback (the org's sole
     # address) rather than one the person submitted — it then only fills a blank.
@@ -55,6 +56,7 @@ module AffiliationServices
       ActiveRecord::Base.transaction do
         create_job_affiliation
         create_facilitator_affiliation if @facilitator_training
+        point_at_submitted_address
       end
       @repointed
     end
@@ -64,25 +66,24 @@ module AffiliationServices
     def create_job_affiliation
       return unless @job_title
 
-      existing = active_or_pending_affiliations_with_title(@job_title)
-      return point_at_submitted_address(existing) if existing.exists?
+      return if active_or_pending_affiliations_with_title(@job_title).exists?
 
       create_affiliation(@job_title, start_date: nil)
     end
 
     def create_facilitator_affiliation
-      existing = active_or_pending_facilitator_affiliations
-      return point_at_submitted_address(existing) if existing.exists?
+      return if active_or_pending_facilitator_affiliations.exists?
 
       create_affiliation(Affiliation::FACILITATOR_TITLE, start_date: facilitator_start_date)
     end
 
-    # An existing active-or-pending affiliation takes the address this submission
-    # gave (the latest answer wins; the prior one stays in the Ahoy audit trail).
-    # No-op when the submission carried no organization address.
-    def point_at_submitted_address(affiliations)
+    # Every active-or-pending affiliation the person holds at the org takes the
+    # address this submission gave, whatever its title (the latest answer wins; the
+    # prior one stays in the Ahoy audit trail). Ended ones are history and keep theirs.
+    def point_at_submitted_address
       return unless @organization_address
 
+      affiliations = @person.affiliations.active_or_pending.where(organization: @organization)
       targets = affiliations.where(organization_address_id: nil)
       targets = targets.or(affiliations.where.not(organization_address_id: @organization_address.id)) if @repoint_address
       targets.includes(:organization_address).find_each do |affiliation|

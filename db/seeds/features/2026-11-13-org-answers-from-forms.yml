@@ -9,5 +9,5 @@ summary: >-
 pro_tips:
   - "After linking, the warning names any saved values the form replaced, so you can reapply newer edits. Previous values are in the activity log."
   - "A website answer that isn't a web address, or an address missing its city or state, is never saved and shows as not applied."
-  - "A new office address becomes the organization's primary, and the person's affiliation moves to it. Both changes are listed so you can switch back."
+  - "A new office address becomes the organization's primary, and all of the person's current affiliations there move to it. Both changes are listed so you can switch back."
   - "The spreadsheet import lists every saved value it replaced on each row."
