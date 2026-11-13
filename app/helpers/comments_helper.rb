@@ -53,6 +53,7 @@ module CommentsHelper
     when WorkshopVariationIdea then "Workshop variation idea · #{record.title}"
     when WorkshopVariation then "Workshop variation · #{record.title}"
     when Grant then "Grant · #{record.name}"
+    when Payment then payment_label(record)
     else record.class.name.underscore.humanize
     end
   end
@@ -119,6 +120,7 @@ module CommentsHelper
     when WorkshopVariationIdea then edit_workshop_variation_idea_path(record)
     when WorkshopVariation then edit_workshop_variation_path(record)
     when Grant then edit_grant_path(record)
+    when Payment then payment_path(record) # a payment's comments live on its show page
     end
   end
 
@@ -143,6 +145,7 @@ module CommentsHelper
     when WorkshopVariationIdea then :workshop_variation_ideas
     when WorkshopVariation then :workshop_variations
     when Grant then :grants
+    when Payment then :payments
     else :comments
     end
   end
@@ -173,6 +176,11 @@ module CommentsHelper
       end
     return "Scholarship ##{scholarship.id}" unless event
     "Scholarship · #{event_label(event)}"
+  end
+
+  def payment_label(payment)
+    kind = payment.type.to_s.delete_suffix("Payment").sub("ExternalProcessor", "Stripe").presence || "Payment"
+    [ "Payment", kind, dollars_from_cents(payment.amount_cents), payment.created_at&.strftime("%b %-d, %Y") ].compact.join(" · ")
   end
 
   def form_submission_label(submission)

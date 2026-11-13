@@ -1,0 +1,10 @@
+name: "Edit a check's number and memo"
+area: payments
+display_status: admin_facing
+released_on: 2026-11-13
+summary: >-
+  A check payment's edit page now lets you correct its check number and memo after it's
+  recorded. Every edit is logged in the payment's change history.
+pro_tips:
+  - "The amount stays locked once a payment is recorded."
+  - "Cash and Stripe payments have no check number or memo, so these fields only appear on checks."

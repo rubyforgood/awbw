@@ -1,23 +1,38 @@
-<div class="mx-auto max-w-2xl">
-  <% bulk_payment_event = @payment.form_submission&.resolved_event if params[:return_to] == "bulk_payments" %>
-  <% if bulk_payment_event %>
-    <%= link_to "← Bulk payments", bulk_payments_return_path(bulk_payment_event), class: "text-sm #{eyebrow_link_class} mb-2 inline-block" %>
-  <% else %>
-    <%= link_to "← Payments", payments_path, class: "text-sm #{eyebrow_link_class} mb-2 inline-block" %>
-  <% end %>
-  <div class="mb-6 flex items-center justify-between">
-    <h1 class="text-primary font-display text-2xl font-bold">Payment</h1>
-    <div class="flex gap-2">
-      <%= link_to "Edit", edit_payment_path(@payment), class: button_classes(:secondary_outline) %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% bulk_payment_event = @payment.form_submission&.resolved_event if params[:return_to] == "bulk_payments" %>
+<% payment_type_label = @payment.type.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %>
+<% additional_designation = @payment.form_additional_designation %>
+<% receipt_url = @payment.metadata&.dig("stripe_charge", "receipt_url") %>
+<% label_class = "text-xs font-medium tracking-wide text-gray-400 uppercase" %>
+<% section_icon_class = "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg #{DomainTheme.bg_class_for(:payments, intensity: 100)} #{DomainTheme.text_class_for(:payments, intensity: 600)}" %>
+
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:payments) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
+  <div class="mb-4">
+    <% if bulk_payment_event %>
+      <%= link_to "← Bulk payments", bulk_payments_return_path(bulk_payment_event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <% else %>
+      <%= link_to "← Payments", payments_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <% end %>
+  </div>
+
+  <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-primary font-display text-2xl font-bold">Payment</h1>
+      <p class="mt-1 text-sm text-gray-600">
+        <%= payment_type_label %> · <%= dollars_from_cents(@payment.amount_cents) %>
+      </p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <%= link_to "Edit", edit_payment_path(@payment), class: button_classes(:secondary_outline, size: :sm) %>
       <% if @payment.amount_cents_remaining > 0 %>
-        <%= link_to "Allocate", new_allocation_path(source_sgid: @payment.to_sgid.to_s, return_to: params[:return_to], expand: params[:expand]), class: button_classes(:primary) %>
+        <%= link_to "Allocate", new_allocation_path(source_sgid: @payment.to_sgid.to_s, return_to: params[:return_to], expand: params[:expand]), class: button_classes(:primary, size: :sm) %>
         <% if @payment.is_a?(ExternalProcessorPayment) && @payment.pay_charge_id.blank? %>
           <span class="flex items-center gap-1 text-sm text-gray-400 italic">
             <i class="fa-solid fa-info-circle"></i>
             Must be refunded via the Stripe Dashboard
           </span>
         <% else %>
-          <%= link_to "Refund", new_refund_path(payment_sgid: @payment.to_sgid.to_s), class: button_classes(:warning) %>
+          <%= link_to "Refund", new_refund_path(payment_sgid: @payment.to_sgid.to_s), class: button_classes(:warning, size: :sm) %>
         <% end %>
       <% end %>
     </div>
@@ -43,96 +58,68 @@
     </div>
   <% end %>
 
-  <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
-    <div>
-      <dt class="text-sm font-medium text-gray-500">Type</dt>
-      <dd class="mt-1 text-sm text-gray-900"><%= @payment.type.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %></dd>
-    </div>
-    <div>
-      <dt class="text-sm font-medium text-gray-500">Payer</dt>
-      <dd class="mt-1 text-sm text-gray-900"><%= person_name(@payment.payer) %></dd>
-    </div>
-    <div>
-      <dt class="text-sm font-medium text-gray-500">Amount</dt>
-      <dd class="mt-1 text-sm text-gray-900"><%= dollars_from_cents(@payment.amount_cents) %></dd>
-    </div>
-    <div>
-      <dt class="text-sm font-medium text-gray-500">Amount remaining to allocate</dt>
-      <dd class="mt-1 text-sm text-gray-900"><%= dollars_from_cents(@payment.amount_cents_remaining) %></dd>
-    </div>
-    <% if @payment.filemaker_codes.any? %>
-      <div class="sm:col-span-2">
-        <dt class="text-sm font-medium text-gray-500">FileMaker Codes</dt>
-        <dd class="mt-1 text-sm text-gray-900">
-          <%= filemaker_code_links(@payment, link_class: "text-primary hover:underline") ||
-                @payment.filemaker_code %>
-        </dd>
+  <div class="space-y-6">
+    <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+        <span class="<%= section_icon_class %>"><i class="fa-solid fa-money-check-dollar"></i></span>
+        <h2 class="text-sm font-semibold text-gray-700">Details</h2>
       </div>
-    <% end %>
-    <% if @payment.check_number.present? %>
-      <div>
-        <dt class="text-sm font-medium text-gray-500">Check Number</dt>
-        <dd class="mt-1 text-sm text-gray-900"><%= @payment.check_number %></dd>
-      </div>
-    <% end %>
-    <% if @payment.memo.present? %>
-      <div>
-        <dt class="text-sm font-medium text-gray-500">Memo</dt>
-        <dd class="mt-1 text-sm text-gray-900"><%= @payment.memo %></dd>
-      </div>
-    <% end %>
-    <% if @payment.pay_charge_id.present? %>
-      <div>
-        <dt class="text-sm font-medium text-gray-500">Pay Charge ID</dt>
-        <dd class="mt-1 text-sm text-gray-900"><%= @payment.pay_charge_id %></dd>
-      </div>
-    <% end %>
-    <% receipt_url = @payment.metadata&.dig("stripe_charge", "receipt_url") %>
-    <% if receipt_url.present? %>
-      <div>
-        <dt class="text-sm font-medium text-gray-500">Stripe Receipt</dt>
-        <dd class="mt-1 text-sm">
-          <a href="<%= receipt_url %>" target="_blank" rel="noopener" class="text-primary hover:text-primary-dark inline-flex items-center gap-1 underline">
-            View Receipt
-            <i class="fa-solid fa-arrow-up-right-from-square h-3 w-3"></i>
-          </a>
-        </dd>
-      </div>
-    <% end %>
-    <div>
-      <dt class="text-sm font-medium text-gray-500">Created</dt>
-      <dd class="mt-1 text-sm text-gray-900"><%= @payment.created_at.strftime("%B %d, %Y at %I:%M %p") %></dd>
-    </div>
-    <% if @payment.metadata.present? %>
-      <div class="sm:col-span-2">
-        <div data-controller="dropdown" class="relative">
-          <button type="button"
-                  data-action="dropdown#toggle"
-                  data-dropdown-payload-param='[{"payment-metadata-<%= @payment.id %>":"hidden"}]'
-                  class="inline-flex items-center gap-1.5 text-sm font-medium <%= eyebrow_link_class %> cursor-pointer">
-            Metadata
-            <i class="fa-solid fa-chevron-down h-3 w-3 text-gray-400"></i>
-          </button>
-          <div id="payment-metadata-<%= @payment.id %>"
-               data-dropdown-target="content"
-               class="mt-2 hidden max-w-full rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-xs break-words whitespace-pre-wrap text-gray-800">
-            <%= JSON.pretty_generate(@payment.metadata) %>
+
+      <dl class="grid grid-cols-1 gap-px bg-gray-100 sm:grid-cols-2">
+        <%# Half-width fields; an odd last one spans the row so the grid has no gap. %>
+        <% details = [
+             [ "Type", payment_type_label, :emphasis ],
+             [ "Amount", dollars_from_cents(@payment.amount_cents), :emphasis ],
+             [ "Created", @payment.created_at.strftime("%B %d, %Y at %I:%M %p") ],
+             [ "Amount remaining to allocate", dollars_from_cents(@payment.amount_cents_remaining) ],
+             *[ [ "Payer", @payment.payer ], [ "Additional designation", additional_designation ] ].filter_map { |label, party|
+               [ label, party.is_a?(Organization) ? organization_profile_button(party) : person_profile_button(party) ] if party
+             },
+             ([ "Check number", @payment.check_number ] if @payment.check_number.present?),
+             ([ "Check memo", tag.span(@payment.memo, class: "whitespace-pre-line") ] if @payment.memo.present?),
+             ([ "Pay charge ID", @payment.pay_charge_id ] if @payment.pay_charge_id.present?),
+             ([ "Stripe receipt", link_to(receipt_url, target: "_blank", rel: "noopener", class: "text-primary hover:text-primary-dark inline-flex items-center gap-1 underline") { safe_join([ "View receipt", tag.i(class: "fa-solid fa-arrow-up-right-from-square h-3 w-3") ], " ") } ] if receipt_url.present?),
+             ([ "FileMaker codes", filemaker_code_links(@payment, link_class: "text-primary hover:underline") || @payment.filemaker_code ] if @payment.filemaker_codes.any?)
+           ].compact %>
+        <% details.each_with_index do |(label, value, emphasis), index| %>
+          <div class="bg-white px-4 py-3 <%= "sm:col-span-2" if details.size.odd? && index == details.size - 1 %>">
+            <dt class="<%= label_class %>"><%= label %></dt>
+            <dd class="mt-1 min-w-0 <%= emphasis ? "text-2xl font-bold text-gray-900" : "text-sm text-gray-900" %> tabular-nums"><%= value %></dd>
           </div>
+        <% end %>
+        <% if @payment.metadata.present? %>
+          <div class="bg-white px-4 py-3 sm:col-span-2">
+            <div data-controller="dropdown" class="relative">
+              <button type="button"
+                      data-action="dropdown#toggle"
+                      data-dropdown-payload-param='[{"payment-metadata-<%= @payment.id %>":"hidden"}]'
+                      class="inline-flex items-center gap-1.5 <%= label_class %> cursor-pointer hover:text-gray-600">
+                Metadata
+                <i class="fa-solid fa-chevron-down h-3 w-3"></i>
+              </button>
+              <div id="payment-metadata-<%= @payment.id %>"
+                   data-dropdown-target="content"
+                   class="mt-2 hidden max-w-full rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-xs break-words whitespace-pre-wrap text-gray-800">
+                <%= JSON.pretty_generate(@payment.metadata) %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </dl>
+    </section>
+
+    <%= render "comments", payment: @payment %>
+
+    <% if @allocations.any? %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="<%= section_icon_class %>"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
+          <h2 class="text-sm font-semibold text-gray-700">Allocations</h2>
         </div>
-      </div>
-    <% end %>
-    <div class="sm:col-span-2">
-      <%= render "papertrail_versions", record: @payment %>
-    </div>
-  </dl>
-  <% if @allocations.any? %>
-    <div class="mt-8">
-      <h2 class="mb-4 text-lg font-medium">Allocations</h2>
-      <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allocated To</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allocated to</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/Time</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -147,7 +134,7 @@
                 end %>
               <tr class="<%= row_class %>">
                 <td class="px-4 py-3 text-sm text-gray-900">
-                  <%= link_to allocations_path(allocatable_sgid: allocation.allocatable.to_sgid.to_s) do %>
+                  <%= link_to allocations_path(allocatable_sgid: allocation.allocatable.to_sgid.to_s), class: "text-primary hover:underline" do %>
                     <% if allocation.allocatable_type == "EventRegistration" && allocation.allocatable.present? %>
                       <%= allocation.allocatable.registrant.full_name %>
                       -
@@ -158,7 +145,7 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-3 text-sm text-gray-900"><%= dollars_from_cents(allocation.amount) %></td>
+                <td class="px-4 py-3 text-sm text-gray-900 tabular-nums"><%= dollars_from_cents(allocation.amount) %></td>
                 <td class="px-4 py-3 text-sm text-gray-500"><%= allocation.created_at.strftime("%B %d, %Y at %I:%M %p") %></td>
 
                 <td class="px-4 py-3 text-right text-sm font-medium">
@@ -167,17 +154,18 @@
                   <% end %>
                 </td>
               </tr>
-
             <% end %>
           </tbody>
         </table>
-      </div>
-    </div>
-  <% end %>
-  <% if @refunds.any? %>
-    <div class="mt-8">
-      <h2 class="mb-4 text-lg font-medium">Refunds</h2>
-      <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
+      </section>
+    <% end %>
+
+    <% if @refunds.any? %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="<%= section_icon_class %>"><i class="fa-solid fa-rotate-left"></i></span>
+          <h2 class="text-sm font-semibold text-gray-700">Refunds</h2>
+        </div>
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
@@ -198,13 +186,24 @@
                   <% end %>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-900"><%= refund.method.titleize %></td>
-                <td class="px-4 py-3 text-sm text-gray-900"><%= dollars_from_cents(refund.amount_cents) %></td>
+                <td class="px-4 py-3 text-sm text-gray-900 tabular-nums"><%= dollars_from_cents(refund.amount_cents) %></td>
                 <td class="px-4 py-3 text-sm text-gray-500"><%= refund.created_at.strftime("%B %d, %Y at %I:%M %p") %></td>
               </tr>
             <% end %>
           </tbody>
         </table>
-      </div>
+      </section>
+    <% end %>
+  </div>
+
+  <div class="mt-6">
+    <%= render "papertrail_versions", record: @payment, label: "Version history" %>
+  </div>
+
+  <%= render "shared/audit_info", resource: @payment %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @payment %>
     </div>
   <% end %>
 </div>

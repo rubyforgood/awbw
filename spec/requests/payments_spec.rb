@@ -17,7 +17,18 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include(person.name)
     end
 
-    it "breaks the row's View link out of the results frame" do
+    it "totals every payment matching the filters, not just the page" do
+      CashPayment.create!(person:, amount_cents: 10_000, amount_cents_remaining: 0)
+      CheckPayment.create!(person:, amount_cents: 2_500, check_number: "1")
+      CashPayment.create!(person: create(:person), amount_cents: 99_900)
+
+      get payments_path(person_id: person.id, number_of_items_per_page: 1), headers: { "Turbo-Frame" => "payments_results" }
+
+      text = Nokogiri::HTML(response.body).text.squish
+      expect(text).to include("2 payments", "Total $125", "Unallocated $25")
+    end
+
+    it "breaks the row's amount link out of the results frame" do
       payment = create(:payment, person: person, amount_cents: 5000, amount_cents_remaining: 5000)
 
       get payments_path, headers: { "Turbo-Frame" => "payments_results" }
@@ -48,6 +59,20 @@ RSpec.describe "Payments", type: :request do
       get payment_path(payment)
 
       expect(response.body).to include("← Payments")
+    end
+  end
+
+  describe "GET /payments/:id linked records" do
+    it "links the payer but not the form submission or its event" do
+      event = create(:event, cost_cents: 5000)
+      submission = create(:form_submission, event:, role: "bulk_payment")
+      payment = create(:payment, person:, form_submission: submission)
+
+      get payment_path(payment)
+
+      expect(response.body).to include(%(href="#{person_path(person)}"))
+      expect(response.body).not_to include(%(href="#{event_path(event)}"))
+      expect(response.body).not_to include(%(href="#{form_submission_path(submission)}"))
     end
   end
 
@@ -173,6 +198,38 @@ RSpec.describe "Payments", type: :request do
   describe "PATCH /payments/:id" do
     let(:organization) { create(:organization) }
 
+    it "updates the check number and memo on a check payment" do
+      payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234", memo: "Old memo")
+
+      get edit_payment_path(payment)
+      expect(response.body).to include("payment[check_number]")
+      expect(response.body).to include("payment[memo]")
+
+      patch payment_path(payment), params: {
+        payment: { payer_sgid: person.to_sgid.to_s, check_number: "5678", memo: "Spring workshop" }
+      }
+
+      payment.reload
+      expect(payment.check_number).to eq("5678")
+      expect(payment.memo).to eq("Spring workshop")
+    end
+
+    it "records an Ahoy update event with the before and after values" do
+      payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234", memo: "Old memo")
+      # The request spec client reads as a bot, which Ahoy skips by default.
+      allow(Ahoy).to receive(:track_bots).and_return(true)
+
+      expect {
+        patch payment_path(payment), params: {
+          payment: { payer_sgid: person.to_sgid.to_s, check_number: "5678", memo: "Spring workshop" }
+        }
+      }.to change { Ahoy::Event.where(name: "update.payment", resource_id: payment.id).count }.by(1)
+
+      changes = Ahoy::Event.where(name: "update.payment", resource_id: payment.id).last.properties["changes"]
+      expect(changes["memo"]).to eq("before" => "Old memo", "after" => "Spring workshop")
+      expect(changes["check_number"]).to eq("before" => "1234", "after" => "5678")
+    end
+
     it "updates the FileMaker code" do
       payment = create(:payment, person:)
 
@@ -212,6 +269,42 @@ RSpec.describe "Payments", type: :request do
       payment.reload
       expect(payment.organization).to eq(organization)
       expect(payment.person).to be_nil
+    end
+  end
+
+  describe "comments and communications on a payment" do
+    it "keeps comments off the new and edit forms" do
+      payment = create(:payment, person:)
+
+      get new_payment_path(type: "CheckPayment")
+      expect(response.body).not_to include("comments_attributes")
+
+      get edit_payment_path(payment)
+      expect(response.body).not_to include("comments_attributes")
+    end
+
+    it "lists the payment's comments and communications on the show page" do
+      payment = create(:payment, person:)
+      create(:comment, commentable: payment, topic: "Follow-up", body: "Called about the remaining balance")
+      create(:notification, noticeable: payment, email_subject: "Left a voicemail")
+
+      get payment_path(payment)
+
+      expect(response.body).to include("Comments &amp; communications", "Called about the remaining balance", "Left a voicemail")
+    end
+
+    it "adds a comment from the show page and lands back on it" do
+      payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
+
+      expect {
+        post payment_comments_path(payment), params: { comment: { topic: "Follow-up", body: "Called about the check" } },
+                                             headers: { "HTTP_REFERER" => "http://www.example.com#{payment_path(payment)}" }
+      }.to change { payment.comments.count }.by(1)
+
+      expect(response).to redirect_to(payment_path(payment))
+      comment = payment.comments.last
+      expect(comment.body).to eq("Called about the check")
+      expect(comment.created_by).to eq(admin)
     end
   end
 
