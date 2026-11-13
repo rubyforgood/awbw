@@ -341,6 +341,27 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).not_to include("Profile show age ranges")
       end
 
+      it "shows each organization's audit stamps side by side and flags the deleted one's as dropped" do
+        creator = create(:user)
+        keep.update_columns(created_at: Time.zone.local(2019, 3, 4, 12))
+        delete_rec.update_columns(created_at: Time.zone.local(2024, 7, 8, 12), created_by_id: creator.id)
+
+        get dedupe_preview_organizations_path(
+          organization_to_keep_id: keep.id,
+          organization_to_delete_id: delete_rec.id
+        )
+
+        page = Nokogiri::HTML(response.body)
+        row_for = ->(label, index) { page.css("span").select { |span| span.text == label }[index].parent }
+        expect(row_for.call("Created at", 0).text).to include("2024-07-08", "Will be dropped")
+        expect(row_for.call("Created at", 1).text).to include("2019-03-04")
+        expect(row_for.call("Created at", 1).text).not_to include("Will be dropped")
+        expect(row_for.call("Created by", 0).text).to include(creator.name, "Will be dropped")
+        expect(row_for.call("Created by", 1).text).to include("(none)")
+        expect(row_for.call("Created by", 1).text).not_to include("Will be dropped")
+        expect(page.text).to include("Updated at", "Updated by")
+      end
+
       it "leaves a blank status blank instead of preselecting one" do
         keep.update_column(:organization_status_id, nil)
 
