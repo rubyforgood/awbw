@@ -161,9 +161,9 @@ class PublicFormSubmission
   end
 
   # A logged-in respondent is their own Person unless they left their identity
-  # incomplete on an anonymous form. Otherwise reuses an existing Person on an
-  # email + last-name match so a returning respondent isn't duplicated; nil when the
-  # form didn't collect name + email.
+  # incomplete on an anonymous form. Otherwise reuses an existing Person on a
+  # first name + last name + email match (the event registration's rule) so a
+  # returning respondent isn't duplicated; nil when the form didn't collect name + email.
   def find_or_create_person
     return nil unless identified?
     return @person if @person
@@ -183,8 +183,10 @@ class PublicFormSubmission
     )
   end
 
+  # Accepts the first_name or legal_first_name answer so a respondent who swaps
+  # them still matches, as PublicRegistration does.
   def find_matching_person(last_name:, email:)
-    PersonMatcher.call(email:, last_name:)
+    PersonMatcher.call(email:, last_name:, first_names: [ field_value("first_name"), field_value("legal_first_name") ])
   end
 
   # An affirmative communication-consent answer subscribes the person to the

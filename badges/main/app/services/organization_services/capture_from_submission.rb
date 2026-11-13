@@ -2,8 +2,8 @@ module OrganizationServices
   # Resolves and fills in the registrant's organization from a submitted form, the
   # same way for an event registration and a standalone form: the organization is
   # looked up by name (never created here — an unmatched name is left for an admin
-  # to resolve), then its website, type (with "Other" folded in), and work address
-  # are synced from the answers. A valid submitted answer overwrites the org's
+  # to resolve), then its website, type (with "Other" folded in), work address,
+  # and phone are synced from the answers. A valid submitted answer overwrites the org's
   # website, type, and matching address details, and an address the org doesn't already have is added as another work
   # address rather than rewriting one (see UpsertAddress).
   #
@@ -56,6 +56,7 @@ module OrganizationServices
       ).changes
 
       address_result = UpsertAddress.call(organization: organization, **entry[:address])
+      phone_changes = UpsertPhone.call(organization: organization, phone: entry[:phone]).changes
 
       affiliation_changes = AffiliationServices::CreateFromRegistration.call(
         person: @person,
@@ -67,7 +68,7 @@ module OrganizationServices
         event_registration: @event_registration
       )
 
-      Result.new(organization: organization, autofill: profile_changes + address_result.changes + affiliation_changes)
+      Result.new(organization: organization, autofill: profile_changes + address_result.changes + phone_changes + affiliation_changes)
     end
 
     private

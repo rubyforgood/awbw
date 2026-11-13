@@ -96,6 +96,7 @@ module OrganizationServices
     def call
       profile_changes = sync_profile
       address_result = upsert_address
+      phone_changes = OrganizationServices::UpsertPhone.call(organization: @organization, phone: @entry && @entry[:phone]).changes
 
       affiliation_changes = AffiliationServices::CreateFromRegistration.call(
         person: @person,
@@ -108,7 +109,7 @@ module OrganizationServices
         repoint_address: address_result.address.present?
       )
 
-      Result.new(saved: profile_changes + address_result.changes + affiliation_changes, conflicts: conflicts,
+      Result.new(saved: profile_changes + address_result.changes + phone_changes + affiliation_changes, conflicts: conflicts,
                  address: address_result.address)
     end
 

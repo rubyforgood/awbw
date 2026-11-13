@@ -94,7 +94,7 @@ RSpec.describe FormSubmissionDecorator do
       expect(submission.link_organization_effects).to eq([
         "Links it to this submission",
         "Records it in #{person.first_name}'s affiliations",
-        "Replaces the organization's saved website, type, and work address with this submission's answers — reapply any newer edits afterward"
+        "Replaces the organization's saved website, type, work address, and phone with this submission's answers — reapply any newer edits afterward"
       ])
     end
   end

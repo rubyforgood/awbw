@@ -84,7 +84,7 @@ class FormBuilderService
     person_contact_info: %w[
       primary_email_type legal_first_name pronouns secondary_email secondary_email_type
       mailing_street mailing_address_type mailing_city mailing_state mailing_zip mailing_country
-      phone phone_type organization_name organization_position organization_website organization_type
+      phone phone_type organization_name organization_position organization_website organization_type organization_phone
       organization_street organization_city organization_state organization_zip organization_country
     ],
     person_background: %w[racial_ethnic_identity],
@@ -139,7 +139,7 @@ class FormBuilderService
     person_contact_info: [
       "Primary Email Type", "Other first name (optional)", "Pronouns", "Secondary Email", "Secondary Email Type",
       "Street Address", "Address Type", "City", "State / Province", "Zip / Postal Code", "Country",
-      "Phone", "Phone Type", "Organization Name", "Position / Title", "Organization Website", "Organization Type",
+      "Phone", "Phone Type", "Organization Name", "Position / Title", "Organization Website", "Organization Type", "Organization Phone",
       "Organization Street Address", "Organization City", "Organization State / Province", "Organization Zip / Postal Code",
       "Organization Country"
     ],
@@ -542,6 +542,8 @@ class FormBuilderService
     position = add_field(form, position, "Organization Type", :single_select_radio,
                          key: "organization_type", group: "person_contact_info", required: false,
                          options: Organization::ORGANIZATION_TYPES)
+    position = add_field(form, position, "Organization Phone", :free_form_input_one_line,
+                         key: "organization_phone", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization Street Address", :free_form_input_one_line,
                          key: "organization_street", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization City", :free_form_input_one_line,

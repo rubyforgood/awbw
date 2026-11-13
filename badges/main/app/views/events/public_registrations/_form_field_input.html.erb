@@ -105,7 +105,7 @@
                      else
                        case field.field_identifier
                        when /email(?!_type)/ then "email"
-                       when "phone" then "tel"
+                       when "phone", "organization_phone" then "tel"
                        else
                          field.number_integer? ? "number" : "text"
                        end
