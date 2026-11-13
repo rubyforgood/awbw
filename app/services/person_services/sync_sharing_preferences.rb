@@ -1,7 +1,8 @@
 module PersonServices
-  # Write the two content-sharing answers onto the Person: whether their contributed
-  # content is credited or anonymous, and which name format credits it. Both arrive as
-  # the option label the question offered, so each maps back to its stored value; an
+  # Write the sharing answers onto the Person: whether their contributed content is
+  # credited or anonymous, which name format credits it, whether the profile is
+  # searchable, and each "Show …" profile toggle. Each arrives as the option label the
+  # question offered (the toggles as Yes/No), so each maps back to its stored value; an
   # unanswered or unrecognized answer leaves the profile alone. Self-gating — a form
   # that doesn't ask the questions is a no-op — so a submission flow can call it
   # unconditionally, the way OrganizationServices::SyncProfile is called for an org.
@@ -14,7 +15,8 @@ module PersonServices
     # field_identifier => { option label => stored value }
     IDENTIFIER_VALUES = {
       "anonymous_contributions" => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS,
-      "display_name_preference" => Person::DISPLAY_NAME_PREFERENCE_LABELS
+      "display_name_preference" => Person::DISPLAY_NAME_PREFERENCE_LABELS,
+      **Person::PROFILE_VISIBILITY_LABELS.keys.index_with { Person::PROFILE_VISIBILITY_OPTIONS }
     }.freeze
 
     def self.call(person:, form:, form_params: {})
@@ -32,7 +34,7 @@ module PersonServices
 
     def call
       IDENTIFIER_VALUES.each do |identifier, values|
-        apply(identifier, values.invert[submitted_label(identifier)])
+        apply(identifier, stored_value(values, submitted_label(identifier)))
       end
       @person.save! if @person.changed?
       self
@@ -44,6 +46,13 @@ module PersonServices
     def submitted_label(identifier)
       field = @form.form_fields.find_by(field_identifier: identifier)
       field && @form_params[field.id.to_s]
+    end
+
+    # Matched ignoring case and surrounding space, so a hand-built "yes" still counts.
+    def stored_value(values, label)
+      return nil if label.blank?
+
+      values.find { |_value, option| option.casecmp?(label.to_s.strip) }&.first
     end
 
     def apply(identifier, new_value)

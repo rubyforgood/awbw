@@ -1,0 +1,12 @@
+name: "Ask profile display preferences on forms"
+area: people
+display_status: admin_facing
+released_on: 2026-11-12
+action_path: "/forms/smart_form_settings#profile_display"
+pr_number: 2987
+summary: >-
+  Forms can now ask whether someone's profile is searchable and each "Show …" profile switch (email,
+  phone, bio, sectors, and more) as Yes/No questions, and the answers update the person's profile.
+pro_tips:
+  - "Add the \"Profile display preferences\" section from the question library to get all of them at once, then delete the ones you don't need."
+  - "A blank answer leaves the profile alone; the change shows on the submission's \"What this submission changed\" page."
