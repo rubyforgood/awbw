@@ -796,6 +796,36 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include("Agreement offered")
       end
 
+      describe "the scholarship form link" do
+        let(:scholarship_form) { create(:form, name: "Scholarship application", role: "scholarship") }
+
+        before { create(:event_form, :scholarship, event:, form: scholarship_form) }
+
+        it "only shows the shareable link while a scholarship is requested and the application is missing" do
+          get edit_event_registration_path(existing_registration)
+          expect(response.body).not_to include("Scholarship form not completed")
+
+          existing_registration.update!(scholarship_requested: true)
+          get edit_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Scholarship form not completed")
+          expect(response.body).to include(registration_scholarship_application_path(existing_registration.slug))
+        end
+
+        it "hides the link once the application has answers" do
+          existing_registration.update!(scholarship_requested: true)
+          submission = create(:form_submission, person: existing_registration.registrant,
+                                                form: scholarship_form, event:, role: "scholarship")
+          create(:form_answer, form_submission: submission,
+                               form_field: create(:form_field, form: scholarship_form),
+                               submitted_answer: "I need help")
+
+          get edit_event_registration_path(existing_registration)
+
+          expect(response.body).not_to include("Scholarship form not completed")
+        end
+      end
+
       it "hides Delete and explains why for a registration with payment records" do
         payment = create(:payment, person: regular_user.person, amount_cents: 1000, amount_cents_remaining: nil)
         create(:allocation, source: payment, allocatable: existing_registration, amount: 1000)

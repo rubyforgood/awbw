@@ -805,6 +805,11 @@ class EventRegistration < ApplicationRecord
     effective_scholarship.present?
   end
 
+  def scholarship_application_completed?
+    form = event.scholarship_form
+    form.present? && ScholarshipApplication.new(event:, person: registrant).answered?
+  end
+
   # Noun phrase distinguishing a scholarship-requested registration from a
   # standard one in email subjects and notification labels (e.g.
   # "event scholarship registration" vs "event registration"). Driven by the
