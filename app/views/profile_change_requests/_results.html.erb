@@ -9,8 +9,9 @@
       <% end %>
     <% end %>
   </nav>
-  <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Submitted by filter">
-    <%= link_to "Anyone", change_requests_queue_path(submitted_by: nil), class: tab_class.call(@submitted_by.nil?) %>
+  <span class="text-sm text-gray-500">Who submitted it</span>
+  <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Who submitted it">
+    <%= link_to "All", change_requests_queue_path(submitted_by: nil), class: tab_class.call(@submitted_by.nil?) %>
     <% ProfileChangeRequest::SUBMITTERS.each do |submitter, label| %>
       <%= link_to label, change_requests_queue_path(submitted_by: submitter), class: tab_class.call(submitter == @submitted_by) %>
     <% end %>
