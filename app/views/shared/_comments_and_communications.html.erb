@@ -8,10 +8,8 @@
 <%# The person this record's comments and communications belong to — links the
     header to their full, filterable feed. Nil when the record has no person yet. %>
 <% view_all_person = local_assigns[:view_all_person] %>
-<%# `record` may be a Draper decorator, so unwrap it before reading the class. STI
-    records (e.g. CheckPayment) file comments/communications under the base class
-    ("Payment"), so compare against that. %>
-<% record_type = (record.try(:decorated?) ? record.object : record).class.base_class.name %>
+<%# `record` may be a Draper decorator — read the type via model_name, not class.name. %>
+<% record_type = record.model_name.name %>
 <% list_id = "#{record.model_name.param_key}-activity-list" %>
 
 <%# Non-admins see the emails the portal sent them (transactional and bulk);

@@ -120,7 +120,7 @@ module CommentsHelper
     when WorkshopVariationIdea then edit_workshop_variation_idea_path(record)
     when WorkshopVariation then edit_workshop_variation_path(record)
     when Grant then edit_grant_path(record)
-    when Payment then edit_payment_path(record)
+    when Payment then payment_path(record) # a payment's comments live on its show page
     end
   end
 

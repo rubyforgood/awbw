@@ -63,7 +63,7 @@ RSpec.describe "Payments", type: :request do
   end
 
   describe "GET /payments/:id linked records" do
-    it "links the payer, the submission's event, and the form submission as cards" do
+    it "links the payer but not the form submission or its event" do
       event = create(:event, cost_cents: 5000)
       submission = create(:form_submission, event:, role: "bulk_payment")
       payment = create(:payment, person:, form_submission: submission)
@@ -71,18 +71,8 @@ RSpec.describe "Payments", type: :request do
       get payment_path(payment)
 
       expect(response.body).to include(%(href="#{person_path(person)}"))
-      expect(response.body).to include(%(href="#{event_path(event)}"))
-      expect(response.body).to include(%(href="#{form_submission_path(submission)}"))
-    end
-
-    it "leaves out the event and form submission when no submission is linked" do
-      payment = create(:payment, person:)
-
-      get payment_path(payment)
-
-      expect(response.body).to include(%(href="#{person_path(person)}"))
-      expect(response.body).not_to include("Form submission</p>")
-      expect(response.body).not_to include("Event</p>")
+      expect(response.body).not_to include(%(href="#{event_path(event)}"))
+      expect(response.body).not_to include(%(href="#{form_submission_path(submission)}"))
     end
   end
 
@@ -283,70 +273,38 @@ RSpec.describe "Payments", type: :request do
   end
 
   describe "comments and communications on a payment" do
-    let(:organization) { create(:organization, email: "billing@example.org") }
-
-    it "renders the comments and communications section on edit" do
+    it "keeps comments off the new and edit forms" do
       payment = create(:payment, person:)
+
+      get new_payment_path(type: "CheckPayment")
+      expect(response.body).not_to include("comments_attributes")
 
       get edit_payment_path(payment)
-
-      expect(response.body).to include("comments-section")
+      expect(response.body).not_to include("comments_attributes")
     end
 
-    it "renders the comments and communications section on new" do
-      get new_payment_path(type: "CheckPayment")
-
-      expect(response.body).to include("comments-section")
-    end
-
-    it "saves a comment entered while creating the payment" do
-      expect {
-        post payments_path, params: {
-          payment: {
-            type: "CheckPayment", payer_sgid: person.to_sgid.to_s, amount_dollars: "50.00", check_number: "1234",
-            comments_attributes: { "0" => { topic: "Intake", body: "Arrived by mail" } }
-          }
-        }
-      }.to change(Comment, :count).by(1)
-
-      expect(Payment.last.comments.last.body).to eq("Arrived by mail")
-    end
-
-    it "lists the payment's comments on the show page" do
+    it "lists the payment's comments and communications on the show page" do
       payment = create(:payment, person:)
       create(:comment, commentable: payment, topic: "Follow-up", body: "Called about the remaining balance")
+      create(:notification, noticeable: payment, email_subject: "Left a voicemail")
 
       get payment_path(payment)
 
-      expect(response.body).to include("Comments &amp; communications", "Called about the remaining balance")
+      expect(response.body).to include("Comments &amp; communications", "Called about the remaining balance", "Left a voicemail")
     end
 
-    it "adds a comment to a check payment" do
+    it "adds a comment from the show page and lands back on it" do
       payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
 
       expect {
-        patch payment_path(payment), params: {
-          payment: { payer_sgid: person.to_sgid.to_s, comments_attributes: { "0" => { topic: "Follow-up", body: "Called about the check" } } }
-        }
+        post payment_comments_path(payment), params: { comment: { topic: "Follow-up", body: "Called about the check" } },
+                                             headers: { "HTTP_REFERER" => "http://www.example.com#{payment_path(payment)}" }
       }.to change { payment.comments.count }.by(1)
 
+      expect(response).to redirect_to(payment_path(payment))
       comment = payment.comments.last
       expect(comment.body).to eq("Called about the check")
       expect(comment.created_by).to eq(admin)
-    end
-
-    it "logs a communication addressed to the payer" do
-      payment = CheckPayment.create!(organization:, payer_type: "Organization", amount_cents: 5_000, check_number: "1234")
-
-      expect {
-        patch payment_path(payment), params: {
-          payment: { payer_sgid: organization.to_sgid.to_s, notifications_attributes: { "0" => { email_subject: "Emailed the payer" } } }
-        }
-      }.to change { payment.notifications.count }.by(1)
-
-      note = payment.notifications.last
-      expect(note.noticeable).to eq(payment)
-      expect(note.recipient_email).to eq("billing@example.org")
     end
   end
 

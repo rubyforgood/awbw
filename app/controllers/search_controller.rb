@@ -78,7 +78,6 @@ class SearchController < ApplicationController
       "organization" => Organization,
       "event" => Event,
       "event_registration" => EventRegistration,
-      "form_submission" => FormSubmission,
       "resource" => Resource,
       "sector" => Sector,
       "category" => Category

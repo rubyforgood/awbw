@@ -116,6 +116,8 @@ class CommentsController < ApplicationController
       @commentable = TopicSubscription.find(params[:topic_subscription_id])
     elsif params[:workshop_id]
       @commentable = Workshop.find(params[:workshop_id])
+    elsif params[:payment_id]
+      @commentable = Payment.find(params[:payment_id])
     else
       redirect_to root_path, alert: "Invalid commentable resource"
     end

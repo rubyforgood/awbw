@@ -11,7 +11,6 @@ class Payment < ApplicationRecord
   has_many :allocations, as: :source
   has_many :refunds, as: :refundable
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
-  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   belongs_to :person, optional: true
   belongs_to :organization, optional: true
   belongs_to :form_submission, optional: true

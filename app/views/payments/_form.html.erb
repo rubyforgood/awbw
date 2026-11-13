@@ -50,15 +50,12 @@
         <%= f.input :currency, as: :hidden, input_html: { value: "usd" } %>
         <% if @payment.type == "CheckPayment" %>
           <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
-            <%= f.input :check_number, hint: "Digits only. Leave off \"Check #\".", input_html: { class: "bg-white", placeholder: "1234" } %>
-            <%= f.input :memo, label: "Check memo", hint: "Copy the check's memo line.", input_html: { class: "bg-white", placeholder: "Memo line on the check" } %>
+            <%= f.input :check_number, input_html: { class: "bg-white" } %>
+            <%= f.input :memo, label: "Check memo", input_html: { class: "bg-white", placeholder: "Memo line on the check" } %>
           </div>
         <% end %>
       </div>
 
-      <div class="mt-6">
-        <%= render "shared/comments_and_communications", f: f, view_all_person: @payment.person %>
-      </div>
 
       <div class="action-buttons mt-8 flex justify-center gap-3">
         <%= link_to "Cancel", payments_path, class: button_classes(:secondary_outline) %>

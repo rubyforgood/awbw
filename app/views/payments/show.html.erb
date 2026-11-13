@@ -1,7 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<% form_submission = @payment.form_submission %>
-<% submission_event = form_submission&.resolved_event %>
-<% bulk_payment_event = submission_event if params[:return_to] == "bulk_payments" %>
+<% bulk_payment_event = @payment.form_submission&.resolved_event if params[:return_to] == "bulk_payments" %>
 <% payment_type_label = @payment.type.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %>
 <% additional_designation = @payment.form_additional_designation %>
 <% receipt_url = @payment.metadata&.dig("stripe_charge", "receipt_url") %>
@@ -77,8 +75,6 @@
              *[ [ "Payer", @payment.payer ], [ "Additional designation", additional_designation ] ].filter_map { |label, party|
                [ label, party.is_a?(Organization) ? organization_profile_button(party) : person_profile_button(party) ] if party
              },
-             ([ "Form submission", form_submission_show_button(form_submission) ] if form_submission),
-             ([ "Event", event_show_button(submission_event, subtitle: submission_event.start_date&.strftime("%b %-d, %Y")) ] if submission_event),
              ([ "Check number", @payment.check_number ] if @payment.check_number.present?),
              ([ "Check memo", tag.span(@payment.memo, class: "whitespace-pre-line") ] if @payment.memo.present?),
              ([ "Pay charge ID", @payment.pay_charge_id ] if @payment.pay_charge_id.present?),
@@ -112,43 +108,7 @@
       </dl>
     </section>
 
-    <%# Read view of the payment's comments and communications, newest first, using
-        the combined feed's rows (editable inline there and here); new ones are added
-        on the edit page. %>
-    <% feed_comments = allowed_to?(:manage?, Comment) ? @payment.comments.to_a : [] %>
-    <% feed_communications = authorized_scope(@payment.communications_scope, with: NotificationPolicy).to_a %>
-    <% feed_entries = FeedRecordPreloader.new((feed_comments + feed_communications).sort_by(&:created_at).reverse).call %>
-    <section id="payment-comments" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
-             data-controller="expandable-cards"
-             data-action="expandable-card:measured->expandable-cards#refresh"
-             data-expandable-cards-expandable-card-outlet="#payment-comments [data-controller~='expandable-card']"
-             data-expandable-cards-expanded-value="false"
-             data-expandable-cards-expanded-label-value="<%= t("communications.collapse_all") %>"
-             data-expandable-cards-collapsed-label-value="<%= t("communications.expand_all") %>">
-      <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
-          <i class="fa-solid fa-comments"></i>
-        </span>
-        <h2 class="text-sm font-semibold text-gray-700"><%= t("communications.section_title") %></h2>
-        <% if feed_entries.any? %>
-          <span class="hidden" data-expandable-cards-target="toggle">
-            <%= render "comments_and_communications/expand_all_button", expanded: false %>
-          </span>
-        <% end %>
-        <%= link_to edit_payment_path(@payment, anchor: "comments-section"), class: "ml-auto inline-flex items-center gap-1 text-sm #{eyebrow_link_class}" do %>
-          <i class="fa-solid fa-plus text-xs"></i> Add
-        <% end %>
-      </div>
-      <div class="flex flex-col gap-2 p-4">
-        <% if feed_entries.any? %>
-          <% feed_entries.each do |entry| %>
-            <%= render "comments_and_communications/entry_row", entry: entry, person: @payment.person, source_chip: false %>
-          <% end %>
-        <% else %>
-          <p class="text-sm text-gray-500"><%= t("communications.section_none") %></p>
-        <% end %>
-      </div>
-    </section>
+    <%= render "comments", payment: @payment %>
 
     <% if @allocations.any? %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
