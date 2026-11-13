@@ -1448,6 +1448,39 @@ RSpec.describe "EventRegistrations", type: :request do
           new_destination = EventRegistration.find_by(registrant: source.registrant, event: second_dest)
           expect(new_destination.transferred_from_registration).to eq(source)
         end
+
+        describe "the facilitator affiliation (ADR-0003 D6d)" do
+          let(:org) { create(:organization) }
+          let(:training) { create(:event, published: true, facilitator_training: true) }
+
+          def facilitator_row_for(registration)
+            create(:affiliation, person: registration.registrant, organization: org, title: "Facilitator",
+                                 start_date: registration.event.starts_on, event_registration: registration)
+          end
+
+          it "moves the row the source created to the destination training" do
+            source.event_registration_organizations.create!(organization: org)
+            row = facilitator_row_for(source)
+
+            post process_transfer_event_registration_path(source), params: { destination_event_id: training.id }
+
+            incoming = EventRegistration.find_by(registrant: source.registrant, event: training)
+            expect(row.reload).to have_attributes(event_registration_id: incoming.id, start_date: training.starts_on)
+          end
+
+          it "carries a collapsing middle registration's row on to the final one" do
+            original = create(:event_registration, status: "transferred_out")
+            middle = create(:event_registration, registrant: original.registrant,
+              status: "transferred_out", transferred_from_registration: original)
+            middle.event_registration_organizations.create!(organization: org)
+            row = facilitator_row_for(middle)
+
+            post process_transfer_event_registration_path(middle), params: { destination_event_id: training.id }
+
+            final = EventRegistration.find_by(registrant: middle.registrant, event: training)
+            expect(row.reload.event_registration_id).to eq(final.id)
+          end
+        end
       end
 
       describe "GET /event_registrations/:id/transfer (manage hub)" do
@@ -1477,6 +1510,19 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(source.reload.status).to eq("registered")
           expect(response).to redirect_to(edit_event_registration_path(source))
+        end
+
+        it "moves the facilitator affiliation back to the source when the transfer is undone" do
+          org = create(:organization)
+          source.event_registration_organizations.create!(organization: org)
+          training = create(:event, published: true, facilitator_training: true)
+          row = create(:affiliation, person: source.registrant, organization: org, title: "Facilitator",
+                                     start_date: source.event.starts_on, event_registration: source)
+          post process_transfer_event_registration_path(source), params: { destination_event_id: training.id }
+
+          patch revert_transfer_event_registration_path(source)
+
+          expect(row.reload).to have_attributes(event_registration_id: source.id, start_date: source.event.starts_on)
         end
 
         it "undoes a completed transfer, unlinking the destination and restoring the source" do
