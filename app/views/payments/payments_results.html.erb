@@ -28,14 +28,14 @@
             <% label, classes, icon = type_badges.fetch(payment.type) { [ payment.type.to_s.titleize, "bg-gray-50 text-gray-700 border-gray-200", nil ] } %>
             <% payer = payment.payer %>
             <tr class="hover:bg-gray-50">
-              <td class="px-6 py-4 text-sm whitespace-nowrap"><%= render "shared/badge", label: label, classes: classes, icon: icon %></td>
-              <td class="px-6 py-3 text-sm">
+              <td class="px-6 py-2 text-sm whitespace-nowrap"><%= render "shared/badge", label: label, classes: classes, icon: icon %></td>
+              <td class="px-6 py-2 text-sm">
                 <div class="flex items-center gap-2 text-gray-900">
                   <i class="fa-solid <%= payer.is_a?(Organization) ? "fa-building" : "fa-user" %> shrink-0 text-xs text-gray-400"></i>
                   <span class="font-medium"><%= person_name(payer).presence || "Unknown payer" %></span>
                 </div>
               </td>
-              <td class="px-6 py-3 text-sm whitespace-nowrap">
+              <td class="px-6 py-2 text-sm whitespace-nowrap">
                 <%# The amount card opens the payment, like the record cards on other indexes. %>
                 <%= link_to payment_path(payment),
                       class: "inline-flex w-28 items-center justify-between gap-1.5 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums transition-colors duration-200 #{DomainTheme.border_class_for(:payments)} #{DomainTheme.bg_class_for(:payments, intensity: 100)} #{DomainTheme.bg_class_for(:payments, intensity: 100, hover: true)} #{DomainTheme.text_class_for(:payments, intensity: 800)}",
@@ -44,8 +44,8 @@
                   <i class="fa-solid fa-chevron-right text-2xs opacity-60"></i>
                 <% end %>
               </td>
-              <td class="px-6 py-4 text-sm whitespace-nowrap tabular-nums <%= payment.amount_cents_remaining.to_i.positive? ? "font-medium text-amber-700" : "text-gray-400" %>"><%= dollars_from_cents(payment.amount_cents_remaining) %></td>
-              <td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500"><%= payment.created_at.strftime("%b %-d, %Y · %-l:%M %p") %></td>
+              <td class="px-6 py-2 text-sm whitespace-nowrap tabular-nums <%= payment.amount_cents_remaining.to_i.positive? ? "font-medium text-amber-700" : "text-gray-400" %>"><%= dollars_from_cents(payment.amount_cents_remaining) %></td>
+              <td class="px-6 py-2 text-sm whitespace-nowrap text-gray-500"><%= payment.created_at.strftime("%b %-d, %Y · %-l:%M %p") %></td>
             </tr>
           <% end %>
         </tbody>
