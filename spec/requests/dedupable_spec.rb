@@ -336,7 +336,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Keep Org", "Delete Org")
-        expect(response.body).to include("Records that will move", "Affiliations")
+        expect(response.body).to include("Connected records that will move", "Affiliations")
         expect(response.body).to include("Website url")
         expect(response.body).not_to include("Profile show age ranges")
       end
@@ -638,7 +638,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Keep", "Delete")
-        expect(response.body).to include("Records that will move", "Affiliations")
+        expect(response.body).to include("Connected records that will move", "Affiliations")
         expect(response.body).to include("Date of birth")
         expect(response.body).not_to include("Profile show age ranges")
       end
@@ -1359,7 +1359,7 @@ RSpec.describe "Dedupable concern", type: :request do
         )
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Records that will move")
+        expect(response.body).to include("Connected records that will move")
       end
 
       it "notes that a merge across different registrants keeps the people separate" do

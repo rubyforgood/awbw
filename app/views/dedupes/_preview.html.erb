@@ -58,6 +58,28 @@
   keep_images = preview_images ? Array(preview_images.call(record_to_keep)) : []
 %>
 
+<%# Read-only inventory of each record's belongs_to links not shown as a field, then its audit
+    stamps. The merge fills the keeper's empty links from the deleted record and drops the rest. %>
+<%
+  linked_associations ||= []
+  linked_display = ->(record) {
+    record ? (record.try(:name).presence || record.try(:title).presence || "##{record.id}") : "(none)"
+  }
+  link_rows = linked_associations.map do |assoc|
+    delete_linked = record_to_delete.public_send(assoc.name)
+    keep_linked = record_to_keep.public_send(assoc.name)
+    { label: assoc.name.to_s.humanize, delete: linked_display.call(delete_linked), keep: linked_display.call(keep_linked),
+      delete_kind: Dedupable.link_outcome(assoc, record_to_keep, record_to_delete), keep_kind: (:stays if keep_linked) }
+  end
+  audit_rows = audit_columns.map do |col|
+    delete_val = record_to_delete.public_send(col.name)
+    dropped = delete_val.to_s.strip.present? && delete_val != record_to_keep.public_send(col.name)
+    { label: col.name.humanize, delete: read_only_display.call(col, record_to_delete), keep: read_only_display.call(col, record_to_keep),
+      delete_kind: (:dropped if dropped), keep_kind: nil }
+  end
+  reference_rows = link_rows + audit_rows
+%>
+
 <div class="mb-6 grid grid-cols-2 gap-x-6"
      data-controller="autosave"
      data-autosave-url-value="<%= url_for(action: :dedupe_update_keep) %>"
@@ -161,7 +183,7 @@
       %>
 
       <!-- Left: read-only -->
-      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %> <%= "rounded-bl-xl" if col == columns.last %>">
+      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %> <%= "rounded-bl-xl" if col == columns.last && reference_rows.empty? %>">
         <div class="mb-1 flex items-center gap-2 text-gray-400">
           <%= label %>
           <% if deprecated %>
@@ -185,7 +207,7 @@
       </div>
 
       <!-- Right: editable -->
-      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %> <%= "rounded-br-xl" if col == columns.last %>">
+      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %> <%= "rounded-br-xl" if col == columns.last && reference_rows.empty? %>">
         <label class="mb-1 flex items-center gap-2 text-gray-400">
           <%= label %>
           <% if deprecated %>
@@ -230,50 +252,29 @@
     <% end %>
   <% end %>
 
+  <!-- Links & history: what the record itself points at, then its audit stamps -->
+  <% if reference_rows.any? %>
+    <% heading = audit_rows.any? ? "Links & history" : "Linked records" %>
+    <div class="border-x border-t-2 border-b <%= border %> <%= header_bg %> px-5 py-3">
+      <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase"><%= heading %> <span class="ml-1 text-gray-400 normal-case">(fill the keeper's empty links, else dropped)</span></h3>
+    </div>
+    <div class="border-x border-t-2 border-b <%= border %> <%= header_bg %> px-5 py-3">
+      <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase"><%= heading %> <span class="ml-1 text-gray-400 normal-case">(read-only)</span></h3>
+    </div>
+    <% reference_rows.each_with_index do |row, index| %>
+      <% last = index == reference_rows.size - 1 %>
+      <% [ [ row[:delete], row[:delete_kind], "rounded-bl-xl" ], [ row[:keep], row[:keep_kind], "rounded-br-xl" ] ].each do |value, kind, corner| %>
+        <div class="border-x border-b <%= border %> flex flex-wrap items-center gap-x-2 bg-white px-5 py-3 text-sm <%= corner if last %>">
+          <span class="w-full text-gray-400 sm:w-auto"><%= row[:label] %></span>
+          <span class="text-gray-900"><%= value %></span>
+          <%= render "dedupes/outcome_chip", kind: kind if kind %>
+        </div>
+      <% end %>
+    <% end %>
+  <% end %>
 </div>
 
-<%# Read-only inventory of each record's belongs_to links not shown as a field, then its audit
-    stamps. The merge fills the keeper's empty links from the deleted record and drops the rest. %>
-<%
-  linked_associations ||= []
-  linked_display = ->(record) {
-    record ? (record.try(:name).presence || record.try(:title).presence || "##{record.id}") : "(none)"
-  }
-  link_rows = linked_associations.map do |assoc|
-    delete_linked = record_to_delete.public_send(assoc.name)
-    keep_linked = record_to_keep.public_send(assoc.name)
-    { label: assoc.name.to_s.humanize, delete: linked_display.call(delete_linked), keep: linked_display.call(keep_linked),
-      delete_kind: Dedupable.link_outcome(assoc, record_to_keep, record_to_delete), keep_kind: (:stays if keep_linked) }
-  end
-  audit_rows = audit_columns.map do |col|
-    delete_val = record_to_delete.public_send(col.name)
-    dropped = delete_val.to_s.strip.present? && delete_val != record_to_keep.public_send(col.name)
-    { label: col.name.humanize, delete: read_only_display.call(col, record_to_delete), keep: read_only_display.call(col, record_to_keep),
-      delete_kind: (:dropped if dropped), keep_kind: nil }
-  end
-  reference_rows = link_rows + audit_rows
-%>
-<% if reference_rows.any? %>
-  <div class="mt-6">
-    <div class="rounded-t-xl border-x border-t border-b <%= border %> <%= header_bg %> px-5 py-3">
-      <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase"><%= audit_rows.any? ? "Links & history" : "Linked records" %> <span class="ml-1 text-gray-400 normal-case">(read-only — the keeper's empty links fill from the deleted record)</span></h3>
-    </div>
-    <div class="grid grid-cols-2 gap-x-6">
-      <% reference_rows.each_with_index do |row, index| %>
-        <% last = index == reference_rows.size - 1 %>
-        <% [ [ row[:delete], row[:delete_kind], "rounded-bl-xl" ], [ row[:keep], row[:keep_kind], "rounded-br-xl" ] ].each do |value, kind, corner| %>
-          <div class="border-x border-b <%= border %> flex flex-wrap items-center gap-x-2 bg-white px-5 py-3 text-sm <%= corner if last %>">
-            <span class="w-full text-gray-400 sm:w-auto"><%= row[:label] %></span>
-            <span class="text-gray-900"><%= value %></span>
-            <%= render "dedupes/outcome_chip", kind: kind if kind %>
-          </div>
-        <% end %>
-      <% end %>
-    </div>
-  </div>
-<% end %>
-
-<!-- Records that will move: own card, aligned rows so the same association appears on both sides -->
+<!-- Connected records: own card, aligned rows so the same association appears on both sides -->
 <div class="mt-6 grid grid-cols-2 gap-x-6">
   <%
     delete_by_label = reassignment_delete.index_by { |entry| entry[:label] }
@@ -283,10 +284,10 @@
     keep_total = reassignment_keep.sum { |entry| entry[:count] }
   %>
   <div class="border <%= border %> rounded-t-xl <%= header_bg %> px-5 py-3">
-    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Records that will move <span class="ml-1 text-gray-400 normal-case">(<%= delete_total %>)</span></h3>
+    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Connected records that will move <span class="ml-1 text-gray-400 normal-case">(<%= delete_total %>)</span></h3>
   </div>
   <div class="border <%= border %> rounded-t-xl <%= header_bg %> px-5 py-3">
-    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Records already here <span class="ml-1 text-gray-400 normal-case">(<%= keep_total %>)</span></h3>
+    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Connected records already here <span class="ml-1 text-gray-400 normal-case">(<%= keep_total %>)</span></h3>
   </div>
 
   <% if labels.empty? %>
