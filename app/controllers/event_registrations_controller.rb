@@ -296,6 +296,12 @@ class EventRegistrationsController < ApplicationController
           link.form_autofill_changes = source_link.read_attribute(:form_autofill_changes)
         end
       end
+      # The facilitator affiliation the transferring reg created follows it, before a
+      # collapsing middle reg is dropped (ADR-0003 D6d). A re-pointed destination
+      # gives back only the row an earlier transfer moved onto it.
+      AffiliationServices::FollowTransfer.call(
+        to: destination, from: [ @event_registration, source ], moved_only_from: [ previous ]
+      )
       # Split/relocate CE before dropping a collapsing middle reg, so its record
       # moves forward instead of being cascade-destroyed with the reg. (#1944)
       EventRegistrationServices::TransferContinuingEducation.new(
