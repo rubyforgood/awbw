@@ -1233,6 +1233,18 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(source.reload.organizations).to include(org)
         end
 
+        it "carries each copied org link's pinned submission forward" do
+          org = create(:organization)
+          submission = create(:form_submission, person: source.registrant, event: source.event)
+          source.event_registration_organizations.create!(organization: org, form_submission: submission)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming.event_registration_organizations.find_by(organization: org).form_submission).to eq(submission)
+        end
+
         it "copies the registrant's progress fields (days, payment method, buddy, feature/shout-out) forward" do
           source.update!(completed_day_1: true, expected_payment_method: "Check",
             someone_else_will_pay: true, shoutout: true)
@@ -1700,6 +1712,23 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(response.body).to include("Helping Hands")
           expect(response.body).not_to include("Other Event Agency")
+        end
+
+        it "reads a transferred-in registration's answers from the event it transferred from" do
+          source_event = create(:event, title: "Origin Training")
+          source_reg = create(:event_registration, registrant: regular_user.person, event: source_event, status: "transferred_out")
+          existing_registration.update!(transferred_from_registration: source_reg)
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_name")
+          create(:event_form, :registration, event: source_event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form, event: source_event)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Origin Agency")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Origin Agency")
+          expect(response.body).to include("From the original registration for Origin Training")
+          expect(response.body).to include(event_registrant_submissions_path(source_event, person_id: regular_user.person.id))
         end
 
         it "flags a persistent discrepancy on a linked org whose saved profile differs from the submission" do
