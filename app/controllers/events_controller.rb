@@ -91,7 +91,10 @@ class EventsController < ApplicationController
   # trainee count split into Live vs On-demand. Sibling of the revenue and
   # participation reports.
   def scholarships
-    events, selected_year = filtered_report_events(Event.facilitator_trainings)
+    scholarship_event_kinds
+    # The kinds already carry any event type a sibling report's tab passed in.
+    @event_type = nil
+    events, selected_year = filtered_report_events(Event.of_kinds(scholarship_event_kinds))
     @report = EventScholarshipReport.new(events, featured_year: selected_year, funder: @filter_funder)
   end
 
@@ -804,6 +807,22 @@ class EventsController < ApplicationController
   # Shared filter state for the revenue/participation/reports/scholarships report
   # pages: the event-type, specific-event and abbreviation-search filters, plus the
   # event list for the Event dropdown.
+  # The scholarships report's event-type checkboxes (Event::KINDS). Unsubmitted,
+  # it covers facilitator trainings (live + on-demand) — or the single event type
+  # a sibling report's tab carried over. Submitted with nothing checked (the
+  # form's blank `event_kinds[]` marker alone), it covers every event.
+  def scholarship_event_kinds
+    @scholarship_event_kinds ||= if params.key?(:event_kinds)
+      Array(params[:event_kinds]) & Event::KINDS
+    else
+      case @event_type
+      when "live", "on_demand", "other" then [ @event_type ]
+      else %w[ live on_demand ]
+      end
+    end
+  end
+  helper_method :scholarship_event_kinds
+
   def set_report_filters
     @event_type = params[:event_type].presence_in(%w[ trainings live on_demand other ])
     @filter_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
@@ -813,7 +832,7 @@ class EventsController < ApplicationController
     # facilitator trainings for scholarships, every event otherwise.
     dropdown_scope = case action_name
     when "revenue" then Event.paid
-    when "scholarships" then Event.facilitator_trainings
+    when "scholarships" then Event.of_kinds(scholarship_event_kinds)
     else Event.all
     end
     # Only offer events the viewer may report on, so picking one from the dropdown

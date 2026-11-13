@@ -15,7 +15,9 @@
 <%# Attended is a completed attendance only; a partial one is reported beside it
     rather than folded in, since its scholarship and fees still count in the money
     columns to the right. %>
-<td class="border border-gray-200 px-3 py-2 text-right whitespace-nowrap">
+<%# Totals (attended, and each Total column) are tinted so they read apart from
+    the funded/unfunded split beside them. %>
+<td class="border border-gray-200 bg-fuchsia-100/60 px-3 py-2 text-right font-semibold whitespace-nowrap">
   <% if event && source.attended_count.positive? %>
     <%= link_to source.attended_count, attended_registrants_path(event),
           class: "text-blue-600 hover:text-blue-800 hover:underline",
@@ -38,10 +40,10 @@
     <td class="border border-l-2 border-gray-200 border-l-fuchsia-200 px-3 py-2 text-right"><%= scholarship_figure_link(source.funded_count, source.funded_count, funded, event: event, year: year) %></td>
     <td class="border border-gray-200 px-3 py-2 text-right"><%= scholarship_figure_link(source.unfunded_count, source.unfunded_count, unfunded, event: event, year: year) %></td>
   <% end %>
-  <td class="border border-gray-200 px-3 py-2 text-right font-semibold text-gray-900<%= " border-l-2 border-l-fuchsia-200" unless split %>"><%= scholarship_figure_link(source.scholarship_count, source.scholarship_count, any, event: event, year: year) %></td>
+  <td class="border border-gray-200 bg-fuchsia-100/60 px-3 py-2 text-right font-semibold text-gray-900<%= " border-l-2 border-l-fuchsia-200" unless split %>"><%= scholarship_figure_link(source.scholarship_count, source.scholarship_count, any, event: event, year: year) %></td>
   <% if split %>
     <td class="border border-l-2 border-gray-200 border-l-fuchsia-200 px-3 py-2 text-right"><%= scholarship_figure_link(dollars_from_cents(source.funded_cents), source.funded_cents, funded, event: event, year: year) %></td>
     <td class="border border-gray-200 px-3 py-2 text-right"><%= scholarship_figure_link(dollars_from_cents(source.unfunded_cents), source.unfunded_cents, unfunded, event: event, year: year) %></td>
   <% end %>
-  <td class="border border-gray-200 px-3 py-2 text-right font-semibold text-gray-900<%= " border-l-2 border-l-fuchsia-200" unless split %>"><%= scholarship_figure_link(dollars_from_cents(source.scholarship_cents), source.scholarship_cents, any, event: event, year: year) %></td>
+  <td class="border border-gray-200 bg-fuchsia-100/60 px-3 py-2 text-right font-semibold text-gray-900<%= " border-l-2 border-l-fuchsia-200" unless split %>"><%= scholarship_figure_link(dollars_from_cents(source.scholarship_cents), source.scholarship_cents, any, event: event, year: year) %></td>
 <% end %>

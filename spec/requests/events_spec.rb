@@ -854,6 +854,48 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("$30")
       end
 
+      context "event type checkboxes" do
+        def headers_and_rows
+          Nokogiri::HTML(response.body)
+        end
+
+        it "defaults to facilitator trainings, both checked" do
+          sign_in admin
+          get scholarships_events_path
+          page = headers_and_rows
+          checked = page.css("select#event_kinds option[selected]").map { |option| option["value"] }
+          expect(checked).to contain_exactly("live", "on_demand")
+          expect(response.body).to include("All facilitator trainings")
+          expect(response.body).not_to include("Paid webinar")
+        end
+
+        it "narrows to the checked kinds" do
+          sign_in admin
+          get scholarships_events_path(event_kinds: [ "", "other" ])
+          expect(response.body).to include("Paid webinar", "All events")
+          expect(response.body).not_to include("TAC 261")
+        end
+
+        it "covers every event when submitted with nothing checked" do
+          sign_in admin
+          get scholarships_events_path(event_kinds: [ "" ])
+          expect(response.body).to include("Paid webinar", "TAC 261", "Self-paced training")
+        end
+
+        it "carries the checked kinds into the registrations index links" do
+          paid = create(:event_registration, event: webinar, registrant: create(:person), status: "attended")
+          award = create(:scholarship, recipient: paid.registrant, amount_cents: 1_500, grant: nil)
+          create(:allocation, source: award, allocatable: paid, amount: 1_500)
+          sign_in admin
+
+          get scholarships_events_path(event_kinds: [ "", "live", "other" ])
+          expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "live,other", funder: "awbw", organization_id: "none")))
+
+          get scholarships_events_path(event_kinds: [ "" ])
+          expect(response.body).to include(CGI.escapeHTML(event_registrations_path(funder: "awbw", organization_id: "none")))
+        end
+      end
+
       it "lists the organizations whose trainees received scholarships, with location" do
         org = create(:organization, name: "Harbor Program")
         create(:address, addressable: org, city: "Long Beach", state: "CA")

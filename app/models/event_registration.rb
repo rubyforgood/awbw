@@ -219,7 +219,11 @@ class EventRegistration < ApplicationRecord
     when "live" then joins(:event).where(events: { facilitator_training: true, on_demand: false })
     when "on_demand" then joins(:event).where(events: { facilitator_training: true, on_demand: true })
     when "other" then joins(:event).where(events: { facilitator_training: false })
-    else all
+    else
+      # A comma-separated mix of Event::KINDS (e.g. "live,other"), which the
+      # scholarship report's event-type checkboxes drill in with.
+      kinds = type.to_s.split(",") & Event::KINDS
+      kinds.any? ? where(event_id: Event.of_kinds(kinds).select(:id)) : all
     end
   }
   # Registrations whose event falls in the given calendar year. Uses a subquery

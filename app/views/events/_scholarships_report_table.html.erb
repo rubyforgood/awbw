@@ -14,12 +14,12 @@
   <div class="flex items-center justify-between gap-3 border-b border-fuchsia-300 bg-fuchsia-50 px-4 py-3">
     <h3 class="flex items-center gap-2 text-base font-semibold text-fuchsia-900">
       <i class="fa-solid fa-graduation-cap text-fuchsia-500"></i>
-      <%= all_time ? "All facilitator trainings" : "#{years.first.year || "Undated"} facilitator trainings" %>
+      <%= all_time ? "All #{scholarship_report_noun}" : "#{years.first.year || "Undated"} #{scholarship_report_noun}" %>
     </h3>
     <div class="flex items-center gap-4">
       <%= render "scholarships_funding_toggle", split: split %>
       <%= render "scholarships_report_toggle", combined: combined %>
-      <span class="text-xs text-gray-500"><%= pluralize(report.columns.size, "training") %></span>
+      <span class="text-xs text-gray-500"><%= pluralize(report.columns.size, scholarship_report_noun == "events" ? "event" : "training") %></span>
     </div>
   </div>
 
@@ -27,8 +27,8 @@
     <table class="w-full border-collapse text-sm">
       <thead>
         <tr class="bg-fuchsia-50 text-fuchsia-900">
-          <th rowspan="2" class="border border-gray-200 px-3 py-2 text-left align-bottom font-semibold">Training</th>
-          <th rowspan="2" class="border border-gray-200 px-3 py-2 text-right align-bottom font-semibold">
+          <th rowspan="2" class="border border-gray-200 px-3 py-2 text-left align-bottom font-semibold"><%= scholarship_report_noun == "events" ? "Event" : "Training" %></th>
+          <th rowspan="2" class="border border-gray-200 bg-fuchsia-200/70 px-3 py-2 text-right align-bottom font-semibold">
             <i class="fa-solid fa-user-check mr-1 text-fuchsia-500"></i>Registrants attended
           </th>
           <% if combined %>
@@ -51,7 +51,7 @@
               <th class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-1.5 text-right font-medium">Funded</th>
               <th class="border border-gray-200 px-3 py-1.5 text-right font-medium">Unfunded</th>
             <% end %>
-            <th class="border border-gray-200 px-3 py-1.5 text-right font-semibold<%= " border-l-2 border-l-fuchsia-300" unless split %>">Total</th>
+            <th class="border border-gray-200 bg-fuchsia-200/70 px-3 py-1.5 text-right font-semibold<%= " border-l-2 border-l-fuchsia-300" unless split %>">Total</th>
           <% end %>
         </tr>
       </thead>

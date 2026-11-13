@@ -60,7 +60,7 @@ module EventsHelper
     time_period = params[:time_period].to_s
     report_year = time_period == "this_year" ? Date.current.year : Integer(time_period, exception: false)
     event_registrations_path(**{
-      event_type: params[:event_type].presence || "trainings",
+      event_type: scholarship_drilldown_event_type,
       event_year: year || report_year,
       event_search: params[:search].presence,
       **filters
@@ -72,6 +72,24 @@ module EventsHelper
   SCHOLARSHIP_FUNDING_TOTALS = "totals".freeze
   def scholarship_funding_split?
     params[:funding] != SCHOLARSHIP_FUNDING_TOTALS
+  end
+
+  # What the scholarships report's rows are, per its event-type checkboxes:
+  # "facilitator trainings" unless non-training events are in scope (or nothing is
+  # checked, which means every event), then "events".
+  def scholarship_report_noun
+    kinds = scholarship_event_kinds
+    kinds.empty? || kinds.include?("other") ? "events" : "facilitator trainings"
+  end
+
+  # The registrations index's event_type for the report's checked kinds: nothing
+  # (every event) when none or all are checked, "trainings" for live + on-demand,
+  # else the kinds comma-joined (EventRegistration.event_type reads either).
+  def scholarship_drilldown_event_type
+    kinds = scholarship_event_kinds
+    return if kinds.empty? || kinds.size == Event::KINDS.size
+    return "trainings" if kinds.sort == %w[ live on_demand ]
+    kinds.join(",")
   end
 
   # A scholarships-report figure as a link to the registrations behind it (see
@@ -94,7 +112,7 @@ module EventsHelper
   # The scholarships report's filter/toggle state, carried through a drill-in so
   # its eyebrow can rebuild the exact view (period, event type/id, search, funder,
   # split/combined layout, and the report's own origin) the user came from.
-  REPORT_FILTER_KEYS = %i[ time_period event_type event_id search funder_sgid view funding return_to ].freeze
+  REPORT_FILTER_KEYS = [ :time_period, :event_type, :event_id, :search, :funder_sgid, :view, :funding, :return_to, { event_kinds: [] } ].freeze
 
   # Stable anchor id for a training's row on the scholarships report, so the
   # registrants eyebrow can scroll to and highlight the row drilled in from.

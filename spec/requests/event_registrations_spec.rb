@@ -87,6 +87,12 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include(existing_registration.registrant.name)
       end
 
+      it "shows a mixed event-type drill-in as its own selected option" do
+        get event_registrations_path(event_type: "live,other")
+        option = Nokogiri::HTML(response.body).at_css("select#event_type option[selected]")
+        expect(option.text).to eq("Live trainings + Other events")
+      end
+
       it "filters registrations by ce_status" do
         needs_license = create(:event_registration)
         placeholder = create(:professional_license, :placeholder, person: needs_license.registrant)

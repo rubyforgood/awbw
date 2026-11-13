@@ -22,7 +22,7 @@
     <div class="w-full md:min-w-44 md:flex-1">
       <%= label_tag :event_type, "Event type", class: search_label_class %>
       <%= select_tag :event_type,
-                     options_for_select(EventRegistration::EVENT_TYPE_FILTER_OPTIONS, params[:event_type]),
+                     options_for_select(event_type_filter_options(params[:event_type]), params[:event_type]),
                      include_blank: "All events",
                      class: search_field_class(extra: "search-select-placeholder"),
                      onchange: "this.form.submit();" %>

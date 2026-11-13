@@ -148,6 +148,21 @@ class Event < ApplicationRecord
   # Delivery format: self-paced ("On-demand") vs scheduled instructor-led ("Live").
   scope :on_demand, -> { where(on_demand: true) }
   scope :live, -> { where(on_demand: false) }
+  # Event kinds a report can narrow to — live trainings, on-demand trainings, and
+  # everything that isn't a facilitator training — each as its column conditions.
+  KIND_CONDITIONS = {
+    "live" => { facilitator_training: true, on_demand: false },
+    "on_demand" => { facilitator_training: true, on_demand: true },
+    "other" => { facilitator_training: false }
+  }.freeze
+  KINDS = KIND_CONDITIONS.keys.freeze
+  KIND_LABELS = { "live" => "Live trainings", "on_demand" => "On-demand trainings", "other" => "Other events" }.freeze
+  # Events of any of the given kinds; no kinds (or every kind) means every event.
+  scope :of_kinds, ->(kinds) {
+    kinds = Array(kinds) & KINDS
+    next all if kinds.empty? || kinds.size == KINDS.size
+    where(id: kinds.map { |kind| Event.where(KIND_CONDITIONS[kind]) }.reduce(:or).select(:id))
+  }
   # start_date is a date column, so compare against a date — a Time would be cast
   # to midnight and drop events starting today.
   scope :upcoming, -> { where("start_date >= ?", Date.current) }

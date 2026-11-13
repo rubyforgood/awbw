@@ -1764,6 +1764,18 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".event_type with a comma-separated mix of kinds" do
+    it "matches registrations at events of any listed kind" do
+      live = create(:event_registration, event: create(:event, facilitator_training: true, on_demand: false))
+      on_demand = create(:event_registration, event: create(:event, facilitator_training: true, on_demand: true))
+      other = create(:event_registration, event: create(:event, facilitator_training: false))
+
+      matched = EventRegistration.event_type("live,other")
+      expect(matched).to include(live, other)
+      expect(matched).not_to include(on_demand)
+    end
+  end
+
   describe ".linked_organization" do
     it "matches registrations linked to the organization, or to none" do
       organization = create(:organization)
