@@ -32,6 +32,7 @@ namespace :db do
       staff_aliases
       fm_archive
       address_duplicates
+      organization_duplicates
       transfers
     ]
 
@@ -181,6 +182,11 @@ namespace :db do
     desc "Seed addresses that hit every address-dedupe matching rule, plus near-misses that stay separate"
     task address_duplicates: :environment do
       load Rails.root.join("db/seeds/dev/address_duplicates.rb")
+    end
+
+    desc "Seed organizations that hit every organization-dedupe name and FileMaker-code rule, plus near-misses"
+    task organization_duplicates: :environment do
+      load Rails.root.join("db/seeds/dev/organization_duplicates.rb")
     end
 
     desc "Seed transferred registrants covering paid, intends-to-pay, and partial balances"
