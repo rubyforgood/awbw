@@ -970,6 +970,7 @@ RSpec.describe "Events::Callouts", type: :request do
     end
 
     describe "the scholarship application" do
+      let(:registration) { create(:event_registration, event:) }
       let(:form) { create(:form, name: "Scholarship application", role: "scholarship") }
       let!(:question) { create(:form_field, form:, name: "Why do you need this?", required: true) }
 

@@ -103,9 +103,8 @@ module Events
     def submit_scholarship_application
       load_scholarship_application
       form_params = OutsideUsaState.form_field_answers(params, :callout_form)
-      @field_errors = FormAnswerValidator.call(@form_fields.reject(&:group_header?), form_params)
+      @field_errors = FormAnswerValidator.call(@form_fields, form_params)
       if @field_errors.any?
-        @submitted_values = form_params
         flash.now[:alert] = "Your application is not complete yet. Please check for any errors or missing information."
         render :scholarship_application, status: :unprocessable_content
         return
