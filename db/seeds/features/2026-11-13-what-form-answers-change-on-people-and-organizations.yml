@@ -30,7 +30,7 @@ description: |
   <p><strong>Person's affiliations</strong></p>
   <ul>
     <li><strong>New and current (active or upcoming) ones at the org</strong> get the new address, whatever their title.</li>
-    <li><strong>No address submitted:</strong> the org's only active address fills affiliations that have none.</li>
+    <li><strong>No address submitted (on link):</strong> the org's only active address fills affiliations that have none.</li>
     <li><strong>Unchanged:</strong> ended affiliations, and other people's.</li>
   </ul>
   <p><strong>Facilitator affiliation</strong></p>
