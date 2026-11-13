@@ -64,7 +64,7 @@ class EventRegistrationImporter
     TEMPLATE_HEADERS = %w[
       FileMakerCode FirstName LastName EMail Nickname Pronouns SecondaryEmail
       Status Day1 Day2 Day3 Day4 Day5 RegisteredOn
-      Organization Position OrganizationWebsite OrganizationType
+      Organization Position OrganizationWebsite OrganizationType OrganizationPhone
       OrganizationStreet OrganizationCity OrganizationState OrganizationZip OrganizationCountry
       Street City State Zip Country AddressType Phone PhoneType
       PrimarySector AdditionalSectors PrimaryAgeGroup AdditionalAgeGroups
