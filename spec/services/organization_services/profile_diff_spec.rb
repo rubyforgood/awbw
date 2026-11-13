@@ -25,6 +25,14 @@ RSpec.describe OrganizationServices::ProfileDiff do
     expect(diff).to be_empty
   end
 
+  it "does not flag a website answer that isn't a web address (the sync ignores it)" do
+    organization.update!(website_url: "https://acme.org")
+
+    diff = described_class.call(organization: organization, website: "Acme Unified School District")
+
+    expect(diff).to be_empty
+  end
+
   it "flags a website that differs from the saved one" do
     organization.update!(website_url: "https://acme.org")
 
@@ -88,6 +96,16 @@ RSpec.describe OrganizationServices::ProfileDiff do
 
       diff = described_class.call(organization: organization, address: {
         street_address: " 1 main st ", city: "austin", state: "tx", zip_code: "78701"
+      })
+
+      expect(diff).to be_empty
+    end
+
+    it "does not flag a street that differs only in spelling the address matcher treats as the same" do
+      create(:address, addressable: organization, street_address: "12 E Main St.", city: "Austin", state: "TX", zip_code: "78701")
+
+      diff = described_class.call(organization: organization, address: {
+        street_address: "12 East Main Street", city: "Austin", state: "TX", zip_code: "78701"
       })
 
       expect(diff).to be_empty

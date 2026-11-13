@@ -42,6 +42,8 @@ module OrganizationServices
       submitted = @website&.strip
       saved = @organization.website_url
       return if submitted.blank? || saved.blank?
+      # A non-address answer is ignored by the sync, so there's nothing to reconcile.
+      return unless Organization.website_address?(submitted)
       return if normalize_url(submitted) == normalize_url(saved)
 
       Discrepancy.new(field: :website_url, label: "Website", submitted: submitted, saved: saved)
@@ -61,6 +63,9 @@ module OrganizationServices
 
     # Compare every address field against the org's corresponding address. A field
     # blank on either side is skipped (the blank gets filled, not reconciled).
+    # Street compares through AddressNormalizer — the same key AddressMatcher used
+    # to pick this address — so "12 E. Main St" vs "12 East Main Street" isn't
+    # flagged as a difference the matcher already treated as the same place.
     # City can differ here because AddressMatcher's last resort matches on
     # street + ZIP across cities — that's exactly the respelled-city case an admin
     # should see rather than have silently normalized away.
@@ -69,7 +74,8 @@ module OrganizationServices
       return [] unless existing
 
       [
-        field_discrepancy(:address_street, "Address – street", @address[:street_address], existing.street_address),
+        field_discrepancy(:address_street, "Address – street", @address[:street_address], existing.street_address,
+                          normalize: AddressNormalizer.method(:street)),
         field_discrepancy(:address_city, "Address – city", @address[:city], existing.city),
         field_discrepancy(:address_state, "Address – state", @address[:state], existing.state),
         field_discrepancy(:address_zip, "Address – ZIP", @address[:zip_code], existing.zip_code),
@@ -87,13 +93,14 @@ module OrganizationServices
       )
     end
 
-    def field_discrepancy(field, label, submitted, saved)
+    def field_discrepancy(field, label, submitted, saved, normalize: nil)
       submitted = submitted&.strip.presence
       # Strip both sides: a legacy row can hold a padded street/ZIP, and comparing
       # it raw would flag the address as differing from the answer it came from.
       saved = saved&.strip.presence
       return if submitted.blank? || saved.blank?
       return if submitted.casecmp?(saved)
+      return if normalize && normalize.call(submitted) == normalize.call(saved)
 
       Discrepancy.new(field: field, label: label, submitted: submitted, saved: saved)
     end

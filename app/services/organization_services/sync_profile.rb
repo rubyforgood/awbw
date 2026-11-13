@@ -3,7 +3,8 @@ module OrganizationServices
   # organization_type/organization_type_other — from a registrant's submitted
   # answers. A non-blank submitted value overwrites what's on file (the latest
   # registration is the freshest source of truth; the prior value survives in
-  # the Ahoy audit trail); a blank answer never clobbers existing data.
+  # the Ahoy audit trail); a blank answer never clobbers existing data, and
+  # neither does a website answer that isn't a web address.
   #
   # The "Organization Type" answer folds an "Other" choice's free text in as
   # "Other: <text>": we split the option label (drives organization_type) from the
@@ -43,7 +44,7 @@ module OrganizationServices
       # Snapshot before each write — what was there decides whether the form filled
       # a blank or replaced something an admin may have curated.
       website_before = @organization.website_url
-      @changes << change("website_url", "Website", @organization.website_url, website_before) if apply_value(:website_url, @website)
+      @changes << change("website_url", "Website", @organization.website_url, website_before) if apply_value(:website_url, submitted_website)
       type_before = displayed_organization_type
       @changes << change("organization_type", "Type", displayed_organization_type, type_before) if sync_organization_type
       Result.new(organization: @organization, changes: @changes)
@@ -87,6 +88,12 @@ module OrganizationServices
 
       OtherResponse.record_source(owner: @organization, submission: @submission,
                                   field_identifier: OtherResponse::ORGANIZATION_TYPE_FIELD_IDENTIFIER)
+    end
+
+    # An answer that isn't a web address (e.g. the org's name typed into the
+    # website field) is treated as blank, so it never lands on the org.
+    def submitted_website
+      @website if Organization.website_address?(@website)
     end
 
     def apply_value(attribute, value)

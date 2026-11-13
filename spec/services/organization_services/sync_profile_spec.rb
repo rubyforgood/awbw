@@ -26,6 +26,23 @@ RSpec.describe OrganizationServices::SyncProfile do
       expect(organization.reload.website_url).to eq("https://new.org")
     end
 
+    it "ignores a website answer that isn't a web address, even when overwriting" do
+      organization.update!(website_url: "https://acme.org")
+
+      result = described_class.call(organization: organization, website: "Acme Unified School District")
+
+      expect(organization.reload.website_url).to eq("https://acme.org")
+      expect(result.changes).to be_empty
+    end
+
+    it "does not fill a blank website with an answer that isn't a web address" do
+      organization.update!(website_url: nil)
+
+      described_class.call(organization: organization, website: "Acme", overwrite: false)
+
+      expect(organization.reload.website_url).to be_nil
+    end
+
     it "fills a blank website but leaves an existing one when overwrite is false" do
       organization.update!(website_url: "https://curated.org")
 

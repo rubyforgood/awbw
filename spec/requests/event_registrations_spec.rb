@@ -2262,11 +2262,11 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "escapes a submitted answer before putting it in the flash warning" do
-          organization.update!(website_url: "https://curated.org")
+          organization.update!(organization_type: "For-profit")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
-          field = create(:form_field, form: reg_form, field_identifier: "organization_website")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_type")
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "<img src=x onerror=alert(1)>")
 
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
