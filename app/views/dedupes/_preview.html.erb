@@ -268,7 +268,7 @@
 <%# Read-only inventory of every parent (belongs_to) reference not already shown as an
     editable field above — full visibility into what each record is linked to before merging. %>
 <%
-  shown_fk_names = columns.map(&:name)
+  shown_fk_names = (columns + read_only_columns).map(&:name)
   linked_associations = model_class.reflect_on_all_associations(:belongs_to)
                                    .reject { |assoc| shown_fk_names.include?(assoc.foreign_key.to_s) }
   linked_display = ->(record) {
