@@ -28,7 +28,7 @@ class RefundsController < ApplicationController
     if @payment.is_a?(ExternalProcessorPayment) && @payment.pay_charge.present?
       @payment.with_lock do
         if amount_val > @payment.amount_cents_remaining
-          flash[:error] = "Refund cannot exceed remaining amount (#{@payment.amount_cents_remaining})"
+          flash[:error] = refund_too_large_message(@payment.amount_cents_remaining)
           redirect_to new_refund_path(payment_sgid: @payment.to_sgid.to_s) and return
         end
 
@@ -49,7 +49,7 @@ class RefundsController < ApplicationController
         remaining = @payment.amount_cents_remaining
 
         if amount_val > remaining
-          flash[:error] = "Refund cannot exceed remaining amount (#{remaining})"
+          flash[:error] = refund_too_large_message(remaining)
           redirect_to new_refund_path(payment_sgid: @payment.to_sgid.to_s)
           return
         end
@@ -62,5 +62,13 @@ class RefundsController < ApplicationController
         end
       end
     end
+  end
+
+  private
+
+  # Only money not yet allocated can be refunded; say how much that is, in dollars.
+  def refund_too_large_message(remaining_cents)
+    "Refund can't be more than the #{helpers.dollars_from_cents(remaining_cents)} not yet allocated on this payment. " \
+      "Revert an allocation first to refund more."
   end
 end
