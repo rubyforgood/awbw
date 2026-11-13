@@ -14,7 +14,9 @@ class RefundsController < ApplicationController
     @refund = Refund.new(
       refundable: @payment,
       refundable_type: "Payment",
-      refundable_id: @payment&.id
+      refundable_id: @payment&.id,
+      # Money usually goes back to whoever paid, so start with the payer.
+      recipient: @payment&.payer
     )
   end
 

@@ -5,6 +5,11 @@ export default class extends Controller {
 
   connect() {
     this._placeholder = this.pickerContainerTarget.innerHTML;
+
+    // A type already selected on load (prefilled, or kept from the URL) shows its
+    // picker right away instead of waiting for a change.
+    const typeSelect = this.element.querySelector('[data-action~="search-type-select#toggle"]');
+    if (typeSelect?.value) this.toggle({ target: typeSelect });
   }
 
   toggle(event) {
