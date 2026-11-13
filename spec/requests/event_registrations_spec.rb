@@ -1864,7 +1864,7 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("#form-submission-#{sub2.id}")
         end
 
-        it "shows a Create and link row for each distinct submitted org not in the database" do
+        it "shows a Create org and link row for each distinct submitted org not in the database" do
           reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
           field = reg_form.form_fields.find_by(field_identifier: "organization_name") ||
@@ -1885,6 +1885,15 @@ RSpec.describe "EventRegistrations", type: :request do
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).to include("No registration form was submitted")
+        end
+
+        it "notes that linking here also updates the registrant's affiliations" do
+          get link_organization_event_registration_path(existing_registration)
+
+          first_name = existing_registration.registrant.first_name
+          expect(response.body).to include("Linking an organization here:")
+          expect(response.body).to include("Links it to this registration")
+          expect(response.body).to include(CGI.escapeHTML("Records it in #{first_name}'s affiliations"))
         end
 
         it "says no organization was submitted when the form was submitted without one" do

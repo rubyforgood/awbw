@@ -1,17 +1,13 @@
 class FormSubmissionDecorator < ApplicationDecorator
   delegate_all
 
-  # What linking an organization from this submission's editor does beyond the
-  # submission itself, mirroring FormSubmissionsController#link_and_report.
+  # What linking an organization from this submission's editor does, mirroring
+  # FormSubmissionsController#link_and_report.
   def link_organization_effects
-    registration = event_registration_for_link
-    position = org_entry[:position]
-    [
-      ("Links it to their #{registration.event.title} registration" if registration),
-      ("Adds a “#{position}” job affiliation there" if position),
-      ("Replaces the organization's saved website, type, and work address with this submission's answers — reapply any newer edits afterward" if org_profile_answers?),
-      ("Adds a Facilitator affiliation there" if OrganizationServices::LinkSubmittedOrganization::FACILITATOR_CONFERRING_SCENARIOS.include?(link_scenario))
-    ].compact
+    OrganizationServices::LinkSubmittedOrganization.effects(
+      record_noun: "submission", person: object.person, scenario: link_scenario,
+      position: org_entry[:position], registration: event_registration_for_link
+    ) + [ ("Replaces the organization's saved website, type, and work address with this submission's answers — reapply any newer edits afterward" if org_profile_answers?) ].compact
   end
 
   def org_profile_answers?
