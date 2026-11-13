@@ -199,6 +199,43 @@ RSpec.describe "Profile change requests", type: :request do
       expect(response.body).not_to include("Change requests")
     end
 
+    it "puts the change-requests link in the profile's top menu" do
+      create(:profile_change_request, :primary_email, person: person)
+
+      get person_path(person)
+
+      expect(response.body).to include(ERB::Util.html_escape(profile_change_requests_path(person_id: person.id, status: "pending")))
+      expect(response.body).to include("Change requests (1 pending)")
+    end
+
+    it "links the profile's affiliations section to the person's change request options" do
+      get person_path(person, section: "affiliations"), headers: { "Turbo-Frame" => "person_affiliations_section" }
+
+      expect(response.body).to include("Change request options")
+      expect(response.body).to include(ERB::Util.html_escape(new_profile_change_request_path(person_id: person, field: "affiliation")))
+    end
+
+    it "marks a request staff filed for someone, naming whose profile it's for" do
+      create(:profile_change_request, :primary_email, person: person, requested_by: admin)
+      create(:profile_change_request, :secondary_email, person: person, requested_by: owner_user)
+
+      get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+      expect(response.body).to include("submitted by #{admin.full_name}", person_path(person))
+      expect(response.body.scan("fa-user-shield").size).to eq(1)
+      expect(response.body).to include("Requested by #{owner_user.full_name}")
+    end
+
+    it "sends an admin on the options page back to the profile" do
+      create(:affiliation, person: person, organization: create(:organization))
+      create(:affiliation, person: person, organization: create(:organization))
+
+      get new_profile_change_request_path(person_id: person, field: "affiliation")
+
+      expect(response.body).to include("Which organization?")
+      expect(response.body).to include("Back to profile", person_path(person, anchor: "affiliations"))
+    end
+
     it "filters the queue to one person" do
       create(:profile_change_request, :primary_email, person: person, requested_value: "mine@example.com")
       create(:profile_change_request, :primary_email, requested_value: "someone-else@example.com")

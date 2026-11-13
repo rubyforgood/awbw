@@ -1,0 +1,7 @@
+name: "Change requests in a person's activity"
+area: people
+display_status: admin_facing
+released_on: 2026-11-13
+summary: >-
+  Filtering activity to one person now includes their profile change requests, whether they sent
+  them or staff filed them for them.

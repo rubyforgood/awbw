@@ -115,8 +115,10 @@ class ProfileChangeRequestsController < ApplicationController
   def prepare_affiliation_request
     @affiliations = @person.affiliations.includes(:organization).select(&:organization)
                            .sort_by { |a| [ a.active? ? 0 : 1, a.organization.name.downcase ] }
-    organizations_link = [ new_profile_change_request_path(person_id: @person, field: "affiliation"), "Back to my organizations" ]
-    profile_link = [ edit_person_path(@person, anchor: "affiliations"), "Back to editing my profile" ]
+    own = current_user.person_id == @person.id
+    organizations_link = [ new_profile_change_request_path(person_id: @person, field: "affiliation"), own ? "Back to my organizations" : "Back to organizations" ]
+    # An admin arrives from the person's profile (affiliations section), so send them back there.
+    profile_link = own ? [ edit_person_path(@person, anchor: "affiliations"), "Back to editing my profile" ] : [ person_path(@person, anchor: "affiliations"), "Back to profile" ]
 
     if params[:add].present? || @affiliations.empty?
       @request.requested_value = ProfileChangeRequest::AFFILIATION_CHANGE_ADD

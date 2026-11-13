@@ -51,6 +51,12 @@ RSpec.describe "Choosing which organization to change", type: :request do
     end
   end
 
+  it "keeps admin-only options off the owner's own affiliations section" do
+    get person_path(person, section: "affiliations"), headers: { "Turbo-Frame" => "person_affiliations_section" }
+
+    expect(response.body).not_to include("Change request options")
+  end
+
   it "skips the organization list for someone with one organization" do
     new_affiliation_request
 

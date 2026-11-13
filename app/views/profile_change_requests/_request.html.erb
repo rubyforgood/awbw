@@ -11,8 +11,19 @@
           <span class="text-xs text-gray-500"><%= request.resolution_note %></span>
         <% end %>
       </div>
+      <%# Staff can file a request for someone from their profile; say whose profile it's for. %>
+      <% for_someone_else = request.requested_by.person_id != request.person_id %>
       <p class="mt-1 text-sm text-gray-500">
-        Requested by <%= request.requested_by.full_name %> on <%= request.requested_on %>
+        <% if for_someone_else %>
+          For <%= link_to request.person.full_name, person_path(request.person), class: "underline hover:text-gray-700", data: { turbo_frame: "_top" } %>
+          · submitted by <%= request.requested_by.full_name %>
+          <span class="ms-1 inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-800">
+            <i class="fa-solid fa-user-shield"></i> Staff
+          </span>
+          on <%= request.requested_on %>
+        <% else %>
+          Requested by <%= request.requested_by.full_name %> on <%= request.requested_on %>
+        <% end %>
       </p>
     </div>
   </div>
