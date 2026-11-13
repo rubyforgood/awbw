@@ -819,12 +819,20 @@ class EventRegistrationImporter
     note_declined(person, capture.declined.map { |d| [ d.attribute.to_s.humanize, d.submitted, d.saved ] }, preview)
   end
 
+  # entries: [ label, submitted, saved, reason ] — saved is nil when nothing was on
+  # file (the answer was skipped for `reason`, e.g. a website that isn't a web address).
   def note_declined(record, entries, preview)
-    entries.each { |label, submitted, saved| preview.warnings << "Kept #{label.downcase} “#{saved}” — sheet said “#{submitted}”" }
+    entries.each do |label, submitted, saved, reason|
+      kept = saved.present? ? "Kept #{label.downcase} “#{saved}”" : "Skipped #{label.downcase}"
+      preview.warnings << "#{kept} — sheet said “#{submitted}”#{" (#{reason})" if reason}"
+    end
     return if entries.empty?
 
     body = "Imported sheet disagreed and was not applied: " +
-      entries.map { |label, submitted, saved| "#{label} “#{submitted}” (kept “#{saved}”)" }.join("; ") + "."
+      entries.map { |label, submitted, saved, reason|
+        details = [ ("kept “#{saved}”" if saved.present?), reason ].compact.join(", ")
+        "#{label} “#{submitted}” (#{details})"
+      }.join("; ") + "."
     return if record.comments.exists?(topic: COMMENT_TOPIC, body: body)
 
     record.comments.create_as_system!(topic: COMMENT_TOPIC, body: body)
@@ -846,7 +854,7 @@ class EventRegistrationImporter
   # flow already uses.
   def organization_declines(organization, answers)
     OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: FormSubmission.org_entry_from(answers))
-      .map { |discrepancy| [ discrepancy.label, discrepancy.submitted, discrepancy.saved ] }
+      .map { |discrepancy| [ discrepancy.label, discrepancy.submitted, discrepancy.saved, discrepancy.reason ] }
   end
 
   def enroll_ce(registration, values)

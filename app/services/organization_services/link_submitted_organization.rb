@@ -29,7 +29,7 @@ module OrganizationServices
         return if conflicts.none?
 
         descriptions = conflicts.map do |conflict|
-          "#{conflict.label} (form: “#{ERB::Util.html_escape(conflict.submitted)}”, saved: “#{ERB::Util.html_escape(conflict.saved)}”)"
+          "#{conflict.label} (#{ERB::Util.html_escape(conflict.summary)})"
         end
         "Some form answers differ from #{ERB::Util.html_escape(organization.name)}’s saved profile and were not applied: #{descriptions.to_sentence}. Edit the organization if they should change."
       end

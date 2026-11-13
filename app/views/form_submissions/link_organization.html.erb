@@ -83,7 +83,7 @@
                   </p>
                   <ul class="mt-1 space-y-0.5">
                     <% @profile_conflicts.each do |conflict| %>
-                      <li><span class="font-medium"><%= conflict.label %></span> — form: “<%= conflict.submitted %>”, saved: “<%= conflict.saved %>”</li>
+                      <li><span class="font-medium"><%= conflict.label %></span> — <%= conflict.summary %></li>
                     <% end %>
                   </ul>
                 </div>

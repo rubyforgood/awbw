@@ -31,7 +31,18 @@ RSpec.describe OrganizationServices::ProfileDiff do
 
     diff = described_class.call(organization: organization, website: "Acme Unified School District")
 
-    expect(diff.first).to have_attributes(field: :website_url, submitted: "Acme Unified School District", saved: "https://acme.org")
+    expect(diff.first).to have_attributes(field: :website_url, submitted: "Acme Unified School District", saved: "https://acme.org",
+                                          reason: "not a web address")
+    expect(diff.first.summary).to eq("form: “Acme Unified School District”, saved: “https://acme.org” — not a web address")
+  end
+
+  it "flags a website answer that isn't a web address even when the org has no website" do
+    organization.update!(website_url: nil)
+
+    diff = described_class.call(organization: organization, website: "Acme Unified School District")
+
+    expect(diff.first).to have_attributes(field: :website_url, saved: nil, reason: "not a web address")
+    expect(diff.first.summary).to eq("form: “Acme Unified School District” — not a web address")
   end
 
   it "flags a website that differs from the saved one" do

@@ -639,6 +639,19 @@ RSpec.describe EventRegistrationImporter do
         expect(organization.comments.sole.body).to include("Website “https://other.example.org”")
       end
 
+      it "reports a website that isn't a web address even when the organization has none" do
+        organization = create(:organization, name: "Sunrise Center", website_url: nil)
+
+        result = import_rows(%w[FirstName LastName EMail Organization OrganizationWebsite],
+                             [ "Pat", "Example", "pat@example.org", "Sunrise Center", "Sunrise Center" ])
+
+        expect(organization.reload.website_url).to be_nil
+        expect(result.rows.first.warnings).to include("Skipped website — sheet said “Sunrise Center” (not a web address)")
+        expect(organization.comments.sole.body).to eq(
+          "Imported sheet disagreed and was not applied: Website “Sunrise Center” (not a web address)."
+        )
+      end
+
       it "warns about a sector it doesn't recognize" do
         result = import_rows(%w[FirstName LastName EMail AdditionalSectors], [ "Pat", "Example", "pat@example.org", "Education, Astronomy" ])
 
