@@ -12,6 +12,7 @@ module Events
     before_action :set_event_registration
     before_action :authorize_callout
     before_action :set_event
+    before_action :require_scholarship_form, only: %i[ scholarship_application submit_scholarship_application ]
     # These pages carry an editable intro (the built-in row's "Callout page text")
     # above the app-controlled content, plus any resources linked to the row.
     before_action :set_builtin_content, only: %i[ payment scholarship certificate videoconference staff ]
@@ -78,6 +79,9 @@ module Events
       @scholarships = @event_registration.effective_scholarships
       @scholarship = @scholarships.first
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
+      @scholarship_form = @event.scholarship_form
+      @scholarship_application_completed = @scholarship_form.present? &&
+        ScholarshipApplication.new(event: @event, person: @event_registration.registrant).answered?
 
       # The recipients survey, delivered here once the recipient has signed their
       # agreement (and any drip date has passed).
@@ -90,6 +94,31 @@ module Events
         @recipient_survey_editing = !@recipient_survey_completed_anonymously &&
           (@recipient_survey_submission.nil? || params[:edit].to_i == @recipient_survey_link.form_id)
       end
+    end
+
+    def scholarship_application
+      load_scholarship_application
+    end
+
+    def submit_scholarship_application
+      load_scholarship_application
+      form_params = OutsideUsaState.form_field_answers(params, :callout_form)
+      @field_errors = FormAnswerValidator.call(@form_fields.reject(&:group_header?), form_params)
+      if @field_errors.any?
+        @submitted_values = form_params
+        flash.now[:alert] = "Your application is not complete yet. Please check for any errors or missing information."
+        render :scholarship_application, status: :unprocessable_content
+        return
+      end
+
+      service = EventRegistrationServices::CalloutFormSubmission.call(
+        registration: @event_registration, callout: nil, form: @scholarship_form, form_params:
+      )
+      @event_registration.update!(scholarship_requested: true) unless @event_registration.scholarship_requested?
+      NotificationMailer.callout_form_submitted_fyi(service.submission, updated: service.edited?).deliver_later
+
+      redirect_to registration_scholarship_path(@event_registration.slug),
+                  notice: "Thanks — your scholarship application has been submitted."
     end
 
     # The Agree button (agreement=yes) records an "accepted" response.
@@ -417,6 +446,21 @@ module Events
       return scholarships.first if params[:scholarship_id].blank?
 
       scholarships.find { |scholarship| scholarship.id.to_s == params[:scholarship_id].to_s }
+    end
+
+    def require_scholarship_form
+      @scholarship_form = @event.scholarship_form
+      return if @scholarship_form
+
+      redirect_to registration_scholarship_path(@event_registration.slug),
+                  alert: "This event doesn't have a scholarship application form."
+    end
+
+    def load_scholarship_application
+      @form_fields = @scholarship_form.form_fields.reorder(position: :asc).to_a
+      @scholarship_submission = FormSubmission.find_by(
+        person: @event_registration.registrant, event: @event, form: @scholarship_form
+      )
     end
 
     # A dollar amount typed into the support-request box ("$1,200", "1200.50") as

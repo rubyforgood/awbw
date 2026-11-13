@@ -33,7 +33,7 @@ module EventRegistrationServices
       instance
     end
 
-    def initialize(registration:, callout:, form:, form_params: {})
+    def initialize(registration:, callout: nil, form:, form_params: {})
       @registration = registration
       @callout = callout
       @form = form
@@ -53,7 +53,7 @@ module EventRegistrationServices
         )
         # Capture first-time vs. edit before the metadata update below flips the flag.
         @edited = !@submission.previously_new_record?
-        @submission.record_callout_collection!(@callout)
+        @submission.record_callout_collection!(@callout) if @callout
         save_answers
         OtherResponses::CaptureFromSubmission.call(@submission)
         Quotes::CaptureFromSubmission.call(@submission)
@@ -70,7 +70,7 @@ module EventRegistrationServices
 
     # A CE hours evaluation never credits the registrant, whatever the form's settings or answers.
     def anonymous?
-      return true if @callout.anonymous_responses?
+      return true if @callout&.anonymous_responses?
 
       @form.anonymous? && !@form.identified_by?(@form_params)
     end
@@ -95,7 +95,7 @@ module EventRegistrationServices
             @submission.quotes.update_all(created_by_id: nil, updated_by_id: nil)
             Analytics::AnonymizeSubmissionEvents.call(@submission)
           end
-          @submission.record_callout_collection!(@callout)
+          @submission.record_callout_collection!(@callout) if @callout
           save_answers
           FormCompletion.record!(person:, form: @form, event:)
           OtherResponses::CaptureFromSubmission.call(@submission)
@@ -131,7 +131,7 @@ module EventRegistrationServices
     # A form delivered on the scholarship callout is a scholarship recipient's final
     # step, so submitting it stamps their readiness for the certificate.
     def stamp_scholarship_form_completion
-      return unless @callout.builtin_key == "scholarship" && @registration.scholarship_recipient?
+      return unless @callout&.builtin_key == "scholarship" && @registration.scholarship_recipient?
       return if @registration.post_survey_completed?
       @registration.mark_post_survey_completed!
     end

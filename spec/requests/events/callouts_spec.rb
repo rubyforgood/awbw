@@ -969,6 +969,46 @@ RSpec.describe "Events::Callouts", type: :request do
       end
     end
 
+    describe "the scholarship application" do
+      let(:form) { create(:form, name: "Scholarship application", role: "scholarship") }
+      let!(:question) { create(:form_field, form:, name: "Why do you need this?", required: true) }
+
+      before { create(:event_form, event:, form:, role: "scholarship") }
+
+      it "prompts for a missing application, then accepts and stops prompting for it" do
+        get registration_scholarship_path(registration.slug)
+        expect(response.body).to include("Complete your scholarship application")
+
+        get registration_scholarship_application_path(registration.slug)
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("callout_form[form_fields][#{question.id}]")
+
+        expect {
+          post registration_scholarship_application_path(registration.slug),
+            params: { callout_form: { form_fields: { question.id.to_s => "I need help" } } }
+        }.to change { FormSubmission.where(person: registration.registrant, event:, role: "scholarship").count }.by(1)
+
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+        expect(registration.reload.scholarship_requested?).to be(true)
+
+        get registration_scholarship_path(registration.slug)
+        expect(response.body).not_to include("Complete your scholarship application")
+      end
+
+      it "edits the existing submission instead of duplicating it" do
+        post registration_scholarship_application_path(registration.slug),
+          params: { callout_form: { form_fields: { question.id.to_s => "First answer" } } }
+        submission = FormSubmission.find_by!(person: registration.registrant, event:, form:)
+
+        expect {
+          post registration_scholarship_application_path(registration.slug),
+            params: { callout_form: { form_fields: { question.id.to_s => "Updated answer" } } }
+        }.not_to change { FormSubmission.where(person: registration.registrant, event:, form:).count }
+
+        expect(submission.reload.form_answers.find_by(form_field: question).submitted_answer).to eq("Updated answer")
+      end
+    end
+
     describe "POST /registration/:slug/scholarship/agreement" do
       it "signs the agreement and stamps the time when Agree is submitted" do
         expect(scholarship.agreement_signed?).to be(false)
