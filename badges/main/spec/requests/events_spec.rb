@@ -2253,6 +2253,16 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Transfer incomplete — no destination event recorded yet")
       end
 
+      it "keeps a no-show on record in the badge after the registrant transfers out" do
+        reg = create(:event_registration, event: event, status: "no_show")
+        reg.update!(status: "transferred_out")
+
+        get registrants_event_path(event, params: { attendance_status: "transferred_out" })
+
+        badge = Capybara.string(response.body).find("##{ActionView::RecordIdentifier.dom_id(reg, :attendance_status)}")
+        expect(badge.text.squish).to include("No show Transferred out")
+      end
+
       it "drops the warning once the transfer destination is recorded" do
         source = create(:event_registration, event: event, status: "transferred_out")
         create(:event_registration, registrant: source.registrant, transferred_from_registration: source)
