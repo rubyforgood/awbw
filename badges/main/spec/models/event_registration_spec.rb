@@ -2155,7 +2155,7 @@ RSpec.describe EventRegistration, type: :model do
 
   describe "#program_statuses" do
     let(:registration) { create(:event_registration) }
-    let(:training_date) { registration.event.start_date.to_date }
+    let(:training_date) { registration.event.starts_on }
     let(:linked_org) { create(:organization, name: "Registration Org") }
     let(:other_org) { create(:organization, name: "Other Org") }
 

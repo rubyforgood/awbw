@@ -836,7 +836,7 @@ class EventRegistrationImporter
     note_declined(organization, organization_declines(organization, answers), preview)
     result = OrganizationServices::CaptureFromSubmission.call(
       person: person, answers: answers, organization: organization, submission: submission,
-      facilitator_training: @event.facilitator_training, training_date: @event.start_date,
+      facilitator_training: @event.facilitator_training, training_date: @event.starts_on,
       event_registration: registration, overwrite: false
     )
     registration.link_submitted_organization!(organization, submission: submission, autofill: result.autofill)

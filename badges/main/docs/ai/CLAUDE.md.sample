@@ -520,6 +520,7 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 - Default branch is `main`
 - Commit messages should explain why, not what
+- **Never put a person's name in a branch name** — not a staff member, the person who reported the issue, a registrant, or anyone in the data. Name the branch for the change (`program-status-anchor-dates`, not `jane-doe-ongoing-fix`). Branch names are public and outlive the PR. The tool-assigned username prefix (e.g. Conductor's `<github-user>/`) is fine.
 - CI runs via GitHub Actions (`.github/workflows/`)
 - **Don't follow, poll, or wait on CI.** After pushing or opening/updating a PR, never run `gh run watch`, `gh pr checks`, or spawn a background task to poll a CI run to completion. The user watches CI themselves. Push, report what you did, and end the turn — don't burn tokens waiting on the run.
 - **When rebasing onto main**, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts between the two branches. Check both directions: schema/model changes on either branch that affect views, partials, or layouts on the other (e.g., main redesigned a table's CSS but your branch adds new columns to it, or vice versa)

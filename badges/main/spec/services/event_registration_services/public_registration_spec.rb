@@ -96,8 +96,20 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       person = register_with(position: nil)
 
       facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
-      expect(facilitator.start_date).to eq(event.start_date.to_date)
-      expect(organization.reload.facilitator_status_on(event.start_date.to_date)).to eq(:new)
+      expect(facilitator.start_date).to eq(event.starts_on)
+      expect(organization.reload.facilitator_status_on(event.starts_on)).to eq(:new)
+    end
+
+    # A Pacific-evening start is already the next day in UTC. The minted row must take
+    # the event's Pacific day — the one the dashboard anchors on — or it lands a day
+    # off from its own training's anchor.
+    it "dates the facilitator affiliation to the event's Pacific day, the dashboard's anchor" do
+      event.update!(start_date: Time.utc(2026, 11, 14, 3, 0), end_date: Time.utc(2026, 11, 14, 6, 0))
+      person = register_with(position: nil)
+
+      facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
+      expect(facilitator.start_date).to eq(Date.new(2026, 11, 13))
+      expect(organization.reload.facilitator_program_status(as_of: event.starts_on).status).to eq(:new)
     end
 
     it "links the created affiliations to the organization address built from the form" do
