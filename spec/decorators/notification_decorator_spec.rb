@@ -35,6 +35,14 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
   end
 
+  describe "#failed_label" do
+    it "shows the created date, same as a pending send" do
+      notification = build_stubbed(:notification, created_at: Time.utc(2026, 8, 12, 18), error_at: Time.utc(2026, 11, 13))
+
+      expect(notification.decorate.failed_label).to eq("Failed (8/12/26)")
+    end
+  end
+
   describe "#event" do
     it "resolves the event through an EventRegistration noticeable" do
       event = build_stubbed(:event)

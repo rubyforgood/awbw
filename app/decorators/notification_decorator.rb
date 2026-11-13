@@ -192,9 +192,13 @@ class NotificationDecorator < ApplicationDecorator
   def detail(length: nil)
   end
 
-  # A pending send has no delivered_at, so the created date stands in for when it was queued.
+  # An undelivered send has no delivered_at, so the created date stands in for when it was queued.
   def pending_label
-    "Pending (#{created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%-m/%-d/%y")})"
+    "Pending (#{queued_on})"
+  end
+
+  def failed_label
+    "Failed (#{queued_on})"
   end
 
   # Whole-row tint on the communications index: red error for a failed send,
@@ -244,6 +248,10 @@ class NotificationDecorator < ApplicationDecorator
   end
 
   private
+
+  def queued_on
+    created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%-m/%-d/%y")
+  end
 
   # Root record the shared event chip resolves a registration/event from.
   def event_chip_record
