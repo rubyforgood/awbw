@@ -154,6 +154,42 @@ RSpec.describe EventScholarshipReport do
       expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
     end
 
+    context "affiliation timeframe" do
+      let(:event) { create(:event, facilitator_training: true, cost_cents: 50_000, start_date: Date.new(2025, 3, 1), end_date: Date.new(2025, 3, 2)) }
+      let(:site) { create(:address, addressable: org_a, city: "Peoria", state: "IL") }
+
+      it "counts a facilitator affiliation in effect during the training, even one since ended" do
+        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+          start_date: Date.new(2024, 1, 1), end_date: Date.new(2025, 6, 1), inactive: true)
+
+        expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
+      end
+
+      it "skips one that ended before the report's timeframe, falling back to the org's addresses" do
+        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+          start_date: Date.new(2020, 1, 1), end_date: Date.new(2021, 1, 1), inactive: true)
+
+        expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
+      end
+
+      it "skips one that starts after the report's timeframe" do
+        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+          start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 12, 31))
+
+        expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
+      end
+
+      it "uses the selected year as the timeframe" do
+        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+          start_date: Date.new(2025, 11, 1), end_date: Date.new(2025, 12, 31))
+
+        all_time = described_class.new([ event.decorate ])
+        year = described_class.new([ event.decorate ], featured_year: 2025)
+        expect(all_time.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
+        expect(year.organization_rows.first.locations).to eq([ "Peoria, IL" ])
+      end
+    end
+
     it "ignores the recipients' job (non-facilitator) affiliations" do
       site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
       create(:affiliation, person: person1, organization: org_a, organization_address: site)

@@ -178,9 +178,10 @@ class EventScholarshipReport
   private
 
   # "City, ST" labels, uniqued, for where an org's recipients facilitate: the org
-  # addresses on the recipients' facilitator affiliations with it (job
-  # affiliations don't count) — falling back to every active address of the org
-  # when none of those affiliations names one.
+  # addresses on the recipients' facilitator affiliations with it that were in
+  # effect during the report's timeframe (job affiliations don't count; an
+  # address since made inactive still does) — falling back to every active
+  # address of the org when none of those affiliations names one.
   def locations_for(organization, recipient_ids)
     affiliation_address_ids = affiliation_address_ids_by_org_person
       .slice(*recipient_ids.map { |person_id| [ organization.id, person_id ] })
@@ -198,14 +199,33 @@ class EventScholarshipReport
   def affiliation_address_ids_by_org_person
     @affiliation_address_ids_by_org_person ||= begin
       by_organization = figures.by_organization.except(nil)
-      Affiliation
-        .facilitators
+      window = report_window
+      scope = Affiliation.facilitators
+      # In effect at some point in the report's timeframe, judged by dates (not the
+      # inactive flag, which reflects today) — so a recipient who has since left
+      # still shows where they facilitated then.
+      if window
+        scope = scope
+          .where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", window.last)
+          .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", window.first)
+      end
+      scope
         .where(organization_id: by_organization.keys, person_id: by_organization.values.flat_map { |f| f.recipient_ids.to_a }.uniq)
         .where.not(organization_address_id: nil)
         .pluck(:organization_id, :person_id, :organization_address_id)
         .group_by { |organization_id, person_id, _| [ organization_id, person_id ] }
         .transform_values { |rows| rows.map(&:last) }
     end
+  end
+
+  # The report's timeframe: the selected calendar year, else (all time) the span
+  # of the events in scope. Nil when no event has a date.
+  def report_window
+    return Date.new(@featured_year_value, 1, 1)..Date.new(@featured_year_value, 12, 31) if @featured_year_value
+
+    starts = @events.filter_map { |event| event.start_date&.to_date }
+    ends = @events.filter_map { |event| (event.end_date || event.start_date)&.to_date }
+    starts.min..ends.max if starts.any?
   end
 
   def affiliation_addresses_by_id
