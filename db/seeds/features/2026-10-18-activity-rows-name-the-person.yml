@@ -1,0 +1,10 @@
+name: "Activity rows name the person they're about"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-18
+pr_number: 2750
+action_path: "/admin/activities/events"
+summary: >-
+  Activity rows about a person or login now show the person's name instead of a
+  generic "Profile" or "User account." Logins show the name with "(user)" after
+  it.

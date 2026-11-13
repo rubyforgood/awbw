@@ -1,0 +1,12 @@
+name: "Choose who a membership invoice is billed to"
+area: payments
+display_status: admin_facing
+released_on: 2026-10-27
+pr_number: 2889
+action_path: "/membership_invoices"
+summary: >-
+  Edit a membership invoice to bill one of the member's organizations, choose
+  the address, hide the name or address, add an "Attention" person, or add
+  extra info. Next year's invoice copies these details.
+pro_tips:
+  - "The amount can be changed only until a payment or discount is recorded."

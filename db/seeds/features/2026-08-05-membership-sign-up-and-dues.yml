@@ -2,7 +2,9 @@ name: "Membership sign-up and dues"
 area: payments
 display_status: admin_facing
 released_on: 2026-08-05
-action_path: "/people/1/checkout"
+action_path: "/memberships"
 pr_number: 2094
 summary: >-
   Members can sign up for a recurring membership and pay dues through the portal.
+  Memberships are now managed in the portal and renew automatically; see the
+  newer membership entries.

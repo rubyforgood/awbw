@@ -1,0 +1,13 @@
+name: "Members pay automatically with a saved card"
+area: payments
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2920
+action_path: "/memberships"
+summary: >-
+  Members can save a card through Stripe from the membership card on their
+  profile. It pays any open invoice and turns on autopay. Admins can turn
+  autopay off but can't add a card.
+pro_tips:
+  - "The card is charged as soon as a renewal invoice is issued, up to 30 days before the term ends."
+  - "A failed charge is retried daily, up to 7 times. With no card on file the badge reads \"Needs card.\""
