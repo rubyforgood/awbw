@@ -360,7 +360,7 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(row_for.call("Created by", 1).text).to include("(none)")
         expect(row_for.call("Created by", 1).text).not_to include("Will be dropped")
         expect(page.text).to include("Updated at", "Updated by")
-        expect(response.body.index("Created at")).to be > response.body.index("Linked records")
+        expect(response.body.index("Created at")).to be > response.body.index("Links &amp; history")
       end
 
       it "marks a deleted organization's link as filling the keeper's empty one, else dropped" do

@@ -9,8 +9,8 @@
     keep_param_key:      Param key for keep fields (e.g. :organization_to_keep)
     editable_columns:    Optional allowlist of column names to show/edit; nil shows all
     read_only_columns:   Column names shown side by side for comparison but not editable
-    audit_columns:       Like read_only_columns, listed at the bottom of Linked records
-    linked_associations: belongs_to reflections listed under Linked records
+    audit_columns:       Like read_only_columns, listed at the bottom of Links & history
+    linked_associations: belongs_to reflections listed under Linked records (Links & history with audit_columns)
     record_label:        Callable naming a record in the headers (defaults to #name)
     union_columns:       Column names whose values are combined into the keeper (not replaced)
     form_builder:        The parent form builder (f)
@@ -161,7 +161,7 @@
       %>
 
       <!-- Left: read-only -->
-      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %>">
+      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %> <%= "rounded-bl-xl" if col == columns.last %>">
         <div class="mb-1 flex items-center gap-2 text-gray-400">
           <%= label %>
           <% if deprecated %>
@@ -185,7 +185,7 @@
       </div>
 
       <!-- Right: editable -->
-      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %>">
+      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %> <%= "rounded-br-xl" if col == columns.last %>">
         <label class="mb-1 flex items-center gap-2 text-gray-400">
           <%= label %>
           <% if deprecated %>
@@ -230,31 +230,6 @@
     <% end %>
   <% end %>
 
-  <!-- Reassignment summary — aligned rows: the same association appears on both sides -->
-  <%
-    delete_by_label = reassignment_delete.index_by { |entry| entry[:label] }
-    keep_by_label = reassignment_keep.index_by { |entry| entry[:label] }
-    labels = (reassignment_delete + reassignment_keep).map { |entry| entry[:label] }.uniq.sort
-    delete_total = reassignment_delete.sum { |entry| entry[:count] }
-    keep_total = reassignment_keep.sum { |entry| entry[:count] }
-  %>
-  <div class="border-x border-t-2 border-b <%= border %> <%= header_bg %> px-5 py-3">
-    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Records that will move <span class="ml-1 text-gray-400 normal-case">(<%= delete_total %>)</span></h3>
-  </div>
-  <div class="border-x border-t-2 border-b <%= border %> <%= header_bg %> px-5 py-3">
-    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Records already here <span class="ml-1 text-gray-400 normal-case">(<%= keep_total %>)</span></h3>
-  </div>
-
-  <% if labels.empty? %>
-    <div class="border-x border-b <%= border %> rounded-bl-xl bg-white px-5 py-3 text-sm text-gray-400">Nothing to move</div>
-    <div class="border-x border-b <%= border %> rounded-br-xl bg-white px-5 py-3 text-sm text-gray-400">None yet</div>
-  <% else %>
-    <% labels.each_with_index do |label, index| %>
-      <% last = index == labels.size - 1 %>
-      <%= render "dedupes/reassignment_entry", entry: delete_by_label[label], border: border, round: (last ? "rounded-bl-xl" : ""), record_outcomes: record_outcomes %>
-      <%= render "dedupes/reassignment_entry", entry: keep_by_label[label], border: border, round: (last ? "rounded-br-xl" : ""), record_outcomes: record_outcomes %>
-    <% end %>
-  <% end %>
 </div>
 
 <%# Read-only inventory of each record's belongs_to links not shown as a field, then its audit
@@ -281,7 +256,7 @@
 <% if reference_rows.any? %>
   <div class="mt-6">
     <div class="rounded-t-xl border-x border-t border-b <%= border %> <%= header_bg %> px-5 py-3">
-      <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Linked records <span class="ml-1 text-gray-400 normal-case">(read-only — the keeper's empty links fill from the deleted record)</span></h3>
+      <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase"><%= audit_rows.any? ? "Links & history" : "Linked records" %> <span class="ml-1 text-gray-400 normal-case">(read-only — the keeper's empty links fill from the deleted record)</span></h3>
     </div>
     <div class="grid grid-cols-2 gap-x-6">
       <% reference_rows.each_with_index do |row, index| %>
@@ -297,3 +272,31 @@
     </div>
   </div>
 <% end %>
+
+<!-- Records that will move: own card, aligned rows so the same association appears on both sides -->
+<div class="mt-6 grid grid-cols-2 gap-x-6">
+  <%
+    delete_by_label = reassignment_delete.index_by { |entry| entry[:label] }
+    keep_by_label = reassignment_keep.index_by { |entry| entry[:label] }
+    labels = (reassignment_delete + reassignment_keep).map { |entry| entry[:label] }.uniq.sort
+    delete_total = reassignment_delete.sum { |entry| entry[:count] }
+    keep_total = reassignment_keep.sum { |entry| entry[:count] }
+  %>
+  <div class="border <%= border %> rounded-t-xl <%= header_bg %> px-5 py-3">
+    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Records that will move <span class="ml-1 text-gray-400 normal-case">(<%= delete_total %>)</span></h3>
+  </div>
+  <div class="border <%= border %> rounded-t-xl <%= header_bg %> px-5 py-3">
+    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Records already here <span class="ml-1 text-gray-400 normal-case">(<%= keep_total %>)</span></h3>
+  </div>
+
+  <% if labels.empty? %>
+    <div class="border-x border-b <%= border %> rounded-bl-xl bg-white px-5 py-3 text-sm text-gray-400">Nothing to move</div>
+    <div class="border-x border-b <%= border %> rounded-br-xl bg-white px-5 py-3 text-sm text-gray-400">None yet</div>
+  <% else %>
+    <% labels.each_with_index do |label, index| %>
+      <% last = index == labels.size - 1 %>
+      <%= render "dedupes/reassignment_entry", entry: delete_by_label[label], border: border, round: (last ? "rounded-bl-xl" : ""), record_outcomes: record_outcomes %>
+      <%= render "dedupes/reassignment_entry", entry: keep_by_label[label], border: border, round: (last ? "rounded-br-xl" : ""), record_outcomes: record_outcomes %>
+    <% end %>
+  <% end %>
+</div>

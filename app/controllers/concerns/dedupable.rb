@@ -228,7 +228,7 @@ module Dedupable
   #                       only these are accepted on save (optional, defaults to every column)
   #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
   #                       e.g. a login's email and sign-in history (optional)
-  #   audit_columns:      Like read_only_columns, but listed at the bottom of Linked records — e.g.
+  #   audit_columns:      Like read_only_columns, but listed at the bottom of Links & history — e.g.
   #                       created/updated stamps; never filled onto the keeper (optional)
   #   record_label:       Lambda(record) naming a record across the deduper when #name doesn't tell two
   #                       apart, e.g. two logins of one person (optional, defaults to #name)
