@@ -37,6 +37,54 @@ RSpec.describe FormSubmissionChanges do
     expect(edits.map { |change| [ change.outcome, change.label, change.value ] }).to eq([ [ "Filled", "Website", "new.com" ] ])
   end
 
+  describe "changes made by linking an organization" do
+    let(:org) { create(:organization, name: "Harbor") }
+    let(:link_source) { { "source" => OrganizationServices::LinkSubmittedOrganization::CHANGE_SOURCE } }
+
+    it "marks rows written while an admin linked the org" do
+      stamp("update.organization", resource_type: "Organization", resource_id: org.id,
+            properties: { "changes" => { "website_url" => { "before" => "old.org", "after" => "new.org" } } }.merge(link_source))
+      stamp("update.organization", resource_type: "Organization", resource_id: org.id,
+            properties: { "changes" => { "organization_type" => { "before" => nil, "after" => "School" } } })
+
+      changes = described_class.new(submission).organization_edits(org)
+
+      expect(changes.map { |change| [ change.label, change.via_link ] }).to contain_exactly([ "Website", true ], [ "Type", false ])
+    end
+
+    it "names the address a primary switch is on and reads the flag as yes/no" do
+      address = create(:address, addressable: org, street_address: "9 Elm St", city: "Dallas", state: "TX", zip_code: "75201")
+      stamp("update.address", resource_type: "Address", resource_id: address.id,
+            properties: { "changes" => { "primary" => { "before" => true, "after" => false } } }.merge(link_source))
+
+      change = described_class.new(submission).organization_edits(org).sole
+
+      expect(change).to have_attributes(label: "Primary (9 Elm St, Dallas, TX 75201)", value: "No", previous_value: "Yes")
+    end
+
+    it "marks a newly added primary address as primary" do
+      address = create(:address, addressable: org, street_address: "1 Main St", city: "Austin", state: "TX", primary: true)
+      stamp("create.address", resource_type: "Address", resource_id: address.id,
+            properties: { "resource_title" => "1 Main St, Austin, TX", "attributes" => address.attributes })
+
+      expect(described_class.new(submission).organization_edits(org).sole.value).to eq("1 Main St, Austin, TX (primary)")
+    end
+
+    it "shows an affiliation's address move as the addresses, under the affiliation's title and org" do
+      old_address = create(:address, addressable: org, street_address: "9 Elm St", city: "Dallas", state: "TX", zip_code: "75201")
+      new_address = create(:address, addressable: org, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
+      affiliation = create(:affiliation, organization: org, title: "Facilitator", organization_address: new_address)
+      stamp("update.affiliation", resource_type: "Affiliation", resource_id: affiliation.id,
+            properties: { "changes" => { "organization_address_id" => { "before" => old_address.id, "after" => new_address.id } } })
+
+      group = described_class.new(submission).groups.find { |g| g.record_type == "Affiliation" }
+
+      expect(group.title).to eq("Facilitator at Harbor")
+      expect(group.changes.sole).to have_attributes(label: "Organization address", value: "1 Main St, Austin, TX 78701",
+                                                    previous_value: "9 Elm St, Dallas, TX 75201")
+    end
+  end
+
   it "labels a change from blank as filled" do
     person = create(:person)
     stamp("update.person", resource_type: "Person", resource_id: person.id,
@@ -191,7 +239,7 @@ RSpec.describe FormSubmissionChanges do
       expect(group.record_id).to eq(person.id)
       anchors = group.changes.to_h { |c| [ c.label, c.anchor ] }
       expect(anchors["Racial / ethnic identity"]).to eq("person_racial_ethnic_identity")
-      expect(anchors["ZIP"]).to eq("addresses")
+      expect(anchors.find { |label, _| label.start_with?("ZIP") }&.last).to eq("addresses")
     end
   end
 
@@ -206,7 +254,7 @@ RSpec.describe FormSubmissionChanges do
 
       group = described_class.new(submission).edited_groups.sole
       expect(group).to have_attributes(record_type: "Person", record_id: person.id)
-      expect(group.changes.first).to have_attributes(outcome: "Replaced", label: "ZIP", anchor: "addresses")
+      expect(group.changes.first).to have_attributes(outcome: "Replaced", label: "ZIP (#{address.name.squish})", anchor: "addresses")
     end
 
     it "groups a phone update under the phone itself once the row is gone" do

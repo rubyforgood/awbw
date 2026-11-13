@@ -74,14 +74,12 @@
               <%= render "event_registrations/org_affiliation_pills", org: @matched_organization,
                           affiliations: (@affiliations_by_org[@matched_organization.id] || []),
                           submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
-              <%# What this submission wrote onto the org — blanks it filled and, from
-                  a public (latest-wins) submission, values it replaced — read from its
-                  audit events. %>
+              <%# What this submission (and linking it) wrote onto the org, read from its audit events. %>
               <% if @organization_fills.any? %>
                 <div class="relative z-10 mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
                   <p class="flex items-center gap-1.5 font-semibold">
                     <i class="fa-solid fa-circle-info"></i>
-                    Filled from this submission's form:
+                    Changed on this organization by this submission:
                   </p>
                   <ul class="mt-1 space-y-0.5">
                     <% @organization_fills.each do |change| %>

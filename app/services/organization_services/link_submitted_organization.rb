@@ -59,6 +59,10 @@ module OrganizationServices
     # shares the submission path's "on_demand" scenario). All but
     # non_facilitator_training confer the standing Facilitator affiliation; a
     # nil scenario (a non-agreement form) confers nothing.
+    # Current.source while an admin links an org, so every write it makes is
+    # stamped as coming from the link (FormSubmissionChanges badges those rows).
+    CHANGE_SOURCE = "Organization linking".freeze
+
     FACILITATOR_CONFERRING_SCENARIOS = %w[on_demand facilitator_training reinstatement].freeze
     SCENARIOS = (FACILITATOR_CONFERRING_SCENARIOS + %w[non_facilitator_training]).freeze
 

@@ -553,7 +553,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
           get link_organization_form_submission_path(submission)
 
-          expect(response.body).to include("Filled from this submission's form")
+          expect(response.body).to include("Changed on this organization by this submission")
           expect(response.body).to include("harbor.example.org")
         end
 
@@ -655,6 +655,37 @@ RSpec.describe "FormSubmissions", type: :request do
 
           expect(facilitator.reload.organization_address).to have_attributes(street_address: "1 Main St", city: "Austin")
           expect(flash[:warning]).to include("Facilitator affiliation address", "was “9 Elm St, Dallas, TX 75201”", "Primary work address")
+        end
+
+        it "lists the link's changes on the submission's changes page, marked as from linking" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          add_answer("organization_website", "new.example.org")
+          add_answer("organization_street", "1 Main St")
+          add_answer("organization_city", "Austin")
+          add_answer("organization_state", "TX")
+          organization = create(:organization, name: "Harbor Family Shelter", website_url: "old.example.org")
+          dallas = create(:address, addressable: organization, street_address: "9 Elm St", city: "Dallas", state: "TX",
+                                    zip_code: "75201", primary: true)
+          create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: dallas)
+          # The request spec client reads as a bot, which Ahoy skips by default.
+          allow(Ahoy).to receive(:track_bots).and_return(true)
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+          get changes_form_submission_path(submission)
+
+          page = Nokogiri::HTML(response.body).text.squish
+          expect(page).to include("From linking", "new.example.org (replaced “old.example.org”)",
+                                  "Primary (9 Elm St, Dallas, TX 75201) No (replaced “Yes”)",
+                                  "Facilitator at Harbor Family Shelter", "9 Elm St, Dallas, TX 75201")
+          expect(page).not_to include("(replaced “#{dallas.id}”)")
+        end
+
+        it "asks for confirmation before linking, naming what it will change" do
+          add_answer("organization_name", "Harbor Family Shelter")
+
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("data-turbo-confirm=\"Linking applies the person&#39;s form answers to this organization:")
         end
 
         it "writes the submission's org answers and warns about the values it replaced" do

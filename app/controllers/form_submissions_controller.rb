@@ -1,5 +1,7 @@
 class FormSubmissionsController < ApplicationController
   before_action :set_form_submission, only: %i[link_organization select_organization create_organization]
+  before_action -> { Current.source = OrganizationServices::LinkSubmittedOrganization::CHANGE_SOURCE },
+                only: %i[select_organization create_organization]
 
   def index
     authorize! FormSubmission

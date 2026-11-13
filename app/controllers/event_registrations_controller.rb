@@ -8,6 +8,8 @@ class EventRegistrationsController < ApplicationController
   # A transferred-out reg is locked (issue #1944): its inline write endpoints are
   # blocked with a warning rather than silently ignored. The full-form `update` is
   # handled separately (it keeps comments/communications editable).
+  before_action -> { Current.source = OrganizationServices::LinkSubmittedOrganization::CHANGE_SOURCE },
+                only: %i[select_organization create_organization]
   before_action :block_locked_registration, only: [ :update_onboarding, :toggle_certificate_issued, :toggle_ce_certificate_issued, :update_attendance, :toggle_post_survey ]
 
   def index
