@@ -1,5 +1,5 @@
 <div class="group relative ml-auto inline-flex cursor-help items-center gap-1 text-xs text-gray-500">
-  <i class="fa-solid fa-envelope"></i> An email will be sent
+  <i class="fa-solid fa-envelope"></i> <%= request.staff_filed? ? "An email will be sent to admin only" : "An email will be sent" %>
   <div class="absolute top-full right-0 z-50 mt-1 hidden w-96 rounded-lg bg-white text-left text-sm whitespace-normal text-gray-700 shadow-lg ring-1 ring-gray-200 group-hover:block">
     <div class="space-y-0.5 rounded-t-lg border-b border-gray-200 bg-gray-50 px-4 py-2 text-xs text-gray-500">
       <div><span class="font-medium text-gray-700">To:</span> <%= request.review_email_recipient %></div>

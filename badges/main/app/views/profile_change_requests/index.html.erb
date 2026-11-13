@@ -14,7 +14,7 @@
   <% if @person %>
     <p class="mt-2 text-sm text-gray-700">
       Showing requests from <span class="font-medium"><%= @person.full_name %></span>.
-      <%= link_to "Show everyone's", profile_change_requests_path(status: @status), class: "underline hover:text-blue-800" %>
+      <%= link_to "Show everyone's", change_requests_queue_path(person: nil), class: "underline hover:text-blue-800" %>
     </p>
   <% end %>
 
@@ -22,7 +22,7 @@
       requests already loaded, so the card is in this response for the browser to
       scroll to; everything else loads the queue lazily through the frame. %>
   <%= turbo_frame_tag :profile_change_requests_results,
-                      src: (profile_change_requests_path(status: @status, person_id: @person&.id) unless @requests),
+                      src: (change_requests_queue_path unless @requests),
                       data: { turbo: "temporary" } do %>
     <% if @requests %>
       <%= render "profile_change_requests/results" %>

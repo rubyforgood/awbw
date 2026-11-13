@@ -4,6 +4,7 @@ class ProfileChangeRequestsController < ApplicationController
   def index
     authorize! ProfileChangeRequest
     @status = ProfileChangeRequest::STATUSES.include?(params[:status]) ? params[:status] : "pending"
+    @submitted_by = params[:submitted_by].presence_in(ProfileChangeRequest::SUBMITTERS.keys)
     @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
     # A link to one card (highlight + anchor) loads the queue up front so the card
     # is in the first response for the browser to scroll to.
@@ -92,6 +93,7 @@ class ProfileChangeRequestsController < ApplicationController
 
   def load_requests
     scope = authorized_scope(ProfileChangeRequest.all).where(@person ? { person: @person } : {})
+    scope = scope.submitted_by(@submitted_by) if @submitted_by
     @status_counts = scope.group(:status).count
     @requests = scope.where(status: @status)
                   .includes(:person, :requested_by, :reviewed_by)
@@ -115,8 +117,10 @@ class ProfileChangeRequestsController < ApplicationController
   def prepare_affiliation_request
     @affiliations = @person.affiliations.includes(:organization).select(&:organization)
                            .sort_by { |a| [ a.active? ? 0 : 1, a.organization.name.downcase ] }
-    organizations_link = [ new_profile_change_request_path(person_id: @person, field: "affiliation"), "Back to my organizations" ]
-    profile_link = [ edit_person_path(@person, anchor: "affiliations"), "Back to editing my profile" ]
+    own = current_user.person_id == @person.id
+    organizations_link = [ new_profile_change_request_path(person_id: @person, field: "affiliation"), own ? "Back to my organizations" : "Back to organizations" ]
+    # An admin arrives from the person's profile (affiliations section), so send them back there.
+    profile_link = own ? [ edit_person_path(@person, anchor: "affiliations"), "Back to editing my profile" ] : [ person_path(@person, anchor: "affiliations"), "Back to profile" ]
 
     if params[:add].present? || @affiliations.empty?
       @request.requested_value = ProfileChangeRequest::AFFILIATION_CHANGE_ADD
