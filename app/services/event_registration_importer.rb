@@ -76,6 +76,7 @@ class EventRegistrationImporter
     organization: "organization_name",
     position: "organization_position",
     organization_website: "organization_website",
+    organization_phone: "organization_phone",
     organization_street: "organization_street",
     organization_city: "organization_city",
     organization_state: "organization_state",

@@ -217,8 +217,8 @@ RSpec.describe "Forms", type: :request do
       it "notes where the referral-source answer is surfaced" do
         get smart_form_settings_forms_path
 
-        expect(response.body).to include("event breakdowns")
-        expect(response.body).to include("reports breakdowns")
+        expect(response.body).to include("event roster")
+        expect(response.body).to include("scholarship recipients")
         expect(response.body).to include("form results")
       end
 

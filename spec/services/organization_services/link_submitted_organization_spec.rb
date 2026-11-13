@@ -52,6 +52,14 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
         .to include("Harbor Family Shelter linked.", "Saved from the form")
     end
 
+    it "adds the submitted organization phone as the org's primary and reports it" do
+      result = described_class.call(person: person, organization: organization,
+                                    entry: entry.merge(phone: "555-400-1000"), scenario: "on_demand")
+
+      expect(organization.contact_methods.sole).to have_attributes(value: "555-400-1000", primary: true)
+      expect(result.saved.map(&:field)).to include("phone")
+    end
+
     it "replaces a saved value and warns the admin to reapply any newer edit" do
       organization.update!(organization_type: "School")
       differing = entry.merge(organization_type: "Government Agency")
