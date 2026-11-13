@@ -18,17 +18,30 @@ RSpec.describe PersonServices::CaptureFromSubmission do
       expect(address.reload).to have_attributes(street_address: "1 Old Rd", zip_code: "62701")
     end
 
-    it "overwrites the ZIP and street a submission gives" do
+    it "updates the same-street address's ZIP and makes it primary" do
+      other = create(:address, addressable: person, city: "Chicago", state: "IL", street_address: "9 Elm St", primary: true)
       address = create(:address, addressable: person, city: "Springfield", state: "IL", street_address: "1 Old Rd", zip_code: "62701")
+
+      described_class.call(person:, answers: { "mailing_city" => "Springfield", "mailing_state" => "IL",
+                                               "mailing_street" => "1 Old Road", "mailing_zip" => "62702" })
+
+      expect(address.reload).to have_attributes(street_address: "1 Old Rd", zip_code: "62702", primary: true)
+      expect(other.reload).not_to be_primary
+      expect(person.addresses.count).to eq(2)
+    end
+
+    it "adds a different street in the same city as a new primary address, retiring the old one" do
+      old = create(:address, addressable: person, city: "Springfield", state: "IL", street_address: "1 Old Rd", zip_code: "62701", primary: true)
 
       described_class.call(person:, answers: { "mailing_city" => "Springfield", "mailing_state" => "IL",
                                                "mailing_street" => "2 New St", "mailing_zip" => "62702" })
 
-      expect(address.reload).to have_attributes(street_address: "2 New St", zip_code: "62702")
+      expect(old.reload).to have_attributes(street_address: "1 Old Rd", primary: false, inactive: true)
+      expect(person.addresses.find_by(street_address: "2 New St")).to have_attributes(zip_code: "62702", primary: true)
     end
 
     it "reports each saved value it replaced" do
-      create(:address, addressable: person, city: "Springfield", state: "IL", street_address: "1 Old Rd", zip_code: "62701")
+      old = create(:address, addressable: person, city: "Springfield", state: "IL", street_address: "1 Old Rd", zip_code: "62701", primary: true)
       person.update!(pronouns: "she/her")
 
       capture = described_class.new(person:, answers: { "mailing_city" => "Springfield", "mailing_state" => "IL",
@@ -36,7 +49,8 @@ RSpec.describe PersonServices::CaptureFromSubmission do
       capture.call
 
       expect(capture.replaced.map { |change| [ change.label, change.saved, change.submitted ] }).to contain_exactly(
-        [ "Mailing address street address", "1 Old Rd", "2 New St" ], [ "Pronouns", "she/her", "they/them" ]
+        [ "Primary mailing address", old.name.squish, person.addresses.find_by(street_address: "2 New St").name.squish ],
+        [ "Pronouns", "she/her", "they/them" ]
       )
     end
 

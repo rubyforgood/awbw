@@ -411,9 +411,10 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(person.addresses.find_by(primary: true).country).to eq("USA")
     end
 
-    it "updates a returning registrant's address when the city and state are spelled differently" do
+    it "updates a returning registrant's address when the city, state, and street are spelled differently" do
       person = create(:person, email: "ada@example.com", first_name: "Ada", last_name: "Lin")
-      existing = create(:address, addressable: person, city: "Saint Louis", state: "Missouri", primary: true)
+      existing = create(:address, addressable: person, street_address: "9 Elm Road", city: "Saint Louis", state: "Missouri",
+                                  zip_code: "", primary: true)
       params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
         field_id("mailing_street") => "9 Elm Rd",
         field_id("mailing_city") => "St. Louis",
@@ -424,7 +425,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       described_class.call(event: event, registration_form: form, form_params: params)
 
       expect(person.addresses.reload).to eq([ existing ])
-      expect(existing.reload.street_address).to eq("9 Elm Rd")
+      expect(existing.reload).to have_attributes(street_address: "9 Elm Road", zip_code: "63101")
     end
 
     context "with a matched organization" do

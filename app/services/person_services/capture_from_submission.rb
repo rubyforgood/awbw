@@ -84,38 +84,57 @@ module PersonServices
       @form_params[field.id.to_s]
     end
 
+    # The submitted address becomes the primary. It updates an address on file only
+    # when that's the same place — same city, state, and street (or no street on one
+    # side); a different street is a new address. The old primary is retired.
     def capture_mailing_address
       new_city = field_value("mailing_city")&.strip
       return if new_city.blank?
 
       new_state = field_value("mailing_state")&.strip
       new_country = field_value("mailing_country")&.strip
+      previous_primary = @person.addresses.find_by(primary: true)
+      address = same_mailing_address(new_city, new_state) || create_mailing_address(new_city, new_state, new_country)
+      apply_value(address, :country, new_country)
+      apply_value(address, :address_type, field_value("mailing_address_type")&.downcase)
+      make_primary_address(address, previous_primary)
+    end
+
+    def same_mailing_address(city, state)
+      street = AddressNormalizer.street(field_value("mailing_street"))
       existing = @person.addresses.order(:id).find do |address|
-        AddressNormalizer.city(address.city) == AddressNormalizer.city(new_city) &&
-          AddressNormalizer.state(address.state) == AddressNormalizer.state(new_state)
+        AddressNormalizer.city(address.city) == AddressNormalizer.city(city) &&
+          AddressNormalizer.state(address.state) == AddressNormalizer.state(state) &&
+          (street.blank? || address.street_address.blank? || AddressNormalizer.street(address.street_address) == street)
       end
+      return unless existing
 
-      if existing
-        apply_value(existing, :street_address, field_value("mailing_street"))
-        apply_value(existing, :zip_code, field_value("mailing_zip"))
-        existing.update!(primary: true, inactive: false)
-        apply_value(existing, :country, new_country)
-        apply_value(existing, :address_type, field_value("mailing_address_type")&.downcase)
-        return existing
-      end
+      apply_value(existing, :street_address, field_value("mailing_street")) if existing.street_address.blank?
+      apply_value(existing, :zip_code, field_value("mailing_zip"))
+      existing
+    end
 
-      @person.addresses.where(primary: true).update_all(primary: false, inactive: true)
-
+    def create_mailing_address(city, state, country)
       @person.addresses.create!(
         # street/ZIP are NOT NULL with no default, so a skipped answer lands as "".
-        street_address: field_value("mailing_street").to_s,
-        city: new_city,
-        state: new_state,
-        zip_code: field_value("mailing_zip").to_s,
-        **AddressDefaults.for(city: new_city, state: new_state, zip_code: field_value("mailing_zip"), country: new_country),
-        address_type: field_value("mailing_address_type")&.downcase || "unknown",
-        primary: true
+        street_address: field_value("mailing_street").to_s.strip,
+        city: city,
+        state: state,
+        zip_code: field_value("mailing_zip").to_s.strip,
+        **AddressDefaults.for(city: city, state: state, zip_code: field_value("mailing_zip"), country: country),
+        address_type: field_value("mailing_address_type")&.downcase || "unknown"
       )
+    end
+
+    # Record by record (not update_all) so each switch lands in the Ahoy audit trail.
+    def make_primary_address(address, previous_primary)
+      @person.addresses.where(primary: true).where.not(id: address.id).find_each do |other|
+        other.update!(primary: false, inactive: true)
+      end
+      address.update!(primary: true, inactive: false)
+      return if previous_primary.nil? || previous_primary == address
+
+      @replaced << Replaced.new(label: "Primary mailing address", submitted: address.name.squish, saved: previous_primary.name.squish)
     end
 
     def capture_phone
@@ -132,7 +151,7 @@ module PersonServices
         return existing
       end
 
-      @person.contact_methods.where(kind: :phone, primary: true).update_all(primary: false, inactive: true)
+      @person.contact_methods.where(kind: :phone, primary: true).find_each { |phone| phone.update!(primary: false, inactive: true) }
 
       @person.contact_methods.create!(
         kind: :phone,
