@@ -8,6 +8,8 @@ summary: >-
   One place to check exactly what a form's answers change when it's submitted or
   linked to an organization: the organization's address and phone, the person's
   affiliations and phone, and what the confirmation message reports.
+pro_tips:
+  - "The same rules apply when you link from an event's Registrants page (Link organizations) or from a form submission."
 description: |
   <p><strong>Org address</strong></p>
   <ul>
