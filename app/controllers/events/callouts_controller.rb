@@ -78,7 +78,8 @@ module Events
 
       @scholarships = @event_registration.effective_scholarships
       @scholarship = @scholarships.first
-      @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
+      answers_registration = @event_registration.form_answers_registration
+      @form_answers_registration = answers_registration if answers_registration.slug.present? && answers_registration.registration_form_submitted?
       @scholarship_form = @event.scholarship_form
       @scholarship_application_completed = @scholarship_form.present? &&
         ScholarshipApplication.new(event: @event, person: @event_registration.registrant).answered?

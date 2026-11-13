@@ -22,6 +22,30 @@ class FormSubmissionSittings
       .transform_values { |rows| new(rows.map { |_, _, id, form_name, role, created_at| Entry.new(id:, form_name:, role:, created_at:) }) }
   end
 
+  # Where a registration's registration-form answers live: its own event, or the original event for a
+  # transferred-in registrant who didn't also register at the new one.
+  Placement = Data.define(:sittings, :event_id, :original_event_title) do
+    def from_original? = original_event_title.present?
+  end
+
+  # { registration id => Placement }, only for registrations with registration-form answers on file.
+  def self.placements_for(registrations)
+    originals = EventRegistration.joins(:event)
+      .where(id: registrations.filter_map(&:transferred_from_registration_id))
+      .pluck(:id, :event_id, Arel.sql("events.title"))
+      .to_h { |id, event_id, title| [ id, [ event_id, title ] ] }
+    event_ids = (registrations.map(&:event_id) + originals.values.map(&:first)).uniq
+    by_key = for_events(event_ids, registrations.map(&:registrant_id).uniq)
+    registrations.each_with_object({}) do |registration, placements|
+      own = by_key[[ registration.registrant_id, registration.event_id ]]
+      next placements[registration.id] = Placement.new(own, registration.event_id, nil) if own&.registered?
+
+      original_event_id, title = originals[registration.transferred_from_registration_id]
+      original = by_key[[ registration.registrant_id, original_event_id ]]
+      placements[registration.id] = Placement.new(original, original_event_id, title) if original&.registered?
+    end
+  end
+
   # roles_by_form_id maps each form to its role on the event, so records saved without a role still group.
   def initialize(submissions, roles_by_form_id: {})
     @submissions = submissions.sort_by(&:created_at)

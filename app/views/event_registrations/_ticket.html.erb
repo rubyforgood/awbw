@@ -186,11 +186,10 @@
       <% if event_registration.active? %>
         <!-- Manage registration -->
         <div class="flex flex-col items-center gap-1.5">
-          <% registration_form = event_registration.event.registration_form %>
-
-          <% if registration_form && event_registration.event.form_submissions.exists?(person: event_registration.registrant, form: registration_form) %>
+          <% answers_registration = event_registration.form_answers_registration %>
+          <% if answers_registration.slug.present? && answers_registration.registration_form_submitted? %>
             <%= link_to "View your form responses",
-                          event_public_registration_path(event_registration.event, reg: event_registration.slug),
+                          event_public_registration_path(answers_registration.event, reg: answers_registration.slug),
                           class: "text-sm text-gray-500 hover:text-blue-600 underline" %>
           <% end %>
 

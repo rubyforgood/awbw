@@ -9,11 +9,11 @@ module OrganizationServices
   class FilemakerNames
     include FilemakerValues
 
-    AUDIENCE_WORDS = (DuplicateFinder::AUDIENCE_WORDS + %w[womens women mens men teens teen youth]).freeze
+    AUDIENCE_WORDS = (DuplicateFinder::AUDIENCE_WORDS + %w[women men teens teen youth]).freeze
     FILLER_WORDS = %w[the of and].freeze
     # The old app's audience versions of one program. Women, Men and Youth also end real names
     # ("Safe Place for Youth"), so only their possessives mark a version.
-    VERSION_WORDS = (DuplicateFinder::AUDIENCE_WORDS + %w[womens mens]).freeze
+    VERSION_WORDS = DuplicateFinder::AUDIENCE_WORDS
     TRAILING_AUDIENCE = /[\s,–—-]*\b(?:combined|children[’'í]?s|children|adults?|women[’'í]?s|men[’'í]?s)\s*\z/i
     TRAILING_CODE = /\s*\((?:ORG|P)\d+\)\z/
 

@@ -1,4 +1,14 @@
 class EventRegistrationDecorator < ApplicationDecorator
+  # What linking an organization from this registration's editor does, mirroring
+  # EventRegistrationsController#link_and_report. `position` is the title the
+  # registrant submitted (the editor's primary submitted entry).
+  def link_organization_effects(position:)
+    OrganizationServices::LinkSubmittedOrganization.effects(
+      record_noun: "registration", person: object.registrant,
+      scenario: object.event.linking_scenario, position: position
+    )
+  end
+
   # The CE lifecycle badge, shared by every surface that shows CE status (the
   # registrants index, the CE callout, the CE card on the registration edit page).
   # One progression: Requested → Needs license # → $X due → Approved → Issued, with an

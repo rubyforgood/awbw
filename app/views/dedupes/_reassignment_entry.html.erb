@@ -1,6 +1,6 @@
 <%# One aligned cell of the reassignment summary. Locals: entry ({ label:, count:,
   names: [..], records: [..] } or nil for a side that has none of this association), border, round,
-  record_outcomes ({ record => what the merge changes through it }, optional).
+  record_outcomes ({ record => what the merge changes through it }, optional), kind (outcome chip, optional).
   A single record shows inline; several expand to a bulleted list of every loaded name.
   Logins show their email and sign-in state instead of a name. %>
 <%
@@ -19,6 +19,7 @@
   <% elsif entry[:count] <= 1 %>
     <span class="font-medium text-gray-800"><%= entry[:label] %></span>
     <span class="text-gray-400">(<%= entry[:count] %>)</span>
+    <%= render "dedupes/outcome_chip", kind: local_assigns[:kind] if local_assigns[:kind] %>
     <% if entry[:names].any? %>
       <span class="text-gray-500">· <%= item.call(0) %></span>
     <% end %>
@@ -28,6 +29,7 @@
       <summary class="flex cursor-pointer list-none items-center gap-1 text-gray-600 [&::-webkit-details-marker]:hidden">
         <span class="font-medium text-gray-800"><%= entry[:label] %></span>
         <span class="text-gray-400">(<%= entry[:count] %>)</span>
+        <%= render "dedupes/outcome_chip", kind: local_assigns[:kind] if local_assigns[:kind] %>
         <i class="fa-solid fa-chevron-right ml-auto text-xs text-gray-400 transition-transform group-open:rotate-90"></i>
       </summary>
       <ul class="mt-1 ml-5 list-disc space-y-0.5 text-gray-500">

@@ -522,7 +522,7 @@ RSpec.describe "FormSubmissions", type: :request do
           get link_organization_form_submission_path(submission)
 
           expect(response.body).to include("Lakeside Community College")
-          expect(response.body).to include("Create and link")
+          expect(response.body).to include("Create org and link")
           expect(response.body).to include("Pending")
           expect(response.body).to include(CGI.escapeHTML(create_organization_form_submission_path(submission)))
         end
@@ -747,7 +747,7 @@ RSpec.describe "FormSubmissions", type: :request do
           get link_organization_form_submission_path(submission)
 
           expect(response.body).to include("Links it to their #{training.title} registration")
-          expect(response.body).to include("Adds a Facilitator affiliation there")
+          expect(response.body).to include("and as a Facilitator")
         end
 
         it "shows no agreement processing panel" do
@@ -790,10 +790,9 @@ RSpec.describe "FormSubmissions", type: :request do
 
           get link_organization_form_submission_path(submission)
 
-          expect(response.body).to include("Linking an organization here also:")
+          expect(response.body).to include("Linking an organization here:")
           expect(response.body).to include("Links it to their #{training.title} registration")
-          expect(response.body).to include("Adds a “Counselor” job affiliation there")
-          expect(response.body).to include("Adds a Facilitator affiliation there")
+          expect(response.body).to include(CGI.escapeHTML("Records it in #{person.first_name}'s affiliations as “Counselor” and as a Facilitator"))
         end
 
         it "links a second org without tying it to the submission another org already holds" do

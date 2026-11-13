@@ -67,6 +67,35 @@ RSpec.describe "Events::Registrations", type: :request do
         expect(response.body).to include("You transferred into")
         expect(response.body).to include(registration_ticket_path(source.slug))
       end
+
+      context "with registration form answers on the original registration" do
+        let(:source_event) { create(:event) }
+        let(:source) { create(:event_registration, event: source_event, registrant: user.person, status: "transferred_out") }
+        let(:form) { create(:form) }
+
+        before do
+          create(:event_form, event: source_event, form: form)
+          create(:event_form, event: event, form: create(:form))
+          create(:form_submission, person: user.person, form: form, event: source_event)
+          registration.update!(transferred_from_registration: source)
+        end
+
+        it "links a transferred-in ticket to the answers on the original registration" do
+          get registration_ticket_path(registration.slug)
+
+          expect(response.body).to include("View your form responses")
+          expect(response.body).to include(event_public_registration_path(source_event, reg: source.slug))
+        end
+
+        it "keeps the link on the new event's answers when they registered there too" do
+          create(:form_submission, person: user.person, form: event.registration_form, event: event)
+
+          get registration_ticket_path(registration.slug)
+
+          expect(response.body).to include(event_public_registration_path(event, reg: registration.slug))
+          expect(response.body).not_to include(event_public_registration_path(source_event, reg: source.slug))
+        end
+      end
     end
 
     context "as an admin" do
@@ -288,6 +317,21 @@ RSpec.describe "Events::Registrations", type: :request do
 
       expect(response.body).to include("Review your form responses")
       expect(response.body).to include(event_public_registration_path(event, reg: registration.slug))
+    end
+
+    it "links a transferred-in recipient to the answers on the original registration" do
+      source_event = create(:event)
+      source = create(:event_registration, event: source_event, registrant: registration.registrant, status: "transferred_out")
+      registration.update!(transferred_from_registration: source)
+      create(:allocation, source: create(:scholarship, recipient: source.registrant), allocatable: source, amount: 1_000)
+      form = create(:form)
+      create(:event_form, event: source_event, form: form)
+      create(:form_submission, person: registration.registrant, form: form, event: source_event)
+
+      get registration_scholarship_path(registration.slug)
+
+      expect(response.body).to include("Review your form responses")
+      expect(response.body).to include(event_public_registration_path(source_event, reg: source.slug))
     end
 
     it "omits the form-responses link when the registrant has no submission" do

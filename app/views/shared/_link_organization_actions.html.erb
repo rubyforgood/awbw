@@ -7,73 +7,90 @@
       creatable_org_names – submitted names not in the database yet
       potential_matches  – orgs suggested for the submitted name
       submitter_noun     – how to refer to the form-filler ("registrant"/"person")
-      return_to          – carried through both actions %>
+      return_to          – carried through both actions
+    Button hierarchy: one solid button per page. When the submitter typed an org
+    we don't have, "Create org and link" is the expected next step and takes it, so
+    the search's "Link organization" drops to outline; otherwise the search is
+    the main action. Suggested matches are only fuzzy hints, so they sit in a
+    dashed, lighter box with small outline buttons either way. %>
 <% submitter_noun = local_assigns.fetch(:submitter_noun, "registrant") %>
 <% link_confirm = "Linking applies the #{submitter_noun}'s form answers to this organization:\n\n" \
                   "• Replaces its saved website, type, and matching address details\n" \
                   "• Adds a new address as its primary (the old one stays, no longer primary)\n" \
                   "• Moves the #{submitter_noun}'s current affiliations there to that address\n\n" \
                   "Each change is listed on “What this submission changed”, and previous values stay in the activity log." %>
-<%# Each org the submitter typed that we don't have gets the solid (primary)
-    create+link style; "Link organization" is then demoted to the outline style. %>
 <% create_is_primary = creatable_org_names.any? %>
 <div class="border-t border-gray-200 pt-4">
-  <h3 class="text-sm font-semibold text-gray-700 mb-3">Add an organization</h3>
+  <h3 class="mb-3 text-sm font-semibold text-gray-700">Add an organization</h3>
 
   <% if creatable_org_names.any? %>
-    <p class="text-sm text-gray-600 mb-2">
-      <%= creatable_org_names.size > 1 ? "These organizations the #{submitter_noun} entered aren't in the database yet. Create each in the database and link it in one step:" : "The #{submitter_noun} entered this organization on their form, but it's not in the database yet. Create the organization in the database and link it in one step:" %>
+    <p class="mb-2 text-sm text-gray-600">
+      <%= creatable_org_names.size > 1 ? "The #{submitter_noun}'s organizations aren't in the database yet:" : "The #{submitter_noun}'s organization isn't in the database yet:" %>
     </p>
-    <% creatable_org_names.each do |creatable_name| %>
-      <div class="flex items-stretch gap-2 mb-2">
-        <div class="flex-1 min-w-0 flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800">
-          <span class="truncate"><%= creatable_name %></span>
-        </div>
-        <%= button_to create_url,
-                      method: :post,
-                      params: { organization_name: creatable_name, return_to: return_to },
-                      form: { class: "shrink-0", data: { turbo_frame: "_top", turbo_confirm: link_confirm } },
-                      class: button_classes(:primary, extra: "shrink-0 w-48 justify-center focus:ring-primary cursor-pointer") do %>
-          Create and link
-        <% end %>
-      </div>
-    <% end %>
-    <p class="text-sm text-gray-600 mb-2 mt-4">Or, add an existing organization instead:</p>
+    <ul class="mb-6 space-y-2">
+      <% creatable_org_names.each do |creatable_name| %>
+        <%# The submitted name is read-only text (not an input) — what the
+            person typed is exactly what gets created. %>
+        <li class="flex items-center justify-between gap-3 border-l-4 border-amber-300 pl-3">
+          <p class="min-w-0 text-base text-gray-800">
+            <strong class="break-words">“<%= creatable_name %>”</strong>
+            <span class="text-xs text-gray-500">· entered on form</span>
+          </p>
+          <%= button_to create_url,
+                        method: :post,
+                        params: { organization_name: creatable_name, return_to: return_to },
+                        form: { class: "shrink-0", data: { turbo_frame: "_top", turbo_confirm: link_confirm } },
+                        class: button_classes(:primary, extra: "shrink-0 w-48 justify-center focus:ring-primary cursor-pointer") do %>
+            Create org and link
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+    <p class="mb-2 text-sm text-gray-600">Or link an organization that's already in the database:</p>
   <% end %>
 
   <% if potential_matches.any? %>
-    <p class="text-xs text-gray-500 mb-2">Suggested matches for the submitted name:</p>
-    <div class="space-y-2 mb-4">
-      <% potential_matches.each do |org| %>
-        <%= form_with url: select_url,
-                      method: :post,
-                      data: { turbo_frame: "_top", turbo_confirm: link_confirm },
-                      class: "flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3" do %>
-          <%= hidden_field_tag :organization_id, org.id %>
-          <%= hidden_field_tag :return_to, return_to %>
-          <div class="min-w-0">
-            <p class="font-medium text-gray-800"><%= org.name %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
-          </div>
-          <%= submit_tag "Link organization", class: button_classes(:primary, extra: "cursor-pointer") %>
+    <div class="mb-4 rounded-lg border border-dashed border-gray-300 bg-white p-3">
+      <p class="flex items-center gap-1.5 text-xs font-semibold text-gray-600">
+        <i class="fa-regular fa-lightbulb text-amber-500"></i>
+        Suggested matches — similar names, not confirmed
+      </p>
+      <p class="mb-2 text-xs text-gray-500">Only link one if it's really the same organization.</p>
+      <ul class="divide-y divide-gray-100">
+        <% potential_matches.each do |org| %>
+          <li>
+            <%= form_with url: select_url,
+                          method: :post,
+                          data: { turbo_frame: "_top", turbo_confirm: link_confirm },
+                          class: "flex items-center justify-between gap-3 py-1.5" do %>
+              <%= hidden_field_tag :organization_id, org.id %>
+              <%= hidden_field_tag :return_to, return_to %>
+              <p class="min-w-0 text-sm text-gray-700"><%= org.name %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
+              <%= submit_tag "Link this one", class: button_classes(:primary_outline, size: :sm, extra: "shrink-0 shadow-none cursor-pointer") %>
+            <% end %>
+          </li>
         <% end %>
-      <% end %>
+      </ul>
     </div>
   <% end %>
 
   <%= form_with url: select_url,
                 method: :post,
-                data: { turbo_frame: "_top", turbo_confirm: link_confirm },
-                class: "flex items-stretch gap-2" do %>
+                data: { turbo_frame: "_top", turbo_confirm: link_confirm } do %>
     <%= hidden_field_tag :return_to, return_to %>
-    <div class="flex-1 min-w-0">
-      <%= select_tag :organization_id,
-                     options_from_collection_for_select([], :id, :name),
-                     include_blank: true,
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                     data: { controller: "remote-select", remote_select_model_value: "organization" },
-                     prompt: "Type to search organizations…" %>
+    <label for="link_organization_search" class="mb-1 block text-xs font-semibold text-gray-600"><%= potential_matches.any? ? "Or search all organizations" : "Search all organizations" %></label>
+    <div class="flex items-stretch gap-2">
+      <div class="min-w-0 flex-1">
+        <%= select_tag :organization_id,
+                       options_from_collection_for_select([], :id, :name),
+                       include_blank: true,
+                       id: "link_organization_search",
+                       class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                       data: { controller: "remote-select", remote_select_model_value: "organization" },
+                       prompt: "Type to search organizations…" %>
+      </div>
+      <%= submit_tag potential_matches.any? ? "Link an existing one" : "Link an existing org",
+                     class: button_classes(create_is_primary ? :primary_outline : :primary, extra: "shrink-0 w-48 justify-center focus:ring-primary cursor-pointer") %>
     </div>
-    <%= submit_tag "Link organization",
-                   class: button_classes(create_is_primary ? :primary_outline : :primary, extra: "shrink-0 w-48 justify-center focus:ring-primary cursor-pointer") %>
   <% end %>
 </div>
