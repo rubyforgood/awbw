@@ -7,3 +7,5 @@ action_path: "/profile_change_requests"
 summary: >-
   A change request staff filed for someone shows a Staff badge in the queue, with whose profile it's
   for and who submitted it. Requests people sent themselves still read "Requested by".
+pro_tips:
+  - "Reviewing a staff-filed request emails the admin who filed it, not the person."

@@ -221,9 +221,17 @@ RSpec.describe "Profile change requests", type: :request do
 
       get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
 
-      expect(response.body).to include("submitted by #{admin.full_name}", person_path(person))
+      expect(response.body).to include("#{admin.full_name} for", person_path(person))
       expect(response.body.scan("fa-user-shield").size).to eq(1)
-      expect(response.body).to include("Requested by #{owner_user.full_name}")
+      expect(response.body).to include(owner_user.full_name)
+    end
+
+    it "says a staff-filed request's review email goes to the admin only" do
+      create(:profile_change_request, :primary_email, person: person, requested_by: admin)
+
+      get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+      expect(response.body).to include("An email will be sent to admin only")
     end
 
     it "filters the queue to staff-filed or self-submitted requests" do
