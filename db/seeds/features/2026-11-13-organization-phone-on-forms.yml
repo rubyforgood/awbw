@@ -3,42 +3,10 @@ area: people
 display_status: admin_facing
 released_on: 2026-11-13
 pr_number: 2997
-action_path: "/form_submissions"
+action_path: "/forms"
 summary: >-
-  Forms can now ask for the organization's phone, which is saved on the organization
-  when the form is submitted or linked. The description lists exactly what form
-  answers change on the organization, the person, and their affiliations.
+  Forms can now ask for the organization's phone. It's saved on the organization as a
+  work phone when the form is submitted or linked, and a new number becomes its primary.
 pro_tips:
   - "New forms include Organization Phone automatically. Add it to an existing form by hand."
-description: |
-  <p><strong>Org address</strong></p>
-  <ul>
-    <li><strong>No match → new primary work address.</strong> Old primary stays, loses the flag.
-      <ul><li>A match is same street plus same city and state, or same street plus ZIP.</li></ul>
-    </li>
-    <li><strong>Match → updated.</strong> ZIP and country overwritten, blanks filled, reactivated. Primary only if the org has no active primary.</li>
-    <li><strong>No state → not saved.</strong></li>
-  </ul>
-  <p><strong>Org phone</strong></p>
-  <ul>
-    <li><strong>New number → new primary work phone.</strong> Old primary stays, loses the flag.</li>
-    <li><strong>Known number (ignoring formatting) → reactivated.</strong> Primary only if the org has no active primary.</li>
-    <li><strong>Blank → not saved.</strong></li>
-  </ul>
-  <p><strong>Person's affiliations</strong></p>
-  <ul>
-    <li><strong>New and current (active or upcoming) ones at the org</strong> get the new address, whatever their title.</li>
-    <li><strong>No address submitted:</strong> the org's only active address fills affiliations that have none.</li>
-    <li><strong>Unchanged:</strong> ended affiliations, and other people's.</li>
-  </ul>
-  <p><strong>Facilitator affiliation</strong></p>
-  <ul>
-    <li>Created only by facilitator trainings, on-demand agreements and reinstatement agreements.</li>
-    <li>Skipped if the person already has a current one at the org.</li>
-  </ul>
-  <p><strong>Person's phone</strong> (set when the form is submitted, not on link)</p>
-  <ul>
-    <li>Becomes their primary; a known number is reactivated.</li>
-    <li><strong>Old primary is made inactive.</strong></li>
-  </ul>
-  <p><strong>Flash</strong> reports each change: “Primary work address (was …)”, “Primary phone (was …)”, “Facilitator affiliation address (was …)”.</p>
+  - "The registration import reads an OrganizationPhone column too."
