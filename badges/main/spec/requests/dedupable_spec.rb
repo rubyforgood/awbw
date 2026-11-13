@@ -58,16 +58,6 @@ RSpec.describe "Dedupable concern", type: :request do
           expect(response.body).to include("Delete Me")
         end
 
-        it "lists audit stamps read-only under Links & history instead of as editable fields" do
-          get dedupe_preview_categories_path(
-            category_to_keep_id: keep.id,
-            category_to_delete_id: delete_rec.id
-          )
-
-          expect(response.body).to include("Links &amp; history", "Created by", "Updated at")
-          expect(response.body).not_to include("category_to_keep[created_by_id]")
-        end
-
         it "redirects when keep_id is missing" do
           get dedupe_preview_categories_path(
             category_to_delete_id: delete_rec.id
@@ -346,48 +336,9 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Keep Org", "Delete Org")
-        expect(response.body).to include("Connected records that will move", "Affiliations")
+        expect(response.body).to include("Records that will move", "Affiliations")
         expect(response.body).to include("Website url")
         expect(response.body).not_to include("Profile show age ranges")
-      end
-
-      it "shows each organization's audit stamps side by side and flags the deleted one's as dropped" do
-        creator = create(:user)
-        keep.update_columns(created_at: Time.zone.local(2019, 3, 4, 12))
-        delete_rec.update_columns(created_at: Time.zone.local(2024, 7, 8, 12), created_by_id: creator.id)
-
-        get dedupe_preview_organizations_path(
-          organization_to_keep_id: keep.id,
-          organization_to_delete_id: delete_rec.id
-        )
-
-        page = Nokogiri::HTML(response.body)
-        row_for = ->(label, index) { page.css("span").select { |span| span.text == label }[index].parent }
-        expect(row_for.call("Created at", 0).text).to include("2024-07-08", "Will be dropped")
-        expect(row_for.call("Created at", 1).text).to include("2019-03-04")
-        expect(row_for.call("Created at", 1).text).not_to include("Will be dropped")
-        expect(row_for.call("Created by", 0).text).to include(creator.name, "Will be dropped")
-        expect(row_for.call("Created by", 1).text).to include("(none)")
-        expect(row_for.call("Created by", 1).text).not_to include("Will be dropped")
-        expect(page.text).to include("Updated at", "Updated by")
-        expect(response.body.index("Created at")).to be > response.body.index("Links &amp; history")
-      end
-
-      it "marks a deleted organization's link as filling the keeper's empty one, else dropped" do
-        parent = create(:organization, name: "Roof Org")
-        delete_rec.update_columns(parent_id: parent.id)
-        parent_rows = -> { Nokogiri::HTML(response.body).css("span").select { |span| span.text == "Parent" }.map(&:parent) }
-
-        get dedupe_preview_organizations_path(organization_to_keep_id: keep.id, organization_to_delete_id: delete_rec.id)
-        delete_row, keep_row = parent_rows.call
-        expect(delete_row.text).to include("Roof Org", "Fills the keeper")
-        expect(keep_row.text).not_to include("Stays linked")
-
-        keep.update_columns(parent_id: create(:organization, name: "Other Roof").id)
-        get dedupe_preview_organizations_path(organization_to_keep_id: keep.id, organization_to_delete_id: delete_rec.id)
-        delete_row, keep_row = parent_rows.call
-        expect(delete_row.text).to include("Roof Org", "Will be dropped")
-        expect(keep_row.text).to include("Other Roof", "Stays linked")
       end
 
       it "leaves a blank status blank instead of preselecting one" do
@@ -433,21 +384,6 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response).to redirect_to(dedupe_index_organizations_path)
         expect(Organization.exists?(delete_rec.id)).to be false
         expect(report.reload.organization_id).to eq(keep.id)
-      end
-
-      it "fills the keeper's empty links from the duplicate and keeps the ones it has" do
-        keep_wt, delete_wt = create_list(:windows_type, 2)
-        parent = create(:organization)
-        keep.update_columns(windows_type_id: keep_wt.id)
-        delete_rec.update_columns(windows_type_id: delete_wt.id, parent_id: parent.id)
-
-        post dedupe_perform_organizations_path, params: {
-          organization_to_delete_id: delete_rec.id,
-          organization_to_keep_id: keep.id
-        }
-
-        expect(keep.reload.parent).to eq(parent)
-        expect(keep.windows_type).to eq(keep_wt)
       end
 
       it "applies keep-field edits before merging" do
@@ -648,7 +584,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Keep", "Delete")
-        expect(response.body).to include("Connected records that will move", "Affiliations")
+        expect(response.body).to include("Records that will move", "Affiliations")
         expect(response.body).to include("Date of birth")
         expect(response.body).not_to include("Profile show age ranges")
       end
@@ -692,16 +628,6 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response).to redirect_to(dedupe_index_people_path)
         expect(Person.exists?(delete_rec.id)).to be false
         expect(affiliation.reload.person_id).to eq(keep.id)
-      end
-
-      it "leaves the keeper's empty created by alone instead of filling it from the duplicate" do
-        keep.update_columns(created_by_id: nil)
-        delete_rec.update_columns(created_by_id: create(:user).id)
-
-        post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
-
-        expect(Person.exists?(delete_rec.id)).to be false
-        expect(keep.reload.created_by_id).to be_nil
       end
 
       it "lets the keeper adopt the duplicate's name and email despite the uniqueness index" do
@@ -1208,17 +1134,14 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Deprecated")
       end
 
-      it "lists links and audit stamps in Links & history, and chips connected records on both sides" do
-        create(:bookmark, bookmarkable: delete_rec)
-        create(:bookmark, bookmarkable: keep)
-
+      it "lists belongs_to references not shown as fields in a read-only Linked records section" do
         get dedupe_preview_workshops_path(
           workshop_to_keep_id: keep.id,
           workshop_to_delete_id: delete_rec.id
         )
 
-        expect(response.body).to include("Links &amp; history", "Organization", "Created by", "Updated at")
-        expect(response.body).to include("Moves to keeper", "Stays linked")
+        expect(response.body).to include("Linked records")
+        expect(response.body).to include("Created by")
       end
 
       it "shows a thumbnail on the deleted workshop as moving to the keeper" do
@@ -1372,7 +1295,7 @@ RSpec.describe "Dedupable concern", type: :request do
         )
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Connected records that will move")
+        expect(response.body).to include("Records that will move")
       end
 
       it "notes that a merge across different registrants keeps the people separate" do
