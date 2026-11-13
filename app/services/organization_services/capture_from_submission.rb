@@ -3,9 +3,8 @@ module OrganizationServices
   # same way for an event registration and a standalone form: the organization is
   # looked up by name (never created here — an unmatched name is left for an admin
   # to resolve), then its website, type (with "Other" folded in), and work address
-  # are synced from the answers — fill-blanks only: an answer fills what the org is
-  # missing and never replaces a saved value (ProfileDiff surfaces the ones that
-  # differ), and an address the org doesn't already have is added as another work
+  # are synced from the answers. A submitted answer overwrites the org's website
+  # and type, and an address the org doesn't already have is added as another work
   # address rather than rewriting one (see UpsertAddress).
   #
   # The person then gets their affiliation(s) with the org, titled from the typed
@@ -24,21 +23,22 @@ module OrganizationServices
     Result = Struct.new(:organization, :autofill, keyword_init: true)
 
     def self.call(person:, form: nil, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil,
-                  submission: nil, answers: nil, organization: nil)
+                  submission: nil, answers: nil, organization: nil, overwrite: true)
       new(person:, form:, form_params:, facilitator_training:, training_date:, event_registration:, submission:,
-          answers:, organization:).call
+          answers:, organization:, overwrite:).call
     end
 
     # `answers` (field_identifier => value) stands in for form + form_params, and
     # `organization` for the by-name lookup, when a caller has already resolved them
-    # (the spreadsheet importer).
+    # (the spreadsheet importer). `overwrite: false` only fills the org's blanks.
     def initialize(person:, form: nil, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil,
-                   submission: nil, answers: nil, organization: nil)
+                   submission: nil, answers: nil, organization: nil, overwrite: true)
       @submission = submission
       @form = form
       @form_params = (form_params || {}).transform_keys(&:to_s)
       @answers = answers&.transform_keys(&:to_s)
       @organization = organization
+      @overwrite = overwrite
       @person = person
       @facilitator_training = facilitator_training
       @training_date = training_date
@@ -53,10 +53,11 @@ module OrganizationServices
         organization: organization,
         website: entry[:website],
         organization_type: entry[:organization_type],
+        overwrite: @overwrite,
         submission: @submission
       ).changes
 
-      address_result = UpsertAddress.call(organization: organization, **entry[:address])
+      address_result = UpsertAddress.call(organization: organization, overwrite: @overwrite, **entry[:address])
 
       AffiliationServices::CreateFromRegistration.call(
         person: @person,

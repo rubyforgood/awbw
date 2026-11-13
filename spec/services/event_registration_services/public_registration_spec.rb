@@ -477,13 +477,12 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         expect(link.form_submission).to eq(result.form_submission)
       end
 
-      # Fill-blanks only: staff decide what changes; the linking page flags the difference.
-      it "keeps an existing website rather than replacing it with the registrant's answer" do
+      it "overwrites an existing website with the latest answer" do
         organization.update!(website_url: "https://existing.org")
 
         register_with_org(field_id("organization_website") => "helpinghands.org")
 
-        expect(organization.reload.website_url).to eq("https://existing.org")
+        expect(organization.reload.website_url).to include("helpinghands.org")
       end
 
       it "stores the org address as a work address" do
@@ -606,12 +605,21 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(organization.organization_type_other).to be_nil
     end
 
-    it "keeps a previously stored type rather than replacing it with the registrant's answer" do
+    it "overwrites a previously stored type with the latest registrant's answer" do
       organization.update!(organization_type: "501c3/nonprofit", organization_type_other: nil)
 
       register_with_organization_type("Other: Equine therapy")
 
-      expect(organization.organization_type).to eq("501c3/nonprofit")
+      expect(organization.organization_type).to eq("Other")
+      expect(organization.organization_type_other).to eq("Equine therapy")
+    end
+
+    it "clears a stale organization_type_other when the latest answer is no longer 'Other'" do
+      organization.update!(organization_type: "Other", organization_type_other: "Equine therapy")
+
+      register_with_organization_type("Government agency")
+
+      expect(organization.organization_type).to eq("Government agency")
       expect(organization.organization_type_other).to be_nil
     end
   end

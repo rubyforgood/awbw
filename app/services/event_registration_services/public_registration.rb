@@ -72,10 +72,8 @@ module EventRegistrationServices
         event_registration = existing || create_event_registration(person)
 
         # find_organization only ever finds, so a matched org already existed and the
-        # registrant just filled what it was missing — @organization_autofill records
-        # what, and to what value, for connect_organization's admin-linking-page note
-        # below. Answers that differ from saved values aren't applied; the linking
-        # page's ProfileDiff note surfaces them.
+        # registrant just changed it — @organization_autofill records what, and to
+        # what value, for connect_organization's admin-linking-page note below.
         org_result = OrganizationServices::CaptureFromSubmission.call(
           form: @registration_form,
           form_params: @form_params,

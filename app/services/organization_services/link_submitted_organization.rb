@@ -81,14 +81,14 @@ module OrganizationServices
       return [] unless @entry
 
       OrganizationServices::SyncProfile.call(
-        organization: @organization, website: @entry[:website], organization_type: @entry[:organization_type],
+        organization: @organization, overwrite: false, website: @entry[:website], organization_type: @entry[:organization_type],
         submission: @entry[:submission]
       ).changes
     end
 
     def upsert_address
       OrganizationServices::UpsertAddress.call(
-        organization: @organization, **submitted_address
+        organization: @organization, overwrite: false, **submitted_address
       )
     end
 

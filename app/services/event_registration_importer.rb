@@ -845,7 +845,7 @@ class EventRegistrationImporter
     result = OrganizationServices::CaptureFromSubmission.call(
       person: person, answers: answers, organization: organization, submission: submission,
       facilitator_training: @event.facilitator_training, training_date: @event.starts_on,
-      event_registration: registration
+      event_registration: registration, overwrite: false
     )
     registration.link_submitted_organization!(organization, submission: submission, autofill: result.autofill)
   end

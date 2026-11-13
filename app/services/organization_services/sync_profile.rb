@@ -1,11 +1,10 @@
 module OrganizationServices
   # Populate an organization's structured profile columns — website_url and
   # organization_type/organization_type_other — from a registrant's submitted
-  # answers. Fill-blanks only, in every flow (public registration, standalone
-  # forms, admin linking, the importer): a submitted answer fills a column that's
-  # empty and never replaces a value on file — staff decide what changes, and an
-  # answer that differs is surfaced by OrganizationServices::ProfileDiff instead.
-  # A website answer that isn't a web address is never saved.
+  # answers. A non-blank submitted value overwrites what's on file (the latest
+  # registration is the freshest source of truth; the prior value survives in
+  # the Ahoy audit trail); a blank answer never clobbers existing data, and
+  # neither does a website answer that isn't a web address.
   #
   # The "Organization Type" answer folds an "Other" choice's free text in as
   # "Other: <text>": we split the option label (drives organization_type) from the
@@ -13,24 +12,30 @@ module OrganizationServices
   # text lingers) and record the free text as an OtherResponse for the curation
   # queue. Shared by the public registration flow and the admin
   # create-and-link action so both build the org profile identically.
+  #
+  # overwrite: (default true) reflects the public flow's latest-wins contract —
+  # a non-blank answer replaces what's on file. The admin create-and-link flow
+  # passes overwrite: false so it only fills columns that are currently blank,
+  # never clobbering an existing org's curated type/website.
   class SyncProfile
     # changes: AutofillChange per column this call actually wrote from the form —
     # the field and the value that landed in it — so the caller can tell the admin
     # what was saved and to what. Answers that differ from a value already on the
-    # org (and so weren't applied) are reported separately by
+    # org (and so weren't applied under fill-blanks) are reported separately by
     # OrganizationServices::ProfileDiff.
     Result = Struct.new(:organization, :changes, keyword_init: true)
 
     # submission: the form submission the answers came from, when it's saved
     # already, so a captured org-type "Other" records which answer typed it.
-    def self.call(organization:, website: nil, organization_type: nil, submission: nil)
-      new(organization:, website:, organization_type:, submission:).call
+    def self.call(organization:, website: nil, organization_type: nil, overwrite: true, submission: nil)
+      new(organization:, website:, organization_type:, overwrite:, submission:).call
     end
 
-    def initialize(organization:, website: nil, organization_type: nil, submission: nil)
+    def initialize(organization:, website: nil, organization_type: nil, overwrite: true, submission: nil)
       @organization = organization
       @website = website
       @organization_type = organization_type
+      @overwrite = overwrite
       @submission = submission
     end
 
@@ -61,7 +66,7 @@ module OrganizationServices
     def sync_organization_type
       raw = @organization_type&.strip
       return false if raw.blank?
-      return false if @organization.organization_type.present?
+      return false if !@overwrite && @organization.organization_type.present?
 
       label, _separator, specified = raw.partition(":")
       label = label.strip
@@ -93,7 +98,7 @@ module OrganizationServices
 
     def apply_value(attribute, value)
       return false if value.blank?
-      return false if @organization.public_send(attribute).present?
+      return false if !@overwrite && @organization.public_send(attribute).present?
       @organization.update!(attribute => value.strip)
       changed?(attribute)
     end
