@@ -46,31 +46,43 @@ RSpec.describe FormSubmissionDecorator do
       submission.decorate
     end
 
-    it "names the on-demand registration and both affiliations" do
+    it "names the submission, the on-demand registration, and both affiliation roles" do
       training = create(:event, title: "On-Demand Training", facilitator_training: true, on_demand: true)
       create(:event_registration, event: training, registrant: person)
       submission = submission_for(create(:form, role: "registration"), event: training, position: "Counselor")
 
       expect(submission.link_organization_effects).to eq([
+        "Links it to this submission",
         "Links it to their On-Demand Training registration",
-        "Adds a “Counselor” job affiliation there",
-        "Adds a Facilitator affiliation there"
+        "Records it in #{person.first_name}'s affiliations as “Counselor” and as a Facilitator"
       ])
     end
 
-    it "names the Facilitator affiliation a reinstatement confers" do
+    it "names the Facilitator role a reinstatement confers" do
       submission = submission_for(create(:form, role: "reinstatement"), position: "Counselor")
 
       expect(submission.link_organization_effects).to eq([
-        "Adds a “Counselor” job affiliation there",
-        "Adds a Facilitator affiliation there"
+        "Links it to this submission",
+        "Records it in #{person.first_name}'s affiliations as “Counselor” and as a Facilitator"
       ])
     end
 
-    it "lists only the job affiliation for a form without an agreement role" do
+    it "names only the job title for a form without an agreement role" do
       submission = submission_for(create(:form), position: "Volunteer")
 
-      expect(submission.link_organization_effects).to eq([ "Adds a “Volunteer” job affiliation there" ])
+      expect(submission.link_organization_effects).to eq([
+        "Links it to this submission",
+        "Records it in #{person.first_name}'s affiliations as “Volunteer”"
+      ])
+    end
+
+    it "still names the affiliation when there's no position or agreement role" do
+      submission = submission_for(create(:form))
+
+      expect(submission.link_organization_effects).to eq([
+        "Links it to this submission",
+        "Records it in #{person.first_name}'s affiliations"
+      ])
     end
 
     it "warns that the submission's org answers replace the saved profile" do
@@ -80,6 +92,8 @@ RSpec.describe FormSubmissionDecorator do
       submission.form_answers.create!(form_field: field, submitted_answer: "harbor.example.org")
 
       expect(submission.link_organization_effects).to eq([
+        "Links it to this submission",
+        "Records it in #{person.first_name}'s affiliations",
         "Replaces the organization's saved website, type, and work address with this submission's answers — reapply any newer edits afterward"
       ])
     end

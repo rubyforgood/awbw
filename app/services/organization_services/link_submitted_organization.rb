@@ -66,6 +66,20 @@ module OrganizationServices
     FACILITATOR_CONFERRING_SCENARIOS = %w[on_demand facilitator_training reinstatement].freeze
     SCENARIOS = (FACILITATOR_CONFERRING_SCENARIOS + %w[non_facilitator_training]).freeze
 
+    # What linking an org from an editor does, as one plain-language list for the
+    # editor's top-of-page note: the record link(s), then the affiliation .call
+    # always records (titled by the submitted position, plus Facilitator when the
+    # scenario confers it).
+    def self.effects(record_noun:, person:, scenario:, position: nil, registration: nil)
+      name = person.first_name.presence || person.full_name
+      roles = [ ("“#{position}”" if position.present?), ("a Facilitator" if FACILITATOR_CONFERRING_SCENARIOS.include?(scenario)) ].compact
+      [
+        "Links it to this #{record_noun}",
+        ("Links it to their #{registration.event.title} registration" if registration),
+        [ "Records it in #{name}'s affiliations", (" as #{roles.join(" and as ")}" if roles.any?) ].join
+      ].compact
+    end
+
     def self.call(person:, organization:, entry:, scenario:, training_date: nil, event_registration: nil)
       new(person:, organization:, entry:, scenario:, training_date:, event_registration:).call
     end
