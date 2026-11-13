@@ -132,6 +132,9 @@ RSpec.describe AuthorCreditDivergenceQuery do
       expect(described_class.new(type: "Story").any?).to be(true)
 
       person.update_columns(anonymous_contributions: false, display_name_preference: "")
+      expect(described_class.new(type: "Story").any?).to be(true)
+
+      story.update_columns(author_credit_preference: Person::DEFAULT_DISPLAY_NAME_PREFERENCE)
       expect(described_class.new(type: "Story").any?).to be(false)
       expect_any_to_match(described_class.new(type: "Story"))
     end

@@ -60,7 +60,7 @@
       <div class="pb-2 whitespace-nowrap sm:min-w-[11rem]">
         <span class="block text-xs font-medium text-gray-500">Current Display name preference</span>
         <span class="mt-1 block text-sm font-medium text-gray-800">
-          <%= Person::DISPLAY_NAME_PREFERENCE_LABELS[person.display_name_preference.presence || "full_name"] %>
+          <%= Person::DISPLAY_NAME_PREFERENCE_LABELS[person.display_name_preference] %>
         </span>
         <span class="mt-0.5 block text-xs text-gray-500">
           Anonymous: <%= person.anonymous_contributions? ? "on" : "off" %>

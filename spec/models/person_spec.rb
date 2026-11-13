@@ -320,9 +320,15 @@ RSpec.describe Person, type: :model do
     end
 
     context "when display_name_preference is nil or unknown" do
-      it "defaults to full name" do
+      it "falls back to the default format" do
+        stub_const("Person::DEFAULT_DISPLAY_NAME_PREFERENCE", "first_name_only")
         person.display_name_preference = nil
-        expect(person.name).to eq("Jane Doe")
+        expect(person.name).to eq("Jane")
+      end
+
+      it "uses first name and last initial out of the box" do
+        person.display_name_preference = nil
+        expect(person.name).to eq("Jane D.")
       end
     end
 
@@ -358,6 +364,14 @@ RSpec.describe Person, type: :model do
 
     it "does not match a last name the preference hides" do
       expect(described_class.displayed_name_like("Brambleton")).not_to include(initialled)
+    end
+
+    it "treats an unset preference as the default format" do
+      unset = create(:person, first_name: "Philippa", last_name: "Quernsby")
+      unset.update_column(:display_name_preference, nil)
+
+      expect(described_class.displayed_name_like("Philippa Q.")).to include(unset)
+      expect(described_class.displayed_name_like("Quernsby")).not_to include(unset)
     end
 
     it "matches nothing for a blank query" do
@@ -410,9 +424,9 @@ RSpec.describe Person, type: :model do
       expect(person.effective_author_credit_preference).to eq("first_name_only")
     end
 
-    it "falls back to full_name when unset" do
+    it "falls back to the default format when unset" do
       person.display_name_preference = nil
-      expect(person.effective_author_credit_preference).to eq("full_name")
+      expect(person.effective_author_credit_preference).to eq(Person::DEFAULT_DISPLAY_NAME_PREFERENCE)
     end
 
     it "is anonymous when contributions are anonymous, whatever the format" do
