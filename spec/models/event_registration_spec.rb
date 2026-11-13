@@ -160,6 +160,23 @@ RSpec.describe EventRegistration, type: :model do
       expect(source.attendance_status_report_label).to eq("Transferred out")
     end
 
+    it "keeps a no-show or partial attendance on record after the reg transfers out" do
+      no_show = create(:event_registration, status: "no_show")
+      no_show.update!(status: "transferred_out")
+      partial = create(:event_registration, status: "incomplete_attendance")
+      partial.update!(status: "transferred_out")
+      expect(no_show.pre_transfer_outcome_label).to eq("No show")
+      expect(no_show.attendance_status_report_label).to eq("No show → Transferred out")
+      expect(partial.pre_transfer_outcome_label).to eq("Partial")
+    end
+
+    it "notes no prior outcome when the reg transferred out while registered or attended" do
+      attended = create(:event_registration, status: "attended")
+      attended.update!(status: "transferred_out")
+      expect(attended.pre_transfer_outcome_label).to be_nil
+      expect(source.pre_transfer_outcome_label).to be_nil
+    end
+
     it "offers a Transferred in filter option backed by the FK value" do
       expect(EventRegistration::ATTENDANCE_FILTER_OPTIONS).to include([ "Transferred in", "transferred_in" ])
     end

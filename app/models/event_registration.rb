@@ -57,6 +57,7 @@ class EventRegistration < ApplicationRecord
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
+  PRE_TRANSFER_OUTCOME_LABELS = { "no_show" => "No show", "incomplete_attendance" => "Partial" }.freeze
   # Money is tracked apart from attendance: a transferred-out reg left the event but
   # its money stays on the event's books.
   MONEY_STATUSES = (ACTIVE_STATUSES + %w[ transferred_out ]).freeze
@@ -1223,8 +1224,16 @@ class EventRegistration < ApplicationRecord
   # transferred in — an incoming reg keeps its own status, so the transfer trail
   # would otherwise be invisible in exports.
   def attendance_status_report_label
-    return attendance_status_label unless transferred_in?
-    "#{attendance_status_label} (transferred in)"
+    label = attendance_status_label
+    label = "#{pre_transfer_outcome_label} → #{label}" if pre_transfer_outcome_label
+    label = "#{label} (transferred in)" if transferred_in?
+    label
+  end
+
+  # The attendance outcome a transferred-out reg had before it left, so a no-show
+  # or partial attendance stays on record after the status becomes transferred_out.
+  def pre_transfer_outcome_label
+    PRE_TRANSFER_OUTCOME_LABELS[status_before_transfer] if transferred_out?
   end
 
   # The completion record for a checklist step, or nil. Reads from the loaded
