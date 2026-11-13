@@ -173,6 +173,38 @@ RSpec.describe "Payments", type: :request do
   describe "PATCH /payments/:id" do
     let(:organization) { create(:organization) }
 
+    it "updates the check number and memo on a check payment" do
+      payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234", memo: "Old memo")
+
+      get edit_payment_path(payment)
+      expect(response.body).to include("payment[check_number]")
+      expect(response.body).to include("payment[memo]")
+
+      patch payment_path(payment), params: {
+        payment: { payer_sgid: person.to_sgid.to_s, check_number: "5678", memo: "Spring workshop" }
+      }
+
+      payment.reload
+      expect(payment.check_number).to eq("5678")
+      expect(payment.memo).to eq("Spring workshop")
+    end
+
+    it "records an Ahoy update event with the before and after values" do
+      payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234", memo: "Old memo")
+      # The request spec client reads as a bot, which Ahoy skips by default.
+      allow(Ahoy).to receive(:track_bots).and_return(true)
+
+      expect {
+        patch payment_path(payment), params: {
+          payment: { payer_sgid: person.to_sgid.to_s, check_number: "5678", memo: "Spring workshop" }
+        }
+      }.to change { Ahoy::Event.where(name: "update.payment", resource_id: payment.id).count }.by(1)
+
+      changes = Ahoy::Event.where(name: "update.payment", resource_id: payment.id).last.properties["changes"]
+      expect(changes["memo"]).to eq("before" => "Old memo", "after" => "Spring workshop")
+      expect(changes["check_number"]).to eq("before" => "1234", "after" => "5678")
+    end
+
     it "updates the FileMaker code" do
       payment = create(:payment, person:)
 
