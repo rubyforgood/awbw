@@ -30,13 +30,12 @@ class SmartFormFields
       key: :identity,
       title: "Who the registrant is",
       summary: "These decide which Person the submission belongs to. A logged-in respondent is always " \
-               "their own account. Otherwise email and last name are matched against people on file (an " \
-               "event registration also needs the first name or other first name to match), and the email " \
-               "can match any of the person's emails. No match creates a new person. Name and email are set " \
+               "their own account. Otherwise first name (or other first name), last name, and email are " \
+               "matched against people on file, and the email can match any of the person's emails. No match creates a new person. Name and email are set " \
                "only on a new person — they never change someone already on file.",
       fields: [
-        [ "first_name", "Preferred first name", "Sets a new person's first name — the name they go by. Never changes an existing person's name. Event registrations also use it to match a returning person." ],
-        [ "legal_first_name", "Other first name", "Sets the person's legal first name, shown to admins on their profile, saved only when it differs from their first name. Used as a new person's first name when no first name is given. Event registrations also accept it when matching a returning person." ],
+        [ "first_name", "Preferred first name", "Sets a new person's first name — the name they go by. Never changes an existing person's name. Part of the match key." ],
+        [ "legal_first_name", "Other first name", "Sets the person's legal first name, shown to admins on their profile, saved only when it differs from their first name. Used as a new person's first name when no first name is given. Also accepted in place of the first name when matching a returning person." ],
         [ "last_name", "Last name", "Sets a new person's last name; never changes an existing person's. Part of the match key — without it no person can be matched or created." ],
         [ "pronouns", "Pronouns", "Sets the person's pronouns." ],
         [ "pronunciation", "Name pronunciation", "Sets the admin-only note on the person's profile for how to say their name." ],

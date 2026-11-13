@@ -175,12 +175,28 @@ RSpec.describe PublicFormSubmission do
     end
   end
 
-  it "reuses an existing person matched on email + last name" do
+  it "reuses an existing person matched on first name + last name + email" do
     existing = create(:person, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
 
     expect { described_class.call(form: form, form_params: params_for) }
       .to change(Person, :count).by(0)
       .and change(FormSubmission, :count).by(1)
+
+    expect(FormSubmission.last.person).to eq(existing)
+  end
+
+  it "creates a new person when the email and last name match but the first name doesn't" do
+    existing = create(:person, first_name: "Alex", last_name: "Rivera", email: "sam@example.com")
+
+    expect { described_class.call(form: form, form_params: params_for) }.to change(Person, :count).by(1)
+
+    expect(FormSubmission.last.person).not_to eq(existing)
+  end
+
+  it "reuses an existing person whose legal first name matches the submitted first name" do
+    existing = create(:person, first_name: "Alex", legal_first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
+
+    expect { described_class.call(form: form, form_params: params_for) }.not_to change(Person, :count)
 
     expect(FormSubmission.last.person).to eq(existing)
   end
