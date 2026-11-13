@@ -46,6 +46,7 @@
         <% if allowed_to?(:index?, Person) %>
           <%= link_to "People", people_path, class: "admin-only text-sm text-gray-600 hover:text-primary px-2 py-1" %>
         <% end %>
+        <%= render "people/change_requests_link", person: @person, link_class: "admin-only text-sm text-gray-600 hover:text-primary px-2 py-1" %>
         <% if allowed_to?(:edit?, @person) && !own_profile %>
           <%= link_to edit_person_path(@person),
                         class: "admin-only inline-flex items-center gap-1.5 text-sm font-semibold rounded-full bg-brand-yellow-400 hover:bg-brand-yellow-500 text-primary px-4 py-1.5 shadow-sm transition" do %>

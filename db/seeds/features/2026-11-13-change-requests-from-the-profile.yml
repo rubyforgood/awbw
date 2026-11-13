@@ -1,0 +1,11 @@
+name: "Change requests from the profile"
+area: people
+display_status: admin_facing
+released_on: 2026-11-13
+pr_number: 2994
+action_path: "/people"
+summary: >-
+  A person's profile now has a Change requests link at the top (when they have any) and a Change
+  request options button under Affiliations that opens the same organization options the person sees.
+pro_tips:
+  - "From the options page, Back to profile returns you to the person's affiliations."

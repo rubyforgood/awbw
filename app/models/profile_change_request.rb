@@ -78,6 +78,13 @@ class ProfileChangeRequest < ApplicationRecord
   scope :resolved, -> { where(status: "resolved") }
   scope :declined, -> { where(status: "declined") }
   scope :newest_first, -> { order(created_at: :desc) }
+  # Who sent it: the person themselves, or staff filing it for them (from the profile).
+  SUBMITTERS = { "person" => "Person", "staff" => "Staff" }.freeze
+  scope :self_submitted, -> { joins(:requested_by).where("users.person_id = profile_change_requests.person_id") }
+  scope :staff_filed, -> { joins(:requested_by).where("users.person_id IS NULL OR users.person_id <> profile_change_requests.person_id") }
+  scope :submitted_by, ->(submitter) { submitter == "staff" ? staff_filed : self_submitted }
+
+  def staff_filed? = requested_by.person_id != person_id
 
   def pending? = status == "pending"
   def resolved? = status == "resolved"
