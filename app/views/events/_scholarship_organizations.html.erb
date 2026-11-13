@@ -4,7 +4,8 @@
     the registration; ones linked to none get a closing "No organization" row so
     the list reconciles with the totals above. Every figure links to the
     registrations behind it (see scholarship_figure_link). Pass `report:` (an
-    EventScholarshipReport). %>
+    EventScholarshipReport) and `split:` (false hides the funded/unfunded
+    columns — the funding toggle). %>
 <% rows = report.organization_rows %>
 <% unaffiliated = report.unaffiliated_scholarships %>
 <% if rows.any? || unaffiliated %>
@@ -25,9 +26,11 @@
             <th class="border border-gray-200 px-3 py-2 text-left font-semibold">Location</th>
             <th class="border border-gray-200 px-3 py-2 text-right font-semibold">Recipients</th>
             <th class="border border-gray-200 px-3 py-2 text-right font-semibold"># of scholarships</th>
-            <th class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-right font-medium">Funded</th>
-            <th class="border border-gray-200 px-3 py-2 text-right font-medium">Unfunded</th>
-            <th class="border border-gray-200 px-3 py-2 text-right font-semibold">Total</th>
+            <% if split %>
+              <th class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-right font-medium">Funded</th>
+              <th class="border border-gray-200 px-3 py-2 text-right font-medium">Unfunded</th>
+            <% end %>
+            <th class="border border-gray-200 px-3 py-2 text-right font-semibold<%= " border-l-2 border-l-fuchsia-300" unless split %>">Total</th>
           </tr>
         </thead>
         <tbody class="tabular-nums">
@@ -37,14 +40,14 @@
                 <%= link_to row.organization.name, organization_path(row.organization), class: "text-blue-600 hover:text-blue-800 hover:underline" %>
               </td>
               <td class="border border-gray-200 px-3 py-2 text-gray-700"><%= row.location.presence || "—" %></td>
-              <%= render "scholarship_organization_figures", figures: row, organization_id: row.organization.id %>
+              <%= render "scholarship_organization_figures", figures: row, organization_id: row.organization.id, split: split %>
             </tr>
           <% end %>
           <% if unaffiliated %>
             <tr class="bg-gray-50">
               <td class="border border-gray-200 px-3 py-2 italic text-gray-700">No organization</td>
               <td class="border border-gray-200 px-3 py-2 text-gray-700">—</td>
-              <%= render "scholarship_organization_figures", figures: unaffiliated, organization_id: EventRegistration::NO_ORGANIZATION %>
+              <%= render "scholarship_organization_figures", figures: unaffiliated, organization_id: EventRegistration::NO_ORGANIZATION, split: split %>
             </tr>
           <% end %>
         </tbody>

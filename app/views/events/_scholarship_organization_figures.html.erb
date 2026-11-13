@@ -1,11 +1,14 @@
 <%# The figure cells for one row of the organizations-with-scholarships table —
     recipients, award count, then funded / unfunded / total dollars — each linked
     to that organization's scholarship registrations. Pass `figures:` (responds to
-    recipient_count / award_count / *_cents) and `organization_id:` (an id, or
-    EventRegistration::NO_ORGANIZATION). %>
+    recipient_count / award_count / *_cents), `organization_id:` (an id, or
+    EventRegistration::NO_ORGANIZATION) and `split:` (false drops the funded /
+    unfunded cells). %>
 <% any = { scholarship: "yes", organization_id: organization_id } %>
 <td class="border border-gray-200 px-3 py-2 text-right"><%= scholarship_figure_link(figures.recipient_count, figures.recipient_count, any) %></td>
 <td class="border border-gray-200 px-3 py-2 text-right"><%= scholarship_figure_link(figures.award_count, figures.award_count, any) %></td>
-<td class="border border-l-2 border-gray-200 border-l-fuchsia-200 px-3 py-2 text-right"><%= scholarship_figure_link(dollars_from_cents(figures.funded_cents), figures.funded_cents, { funder: "external", organization_id: organization_id }) %></td>
-<td class="border border-gray-200 px-3 py-2 text-right"><%= scholarship_figure_link(dollars_from_cents(figures.unfunded_cents), figures.unfunded_cents, { funder: "awbw", organization_id: organization_id }) %></td>
-<td class="border border-gray-200 px-3 py-2 text-right font-semibold text-gray-900"><%= scholarship_figure_link(dollars_from_cents(figures.scholarship_cents), figures.scholarship_cents, any) %></td>
+<% if split %>
+  <td class="border border-l-2 border-gray-200 border-l-fuchsia-200 px-3 py-2 text-right"><%= scholarship_figure_link(dollars_from_cents(figures.funded_cents), figures.funded_cents, { funder: "external", organization_id: organization_id }) %></td>
+  <td class="border border-gray-200 px-3 py-2 text-right"><%= scholarship_figure_link(dollars_from_cents(figures.unfunded_cents), figures.unfunded_cents, { funder: "awbw", organization_id: organization_id }) %></td>
+<% end %>
+<td class="border border-gray-200 px-3 py-2 text-right font-semibold text-gray-900<%= " border-l-2 border-l-fuchsia-200" unless split %>"><%= scholarship_figure_link(dollars_from_cents(figures.scholarship_cents), figures.scholarship_cents, any) %></td>

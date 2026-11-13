@@ -26,6 +26,7 @@
           class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-8" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
       <%= hidden_field_tag :view, params[:view] %>
+      <%= hidden_field_tag :funding, params[:funding] %>
       <div class="flex flex-wrap items-end gap-4">
         <%= render "report_filters", event_all_label: "All trainings" %>
       </div>
@@ -36,7 +37,7 @@
 
       <%= render "scholarships_report", report: @report %>
 
-      <%= render "scholarship_organizations", report: @report %>
+      <%= render "scholarship_organizations", report: @report, split: scholarship_funding_split? %>
 
       <p class="mt-6 text-xs text-gray-500">
         <span class="font-medium">Funded</span> = backed by an external grant.

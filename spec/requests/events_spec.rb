@@ -919,6 +919,37 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(CGI.escapeHTML(registrants_event_path(training, funder: "awbw")))
       end
 
+      it "drops the funded/unfunded columns when the funding toggle is set to totals" do
+        org = create(:organization, name: "Harbor Program")
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        create(:event_registration_organization, event_registration: reg, organization: org)
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 2_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 2_500)
+        sign_in admin
+
+        get scholarships_events_path
+        headers = Nokogiri::HTML(response.body).css("th").map { |th| th.text.strip }
+        expect(headers).to include("Funded", "Unfunded", "Total")
+        expect(response.body).to include("Totals only")
+
+        get scholarships_events_path(funding: "totals")
+        page = Nokogiri::HTML(response.body)
+        headers = page.css("th").map { |th| th.text.strip }
+        expect(headers).not_to include("Funded", "Unfunded")
+        expect(headers).to include("Total")
+        expect(response.body).to include("Harbor Program")
+        # The filter form keeps the toggle when filters change.
+        expect(page.at_css("input[type=hidden][name=funding]")["value"]).to eq("totals")
+      end
+
+      it "combines the totals-only and combined layouts" do
+        sign_in admin
+        get scholarships_events_path(funding: "totals", view: "combined")
+        expect(response).to have_http_status(:ok)
+        headers = Nokogiri::HTML(response.body).css("th").map { |th| th.text.strip }
+        expect(headers).not_to include("Funded", "Unfunded")
+      end
+
       it "renders the combined-cell layout when the view toggle is set" do
         sign_in admin
         get scholarships_events_path(view: "combined")

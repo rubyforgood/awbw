@@ -67,6 +67,13 @@ module EventsHelper
     }.compact)
   end
 
+  # The scholarships report's funding toggle: true (the default) splits figures
+  # into funded and unfunded; `funding=totals` shows only the totals.
+  SCHOLARSHIP_FUNDING_TOTALS = "totals".freeze
+  def scholarship_funding_split?
+    params[:funding] != SCHOLARSHIP_FUNDING_TOTALS
+  end
+
   # A scholarships-report figure as a link to the registrations behind it (see
   # #scholarship_drilldown_path); plain text when the figure is zero.
   def scholarship_figure_link(label, amount, filters, event: nil, year: nil)
@@ -87,7 +94,7 @@ module EventsHelper
   # The scholarships report's filter/toggle state, carried through a drill-in so
   # its eyebrow can rebuild the exact view (period, event type/id, search, funder,
   # split/combined layout, and the report's own origin) the user came from.
-  REPORT_FILTER_KEYS = %i[ time_period event_type event_id search funder_sgid view return_to ].freeze
+  REPORT_FILTER_KEYS = %i[ time_period event_type event_id search funder_sgid view funding return_to ].freeze
 
   # Stable anchor id for a training's row on the scholarships report, so the
   # registrants eyebrow can scroll to and highlight the row drilled in from.
@@ -275,7 +282,7 @@ module EventsHelper
   # event's calendar year) and funding source (funder_sgid names a specific funder;
   # funder is grant-funded vs org-subsidized).
   REPORT_SUBNAV_PARAMS = %i[
-    event_id event_type search funder_sgid time_period view registrant_ids
+    event_id event_type search funder_sgid time_period view funding registrant_ids
     attendance_status payment_status funder scholarship
     sector name_email contact_info work_location affiliation_status organization_id org_city state county
     age_group life_experience country school_district program_status
