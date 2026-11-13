@@ -1,0 +1,12 @@
+name: "Delete hidden when payment records block it, with the reason"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2914
+action_path: "/events"
+summary: >-
+  CE and event registration edit pages hide the Delete button when payment
+  records keep the registration from being deleted, and show a note saying why,
+  instead of letting the delete fail.
+pro_tips:
+  - "Reverted payments still count as payment records, so reverting doesn't unblock a delete."

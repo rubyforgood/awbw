@@ -1,0 +1,12 @@
+name: "Edit a person's internal notes"
+area: people
+display_status: admin_facing
+released_on: 2026-10-15
+pr_number: 2689
+action_path: "/people"
+summary: >-
+  Admins can see and edit a person's internal notes (including old FileMaker
+  comments) on the person's edit page, the same way organizations already
+  worked. Before, those notes only showed on the dedupe page.
+pro_tips:
+  - "Add ?admin=true to the edit page's address to show the Internal notes field."
