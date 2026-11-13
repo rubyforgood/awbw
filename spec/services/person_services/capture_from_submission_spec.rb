@@ -3,6 +3,39 @@ require "rails_helper"
 RSpec.describe PersonServices::CaptureFromSubmission do
   let(:person) { create(:person) }
 
+  describe "the phone" do
+    it "reuses the same number on file despite formatting, making it the only primary" do
+      other = create(:contact_method, contactable: person, kind: :phone, value: "555-400-2000", primary: true)
+      same = create(:contact_method, contactable: person, kind: :phone, value: "+1 (555) 400-1000", primary: false)
+
+      capture = described_class.new(person:, answers: { "phone" => "555 400 1000" })
+      capture.call
+
+      expect(person.contact_methods.where(kind: :phone).count).to eq(2)
+      expect(same.reload).to have_attributes(primary: true, inactive: false)
+      expect(other.reload).to have_attributes(primary: false, inactive: true)
+      expect(capture.replaced.sole).to have_attributes(label: "Primary phone", saved: "555-400-2000", submitted: "+1 (555) 400-1000")
+    end
+
+    it "adds a new number as the primary, retiring the old one" do
+      old = create(:contact_method, contactable: person, kind: :phone, value: "555-400-2000", primary: true)
+
+      described_class.call(person:, answers: { "phone" => "555-400-1000" })
+
+      expect(old.reload).to have_attributes(primary: false, inactive: true)
+      expect(person.contact_methods.find_by(value: "555-400-1000")).to be_primary
+    end
+
+    it "reports nothing when the submitted number is already the primary" do
+      create(:contact_method, contactable: person, kind: :phone, value: "555-400-1000", primary: true)
+
+      capture = described_class.new(person:, answers: { "phone" => "(555) 400-1000" })
+      capture.call
+
+      expect(capture.replaced).to be_empty
+    end
+  end
+
   describe "the mailing address" do
     it "saves a new address with no ZIP or street as blank" do
       described_class.call(person:, answers: { "mailing_city" => "Springfield", "mailing_state" => "IL" })

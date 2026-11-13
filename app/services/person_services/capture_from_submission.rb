@@ -137,28 +137,27 @@ module PersonServices
       @replaced << Replaced.new(label: "Primary mailing address", submitted: address.name.squish, saved: previous_primary.name.squish)
     end
 
+    # The submitted phone becomes the primary, reusing the same number on file
+    # (formatting aside) or adding it; the old primary is retired.
     def capture_phone
       phone_value = field_value("phone")&.strip
       return if phone_value.blank?
 
-      phone_type = field_value("phone_type")&.downcase
-      contact_type = phone_type == "work" ? "work" : "personal"
+      contact_type = field_value("phone_type")&.downcase == "work" ? "work" : "personal"
+      phones = @person.contact_methods.where(kind: :phone)
+      previous_primary = phones.find_by(primary: true)
+      number = ContactMethodDeduper.comparable_number(phone_value)
+      existing = phones.find { |phone| ContactMethodDeduper.comparable_number(phone.value.to_s) == number }
 
-      existing = @person.contact_methods.find_by(kind: :phone, value: phone_value)
-
-      if existing
-        existing.update!(contact_type: contact_type, primary: true, inactive: false)
-        return existing
+      phones.where(primary: true).where.not(id: existing&.id).find_each { |phone| phone.update!(primary: false, inactive: true) }
+      phone = if existing
+        existing.tap { |found| found.update!(contact_type: contact_type, primary: true, inactive: false) }
+      else
+        @person.contact_methods.create!(kind: :phone, value: phone_value, contact_type: contact_type, primary: true)
       end
+      return if previous_primary.nil? || previous_primary == phone
 
-      @person.contact_methods.where(kind: :phone, primary: true).find_each { |phone| phone.update!(primary: false, inactive: true) }
-
-      @person.contact_methods.create!(
-        kind: :phone,
-        value: phone_value,
-        contact_type: contact_type,
-        primary: true
-      )
+      @replaced << Replaced.new(label: "Primary phone", submitted: phone.value, saved: previous_primary.value)
     end
 
     # A license is identified by its number (plus type), so no number answered means
