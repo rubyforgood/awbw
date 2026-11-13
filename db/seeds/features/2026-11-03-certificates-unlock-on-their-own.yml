@@ -1,0 +1,13 @@
+name: "Certificates unlock on their own; the slider makes one available now"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-03
+pr_number: 2942
+action_path: "/events"
+summary: >-
+  On the registrants list, a certificate that has unlocked on its own shows a
+  green "Available." Otherwise its slider makes it available right away. This
+  works the same for event and CE certificates.
+pro_tips:
+  - "Hover a certificate cell to see exactly what unlocks it."
+  - "Making a CE certificate available unlocks it even if that CE was denied."

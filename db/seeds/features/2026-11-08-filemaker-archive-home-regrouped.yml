@@ -1,0 +1,10 @@
+name: "FileMaker archive home groups tables by what they hold"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-08
+pr_number: 2967
+action_path: "/fm_archives"
+summary: >-
+  The FileMaker archive home files each table by what it holds. Monthly reports
+  (Services) sit with Workshops, Expenditure with Grants & funding, and contact
+  logs and notes in a new Contact history card. Cards stay in fixed columns.

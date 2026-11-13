@@ -1,0 +1,12 @@
+name: "Set the membership fee for many members at once"
+area: payments
+display_status: admin_facing
+released_on: 2026-11-06
+pr_number: 2956
+action_path: "/memberships"
+summary: >-
+  From the memberships list's bulk actions, lock a yearly price on every checked
+  membership. A confirm page shows each one's current price first. Leave the
+  price blank to put them back on the standard price.
+pro_tips:
+  - "The new price applies to future renewal invoices only; invoices already issued keep their amount."

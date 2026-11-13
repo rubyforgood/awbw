@@ -1,0 +1,12 @@
+name: "Membership year report"
+area: payments
+display_status: admin_facing
+released_on: 2026-11-06
+pr_number: 2956
+action_path: "/membership_reports"
+summary: >-
+  Pick a year or all time to see membership revenue collected and still
+  outstanding, plus memberships that ended, split into closed out and still
+  owing. Each number opens the matching list.
+pro_tips:
+  - "Revenue counts real payments only, not comps or credits."
