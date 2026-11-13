@@ -1,0 +1,36 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Scholarship application — #{@event.title}") %>
+
+<%= render layout: "events/callouts/callout_page",
+           locals: { title: "Scholarship application",
+                     back_path: registration_scholarship_path(@event_registration.slug),
+                     back_label: "Back to scholarship" } do %>
+  <div class="space-y-6">
+    <%= render "forms/header", form: @scholarship_form, event: @event %>
+
+    <%= form_with url: registration_scholarship_application_path(@event_registration.slug), method: :post do %>
+      <div class="space-y-2">
+        <% @form_fields.each do |field| %>
+          <% next if field.paired_with_state?(among: @form_fields) %>
+          <% if field.group_header? %>
+            <% next if field.name.to_s.strip.casecmp?(@scholarship_form.display_name.to_s.strip) %>
+            <h2 class="border-b border-gray-100 pt-2 pb-1 text-sm font-semibold tracking-wide text-gray-400 uppercase"><%= field.name %></h2>
+          <% else %>
+            <% submitted = params.dig(:callout_form, :form_fields, field.id.to_s) %>
+            <% saved = @scholarship_submission&.form_answers&.find_by(form_field: field)&.submitted_answer %>
+            <%= render "events/public_registrations/form_field",
+                       field: field, asked: @form_fields, param_scope: "callout_form",
+                       required: field.answer_required?, submission: @scholarship_submission,
+                       value: submitted.nil? ? saved : submitted %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <div class="pt-6">
+        <%= button_tag type: "submit", class: button_classes(:primary) do %>
+          <i class="fa-solid fa-paper-plane"></i> Submit application
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

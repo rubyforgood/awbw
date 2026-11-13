@@ -119,6 +119,8 @@ Rails.application.routes.draw do
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
   get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
   get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
+  get "registration/:slug/scholarship/application", to: "events/callouts#scholarship_application", as: :registration_scholarship_application
+  post "registration/:slug/scholarship/application", to: "events/callouts#submit_scholarship_application"
   post "registration/:slug/scholarship/agreement", to: "events/callouts#sign_agreement", as: :registration_scholarship_agreement
   post "registration/:slug/scholarship/decline", to: "events/callouts#decline_agreement", as: :registration_scholarship_decline
   post "registration/:slug/scholarship/request-support", to: "events/callouts#request_scholarship_support", as: :registration_scholarship_request_support
