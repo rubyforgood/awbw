@@ -320,14 +320,13 @@
                             classes: "bg-blue-50 text-blue-700 border-blue-200",
                             href: edit_scholarship_path(s, return_to: "registrants") %>
                     <% end %>
-                  <% elsif registration.transferred_in? %>
-                    <%# Transferred in with no scholarship on the source — nothing to award here. %>
-                    <span class="text-gray-300">—</span>
                   <% elsif registration.scholarship_requested? %>
                     <%= render "shared/badge",
                           label: "Requested",
                           classes: "bg-amber-50 text-amber-700 border-amber-200",
                           href: new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants") %>
+                  <% elsif registration.transferred_in? %>
+                    <span class="text-gray-300">—</span>
                   <% else %>
                     <%= render "shared/badge",
                           label: "Create",

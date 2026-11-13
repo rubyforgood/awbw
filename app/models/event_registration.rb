@@ -713,6 +713,13 @@ class EventRegistration < ApplicationRecord
     transferred_from_registration_id.present?
   end
 
+  # Unlinks a transfer's destination into a standalone registration. A scholarship request moved in by
+  # the transfer goes back with it, unless an award was already made here.
+  def detach_from_transfer!
+    request_moved_in = transferred_from_registration&.scholarship_requested? && scholarships.none?
+    update!(transferred_from_registration: nil, scholarship_requested: scholarship_requested? && !request_moved_in)
+  end
+
   # A transferred-out registration whose destination hasn't been recorded yet.
   # Drives the follow-up prompt to create/link the incoming registration.
   def transfer_destination_pending?

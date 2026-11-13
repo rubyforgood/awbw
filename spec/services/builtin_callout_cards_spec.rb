@@ -260,6 +260,13 @@ RSpec.describe BuiltinCalloutCards do
       expect(scholarship_card.theme).to eq(DomainTheme.swatch("amber"))
     end
 
+    it "shows a pending request moved in by a transfer even without a scholarship form" do
+      source = create(:event_registration, registrant: registration.registrant, status: "transferred_out")
+      registration.update!(transferred_from_registration: source, scholarship_requested: true)
+
+      expect(card(registration, "Scholarship")&.subtitle).to eq("Your scholarship request status")
+    end
+
     context "for a transferred-in recipient with the award on the original registration" do
       let(:source) { create(:event_registration, registrant: registration.registrant, status: "transferred_out") }
       let(:scholarship) { create(:scholarship, recipient: registration.registrant, amount_cents: 25_000, tasks_completed: true) }
@@ -276,6 +283,12 @@ RSpec.describe BuiltinCalloutCards do
         expect(scholarship_card.subtitle).to eq("Review and accept your scholarship agreement")
         expect(scholarship_card.badge).to be_nil
         expect(scholarship_card.theme).to eq(DomainTheme.swatch("amber"))
+      end
+
+      it "keeps the card when the new event has no scholarship form" do
+        EventForm.where(event:, role: "scholarship").destroy_all
+
+        expect(card(registration.reload, "Scholarship")).to be_present
       end
 
       it "shows the awarded amount once signed" do

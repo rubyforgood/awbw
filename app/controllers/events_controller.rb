@@ -311,7 +311,7 @@ class EventsController < ApplicationController
       # Preload each org's affiliations: the row's program-status badge classifies
       # them via Organization#facilitator_status_on, which filters the loaded
       # association — unloaded, that's a per-org query pulling every affiliation row.
-      .includes(:checklist_completions, { organizations: :affiliations }, :allocations, :scholarships, :comments, { transferred_from_registration: [ :event, :allocations ] }, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, { affiliations: :organization } ])
+      .includes(:checklist_completions, { organizations: :affiliations }, :allocations, :scholarships, :comments, { transferred_from_registration: [ :event, :allocations, :scholarships ] }, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
 

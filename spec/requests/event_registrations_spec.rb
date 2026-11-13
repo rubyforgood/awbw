@@ -1247,6 +1247,16 @@ RSpec.describe "EventRegistrations", type: :request do
           )
         end
 
+        it "moves a pending scholarship request to the new registration" do
+          source.update!(scholarship_requested: true)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming).to be_scholarship_requested
+        end
+
         it "compresses carried days and flags the mismatch when the source had more days than the destination" do
           # Mid-month so the month_year asserted below reads the same in UTC and the request's Pacific zone.
           starts = 1.month.from_now.change(day: 15, hour: 12)
@@ -1467,6 +1477,28 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(source.reload.status).to eq("registered")
           expect(EventRegistration.exists?(destination.id)).to be(true)
           expect(destination.reload.transferred_from_registration).to be_nil
+        end
+
+        it "takes back the scholarship request the transfer moved onto the destination" do
+          source.update!(scholarship_requested: true)
+          destination = create(:event_registration, registrant: source.registrant, event: create(:event, published: true),
+            transferred_from_registration: source, scholarship_requested: true)
+
+          patch revert_transfer_event_registration_path(source)
+
+          expect(destination.reload).not_to be_scholarship_requested
+          expect(source.reload).to be_scholarship_requested
+        end
+
+        it "keeps the destination's request once a scholarship was awarded there" do
+          source.update!(scholarship_requested: true)
+          destination = create(:event_registration, registrant: source.registrant, event: create(:event, published: true),
+            transferred_from_registration: source, scholarship_requested: true)
+          create(:allocation, source: create(:scholarship, recipient: source.registrant), allocatable: destination, amount: 1)
+
+          patch revert_transfer_event_registration_path(source)
+
+          expect(destination.reload).to be_scholarship_requested
         end
 
         it "undoes a collapsed chain, re-merging the relocated CE back onto the origin" do
