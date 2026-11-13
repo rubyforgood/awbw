@@ -1,6 +1,31 @@
 require "rails_helper"
 
 RSpec.describe NotificationMailer, type: :mailer do
+  describe "#account_email_changed" do
+    let(:user) { create(:user, :with_person, email: "new@example.com") }
+
+    it "tells the new address its login email changed" do
+      notification = create(:notification, kind: "account_email_changed", noticeable: user,
+                            recipient_role: "person", recipient_email: "new@example.com")
+      mail = described_class.account_email_changed(notification)
+
+      expect(mail.to).to eq([ "new@example.com" ])
+      expect(mail.subject).to eq(NotificationMailer::ACCOUNT_EMAIL_CHANGED_SUBJECT)
+      expect(mail.html_part.body.decoded).to include("is now <strong>new@example.com</strong>")
+      expect(mail.text_part.body.decoded).not_to include("previous address")
+    end
+
+    it "explains the notice when it goes to the previous address" do
+      notification = create(:notification, kind: "account_email_changed", noticeable: user,
+                            recipient_role: "person", recipient_email: "old@example.com")
+      mail = described_class.account_email_changed(notification)
+
+      expect(mail.to).to eq([ "old@example.com" ])
+      expect(mail.text_part.body.decoded).to include("is now new@example.com")
+      expect(mail.text_part.body.decoded).to include("sending this to your previous address")
+    end
+  end
+
   describe "#profile_change_reviewed" do
     let(:requester) { create(:user, :with_person, first_name: "Amy") }
     let(:request) do

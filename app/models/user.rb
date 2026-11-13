@@ -426,19 +426,24 @@ class User < ApplicationRecord
     PersonLoginEmailSync.call(self)
   end
 
+  # Emails a security notice to the new login address and to the one it replaced,
+  # so an unexpected change is noticed at the old inbox too. Reconfirmable means
+  # the email only changes once the new address is confirmed (or an admin
+  # confirms it), so this never fires on an unconfirmed request.
   def create_email_changed_notification
     return unless previous_changes.key?("email")
 
-    _from, to = previous_changes["email"]
-    NotificationServices::CreateNotification.call(
-      noticeable: self,
-      person: person,
-      recipient_role: :person,
-      recipient_email: to,
-      kind: :account_email_changed,
-      notification_type: 1,
-      deliver: false
-    )
+    from, to = previous_changes["email"]
+    [ to, from ].compact_blank.uniq(&:downcase).each do |recipient_email|
+      NotificationServices::CreateNotification.call(
+        noticeable: self,
+        person: person,
+        recipient_role: :person,
+        recipient_email: recipient_email,
+        kind: :account_email_changed,
+        notification_type: 1
+      )
+    end
   end
 
   def sync_locked_at_from_locked

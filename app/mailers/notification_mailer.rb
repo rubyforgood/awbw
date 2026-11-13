@@ -6,6 +6,7 @@ class NotificationMailer < ApplicationMailer
   SUBJECT_PREFIX = "AWBW Portal:".freeze
   FYI_PREFIX = "#{SUBJECT_PREFIX} [FYI]".freeze
   PROFILE_CHANGE_REVIEWED_SUBJECT = "#{SUBJECT_PREFIX} Update on your change request".freeze
+  ACCOUNT_EMAIL_CHANGED_SUBJECT = "#{SUBJECT_PREFIX} Your login email was changed".freeze
 
   def event_registration_confirmation_fyi(notification)
     @event_registration = notification.noticeable
@@ -266,6 +267,22 @@ class NotificationMailer < ApplicationMailer
     mail(
       to: notification.recipient_email,
       subject: PROFILE_CHANGE_REVIEWED_SUBJECT
+    )
+  end
+
+  # Security notice sent after a login email change, to both the new address and
+  # the one it replaced (so a hijacked account is noticed at the old inbox). The
+  # new address is read from the user at send time, so a resend names the current
+  # login email.
+  def account_email_changed(notification)
+    @user = notification.noticeable
+    @first_name = @user.person&.first_name.presence || @user.first_name.presence
+    @new_email = @user.email
+    @sent_to_previous = !notification.recipient_email.to_s.casecmp?(@new_email.to_s)
+
+    mail(
+      to: notification.recipient_email,
+      subject: ACCOUNT_EMAIL_CHANGED_SUBJECT
     )
   end
 

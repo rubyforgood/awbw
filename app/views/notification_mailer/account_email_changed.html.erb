@@ -1,0 +1,25 @@
+<h1 style="margin: 0 0 16px; font-weight: bold;">Your login email was changed</h1>
+
+<% if @first_name %>
+  <p style="margin: 0 0 16px; color:#374151;">Dear <%= @first_name %>,</p>
+<% end %>
+
+<p style="margin: 0 0 16px; color:#374151;">
+  The login email for your AWBW Portal account is now <strong><%= @new_email %></strong>.
+</p>
+
+<% if @sent_to_previous %>
+  <p style="margin: 0 0 16px; color:#374151;">
+    We're sending this to your previous address so you know about the change.
+  </p>
+<% end %>
+
+<p style="margin: 0 0 16px; color:#374151;">
+  If you didn't make this change, please contact us right away at
+  <%= mail_to Setting.programs_email %>.
+</p>
+
+<p style="margin: 0 0 16px; color:#374151;">
+  Thank you,<br>
+  AWBW Staff
+</p>
