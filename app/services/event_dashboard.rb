@@ -1081,7 +1081,7 @@ class EventDashboard
   # instead of the current date, so revisiting a past event always shows the same
   # numbers regardless of affiliations that have started or ended since.
   def reference_date
-    @reference_date ||= (event.start_date || Date.current).to_date
+    @reference_date ||= event.starts_on || Date.current
   end
 
   # Scholarships to RECOGNIZE recipients at this event: awards on this event's own
