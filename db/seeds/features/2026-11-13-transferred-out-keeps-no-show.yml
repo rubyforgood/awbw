@@ -5,5 +5,8 @@ released_on: 2026-11-13
 action_path: "/transfer_guide"
 summary: >-
   When someone who was a no-show (or partially attended) transfers to another
-  training, their original registration now reads "Transferred out · was no show"
-  on rosters, the person's profile, organization chips, and exports.
+  training, their original "Transferred out" badge now carries the no-show or
+  partial icon on rosters, the person's profile, and organization chips.
+pro_tips:
+  - "Hover the icon to see what it means."
+  - "CSV exports spell it out: \"Transferred out (was no show)\"."

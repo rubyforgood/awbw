@@ -2259,7 +2259,7 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event, params: { attendance_status: "transferred_out" })
 
-        expect(response.body).to include("Transferred out · was no show")
+        expect(response.body).to include("Was no show before transferring out")
       end
 
       it "drops the warning once the transfer destination is recorded" do

@@ -143,13 +143,21 @@ class EventRegistrationDecorator < ApplicationDecorator
   # Pill bundle for the profile event card's status marker, reusing the shared
   # status SSOT so label, icon, and colors stay in one place.
   def attendance_status_badge
-    { label: attendance_status_display_label, icon: attendance_status_icon, classes: attendance_status_classes }
+    { label: attendance_status_label, icon: attendance_status_icon, classes: attendance_status_classes,
+      outcome_icon: pre_transfer_outcome_icon }
   end
 
-  def attendance_status_display_label
-    return attendance_status_label unless pre_transfer_outcome_label
+  PRE_TRANSFER_OUTCOME_ICON_CLASSES = {
+    "no_show" => "text-red-600",
+    "incomplete_attendance" => "text-amber-600"
+  }.freeze
 
-    "#{attendance_status_label} · was #{pre_transfer_outcome_label.downcase}"
+  def pre_transfer_outcome_icon
+    return unless pre_transfer_outcome_label
+
+    { icon: ATTENDANCE_STATUS_ICONS[status_before_transfer],
+      classes: PRE_TRANSFER_OUTCOME_ICON_CLASSES[status_before_transfer],
+      title: "Was #{pre_transfer_outcome_label.downcase} before transferring out" }
   end
 
   def title

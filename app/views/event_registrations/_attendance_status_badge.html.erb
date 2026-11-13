@@ -13,7 +13,8 @@
             class: "absolute inset-0 w-full opacity-0 cursor-pointer",
             onchange: "this.form.requestSubmit()",
             "aria-label": "Change attendance status" %>
-      <span><%= deco.attendance_status_display_label %></span>
+      <span><%= registration.attendance_status_label %></span>
+      <%= render "event_registrations/pre_transfer_outcome_icon", outcome_icon: deco.pre_transfer_outcome_icon %>
       <i class="fas fa-chevron-down text-2xs"></i>
     </div>
   <% end %>

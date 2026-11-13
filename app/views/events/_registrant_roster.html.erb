@@ -217,7 +217,8 @@
                           onclick: "event.stopPropagation()",
                           data: { turbo_frame: "_top" } do %>
                       <i class="fa-solid <%= attendance.attendance_status_icon %>"></i>
-                      <span><%= attendance.attendance_status_display_label %></span>
+                      <span><%= registration.attendance_status_label %></span>
+                      <%= render "event_registrations/pre_transfer_outcome_icon", outcome_icon: attendance.pre_transfer_outcome_icon %>
                     <% end %>
                   <% else %>
                     <span class="text-gray-300">—</span>
