@@ -161,6 +161,7 @@ class Person < ApplicationRecord
     "last_name_only" => "Last name only"
   }.freeze
 
+  normalizes :display_name_preference, with: ->(value) { value.presence }
   validates :display_name_preference, inclusion: { in: DISPLAY_NAME_PREFERENCES }, allow_blank: true
   # Mirrors SectorsTaggable's single-primary rule for age ranges — the chip
   # editor's single-star JS is the first line of defense, this guards imports,
