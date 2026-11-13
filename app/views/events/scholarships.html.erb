@@ -18,7 +18,7 @@
           icon: "fa-solid fa-graduation-cap",
           theme: :scholarships,
           event: @filter_event,
-          subtitle: "Scholarship dollars and awards (funded vs unfunded) per facilitator training, by year, with trainees who attended." %>
+          subtitle: "Scholarship dollars and awards (funded vs unfunded) per facilitator training, by year, with trainees who attended and the organizations they came from." %>
 
     <%# Ahoy-style filters — time period, specific training, and abbreviation
         search — each auto-submitting a GET form so the report reshapes on change. %>
@@ -35,6 +35,8 @@
       <%= render "scholarship_kpis", report: @report %>
 
       <%= render "scholarships_report", report: @report %>
+
+      <%= render "scholarship_organizations", report: @report %>
 
       <p class="mt-6 text-xs text-gray-500">
         <span class="font-medium">Funded</span> = backed by an external grant.

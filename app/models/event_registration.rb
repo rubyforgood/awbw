@@ -99,12 +99,15 @@ class EventRegistration < ApplicationRecord
     [ "Intends to pay", "intends_to_pay" ]
   ].freeze
   # Scholarship funding-source options (the .funder scope's vocabulary), named the
-  # way Scholarship.externally_funded / .org_subsidized name the same split. No
-  # select offers these yet — they arrive from the revenue report's drill-ins.
+  # way Scholarship.externally_funded / .org_subsidized name the same split. The
+  # registrations index and roster offer them as the Funding select, which the
+  # revenue and scholarship reports drill into.
   FUNDER_FILTER_OPTIONS = [
     [ "Grant-funded", "external" ],
     [ "Org-subsidized", "awbw" ]
   ].freeze
+  # The organization filter value meaning "linked to no organization".
+  NO_ORGANIZATION = "none".freeze
   # Scholarship-status filter options (the .scholarship_status scope's vocabulary).
   SCHOLARSHIP_STATUS_FILTER_OPTIONS = [
     [ "All recipients", "yes" ],
@@ -182,6 +185,12 @@ class EventRegistration < ApplicationRecord
   # Scopes
   def self.person_name_join = :registrant
   scope :registrant_name, ->(query) { by_person_name(query) }
+  # Events whose abbreviation or title contains the term — the reports' Event
+  # search, carried into the registrations index by their drill-in links.
+  scope :event_search, ->(term) {
+    like = "%#{sanitize_sql_like(term.to_s.strip)}%"
+    where(event_id: Event.where("events.abbreviation LIKE :q OR events.title LIKE :q", q: like).select(:id))
+  }
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
@@ -509,6 +518,13 @@ class EventRegistration < ApplicationRecord
   # "pending" = an organization name was submitted but nothing is linked yet (the
   # Pending chip on the roster). Needs the event to resolve its organization-name
   # field ("organization_name").
+  # Registrations linked to the given organization — or, given NO_ORGANIZATION,
+  # linked to none at all.
+  scope :linked_organization, ->(value) {
+    linked = EventRegistrationOrganization.select(:event_registration_id)
+    next where.not(id: linked) if value.to_s == NO_ORGANIZATION
+    where(id: linked.where(organization_id: value))
+  }
   scope :organization_linking_status, ->(value, event) {
     linked = EventRegistrationOrganization.select(:event_registration_id)
     case value
@@ -606,10 +622,11 @@ class EventRegistration < ApplicationRecord
     elsif params[:event_name].present?
       registrations = registrations.event_title(params[:event_name].downcase.strip)
     end
+    if params[:event_search].present?
+      registrations = registrations.event_search(params[:event_search])
+    end
     if params[:organization_id].present?
-      registrations = registrations.joins(:event_registration_organizations)
-                                   .where(event_registration_organizations: { organization_id: params[:organization_id] })
-                                   .distinct
+      registrations = registrations.linked_organization(params[:organization_id])
     end
     if params[:ce_status].present?
       registrations = registrations.ce_status(params[:ce_status])

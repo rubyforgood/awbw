@@ -93,10 +93,36 @@ class EventScholarshipReport
   end
 
   def columns
-    @columns ||= begin
-      figures = EventScholarshipFigures.new(@events, funder: @funder)
-      @events.map { |event| Column.new(event: event, figures: figures.for(event)) }
+    @columns ||= @events.map { |event| Column.new(event: event, figures: figures.for(event)) }
+  end
+
+  # One organization whose trainees received scholarships across the trainings in
+  # scope, with where its program is.
+  OrganizationRow = Struct.new(:organization, :figures, keyword_init: true) do
+    def funded_cents = figures.funded_cents
+    def unfunded_cents = figures.unfunded_cents
+    def scholarship_cents = figures.scholarship_cents
+    def award_count = figures.award_count
+    def recipient_count = figures.recipient_count
+    def location = organization.program_location
+  end
+
+  # Organizations whose trainees received scholarships, name-sorted. See
+  # EventScholarshipFigures#by_organization for how awards are credited.
+  def organization_rows
+    @organization_rows ||= begin
+      by_organization = figures.by_organization
+      organizations = Organization.includes(:addresses).where(id: by_organization.keys.compact)
+      organizations
+        .map { |organization| OrganizationRow.new(organization: organization, figures: by_organization[organization.id]) }
+        .sort_by { |row| row.organization.name.to_s.downcase }
     end
+  end
+
+  # Scholarships on registrations linked to no organization (nil when none), so
+  # the organization list reconciles with the totals.
+  def unaffiliated_scholarships
+    figures.by_organization[nil]
   end
 
   def any?
@@ -146,6 +172,10 @@ class EventScholarshipReport
   end
 
   private
+
+  def figures
+    @figures ||= EventScholarshipFigures.new(@events, funder: @funder)
+  end
 
   # A zeroed year group for a period with no trainings, so the summary card
   # renders 0 rather than blank.

@@ -1764,6 +1764,22 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".linked_organization" do
+    it "matches registrations linked to the organization, or to none" do
+      organization = create(:organization)
+      linked = create(:event_registration)
+      create(:event_registration_organization, event_registration: linked, organization: organization)
+      other = create(:event_registration)
+      create(:event_registration_organization, event_registration: other)
+      unlinked = create(:event_registration)
+
+      expect(EventRegistration.linked_organization(organization.id)).to contain_exactly(linked)
+      none = EventRegistration.linked_organization(EventRegistration::NO_ORGANIZATION)
+      expect(none).to include(unlinked)
+      expect(none).not_to include(linked, other)
+    end
+  end
+
   describe ".organization_status scope" do
     let(:event) { create(:event) }
 

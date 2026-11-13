@@ -854,6 +854,71 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("$30")
       end
 
+      it "lists the organizations whose trainees received scholarships, with location" do
+        org = create(:organization, name: "Harbor Program")
+        create(:address, addressable: org, city: "Long Beach", state: "CA")
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        create(:event_registration_organization, event_registration: reg, organization: org)
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 2_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 2_500)
+
+        sign_in admin
+        get scholarships_events_path
+
+        expect(response.body).to include("Organizations with scholarships", "Harbor Program", "Long Beach, CA", "$25")
+        # Across trainings, figures drill into the registrations index.
+        expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "trainings", scholarship: "yes", organization_id: org.id)))
+      end
+
+      it "adds a No organization row whose figures link to unlinked registrations" do
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 1_500)
+
+        sign_in admin
+        get scholarships_events_path
+
+        expect(response.body).to include("No organization")
+        expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "trainings", funder: "awbw", organization_id: "none")))
+      end
+
+      it "carries the report's event search into the registrations index links" do
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 1_500)
+
+        sign_in admin
+        get scholarships_events_path(search: "TAC")
+
+        expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "trainings", event_search: "TAC", funder: "awbw", organization_id: "none")))
+      end
+
+      it "drills into the training's registrants when filtered to one event" do
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 1_500)
+
+        sign_in admin
+        get scholarships_events_path(event_id: training.id)
+
+        expect(response.body).to include(CGI.escapeHTML(registrants_event_path(training, scholarship: "yes", organization_id: "none")))
+        expect(response.body).not_to include(event_registrations_path(event_type: "trainings"))
+      end
+
+      it "links a year subtotal to that year's registrations" do
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 1_500)
+        create(:event, facilitator_training: true, start_date: Date.new(2025, 5, 1))
+
+        sign_in admin
+        get scholarships_events_path
+
+        expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "trainings", event_year: 2026, funder: "awbw")))
+        # A training row drills into that training's roster.
+        expect(response.body).to include(CGI.escapeHTML(registrants_event_path(training, funder: "awbw")))
+      end
+
       it "renders the combined-cell layout when the view toggle is set" do
         sign_in admin
         get scholarships_events_path(view: "combined")
@@ -1567,6 +1632,20 @@ RSpec.describe "Events", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("$50 due")
+    end
+
+    it "filters the roster by linked organization" do
+      organization = create(:organization)
+      linked = create(:event_registration, event: event, registrant: create(:person, first_name: "Linda", last_name: "Linked"))
+      create(:event_registration_organization, event_registration: linked, organization: organization)
+
+      get registrants_event_path(event, organization_id: organization.id)
+      expect(response.body).to include("Linda")
+      expect(response.body).not_to include(person.last_name)
+
+      get registrants_event_path(event, organization_id: EventRegistration::NO_ORGANIZATION)
+      expect(response.body).to include(person.last_name)
+      expect(response.body).not_to include("Linda")
     end
 
     context "eyebrow back link" do

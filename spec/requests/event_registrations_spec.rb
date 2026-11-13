@@ -65,6 +65,28 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include(existing_registration.registrant.name)
       end
 
+      it "filters to registrations linked to no organization" do
+        linked = create(:event_registration)
+        create(:event_registration_organization, event_registration: linked)
+
+        get event_registrations_path(organization_id: EventRegistration::NO_ORGANIZATION)
+        expect(response.body).to include(existing_registration.registrant.name)
+        expect(response.body).not_to include(linked.registrant.name)
+      end
+
+      it "filters by event search (abbreviation or title), showing the box only then" do
+        tac = create(:event, title: "Spring cohort", abbreviation: "TAC261")
+        matching = create(:event_registration, event: tac)
+
+        get event_registrations_path
+        expect(response.body).not_to include("Event search")
+
+        get event_registrations_path(event_search: "TAC")
+        expect(response.body).to include("Event search")
+        expect(response.body).to include(matching.registrant.name)
+        expect(response.body).not_to include(existing_registration.registrant.name)
+      end
+
       it "filters registrations by ce_status" do
         needs_license = create(:event_registration)
         placeholder = create(:professional_license, :placeholder, person: needs_license.registrant)

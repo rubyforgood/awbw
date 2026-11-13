@@ -248,6 +248,7 @@ class EventsController < ApplicationController
     scope = scope.submission_status(params[:submission_status], @event) if params[:submission_status].present?
     scope = scope.located_in(on: @event.start_date, state: params[:state], county: params[:county], city: params[:city])
     scope = scope.organization_linking_status(params[:org_status], @event) if params[:org_status].present?
+    scope = scope.linked_organization(params[:organization_id]) if params[:organization_id].present?
     scope = scope.account_status(params[:account_status]) if params[:account_status].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
     scope = scope.registrant_sector(params[:sector]) if params[:sector].present?
@@ -267,6 +268,10 @@ class EventsController < ApplicationController
     @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name")).to_a
     @dashboard = EventDashboard.new(@event)
     @ce_eligible = @event.ce_eligible?
+    # The roster's Organization filter offers the orgs linked on this event's registrations.
+    @linked_organizations = Organization
+      .where(id: EventRegistrationOrganization.where(event_registration_id: @event.event_registrations.select(:id)).select(:organization_id))
+      .order(:name)
 
     @submitted_org_names = submitted_org_names_for(@event_registrations)
     preload_ce_certificate_reads(@event_registrations)

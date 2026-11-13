@@ -45,6 +45,36 @@ module EventsHelper
     event_registrations_path(**filters)
   end
 
+  # Where a scholarships-report figure drills in: the registrations behind it.
+  # A figure for one training (a row, or any figure once the report is filtered
+  # to one event) lands on that training's registrants roster; a figure spanning
+  # trainings lands on the registrations index, narrowed to the report's event
+  # type, event search, and `year` (a year subtotal) or the report's selected year.
+  # `filters` are the figure's own (scholarship / funder / organization_id).
+  def scholarship_drilldown_path(filters, event: nil, year: nil)
+    event_id = event&.id || params[:event_id].presence
+    if event_id
+      return registrants_event_path(event_id, **{ **filters, funder_name: @filter_funder&.name.presence }.compact)
+    end
+
+    time_period = params[:time_period].to_s
+    report_year = time_period == "this_year" ? Date.current.year : Integer(time_period, exception: false)
+    event_registrations_path(**{
+      event_type: params[:event_type].presence || "trainings",
+      event_year: year || report_year,
+      event_search: params[:search].presence,
+      **filters
+    }.compact)
+  end
+
+  # A scholarships-report figure as a link to the registrations behind it (see
+  # #scholarship_drilldown_path); plain text when the figure is zero.
+  def scholarship_figure_link(label, amount, filters, event: nil, year: nil)
+    return label unless amount.to_i.positive?
+    link_to label, scholarship_drilldown_path(filters, event: event, year: year),
+      class: "text-blue-600 hover:text-blue-800 hover:underline", title: "View these registrations"
+  end
+
   # Human label for the attendees index's population filters — e.g.
   # "Attended · All trainings". Shown in the page subtitle so the defaults the page
   # applies are visible rather than implied.
