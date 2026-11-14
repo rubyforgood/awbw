@@ -623,6 +623,14 @@ module ApplicationHelper
     MoneyFormatter.dollars_from_cents(cents)
   end
 
+  # dollars_from_cents split at the decimal point so a column of amounts lines up on
+  # it; a whole-dollar amount keeps an invisible ".00" to hold the cents' width.
+  def decimal_aligned_dollars_from_cents(cents)
+    dollars, decimals = dollars_from_cents(cents).split(".", 2)
+    cents_tag = decimals ? tag.span(".#{decimals}", class: "inline-block w-7 text-left") : tag.span(".00", class: "invisible inline-block w-7 text-left", aria: { hidden: true })
+    tag.span(class: "inline-flex tabular-nums") { tag.span(dollars, class: "inline-block min-w-16 text-right") + cents_tag }
+  end
+
   # Like dollars_from_cents but preserves a leading minus for negative amounts.
   def signed_dollars_from_cents(cents)
     MoneyFormatter.signed_dollars_from_cents(cents)
