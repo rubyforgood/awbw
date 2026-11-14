@@ -198,6 +198,10 @@
                     <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="Check payment needs a check number — no payment recorded">
                       Check # missing
                     </span>
+                  <% when :invalid_check_number %>
+                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="Check number can only contain digits and hyphens — no payment recorded">
+                      Bad check #
+                    </span>
                   <% when :invalid %>
                     <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="Amount could not be read — no payment recorded">
                       Bad amount
