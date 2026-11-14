@@ -38,13 +38,13 @@
               <td class="px-6 py-2 text-sm whitespace-nowrap">
                 <%# The amount card opens the payment, like the record cards on other indexes. %>
                 <%= link_to payment_path(payment),
-                      class: "inline-flex w-28 items-center justify-between gap-1.5 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums transition-colors duration-200 #{DomainTheme.border_class_for(:payments)} #{DomainTheme.bg_class_for(:payments, intensity: 100)} #{DomainTheme.bg_class_for(:payments, intensity: 100, hover: true)} #{DomainTheme.text_class_for(:payments, intensity: 800)}",
+                      class: "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums transition-colors duration-200 #{DomainTheme.border_class_for(:payments)} #{DomainTheme.bg_class_for(:payments, intensity: 100)} #{DomainTheme.bg_class_for(:payments, intensity: 100, hover: true)} #{DomainTheme.text_class_for(:payments, intensity: 800)}",
                       data: { turbo_frame: "_top", turbo_prefetch: false } do %>
-                  <%= dollars_from_cents(payment.amount_cents) %>
+                  <%= decimal_aligned_dollars_from_cents(payment.amount_cents) %>
                   <i class="fa-solid fa-chevron-right text-2xs opacity-60"></i>
                 <% end %>
               </td>
-              <td class="px-6 py-2 text-sm whitespace-nowrap tabular-nums <%= payment.amount_cents_remaining.to_i.positive? ? "font-medium text-amber-700" : "text-gray-400" %>"><%= dollars_from_cents(payment.amount_cents_remaining) %></td>
+              <td class="px-6 py-2 text-sm whitespace-nowrap tabular-nums <%= payment.amount_cents_remaining.to_i.positive? ? "font-medium text-amber-700" : "text-gray-400" %>"><%= decimal_aligned_dollars_from_cents(payment.amount_cents_remaining) %></td>
               <td class="px-6 py-2 text-sm whitespace-nowrap text-gray-500"><%= payment.created_at.strftime("%b %-d, %Y · %-l:%M %p") %></td>
             </tr>
           <% end %>
