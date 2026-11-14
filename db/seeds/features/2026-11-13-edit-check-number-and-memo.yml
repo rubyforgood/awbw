@@ -7,4 +7,5 @@ summary: >-
   recorded. Every edit is logged in the payment's change history.
 pro_tips:
   - "The amount stays locked once a payment is recorded."
+  - "Check numbers take digits and hyphens only (e.g. 53-0633995), so leave off \"Check #\"."
   - "Cash and Stripe payments have no check number or memo, so these fields only appear on checks."

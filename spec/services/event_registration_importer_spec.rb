@@ -738,6 +738,13 @@ RSpec.describe EventRegistrationImporter do
         emails.map { |email| registration_of(Person.find_by(email: email)) }
       end
 
+      it "flags a check number that isn't digits and hyphens and records no payment" do
+        result = import_rows(header, [ "Pat", "Example", "pat@example.org", "500.00", "Check", "Check #12345" ])
+
+        expect(result.rows.first.payment_status).to eq(:invalid_check_number)
+        expect(Payment.count).to eq(0)
+      end
+
       it "splits one check repeated on every row across those registrations" do
         import_rows(header,
                     [ "Pat", "Example", "pat@example.org", "1000.00", "Check", "12345" ],

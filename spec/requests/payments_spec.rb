@@ -214,6 +214,15 @@ RSpec.describe "Payments", type: :request do
       expect(payment.memo).to eq("Spring workshop")
     end
 
+    it "rejects a check number that isn't digits and hyphens" do
+      payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
+
+      patch payment_path(payment), params: { payment: { payer_sgid: person.to_sgid.to_s, check_number: "Check #5678" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(payment.reload.check_number).to eq("1234")
+    end
+
     it "records an Ahoy update event with the before and after values" do
       payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234", memo: "Old memo")
       # The request spec client reads as a bot, which Ahoy skips by default.
