@@ -3,8 +3,8 @@
   <%# Totals span every payment matching the filters, not just this page. %>
   <div class="mb-3 flex flex-wrap items-baseline gap-x-6 gap-y-1 px-1 text-sm text-gray-600">
     <span><span class="font-semibold text-gray-900"><%= number_with_delimiter(count.to_i) %></span> <%= "payment".pluralize(count.to_i) %></span>
-    <span>Total <span class="text-lg font-bold text-gray-900 tabular-nums"><%= dollars_from_cents(total_cents.to_i) %></span></span>
-    <span>Unallocated <span class="font-semibold tabular-nums <%= unallocated_cents.to_i.positive? ? "text-amber-700" : "text-gray-900" %>"><%= dollars_from_cents(unallocated_cents.to_i) %></span></span>
+    <span>Total <span class="text-lg font-bold text-gray-900 tabular-nums"><%= dollars_from_cents(total_cents.to_i, always_cents: true) %></span></span>
+    <span>Unallocated <span class="font-semibold tabular-nums <%= unallocated_cents.to_i.positive? ? "text-amber-700" : "text-gray-900" %>"><%= dollars_from_cents(unallocated_cents.to_i, always_cents: true) %></span></span>
   </div>
   <% if @payments.any? %>
     <div class="border-primary/10 animate-fade overflow-x-auto rounded-2xl border bg-white shadow-sm blur-on-submit">
@@ -14,7 +14,7 @@
             <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Type</th>
             <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Payer</th>
             <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Amount</th>
-            <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Unallocated</th>
+            <th class="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Unallocated</th>
             <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Created</th>
           </tr>
         </thead>
@@ -38,13 +38,13 @@
               <td class="px-6 py-2 text-sm whitespace-nowrap">
                 <%# The amount card opens the payment, like the record cards on other indexes. %>
                 <%= link_to payment_path(payment),
-                      class: "inline-flex w-28 items-center justify-between gap-1.5 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums transition-colors duration-200 #{DomainTheme.border_class_for(:payments)} #{DomainTheme.bg_class_for(:payments, intensity: 100)} #{DomainTheme.bg_class_for(:payments, intensity: 100, hover: true)} #{DomainTheme.text_class_for(:payments, intensity: 800)}",
+                      class: "inline-flex w-32 items-center justify-end gap-1.5 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums transition-colors duration-200 #{DomainTheme.border_class_for(:payments)} #{DomainTheme.bg_class_for(:payments, intensity: 100)} #{DomainTheme.bg_class_for(:payments, intensity: 100, hover: true)} #{DomainTheme.text_class_for(:payments, intensity: 800)}",
                       data: { turbo_frame: "_top", turbo_prefetch: false } do %>
-                  <%= dollars_from_cents(payment.amount_cents) %>
+                  <%= dollars_from_cents(payment.amount_cents, always_cents: true) %>
                   <i class="fa-solid fa-chevron-right text-2xs opacity-60"></i>
                 <% end %>
               </td>
-              <td class="px-6 py-2 text-sm whitespace-nowrap tabular-nums <%= payment.amount_cents_remaining.to_i.positive? ? "font-medium text-amber-700" : "text-gray-400" %>"><%= dollars_from_cents(payment.amount_cents_remaining) %></td>
+              <td class="px-6 py-2 text-right text-sm whitespace-nowrap tabular-nums <%= payment.amount_cents_remaining.to_i.positive? ? "font-medium text-amber-700" : "text-gray-400" %>"><%= dollars_from_cents(payment.amount_cents_remaining, always_cents: true) %></td>
               <td class="px-6 py-2 text-sm whitespace-nowrap text-gray-500"><%= payment.created_at.strftime("%b %-d, %Y · %-l:%M %p") %></td>
             </tr>
           <% end %>

@@ -25,7 +25,7 @@ RSpec.describe "Payments", type: :request do
       get payments_path(person_id: person.id, number_of_items_per_page: 1), headers: { "Turbo-Frame" => "payments_results" }
 
       text = Nokogiri::HTML(response.body).text.squish
-      expect(text).to include("2 payments", "Total $125", "Unallocated $25")
+      expect(text).to include("2 payments", "Total $125.00", "Unallocated $25.00")
     end
 
     it "breaks the row's amount link out of the results frame" do
@@ -212,6 +212,15 @@ RSpec.describe "Payments", type: :request do
       payment.reload
       expect(payment.check_number).to eq("5678")
       expect(payment.memo).to eq("Spring workshop")
+    end
+
+    it "rejects a check number that isn't digits and hyphens" do
+      payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
+
+      patch payment_path(payment), params: { payment: { payer_sgid: person.to_sgid.to_s, check_number: "Check #5678" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(payment.reload.check_number).to eq("1234")
     end
 
     it "records an Ahoy update event with the before and after values" do
