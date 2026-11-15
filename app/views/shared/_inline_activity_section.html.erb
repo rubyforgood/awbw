@@ -1,0 +1,41 @@
+<section id="<%= inline_dom_id(record, :activity_section) %>"
+         class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="flex flex-wrap items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
+      <i class="fa-solid fa-comments"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700"><%= t("communications.section_title") %></h2>
+    <% if local_assigns[:feed_person].present? %>
+      <%= link_to comments_and_communications_path(person_id: feed_person.id),
+            class: "ml-auto inline-flex items-center gap-1 text-sm #{eyebrow_link_class}",
+            title: "Open #{person_name(feed_person)}'s comments and communications feed" do %>
+        View in feed <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="space-y-2 p-4">
+    <div id="<%= inline_dom_id(record, :activity_list) %>" class="flex flex-col gap-2">
+      <% entries.each do |entry| %>
+        <% if entry.is_a?(Comment) %>
+          <%= render "comments/inline_row", comment: entry %>
+        <% else %>
+          <%= render "notifications/inline_row", notification: entry %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if entries.empty? %>
+      <p id="<%= inline_dom_id(record, :activity_list_empty) %>" class="text-sm text-gray-400"><%= t("communications.section_none") %></p>
+    <% end %>
+
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+      <% if allowed_to?(:manage?, Comment) %>
+        <%= render "comments/new_control", record: record %>
+      <% end %>
+      <% if record.respond_to?(:communications_scope) && allowed_to?(:create?, Notification) %>
+        <%= render "notifications/new_control", record: record %>
+      <% end %>
+    </div>
+  </div>
+</section>

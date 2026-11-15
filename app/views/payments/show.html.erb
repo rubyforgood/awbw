@@ -108,7 +108,8 @@
       </dl>
     </section>
 
-    <%= render "comments", payment: @payment %>
+    <%= render "shared/inline_activity_section", record: @payment, entries: @activity_entries,
+               feed_person: @payment.person %>
 
     <% if @allocations.any? %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">

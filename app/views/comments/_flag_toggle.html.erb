@@ -1,3 +1,4 @@
+<% return unless allowed_to?(:update?, comment) %>
 <%= button_to comment_path(comment),
               method: :patch,
               params: { comment: { flagged: !comment.flagged } },

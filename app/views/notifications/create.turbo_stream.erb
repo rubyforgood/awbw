@@ -1,0 +1,9 @@
+<% if (record = @notification.noticeable) %>
+  <%= turbo_stream.prepend inline_dom_id(record, :activity_list) do %>
+    <%= render "notifications/inline_row", notification: @notification %>
+  <% end %>
+  <%= turbo_stream.remove inline_dom_id(record, :activity_list_empty) %>
+  <%= turbo_stream.replace inline_dom_id(record, :new_communication) do %>
+    <%= render "notifications/new_control", record: record %>
+  <% end %>
+<% end %>

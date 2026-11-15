@@ -297,14 +297,152 @@ RSpec.describe "Payments", type: :request do
       payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
 
       expect {
-        post payment_comments_path(payment), params: { comment: { topic: "Follow-up", body: "Called about the check" } },
-                                             headers: { "HTTP_REFERER" => "http://www.example.com#{payment_path(payment)}" }
+        post comments_path, params: { comment: { topic: "Follow-up", body: "Called about the check" },
+                                      commentable_sgid: payment.to_sgid.to_s },
+                            headers: { "HTTP_REFERER" => "http://www.example.com#{payment_path(payment)}" }
       }.to change { payment.comments.count }.by(1)
 
       expect(response).to redirect_to(payment_path(payment))
       comment = payment.comments.last
       expect(comment.body).to eq("Called about the check")
       expect(comment.created_by).to eq(admin)
+    end
+
+    it "renders each row in its own inline-edit frame, with live toggles" do
+      payment = create(:payment, person:)
+      comment = create(:comment, commentable: payment, body: "Called about the remaining balance")
+      notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
+                                          email_subject: "Left a voicemail", recipient_email: person.email)
+
+      get payment_path(payment)
+
+      expect(response.body).to include("inline_comment_#{comment.id}", "inline_notification_#{notification.id}")
+      expect(response.body).to include(edit_comment_path(comment))
+      expect(response.body).to include(edit_notification_path(notification))
+      expect(response.body).to include("comment[flagged]")
+    end
+
+    it "loads a comment's edit form into its row frame without toggle fields" do
+      payment = create(:payment, person:)
+      comment = create(:comment, commentable: payment, body: "Original")
+
+      get edit_comment_path(comment), headers: { "Turbo-Frame" => "inline_comment_#{comment.id}" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Original", "Save", "inline_comment_#{comment.id}")
+      expect(response.body).not_to include("comment[flagged]")
+    end
+
+    it "saves an inline comment edit and returns to the payment" do
+      payment = create(:payment, person:)
+      comment = create(:comment, commentable: payment, body: "Original")
+
+      patch comment_path(comment), params: { comment: { body: "Updated" }, inline: 1 }
+
+      expect(response).to redirect_to(payment_path(payment))
+      expect(comment.reload.body).to eq("Updated")
+    end
+
+    it "returns the read-only comment row when the payment frame reloads it" do
+      payment = create(:payment, person:)
+      comment = create(:comment, commentable: payment, body: "Original")
+
+      get comment_path(comment), headers: { "Turbo-Frame" => "inline_comment_#{comment.id}" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("inline_comment_#{comment.id}", "Original", "Edit")
+    end
+
+    it "renders the inline add forms without requiring a page visit" do
+      payment = create(:payment, person:)
+
+      get new_comment_path(commentable_sgid: payment.to_sgid.to_s)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(ActionView::RecordIdentifier.dom_id(payment, :new_comment), "New comment")
+
+      get new_notification_path(noticeable_sgid: payment.to_sgid.to_s)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(ActionView::RecordIdentifier.dom_id(payment, :new_communication), "New communication")
+    end
+
+    it "creates a comment from the payment's add frame" do
+      payment = create(:payment, person:)
+
+      expect {
+        post comments_path, params: { comment: { body: "Added inline" },
+                                      commentable_sgid: payment.to_sgid.to_s, inline: 1 },
+                            headers: { "Turbo-Frame" => ActionView::RecordIdentifier.dom_id(payment, :new_comment) }
+      }.to change { payment.comments.count }.by(1)
+
+      expect(response.body).to include(ActionView::RecordIdentifier.dom_id(payment, :activity_list), "Added inline")
+    end
+
+    it "logs a communication against the payment from its add frame" do
+      payment = create(:payment, person:)
+      expect(payment.communications_email).to be_present
+
+      expect {
+        post notifications_path, params: {
+          noticeable_sgid: payment.to_sgid.to_s,
+          inline: 1,
+          notification: { channel: "email", direction: "outgoing", email_subject: "Left a voicemail" }
+        }, headers: { "Turbo-Frame" => ActionView::RecordIdentifier.dom_id(payment, :new_communication) }
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.last
+      expect(notification.noticeable_id).to eq(payment.id)
+      expect(notification.noticeable_type).to eq("Payment")
+      expect(notification.recipient_email).to eq(payment.communications_email)
+      expect(response.body).to include(ActionView::RecordIdentifier.dom_id(payment, :activity_list), "Left a voicemail")
+    end
+
+    it "loads a communication's edit form without toggle fields" do
+      payment = create(:payment, person:)
+      notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
+                                           email_subject: "Called about the check", recipient_email: person.email)
+
+      get edit_notification_path(notification), headers: { "Turbo-Frame" => "inline_notification_#{notification.id}" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Called about the check", "Save")
+      expect(response.body).not_to include("notification[responded]", "notification[flagged]")
+    end
+
+    it "re-renders a communication's edit frame when its subject is blank" do
+      payment = create(:payment, person:)
+      notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
+                                           email_subject: "Called about the check", recipient_email: person.email)
+
+      patch notification_path(notification),
+            params: { notification: { email_subject: "" }, inline: 1 }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("inline_notification_#{notification.id}")
+    end
+
+    it "files a comment against another record through the signed context" do
+      expect {
+        post comments_path, params: { comment: { body: "Generic note" },
+                                      commentable_sgid: person.to_sgid.to_s, inline: 1 }
+      }.to change { person.comments.count }.by(1)
+
+      expect(response).to redirect_to(person_path(person))
+    end
+
+    it "logs a communication against another record through the signed context" do
+      expect {
+        post notifications_path, params: {
+          noticeable_sgid: person.to_sgid.to_s,
+          inline: 1,
+          notification: { channel: "email", direction: "outgoing", email_subject: "Generic call" }
+        }
+      }.to change(Notification, :count).by(1)
+
+      expect(response).to redirect_to(person_path(person))
+      notification = Notification.last
+      expect(notification.noticeable_id).to eq(person.id)
+      expect(notification.noticeable_type).to eq("Person")
+      expect(notification.recipient_email).to eq(person.communications_email)
     end
   end
 

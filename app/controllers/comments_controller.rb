@@ -1,11 +1,12 @@
 class CommentsController < ApplicationController
   include AhoyTracking
 
-  before_action :set_commentable, only: :create
+  before_action :set_commentable, only: [ :new, :create ]
+  before_action :set_comment, only: [ :show, :edit, :update, :destroy ]
 
   # Global, admin-only index of every comment, with the same search boxes as a
-  # person's aggregated feed plus remote person/event filters. The nested
-  # create/update actions below manage a single record's comments.
+  # person's aggregated feed plus remote person/event filters. The actions below
+  # manage a single record's comments.
   def index
     authorize!
 
@@ -25,44 +26,79 @@ class CommentsController < ApplicationController
     end
   end
 
+  def show
+    authorize! @comment
+
+    if turbo_frame_request?
+      render partial: "comments/inline_row", locals: { comment: @comment }
+    end
+  end
+
+  def new
+    authorize!
+    @comment = Comment.new
+  end
+
+  def edit
+    authorize! @comment
+  end
+
   def create
     authorize!
     @comment = @commentable.comments.build(comment_params)
 
     if @comment.save
-      @created_comment = @comment
-      setup_aggregated_context if aggregated?
-      respond_to do |format|
-        format.turbo_stream
-        format.html { redirect_to after_create_html_path, notice: "Comment created successfully." }
+      if params[:inline].present?
+        create_inline
+      else
+        @created_comment = @comment
+        setup_aggregated_context if aggregated?
+        respond_to do |format|
+          format.turbo_stream
+          format.html { redirect_to after_create_html_path, notice: "Comment created successfully." }
+        end
       end
+    elsif params[:inline].present?
+      render :new, status: :unprocessable_content
     else
-      redirect_back fallback_location: root_path, alert: "Failed to create comment."
+      redirect_back_or_to root_path, alert: "Failed to create comment."
     end
   end
 
   def update
-    @comment = Comment.find(params[:id])
     authorize! @comment
     target = commentable_target
     @comment.commentable = target if target
-    @comment.update(comment_params)
-    setup_aggregated_context
 
-    respond_to do |format|
-      format.turbo_stream
-      format.html { redirect_back fallback_location: root_path }
+    if @comment.update(comment_params)
+      if params[:inline].present?
+        redirect_to helpers.inline_record_path(@comment.commentable, fallback: comment_path(@comment)),
+                    status: :see_other
+      else
+        setup_aggregated_context
+        respond_to do |format|
+          format.turbo_stream
+          format.html { redirect_back_or_to root_path }
+        end
+      end
+    elsif params[:inline].present?
+      render :edit, status: :unprocessable_content
+    else
+      setup_aggregated_context
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_back_or_to root_path, alert: "Failed to update comment." }
+      end
     end
   end
 
   def destroy
-    @comment = Comment.find(params[:id])
     authorize! @comment
     @comment.destroy!
 
     respond_to do |format|
       format.turbo_stream
-      format.html { redirect_back fallback_location: root_path, notice: "Comment deleted." }
+      format.html { redirect_back_or_to root_path, notice: "Comment deleted." }
     end
   end
 
@@ -87,10 +123,23 @@ class CommentsController < ApplicationController
     end
   end
 
+  def create_inline
+    if turbo_frame_request?
+      render :create, formats: :turbo_stream
+    else
+      redirect_to helpers.inline_record_path(@commentable, fallback: comments_path),
+                  notice: "Comment created successfully."
+    end
+  end
+
   def setup_aggregated_context
     return if params[:for_person_id].blank?
     @aggregator_person = Person.find(params[:for_person_id]).decorate
     @comment_targets = helpers.person_record_targets(@aggregator_person)
+  end
+
+  def set_comment
+    @comment = Comment.find(params[:id])
   end
 
   def set_commentable
@@ -116,8 +165,6 @@ class CommentsController < ApplicationController
       @commentable = TopicSubscription.find(params[:topic_subscription_id])
     elsif params[:workshop_id]
       @commentable = Workshop.find(params[:workshop_id])
-    elsif params[:payment_id]
-      @commentable = Payment.find(params[:payment_id])
     else
       redirect_to root_path, alert: "Invalid commentable resource"
     end

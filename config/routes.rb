@@ -79,10 +79,11 @@ Rails.application.routes.draw do
 
   resources :fm_archives, only: [ :index, :show ]
 
-  # Top-level update/destroy lets the aggregated feeds flag, edit, or delete any
-  # comment by id, even when its commentable has no nested comments route
-  # (affiliations, staff tags…).
-  resources :comments, only: [ :index, :update, :destroy ]
+  # Top-level new/create/show/edit/update/destroy lets a comment be filed
+  # against any record through its signed GlobalID, and opened or edited by id
+  # even when its commentable has no nested comments route (affiliations, staff
+  # tags…).
+  resources :comments, only: [ :index, :show, :new, :create, :edit, :update, :destroy ]
 
   resources :banners
   resources :bookmarks do
@@ -339,7 +340,7 @@ Rails.application.routes.draw do
       post :curate
     end
   end
-  resources :notifications, only: [ :index, :new, :create, :show, :update ] do
+  resources :notifications, only: [ :index, :new, :create, :show, :edit, :update ] do
     member do
       post :resend
     end
@@ -377,7 +378,6 @@ Rails.application.routes.draw do
     end
     resource :reconciliation_acknowledgement, only: [ :create, :destroy ],
              controller: "payments/reconciliation_acknowledgements"
-    resources :comments, only: [ :create ]
   end
   resources :allocations, only: [ :new, :create, :index ] do
     post :revert, on: :member

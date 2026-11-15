@@ -3,7 +3,7 @@
     needs a reply (incoming, or a contact-us FYI; see Notification#requires_response?).
     Self-contained autosave: each change PATCHes notification_path immediately,
     independent of any surrounding form. Locals: notification. %>
-<% return unless notification.requires_response? %>
+<% return unless allowed_to?(:update?, notification) && notification.requires_response? %>
 <span data-controller="autosave"
       data-autosave-url-value="<%= notification_path(notification) %>"
       data-autosave-id-value="<%= notification.id %>"
