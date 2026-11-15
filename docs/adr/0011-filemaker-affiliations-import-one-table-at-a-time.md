@@ -306,9 +306,11 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
   - **Start:** `DateEntered`, the first day FileMaker records the person at the org. A job
     affiliation is normally undated (ADR-0003 D1) because we rarely know when it began; here
     we know at least this much.
-  - **End:** only when `Notes` say the person is no longer with the org (the `LEFT_NOTE`
-    wording ADR-0008 used). The end date is the date of `ModificationTimeStamp`, the last
-    time staff saved the row, when they already knew. An end date in the past makes the row
+  - **End:** only when `Notes` say the person left: "no longer with/at/works/employed" (the
+    `LEFT_NOTE` wording ADR-0008 used) or "left" (decided 2026-11-14, for the one note reading
+    "Left in 2016"). A note naming the year they left ends on December 31 of that year, the
+    latest day it allows; otherwise the end date is the date of `ModificationTimeStamp`, the
+    last time staff saved the row, when they already knew. An end date in the past makes the row
     inactive on save. With no `ModificationTimeStamp`, the row is saved `inactive` with no
     end date.
   - **The comment says when an end date is a stand-in:** FileMaker never recorded the real
@@ -347,8 +349,11 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
   project the person staffed (their own Personnel row); the one org where they already have an
   affiliation; the one org named "… Combined" (43 codes, 198 rows — usually the org already
   holding the affiliations). Blazer E1 counts how many rows each clue settles.
-- **Round two: "Left in 2016".** One note says the person left, in words `LEFT_NOTE` doesn't
-  catch. End it December 31, 2016, or leave it for staff?
+- **Round two: the start date of a row whose notes say the person left.** Entered and marked
+  left in the same sitting, `DateEntered` reads as a one-day job; and "Left in 2016" was
+  entered in 2020 or later, so its start would fall after its end. Leaning: leave the start
+  blank on any row whose notes say the person left ("was there, had left by this date").
+  Blazer L1 counts how many left-rows were entered and marked left on the same day.
 
 - **Pass two: the stand-in end date for ended rows with no evidence** (about 3,440 rows).
   - **What FileMaker has** (production, 2026-11-13; each row counted under its best source):
