@@ -1,7 +1,7 @@
 module OrganizationServices
   # Turns the FileMaker archive's organizations (FmOrganization) and the art programs run at
   # them (FmProject) into portal organizations (ADR-0008). Runs after the Rolodex pass and
-  # before AffiliationServices::ImportFromFilemaker, which finds what this creates by code.
+  # before the affiliation imports (ADR-0011), which find what this creates by code.
   #
   # An app organization is usually a FileMaker project; the FileMaker organization above it
   # becomes its parent (ADR-0004). An organization with exactly one project is one place,

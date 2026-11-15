@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-# Bring FileMaker's organizations, projects and the ties between them and people into the
-# portal (ADR-0008), as runs that can each be checked and reversed on their own:
+# Bring FileMaker's organizations and projects into the portal (ADR-0008), as runs that can
+# each be checked and reversed on their own. Affiliations come in through ADR-0011's tasks
+# (fm:import_personnel), one FileMaker table per task:
 #   0. fm:merge_same_named_organizations — OrganizationServices::MergeSameNamed: one place the
 #      old app split by audience ("… Women's", "… Combined") becomes one organization. Run it
 #      before the import and again after. fm:undo_import doesn't reverse it; its report lists
@@ -10,30 +11,21 @@
 #      fm:import_people: organizations, projects (as programs nested under them), their
 #      addresses, phones, emails, agencies' own Rolodex cards, and the organization a card
 #      names for someone staffing an unimported project. Creates only organizations.
-#   2. fm:import_affiliations — after the first:
-#      a. PersonServices::ImportFromRolodex over agency cards only — the contact person an
-#         agency card names, which fm:import_people skipped
-#      b. AffiliationServices::ImportFromFilemaker — personnel, people-to-organizations, and
-#         each Rolodex card's organization, title and work addresses
 # Each is idempotent: a row whose code a record already carries is left alone.
 #
 # Dry-run by default. Set DRY_RUN=false to write changes; VERBOSE=true lists every row.
 # A real run commits each batch as it goes, so stopping partway keeps what it finished and
 # the rerun skips it. The full report is also saved as an ActiveStorage blob. Every record a
-# run creates or fills is logged under the run's name, which fm:undo_import reverses. Undo the
-# affiliations run before the organizations run — an organization someone is affiliated with
-# is kept.
-# FM_IDS names the archive rows to read, by their own ID — for organizations, an organization,
-# a project, an agency card or a personnel record (an organization and its projects come as a
-# pair either way, since one can't be read without the other); for affiliations, a personnel
-# record, a people-to-organizations record, or a Rolodex card (an agency card brings in its
-# contact person):
+# run creates or fills is logged under the run's name, which fm:undo_import reverses. An
+# organization someone is affiliated with is kept.
+# FM_IDS names the archive rows to read, by their own ID — an organization, a project, an
+# agency card or a personnel record (an organization and its projects come as a pair either
+# way, since one can't be read without the other):
 #   bin/rails fm:import_organizations                 # preview, writes nothing
 #   DRY_RUN=false bin/rails fm:import_organizations   # create + link organizations
-#   DRY_RUN=false bin/rails fm:import_affiliations    # then the affiliations
 #   FM_IDS=ORG02184,P1630 DRY_RUN=false bin/rails fm:import_organizations   # just these rows
-#   DRY_RUN=false bin/rails fm:undo_import RUN=fm-import-affiliations-20261022134055
-#   DRY_RUN=false bin/rails fm:purge_import_activity RUN=fm-import-affiliations-20261022134055
+#   DRY_RUN=false bin/rails fm:undo_import RUN=fm-import-organizations-20261022134055
+#   DRY_RUN=false bin/rails fm:purge_import_activity RUN=fm-import-organizations-20261022134055
 namespace :fm do
   import_from_archive = lambda do |task_name, steps, undoable: true|
     unless Setting.import_user
@@ -160,19 +152,6 @@ namespace :fm do
   task import_organizations: :environment do
     import_from_archive.call("import_organizations", {
       "Organizations and projects" => ->(**options) { OrganizationServices::ImportFromFilemaker.new(**options) }
-    })
-  end
-
-  desc "Create affiliations, and the people agency cards name, from the FileMaker archive (after fm:import_organizations). Idempotent. DRY_RUN=false to execute."
-  task import_affiliations: :environment do
-    import_from_archive.call("import_affiliations", {
-      # The people pass skipped every agency card, so the contact person one names comes in
-      # here — only those cards, leaving everyone fm:import_people already brought over alone.
-      "People named on agency cards" => lambda do |fm_ids:, progress:, run:|
-        cards = fm_ids.any? ? FmRolodex.agency_cards.where(fm_id: fm_ids) : FmRolodex.agency_cards
-        PersonServices::ImportFromRolodex.new(scope: cards, relink: fm_ids.any?, progress:, run:)
-      end,
-      "Affiliations and work addresses" => ->(**options) { AffiliationServices::ImportFromFilemaker.new(**options) }
     })
   end
 

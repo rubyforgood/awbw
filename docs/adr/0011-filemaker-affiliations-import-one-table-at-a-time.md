@@ -19,7 +19,8 @@
   (`AffiliationServices::ImportPeopleToOrgs`). Each writes, commits in batches, skips finished
   rows on a rerun, and prints and saves a report.
 - **Later rounds:** Rolodex titles and work addresses, each decided here before it's built.
-- **ADR-0008's `fm:import_affiliations` is left as it is for now.**
+- **ADR-0008's `fm:import_affiliations` is retired and deleted** (decided 2026-11-14). It did
+  everything in one run; each thing it did that's still wanted becomes its own task here.
 
 ## Context
 
@@ -46,7 +47,10 @@ a lot in one run:
 - reading "no longer with" notes
 
 It also expects ADR-0008's org shape, where projects are nested orgs. That's too much to
-review or undo as one run, and it doesn't fit what #2957 left.
+review or undo as one run, and it doesn't fit what #2957 left. Run after `fm:import_personnel`,
+it would also have placed, by guessing, exactly the rows round one sends to staff. So it's
+deleted (with its specs) in the PR that adds round one, and what it did that nothing here
+covers yet is listed under Later rounds.
 
 FileMaker ties people to organizations in three places:
 
@@ -227,7 +231,9 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
   so they're out of scope.
 - **End date, first that fits:**
   1. their own last workshop log on that project (`fm_workshop_logs` `LeaderID` + `ProjectID`);
-  2. the Personnel row's `DateTimeModified`, when staff last saved it;
+  2. the Personnel row's `DateTimeModified`, when staff last saved it — first choice when the
+     row's own `Notes` say the person left (the `LEFT_NOTE` wording), which ADR-0008's pass
+     also read (`Notes` is filled on 7,621 Personnel rows; how many say "left" is unmeasured);
   3. the project's last workshop log, by anyone;
   4. a stand-in for rows with none of these (open question below), never later than
      yesterday.
@@ -340,6 +346,18 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
 3. **Rolodex card `OrgID` + `Title` → job affiliation.** This overlaps round two. The card
    has no ID of its own, so a rerun matches on person + org + title.
 4. **Work addresses → the organization** (ADR-0008, ADR-0010).
+5. **People named on agency cards.** `fm:import_people` skipped every agency card
+   (`FmRolodex.agency_cards`); ADR-0008's pass ran `PersonServices::ImportFromRolodex` over them
+   so the contact person each names became a `Person`. That service still exists; a small task
+   can run it over agency cards alone.
+
+Also in ADR-0008's pass, left out on purpose until a round decides them:
+
+- **AWBW Placeholder** — a Personnel row naming no person gave an otherwise empty org one
+  Facilitator affiliation for a placeholder person, to keep the program's history.
+- **Personnel rows with no project** (27) — placed at the org on the person's Rolodex card.
+- **Old-app titles** — an existing Leader/Liaison/Assistant/"default" row at the org matched
+  as a Facilitator. Round one matches only exact `Facilitator`; Data health lists the rest.
 
 ## Open questions
 
@@ -397,5 +415,3 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
   untitled job affiliation (recommended), or be skipped? Untitled, it still records that the
   person was at the organization, dated from `DateEntered`, and the notes come along.
   Skipped, round two brings in about 320 rows.
-- **ADR-0008's `fm:import_affiliations`.** Should it be retired once these rounds cover its
-  tables?
