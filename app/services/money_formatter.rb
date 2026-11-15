@@ -4,10 +4,11 @@
 # models and other POROs (no view-helper access) call MoneyFormatter directly.
 class MoneyFormatter
   # Full amount with a thousands delimiter, dropping the cents when the amount is
-  # a whole number of dollars: 150000 => "$1,500", 75050 => "$750.50".
-  def self.dollars_from_cents(cents)
+  # a whole number of dollars: 150000 => "$1,500", 75050 => "$750.50". Pass
+  # always_cents: true to keep ".00" (e.g. a column of amounts lined up on the point).
+  def self.dollars_from_cents(cents, always_cents: false)
     cents = cents.to_i
-    precision = (cents % 100).zero? ? 0 : 2
+    precision = always_cents || !(cents % 100).zero? ? 2 : 0
     ActiveSupport::NumberHelper.number_to_currency(cents / 100.0, precision: precision)
   end
 

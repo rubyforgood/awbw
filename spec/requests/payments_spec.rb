@@ -25,7 +25,7 @@ RSpec.describe "Payments", type: :request do
       get payments_path(person_id: person.id, number_of_items_per_page: 1), headers: { "Turbo-Frame" => "payments_results" }
 
       text = Nokogiri::HTML(response.body).text.squish
-      expect(text).to include("2 payments", "Total $125", "Unallocated $25")
+      expect(text).to include("2 payments", "Total $125.00", "Unallocated $25.00")
     end
 
     it "breaks the row's amount link out of the results frame" do
