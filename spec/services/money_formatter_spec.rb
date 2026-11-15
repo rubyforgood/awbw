@@ -8,6 +8,11 @@ RSpec.describe MoneyFormatter do
       expect(described_class.dollars_from_cents(0)).to eq("$0")
     end
 
+    it "always shows the cents when asked" do
+      expect(described_class.dollars_from_cents(150_000, always_cents: true)).to eq("$1,500.00")
+      expect(described_class.dollars_from_cents(1_212, always_cents: true)).to eq("$12.12")
+    end
+
     it "keeps the cents when present" do
       expect(described_class.dollars_from_cents(75_050)).to eq("$750.50")
       expect(described_class.dollars_from_cents(1_099)).to eq("$10.99")

@@ -192,20 +192,6 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
-  describe "#decimal_aligned_dollars_from_cents" do
-    it "splits dollars and cents at the decimal point" do
-      html = Nokogiri::HTML.fragment(helper.decimal_aligned_dollars_from_cents(1_212))
-      expect(html.css("span span").map(&:text)).to eq([ "$12", ".12" ])
-    end
-
-    it "keeps an invisible cents placeholder for whole dollars" do
-      html = Nokogiri::HTML.fragment(helper.decimal_aligned_dollars_from_cents(150_000))
-      dollars, cents = html.css("span span")
-      expect(dollars.text).to eq("$1,500")
-      expect(cents["class"]).to include("invisible")
-    end
-  end
-
   describe "#dollars_from_cents" do
     it "drops the cents for whole-dollar amounts and adds thousands separators" do
       expect(helper.dollars_from_cents(150_000)).to eq("$1,500")
