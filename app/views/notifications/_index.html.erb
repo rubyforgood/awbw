@@ -79,20 +79,9 @@
       </td>
 
       <!-- Responded -->
-      <td class="px-4 py-3 text-center"
-          data-controller="autosave"
-          data-autosave-url-value="<%= notification_path(notification) %>"
-          data-autosave-id-value="<%= notification.id %>"
-          data-action="change->autosave#save">
+      <td class="px-4 py-3 text-center">
         <% if notification.requires_response? %>
-          <input type="hidden" name="notification[responded]" value="0">
-          <input type="checkbox"
-                 name="notification[responded]"
-                 value="1"
-                 <%= "checked" if notification.responded? %>
-                 class="h-5 w-5 cursor-pointer rounded border-gray-300 text-green-600 accent-green-600 focus:ring-green-500"
-                 title="Responded to by staff">
-          <%= render "shared/autosave_status", field_name: "notification[responded]", classes: "mt-1 block" %>
+          <%= render "notifications/responded_toggle", notification: notification %>
         <% else %>
           <span class="text-gray-300">—</span>
         <% end %>

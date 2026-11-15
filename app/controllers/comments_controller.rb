@@ -71,6 +71,8 @@ class CommentsController < ApplicationController
     @comment.commentable = target if target
 
     if @comment.update(comment_params)
+      flash.now[:notice] = "Saved" if params[:toggle].present?
+
       if params[:inline].present?
         redirect_to helpers.inline_record_path(@comment.commentable, fallback: comment_path(@comment)),
                     status: :see_other

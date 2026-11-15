@@ -239,36 +239,40 @@ RSpec.describe "Notifications", type: :request do
       expect(response.body).to include(form_submission_path(submission))
     end
 
-    context "responded checkbox rendering" do
+    context "responded toggle rendering" do
       let!(:fyi)             { create(:notification, kind: "contact_us_fyi", responded: false, recipient_email: "fyi@example.com") }
       let!(:fyi_done)        { create(:notification, kind: "contact_us_fyi", responded: true,  recipient_email: "done@example.com") }
       let!(:user_confirm)    { create(:notification, kind: "contact_us",                      recipient_email: "confirm@example.com") }
       let!(:other)           { create(:notification, kind: "reset_password_fyi",              recipient_email: "other@example.com") }
 
-      it "renders an unchecked checkbox for unresponded contact_us_fyi rows" do
+      it "renders an unresponded toggle for unresponded contact_us_fyi rows" do
         get notifications_path, params: { email: "fyi@example.com" }, headers: turbo_headers
 
-        expect(response.body).to match(/name="notification\[responded\]"[^>]*value="1"(?![^>]*checked)/)
+        button = Nokogiri::HTML(response.body)
+          .at_css("form##{ActionView::RecordIdentifier.dom_id(fyi, :responded)} button")
+        expect(button["aria-pressed"]).to eq("false")
       end
 
-      it "renders a checked checkbox for responded contact_us_fyi rows" do
+      it "renders a responded toggle for responded contact_us_fyi rows" do
         get notifications_path, params: { email: "done@example.com" }, headers: turbo_headers
 
-        expect(response.body).to match(/name="notification\[responded\]"[^>]*value="1"[^>]*checked/)
+        button = Nokogiri::HTML(response.body)
+          .at_css("form##{ActionView::RecordIdentifier.dom_id(fyi_done, :responded)} button")
+        expect(button["aria-pressed"]).to eq("true")
       end
 
-      it "renders an em-dash placeholder (no checkbox) for contact_us auto-confirmations" do
+      it "renders an em-dash placeholder (no toggle) for contact_us auto-confirmations" do
         get notifications_path, params: { email: "confirm@example.com" }, headers: turbo_headers
 
         expect(response.body).to include(user_confirm.recipient_email)
-        expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
+        expect(response.body).not_to include(ActionView::RecordIdentifier.dom_id(user_confirm, :responded))
       end
 
-      it "renders an em-dash placeholder (no checkbox) for other kinds" do
+      it "renders an em-dash placeholder (no toggle) for other kinds" do
         get notifications_path, params: { email: "other@example.com" }, headers: turbo_headers
 
         expect(response.body).to include(other.recipient_email)
-        expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
+        expect(response.body).not_to include(ActionView::RecordIdentifier.dom_id(other, :responded))
       end
     end
   end
@@ -408,17 +412,19 @@ RSpec.describe "Notifications", type: :request do
     context "as an admin" do
       before { sign_in admin }
 
-      it "renders the responded checkbox for contact_us_fyi" do
+      it "renders the responded toggle for contact_us_fyi" do
         get notification_path(fyi)
 
-        expect(response.body).to match(/<input[^>]*name="notification\[responded\]"[^>]*value="1"/)
+        button = Nokogiri::HTML(response.body)
+          .at_css("form##{ActionView::RecordIdentifier.dom_id(fyi, :responded)} button")
+        expect(button["aria-pressed"]).to eq("false")
       end
 
-      it "renders the responded checkbox for an incoming communication" do
+      it "renders the responded toggle for an incoming communication" do
         incoming = create(:notification, :incoming, kind: "reset_password_fyi")
         get notification_path(incoming)
 
-        expect(response.body).to match(/<input[^>]*name="notification\[responded\]"[^>]*value="1"/)
+        expect(response.body).to include(ActionView::RecordIdentifier.dom_id(incoming, :responded))
       end
 
       it "tracks the view so staff usage of communications is measurable" do
@@ -426,16 +432,16 @@ RSpec.describe "Notifications", type: :request do
         get notification_path(fyi)
       end
 
-      it "does not render the responded checkbox for contact_us (auto-confirmation)" do
+      it "does not render the responded toggle for contact_us (auto-confirmation)" do
         get notification_path(user_confirm)
 
-        expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
+        expect(response.body).not_to include(ActionView::RecordIdentifier.dom_id(user_confirm, :responded))
       end
 
-      it "does not render the responded checkbox for other kinds" do
+      it "does not render the responded toggle for other kinds" do
         get notification_path(other)
 
-        expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
+        expect(response.body).not_to include(ActionView::RecordIdentifier.dom_id(other, :responded))
       end
 
       # Scoped to the From row's <dd> so an unrelated mention of the sender or of
@@ -501,10 +507,10 @@ RSpec.describe "Notifications", type: :request do
 
       before { sign_in regular_user }
 
-      it "does not render the responded checkbox even on contact_us_fyi" do
+      it "does not render the responded toggle even on contact_us_fyi" do
         get notification_path(fyi)
 
-        expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
+        expect(response.body).not_to include(ActionView::RecordIdentifier.dom_id(fyi, :responded))
       end
     end
   end
@@ -529,6 +535,16 @@ RSpec.describe "Notifications", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(contact_notification.reload.responded).to be(false)
+      end
+
+      it "replaces the responded toggle and shows Saved" do
+        patch notification_path(contact_notification),
+              params: { toggle: "responded", notification: { responded: "1" } },
+              headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+        expect(response).to have_http_status(:ok)
+        expect(contact_notification.reload.responded).to be(true)
+        expect(response.body).to include(ActionView::RecordIdentifier.dom_id(contact_notification, :responded), "Saved")
       end
 
       it "tracks a responded change as an ahoy event" do
@@ -575,18 +591,18 @@ RSpec.describe "Notifications", type: :request do
         let(:turbo_headers) { { "Accept" => "text/vnd.turbo-stream.html" } }
 
         it "raises the flag and re-renders the toggle as flagged" do
-          patch notification_path(contact_notification), params: { notification: { flagged: "1" } }, headers: turbo_headers
+          patch notification_path(contact_notification), params: { toggle: "flagged", notification: { flagged: "1" } }, headers: turbo_headers
 
           expect(response).to have_http_status(:ok)
           expect(contact_notification.reload).to be_flagged
           expect(response.body).to include("flag_notification_#{contact_notification.id}")
-          expect(response.body).to include("text-orange-500")
+          expect(response.body).to include("text-orange-500", "Saved")
         end
 
         it "clears the flag" do
           contact_notification.update!(flagged: true)
 
-          patch notification_path(contact_notification), params: { notification: { flagged: "0" } }, headers: turbo_headers
+          patch notification_path(contact_notification), params: { toggle: "flagged", notification: { flagged: "0" } }, headers: turbo_headers
 
           expect(response).to have_http_status(:ok)
           expect(contact_notification.reload).not_to be_flagged

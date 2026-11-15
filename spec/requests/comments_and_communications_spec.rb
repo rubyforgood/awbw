@@ -525,7 +525,7 @@ RSpec.describe "Comments and communications", type: :request do
 
       doc = Nokogiri::HTML(response.body)
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
-      expect(row.at_css("[data-controller='autosave'] input[name='notification[responded]'][type=checkbox]")).to be_present
+      expect(row.at_css("form##{ActionView::RecordIdentifier.dom_id(notification, :responded)} button")).to be_present
     end
 
     it "shows a Responded checkbox for a contact-us FYI even though it's an automated, non-editable row" do
@@ -539,11 +539,11 @@ RSpec.describe "Comments and communications", type: :request do
 
       doc = Nokogiri::HTML(response.body)
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(contact_us_fyi)}")
-      expect(row.at_css("[data-controller='autosave'] input[name='notification[responded]'][type=checkbox]")).to be_present
+      expect(row.at_css("form##{ActionView::RecordIdentifier.dom_id(contact_us_fyi, :responded)} button")).to be_present
       expect(row.at_css("button[data-action='edit-toggle#toggle']")).to be_nil
     end
 
-    it "hides the Responded checkbox for a communication that doesn't need one" do
+    it "hides the responded toggle for a communication that doesn't need one" do
       notification = create(:notification, noticeable: person, recipient_email: "primary@example.com",
                                            email_subject: "FYI, no reply needed", kind: "manual_log",
                                            channel: "email", recipient_role: "person", notification_type: 0)
@@ -553,7 +553,7 @@ RSpec.describe "Comments and communications", type: :request do
 
       doc = Nokogiri::HTML(response.body)
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
-      expect(row.at_css("[data-controller='autosave']")).to be_nil
+      expect(row.at_css("form##{ActionView::RecordIdentifier.dom_id(notification, :responded)}")).to be_nil
     end
   end
 

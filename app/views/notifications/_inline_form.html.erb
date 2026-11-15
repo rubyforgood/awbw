@@ -46,7 +46,7 @@
             <%= f.select :channel,
                          options_for_select(Notification::MANUAL_CHANNELS.map { |channel| [ channel.titleize, channel ] }, channel_default),
                          { include_blank: false }, class: select_class, aria: { label: "Channel" } %>
-            <%= render "notifications/direction_toggle", f: f, compact: true %>
+            <%= render "notifications/direction_checkbox", f: f, compact: true %>
           </div>
           <%= f.input_field :email_subject, as: :text, rows: 1, required: true, placeholder: "Topic or subject line",
                             class: field_class, aria: { label: "Subject" } %>

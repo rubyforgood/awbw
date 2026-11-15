@@ -72,22 +72,9 @@
         </div>
       <% end %>
 
-      <% if @notification.requires_response? && allowed_to?(:update?, @notification) %>
-        <div class="flex items-center justify-end gap-2"
-             data-controller="autosave"
-             data-autosave-url-value="<%= notification_path(@notification) %>"
-             data-autosave-id-value="<%= @notification.id %>"
-             data-action="change->autosave#save">
-          <label class="inline-flex cursor-pointer items-center gap-2 rounded bg-gray-50 px-2 py-1 hover:bg-gray-100">
-            <input type="hidden" name="notification[responded]" value="0">
-            <input type="checkbox"
-                   name="notification[responded]"
-                   value="1"
-                   <%= "checked" if @notification.responded? %>
-                   class="h-4 w-4 rounded border-gray-300 text-green-600 accent-green-600 focus:ring-green-500">
-            <span class="text-gray-700">Responded</span>
-          </label>
-          <%= render "shared/autosave_status", field_name: "notification[responded]" %>
+      <% if @notification.requires_response? %>
+        <div class="flex items-center justify-end">
+          <%= render "notifications/responded_toggle", notification: @notification %>
         </div>
       <% end %>
 

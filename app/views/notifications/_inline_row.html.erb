@@ -5,7 +5,7 @@
   <% end %>
 <% end %>
 <% trailing = content_tag(:span,
-  safe_join([ render("notifications/responded_checkbox", notification: notification), edit_button ].compact),
+  safe_join([ render("notifications/responded_toggle", notification: notification), edit_button ].compact),
   class: "ml-auto flex shrink-0 items-center gap-3") %>
 <%= tag.div id: dom_id(notification), data: expandable_feed_row_data(clamp: false, key: dom_id(notification)) do %>
   <%= turbo_frame_tag dom_id(notification, :inline) do %>

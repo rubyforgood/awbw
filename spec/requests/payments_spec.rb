@@ -322,7 +322,7 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("comment[flagged]")
     end
 
-    it "loads a comment's edit form into its row frame without toggle fields" do
+    it "loads a comment's edit form into its row frame without a flag control" do
       payment = create(:payment, person:)
       comment = create(:comment, commentable: payment, body: "Original")
 
@@ -396,7 +396,7 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include(ActionView::RecordIdentifier.dom_id(payment, :activity_list), "Left a voicemail")
     end
 
-    it "loads a communication's edit form without toggle fields" do
+    it "loads a communication's edit form without live toggle controls" do
       payment = create(:payment, person:)
       notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
                                            email_subject: "Called about the check", recipient_email: person.email)
@@ -404,9 +404,11 @@ RSpec.describe "Payments", type: :request do
       get edit_notification_path(notification), headers: { "Turbo-Frame" => "inline_notification_#{notification.id}" }
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Called about the check", "Save")
+      expect(response.body).to include("Called about the check", "Save", "notification[direction]")
       expect(response.body).not_to include("notification[responded]", "notification[flagged]")
     end
+
+
 
     it "re-renders a communication's edit frame when its subject is blank" do
       payment = create(:payment, person:)

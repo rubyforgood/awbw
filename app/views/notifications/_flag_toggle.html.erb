@@ -4,8 +4,8 @@
 <% return unless allowed_to?(:update?, notification) %>
 <%= button_to notification_path(notification),
               method: :patch,
-              params: { notification: { flagged: !notification.flagged } },
-              form: { id: dom_id(notification, :flag) },
+              params: { toggle: "flagged", notification: { flagged: !notification.flagged } },
+              form: { id: dom_id(notification, :flag), data: { turbo: true } },
               class: "leading-none",
               title: notification.flagged? ? "Flagged for follow-up — click to clear" : "Flag for follow-up" do %>
   <i class="fa-flag <%= notification.flagged? ? "fa-solid text-orange-500" : "fa-regular text-gray-500 hover:text-orange-400" %>"></i>

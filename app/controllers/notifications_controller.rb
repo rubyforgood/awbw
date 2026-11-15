@@ -61,6 +61,7 @@ class NotificationsController < ApplicationController
     body_was = @notification.email_body_text
 
     if @notification.update(notification_params)
+      flash.now[:notice] = "Saved" if params[:toggle].present?
       track_responded_change(responded_was)
       track_incoming_body_change(body_was)
       combined_feed_person
