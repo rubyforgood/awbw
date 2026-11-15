@@ -31,12 +31,18 @@ module CommentsHelper
       person = entry.decorate.about_person
       email = nil
     else
-      person = entry.decorate.contact_person
+      person = hover_card_person(entry.person_id) || entry.person || entry.decorate.contact_person
       email = entry.recipient_email
     end
     return if person.nil? && email.blank?
 
     render "comments_and_communications/about_person_chip", person: person, email: email
+  end
+
+  # Who a feed row is about, for preloading their hover card. A communication's
+  # bound person stands in; legacy rows without one aren't preloaded.
+  def feed_person_id(entry)
+    entry.is_a?(Comment) ? entry.decorate.about_person&.id : entry.person_id
   end
 
   # Stimulus wiring for a feed row the chevron and "Expand/Collapse all" toggle.

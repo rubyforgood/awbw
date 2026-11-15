@@ -212,10 +212,11 @@ class PersonDecorator < ApplicationDecorator
   end
 
   # Their latest facilitator-training registrations, newest event first, whatever
-  # the attendance outcome.
+  # the attendance outcome. Reads preloaded registrations when a feed loaded them.
   def recent_facilitator_training_registrations(limit: 3)
-    event_registrations.joins(:event).merge(Event.facilitator_trainings)
-                       .includes(:event).order(events: { start_date: :desc }).limit(limit)
+    registrations = event_registrations.loaded? ? event_registrations : event_registrations.includes(:event)
+    registrations.select { |registration| registration.event&.facilitator_training? }
+                 .max_by(limit) { |registration| registration.event.start_date || Time.zone.at(0) }
   end
 
   def facilitator_since_range

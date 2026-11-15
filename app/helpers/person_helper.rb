@@ -160,7 +160,14 @@ module PersonHelper
   # (and queries) their card once.
   def facilitator_hover_card(person, header: false)
     @facilitator_hover_cards ||= {}
-    @facilitator_hover_cards[[ person.id, header ]] ||= render("people/facilitator_hover_card", person: person, header: header)
+    @facilitator_hover_cards[[ person.id, header ]] ||=
+      render("people/facilitator_hover_card", person: hover_card_person(person.id) || person, header: header)
+  end
+
+  # The copy of a person the controller preloaded for their hover card
+  # (@hover_card_people, from HoverCardPeople), when there is one.
+  def hover_card_person(id)
+    @hover_card_people&.[](id) if id
   end
 
   def profile_piece_shown?(person, flag)
