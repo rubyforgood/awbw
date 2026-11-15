@@ -186,16 +186,16 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
 
     it "leads with the kind of code when one is named" do
-      expect(helper.filemaker_code_hint(build(:organization, filemaker_code: nil), kind: "Project or organization ID"))
-        .to eq("Project or organization ID, comma-separated if multiple")
+      expect(helper.filemaker_code_hint(build(:organization, filemaker_code: nil), kind: "Project, organization, or Rolodex ID"))
+        .to eq("Project, organization, or Rolodex ID, comma-separated if multiple")
     end
 
     it "names the kind of code in front of its archive links" do
       FmProject.create!(fm_id: "P2775")
 
-      html = helper.filemaker_code_hint(build(:organization, filemaker_code: "P2775"), kind: "Project or organization ID")
+      html = helper.filemaker_code_hint(build(:organization, filemaker_code: "P2775"), kind: "Project, organization, or Rolodex ID")
 
-      expect(html).to include("Project or organization ID:")
+      expect(html).to include("Project, organization, or Rolodex ID:")
       expect(html).not_to include("In the archive:")
       expect(html).to include("P2775</a>")
     end
@@ -263,6 +263,31 @@ RSpec.describe FilemakerHelper, type: :helper do
       expect(html).to include(fm_archive_path("P00023", table: "projects"))
       expect(html).to include(fm_archive_path("ORG00023", table: "organizations"))
       expect(html).to include(%(title="No FileMaker archive record for 00023"))
+    end
+
+    it "link an agency's Rolodex card alongside its project and FM organization" do
+      FmProject.create!(fm_id: "P00023")
+      FmOrganization.create!(fm_id: "ORG00023")
+      FmRolodex.create!(fm_id: "00023")
+
+      html = helper.filemaker_code_links(build(:organization, filemaker_code: "00023, P00023, ORG00023"))
+
+      expect(html).to include(fm_archive_path("00023", table: "rolodexes"))
+      expect(html).to include(fm_archive_path("P00023", table: "projects"))
+      expect(html).to include(fm_archive_path("ORG00023", table: "organizations"))
+      expect(html).not_to include("line-through")
+    end
+
+    it "narrow to the Rolodex cards among them when asked" do
+      FmProject.create!(fm_id: "P00023")
+      FmRolodex.create!(fm_id: "00023")
+
+      html = helper.filemaker_code_links(build(:organization, filemaker_code: "00023, P00023"),
+                                         archives: [ FmRolodex ], label: "Rolodex", linked_only: true)
+
+      expect(html).to include(fm_archive_path("00023", table: "rolodexes"))
+      expect(html).not_to include("P00023")
+      expect(html).to include(">Rolodex</a>")
     end
   end
 end
