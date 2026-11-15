@@ -390,6 +390,18 @@ RSpec.describe "/organizations", type: :request do
       expect(phones).to have_link("➕ Add phone")
     end
 
+    it "links the agency's Rolodex card in the header beside its FM project" do
+      FmProject.create!(fm_id: "P2775")
+      FmRolodex.create!(fm_id: "00023")
+      organization = create(:organization, filemaker_code: "P2775, 00023")
+
+      get edit_organization_url(organization)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_link("Rolodex", exact: true, href: fm_archive_path("00023", table: "rolodexes"))
+      expect(page).to have_link("FM project", exact: true, href: fm_archive_path("P2775", table: "projects"))
+    end
+
     it "leaves focus alone so in-page links keep their scroll position" do
       get edit_organization_url(create(:organization))
 
