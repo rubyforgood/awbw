@@ -104,8 +104,9 @@ org's program status and is hard to find again.
 - **End dates are mostly missing.** Of the 7,263 rows that don't stay open (any status but
   Active, blank included), only 832 sit on a project with a `CloseDate`; **6,431 have no end
   date anywhere** in Personnel or Projects. Three Active rows sit on a closed project.
-- **Person matches:** of the 8,828 rows placed at an org, 8,483 find exactly one person;
-  345 find nobody or several people and are skipped.
+- **Person matches:** across all 9,037 rows, 8,665 find exactly one person, 370 find nobody
+  (the person wasn't imported) and 2 find several. Of the 8,828 rows placed at an org, 8,483
+  find exactly one person; 345 find nobody or several people and are skipped.
 - **What's already in the portal** for those 8,483 rows: 6,648 have nothing there, 1,823
   have a Facilitator row there (1,371 of them undated, 2 made by a training), 155 have an
   old-app title there, and 1 row's code is already on an affiliation.
@@ -236,7 +237,7 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
 
 ## Decision — round two: people-to-organizations → job affiliations
 
-### What production holds (profiled 2026-11-13)
+### What production holds (profiled 2026-11-13 and 2026-11-14)
 
 - **Every row has** `PersonID`, `OrgID`, `ModifiedBy`, `DateEntered` and
   `ModificationTimeStamp`. `Notes` is filled on 758 rows; `Title` on only 323.
@@ -250,6 +251,21 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
   titled exactly `Facilitator`.
 - **One row is titled `Liaison`,** an old-app role. It comes in as written, and the Data
   health check "Affiliations still titled with an old-app role" lists it for staff.
+- **Most rows say the person left.** 757 of the 758 notes read exactly "No longer with
+  organization", which the `LEFT_NOTE` wording ends; the other reads "Left in 2016", which it
+  doesn't. So about two in three job affiliations from this table come in ended.
+- **Matching** (profiled 2026-11-14): 845 rows find exactly one person and one org. 254 find
+  one person but an `OrgID` on several orgs, 25 find no person, 3 find no org, 1 finds several
+  people.
+- **ORG codes on several orgs** (69 codes): nearly all are one agency the old app split by
+  audience ("… Women's", "… Children's", "… Combined") that #2957 gave the same code. A few
+  are a FileMaker organization whose programs are different portal orgs.
+- **Little is already in the portal:** of the 845 matched rows, 103 have some affiliation at
+  that org, none with the same title, and none already carries the row's code.
+- **Staff stamps all resolve.** Every name in `ModifiedBy` answers to a recorded staff alias,
+  so no row falls back to the import user for want of one.
+- **Repeats:** 16 person-and-org pairs appear more than once (33 rows); 10 of them with the
+  same title (21 rows), which become one affiliation carrying every code.
 
 ### Rules
 
@@ -316,6 +332,14 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
 4. **Work addresses → the organization** (ADR-0008, ADR-0010).
 
 ## Open questions
+
+- **Round two: the 254 rows whose `OrgID` is on several orgs.** Skipped and listed, as the rules
+  stand. Most of those orgs are audience splits of one agency, which
+  `fm:merge_same_named_organizations` (ADR-0008) folds together; running it first would let
+  most of these rows land on the one org that's left. Run the merge before round two, or skip
+  and list?
+- **Round two: "Left in 2016".** One note says the person left, in words `LEFT_NOTE` doesn't
+  catch. End it December 31, 2016, or leave it for staff?
 
 - **Pass two: the stand-in end date for ended rows with no evidence** (about 3,440 rows).
   - **What FileMaker has** (production, 2026-11-13; each row counted under its best source):
