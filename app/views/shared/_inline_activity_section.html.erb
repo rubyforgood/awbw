@@ -1,4 +1,4 @@
-<section id="<%= inline_dom_id(record, :activity_section) %>"
+<section id="activity-section"
          class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex flex-wrap items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
@@ -15,7 +15,9 @@
   </div>
 
   <div class="space-y-2 p-4">
-    <div id="<%= inline_dom_id(record, :activity_list) %>" class="flex flex-col gap-2">
+    <%= render "shared/inline_activity_add_controls", record: record %>
+
+    <div id="activity-list" class="flex flex-col gap-2">
       <% entries.each do |entry| %>
         <% if entry.is_a?(Comment) %>
           <%= render "comments/inline_row", comment: entry %>
@@ -26,16 +28,7 @@
     </div>
 
     <% if entries.empty? %>
-      <p id="<%= inline_dom_id(record, :activity_list_empty) %>" class="text-sm text-gray-400"><%= t("communications.section_none") %></p>
+      <p id="activity-list-empty" class="text-sm text-gray-400"><%= t("communications.section_none") %></p>
     <% end %>
-
-    <div class="mt-3 flex flex-wrap items-center gap-2">
-      <% if allowed_to?(:manage?, Comment) %>
-        <%= render "comments/new_control", record: record %>
-      <% end %>
-      <% if record.respond_to?(:communications_scope) && allowed_to?(:create?, Notification) %>
-        <%= render "notifications/new_control", record: record %>
-      <% end %>
-    </div>
   </div>
 </section>

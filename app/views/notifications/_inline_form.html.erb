@@ -2,6 +2,7 @@
 <% persisted = notification.persisted? %>
 <% form_url = persisted ? notification_path(notification) : notifications_path %>
 <% cancel_path = inline_record_path(record, fallback: notifications_path) %>
+<% cancel_slot = local_assigns[:cancel_slot] %>
 <% frame_data = turbo_frame_request? ? {} : { turbo_frame: "_top" } %>
 <% channel_default = Notification::MANUAL_CHANNELS.include?(notification.channel) ? notification.channel : "email" %>
 <% if persisted %>
@@ -56,7 +57,12 @@
 
         <div class="ml-auto flex shrink-0 items-center gap-x-2">
           <%= f.button :submit, "Save", class: button_classes(:secondary_outline, size: :sm) %>
-          <%= link_to "Cancel", cancel_path, class: "text-sm #{eyebrow_link_class}", data: frame_data %>
+          <% if cancel_slot.present? %>
+            <%= link_to "Cancel", new_notification_path(noticeable_sgid: record.to_sgid.to_s, cancel: 1),
+                  class: "text-sm #{eyebrow_link_class}", data: { turbo_frame: cancel_slot } %>
+          <% else %>
+            <%= link_to "Cancel", cancel_path, class: "text-sm #{eyebrow_link_class}", data: frame_data %>
+          <% end %>
         </div>
       </div>
     <% end %>

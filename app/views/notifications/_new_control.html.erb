@@ -1,7 +1,0 @@
-<%= turbo_frame_tag inline_dom_id(record, :new_communication) do %>
-  <%= link_to new_notification_path(noticeable_sgid: record.to_sgid.to_s),
-        class: button_classes(:secondary_outline, size: :sm, extra: "inline-flex items-center gap-1.5") do %>
-    <i class="fa-solid fa-plus text-2xs"></i>
-    <%= t("communications.add") %>
-  <% end %>
-<% end %>

@@ -8,7 +8,12 @@
   <h1 class="text-primary mb-6 font-display text-2xl font-bold">New comment</h1>
 
   <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-    <%= render "comments/inline_form", comment: @comment, record: @commentable,
-               frame_id: inline_dom_id(@commentable, :new_comment) %>
+    <% frame_id = "activity-new-slot" %>
+    <% if params[:cancel].present? %>
+      <%= turbo_frame_tag frame_id do %><% end %>
+    <% else %>
+      <%= render "comments/inline_form", comment: @comment, record: @commentable,
+                 frame_id: frame_id, cancel_slot: (turbo_frame_request? ? frame_id : nil) %>
+    <% end %>
   </div>
 </div>

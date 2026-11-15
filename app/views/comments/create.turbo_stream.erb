@@ -1,12 +1,10 @@
 <% if params[:inline].present? && @comment.commentable %>
   <% record = @comment.commentable %>
-  <%= turbo_stream.prepend inline_dom_id(record, :activity_list) do %>
+  <%= turbo_stream.update "activity-new-slot", "" %>
+  <%= turbo_stream.prepend "activity-list" do %>
     <%= render "comments/inline_row", comment: @comment %>
   <% end %>
-  <%= turbo_stream.remove inline_dom_id(record, :activity_list_empty) %>
-  <%= turbo_stream.replace inline_dom_id(record, :new_comment) do %>
-    <%= render "comments/new_control", record: record %>
-  <% end %>
+  <%= turbo_stream.remove "activity-list-empty" %>
 <% elsif @aggregator_person %>
   <%= turbo_stream.prepend "aggregated_comments_list" do %>
     <%= render "comments/aggregated_comment", comment: @created_comment.decorate, person: @aggregator_person, record_targets: @comment_targets %>

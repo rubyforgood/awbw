@@ -1,8 +1,4 @@
 module InlineActivityHelper
-  def inline_dom_id(record, prefix)
-    dom_id(inline_record(record), prefix)
-  end
-
   def inline_record_path(record, fallback: root_path)
     return fallback if record.blank?
 
