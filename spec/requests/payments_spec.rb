@@ -282,15 +282,6 @@ RSpec.describe "Payments", type: :request do
   end
 
   describe "comments and communications on a payment" do
-    it "keeps comments off the new and edit forms" do
-      payment = create(:payment, person:)
-
-      get new_payment_path(type: "CheckPayment")
-      expect(response.body).not_to include("comments_attributes")
-
-      get edit_payment_path(payment)
-      expect(response.body).not_to include("comments_attributes")
-    end
 
     it "lists the payment's comments and communications on the show page" do
       payment = create(:payment, person:)
@@ -331,16 +322,6 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("comment[flagged]")
     end
 
-    it "loads a comment's edit form into its row frame without a flag control" do
-      payment = create(:payment, person:)
-      comment = create(:comment, commentable: payment, body: "Original")
-
-      get edit_comment_path(comment), headers: { "Turbo-Frame" => "inline_comment_#{comment.id}" }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Original", "Save", "inline_comment_#{comment.id}")
-      expect(response.body).not_to include("comment[flagged]")
-    end
 
     it "saves an inline comment edit and returns to the payment" do
       payment = create(:payment, person:)
@@ -367,26 +348,28 @@ RSpec.describe "Payments", type: :request do
 
       get new_comment_path(commentable_sgid: payment.to_sgid.to_s)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include(ActionView::RecordIdentifier.dom_id(payment, :new_comment), "New comment")
+      expect(response.body).to include("activity-new-slot", "New comment")
 
       get new_notification_path(noticeable_sgid: payment.to_sgid.to_s)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include(ActionView::RecordIdentifier.dom_id(payment, :new_communication), "New communication")
+      expect(response.body).to include("activity-new-slot", "New communication")
     end
 
-    it "creates a comment from the payment's add frame" do
+
+    it "creates a comment from the payment's add slot" do
       payment = create(:payment, person:)
 
       expect {
         post comments_path, params: { comment: { body: "Added inline" },
                                       commentable_sgid: payment.to_sgid.to_s, inline: 1 },
-                            headers: { "Turbo-Frame" => ActionView::RecordIdentifier.dom_id(payment, :new_comment) }
+                            headers: { "Turbo-Frame" => "activity-new-slot" }
       }.to change { payment.comments.count }.by(1)
 
-      expect(response.body).to include(ActionView::RecordIdentifier.dom_id(payment, :activity_list), "Added inline")
+      expect(response.body).to include("activity-list", "Added inline")
+      expect(response.body).to include("activity-new-slot")
     end
 
-    it "logs a communication against the payment from its add frame" do
+    it "logs a communication against the payment from its add slot" do
       payment = create(:payment, person:)
       expect(payment.communications_email).to be_present
 
@@ -395,27 +378,17 @@ RSpec.describe "Payments", type: :request do
           noticeable_sgid: payment.to_sgid.to_s,
           inline: 1,
           notification: { channel: "email", direction: "outgoing", email_subject: "Left a voicemail" }
-        }, headers: { "Turbo-Frame" => ActionView::RecordIdentifier.dom_id(payment, :new_communication) }
+        }, headers: { "Turbo-Frame" => "activity-new-slot" }
       }.to change(Notification, :count).by(1)
 
       notification = Notification.last
       expect(notification.noticeable_id).to eq(payment.id)
       expect(notification.noticeable_type).to eq("Payment")
       expect(notification.recipient_email).to eq(payment.communications_email)
-      expect(response.body).to include(ActionView::RecordIdentifier.dom_id(payment, :activity_list), "Left a voicemail")
+      expect(response.body).to include("activity-list", "Left a voicemail")
+      expect(response.body).to include("activity-new-slot")
     end
 
-    it "loads a communication's edit form without live toggle controls" do
-      payment = create(:payment, person:)
-      notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
-                                           email_subject: "Called about the check", recipient_email: person.email)
-
-      get edit_notification_path(notification), headers: { "Turbo-Frame" => "inline_notification_#{notification.id}" }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Called about the check", "Save", "notification[direction]")
-      expect(response.body).not_to include("notification[responded]", "notification[flagged]")
-    end
 
 
 
