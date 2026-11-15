@@ -141,7 +141,12 @@ org's program status and is hard to find again.
     | Umbrella on several orgs (skipped) | 1 | 1 | 0 |
 
     98% of rows that name a project are placed (8,828 of 9,010), including 1,755 of the
-    1,774 Active rows. The other 27 rows name no project. Staff can work the
+    1,774 Active rows. The other 27 rows name no project.
+  - **A project code on several orgs is an org cleanup, not an import rule** (2026-11-14:
+    7 codes, 14 orgs, 57 Personnel rows). Each pair is a duplicate or a mistake: one program
+    under its old and new name (40 rows), an org named "DELETE", two test orgs carrying AWBW
+    Staff codes, an audience split, and two codes on an unrelated org. Staff fix the orgs (merge,
+    or remove the stray code) and rerun the import, which picks the rows up. Staff can work the
     skipped rows from a saved Blazer query listing each with links to its FileMaker
     Personnel, project and organization pages, the portal person, and the umbrella org.
 - **What gets created:** an `Affiliation` with
@@ -257,9 +262,12 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
 - **Matching** (profiled 2026-11-14): 845 rows find exactly one person and one org. 254 find
   one person but an `OrgID` on several orgs, 25 find no person, 3 find no org, 1 finds several
   people.
-- **ORG codes on several orgs** (69 codes): nearly all are one agency the old app split by
-  audience ("… Women's", "… Children's", "… Combined") that #2957 gave the same code. A few
-  are a FileMaker organization whose programs are different portal orgs.
+- **ORG codes on several orgs** (2026-11-14): 249 `ORG…` codes sit on 537 portal orgs; 69 of
+  those codes carry 260 people-to-organizations rows. Each org holding a repeated code also
+  holds its own project code, so these are a FileMaker organization's programs: #2957 put the
+  organization's code on every program org it found. Only 22 of the 69 codes (67 rows) are
+  audience copies of one name ("… Women's" / "… Combined"); 47 (193 rows) are differently
+  named programs or sites.
 - **Little is already in the portal:** of the 845 matched rows, 103 have some affiliation at
   that org, none with the same title, and none already carries the row's code.
 - **Staff stamps all resolve.** Every name in `ModifiedBy` answers to a recorded staff alias,
@@ -333,11 +341,12 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
 
 ## Open questions
 
-- **Round two: the 254 rows whose `OrgID` is on several orgs.** Skipped and listed, as the rules
-  stand. Most of those orgs are audience splits of one agency, which
-  `fm:merge_same_named_organizations` (ADR-0008) folds together; running it first would let
-  most of these rows land on the one org that's left. Run the merge before round two, or skip
-  and list?
+- **Round two: the 260 rows whose `OrgID` is on several orgs.** Skipped and listed, as the
+  rules stand. A same-name merge (`fm:merge_same_named_organizations`) would settle only the
+  22 audience-copy codes (67 rows). Candidate rules, strongest first: the one org carrying a
+  project the person staffed (their own Personnel row); the one org where they already have an
+  affiliation; the one org named "… Combined" (43 codes, 198 rows — usually the org already
+  holding the affiliations). Blazer E1 counts how many rows each clue settles.
 - **Round two: "Left in 2016".** One note says the person left, in words `LEFT_NOTE` doesn't
   catch. End it December 31, 2016, or leave it for staff?
 
