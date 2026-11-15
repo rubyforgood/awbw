@@ -367,6 +367,19 @@ Also in ADR-0008's pass, left out on purpose until a round decides them:
   project the person staffed (their own Personnel row); the one org where they already have an
   affiliation; the one org named "… Combined" (43 codes, 198 rows — usually the org already
   holding the affiliations). Blazer E1 counts how many rows each clue settles.
+  - **What the clues settle** (production, 2026-11-14, strongest clue first):
+
+    | Clue | Rows |
+    |---|---|
+    | A project the person staffed is on exactly one of the orgs | 201 |
+    | They already have an affiliation at exactly one of the orgs | 1 |
+    | Exactly one of the orgs is named "… Combined" | 31 |
+    | Their own clues point at several of the orgs | 20 |
+    | No clue | 7 |
+
+  - **Leaning: place by the person's own clues only (202 rows); send the other 58 to staff.**
+    A project they staffed or an affiliation they already hold is a fact about them. "…
+    Combined" is a guess about the org, which this ADR doesn't make.
 - **Round two: the start date of a row whose notes say the person left.** Entered and marked
   left in the same sitting, `DateEntered` reads as a one-day job; and "Left in 2016" was
   entered in 2020 or later, so its start would fall after its end. Leaning: leave the start
