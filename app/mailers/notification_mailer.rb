@@ -7,6 +7,7 @@ class NotificationMailer < ApplicationMailer
   MEMBERSHIP_BULK_INVOICE_SUBJECT = "#{SUBJECT_PREFIX} Your membership invoice".freeze
   FYI_PREFIX = "#{SUBJECT_PREFIX} [FYI]".freeze
   PROFILE_CHANGE_REVIEWED_SUBJECT = "#{SUBJECT_PREFIX} Update on your change request".freeze
+  ACCOUNT_EMAIL_CHANGED_SUBJECT = "#{SUBJECT_PREFIX} Your login email was changed".freeze
 
   def event_registration_confirmation_fyi(notification)
     @event_registration = notification.noticeable
@@ -77,6 +78,7 @@ class NotificationMailer < ApplicationMailer
     @noticeable = notification.noticeable.decorate
     @noticeable_klass = @noticeable.object.class
     @recipient_name = notification.person&.first_name.presence || notification.recipient_email
+    @time_zone = recipient_time_zone(notification.person)
 
     mail(
       to: notification.recipient_email,
@@ -176,6 +178,7 @@ class NotificationMailer < ApplicationMailer
       @user = @noticeable.respond_to?(:created_by) ? @noticeable.created_by : nil
       @report = @noticeable
     end
+    @time_zone = recipient_time_zone(notification.person)
 
     mail(
       to: notification.recipient_email,
@@ -207,6 +210,7 @@ class NotificationMailer < ApplicationMailer
     @submission = notification.noticeable
     @form = @submission.form
     @person = @submission.person
+    @time_zone = recipient_time_zone(notification.person || @person)
 
     mail(
       to: notification.recipient_email,
@@ -280,6 +284,22 @@ class NotificationMailer < ApplicationMailer
     mail(
       to: notification.recipient_email,
       subject: MEMBERSHIP_BULK_INVOICE_SUBJECT
+    )
+  end
+
+  # Security notice sent after a login email change, to both the new address and
+  # the one it replaced (so a hijacked account is noticed at the old inbox). The
+  # new address is read from the user at send time, so a resend names the current
+  # login email.
+  def account_email_changed(notification)
+    @user = notification.noticeable
+    @first_name = @user.person&.first_name.presence || @user.first_name.presence
+    @new_email = @user.email
+    @sent_to_previous = !notification.recipient_email.to_s.casecmp?(@new_email.to_s)
+
+    mail(
+      to: notification.recipient_email,
+      subject: ACCOUNT_EMAIL_CHANGED_SUBJECT
     )
   end
 

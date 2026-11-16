@@ -54,6 +54,26 @@ RSpec.describe "/resources", type: :request do
       expect(response.body).to include("Hidden From Search")
     end
 
+    it "shows only hidden resources when an admin checks hidden from search" do
+      get resources_url(hidden_from_search: true), headers: { "Turbo-Frame" => "resources_results" }
+
+      expect(response.body).to include("Hidden From Search")
+      expect(response.body).not_to include("Visible In Search")
+    end
+
+    it "offers the hidden from search visibility option to admins" do
+      get resources_url
+
+      expect(response.body).to include("visibility_hidden_from_search")
+    end
+
+    it "does not offer the hidden from search visibility option to non-admins" do
+      sign_in create(:user)
+      get resources_url
+
+      expect(response.body).not_to include("visibility_hidden_from_search")
+    end
+
     it "excludes hidden resources for a guest" do
       sign_out user
       get resources_url, headers: { "Turbo-Frame" => "resources_results" }

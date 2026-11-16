@@ -258,26 +258,41 @@ RSpec.describe "Scholarships", type: :request do
     end
   end
 
-  describe "blocking scholarship creation on a transferred-in registration" do
-    let(:source) { create(:event_registration, event: event) }
+  describe "adding a scholarship on a transferred-in registration" do
+    let(:source) { create(:event_registration, event: event, status: "transferred_out") }
     let(:transferred_in) do
       create(:event_registration, event: create(:event, cost_cents: 5000),
         registrant: source.registrant, transferred_from_registration: source)
     end
 
-    it "redirects the new form to the source registration, where the scholarship belongs" do
+    it "opens the new form on the transferred-in registration, priced at the original training" do
       get new_scholarship_path(allocatable_sgid: transferred_in.to_sgid.to_s, return_to: "registration")
 
-      expect(response).to redirect_to(edit_event_registration_path(source))
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(ApplicationController.helpers.dollars_from_cents(event.cost_cents))
     end
 
-    it "creates nothing and redirects the POST to the source registration" do
+    it "awards more on top of the original registration's scholarship" do
+      original = create(:scholarship, recipient: source.registrant, amount_cents: 1_000)
+      create(:allocation, source: original, allocatable: source, amount: 1_000)
+
       expect {
         post scholarships_path(allocatable_sgid: transferred_in.to_sgid.to_s, return_to: "registration"),
-             params: { scholarship: { amount_dollars: "40" } }
-      }.not_to change(Scholarship, :count)
+             params: { scholarship: { amount_dollars: "10" } }
+      }.to change(Scholarship, :count).by(1)
 
-      expect(response).to redirect_to(edit_event_registration_path(source))
+      expect(Scholarship.last.allocation.allocatable).to eq(transferred_in)
+      expect(response).to redirect_to(edit_event_registration_path(transferred_in))
+    end
+
+    it "still caps the award at what's left across both registrations" do
+      create(:allocation, source: create(:scholarship, recipient: source.registrant, amount_cents: event.cost_cents),
+                          allocatable: source, amount: event.cost_cents)
+
+      expect {
+        post scholarships_path(allocatable_sgid: transferred_in.to_sgid.to_s, return_to: "registration"),
+             params: { scholarship: { amount_dollars: "10" } }
+      }.not_to change(Scholarship, :count)
     end
   end
 

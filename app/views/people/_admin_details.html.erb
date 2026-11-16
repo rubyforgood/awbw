@@ -107,7 +107,7 @@
           <dt class="font-medium text-gray-500">Searchable</dt>
           <dd class="text-gray-900"><%= person.profile_is_searchable? ? "Yes" : "No" %></dd>
           <dt class="font-medium text-gray-500">Display name</dt>
-          <dd class="text-gray-900"><%= Person::DISPLAY_NAME_PREFERENCE_LABELS[person.display_name_preference] || "—" %></dd>
+          <dd class="text-gray-900"><%= Person::DISPLAY_NAME_PREFERENCE_LABELS[person.display_name_preference] %></dd>
           <dt class="font-medium text-gray-500">Contributions</dt>
           <dd class="text-gray-900"><%= Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[person.anonymous_contributions] %></dd>
         </dl>

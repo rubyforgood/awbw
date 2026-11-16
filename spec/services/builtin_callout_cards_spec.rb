@@ -260,6 +260,13 @@ RSpec.describe BuiltinCalloutCards do
       expect(scholarship_card.theme).to eq(DomainTheme.swatch("amber"))
     end
 
+    it "shows a pending request moved in by a transfer even without a scholarship form" do
+      source = create(:event_registration, registrant: registration.registrant, status: "transferred_out")
+      registration.update!(transferred_from_registration: source, scholarship_requested: true)
+
+      expect(card(registration, "Scholarship")&.subtitle).to eq("Your scholarship request status")
+    end
+
     context "for a transferred-in recipient with the award on the original registration" do
       let(:source) { create(:event_registration, registrant: registration.registrant, status: "transferred_out") }
       let(:scholarship) { create(:scholarship, recipient: registration.registrant, amount_cents: 25_000, tasks_completed: true) }
@@ -278,6 +285,12 @@ RSpec.describe BuiltinCalloutCards do
         expect(scholarship_card.theme).to eq(DomainTheme.swatch("amber"))
       end
 
+      it "keeps the card when the new event has no scholarship form" do
+        EventForm.where(event:, role: "scholarship").destroy_all
+
+        expect(card(registration.reload, "Scholarship")).to be_present
+      end
+
       it "shows the awarded amount once signed" do
         scholarship.accept_agreement!
 
@@ -285,6 +298,18 @@ RSpec.describe BuiltinCalloutCards do
 
         expect(scholarship_card.subtitle).to eq("Your award — amount, funder, and tasks")
         expect(scholarship_card.badge).to eq(MoneyFormatter.dollars_from_cents(25_000))
+      end
+
+      it "totals the original award and one added after the transfer once both are signed" do
+        top_up = create(:scholarship, recipient: registration.registrant, amount_cents: 99, tasks_completed: true)
+        create(:allocation, source: top_up, allocatable: registration, amount: 99)
+        scholarship.accept_agreement!
+
+        expect(card(registration.reload, "Scholarship").subtitle).to eq("Review and accept your scholarship agreement")
+
+        top_up.accept_agreement!
+
+        expect(card(registration.reload, "Scholarship").badge).to eq(MoneyFormatter.dollars_from_cents(25_099))
       end
 
       it "flags tasks still outstanding on the award" do
@@ -352,6 +377,36 @@ RSpec.describe BuiltinCalloutCards do
       expect(scholarship_card.badge).to eq("Declined")
       expect(scholarship_card.badge_classes).to include("red")
       expect(scholarship_card.theme).to eq(DomainTheme.swatch(DomainTheme.color_for(:scholarships)))
+    end
+
+    it "tracks a newer award offered after a decline" do
+      add_scholarship_form(event)
+      registration.update!(scholarship_requested: true)
+      # Decline first: it zeroes the allocation, freeing the cost for the live award.
+      declined = create(:scholarship, recipient: registration.registrant, amount_cents: 10_000)
+      create(:allocation, source: declined, allocatable: registration, amount: 1000)
+      declined.reload.decline_agreement!("Timing no longer works")
+      live = create(:scholarship, recipient: registration.registrant, amount_cents: 25_000, tasks_completed: true, agreement_signed: true)
+      create(:allocation, source: live, allocatable: registration.reload, amount: 1000)
+
+      scholarship_card = card(registration.reload, "Scholarship")
+      expect(scholarship_card.subtitle).to eq("Your award — amount, funder, and tasks")
+      expect(scholarship_card.badge).to eq("$250")
+      expect(scholarship_card.badge_classes).to include("fuchsia")
+    end
+
+    it "reads as declined when the newest award is declined" do
+      add_scholarship_form(event)
+      registration.update!(scholarship_requested: true)
+      older = create(:scholarship, recipient: registration.registrant, amount_cents: 25_000, tasks_completed: true, agreement_signed: true)
+      create(:allocation, source: older, allocatable: registration, amount: 500)
+      newer = create(:scholarship, recipient: registration.registrant, amount_cents: 10_000)
+      create(:allocation, source: newer, allocatable: registration.reload, amount: 500)
+      newer.reload.decline_agreement!("Timing no longer works")
+
+      scholarship_card = card(registration.reload, "Scholarship")
+      expect(scholarship_card.subtitle).to eq("You declined this award")
+      expect(scholarship_card.badge).to eq("Declined")
     end
 
     it "orders the code-fallback cards from payment downward" do

@@ -1,0 +1,13 @@
+name: "Share a link to pay a membership invoice"
+area: payments
+display_status: admin_facing
+released_on: 2026-10-27
+pr_number: 2889
+action_path: "/membership_invoices"
+summary: >-
+  A membership invoice with a balance shows a payment link you can copy and
+  send. Anyone with it can view and pay that invoice by card without signing
+  in, including people whose login is locked or not set up yet.
+pro_tips:
+  - "The link doesn't expire, and paying through it doesn't save the card."
+  - "The portal doesn't email invoices or failed charges to members, so send this link yourself."

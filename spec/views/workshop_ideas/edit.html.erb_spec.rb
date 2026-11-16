@@ -15,8 +15,8 @@ RSpec.describe "workshop_ideas/edit", type: :view do
     assign(:categories_grouped, [])
     assign(:potential_series_workshops, [])
     assign(:users, User.none)
+    assign(:organizations, [])
   end
-
 
   it "renders the edit workshop_idea form" do
     render
@@ -25,6 +25,8 @@ RSpec.describe "workshop_ideas/edit", type: :view do
       assert_select "textarea[name=?]", "workshop_idea[title]"
 
       assert_select "select[name=?]", "workshop_idea[windows_type_id]"
+
+      assert_select "select[name=?]", "workshop_idea[organization_id]"
 
       assert_select "input[type=hidden][name=?]", "workshop_idea[rhino_tips]"
 

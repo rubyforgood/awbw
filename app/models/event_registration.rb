@@ -1,9 +1,12 @@
 class EventRegistration < ApplicationRecord
+  include FilemakerCoded
   include RemoteSearchable
   include Registerable
   include Certifiable
   include Communicable
   include PersonNameSearchable
+
+  filemaker_archived_in FmParticipant
 
   # Sentinel for the roster's Payment method filter that matches buddy-system
   # registrations (someone_else_will_pay), which isn't an expected_payment_method
@@ -54,6 +57,7 @@ class EventRegistration < ApplicationRecord
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
+  PRE_TRANSFER_OUTCOME_LABELS = { "no_show" => "No show", "incomplete_attendance" => "Partial" }.freeze
   # Money is tracked apart from attendance: a transferred-out reg left the event but
   # its money stays on the event's books.
   MONEY_STATUSES = (ACTIVE_STATUSES + %w[ transferred_out ]).freeze
@@ -96,12 +100,15 @@ class EventRegistration < ApplicationRecord
     [ "Intends to pay", "intends_to_pay" ]
   ].freeze
   # Scholarship funding-source options (the .funder scope's vocabulary), named the
-  # way Scholarship.externally_funded / .org_subsidized name the same split. No
-  # select offers these yet — they arrive from the revenue report's drill-ins.
+  # way Scholarship.externally_funded / .org_subsidized name the same split. The
+  # registrations index and roster offer them as the Funding select, which the
+  # revenue and scholarship reports drill into.
   FUNDER_FILTER_OPTIONS = [
     [ "Grant-funded", "external" ],
     [ "Org-subsidized", "awbw" ]
   ].freeze
+  # The organization filter value meaning "linked to no organization".
+  NO_ORGANIZATION = "none".freeze
   # Scholarship-status filter options (the .scholarship_status scope's vocabulary).
   SCHOLARSHIP_STATUS_FILTER_OPTIONS = [
     [ "All recipients", "yes" ],
@@ -179,6 +186,12 @@ class EventRegistration < ApplicationRecord
   # Scopes
   def self.person_name_join = :registrant
   scope :registrant_name, ->(query) { by_person_name(query) }
+  # Events whose abbreviation or title contains the term — the reports' Event
+  # search, carried into the registrations index by their drill-in links.
+  scope :event_search, ->(term) {
+    like = "%#{sanitize_sql_like(term.to_s.strip)}%"
+    where(event_id: Event.where("events.abbreviation LIKE :q OR events.title LIKE :q", q: like).select(:id))
+  }
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
@@ -207,7 +220,11 @@ class EventRegistration < ApplicationRecord
     when "live" then joins(:event).where(events: { facilitator_training: true, on_demand: false })
     when "on_demand" then joins(:event).where(events: { facilitator_training: true, on_demand: true })
     when "other" then joins(:event).where(events: { facilitator_training: false })
-    else all
+    else
+      # A comma-separated mix of Event::KINDS (e.g. "live,other"), which the
+      # scholarship report's event-type checkboxes drill in with.
+      kinds = type.to_s.split(",") & Event::KINDS
+      kinds.any? ? where(event_id: Event.of_kinds(kinds).select(:id)) : all
     end
   }
   # Registrations whose event falls in the given calendar year. Uses a subquery
@@ -506,6 +523,13 @@ class EventRegistration < ApplicationRecord
   # "pending" = an organization name was submitted but nothing is linked yet (the
   # Pending chip on the roster). Needs the event to resolve its organization-name
   # field ("organization_name").
+  # Registrations linked to the given organization — or, given NO_ORGANIZATION,
+  # linked to none at all.
+  scope :linked_organization, ->(value) {
+    linked = EventRegistrationOrganization.select(:event_registration_id)
+    next where.not(id: linked) if value.to_s == NO_ORGANIZATION
+    where(id: linked.where(organization_id: value))
+  }
   scope :organization_linking_status, ->(value, event) {
     linked = EventRegistrationOrganization.select(:event_registration_id)
     case value
@@ -603,10 +627,11 @@ class EventRegistration < ApplicationRecord
     elsif params[:event_name].present?
       registrations = registrations.event_title(params[:event_name].downcase.strip)
     end
+    if params[:event_search].present?
+      registrations = registrations.event_search(params[:event_search])
+    end
     if params[:organization_id].present?
-      registrations = registrations.joins(:event_registration_organizations)
-                                   .where(event_registration_organizations: { organization_id: params[:organization_id] })
-                                   .distinct
+      registrations = registrations.linked_organization(params[:organization_id])
     end
     if params[:ce_status].present?
       registrations = registrations.ce_status(params[:ce_status])
@@ -656,6 +681,10 @@ class EventRegistration < ApplicationRecord
     status.in?(ACTIVE_STATUSES)
   end
 
+  def holding_money?
+    status.in?(MONEY_STATUSES)
+  end
+
   # Cancel this registration. Releasing scholarships and sending cancellation
   # emails hang off the status-change callbacks, so this and every other path to
   # "cancelled" (e.g. the admin edit form's status dropdown) behave identically.
@@ -683,6 +712,13 @@ class EventRegistration < ApplicationRecord
   # attendance (registered/attended/…) without losing the transfer history.
   def transferred_in?
     transferred_from_registration_id.present?
+  end
+
+  # Unlinks a transfer's destination into a standalone registration. A scholarship request moved in by
+  # the transfer goes back with it, unless an award was already made here.
+  def detach_from_transfer!
+    request_moved_in = transferred_from_registration&.scholarship_requested? && scholarships.none?
+    update!(transferred_from_registration: nil, scholarship_requested: scholarship_requested? && !request_moved_in)
   end
 
   # A transferred-out registration whose destination hasn't been recorded yet.
@@ -749,15 +785,16 @@ class EventRegistration < ApplicationRecord
     scholarships.any?
   end
 
-  # The scholarships that designate this registrant a recipient at THIS event: their
-  # own awards, or — for a transferred-in reg — the awards on the source
-  # registration it came from (walking the transfer chain). The dollars stay on
-  # the source (see EventDashboard's billable basis), but the recipient responds to
-  # the award and completes its tasks from whichever ticket they hold. (#1944)
+  # The scholarships that designate this registrant a recipient at THIS event: for
+  # a transferred-in reg, the awards on the source registration it came from
+  # (walking the transfer chain) followed by any added here. The source award's
+  # record stays on the source (its dollars count here — see
+  # ScholarshipDollarRegistrations), and the recipient responds to each award and
+  # completes its tasks from whichever ticket they hold. (#1944)
   def effective_scholarships
-    return scholarships if scholarships.any? || transferred_from_registration.nil?
+    return scholarships.to_a if transferred_from_registration.nil?
 
-    transferred_from_registration.effective_scholarships
+    transferred_from_registration.effective_scholarships + scholarships.to_a
   end
 
   def effective_scholarship
@@ -766,6 +803,11 @@ class EventRegistration < ApplicationRecord
 
   def scholarship_recipient?
     effective_scholarship.present?
+  end
+
+  def scholarship_application_completed?
+    form = event.scholarship_form
+    form.present? && ScholarshipApplication.new(event:, person: registrant).answered?
   end
 
   # Noun phrase distinguishing a scholarship-requested registration from a
@@ -801,15 +843,25 @@ class EventRegistration < ApplicationRecord
     live.any? && live.all?(&:agreement_signed?)
   end
 
+  # Awards go back and forth (a decline, then a fresh offer — or the reverse), so
+  # the newest award speaks for the registration. Reads preloaded scholarships.
+  def latest_scholarship
+    effective_scholarships.max_by { |scholarship| [ scholarship.created_at, scholarship.id ] }
+  end
+
+  # Declined when the newest award is — an older decline is superseded by a newer
+  # offer, and a newer decline wins over an older live award.
   def scholarship_declined?
-    effective_scholarships.any?(&:agreement_declined?)
+    latest_scholarship&.agreement_declined? || false
   end
 
   # Display-only: a scholarship is only *shown* as awarded once the recipient has
   # signed the agreement. The record and its allocation exist beforehand (the data
   # is unchanged) — the award is just presented as pending acceptance until signed.
+  # Declined awards are skipped, so a partial decline doesn't hide a signed award.
   def scholarship_awarded?
-    scholarship_recipient? && effective_scholarships.all?(&:agreement_signed?)
+    live = effective_scholarships.reject(&:agreement_declined?)
+    live.any? && live.all?(&:agreement_signed?)
   end
 
   def attended?
@@ -886,10 +938,26 @@ class EventRegistration < ApplicationRecord
     super + transferred_from_registration&.allocated_from(source).to_i
   end
 
-  # The reg holding this balance now: a transfer's new reg once one is recorded.
-  def billing_registration
+  def registration_form_submitted?
+    form = event.registration_form
+    form.present? && event.form_submissions.exists?(person_id: registrant_id, form: form)
+  end
+
+  # Registration-form answers are filed under the event they were given at, so a transferred-in
+  # registrant who didn't also register at the new event answered on the original.
+  def form_answers_registration
+    return self if !transferred_in? || registration_form_submitted?
+
+    transferred_from_registration
+  end
+
+  # The reg the registrant holds now: a transfer's new reg once one is recorded.
+  def current_registration
     (transferred_out? && transferred_to_registration) || self
   end
+
+  # The balance follows the registrant to the reg they hold now.
+  def billing_registration = current_registration
 
   # Every allocation settling this reg's balance, across the transfer.
   def billing_allocations
@@ -1161,8 +1229,16 @@ class EventRegistration < ApplicationRecord
   # transferred in — an incoming reg keeps its own status, so the transfer trail
   # would otherwise be invisible in exports.
   def attendance_status_report_label
-    return attendance_status_label unless transferred_in?
-    "#{attendance_status_label} (transferred in)"
+    label = attendance_status_label
+    label = "#{pre_transfer_outcome_label} → #{label}" if pre_transfer_outcome_label
+    label = "#{label} (transferred in)" if transferred_in?
+    label
+  end
+
+  # The attendance outcome a transferred-out reg had before it left, so a no-show
+  # or partial attendance stays on record after the status becomes transferred_out.
+  def pre_transfer_outcome_label
+    PRE_TRANSFER_OUTCOME_LABELS[status_before_transfer] if transferred_out?
   end
 
   # The completion record for a checklist step, or nil. Reads from the loaded
@@ -1229,7 +1305,7 @@ class EventRegistration < ApplicationRecord
   # by verdict, and unlike the registrant-wide rollup it ignores affiliations to
   # other organizations.
   def program_statuses
-    reference_date = event&.start_date&.to_date
+    reference_date = event&.starts_on
     organizations.map { |organization| organization.facilitator_program_status(as_of: reference_date) }
                  .uniq(&:status)
   end

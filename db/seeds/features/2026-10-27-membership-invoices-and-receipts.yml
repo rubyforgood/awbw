@@ -1,0 +1,12 @@
+name: "Members see their invoices and receipts"
+area: payments
+display_status: admin_facing
+released_on: 2026-10-27
+pr_number: 2889
+action_path: "/membership_invoices"
+summary: >-
+  Members can open their membership invoice and pay it with "Pay now," and get a
+  receipt once it's paid in full.
+pro_tips:
+  - "\"Pay now\" is a one-time payment and doesn't turn on autopay."
+  - "Free ($0) invoices count as paid but have no receipt."

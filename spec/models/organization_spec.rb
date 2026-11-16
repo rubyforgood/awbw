@@ -13,6 +13,8 @@ RSpec.describe Organization do
     it { should have_many(:users).through(:people) }
     it { should have_many(:reports) }
     it { should have_many(:workshop_logs) }
+    it { should have_many(:workshop_ideas) }
+    it { should have_many(:workshops) }
     it { should have_many(:contact_methods).dependent(:destroy) }
   end
 
@@ -108,6 +110,21 @@ RSpec.describe Organization do
       parent.parent = grandchild
       expect(parent).not_to be_valid
       expect(parent.errors[:parent_id]).to be_present
+    end
+  end
+
+  describe ".website_address?" do
+    it "accepts a bare domain, a scheme-qualified URL, and a path" do
+      expect(described_class.website_address?("awbw.org")).to be(true)
+      expect(described_class.website_address?(" https://www.awbw.org/ ")).to be(true)
+      expect(described_class.website_address?("http://awbw.org/about")).to be(true)
+    end
+
+    it "rejects blanks, names, and hosts without a dot" do
+      expect(described_class.website_address?(nil)).to be(false)
+      expect(described_class.website_address?("")).to be(false)
+      expect(described_class.website_address?("Acme Unified School District")).to be(false)
+      expect(described_class.website_address?("Acme-Unified")).to be(false)
     end
   end
 
@@ -566,6 +583,53 @@ RSpec.describe Organization do
       fourth.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
 
       expect(organization.active_facilitator_age_groups).to eq([ teen, young, adult ])
+    end
+  end
+
+  describe "#affiliated_workshops" do
+    let(:organization) { create(:organization) }
+    let(:affiliated_person) { create(:person) }
+    let(:windows_type) { create(:windows_type, :adult) }
+
+    before do
+      create(:affiliation, organization: organization, person: affiliated_person)
+    end
+
+    it "includes directly associated workshops and workshops authored by affiliated people without duplicates" do
+      direct_workshop = create(:workshop, title: "Direct Workshop", organization: organization, windows_type: windows_type)
+      authored_workshop = create(:workshop, title: "Authored Workshop", author: affiliated_person, windows_type: windows_type)
+      both_workshop = create(:workshop, title: "Both Workshop", organization: organization, author: affiliated_person, windows_type: windows_type)
+      unrelated_workshop = create(:workshop, title: "Unrelated Workshop", windows_type: windows_type)
+
+      results = organization.affiliated_workshops
+
+      expect(results).to include(direct_workshop, authored_workshop, both_workshop)
+      expect(results).not_to include(unrelated_workshop)
+      expect(results.where(id: both_workshop.id).count).to eq(1)
+    end
+  end
+
+  describe "#affiliated_workshop_ideas" do
+    let(:organization) { create(:organization) }
+    let(:affiliated_person) { create(:person) }
+    let(:windows_type) { create(:windows_type, :adult) }
+    let(:admin) { create(:user, :admin) }
+
+    before do
+      create(:affiliation, organization: organization, person: affiliated_person)
+    end
+
+    it "includes directly associated ideas and ideas authored by affiliated people without duplicates" do
+      direct_idea = create(:workshop_idea, title: "Direct Idea", organization: organization, windows_type: windows_type, created_by: admin)
+      authored_idea = create(:workshop_idea, title: "Authored Idea", author: affiliated_person, windows_type: windows_type, created_by: admin)
+      both_idea = create(:workshop_idea, title: "Both Idea", organization: organization, author: affiliated_person, windows_type: windows_type, created_by: admin)
+      unrelated_idea = create(:workshop_idea, title: "Unrelated Idea", windows_type: windows_type, created_by: admin)
+
+      results = organization.affiliated_workshop_ideas
+
+      expect(results).to include(direct_idea, authored_idea, both_idea)
+      expect(results).not_to include(unrelated_idea)
+      expect(results.where(id: both_idea.id).count).to eq(1)
     end
   end
 end

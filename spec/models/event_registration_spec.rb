@@ -160,6 +160,23 @@ RSpec.describe EventRegistration, type: :model do
       expect(source.attendance_status_report_label).to eq("Transferred out")
     end
 
+    it "keeps a no-show or partial attendance on record after the reg transfers out" do
+      no_show = create(:event_registration, status: "no_show")
+      no_show.update!(status: "transferred_out")
+      partial = create(:event_registration, status: "incomplete_attendance")
+      partial.update!(status: "transferred_out")
+      expect(no_show.pre_transfer_outcome_label).to eq("No show")
+      expect(no_show.attendance_status_report_label).to eq("No show → Transferred out")
+      expect(partial.pre_transfer_outcome_label).to eq("Partial")
+    end
+
+    it "notes no prior outcome when the reg transferred out while registered or attended" do
+      attended = create(:event_registration, status: "attended")
+      attended.update!(status: "transferred_out")
+      expect(attended.pre_transfer_outcome_label).to be_nil
+      expect(source.pre_transfer_outcome_label).to be_nil
+    end
+
     it "offers a Transferred in filter option backed by the FK value" do
       expect(EventRegistration::ATTENDANCE_FILTER_OPTIONS).to include([ "Transferred in", "transferred_in" ])
     end
@@ -315,13 +332,13 @@ RSpec.describe EventRegistration, type: :model do
         expect(own).to be_scholarship_recipient
       end
 
-      it "prefers a transferred-in reg's own award over the source's" do
+      it "includes both the source's award and one added on the transferred-in reg, oldest first" do
         source_award = create(:scholarship, recipient: source.registrant, amount_cents: 4_000)
         create(:allocation, source: source_award, allocatable: source, amount: 4_000)
         own_award = create(:scholarship, recipient: incoming.registrant, amount_cents: 1_000)
         create(:allocation, source: own_award, allocatable: incoming, amount: 1_000)
 
-        expect(incoming.reload.effective_scholarships).to contain_exactly(own_award)
+        expect(incoming.reload.effective_scholarships).to eq([ source_award, own_award ])
       end
 
       it "walks a chain of transfers back to the award" do
@@ -1563,6 +1580,46 @@ RSpec.describe EventRegistration, type: :model do
       create(:allocation, source: scholarship, allocatable: reg, amount: 1099)
       expect(reg.scholarship_awarded?).to be true
     end
+
+    it "skips a declined award alongside a signed one" do
+      reg = create(:event_registration)
+      # Decline first: it zeroes the allocation, freeing the cost for the signed award.
+      declined = create(:scholarship, recipient: reg.registrant, amount_cents: 500)
+      create(:allocation, source: declined, allocatable: reg, amount: 500)
+      declined.reload.decline_agreement!("Timing no longer works")
+      signed = create(:scholarship, recipient: reg.registrant, amount_cents: 1099, agreement_signed: true)
+      create(:allocation, source: signed, allocatable: reg.reload, amount: 1099)
+
+      expect(reg.reload.scholarship_awarded?).to be true
+    end
+  end
+
+  describe "#scholarship_declined?" do
+    let(:reg) { create(:event_registration) }
+
+    def award(amount)
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: amount)
+      create(:allocation, source: scholarship, allocatable: reg.reload, amount: amount)
+      scholarship
+    end
+
+    it "is false with no scholarship" do
+      expect(reg.scholarship_declined?).to be false
+    end
+
+    it "is false when a newer award follows a decline" do
+      award(500).reload.decline_agreement!("Timing no longer works")
+      award(500)
+
+      expect(reg.reload.scholarship_declined?).to be false
+    end
+
+    it "is true when the newest award is declined, even with an older live one" do
+      award(500)
+      award(500).reload.decline_agreement!("Timing no longer works")
+
+      expect(reg.reload.scholarship_declined?).to be true
+    end
   end
 
   describe "#joinable?" do
@@ -1721,6 +1778,34 @@ RSpec.describe EventRegistration, type: :model do
       intends = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
       create(:event_registration, event: event, registrant: create(:person))
       expect(EventRegistration.payment_status("intends_to_pay")).to contain_exactly(intends)
+    end
+  end
+
+  describe ".event_type with a comma-separated mix of kinds" do
+    it "matches registrations at events of any listed kind" do
+      live = create(:event_registration, event: create(:event, facilitator_training: true, on_demand: false))
+      on_demand = create(:event_registration, event: create(:event, facilitator_training: true, on_demand: true))
+      other = create(:event_registration, event: create(:event, facilitator_training: false))
+
+      matched = EventRegistration.event_type("live,other")
+      expect(matched).to include(live, other)
+      expect(matched).not_to include(on_demand)
+    end
+  end
+
+  describe ".linked_organization" do
+    it "matches registrations linked to the organization, or to none" do
+      organization = create(:organization)
+      linked = create(:event_registration)
+      create(:event_registration_organization, event_registration: linked, organization: organization)
+      other = create(:event_registration)
+      create(:event_registration_organization, event_registration: other)
+      unlinked = create(:event_registration)
+
+      expect(EventRegistration.linked_organization(organization.id)).to contain_exactly(linked)
+      none = EventRegistration.linked_organization(EventRegistration::NO_ORGANIZATION)
+      expect(none).to include(unlinked)
+      expect(none).not_to include(linked, other)
     end
   end
 
@@ -2115,7 +2200,7 @@ RSpec.describe EventRegistration, type: :model do
 
   describe "#program_statuses" do
     let(:registration) { create(:event_registration) }
-    let(:training_date) { registration.event.start_date.to_date }
+    let(:training_date) { registration.event.starts_on }
     let(:linked_org) { create(:organization, name: "Registration Org") }
     let(:other_org) { create(:organization, name: "Other Org") }
 
@@ -2380,6 +2465,35 @@ RSpec.describe EventRegistration, type: :model do
         expect(registration.forgotten_sign_out_at(late)).to be_nil
         expect(registration.forgotten_sign_out_entry).to be_nil
       end
+    end
+  end
+
+  describe "#form_answers_registration" do
+    let(:person) { create(:person) }
+    let(:original) { create(:event_registration, registrant: person, status: "transferred_out") }
+    let(:registration) { create(:event_registration, registrant: person, transferred_from_registration: original) }
+
+    before do
+      form = create(:form)
+      create(:event_form, :registration, event: original.event, form: form)
+      create(:form_submission, person: person, form: form, event: original.event)
+    end
+
+    it "is the original for a transferred-in registrant who answered there" do
+      expect(registration.form_answers_registration).to eq(original)
+      expect(original).to be_registration_form_submitted
+    end
+
+    it "is itself once the registrant also answered at the new event" do
+      form = create(:form)
+      create(:event_form, :registration, event: registration.event, form: form)
+      create(:form_submission, person: person, form: form, event: registration.event)
+
+      expect(registration.form_answers_registration).to eq(registration)
+    end
+
+    it "is itself without a transfer" do
+      expect(original.form_answers_registration).to eq(original)
     end
   end
 end

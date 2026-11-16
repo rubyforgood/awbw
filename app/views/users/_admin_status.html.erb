@@ -1,0 +1,5 @@
+<% if user.super_user? %>
+  <i class="fa-solid fa-user-shield text-blue-600" title="<%= "Granted at #{l(user.updated_at, format: :long)}" if user.updated_at.present? %><%= " by #{person_name(user.updated_by)}" if user.updated_by.present? %>"></i>
+<% else %>
+  <span>--</span>
+<% end %>

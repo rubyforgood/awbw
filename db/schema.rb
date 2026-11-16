@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_13_131756) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -423,7 +423,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
   end
 
   create_table "community_news", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "author_credit_preference", default: "full_name"
+    t.string "author_credit_preference"
     t.bigint "author_id"
     t.text "body"
     t.datetime "created_at", null: false
@@ -571,6 +571,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
     t.bigint "event_id"
     t.string "expected_payment_method"
     t.text "fee_note"
+    t.string "filemaker_code"
     t.boolean "intends_to_pay", default: false, null: false
     t.boolean "invoice_requested", default: false, null: false
     t.boolean "payment_unresolved"
@@ -589,6 +590,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
     t.index ["checkout_session_id"], name: "index_event_registrations_on_checkout_session_id"
     t.index ["created_by_id"], name: "index_event_registrations_on_created_by_id"
     t.index ["event_id"], name: "index_event_registrations_on_event_id"
+    t.index ["filemaker_code"], name: "index_event_registrations_on_filemaker_code"
     t.index ["payment_unresolved"], name: "index_event_registrations_on_payment_unresolved"
     t.index ["registrant_id", "event_id"], name: "index_event_registrations_on_registrant_id_and_event_id", unique: true
     t.index ["registrant_id"], name: "index_event_registrations_on_registrant_id"
@@ -1704,7 +1706,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date_of_birth"
-    t.string "display_name_preference", default: "first_name_last_initial"
+    t.string "display_name_preference", null: false
     t.string "email"
     t.string "email_2"
     t.string "email_2_type"
@@ -2116,6 +2118,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
     t.integer "home_featured_stories_limit"
     t.bigint "participant_credit_person_id"
     t.integer "membership_autopay_window_days"
+    t.bigint "story_share_hero_story_id"
     t.index ["ce_administrator_id"], name: "index_settings_on_ce_administrator_id"
     t.index ["created_by_id"], name: "index_settings_on_created_by_id"
     t.index ["import_user_id"], name: "index_settings_on_import_user_id"
@@ -2124,6 +2127,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
     t.index ["remittance_address_id"], name: "index_settings_on_remittance_address_id"
     t.index ["return_address_id"], name: "index_settings_on_return_address_id"
     t.index ["singleton"], name: "index_settings_on_singleton", unique: true
+    t.index ["story_share_hero_story_id"], name: "index_settings_on_story_share_hero_story_id"
     t.index ["updated_by_id"], name: "index_settings_on_updated_by_id"
   end
 
@@ -2394,7 +2398,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
     t.string "state"
     t.string "state2"
     t.string "subscribecode"
-    t.boolean "super_user", default: false
+    t.boolean "super_user", default: false, null: false
     t.string "time_zone", default: "Pacific Time (US & Canada)"
     t.string "unconfirmed_email"
     t.string "unlock_token"
@@ -2528,8 +2532,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
     t.text "warm_up"
     t.text "warm_up_spanish"
     t.integer "windows_type_id", null: false
+    t.integer "organization_id"
     t.index ["author_id"], name: "index_workshop_ideas_on_author_id"
     t.index ["created_by_id"], name: "index_workshop_ideas_on_created_by_id"
+    t.index ["organization_id"], name: "index_workshop_ideas_on_organization_id"
     t.index ["updated_by_id"], name: "index_workshop_ideas_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_workshop_ideas_on_windows_type_id"
   end
@@ -2720,11 +2726,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
     t.integer "windows_type_id"
     t.bigint "workshop_idea_id"
     t.integer "year"
+    t.integer "organization_id"
     t.index ["author_id"], name: "index_workshops_on_author_id"
     t.index ["created_at"], name: "index_workshops_on_created_at"
     t.index ["created_by_id"], name: "index_workshops_on_created_by_id"
     t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
     t.index ["led_count"], name: "index_workshops_on_led_count"
+    t.index ["organization_id"], name: "index_workshops_on_organization_id"
     t.index ["published"], name: "index_workshops_on_published"
     t.index ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
     t.index ["title"], name: "index_workshops_on_title", type: :fulltext
@@ -2955,6 +2963,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
   add_foreign_key "settings", "organizations"
   add_foreign_key "settings", "people", column: "ce_administrator_id", on_delete: :nullify
   add_foreign_key "settings", "people", column: "participant_credit_person_id", on_delete: :nullify
+  add_foreign_key "settings", "stories", column: "story_share_hero_story_id", on_delete: :nullify
   add_foreign_key "settings", "users", column: "import_user_id", on_delete: :nullify
   add_foreign_key "staff_aliases", "users"
   add_foreign_key "staff_taggings", "staff_tags"
@@ -2999,6 +3008,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
   add_foreign_key "windows_types", "users", column: "updated_by_id"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"
+  add_foreign_key "workshop_ideas", "organizations"
   add_foreign_key "workshop_ideas", "people", column: "author_id"
   add_foreign_key "workshop_ideas", "users", column: "created_by_id"
   add_foreign_key "workshop_ideas", "users", column: "updated_by_id"
@@ -3026,6 +3036,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_150053) do
   add_foreign_key "workshop_variations", "windows_types"
   add_foreign_key "workshop_variations", "workshop_variation_ideas"
   add_foreign_key "workshop_variations", "workshops"
+  add_foreign_key "workshops", "organizations"
   add_foreign_key "workshops", "people", column: "author_id"
   add_foreign_key "workshops", "users", column: "created_by_id"
   add_foreign_key "workshops", "users", column: "updated_by_id"

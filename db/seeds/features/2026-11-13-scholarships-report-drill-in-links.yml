@@ -1,0 +1,10 @@
+name: "Click a scholarships report figure to see its registrations"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-13
+pr_number: 2992
+action_path: "/events/scholarships"
+summary: >-
+  Every non-zero count or dollar figure on the scholarships report is a link.
+  One training's figure opens that training's registrants list; a figure across
+  trainings opens the registrations list, already filtered to match.

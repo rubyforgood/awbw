@@ -1,0 +1,22 @@
+<% if user.inactive? %>
+  <span class="fa fa-ban text-red-500"></span>
+<% end %>
+<% if user.locked_at.present? %>
+  <%
+    lock_info = "Locked #{l(user.locked_at, format: :long)}"
+    if user.failed_attempts >= Devise.maximum_attempts
+      lock_info += " (too many failed login attempts)"
+    elsif user.updated_by.present?
+      lock_info += " by #{person_name(user.updated_by)}"
+    end
+  %>
+  <i class="fa-solid fa-lock text-red-500" title="<%= lock_info %>"></i>
+<% end %>
+<% if user.confirmed_at.nil? %>
+  <i class="fa-solid fa-lock text-red-500" title="Unconfirmed — cannot log in"></i>
+<% end %>
+<% if !user.inactive? && !user.locked_at.present? && user.confirmed_at.present? %>
+  <% created_info = user.created_at.present? ? "Created #{l(user.created_at, format: :long)}" : ""
+    created_info += " by #{person_name(user.created_by)}" if user.created_by.present? %>
+  <span class="fa fa-check-circle text-gray-300" title="<%= created_info %>"></span>
+<% end %>

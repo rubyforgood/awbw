@@ -3,6 +3,23 @@ require 'rails_helper'
 RSpec.describe WorkshopIdea, type: :model do
   it_behaves_like "author_creditable", factory: :workshop_idea, org_credited: false, credits_creator: true
 
+  describe "associations" do
+    it { should belong_to(:organization).optional }
+  end
+
+  describe "validations" do
+    it "is valid with an organization" do
+      org = create(:organization)
+      idea = build(:workshop_idea, organization: org)
+      expect(idea).to be_valid
+    end
+
+    it "is valid without an organization" do
+      idea = build(:workshop_idea, organization: nil)
+      expect(idea).to be_valid
+    end
+  end
+
   # An idea nobody named an author on still credits its submitter, who filled the form in.
   describe "#author_credit" do
     it "credits the creating user's person, not the generic label" do

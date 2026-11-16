@@ -1,0 +1,11 @@
+name: "See transfers on the scholarship recipients page"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-10
+pr_number: 2975
+summary: >-
+  A recipient who transferred in now shows a "Transferred in from" pill naming their original training. The
+  original training's recipients page lists people who transferred out in a collapsed section.
+pro_tips:
+  - "People who transferred out aren't counted in the original training's recipient numbers; they count where they moved to."
+  - "Each pill and list entry links to the other training's recipients page."

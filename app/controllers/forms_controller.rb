@@ -1,6 +1,6 @@
 class FormsController < ApplicationController
   before_action :set_form, only: %i[show results edit update destroy copy reorder_field reorder_fields edit_sections update_sections]
-  before_action :set_dashboard_event, only: %i[show edit edit_sections update update_sections]
+  before_action :set_dashboard_event, only: %i[show results edit edit_sections update update_sections]
 
   SORTABLE_COLUMNS = %w[name role fields submissions].freeze
 
@@ -46,9 +46,14 @@ class FormsController < ApplicationController
   # charts, free-text questions as lists of the actual answers.
   def results
     authorize! @form
-    # Honor the event filter only for an event genuinely connected to this shared
-    # form; an unknown id falls back to the unfiltered rollup.
-    @selected_event_id = @form.events.where(id: params[:event_id]).pick(:id) if params[:event_id].present?
+    # The events this form can be narrowed to are the ones its own submissions
+    # were made for — the set the picker offers. A standalone form has no
+    # event_forms rows, so its submissions are the only thing that says which
+    # events it covers (a survey shared as /f/:slug?event=, an on-demand
+    # agreement stamped with its training). An unknown id falls back to the
+    # unfiltered rollup.
+    @filterable_events = Event.where(id: @form.form_submissions.select(:event_id)).distinct.order(:start_date).to_a
+    @selected_event_id = @filterable_events.map(&:id).find { |id| id.to_s == params[:event_id].to_s } if params[:event_id].present?
     @selected_organization_id = params[:organization_id].presence
     @selected_start_date = params[:start_date].presence
     @selected_end_date = params[:end_date].presence
@@ -221,7 +226,12 @@ class FormsController < ApplicationController
   # so the link only ever points at a genuinely connected event. Fall back to
   # the sole connected event when there's exactly one.
   def set_dashboard_event
-    @dashboard_event = @form.events.find_by(id: params[:event_id]) if params[:event_id].present?
+    @dashboard_event = if @form.survey_role? && params[:event_id].present?
+      event = Event.find_by(id: params[:event_id])
+      event if EventSurveyCompletions.survey_allowed_for_event?(event, @form)
+    elsif params[:event_id].present?
+      @form.events.find_by(id: params[:event_id])
+    end
     @dashboard_event ||= @form.events.one? ? @form.events.first : nil
   end
 

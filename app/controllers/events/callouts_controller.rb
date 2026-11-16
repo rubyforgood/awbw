@@ -12,6 +12,7 @@ module Events
     before_action :set_event_registration
     before_action :authorize_callout
     before_action :set_event
+    before_action :require_scholarship_form, only: %i[ scholarship_application submit_scholarship_application ]
     # These pages carry an editable intro (the built-in row's "Callout page text")
     # above the app-controlled content, plus any resources linked to the row.
     before_action :set_builtin_content, only: %i[ payment scholarship certificate videoconference staff ]
@@ -75,8 +76,12 @@ module Events
         return
       end
 
-      @scholarship = @event_registration.effective_scholarship
-      @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
+      @scholarships = @event_registration.effective_scholarships
+      @scholarship = @scholarships.first
+      answers_registration = @event_registration.form_answers_registration
+      @form_answers_registration = answers_registration if answers_registration.slug.present? && answers_registration.registration_form_submitted?
+      @scholarship_form = @event.scholarship_form
+      @scholarship_application_completed = @event_registration.scholarship_application_completed?
 
       # The recipients survey, delivered here once the recipient has signed their
       # agreement (and any drip date has passed).
@@ -91,9 +96,33 @@ module Events
       end
     end
 
+    def scholarship_application
+      load_scholarship_application
+    end
+
+    def submit_scholarship_application
+      load_scholarship_application
+      form_params = OutsideUsaState.form_field_answers(params, :callout_form)
+      @field_errors = FormAnswerValidator.call(@form_fields, form_params)
+      if @field_errors.any?
+        flash.now[:alert] = "Your application is not complete yet. Please check for any errors or missing information."
+        render :scholarship_application, status: :unprocessable_content
+        return
+      end
+
+      service = EventRegistrationServices::CalloutFormSubmission.call(
+        registration: @event_registration, callout: nil, form: @scholarship_form, form_params:
+      )
+      @event_registration.update!(scholarship_requested: true) unless @event_registration.scholarship_requested?
+      NotificationMailer.callout_form_submitted_fyi(service.submission, updated: service.edited?).deliver_later
+
+      redirect_to registration_scholarship_path(@event_registration.slug),
+                  notice: "Thanks — your scholarship application has been submitted."
+    end
+
     # The Agree button (agreement=yes) records an "accepted" response.
     def sign_agreement
-      scholarship = @event_registration.effective_scholarship
+      scholarship = responding_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return
@@ -115,7 +144,7 @@ module Events
     # Record the recipient's decline (drops the award from all totals). A repeat
     # decline is a no-op.
     def decline_agreement
-      scholarship = @event_registration.effective_scholarship
+      scholarship = responding_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return
@@ -136,7 +165,7 @@ module Events
     # The award stays live; we record the amount they can contribute and notify the
     # trainings team so they can revisit the award. A repeat request just updates.
     def request_scholarship_support
-      scholarship = @event_registration.effective_scholarship
+      scholarship = responding_scholarship
       unless scholarship
         redirect_to registration_scholarship_path(@event_registration.slug)
         return
@@ -408,6 +437,30 @@ module Events
     end
 
     private
+
+    # The award a recipient's Agree / Decline / Request support answers: the one the
+    # form names, from this ticket's own awards only.
+    def responding_scholarship
+      scholarships = @event_registration.effective_scholarships
+      return scholarships.first if params[:scholarship_id].blank?
+
+      scholarships.find { |scholarship| scholarship.id.to_s == params[:scholarship_id].to_s }
+    end
+
+    def require_scholarship_form
+      @scholarship_form = @event.scholarship_form
+      return if @scholarship_form
+
+      redirect_to registration_scholarship_path(@event_registration.slug),
+                  alert: "This event doesn't have a scholarship application form."
+    end
+
+    def load_scholarship_application
+      @form_fields = @scholarship_form.form_fields.reorder(position: :asc).to_a
+      @scholarship_submission = FormSubmission.find_by(
+        person: @event_registration.registrant, event: @event, form: @scholarship_form
+      )
+    end
 
     # A dollar amount typed into the support-request box ("$1,200", "1200.50") as
     # integer cents. Nil when blank or not a non-negative number, so the action can

@@ -45,6 +45,10 @@
           while it differs from what's stored). A colored icon inside the select
           echoes the status color. ---- %>
       <% sittings = FormSubmissionSittings.for_events(f.object.event_id, f.object.registrant_id)[[ f.object.registrant_id, f.object.event_id ]]&.groups || [] %>
+      <% form_placement = FormSubmissionSittings.placements_for([ f.object ])[f.object.id] if f.object.transferred_in? %>
+      <% original_sittings = form_placement&.from_original? ? form_placement.sittings.groups : [] %>
+      <% submission_links = original_sittings.map { |sitting| [ sitting, form_placement.event_id, form_placement.original_event_title ] } +
+                            sittings.map { |sitting| [ sitting, f.object.event_id, nil ] } %>
       <% status_icon_colors = {
            "registered"            => "text-blue-600",
            "attended"              => "text-green-600",
@@ -187,14 +191,15 @@
             <% end %>
           <% end %>
 
-          <% sittings.each do |sitting| %>
+          <% submission_links.each do |sitting, answers_event_id, original_event_title| %>
             <% lead = sitting.first %>
-            <%= link_to event_registrant_submissions_path(f.object.event, person_id: f.object.registrant_id,
+            <%= link_to event_registrant_submissions_path(answers_event_id, person_id: f.object.registrant_id,
                           return_to: "event_registration", event_registration_id: f.object.id,
                           registration_return_to: params[:return_to].presence, anchor: "form-submission-#{lead.id}"),
-                        class: "group inline-flex items-center gap-1.5 font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
+                        class: "group inline-flex items-center gap-1.5 font-medium #{original_event_title ? "text-teal-600" : DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
                         target: "_blank",
-                        title: "View #{sitting.map(&:form_name).join(" + ")} — submitted #{lead.created_at.strftime('%b %-d, %Y at %l:%M %P')}",
+                        title: [ ("From the original registration for #{original_event_title}" if original_event_title),
+                                 "View #{sitting.map(&:form_name).join(" + ")} — submitted #{lead.created_at.strftime('%b %-d, %Y at %l:%M %P')}" ].compact.join("\n"),
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-file-lines"></i>
               <%= lead.form_name %><%= " + #{sitting.size - 1} more" if sitting.size > 1 %> · <%= lead.created_at.strftime("%b %-d, %Y") %>
@@ -241,16 +246,13 @@
       </div>
       <% end %>
 
-      <%# A transferred-in registration's earlier payments stay on the source (a
-          read-only summary shows below) and any balance left is paid here. Its
-          scholarship stays on the source too, but when the source had none we still
-          show the editable card so an admin can award one on this registration — a
-          scholarship decided now belongs here, the same way a CE decided now does
-          (issue #1944). %>
+      <%# A transferred-in registration's earlier payments and scholarship stay on the
+          source (a read-only summary shows below); any balance left is paid here, and
+          a scholarship decided now — including more on top of the original — is
+          awarded here, the same way a CE decided now is (issue #1944). %>
       <% transferred_in = f.object.transferred_in? %>
-      <% source_has_scholarship = transferred_in && f.object.transferred_from_registration&.scholarship? %>
       <%# The org card widens to absorb a column for each of the other two cards that's hidden. %>
-      <% show_scholarship = !source_has_scholarship && (f.object.event&.scholarship_eligible? || f.object.scholarships.any?) %>
+      <% show_scholarship = f.object.event&.scholarship_eligible? || f.object.scholarships.any? %>
       <%# CE now lives on the transfer-in reg itself (its own record, carried by the
           transfer), so its card shows here even for a transfer-in — payment/scholarship
           stay on the source and appear in the read-only summary below. (#1944) %>

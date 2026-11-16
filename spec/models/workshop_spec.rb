@@ -11,6 +11,7 @@ RSpec.describe Workshop do
     it { should belong_to(:created_by).optional }
     it { should belong_to(:author).class_name("Person").optional }
     it { should belong_to(:windows_type).optional }
+    it { should belong_to(:organization).optional }
 
     it { should have_many(:sectorable_items).dependent(:destroy).inverse_of(:sectorable) }
     it { should have_many(:sectors).through(:sectorable_items) }
@@ -38,6 +39,17 @@ RSpec.describe Workshop do
     subject { build(:workshop, created_by: create(:user), windows_type: create(:windows_type)) }
 
     it { should validate_presence_of(:title) }
+
+    it "is valid with an organization" do
+      org = create(:organization)
+      subject.organization = org
+      expect(subject).to be_valid
+    end
+
+    it "is valid without an organization" do
+      subject.organization = nil
+      expect(subject).to be_valid
+    end
 
     # Conditional presence validation for legacy workshops (month, year)
     context 'when legacy is true' do

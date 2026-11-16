@@ -1,0 +1,13 @@
+name: "CE-gated callouts show to unpaid CE until the CE payment deadline"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-02
+pr_number: 2938
+action_path: "/events"
+summary: >-
+  A callout set to show only for paid CE now also shows to registrants who
+  haven't paid yet, until the event's CE payment deadline. That way they can
+  still reach the CE card to pay.
+pro_tips:
+  - "Denied CE never sees these callouts, even before the deadline."
+  - "With no CE payment deadline set, only paid or intends-to-pay CE sees them; the callout editor notes this."

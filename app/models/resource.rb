@@ -219,6 +219,7 @@ class Resource < ApplicationRecord
     resources = resources.kinds(params[:kinds]) if params[:kinds].present?
     resources = resources.authored_by(params[:author_id])
     resources = resources.where(organization_id: params[:organization_id]) if params[:organization_id].present?
+    resources = resources.where(hidden_from_search: true) if ActiveModel::Type::Boolean.new.cast(params[:hidden_from_search])
     if visibility_params_present?(params)
       resources = apply_visibility_filters(resources, params)
     elsif params[:published].present?

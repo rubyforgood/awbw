@@ -69,23 +69,27 @@ class StorySharesController < ApplicationController
     params[:sector_names_all].present?
   end
 
+  # Each hero or hand-picked story shows once: a picked hero leaves the carousel, and the sections skip both.
   def load_home
+    picked_hero = picked_hero_story
+    carousel_pool = portal_scope.where.not(id: picked_hero&.id)
+    @featured_stories = carousel_stories(carousel_pool)
+    @hero_story = picked_hero || automatic_hero_story
+    section_pool = portal_scope.where.not(id: hand_picked_stories(carousel_pool).pluck(:id) + [ @hero_story&.id ].compact)
     @home_sectors = Sector.story_share_home_sections.limit(FEATURED_SECTOR_LIMIT).to_a
     @stories_by_sector = @home_sectors.index_with do |sector|
-      section_stories(portal_scope.with_primary_sector(sector))
+      section_stories(section_pool.with_primary_sector(sector))
     end
     @stories_by_audience = Category.story_share_audience_nav.select(&:story_share_home_section).index_with do |category|
-      section_stories(portal_scope.with_primary_category(category))
+      section_stories(section_pool.with_primary_category(category))
     end
-    @featured_stories = carousel_stories
-    @recent_stories = popular_stories
+    @recent_stories = popular_stories(section_pool)
   end
 
   # "What others are reading": the most-viewed visible stories by tracked page
   # views (Ahoy `view.story` events), backfilled with the most-bookmarked when
   # view data is thin so the section always fills. Order preserved.
-  def popular_stories
-    visible = portal_scope
+  def popular_stories(visible)
     ids = Ahoy::Event.where(name: "view.story", resource_type: "Story", resource_id: visible.select(:id))
                      .group(:resource_id)
                      .order(Arel.sql("COUNT(*) DESC"))
@@ -103,12 +107,25 @@ class StorySharesController < ApplicationController
     preloaded(scope).order(publicly_featured: :desc, created_at: :desc).limit(SECTION_STORY_LIMIT).decorate
   end
 
+  def picked_hero_story
+    preloaded(portal_scope.with_hero_media).find_by(id: Setting.story_share_hero_story&.id)&.decorate
+  end
+
+  def automatic_hero_story
+    candidates = portal_scope.with_hero_media.where.not(id: @featured_stories.map(&:id))
+    preloaded(candidates).order(publicly_featured: :desc, created_at: :desc).first&.decorate
+  end
+
+  def hand_picked_stories(pool)
+    pool.story_share_carousel.limit(FEATURED_CAROUSEL_LIMIT)
+  end
+
   # Hand-picked stories lead the hero carousel (by carousel order); fall back to
   # publicly featured then most recent so the carousel never empties.
-  def carousel_stories
-    stories = preloaded(portal_scope.story_share_carousel).limit(FEATURED_CAROUSEL_LIMIT)
-    stories = preloaded(portal_scope.publicly_featured).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
-    stories = preloaded(portal_scope).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
+  def carousel_stories(pool)
+    stories = preloaded(hand_picked_stories(pool))
+    stories = preloaded(pool.publicly_featured).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
+    stories = preloaded(pool).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
     stories.decorate
   end
 

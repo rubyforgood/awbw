@@ -1,0 +1,11 @@
+name: "Transferred-in scholarship recipients count in every dashboard breakdown"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-10
+pr_number: 2975
+summary: >-
+  Someone who transferred into a training with a scholarship now shows as a recipient everywhere: that
+  training's dashboard breakdowns, its recipients-page charts, and the training attendees charts.
+pro_tips:
+  - "Their scholarship dollars count toward that training too."
+  - "A declined award no longer counts them as a recipient at the training they moved to."

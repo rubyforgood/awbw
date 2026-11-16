@@ -1,0 +1,12 @@
+name: "Merging fills the kept record's empty links from the deleted one"
+area: people
+display_status: admin_facing
+released_on: 2026-11-13
+action_path: "/organizations/dedupe_index"
+pr_number: 2984
+summary: >-
+  When you merge two records, any link the kept record is missing (like an organization's parent or
+  windows type) is copied over from the deleted record. The preview marks each one
+  "Fills the keeper," "Will be dropped," or "Stays linked."
+pro_tips:
+  - "Who created or last updated a record is never copied over; the kept record keeps its own history."

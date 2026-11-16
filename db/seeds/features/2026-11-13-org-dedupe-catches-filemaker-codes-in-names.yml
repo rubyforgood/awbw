@@ -1,0 +1,14 @@
+name: "Organization deduper catches FileMaker codes in names"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-13
+pr_number: 2985
+action_path: "/organizations/dedupe_index"
+summary: >-
+  The organization deduper now groups names that differ only by a FileMaker code at the end, like
+  "Hope Center" and "Hope Center (ORG00001)". It also treats a trailing Women's or Men's like
+  Children's, Adult, and Combined.
+pro_tips:
+  - "Codes, audience words, and Inc/LLC can be stacked in any order and still match."
+  - "A bare \"Women\" or \"Men\" at the end of a name is part of the name, so it stays separate."
+  - "Merging combines both records' FileMaker codes, keeping each code once."

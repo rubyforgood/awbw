@@ -14,6 +14,7 @@ RSpec.describe "workshops/edit", type: :view do
     assign(:sectors, [])
     assign(:categories_grouped, [])
     assign(:age_range_comments, [])
+    assign(:organizations, [])
   end
 
   context "when user is an admin" do

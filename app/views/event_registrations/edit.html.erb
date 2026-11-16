@@ -90,6 +90,13 @@
     <% end %>
   </div>
 
+  <% if @event_registration.filemaker_codes.any? %>
+    <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-4 text-sm">
+      <span class="font-medium text-gray-700">FileMaker</span>
+      <%= filemaker_code_links(@event_registration, link_class: "text-blue-600 underline hover:text-blue-800") %>
+    </div>
+  <% end %>
+
   <%= render "shared/audit_info", resource: @event_registration %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
     <div class="mt-4 flex justify-end">

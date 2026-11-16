@@ -7,6 +7,7 @@ class WorkshopIdea < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
+  belongs_to :organization, optional: true
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :nullify
@@ -34,6 +35,10 @@ class WorkshopIdea < ApplicationRecord
   before_save :set_time_frame
 
   validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
+
+  def name
+    title
+  end
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true

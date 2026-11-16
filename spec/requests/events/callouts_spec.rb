@@ -893,6 +893,53 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(scholarship.reload.agreement_support_requested?).to be(true)
       end
 
+      context "with another award added on the new registration" do
+        let!(:top_up) do
+          create(:scholarship, recipient: incoming.registrant, amount_cents: 2_000).tap do |award|
+            create(:allocation, source: award, allocatable: incoming, amount: 2_000)
+          end
+        end
+
+        it "shows both awards on the ticket, each with its own agreement" do
+          get registration_scholarship_path(incoming.slug)
+
+          expect(response.body).to include("$50", "$20")
+          expect(response.body.scan(/name="agreement" value="yes"/).size).to eq(2)
+          expect(response.body).to include(%(name="scholarship_id" value="#{top_up.id}"))
+        end
+
+        it "sums the awards in a banner above them" do
+          get registration_scholarship_path(incoming.slug)
+
+          banner = Nokogiri::HTML(response.body).at_css("#scholarship-total")
+          expect(banner.text.squish).to include("2 scholarships", "$70 total")
+        end
+
+        it "leaves a declined award out of the banner's total" do
+          top_up.reload.decline_agreement!("Timing no longer works")
+
+          get registration_scholarship_path(incoming.slug)
+
+          banner = Nokogiri::HTML(response.body).at_css("#scholarship-total")
+          expect(banner.text.squish).to include("1 scholarship", "$50 total", "1 declined award")
+        end
+
+        it "records Agree on the award the recipient chose" do
+          post registration_scholarship_agreement_path(incoming.slug), params: { agreement: "yes", scholarship_id: top_up.id }
+
+          expect(top_up.reload.agreement_signed?).to be(true)
+          expect(scholarship.reload.agreement_signed?).to be(false)
+        end
+
+        it "ignores an award that isn't on this ticket" do
+          stranger = create(:scholarship, recipient: create(:event_registration, event: event).registrant)
+
+          post registration_scholarship_agreement_path(incoming.slug), params: { agreement: "yes", scholarship_id: stranger.id }
+
+          expect(stranger.reload.agreement_signed?).to be(false)
+        end
+      end
+
       describe "the recipients survey" do
         let(:survey) { create(:form, name: "Recipients survey", role: "recipient_survey") }
         let!(:survey_field) { create(:form_field, form: survey, name: "What did you take away?") }
@@ -919,6 +966,47 @@ RSpec.describe "Events::Callouts", type: :request do
             params: { callout_form: { form_fields: { survey_field.id.to_s => "So much" } } }
           expect(incoming.reload.post_survey_completed?).to be(true)
         end
+      end
+    end
+
+    describe "the scholarship application" do
+      let(:registration) { create(:event_registration, event:) }
+      let(:form) { create(:form, name: "Scholarship application", role: "scholarship") }
+      let!(:question) { create(:form_field, form:, name: "Why do you need this?", required: true) }
+
+      before { create(:event_form, event:, form:, role: "scholarship") }
+
+      it "prompts for a missing application, then accepts and stops prompting for it" do
+        get registration_scholarship_path(registration.slug)
+        expect(response.body).to include("Complete your scholarship application")
+
+        get registration_scholarship_application_path(registration.slug)
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("callout_form[form_fields][#{question.id}]")
+
+        expect {
+          post registration_scholarship_application_path(registration.slug),
+            params: { callout_form: { form_fields: { question.id.to_s => "I need help" } } }
+        }.to change { FormSubmission.where(person: registration.registrant, event:, role: "scholarship").count }.by(1)
+
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+        expect(registration.reload.scholarship_requested?).to be(true)
+
+        get registration_scholarship_path(registration.slug)
+        expect(response.body).not_to include("Complete your scholarship application")
+      end
+
+      it "edits the existing submission instead of duplicating it" do
+        post registration_scholarship_application_path(registration.slug),
+          params: { callout_form: { form_fields: { question.id.to_s => "First answer" } } }
+        submission = FormSubmission.find_by!(person: registration.registrant, event:, form:)
+
+        expect {
+          post registration_scholarship_application_path(registration.slug),
+            params: { callout_form: { form_fields: { question.id.to_s => "Updated answer" } } }
+        }.not_to change { FormSubmission.where(person: registration.registrant, event:, form:).count }
+
+        expect(submission.reload.form_answers.find_by(form_field: question).submitted_answer).to eq("Updated answer")
       end
     end
 

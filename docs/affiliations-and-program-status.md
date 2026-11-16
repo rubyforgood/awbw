@@ -160,7 +160,6 @@ what will happen before anything is written.
 | **Delete affiliation** | The row **this** training created, and they never turned up | Removes it — it recorded an assumption that never came true |
 | **Deactivate affiliation** | An **older** row (hand-entered, or from an earlier training) | Ends it — never deletes it, because it records facilitation that really happened |
 | **Reactivate** | A row this reconciliation previously ended, now that attendance says otherwise | Reopens it, with no lapse recorded |
-| **Move to the new event** | They transferred to another training | Re-dates the affiliation to the new training instead of ending it |
 
 Two rules worth knowing:
 
@@ -168,8 +167,10 @@ Two rules worth knowing:
   another starts would count on both and double the person in any date total — and the
   row is being ended precisely because we have no record they completed a training
   there, so it must not still count as active on that date.
-- **A transfer is not a failure.** The affiliation follows the person to the
-  destination training rather than being ended.
+- **A transfer is not a failure.** Recording the transfer moves the affiliation the
+  registration created to the destination training (re-dated to it) — there's
+  nothing to reconcile, and undoing the transfer moves it back. An older affiliation
+  is left alone.
 
 Whatever reconciliation does, it leaves a **comment on the affiliation** saying why.
 

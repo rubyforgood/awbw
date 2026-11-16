@@ -14,14 +14,15 @@ class PublicFormSubmission
     "This form needs your name and email to complete your submission.".freeze
   ALREADY_SUBMITTED_MESSAGE = "This form was already submitted.".freeze
 
-  def self.call(form:, form_params:, person: nil)
-    new(form:, form_params:, person:).call
+  def self.call(form:, form_params:, person: nil, event: nil)
+    new(form:, form_params:, person:, event:).call
   end
 
-  def initialize(form:, form_params:, person: nil)
+  def initialize(form:, form_params:, person: nil, event: nil)
     @form = form
     @form_params = form_params || {}
     @person = person
+    @event = event
   end
 
   def call
@@ -42,7 +43,7 @@ class PublicFormSubmission
       person = find_or_create_person
       return Result.new(success?: false, errors: [ IDENTITY_REQUIRED_MESSAGE ]) if @form.requires_identity? && person.nil?
 
-      submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
+      submission = FormSubmission.create!(person: person, form: @form, role: ROLE, event: @event)
       # Answers first: the agreement linking core reads the submitted org off
       # them, and a rejected answer (too long, unreadable upload) then aborts
       # before any of the person's own records have been written.
@@ -53,6 +54,7 @@ class PublicFormSubmission
         registration = register_for_on_demand_training(submission)
         capture_organization(submission, registration)
         PersonServices::CaptureFromSubmission.call(person: person, form: @form, form_params: @form_params)
+        stamp_scholarship_form_completion(submission)
       end
 
       OtherResponses::CaptureFromSubmission.call(submission)
@@ -93,6 +95,22 @@ class PublicFormSubmission
     registration
   end
 
+  # The scholarship survey is a recipient's final step, so submitting it stamps
+  # their readiness for the certificate — the same write the scholarship callout
+  # makes (EventRegistrationServices::CalloutFormSubmission). Recipient status
+  # reads through the transfer chain (scholarship_recipient?, not scholarship?):
+  # a transferred-in registration holds no awards of its own, but its registrant
+  # still responds to the award from whichever ticket they hold.
+  def stamp_scholarship_form_completion(submission)
+    return unless @form.role == "recipient_survey" && @event && submission.person
+
+    registration = EventRegistration.find_by(event: @event, registrant: submission.person)
+    return unless registration&.scholarship_recipient?
+    return if registration.post_survey_completed?
+
+    registration.mark_post_survey_completed!
+  end
+
   # Link + fill the submitted organization. An agreement submission is processed
   # through the same linking core an admin would run (process_agreement_organization);
   # any other role runs the same capture an event registration does, so a job
@@ -109,7 +127,7 @@ class PublicFormSubmission
 
   # An agreement submission whose organization name resolves unambiguously is
   # processed on arrival: the linking core confers the standing Facilitator
-  # affiliation and fills the org's blank profile fields — identical to an admin
+  # affiliation and writes the answers onto the org's profile — identical to an admin
   # linking it by hand, so the two paths can't drift (ADR-0002). Anything the
   # core would have to guess at is left for an admin on the submission's linking
   # page.
@@ -143,9 +161,9 @@ class PublicFormSubmission
   end
 
   # A logged-in respondent is their own Person unless they left their identity
-  # incomplete on an anonymous form. Otherwise reuses an existing Person on an
-  # email + last-name match so a returning respondent isn't duplicated; nil when the
-  # form didn't collect name + email.
+  # incomplete on an anonymous form. Otherwise reuses an existing Person on a
+  # first name + last name + email match (the event registration's rule) so a
+  # returning respondent isn't duplicated; nil when the form didn't collect name + email.
   def find_or_create_person
     return nil unless identified?
     return @person if @person
@@ -165,8 +183,10 @@ class PublicFormSubmission
     )
   end
 
+  # Accepts the first_name or legal_first_name answer so a respondent who swaps
+  # them still matches, as PublicRegistration does.
   def find_matching_person(last_name:, email:)
-    PersonMatcher.call(email:, last_name:)
+    PersonMatcher.call(email:, last_name:, first_names: [ field_value("first_name"), field_value("legal_first_name") ])
   end
 
   # An affirmative communication-consent answer subscribes the person to the

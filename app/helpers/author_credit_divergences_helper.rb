@@ -28,6 +28,6 @@ module AuthorCreditDivergencesHelper
   def suggested_display_name_preference(group)
     suggested = group.suggested_preference
     return suggested if Person::DISPLAY_NAME_PREFERENCES.include?(suggested)
-    group.person.display_name_preference.presence || "full_name"
+    group.person.display_name_preference
   end
 end

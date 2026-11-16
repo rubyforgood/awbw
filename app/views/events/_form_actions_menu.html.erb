@@ -26,7 +26,8 @@
     <% show_registration = @event.registration_form.present? %>
     <% show_scholarship = @event.scholarship_form.present? && has_cost %>
     <% show_bulk_payment = @event.bulk_payment_form.present? && has_cost %>
-    <% if @event.registration_form.present? || @event.scholarship_form || @event.bulk_payment_form %>
+    <% survey_forms = EventSurveyCompletions.survey_forms_for(@event) %>
+    <% if @event.registration_form.present? || @event.scholarship_form || @event.bulk_payment_form || survey_forms.any? %>
       <% if show_registration %>
         <%= link_to form_label.call("registration"), new_event_public_registration_path(@event), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
       <% end %>
@@ -35,6 +36,9 @@
       <% end %>
       <% if show_bulk_payment %>
         <%= link_to form_label.call("bulk payment"), new_event_bulk_payment_path(@event), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+      <% end %>
+      <% survey_forms.each do |survey_form| %>
+        <%= link_to survey_form.display_name, public_form_path(survey_form.slug, event: @event.id), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
       <% end %>
       <div class="my-1 border-t border-gray-100"></div>
       <%= link_to manage_label, edit_event_path(@event, anchor: "registration_form_section"), class: item_class %>

@@ -54,7 +54,46 @@ class EventScholarshipFigures
     figures_by_event_id.fetch(event.id, EMPTY)
   end
 
+  # One organization's share of the scholarships across every event in scope.
+  OrganizationFigures = Struct.new(:funded_cents, :unfunded_cents, :award_count, :recipient_ids, keyword_init: true) do
+    def scholarship_cents = funded_cents + unfunded_cents
+    def recipient_count = recipient_ids.size
+  end
+
+  # { organization id => OrganizationFigures } — each award credited to the
+  # organizations linked on the registration its dollars count toward (the org
+  # the trainee registered under). An award on a registration linked to several
+  # organizations counts under each; one linked to none falls under the nil key,
+  # so nothing drops out of the report.
+  def by_organization
+    @by_organization ||= begin
+      totals = Hash.new { |map, id| map[id] = OrganizationFigures.new(funded_cents: 0, unfunded_cents: 0, award_count: 0, recipient_ids: Set.new) }
+      scholarship_rows_by_registration.each do |registration_id, rows|
+        organization_ids_by_registration.fetch(registration_id, [ nil ]).each do |organization_id|
+          total = totals[organization_id]
+          rows.each do |grant_id, amount, recipient_id|
+            external_grant?(grant_id) ? total.funded_cents += amount : total.unfunded_cents += amount
+            total.award_count += 1
+            total.recipient_ids << recipient_id
+          end
+        end
+      end
+      totals.default_proc = nil
+      totals
+    end
+  end
+
   private
+
+  # { registration_id => [ organization_id, ... ] } for the registrations holding
+  # scholarship dollars.
+  def organization_ids_by_registration
+    @organization_ids_by_registration ||= EventRegistrationOrganization
+      .where(event_registration_id: scholarship_rows_by_registration.keys)
+      .distinct
+      .pluck(:event_registration_id, :organization_id)
+      .each_with_object({}) { |(registration_id, organization_id), map| (map[registration_id] ||= []) << organization_id }
+  end
 
   def figures_by_event_id
     @figures_by_event_id ||= @events.to_h { |event| [ event.id, build(event) ] }
@@ -122,18 +161,22 @@ class EventScholarshipFigures
     @registration_ids ||= registration_ids_by_event.values.flatten
   end
 
-  # { registration_id => [ [ grant_id, amount_cents, recipient_id ], ... ] },
-  # optionally narrowed to the funder's grants.
+  # { registration_id => [ [ grant_id, amount_cents, recipient_id ], ... ] }, keyed
+  # by the registration each award's dollars count toward and optionally narrowed
+  # to the funder's grants.
   def scholarship_rows_by_registration
     @scholarship_rows_by_registration ||= begin
+      dollars = ScholarshipDollarRegistrations.new(registration_ids)
       scope = Scholarship
         .not_declined
         .joins(:allocation)
-        .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: registration_ids })
+        .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: dollars.award_registration_ids })
       scope = scope.where(grant_id: funder_grant_ids) if @funder
       scope
         .pluck(Arel.sql("allocations.allocatable_id"), :grant_id, :amount_cents, :recipient_id)
-        .each_with_object({}) { |(registration_id, grant_id, amount, recipient_id), map| (map[registration_id] ||= []) << [ grant_id, amount, recipient_id ] }
+        .each_with_object({}) do |(award_registration_id, grant_id, amount, recipient_id), map|
+          (map[dollars.counting_registration_id(award_registration_id)] ||= []) << [ grant_id, amount, recipient_id ]
+        end
     end
   end
 

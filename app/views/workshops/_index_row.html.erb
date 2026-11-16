@@ -53,6 +53,9 @@
         <div class="text-sm leading-tight text-gray-600">
           By:
           <%= credited_author_link(workshop, class: "hover:underline", data: { turbo: false }) %>
+          <% if workshop.organization.present? %>
+            | <%= workshop.organization.name %>
+          <% end %>
           | <%= workshop.date %>
         </div>
 

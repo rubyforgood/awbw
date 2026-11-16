@@ -118,12 +118,85 @@ RSpec.describe PublicFormSubmission do
     expect(answer.submitted_answer).to eq("I care.")
   end
 
-  it "reuses an existing person matched on email + last name" do
+  it "persists an associated event when provided" do
+    event = create(:event)
+
+    result = described_class.call(form: form, form_params: params_for, event: event)
+
+    expect(result.success?).to be(true)
+    expect(result.form_submission.event).to eq(event)
+  end
+
+  describe "scholarship recipient survey completion" do
+    let(:event) { create(:event, cost_cents: 2000) }
+    let(:survey_form) { create(:form, role: "recipient_survey", slug: "scholarship-survey", published: true) }
+    let(:first_field) { create(:form_field, form: survey_form, field_identifier: "first_name") }
+    let(:last_field)  { create(:form_field, form: survey_form, field_identifier: "last_name") }
+    let(:email_field) { create(:form_field, form: survey_form, field_identifier: "primary_email") }
+
+    it "stamps post_survey_completed_at on the matching scholarship registration" do
+      person = create(:person, first_name: "Taylor", last_name: "Swift", email: "taylor@example.com")
+      registration = create(:event_registration, event: event, registrant: person)
+      scholarship = create(:scholarship, recipient: person, amount_cents: 2000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 2000)
+
+      survey_params = {
+        first_field.id.to_s => "Taylor",
+        last_field.id.to_s => "Swift",
+        email_field.id.to_s => "taylor@example.com"
+      }
+
+      result = described_class.call(form: survey_form, form_params: survey_params, event: event)
+
+      expect(result.success?).to be(true)
+      expect(registration.reload.post_survey_completed?).to be(true)
+    end
+
+    # The dollars stay on the source registration, but the recipient responds to
+    # the award — and fills its survey — from whichever ticket they now hold.
+    it "stamps a transferred-in registration whose award sits on the source" do
+      person = create(:person, first_name: "Rowan", last_name: "Okafor", email: "rowan@example.com")
+      source = create(:event_registration, registrant: person, status: "transferred_out")
+      registration = create(:event_registration, event: event, registrant: person,
+        transferred_from_registration: source)
+      scholarship = create(:scholarship, recipient: person, amount_cents: 2000)
+      create(:allocation, source: scholarship, allocatable: source, amount: 1000)
+
+      survey_params = {
+        first_field.id.to_s => "Rowan",
+        last_field.id.to_s => "Okafor",
+        email_field.id.to_s => "rowan@example.com"
+      }
+
+      result = described_class.call(form: survey_form, form_params: survey_params, event: event)
+
+      expect(result.success?).to be(true)
+      expect(registration.reload.post_survey_completed?).to be(true)
+    end
+  end
+
+  it "reuses an existing person matched on first name + last name + email" do
     existing = create(:person, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
 
     expect { described_class.call(form: form, form_params: params_for) }
       .to change(Person, :count).by(0)
       .and change(FormSubmission, :count).by(1)
+
+    expect(FormSubmission.last.person).to eq(existing)
+  end
+
+  it "creates a new person when the email and last name match but the first name doesn't" do
+    existing = create(:person, first_name: "Alex", last_name: "Rivera", email: "sam@example.com")
+
+    expect { described_class.call(form: form, form_params: params_for) }.to change(Person, :count).by(1)
+
+    expect(FormSubmission.last.person).not_to eq(existing)
+  end
+
+  it "reuses an existing person whose legal first name matches the submitted first name" do
+    existing = create(:person, first_name: "Alex", legal_first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
+
+    expect { described_class.call(form: form, form_params: params_for) }.not_to change(Person, :count)
 
     expect(FormSubmission.last.person).to eq(existing)
   end
@@ -332,6 +405,15 @@ RSpec.describe PublicFormSubmission do
       expect(response.source_form_answer.form_submission).to eq(result.form_submission)
     end
 
+    # Latest valid answer wins on an ordinary form, the same as the person's own fields.
+    it "replaces the organization's saved website with the latest answer on an ordinary form" do
+      org.update!(website_url: "https://old.example")
+
+      described_class.call(form: form, form_params: org_params)
+
+      expect(org.reload.website_url).to eq("https://helpinghands.org")
+    end
+
     it "never creates an organization from an unmatched name — it's left for an admin" do
       expect {
         described_class.call(form: form, form_params: org_params(org_name_field.id.to_s => "Ghost Org"))
@@ -372,15 +454,13 @@ RSpec.describe PublicFormSubmission do
           .to include("Facilitator")
       end
 
-      # Fill-blanks, not latest-wins: an agreement runs the admin linking core, so
-      # a curated value is kept and reported as a conflict on the linking page.
-      it "does not overwrite the organization's curated profile" do
+      it "overwrites the organization's saved profile with the latest answer" do
         form.update!(role: "reinstatement")
-        org.update!(website_url: "https://curated.example")
+        org.update!(website_url: "https://old.example")
 
         described_class.call(form: form, form_params: org_params)
 
-        expect(org.reload.website_url).to eq("https://curated.example")
+        expect(org.reload.website_url).to eq("https://helpinghands.org")
       end
     end
   end

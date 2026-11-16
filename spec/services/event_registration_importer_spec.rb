@@ -514,14 +514,14 @@ RSpec.describe EventRegistrationImporter do
         expect(result.rows.first.organization_status).to eq(:linked_by_spelling)
       end
 
-      it "adds the work address and position but keeps the org's own website" do
+      it "adds the work address and position and takes the sheet's website" do
         import_rows(
           %w[FirstName LastName EMail Organization Position OrganizationWebsite OrganizationStreet OrganizationCity OrganizationState OrganizationZip],
           [ "Pat", "Example", "pat@example.org", "Sunrise Center", "Counselor", "https://other.example.org", "1 Main St", "Springfield", "IL", "62701" ]
         )
         person = Person.find_by(email: "pat@example.org")
 
-        expect(organization.reload.website_url).to eq("https://sunrise.example.org")
+        expect(organization.reload.website_url).to eq("https://other.example.org")
         expect(organization.addresses.pluck(:city)).to eq([ "Springfield" ])
         expect(person.affiliations.pluck(:title)).to include("Counselor")
       end
@@ -595,28 +595,26 @@ RSpec.describe EventRegistrationImporter do
         expect(person.reload.legal_first_name).to eq("Robert")
       end
 
-      it "keeps a matched person's current primary address and adds the sheet's beside it" do
+      it "makes the sheet's address a matched person's primary and takes its pronouns" do
         person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org", pronouns: "she/her")
         current = person.addresses.create!(street_address: "9 Elm St", city: "Portland", state: "OR", zip_code: "97201",
                                            locality: "Unknown", address_type: "personal", primary: true)
 
         import_rows(header, row)
 
-        expect(current.reload).to be_primary
-        expect(person.addresses.find_by(city: "Springfield")).not_to be_primary
-        expect(person.reload.pronouns).to eq("she/her")
+        expect(current.reload).not_to be_primary
+        expect(person.addresses.find_by(city: "Springfield")).to be_primary
+        expect(person.reload.pronouns).to eq("they/them")
       end
 
-      it "reports and comments a person value it kept rather than overwrote" do
+      it "reports a person value it replaced" do
         person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org", pronouns: "she/her")
 
         result = import_rows(%w[FirstName LastName EMail Pronouns], [ "Pat", "Example", "pat@example.org", "they/them" ])
 
-        expect(person.reload.pronouns).to eq("she/her")
-        expect(result.rows.first.warnings).to include("Kept pronouns “she/her” — sheet said “they/them”")
-        expect(person.comments.sole.body).to eq(
-          "Imported sheet disagreed and was not applied: Pronouns “they/them” (kept “she/her”)."
-        )
+        expect(person.reload.pronouns).to eq("they/them")
+        expect(result.rows.first.warnings).to include("Replaced pronouns “she/her” with “they/them”")
+        expect(person.comments).to be_empty
       end
 
       it "stays quiet when the sheet agrees with what's on file" do
@@ -628,15 +626,29 @@ RSpec.describe EventRegistrationImporter do
         expect(person.comments).to be_empty
       end
 
-      it "reports an organization value it kept rather than overwrote" do
+      it "reports an organization value it replaced" do
         organization = create(:organization, name: "Sunrise Center", website_url: "https://sunrise.example.org")
 
         result = import_rows(%w[FirstName LastName EMail Organization OrganizationWebsite],
                              [ "Pat", "Example", "pat@example.org", "Sunrise Center", "https://other.example.org" ])
 
-        expect(organization.reload.website_url).to eq("https://sunrise.example.org")
-        expect(result.rows.first.warnings.join).to include("sheet said “https://other.example.org”")
-        expect(organization.comments.sole.body).to include("Website “https://other.example.org”")
+        expect(organization.reload.website_url).to eq("https://other.example.org")
+        expect(result.rows.first.warnings)
+          .to include("Replaced website “https://sunrise.example.org” with “https://other.example.org”")
+        expect(organization.comments).to be_empty
+      end
+
+      it "reports a website that isn't a web address even when the organization has none" do
+        organization = create(:organization, name: "Sunrise Center", website_url: nil)
+
+        result = import_rows(%w[FirstName LastName EMail Organization OrganizationWebsite],
+                             [ "Pat", "Example", "pat@example.org", "Sunrise Center", "Sunrise Center" ])
+
+        expect(organization.reload.website_url).to be_nil
+        expect(result.rows.first.warnings).to include("Skipped website — sheet said “Sunrise Center” (not a web address)")
+        expect(organization.comments.sole.body).to eq(
+          "Imported sheet disagreed and was not applied: Website “Sunrise Center” (not a web address)."
+        )
       end
 
       it "warns about a sector it doesn't recognize" do

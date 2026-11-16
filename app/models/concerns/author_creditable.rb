@@ -351,7 +351,7 @@ module AuthorCreditable
     def credited_person_match_sql(sql_alias)
       first = "#{sql_alias}.first_name"
       last = "#{sql_alias}.last_name"
-      preference = "COALESCE(#{sql_alias}.display_name_preference, 'full_name')"
+      preference = "#{sql_alias}.display_name_preference"
 
       by_preference = {
         "full_name" => [ "CONCAT(#{first}, #{last})", "CONCAT(#{last}, #{first})", first, last ],

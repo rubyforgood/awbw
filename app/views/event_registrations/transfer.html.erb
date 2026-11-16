@@ -78,6 +78,7 @@
             <ul class="list-disc space-y-1 pl-4 text-xs text-gray-600">
               <li>Created fresh — track attendance here</li>
               <li>Gets a copy of the linked organizations</li>
+              <li>Takes the facilitator affiliation this registration created, re-dated to the new training</li>
               <li>Shown as a scholarship recipient, if relevant</li>
               <li>Takes any registration balance left, and new payments land here</li>
               <li>Gets the remaining CE hours, balance, and certificate</li>
@@ -130,7 +131,7 @@
         <% if pending %>
           Put <%= source.registrant.first_name %> back to <span class="font-medium"><%= restore_label %></span> on <%= source.event.title %> and clear the transfer.
         <% else %>
-          This puts <%= source.registrant.first_name %> back to <span class="font-medium"><%= restore_label %></span> on <%= source.event.title %>, turns their <%= destination.event.title %> registration into a normal standalone registration (nothing deleted), and moves their continuing-education hours back here.
+          This puts <%= source.registrant.first_name %> back to <span class="font-medium"><%= restore_label %></span> on <%= source.event.title %>, turns their <%= destination.event.title %> registration into a normal standalone registration (nothing deleted), and moves their continuing-education hours and facilitator affiliation back here.
         <% end %>
       </p>
       <%= link_to revert_transfer_event_registration_path(source, return_to: @return_to.presence),

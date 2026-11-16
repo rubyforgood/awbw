@@ -2,7 +2,7 @@ class Organization < ApplicationRecord
   include RemoteSearchable, Trendable, WindowsTypeFilterable # Publishable
   include Communicable
   include FilemakerCoded
-  filemaker_archived_in FmProject, FmOrganization
+  filemaker_archived_in FmProject, FmOrganization, FmRolodex
   belongs_to :organization_status, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
@@ -45,6 +45,8 @@ class Organization < ApplicationRecord
   has_many :community_news
   has_many :resources
   has_many :workshop_variations
+  has_many :workshop_ideas
+  has_many :workshops
   has_many :grants, as: :funder, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
@@ -84,7 +86,7 @@ class Organization < ApplicationRecord
   validates :organization_type_other, length: { maximum: 255 }
   validates :tax_id, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
-  validates :mission_vision_values, length: { maximum: 255 }
+  validates :mission_vision_values, length: { maximum: 16_000 }
   # Admin bypass stays on Current.user until #2833 moves it to a controller-set flag (models never call policies).
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
   validate :parent_is_not_self_or_descendant, if: :parent_id_changed?
@@ -265,6 +267,22 @@ class Organization < ApplicationRecord
     direct.or(legacy).distinct
   end
 
+  # The org's own workshops plus those credited to its active facilitators
+  # (#credited_to_facilitators). The profile section, the count button, and the
+  # index's organization filter all read this, so they can't disagree. Ideas below
+  # work the same way.
+  def affiliated_workshops
+    return Workshop.none unless persisted?
+
+    workshops.or(credited_to_facilitators(Workshop)).distinct
+  end
+
+  def affiliated_workshop_ideas
+    return WorkshopIdea.none unless persisted?
+
+    workshop_ideas.or(credited_to_facilitators(WorkshopIdea)).distinct
+  end
+
   # Display order, and what the attendees index filters on.
   FACILITATOR_PROGRAM_STATUSES = FacilitatorProgramStatus::STATUSES
 
@@ -372,10 +390,6 @@ class Organization < ApplicationRecord
          .or(model.where(author_id: nil, created_by_id: User.where(person_id: person_ids).select(:id)))
   end
 
-  def credited_workshops
-    credited_to_facilitators(Workshop)
-  end
-
   # Sectors and age groups are never entered on an org — they roll up from the
   # primary tags of its active facilitators.
   # Most-held first, so a capped list shows the most representative; ties break
@@ -441,6 +455,18 @@ class Organization < ApplicationRecord
   end
 
   remote_searchable_by :name
+
+  # Whether a typed answer looks like a web address ("awbw.org",
+  # "https://www.awbw.org/about") rather than something else typed into the
+  # website field — most often the org's own name. Form syncs only take a website
+  # answer that passes, so a misplaced answer can't overwrite a real website.
+  def self.website_address?(value)
+    candidate = value.to_s.strip
+    return false if candidate.blank? || candidate.match?(/\s/)
+    candidate = "https://#{candidate}" unless candidate.match?(/\Ahttps?:\/\//i)
+    uri = URI.parse(candidate) rescue nil
+    uri.is_a?(URI::HTTP) && uri.host.to_s.include?(".")
+  end
 
   # Returns the website as a clickable, scheme-qualified URL — prepending
   # https:// to a bare domain like "awbw.org" — or nil when the value is blank or

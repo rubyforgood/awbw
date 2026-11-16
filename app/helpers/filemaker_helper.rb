@@ -6,9 +6,10 @@ module FilemakerHelper
 
   # One archive link per FileMaker code a record carries, since a record can answer to
   # several (see FilemakerCoded). A `label` names the button, adding each code only when
-  # there are several to tell apart.
-  def filemaker_code_links(record, link_class: nil, label: nil, linked_only: false)
-    filemaker_archive_links(record.filemaker_codes, archives: record.class.filemaker_archives,
+  # there are several to tell apart. `archives` narrows to some of the record's archives —
+  # pair it with `linked_only`, or codes from the others render struck through.
+  def filemaker_code_links(record, archives: record.class.filemaker_archives, link_class: nil, label: nil, linked_only: false)
+    filemaker_archive_links(record.filemaker_codes, archives: archives,
                                                     link_class: link_class, label: label, linked_only: linked_only)
   end
 
@@ -46,6 +47,7 @@ module FilemakerHelper
     when Workshop then [ record.title, workshop_path(record) ]
     when Address then [ "#{record.addressable.name}: #{record.street_address}", polymorphic_path(record.addressable) ]
     when ContactMethod then [ "#{record.contactable.name}: #{record.value}", polymorphic_path(record.contactable) ]
+    when EventRegistration then [ "#{record.registrant&.full_name} — #{record.event&.title}", edit_event_registration_path(record) ]
     end
 
     link_to text, path, class: button_classes(:primary)

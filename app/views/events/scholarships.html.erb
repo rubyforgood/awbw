@@ -18,23 +18,44 @@
           icon: "fa-solid fa-graduation-cap",
           theme: :scholarships,
           event: @filter_event,
-          subtitle: "Scholarship dollars and awards (funded vs unfunded) per facilitator training, by year, with trainees who attended." %>
+          subtitle: "Scholarship dollars and awards (funded vs unfunded) per event, by year, with trainees who attended and the organizations they came from." %>
 
     <%# Ahoy-style filters — time period, specific training, and abbreviation
         search — each auto-submitting a GET form so the report reshapes on change. %>
+    <%# searchable-checkbox turns the event-type multiselect into checkboxes; the
+        form's onchange submits it (the other fields submit themselves). %>
     <%= form_with url: scholarships_events_path, method: :get, local: true,
+          data: { controller: "searchable-checkbox" },
+          html: { onchange: "if (event.target.multiple) this.requestSubmit()" },
           class: "rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-8" do %>
       <%= hidden_field_tag :return_to, params[:return_to] %>
       <%= hidden_field_tag :view, params[:view] %>
-      <div class="flex flex-wrap items-end gap-4">
-        <%= render "report_filters", event_all_label: "All trainings" %>
+      <%= hidden_field_tag :funding, params[:funding] %>
+      <%# Marks the event types as submitted, so nothing checked means every event
+          rather than the facilitator-trainings default. %>
+      <%= hidden_field_tag "event_kinds[]", "", id: nil %>
+      <%# One row on desktop: the fields shrink to fit (min-w-0 lets a select go
+          narrower than its longest option) while the event-type chips keep room.
+          The shared report filters are rendered one by one (rather than via
+          events/_report_filters) so Event type can sit between search and funder. %>
+      <div class="flex flex-wrap items-end gap-4 lg:flex-nowrap lg:*:min-w-0">
+        <%= render "events/time_period_filter" %>
+        <%= render "events/event_filter", all_label: scholarship_report_noun == "events" ? "All events" : "All trainings" %>
+        <%= render "events/event_search_filter" %>
+        <%= render "shared/filter_multiselect", param: :event_kinds, label: "Event type",
+              options: Event::KIND_SHORT_LABELS.map { |kind, label| [ label, kind ] },
+              selected: scholarship_event_kinds, placeholder: "All events", hide_placeholder: true,
+              wrapper_class: "w-full sm:w-80 lg:shrink-0" %>
+        <%= render "events/funder_filter" %>
       </div>
     <% end %>
 
     <% if @report.any? %>
-      <%= render "scholarship_kpis", report: @report %>
+      <%= render "scholarship_kpis", report: @report, all_label: "All #{scholarship_report_noun}" %>
 
       <%= render "scholarships_report", report: @report %>
+
+      <%= render "scholarship_organizations", report: @report, split: scholarship_funding_split? %>
 
       <p class="mt-6 text-xs text-gray-500">
         <span class="font-medium">Funded</span> = backed by an external grant.
@@ -44,7 +65,7 @@
       </p>
     <% else %>
       <div class="text-center py-12 text-gray-500">
-        No facilitator trainings match these filters yet.
+        No <%= scholarship_report_noun %> match these filters yet.
       </div>
     <% end %>
   </div>

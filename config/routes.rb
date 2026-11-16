@@ -119,6 +119,8 @@ Rails.application.routes.draw do
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
   get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
   get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
+  get "registration/:slug/scholarship/application", to: "events/callouts#scholarship_application", as: :registration_scholarship_application
+  post "registration/:slug/scholarship/application", to: "events/callouts#submit_scholarship_application"
   post "registration/:slug/scholarship/agreement", to: "events/callouts#sign_agreement", as: :registration_scholarship_agreement
   post "registration/:slug/scholarship/decline", to: "events/callouts#decline_agreement", as: :registration_scholarship_decline
   post "registration/:slug/scholarship/request-support", to: "events/callouts#request_scholarship_support", as: :registration_scholarship_request_support
@@ -450,6 +452,7 @@ Rails.application.routes.draw do
   match "story_share/admin/reorder/:id", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder
   post "story_share/admin/add", to: "story_share_admin#add", as: :story_share_admin_add
   delete "story_share/admin/remove", to: "story_share_admin#remove", as: :story_share_admin_remove
+  patch "story_share/admin/hero_story", to: "story_share_admin#update_hero_story", as: :story_share_admin_hero_story
   match "story_share/admin/toggle_home_section/:id", to: "story_share_admin#toggle_home_section", via: [ :put, :patch ], as: :story_share_admin_toggle_home_section
   resources :story_shares, path: "story_share", only: [ :index, :show, :new ]
   resources :video_recordings

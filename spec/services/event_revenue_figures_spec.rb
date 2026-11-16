@@ -84,13 +84,14 @@ RSpec.describe EventRevenueFigures do
                           allocatable: ce, amount: 700)
     end
 
-    it "counts the old reg's money at the old event" do
+    it "counts the old reg's payments at the old event and its scholarship at the new one" do
       old_figures = loader.for(old_event)
 
       expect(old_figures.registration_payments_cents).to eq(3_000)
       expect(old_figures.discount_cents).to eq(500)
-      expect(old_figures.funded_scholarship_cents).to eq(1_500)
+      expect(old_figures.funded_scholarship_cents).to eq(0)
       expect(old_figures.registration_outstanding_cents).to eq(0)
+      expect(loader.for(event).funded_scholarship_cents).to eq(4_000 + 1_500)
     end
 
     it "counts the new reg's money and the balance left at the new event" do
@@ -213,9 +214,48 @@ RSpec.describe EventRevenueFigures do
     end
 
     # 6 batch component queries (incl. which CE still counts) + 2 for what's owed
-    # (RegistrationBalances) + 2 constant queries that classify AWBW-donated grants
+    # (RegistrationBalances) + 1 transfer lookup (ScholarshipDollarRegistrations) + 2 constant queries that classify AWBW-donated grants
     # as subsidy (the AWBW org lookup and its grant ids), regardless of how many
     # events are loaded.
-    expect(queries).to eq(10)
+    expect(queries).to eq(11)
+  end
+
+  describe "a transfer to an earlier training" do
+    let(:march) { create(:event, start_date: Time.zone.local(2027, 3, 18, 9), end_date: Time.zone.local(2027, 3, 19, 17), cost_cents: 50_000) }
+    let(:november) { create(:event, start_date: Time.zone.local(2026, 11, 5, 9), end_date: Time.zone.local(2026, 11, 6, 17)) }
+    let(:recipient) { create(:person) }
+    let(:origin) { create(:event_registration, event: march, registrant: recipient, status: "transferred_out") }
+
+    before do
+      create(:event_registration, event: november, registrant: recipient, status: "attended", transferred_from_registration: origin)
+      create(:allocation, source: create(:scholarship, recipient: recipient, amount_cents: 48_000, grant: nil), allocatable: origin, amount: 48_000)
+      create(:allocation, source: create(:payment, amount_cents: 2_000, amount_cents_remaining: 2_000), allocatable: origin, amount: 2_000)
+    end
+
+    it "counts the award at the earlier training and the payment where it was made" do
+      figures = described_class.new([ march, november ])
+
+      expect(figures.for(november).unfunded_scholarship_cents).to eq(48_000)
+      expect(figures.breakdown_for(november).unfunded_scholarships.map(&:person)).to eq([ recipient ])
+      expect(figures.for(march).unfunded_scholarship_cents).to eq(0)
+      expect(figures.for(march).registration_payments_cents).to eq(2_000)
+    end
+
+    it "adds up across both trainings to the price of the training first registered for" do
+      other = create(:person)
+      origin = create(:event_registration, event: march, registrant: other, status: "transferred_out")
+      create(:event_registration, event: november, registrant: other, status: "attended", transferred_from_registration: origin)
+      create(:allocation, source: create(:scholarship, recipient: other, amount_cents: 30_000, grant: nil), allocatable: origin, amount: 30_000)
+      create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000), allocatable: origin, amount: 5_000)
+
+      contributions = [ march, november ].sum do |event|
+        breakdown = described_class.new([ march, november ]).breakdown_for(event)
+        [ breakdown.registration_payments, breakdown.unfunded_scholarships, breakdown.registration_outstanding ]
+          .sum { |contributors| contributors.select { |c| c.person == other }.sum(&:cents) }
+      end
+
+      expect(described_class.new([ november ]).breakdown_for(november).registration_outstanding.find { |c| c.person == other }.cents).to eq(15_000)
+      expect(contributions).to eq(march.cost_cents)
+    end
   end
 end

@@ -1,0 +1,13 @@
+<%# Funding toggle for the scholarship report's tables: split each figure into
+    funded and unfunded, or show only the totals. Reloads with a `funding` param,
+    preserving the current filters. Pass `split:` (whether the split is shown). %>
+<nav class="inline-flex rounded-lg bg-fuchsia-100 p-0.5 text-xs font-medium" aria-label="Funded vs unfunded">
+  <%= link_to scholarships_events_path(request.query_parameters.except("funding")),
+        class: "px-2.5 py-1 rounded-md transition-colors #{split ? "bg-white text-gray-800 shadow-sm" : "text-fuchsia-700 hover:text-fuchsia-900"}" do %>
+    Funded / unfunded
+  <% end %>
+  <%= link_to scholarships_events_path(request.query_parameters.merge("funding" => EventsHelper::SCHOLARSHIP_FUNDING_TOTALS)),
+        class: "px-2.5 py-1 rounded-md transition-colors #{split ? "text-fuchsia-700 hover:text-fuchsia-900" : "bg-white text-gray-800 shadow-sm"}" do %>
+    Totals only
+  <% end %>
+</nav>

@@ -258,6 +258,97 @@ RSpec.describe "StoryShareAdmin", type: :request do
     end
   end
 
+  describe "PATCH /story_share/admin/hero_story" do
+    def story_with_photo(**attributes)
+      create(:story, :published, :publicly_visible, **attributes).tap do |story|
+        create(:primary_asset, owner: story).file.attach(ActiveStorage::Blob.create_and_upload!(
+          io: StringIO.new("image"), filename: "art.png", content_type: "image/png",
+          metadata: { width: 1200, height: 800, analyzed: true }
+        ))
+      end
+    end
+
+    it "saves a public story with a photo" do
+      sign_in admin
+      story = story_with_photo
+
+      patch story_share_admin_hero_story_path, params: { story_id: story.id }
+
+      expect(response).to redirect_to(story_share_admin_path)
+      expect(Setting.first.story_share_hero_story).to eq(story)
+    end
+
+    it "clears the pick when no story is given" do
+      sign_in admin
+      Setting.create!(story_share_hero_story: story_with_photo)
+
+      patch story_share_admin_hero_story_path
+
+      expect(Setting.first.story_share_hero_story).to be_nil
+    end
+
+    it "keeps the pick when Save is pressed with nothing chosen" do
+      sign_in admin
+      story = story_with_photo
+      Setting.create!(story_share_hero_story: story)
+
+      patch story_share_admin_hero_story_path, params: { story_id: "" }
+
+      expect(flash[:alert]).to be_present
+      expect(Setting.first.story_share_hero_story).to eq(story)
+    end
+
+    it "saves a public story that has only a video" do
+      sign_in admin
+      story = create(:story, :published, :publicly_visible, youtube_url: "https://www.youtube.com/watch?v=abc123")
+
+      patch story_share_admin_hero_story_path, params: { story_id: story.id }
+
+      expect(Setting.first.story_share_hero_story).to eq(story)
+    end
+
+    it "rejects a story with neither a photo nor a video" do
+      sign_in admin
+      story = create(:story, :published, :publicly_visible, youtube_url: "")
+
+      patch story_share_admin_hero_story_path, params: { story_id: story.id }
+
+      expect(flash[:alert]).to be_present
+      expect(Setting.first&.story_share_hero_story).to be_nil
+    end
+
+    it "rejects a story guests can't see" do
+      sign_in admin
+      story = story_with_photo(funder_only: true)
+
+      patch story_share_admin_hero_story_path, params: { story_id: story.id }
+
+      expect(flash[:alert]).to be_present
+      expect(Setting.first&.story_share_hero_story).to be_nil
+    end
+
+    it "does not let non-admins change it" do
+      sign_in regular_user
+      story = story_with_photo
+
+      patch story_share_admin_hero_story_path, params: { story_id: story.id }
+
+      expect(Setting.first&.story_share_hero_story).to be_nil
+    end
+
+    it "shows the current pick and warns when it can't be shown" do
+      sign_in admin
+      story = story_with_photo(title: "Chosen background")
+      Setting.create!(story_share_hero_story: story)
+      story.primary_asset.destroy!
+
+      get story_share_admin_path
+
+      expect(response.body).to include("Chosen background")
+      expect(response.body).to include("using the automatic pick")
+    end
+  end
+
   describe "GET /search/:model for the pickers" do
     it "returns sectors for an admin" do
       sign_in admin

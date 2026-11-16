@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :workshop_idea do
-    title { "MyString" }
+    sequence(:title) { |n| "Workshop Idea #{n}" }
     description { "MyText" }
     staff_notes { "MyText" }
     association :windows_type

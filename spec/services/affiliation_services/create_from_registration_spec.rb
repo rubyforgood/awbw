@@ -124,7 +124,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     expect(person.affiliations.where(organization: organization).map(&:organization_address)).to all(be_nil)
   end
 
-  describe "backfilling the organization address onto an affiliation that already exists" do
+  describe "pointing the person's current affiliations at the submitted organization address" do
     let(:address) { create(:address, addressable: organization) }
 
     it "links the address to an existing job affiliation that has none, instead of skipping it" do
@@ -144,11 +144,44 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
       expect(facilitator.reload.organization_address).to eq(address)
     end
 
-    it "does not overwrite an address the affiliation already has" do
+    it "re-points an affiliation tied to another address at the submitted one and reports it" do
       other = create(:address, addressable: organization)
       facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: other)
 
-      described_class.call(person: person, organization: organization, organization_address: address)
+      changes = described_class.call(person: person, organization: organization, organization_address: address)
+
+      expect(facilitator.reload.organization_address).to eq(address)
+      expect(changes.sole).to have_attributes(label: "Facilitator affiliation address", change_type: "update",
+                                              value: address.name.squish, previous_value: other.name.squish)
+    end
+
+    it "re-points the person's other current affiliations at the org, whatever their title" do
+      other = create(:address, addressable: organization)
+      old_job = create(:affiliation, person: person, organization: organization, title: "Counselor", organization_address: other)
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: other)
+
+      described_class.call(person: person, organization: organization, job_title: "Program director",
+                           organization_address: address, facilitator_training: false)
+
+      expect(old_job.reload.organization_address).to eq(address)
+      expect(facilitator.reload.organization_address).to eq(address)
+    end
+
+    it "leaves an ended affiliation's address alone" do
+      other = create(:address, addressable: organization)
+      ended = create(:affiliation, person: person, organization: organization, title: "Counselor", organization_address: other,
+                                   start_date: 2.years.ago.to_date, end_date: 1.year.ago.to_date)
+
+      described_class.call(person: person, organization: organization, organization_address: address, facilitator_training: false)
+
+      expect(ended.reload.organization_address).to eq(other)
+    end
+
+    it "only fills a blank address when the address is a fallback rather than submitted" do
+      other = create(:address, addressable: organization)
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: other)
+
+      described_class.call(person: person, organization: organization, organization_address: address, repoint_address: false)
 
       expect(facilitator.reload.organization_address).to eq(other)
     end

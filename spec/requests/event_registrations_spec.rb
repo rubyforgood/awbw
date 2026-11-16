@@ -65,6 +65,34 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include(existing_registration.registrant.name)
       end
 
+      it "filters to registrations linked to no organization" do
+        linked = create(:event_registration)
+        create(:event_registration_organization, event_registration: linked)
+
+        get event_registrations_path(organization_id: EventRegistration::NO_ORGANIZATION)
+        expect(response.body).to include(existing_registration.registrant.name)
+        expect(response.body).not_to include(linked.registrant.name)
+      end
+
+      it "filters by event search (abbreviation or title), showing the box only then" do
+        tac = create(:event, title: "Spring cohort", abbreviation: "TAC261")
+        matching = create(:event_registration, event: tac)
+
+        get event_registrations_path
+        expect(response.body).not_to include("Event search")
+
+        get event_registrations_path(event_search: "TAC")
+        expect(response.body).to include("Event search")
+        expect(response.body).to include(matching.registrant.name)
+        expect(response.body).not_to include(existing_registration.registrant.name)
+      end
+
+      it "shows a mixed event-type drill-in as its own selected option" do
+        get event_registrations_path(event_type: "live,other")
+        option = Nokogiri::HTML(response.body).at_css("select#event_type option[selected]")
+        expect(option.text).to eq("Live trainings + Other events")
+      end
+
       it "filters registrations by ce_status" do
         needs_license = create(:event_registration)
         placeholder = create(:professional_license, :placeholder, person: needs_license.registrant)
@@ -595,6 +623,26 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(changes_link_dates).to eq([ "(Sep 1, 2026)" ])
       end
 
+      it "links a transferred-in registration to the answers on the original event, marked in teal" do
+        source_event = create(:event, title: "Origin training")
+        source = create(:event_registration, event: source_event, registrant: regular_user.person, status: "transferred_out")
+        existing_registration.update!(transferred_from_registration: source)
+        reg_form = create(:form, name: "Reg form")
+        create(:event_form, :registration, event: source_event, form: reg_form)
+        submission = create(:form_submission, person: regular_user.person, form: reg_form, event: source_event,
+          role: "registration", created_at: Time.zone.local(2026, 9, 1, 10))
+
+        get edit_event_registration_path(existing_registration, return_to: "roster")
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(source_event, person_id: regular_user.person.id,
+          return_to: "event_registration", event_registration_id: existing_registration.id,
+          registration_return_to: "roster", anchor: "form-submission-#{submission.id}")}']")
+        expect(link).to be_present
+        expect(link.text).to include("Reg form · Sep 1, 2026")
+        expect(link["class"]).to include("text-teal-600")
+        expect(link["title"]).to start_with("From the original registration for Origin training")
+      end
+
       context "when the registrant submitted the registration form more than once" do
         let(:reg_form) { create(:form, name: "Reg form") }
         let!(:first_submission) { create(:form_submission, person: regular_user.person, form: reg_form, event: event, role: "registration", created_at: Time.zone.local(2026, 9, 1, 10)) }
@@ -748,6 +796,36 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include("Agreement offered")
       end
 
+      describe "the scholarship form link" do
+        let(:scholarship_form) { create(:form, name: "Scholarship application", role: "scholarship") }
+
+        before { create(:event_form, :scholarship, event:, form: scholarship_form) }
+
+        it "only shows the shareable link while a scholarship is requested and the application is missing" do
+          get edit_event_registration_path(existing_registration)
+          expect(response.body).not_to include("Scholarship form not completed")
+
+          existing_registration.update!(scholarship_requested: true)
+          get edit_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Scholarship form not completed")
+          expect(response.body).to include(registration_scholarship_application_path(existing_registration.slug))
+        end
+
+        it "hides the link once the application has answers" do
+          existing_registration.update!(scholarship_requested: true)
+          submission = create(:form_submission, person: existing_registration.registrant,
+                                                form: scholarship_form, event:, role: "scholarship")
+          create(:form_answer, form_submission: submission,
+                               form_field: create(:form_field, form: scholarship_form),
+                               submitted_answer: "I need help")
+
+          get edit_event_registration_path(existing_registration)
+
+          expect(response.body).not_to include("Scholarship form not completed")
+        end
+      end
+
       it "hides Delete and explains why for a registration with payment records" do
         payment = create(:payment, person: regular_user.person, amount_cents: 1000, amount_cents_remaining: nil)
         create(:allocation, source: payment, allocatable: existing_registration, amount: 1000)
@@ -851,10 +929,11 @@ RSpec.describe "EventRegistrations", type: :request do
         # Designated a scholarship recipient, linking to the actual award record.
         expect(response.body).to include("Scholarship recipient")
         expect(response.body).to include(edit_scholarship_path(scholarship))
-        # The balance is payable here, so its payment card shows; the award stays on the source.
+        # The balance is payable here, so its payment card shows, and so does the
+        # scholarship card, to award more on top of the original.
         expect(response.body).to include("Registration payments and allocations")
         expect(response.body).to include("name=\"event_registration[intends_to_pay]\"")
-        expect(response.body).not_to include("name=\"event_registration[scholarship_requested]\"")
+        expect(response.body).to include("name=\"event_registration[scholarship_requested]\"")
       end
 
       it "saves intends to pay on a transferred-in reg" do
@@ -1184,6 +1263,18 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(source.reload.organizations).to include(org)
         end
 
+        it "carries each copied org link's pinned submission forward" do
+          org = create(:organization)
+          submission = create(:form_submission, person: source.registrant, event: source.event)
+          source.event_registration_organizations.create!(organization: org, form_submission: submission)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming.event_registration_organizations.find_by(organization: org).form_submission).to eq(submission)
+        end
+
         it "copies the registrant's progress fields (days, payment method, buddy, feature/shout-out) forward" do
           source.update!(completed_day_1: true, expected_payment_method: "Check",
             someone_else_will_pay: true, shoutout: true)
@@ -1196,6 +1287,16 @@ RSpec.describe "EventRegistrations", type: :request do
             completed_day_1: true, expected_payment_method: "Check",
             someone_else_will_pay: true, shoutout: true
           )
+        end
+
+        it "moves a pending scholarship request to the new registration" do
+          source.update!(scholarship_requested: true)
+
+          post process_transfer_event_registration_path(source),
+               params: { destination_event_id: destination_event.id }
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming).to be_scholarship_requested
         end
 
         it "compresses carried days and flags the mismatch when the source had more days than the destination" do
@@ -1377,6 +1478,39 @@ RSpec.describe "EventRegistrations", type: :request do
           new_destination = EventRegistration.find_by(registrant: source.registrant, event: second_dest)
           expect(new_destination.transferred_from_registration).to eq(source)
         end
+
+        describe "the facilitator affiliation (ADR-0003 D6d)" do
+          let(:org) { create(:organization) }
+          let(:training) { create(:event, published: true, facilitator_training: true) }
+
+          def facilitator_row_for(registration)
+            create(:affiliation, person: registration.registrant, organization: org, title: "Facilitator",
+                                 start_date: registration.event.starts_on, event_registration: registration)
+          end
+
+          it "moves the row the source created to the destination training" do
+            source.event_registration_organizations.create!(organization: org)
+            row = facilitator_row_for(source)
+
+            post process_transfer_event_registration_path(source), params: { destination_event_id: training.id }
+
+            incoming = EventRegistration.find_by(registrant: source.registrant, event: training)
+            expect(row.reload).to have_attributes(event_registration_id: incoming.id, start_date: training.starts_on)
+          end
+
+          it "carries a collapsing middle registration's row on to the final one" do
+            original = create(:event_registration, status: "transferred_out")
+            middle = create(:event_registration, registrant: original.registrant,
+              status: "transferred_out", transferred_from_registration: original)
+            middle.event_registration_organizations.create!(organization: org)
+            row = facilitator_row_for(middle)
+
+            post process_transfer_event_registration_path(middle), params: { destination_event_id: training.id }
+
+            final = EventRegistration.find_by(registrant: middle.registrant, event: training)
+            expect(row.reload.event_registration_id).to eq(final.id)
+          end
+        end
       end
 
       describe "GET /event_registrations/:id/transfer (manage hub)" do
@@ -1408,6 +1542,19 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response).to redirect_to(edit_event_registration_path(source))
         end
 
+        it "moves the facilitator affiliation back to the source when the transfer is undone" do
+          org = create(:organization)
+          source.event_registration_organizations.create!(organization: org)
+          training = create(:event, published: true, facilitator_training: true)
+          row = create(:affiliation, person: source.registrant, organization: org, title: "Facilitator",
+                                     start_date: source.event.starts_on, event_registration: source)
+          post process_transfer_event_registration_path(source), params: { destination_event_id: training.id }
+
+          patch revert_transfer_event_registration_path(source)
+
+          expect(row.reload).to have_attributes(event_registration_id: source.id, start_date: source.event.starts_on)
+        end
+
         it "undoes a completed transfer, unlinking the destination and restoring the source" do
           destination_event = create(:event, published: true)
           destination = create(:event_registration, registrant: source.registrant,
@@ -1418,6 +1565,28 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(source.reload.status).to eq("registered")
           expect(EventRegistration.exists?(destination.id)).to be(true)
           expect(destination.reload.transferred_from_registration).to be_nil
+        end
+
+        it "takes back the scholarship request the transfer moved onto the destination" do
+          source.update!(scholarship_requested: true)
+          destination = create(:event_registration, registrant: source.registrant, event: create(:event, published: true),
+            transferred_from_registration: source, scholarship_requested: true)
+
+          patch revert_transfer_event_registration_path(source)
+
+          expect(destination.reload).not_to be_scholarship_requested
+          expect(source.reload).to be_scholarship_requested
+        end
+
+        it "keeps the destination's request once a scholarship was awarded there" do
+          source.update!(scholarship_requested: true)
+          destination = create(:event_registration, registrant: source.registrant, event: create(:event, published: true),
+            transferred_from_registration: source, scholarship_requested: true)
+          create(:allocation, source: create(:scholarship, recipient: source.registrant), allocatable: destination, amount: 1)
+
+          patch revert_transfer_event_registration_path(source)
+
+          expect(destination.reload).to be_scholarship_requested
         end
 
         it "undoes a collapsed chain, re-merging the relocated CE back onto the origin" do
@@ -1621,6 +1790,23 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("Other Event Agency")
         end
 
+        it "reads a transferred-in registration's answers from the event it transferred from" do
+          source_event = create(:event, title: "Origin Training")
+          source_reg = create(:event_registration, registrant: regular_user.person, event: source_event, status: "transferred_out")
+          existing_registration.update!(transferred_from_registration: source_reg)
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_name")
+          create(:event_form, :registration, event: source_event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form, event: source_event)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Origin Agency")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Origin Agency")
+          expect(response.body).to include("From the original registration for Origin Training")
+          expect(response.body).to include(event_registrant_submissions_path(source_event, person_id: regular_user.person.id))
+        end
+
         it "flags a persistent discrepancy on a linked org whose saved profile differs from the submission" do
           organization.update!(name: "Acme", organization_type: "For-profit")
           reg_form = create(:form, name: "Reg form")
@@ -1661,20 +1847,21 @@ RSpec.describe "EventRegistrations", type: :request do
 
         it "flags an address discrepancy on a linked org whose saved address differs from the submission" do
           organization.update!(name: "Acme")
-          create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX")
+          create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
-          { "organization_name" => "Acme", "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX" }.each do |identifier, value|
+          { "organization_name" => "Acme", "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX",
+            "organization_zip" => "78702" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Address – street")
-          expect(response.body).to include("1 Main St")
-          expect(response.body).to include("5 Oak Ave")
+          expect(response.body).to include("Address – ZIP")
+          expect(response.body).to include("78702")
+          expect(response.body).to include("78701")
         end
 
         it "shows the affiliation pill inline on the linked org, noting it has no dates" do
@@ -1834,7 +2021,7 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("#form-submission-#{sub2.id}")
         end
 
-        it "shows a Create and link row for each distinct submitted org not in the database" do
+        it "shows a Create org and link row for each distinct submitted org not in the database" do
           reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
           field = reg_form.form_fields.find_by(field_identifier: "organization_name") ||
@@ -1855,6 +2042,15 @@ RSpec.describe "EventRegistrations", type: :request do
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).to include("No registration form was submitted")
+        end
+
+        it "notes that linking here also updates the registrant's affiliations" do
+          get link_organization_event_registration_path(existing_registration)
+
+          first_name = existing_registration.registrant.first_name
+          expect(response.body).to include("Linking an organization here:")
+          expect(response.body).to include("Links it to this registration")
+          expect(response.body).to include(CGI.escapeHTML("Records it in #{first_name}'s affiliations"))
         end
 
         it "says no organization was submitted when the form was submitted without one" do
@@ -2200,7 +2396,7 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(regular_user.person.affiliations.where(organization: other).pluck(:title)).to contain_exactly("Facilitator")
         end
 
-        it "keeps curated type/website and warns about the discrepancy" do
+        it "replaces the saved type/website and warns the admin to reapply newer edits" do
           organization.update!(organization_type: "For-profit", website_url: "https://curated.org")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
@@ -2212,20 +2408,19 @@ RSpec.describe "EventRegistrations", type: :request do
 
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
-          expect(organization.reload.organization_type).to eq("For-profit")
-          expect(organization.website_url).to eq("https://curated.org")
-          expect(flash[:warning]).to include("were not applied").and include("Government agency").and include("For-profit")
+          expect(organization.reload.organization_type).to eq("Government agency")
+          expect(organization.website_url).to eq("https://other.org")
+          expect(flash[:warning]).to include("replaced saved values").and include("was “For-profit”").and include("reapply")
         end
 
-        # An org whose every answer conflicts is written nothing at all, and it's
-        # the one whose note matters most — so the pin follows the submission that
-        # describes the org, not the subset of answers that made it onto the record.
-        it "pins the submission even when every answer conflicted and nothing was written" do
+        # The pin follows the submission that describes the org, not the subset of
+        # answers that changed the record.
+        it "pins the submission even when nothing was written" do
           organization.update!(organization_type: "For-profit", website_url: "https://curated.org")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
-          { "organization_website" => "https://other.org", "organization_type" => "Government agency" }.each do |identifier, value|
+          { "organization_website" => "https://curated.org", "organization_type" => "For-profit" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -2310,7 +2505,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
-          { "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701" }.each do |identifier, value|
+          { "organization_street" => "5 Oak Ave", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -2318,7 +2513,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
           expect(flash[:notice]).not_to include("work address")
-          expect(flash[:warning]).to include("Address – street")
+          expect(flash[:warning]).to be_nil
         end
 
         it "reports only the address fields it actually filled" do
@@ -2487,7 +2682,7 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(link.form_submission).to eq(submission)
         end
 
-        it "does not overwrite an existing org's curated website and type" do
+        it "overwrites an existing org's website and type with the submission's answers" do
           existing = create(:organization, name: "Existing Org", website_url: "https://curated.org", organization_type: "For-profit")
           reg_form = create(:form, name: "Reg form")
           name_field = create(:form_field, form: reg_form, field_identifier: "organization_name")
@@ -2501,8 +2696,8 @@ RSpec.describe "EventRegistrations", type: :request do
 
           post create_organization_event_registration_path(existing_registration)
 
-          expect(existing.reload.website_url).to eq("https://curated.org")
-          expect(existing.organization_type).to eq("For-profit")
+          expect(existing.reload.website_url).to eq("helpinghands.org")
+          expect(existing.organization_type).to eq("Government agency")
         end
 
         it "does nothing when no organization name was submitted" do

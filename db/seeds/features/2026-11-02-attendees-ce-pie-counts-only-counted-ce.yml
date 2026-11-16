@@ -1,0 +1,10 @@
+name: "Attendees CE pie counts only CE that counts"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-02
+pr_number: 2939
+action_path: "/events/attendees"
+summary: >-
+  The attendees page's CE pie now uses the same rule as the event dashboard:
+  denied CE and CE left unpaid past its payment deadline count as "No CE," and
+  the pie's click-through lists match.

@@ -1,0 +1,9 @@
+name: "Training day read in Pacific time for program status"
+area: events
+display_status: admin_facing
+released_on: 2026-11-13
+pr_number: 2989
+summary: >-
+  A training's day is always read in Pacific time, both for the facilitator affiliation a
+  registration creates and for the New / Ongoing / Reinstated check, so the two can't land a day
+  apart for an evening training or an admin in another time zone.

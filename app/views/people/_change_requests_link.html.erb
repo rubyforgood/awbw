@@ -1,0 +1,10 @@
+<%# Admin link to this person's change-request queue; shown once they've sent one. %>
+<%# locals: (person:, link_class:) %>
+<% latest_request = person.profile_change_requests.newest_first.first if allowed_to?(:index?, ProfileChangeRequest) %>
+<% if latest_request %>
+  <% pending_count = person.profile_change_requests.pending.count %>
+  <%= link_to profile_change_requests_path(person_id: person.id, status: pending_count.positive? ? "pending" : latest_request.status),
+              class: link_class do %>
+    Change requests<%= " (#{pending_count} pending)" if pending_count.positive? %>
+  <% end %>
+<% end %>

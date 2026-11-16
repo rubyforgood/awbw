@@ -12,10 +12,11 @@
     badge:         show the little "admin" lock chip (default false)
     turbo_top:     break out of the enclosing turbo frame on click (default false)
     always:        show the link even when nothing has changed yet (default false)
+    changes:       a FormSubmissionChanges the page already built, to reuse its query (optional)
 %>
 <% submission = local_assigns[:submission] %>
 <% if submission && allowed_to?(:changes?, submission) %>
-  <% submission_changes = FormSubmissionChanges.new(submission) %>
+  <% submission_changes = local_assigns[:changes] || FormSubmissionChanges.new(submission) %>
   <% if submission_changes.edited? || local_assigns[:always] %>
     <% path_params = { return_to: local_assigns[:return_to] }.compact.merge(local_assigns[:extra_params] || {}) %>
     <%= link_to changes_form_submission_path(submission, **path_params),

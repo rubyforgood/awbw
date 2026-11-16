@@ -14,7 +14,9 @@ class UsersController < ApplicationController
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(User.includes(:created_by, :updated_by, :welcome_instructions_sent_by,
                                                   person: { avatar_attachment: :blob }))
-      filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
+      @sort = params[:sort].presence_in(User::SORTS)
+      @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
+      filtered = base_scope.search_by_params(params).sorted_by(@sort, @sort_direction)
       @users_count = filtered.count
       @users = filtered.paginate(page: params[:page], per_page: per_page)
 
@@ -307,7 +309,10 @@ class UsersController < ApplicationController
 
     redirect_to users_path(search: params[:search],
                            super_user: params[:super_user],
-                           inactive: params[:inactive],
+                           access: params[:access],
+                           confirmed: params[:confirmed],
+                           sort: params[:sort],
+                           direction: params[:direction],
                            page: params[:page],
                            number_of_items_per_page: params[:number_of_items_per_page]),
                 notice: "Invitation sent to #{@user.email}."

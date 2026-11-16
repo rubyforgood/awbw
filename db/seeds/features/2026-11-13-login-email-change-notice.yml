@@ -1,0 +1,7 @@
+name: "Login email change notice"
+area: communications
+display_status: admin_facing
+released_on: 2026-11-13
+summary: >-
+  When someone's login email changes, the portal emails both the new address and the old one, so an
+  unexpected change gets noticed. The notice shows as delivered in Communications and can be resent.

@@ -24,7 +24,8 @@ module EventRegistrationServices
 
     # Well-known field_identifier of the "Additional forms" multi-select question.
     # Checking "Invoice" / "W-9" toggles the registration's invoice_requested /
-    # w9_requested flags, which the digital ticket reads to surface those downloads.
+    # w9_requested flags (a record of the request; the ticket offers both downloads
+    # on paid events regardless).
     # The option labels below must match the seeded answer options exactly.
     ADDITIONAL_FORMS_IDENTIFIER = "additional_forms".freeze
     ADDITIONAL_FORMS_INVOICE = "Invoice".freeze
@@ -79,7 +80,7 @@ module EventRegistrationServices
           form_params: @form_params,
           person: person,
           facilitator_training: @event.facilitator_training,
-          training_date: @event.start_date,
+          training_date: @event.starts_on,
           event_registration: event_registration
         )
         organization = org_result.organization

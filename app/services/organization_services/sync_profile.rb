@@ -1,40 +1,33 @@
 module OrganizationServices
   # Populate an organization's structured profile columns — website_url and
   # organization_type/organization_type_other — from a registrant's submitted
-  # answers. A non-blank submitted value overwrites what's on file (the latest
-  # registration is the freshest source of truth; the prior value survives in
-  # the Ahoy audit trail); a blank answer never clobbers existing data.
+  # answers. In every flow (public forms, admin linking, the importer) a valid,
+  # non-blank answer overwrites what's on file — the prior value survives in the
+  # Ahoy audit trail; a blank answer, or a website that isn't a web address,
+  # never lands.
   #
   # The "Organization Type" answer folds an "Other" choice's free text in as
   # "Other: <text>": we split the option label (drives organization_type) from the
   # typed text (fills organization_type_other, cleared for non-"Other" so no stale
   # text lingers) and record the free text as an OtherResponse for the curation
-  # queue. Shared by the public registration flow and the admin
-  # create-and-link action so both build the org profile identically.
-  #
-  # overwrite: (default true) reflects the public flow's latest-wins contract —
-  # a non-blank answer replaces what's on file. The admin create-and-link flow
-  # passes overwrite: false so it only fills columns that are currently blank,
-  # never clobbering an existing org's curated type/website.
+  # queue.
   class SyncProfile
     # changes: AutofillChange per column this call actually wrote from the form —
     # the field and the value that landed in it — so the caller can tell the admin
-    # what was saved and to what. Answers that differ from a value already on the
-    # org (and so weren't applied under fill-blanks) are reported separately by
-    # OrganizationServices::ProfileDiff.
+    # what was saved and to what (and what it replaced). Answers that couldn't be
+    # applied are reported separately by OrganizationServices::ProfileDiff.
     Result = Struct.new(:organization, :changes, keyword_init: true)
 
     # submission: the form submission the answers came from, when it's saved
     # already, so a captured org-type "Other" records which answer typed it.
-    def self.call(organization:, website: nil, organization_type: nil, overwrite: true, submission: nil)
-      new(organization:, website:, organization_type:, overwrite:, submission:).call
+    def self.call(organization:, website: nil, organization_type: nil, submission: nil)
+      new(organization:, website:, organization_type:, submission:).call
     end
 
-    def initialize(organization:, website: nil, organization_type: nil, overwrite: true, submission: nil)
+    def initialize(organization:, website: nil, organization_type: nil, submission: nil)
       @organization = organization
       @website = website
       @organization_type = organization_type
-      @overwrite = overwrite
       @submission = submission
     end
 
@@ -43,7 +36,7 @@ module OrganizationServices
       # Snapshot before each write — what was there decides whether the form filled
       # a blank or replaced something an admin may have curated.
       website_before = @organization.website_url
-      @changes << change("website_url", "Website", @organization.website_url, website_before) if apply_value(:website_url, @website)
+      @changes << change("website_url", "Website", @organization.website_url, website_before) if apply_value(:website_url, submitted_website)
       type_before = displayed_organization_type
       @changes << change("organization_type", "Type", displayed_organization_type, type_before) if sync_organization_type
       Result.new(organization: @organization, changes: @changes)
@@ -65,7 +58,6 @@ module OrganizationServices
     def sync_organization_type
       raw = @organization_type&.strip
       return false if raw.blank?
-      return false if !@overwrite && @organization.organization_type.present?
 
       label, _separator, specified = raw.partition(":")
       label = label.strip
@@ -89,9 +81,14 @@ module OrganizationServices
                                   field_identifier: OtherResponse::ORGANIZATION_TYPE_FIELD_IDENTIFIER)
     end
 
+    # An answer that isn't a web address (e.g. the org's name typed into the
+    # website field) is treated as blank, so it never lands on the org.
+    def submitted_website
+      @website if Organization.website_address?(@website)
+    end
+
     def apply_value(attribute, value)
       return false if value.blank?
-      return false if !@overwrite && @organization.public_send(attribute).present?
       @organization.update!(attribute => value.strip)
       changed?(attribute)
     end

@@ -14,6 +14,9 @@ export default class extends Controller {
       // The form's collection controller submits on the native change TomSelect dispatches on the select.
       select._tomSelect = new TomSelect(select, {
         plugins: ["checkbox_options", "remove_button"],
+        // Opt-in (data-hide-placeholder): drop the placeholder once something is
+        // picked, so the chips and input share one line in a compact filter bar.
+        hidePlaceholder: select.dataset.hidePlaceholder === "true",
         onInitialize() {
           this.control.classList.add("!rounded-lg", "!py-2");
         },
