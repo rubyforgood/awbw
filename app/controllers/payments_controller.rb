@@ -82,13 +82,6 @@ class PaymentsController < ApplicationController
 
   def show
     @payment = Payment.find(params[:id])
-    authorize! @payment, with: PaymentPolicy
-
-    comments = @payment.comments.includes(created_by: :person, updated_by: :person).to_a
-    communications = authorized_scope(@payment.communications_scope, with: NotificationPolicy)
-      .includes(sender: :person).to_a
-    @entries = (comments + communications).sort_by { |entry| entry.created_at || Time.current }.reverse
-
     @allocations = @payment.allocations.includes(:allocatable).order(created_at: :desc).to_a
     # Registration rows name their registrant and event; allocatables are polymorphic,
     # so preload those only on the registrations.
@@ -96,6 +89,12 @@ class PaymentsController < ApplicationController
       records: @allocations.map(&:allocatable).grep(EventRegistration), associations: %i[registrant event]
     ).call
     @refunds = @payment.refunds.order(created_at: :desc)
+    authorize! @payment, with: PaymentPolicy
+
+    comments = @payment.comments.includes(created_by: :person, updated_by: :person).to_a
+    communications = authorized_scope(@payment.communications_scope, with: NotificationPolicy)
+      .includes(sender: :person).to_a
+    @entries = (comments + communications).sort_by { |entry| entry.created_at || Time.current }.reverse
   end
 
   def edit

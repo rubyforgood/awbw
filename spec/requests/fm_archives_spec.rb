@@ -275,6 +275,15 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body.scan(%r{href="/people/\d+"}).size).to eq(1)
     end
 
+    it "links an agency's archived Rolodex card back to the portal organization carrying its code" do
+      FmRolodex.create!(fm_id: "00023", data: { "isAgency__c" => "1" })
+      organization = create(:organization, filemaker_code: "P2775, 00023")
+
+      get fm_archive_path("00023", table: "rolodexes")
+
+      expect(response.body).to include(organization_path(organization))
+    end
+
     it "links an archived project back to its portal organization" do
       FmProject.create!(fm_id: "P2775")
       organization = create(:organization, filemaker_code: "P2775")

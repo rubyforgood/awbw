@@ -4,6 +4,7 @@ class NotificationMailer < ApplicationMailer
   default to: -> { Setting.programs_email }
 
   SUBJECT_PREFIX = "AWBW Portal:".freeze
+  MEMBERSHIP_BULK_INVOICE_SUBJECT = "#{SUBJECT_PREFIX} Your membership invoice".freeze
   FYI_PREFIX = "#{SUBJECT_PREFIX} [FYI]".freeze
   PROFILE_CHANGE_REVIEWED_SUBJECT = "#{SUBJECT_PREFIX} Update on your change request".freeze
   ACCOUNT_EMAIL_CHANGED_SUBJECT = "#{SUBJECT_PREFIX} Your login email was changed".freeze
@@ -273,6 +274,19 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def membership_invoice(notification)
+    @membership = notification.noticeable
+    @person = notification.person || @membership.person
+    @invoice = next_invoice(@membership)
+    @invoice_url = @invoice ? membership_invoice_url(@invoice) : person_url(@person)
+    @custom_message = notification.custom_message.presence
+
+    mail(
+      to: notification.recipient_email,
+      subject: MEMBERSHIP_BULK_INVOICE_SUBJECT
+    )
+  end
+
   # Security notice sent after a login email change, to both the new address and
   # the one it replaced (so a hijacked account is noticed at the old inbox). The
   # new address is read from the user at send time, so a resend names the current
@@ -290,6 +304,11 @@ class NotificationMailer < ApplicationMailer
   end
 
   private
+
+  def next_invoice(membership)
+    membership.membership_invoices.not_paid_in_full.order(:start_date).first ||
+      membership.membership_invoices.order(start_date: :desc).first
+  end
 
   def extract_attachments(noticeable)
     return [] unless noticeable.respond_to?(:primary_asset)

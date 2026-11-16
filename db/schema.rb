@@ -2117,6 +2117,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_131756) do
     t.integer "import_user_id"
     t.integer "home_featured_stories_limit"
     t.bigint "participant_credit_person_id"
+    t.integer "membership_autopay_window_days"
     t.bigint "story_share_hero_story_id"
     t.index ["ce_administrator_id"], name: "index_settings_on_ce_administrator_id"
     t.index ["created_by_id"], name: "index_settings_on_created_by_id"

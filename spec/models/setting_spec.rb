@@ -87,6 +87,7 @@ RSpec.describe Setting do
       expect(described_class.invoice_prefix).to eq("INV")
       expect(described_class.annual_membership_cents).to eq(10000)
       expect(described_class.membership_renewal_window_days).to eq(30)
+      expect(described_class.membership_autopay_window_days).to eq(7)
       expect(described_class.home_featured_stories_limit).to be_nil
     end
 
@@ -94,6 +95,12 @@ RSpec.describe Setting do
       described_class.create!(membership_renewal_window_days: 0)
 
       expect(described_class.membership_renewal_window_days).to eq(0)
+    end
+
+    it "reads the stored autopay window" do
+      described_class.create!(membership_autopay_window_days: 3)
+
+      expect(described_class.membership_autopay_window_days).to eq(3)
     end
   end
 
@@ -304,6 +311,10 @@ RSpec.describe Setting do
 
     it "rejects a negative window" do
       expect(described_class.new(membership_renewal_window_days: -1)).not_to be_valid
+    end
+
+    it "rejects a negative autopay window" do
+      expect(described_class.new(membership_autopay_window_days: -1)).not_to be_valid
     end
 
     it "rejects a home story limit below one" do

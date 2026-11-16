@@ -12,6 +12,7 @@ class Setting < ApplicationRecord
   DEFAULT_CE_ADMINISTRATOR_TITLE = "CE Administrator".freeze
   DEFAULT_ANNUAL_MEMBERSHIP_CENTS = 10000
   DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS = 30
+  DEFAULT_MEMBERSHIP_AUTOPAY_WINDOW_DAYS = 7
 
   belongs_to :organization, optional: true
   belongs_to :return_address, class_name: "Address", optional: true
@@ -33,7 +34,7 @@ class Setting < ApplicationRecord
   validates :ce_accreditation_abbreviation, length: { maximum: 60 }
   validates :ce_accreditation_url, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]),
                                              message: "must be a full http(s) address" }, allow_blank: true
-  validates :annual_membership_cents, :membership_renewal_window_days,
+  validates :annual_membership_cents, :membership_renewal_window_days, :membership_autopay_window_days,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :home_featured_stories_limit, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
@@ -241,6 +242,10 @@ class Setting < ApplicationRecord
   def self.membership_renewal_window_days
     stored(:membership_renewal_window_days) ||
       ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS).to_i
+  end
+
+  def self.membership_autopay_window_days
+    stored(:membership_autopay_window_days) || DEFAULT_MEMBERSHIP_AUTOPAY_WINDOW_DAYS
   end
 
   # The story whose photo or video an admin chose for the Story Share home background.

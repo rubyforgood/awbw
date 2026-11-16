@@ -40,11 +40,11 @@
     <% manage_card_tooltip = "Opens Stripe to update the saved card." %>
     <% subscribe_tooltip =
       if has_card
-        autopay_invoice ? "Turns on automatic payments and charges any issued invoice." : "Turns on automatic payments for future invoices."
-      elsif autopay_invoice
-        membership.autopay_on? ? "Saves your card and pays the issued invoice now. Automatic payments are already on." : "Saves your card, pays the issued invoice now, and turns on automatic payments."
+        "Turns on automatic payments. Invoices are charged automatically before they are due."
+      elsif membership.autopay_on?
+        "Saves your card. Automatic payments are already on."
       else
-        membership.autopay_on? ? "Saves your card. Automatic payments are already on." : "Saves your card and turns on automatic payments for future invoices."
+        "Saves your card and turns on automatic payments. Invoices are charged automatically before they are due."
       end %>
 
     <% if invoices&.any? %>
