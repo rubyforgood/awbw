@@ -150,6 +150,8 @@ picker), use `MoneyFormatter.compact_from_cents(cents)` (`$12.5k`, `$1.2m`) — 
 - **Pass cents, not dollars.** Use the `*_cents` column/accessor (`amount_cents`,
   `amount_cents_remaining`, `allocation.amount`, etc.), not `amount_dollars`. Don't prepend a literal
   `$` — the helper includes it.
+- **Columns of amounts** (a table you scan or compare down) pass `always_cents: true` so every row
+  shows `.00` and, right-aligned with `tabular-nums`, lines up on the decimal point (payments index).
 - **Do NOT use** `number_to_currency`, `format("%.2f", …)`, or the naked `"%.2f" % x` operator to show
   money. They always print `.00` and reintroduce the inconsistency this helper exists to remove.
   (`number_to_currency` is fine only inside the helper definition itself.)

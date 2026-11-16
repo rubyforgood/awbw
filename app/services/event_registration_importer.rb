@@ -598,6 +598,7 @@ class EventRegistrationImporter
       return preview.payment_status = :unknown_type
     end
     return preview.payment_status = :missing_check_number if payment_class == CheckPayment && values[:check_number].blank?
+    return preview.payment_status = :invalid_check_number if payment_class == CheckPayment && !values[:check_number].strip.match?(CheckPayment::CHECK_NUMBER_FORMAT)
 
     return preview.payment_status = :free if registration_cost + ce_cost <= 0
 

@@ -619,8 +619,8 @@ module ApplicationHelper
 
   # Currency for an amount given in cents, dropping the cents when the amount is
   # a whole number of dollars: 150000 → "$1,500", 75050 → "$750.50".
-  def dollars_from_cents(cents)
-    MoneyFormatter.dollars_from_cents(cents)
+  def dollars_from_cents(cents, always_cents: false)
+    MoneyFormatter.dollars_from_cents(cents, always_cents:)
   end
 
   # Like dollars_from_cents but preserves a leading minus for negative amounts.
