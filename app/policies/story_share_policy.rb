@@ -7,7 +7,7 @@ class StorySharePolicy < ApplicationPolicy
 
   def show?
     return false if record.funder_only?
-    admin? || record.publicly_visible? || (authenticated? && record.published?)
+    admin? || (record.published? && (record.publicly_visible? || authenticated?))
   end
 
   # Scoping

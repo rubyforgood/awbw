@@ -8,7 +8,7 @@ class StoryPolicy < ApplicationPolicy
   def show?
     return true if admin? || own_story?
     return false if record.funder_only?
-    record.publicly_visible? || (authenticated? && record.published?)
+    record.published? && (record.publicly_visible? || authenticated?)
   end
 
   # Bulk import from a WordPress export CSV — admins only.

@@ -4,7 +4,8 @@ RSpec.describe EventPolicy, type: :policy do
   let(:admin_user) { build_stubbed :user, :admin }
   let(:regular_user) { build_stubbed :user }
   let(:published_event) { build_stubbed :event, :published }
-  let(:public_event) { build_stubbed :event, publicly_visible: true  }
+  let(:public_event) { build_stubbed :event, :published, publicly_visible: true }
+  let(:unpublished_public_event) { build_stubbed :event, :unpublished, publicly_visible: true }
   let(:unpublished_event) { build_stubbed :event, :unpublished }
   let(:owned_unpublished_event) { build_stubbed :event, :unpublished, created_by: regular_user }
   let(:owned_ended_event) { build_stubbed :event, :published, :ended, created_by: regular_user }
@@ -122,6 +123,12 @@ RSpec.describe EventPolicy, type: :policy do
 
       context "with no user" do
         subject { policy_for(record: unpublished_event, user: nil) }
+
+        it { is_expected.not_to be_allowed_to(:show?) }
+      end
+
+      context "when publicly visible but unpublished, with no user" do
+        subject { policy_for(record: unpublished_public_event, user: nil) }
 
         it { is_expected.not_to be_allowed_to(:show?) }
       end

@@ -6,7 +6,7 @@ class WorkshopPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || record.publicly_visible? || (authenticated? && record.published?)
+    admin? || (record.published? && (record.publicly_visible? || authenticated?))
   end
 
   def destroy?

@@ -61,7 +61,7 @@ class EventPolicy < ApplicationPolicy
     if record.ended?
       authenticated? && record.published? && record.actively_registered?(user.person)
     else
-      record.publicly_visible? || (authenticated? && record.published?)
+      record.published? && (record.publicly_visible? || authenticated?)
     end
   end
 
@@ -74,7 +74,7 @@ class EventPolicy < ApplicationPolicy
     if record.ended?
       authenticated? && record.published? && record.actively_registered?(user.person)
     else
-      record.publicly_visible? || (authenticated? && record.published?)
+      record.published? && (record.publicly_visible? || authenticated?)
     end
   end
 
