@@ -25,7 +25,7 @@ class MembershipInvoiceDecorator < ApplicationDecorator
     return :pay_now unless autopay_ready
     return :pay_now if latest_attempt&.failed?
     return :pay_now if checkout_session_id.present?
-    return :scheduled unless autopay_issued?
+    return :scheduled unless in_autopay_window?
     return :none if autopay_chargeable?
 
     :pay_now

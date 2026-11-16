@@ -1,0 +1,32 @@
+<h1 style="margin: 0 0 16px;">Your membership invoice</h1>
+
+<p style="margin: 0 0 16px; color:#374151;">
+  Hello <strong><%= @person.first_name %></strong>,
+</p>
+
+<% if @custom_message %>
+  <%= simple_format(@custom_message, { style: "margin: 0 0 16px; color:#374151;" }) %>
+<% end %>
+
+<% if @invoice %>
+  <p style="margin: 0 0 16px; color:#374151;">
+    Invoice for <%= @invoice.start_date.strftime("%b %-d, %Y") %> – <%= @invoice.end_date.strftime("%b %-d, %Y") %>:
+    <strong><%= dollars_from_cents(@invoice.cost_cents) %></strong>
+  </p>
+<% end %>
+
+<p style="margin: 0 0 16px;">
+  <%= link_to "View your invoice",
+              @invoice_url,
+              style: "display:inline-block;
+                      padding:10px 16px;
+                      background:#2563eb;
+                      color:#ffffff;
+                      text-decoration:none;
+                      border-radius:6px;
+                      font-weight:bold;" %>
+</p>
+
+<p style="margin: 16px 0 0; color:#374151;">
+  Thank you,<br>AWBW Staff
+</p>
