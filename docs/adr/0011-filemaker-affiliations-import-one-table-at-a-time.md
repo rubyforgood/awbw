@@ -361,8 +361,7 @@ Also in ADR-0008's pass, left out on purpose until a round decides them:
 
 ## Open questions
 
-- **Round two: the 260 rows whose `OrgID` is on several orgs.** Skipped and listed, as the
-  rules stand. A same-name merge (`fm:merge_same_named_organizations`) would settle only the
+- **Round two: the 260 rows whose `OrgID` is on several orgs** (decided below). A same-name merge (`fm:merge_same_named_organizations`) would settle only the
   22 audience-copy codes (67 rows). Candidate rules, strongest first: the one org carrying a
   project the person staffed (their own Personnel row); the one org where they already have an
   affiliation; the one org named "… Combined" (43 codes, 198 rows — usually the org already
@@ -377,9 +376,11 @@ Also in ADR-0008's pass, left out on purpose until a round decides them:
     | Their own clues point at several of the orgs | 20 |
     | No clue | 7 |
 
-  - **Leaning: place by the person's own clues only (202 rows); send the other 58 to staff.**
-    A project they staffed or an affiliation they already hold is a fact about them. "…
-    Combined" is a guess about the org, which this ADR doesn't make.
+  - **Decided 2026-11-14: place by the first clue that settles it (233 rows); send the other
+    27 to staff.** The person's own clues come first. Where they say nothing, the "… Combined"
+    org is close enough: for a job affiliation the exact program matters little, and it's
+    usually the org already holding the affiliations. Rows whose own clues point at several
+    orgs, or with no clue, go to staff.
 - **Round two: the start date of a row whose notes say the person left.** Entered and marked
   left in the same sitting, `DateEntered` reads as a one-day job; and "Left in 2016" was
   entered in 2020 or later, so its start would fall after its end. Leaning: leave the start
