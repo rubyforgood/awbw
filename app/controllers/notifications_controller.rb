@@ -41,7 +41,7 @@ class NotificationsController < ApplicationController
   def create
     authorize!
 
-    if params[:inline].present?
+    if params[:inline].present? || (params[:noticeable_sgid].present? && params[:person_id].blank?)
       create_inline
     else
       create_for_person
@@ -84,11 +84,12 @@ class NotificationsController < ApplicationController
       if params[:inline].present?
         respond_to do |format|
           format.turbo_stream
-          format.html { redirect_to helpers.inline_record_path(@notification.noticeable, fallback: notifications_path), status: :see_other }
+          format.html { redirect_to notification_path(@notification), status: :see_other }
         end
       else
         respond_to do |format|
           format.turbo_stream
+          format.html { redirect_to notification_path(@notification), status: :see_other }
           format.any { head :ok }
         end
       end
@@ -100,6 +101,7 @@ class NotificationsController < ApplicationController
     else
       respond_to do |format|
         format.turbo_stream { head :unprocessable_content }
+        format.html { render :edit, status: :unprocessable_content }
         format.any { head :unprocessable_content }
       end
     end
@@ -183,7 +185,7 @@ class NotificationsController < ApplicationController
     if @notification.save
       respond_to do |format|
         format.turbo_stream
-        format.html { redirect_to helpers.inline_record_path(record, fallback: notifications_path), notice: "Communication logged." }
+        format.html { redirect_to notification_path(@notification), notice: "Communication logged." }
       end
     else
       respond_to do |format|

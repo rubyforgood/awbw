@@ -522,7 +522,8 @@ RSpec.describe "Notifications", type: :request do
       before { sign_in admin }
 
       it "marks the notification as responded" do
-        patch notification_path(contact_notification), params: { notification: { responded: "1" } }
+        patch notification_path(contact_notification), params: { notification: { responded: "1" } },
+              headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
         expect(response).to have_http_status(:ok)
         expect(contact_notification.reload.responded).to be(true)
@@ -531,7 +532,8 @@ RSpec.describe "Notifications", type: :request do
       it "marks the notification as not responded" do
         contact_notification.update!(responded: true)
 
-        patch notification_path(contact_notification), params: { notification: { responded: "0" } }
+        patch notification_path(contact_notification), params: { notification: { responded: "0" } },
+              headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
         expect(response).to have_http_status(:ok)
         expect(contact_notification.reload.responded).to be(false)

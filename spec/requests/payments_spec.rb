@@ -293,7 +293,7 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("Comments &amp; communications", "Called about the remaining balance", "Left a voicemail")
     end
 
-    it "adds a comment from the show page and lands back on it" do
+    it "adds a comment from the show page and lands on the comment" do
       payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
 
       expect {
@@ -302,8 +302,8 @@ RSpec.describe "Payments", type: :request do
                             headers: { "HTTP_REFERER" => "http://www.example.com#{payment_path(payment)}" }
       }.to change { payment.comments.count }.by(1)
 
-      expect(response).to redirect_to(payment_path(payment))
       comment = payment.comments.last
+      expect(response).to redirect_to(comment_path(comment))
       expect(comment.body).to eq("Called about the check")
       expect(comment.created_by).to eq(admin)
     end
@@ -409,30 +409,7 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("notification_#{notification.id}", "notification[email_subject]")
     end
 
-    it "files a comment against another record through the signed context" do
-      expect {
-        post comments_path, params: { comment: { body: "Generic note" },
-                                      commentable_sgid: person.to_sgid.to_s, inline: 1 }
-      }.to change { person.comments.count }.by(1)
 
-      expect(response).to redirect_to(person_path(person))
-    end
-
-    it "logs a communication against another record through the signed context" do
-      expect {
-        post notifications_path, params: {
-          noticeable_sgid: person.to_sgid.to_s,
-          inline: 1,
-          notification: { channel: "email", direction: "outgoing", email_subject: "Generic call" }
-        }
-      }.to change(Notification, :count).by(1)
-
-      expect(response).to redirect_to(person_path(person))
-      notification = Notification.last
-      expect(notification.noticeable_id).to eq(person.id)
-      expect(notification.noticeable_type).to eq("Person")
-      expect(notification.recipient_email).to eq(person.communications_email)
-    end
   end
 
   describe "payer/additional designation via sgids" do

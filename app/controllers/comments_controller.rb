@@ -62,14 +62,20 @@ class CommentsController < ApplicationController
       if params[:inline].present?
         respond_to do |format|
           format.turbo_stream
-          format.html { redirect_to helpers.inline_record_path(@commentable, fallback: comments_path), notice: "Comment created successfully." }
+          format.html { redirect_to comment_path(@comment), notice: "Comment created successfully." }
         end
       else
         @created_comment = @comment
         setup_aggregated_context if aggregated?
         respond_to do |format|
           format.turbo_stream
-          format.html { redirect_to after_create_html_path, notice: "Comment created successfully." }
+          format.html do
+            if params[:commentable_sgid].present? && !aggregated? && params[:for_person_id].blank?
+              redirect_to comment_path(@comment), notice: "Comment created successfully."
+            else
+              redirect_to after_create_html_path, notice: "Comment created successfully."
+            end
+          end
         end
       end
     elsif params[:inline].present?
@@ -77,6 +83,8 @@ class CommentsController < ApplicationController
         format.turbo_stream { render :create, status: :unprocessable_content }
         format.html { render :new, status: :unprocessable_content }
       end
+    elsif params[:commentable_sgid].present? && !aggregated? && params[:for_person_id].blank?
+      render :new, status: :unprocessable_content
     else
       redirect_back_or_to root_path, alert: "Failed to create comment."
     end
@@ -93,13 +101,19 @@ class CommentsController < ApplicationController
       if params[:inline].present?
         respond_to do |format|
           format.turbo_stream
-          format.html { redirect_to helpers.inline_record_path(@comment.commentable, fallback: comment_path(@comment)), status: :see_other }
+          format.html { redirect_to comment_path(@comment), status: :see_other }
         end
       else
         setup_aggregated_context
         respond_to do |format|
           format.turbo_stream
-          format.html { redirect_back_or_to root_path }
+          format.html do
+            if params[:combined].present?
+              redirect_back_or_to root_path
+            else
+              redirect_to comment_path(@comment), status: :see_other
+            end
+          end
         end
       end
     elsif params[:inline].present?
@@ -111,7 +125,13 @@ class CommentsController < ApplicationController
       setup_aggregated_context
       respond_to do |format|
         format.turbo_stream
-        format.html { redirect_back_or_to root_path, alert: "Failed to update comment." }
+        format.html do
+          if params[:combined].present?
+            redirect_back_or_to root_path, alert: "Failed to update comment."
+          else
+            render :edit, status: :unprocessable_content
+          end
+        end
       end
     end
   end

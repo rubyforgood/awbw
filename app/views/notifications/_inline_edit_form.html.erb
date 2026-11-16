@@ -6,8 +6,8 @@
 
     <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
       <div class="w-40 shrink-0">
-        <%= f.datetime_field :created_at, value: inline_datetime_value(notification.created_at),
-                             class: inline_datetime_class, aria: { label: "When" } %>
+        <%= f.datetime_field :created_at, value: (notification.created_at || Time.current).strftime("%Y-%m-%dT%H:%M"),
+                             class: "w-full bg-white rounded-md border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", aria: { label: "When" } %>
       </div>
       <%= render "notifications/from_chip", notification: notification %>
       <%= render "notifications/inline_fields", f: f,

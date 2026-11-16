@@ -2,7 +2,7 @@
 <% record = @notification.noticeable %>
 <div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:notifications) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
   <div class="mb-4">
-    <%= link_to "← Back", inline_record_path(record, fallback: notifications_path),
+    <%= link_to "← Back", notification_path(@notification),
                 class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
@@ -11,8 +11,7 @@
   <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
     <%= render "notifications/page_form", notification: @notification, record: record,
                url: notification_path(@notification),
-               cancel_path: inline_record_path(record, fallback: notifications_path),
-               inline: true %>
+               cancel_path: notification_path(@notification) %>
     <%= render "shared/audit_info", resource: @notification %>
   </div>
 </div>

@@ -2,7 +2,7 @@
 <div class="mx-auto max-w-3xl">
   <div class="mb-3">
     <% if @noticeable %>
-      <%= link_to inline_record_path(@noticeable, fallback: notifications_path), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <%= link_to notifications_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Back
       <% end %>
     <% else %>
@@ -25,8 +25,8 @@
     <% if @noticeable %>
       <%= render "notifications/page_form", notification: @notification, record: @noticeable,
                  url: notifications_path,
-                 cancel_path: inline_record_path(@noticeable, fallback: notifications_path),
-                 include_noticeable_sgid: true, inline: true %>
+                 cancel_path: notifications_path,
+                 include_noticeable_sgid: true %>
     <% else %>
     <%= simple_form_for @notification, url: notifications_path do |f| %>
       <%= render "shared/errors", resource: @notification if @notification.errors.any? %>

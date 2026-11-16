@@ -2,11 +2,11 @@
   <div class="flex flex-wrap items-center gap-2">
     <%= f.select :channel,
                  options_for_select(Notification::MANUAL_CHANNELS.map { |channel| [ channel.titleize, channel ] }, channel_default),
-                 { include_blank: false }, class: inline_select_class, aria: { label: "Channel" } %>
+                 { include_blank: false }, class: "w-32 bg-white rounded-md border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", aria: { label: "Channel" } %>
     <%= render "notifications/direction_checkbox", f: f, compact: true %>
   </div>
   <%= f.input_field :email_subject, as: :text, rows: 1, required: true, placeholder: "Topic or subject line",
-                    class: inline_field_class, aria: { label: "Subject" } %>
+                    class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", aria: { label: "Subject" } %>
   <%= f.input_field :email_body_text, as: :text, rows: 2, placeholder: "What happened? (e.g. left voicemail, sent reminder)",
-                    class: inline_field_class, aria: { label: "Body" } %>
+                    class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", aria: { label: "Body" } %>
 </div>
