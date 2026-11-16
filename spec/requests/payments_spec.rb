@@ -350,12 +350,12 @@ RSpec.describe "Payments", type: :request do
       get new_comment_path(commentable_sgid: payment.to_sgid.to_s),
           headers: { "Accept" => "text/vnd.turbo-stream.html" }
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("activity-new-form-slot", "comment[body]")
+      expect(response.body).to include("comments-and-communications-new-form-slot", "comment[body]")
 
       get new_notification_path(noticeable_sgid: payment.to_sgid.to_s),
           headers: { "Accept" => "text/vnd.turbo-stream.html" }
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("activity-new-form-slot", "notification[email_subject]")
+      expect(response.body).to include("comments-and-communications-new-form-slot", "notification[email_subject]")
     end
 
     it "creates a comment from the payment's add slot" do
@@ -367,8 +367,8 @@ RSpec.describe "Payments", type: :request do
                             headers: { "Accept" => "text/vnd.turbo-stream.html" }
       }.to change { payment.comments.count }.by(1)
 
-      expect(response.body).to include("activity-list", "Added inline")
-      expect(response.body).to include("activity-new-form-slot")
+      expect(response.body).to include("comments-and-communications-list", "Added inline")
+      expect(response.body).to include("comments-and-communications-new-form-slot")
     end
 
     it "logs a communication against the payment from its add slot" do
@@ -386,8 +386,8 @@ RSpec.describe "Payments", type: :request do
       expect(notification.noticeable_id).to eq(payment.id)
       expect(notification.noticeable_type).to eq("Payment")
       expect(notification.recipient_email).to eq(payment.communications_email)
-      expect(response.body).to include("activity-list", "Left a voicemail")
-      expect(response.body).to include("activity-new-form-slot")
+      expect(response.body).to include("comments-and-communications-list", "Left a voicemail")
+      expect(response.body).to include("comments-and-communications-new-form-slot")
     end
 
     it "re-renders a communication's inline edit form when its subject is blank" do

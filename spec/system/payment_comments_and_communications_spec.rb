@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "Payment activity inline add", type: :system, js: true do
+RSpec.describe "Payment comments & communications section", type: :system, js: true do
   let(:admin) { create(:user, :admin) }
   let(:person) { create(:person) }
   let!(:payment) { create(:payment, person:) }

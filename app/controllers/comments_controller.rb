@@ -59,7 +59,7 @@ class CommentsController < ApplicationController
     @comment = @commentable.comments.build(comment_params)
 
     if @comment.save
-      if inline_activity?
+      if record_section_create?
         respond_to do |format|
           format.turbo_stream
           format.html { redirect_to comment_path(@comment), notice: "Comment created successfully." }
@@ -72,7 +72,7 @@ class CommentsController < ApplicationController
           format.html { redirect_to after_create_html_path, notice: "Comment created successfully." }
         end
       end
-    elsif inline_activity?
+    elsif record_section_create?
       respond_to do |format|
         format.turbo_stream { render :create, status: :unprocessable_content }
         format.html { render :new, status: :unprocessable_content }
@@ -94,14 +94,14 @@ class CommentsController < ApplicationController
       respond_to do |format|
         format.turbo_stream
         format.html do
-          if activity_update?
+          if record_section_update?
             redirect_to comment_path(@comment), status: :see_other
           else
             redirect_back_or_to root_path
           end
         end
       end
-    elsif activity_update?
+    elsif record_section_update?
       respond_to do |format|
         format.turbo_stream { render :edit, status: :unprocessable_content }
         format.html { render :edit, status: :unprocessable_content }
@@ -135,11 +135,15 @@ class CommentsController < ApplicationController
     params[:aggregated].present?
   end
 
-  def inline_activity?
+  # A create from the record's comments & communications section: the signed
+  # sgid names the record, and there is no person-feed context.
+  def record_section_create?
     params[:commentable_sgid].present? && !aggregated? && params[:for_person_id].blank?
   end
 
-  def activity_update?
+  # An update from that same record section (inline row or full-page form), not
+  # the combined/aggregated feeds or a live toggle.
+  def record_section_update?
     params[:combined].blank? && params[:aggregated].blank? && params[:toggle].blank?
   end
 

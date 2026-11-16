@@ -1,17 +1,17 @@
 <% if @aggregator_person.blank? %>
   <% record = @comment.commentable %>
   <% if @comment.errors.any? %>
-    <%= turbo_stream.update "activity-new-form-slot" do %>
+    <%= turbo_stream.update "comments-and-communications-new-form-slot" do %>
       <%= render "comments/inline_new_form", comment: @comment, record: record,
                  url: comments_path,
                  cancel_path: new_comment_path(commentable_sgid: record.to_sgid.to_s, cancel: 1) %>
     <% end %>
   <% else %>
-    <%= turbo_stream.update "activity-new-form-slot", "" %>
-    <%= turbo_stream.prepend "activity-list" do %>
+    <%= turbo_stream.update "comments-and-communications-new-form-slot", "" %>
+    <%= turbo_stream.prepend "comments-and-communications-list" do %>
       <%= render "comments/inline_row", comment: @comment %>
     <% end %>
-    <%= turbo_stream.remove "activity-list-empty" %>
+    <%= turbo_stream.remove "comments-and-communications-list-empty" %>
   <% end %>
 <% elsif @aggregator_person %>
   <%= turbo_stream.prepend "aggregated_comments_list" do %>
