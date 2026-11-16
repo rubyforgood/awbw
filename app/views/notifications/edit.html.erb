@@ -9,8 +9,10 @@
   <h1 class="text-primary mb-6 font-display text-2xl font-bold">Edit communication</h1>
 
   <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-    <%= render "notifications/inline_form", notification: @notification, record: record,
-               frame_id: dom_id(@notification, :inline) %>
+    <%= render "notifications/page_form", notification: @notification, record: record,
+               url: notification_path(@notification),
+               cancel_path: inline_record_path(record, fallback: notifications_path),
+               inline: true %>
     <%= render "shared/audit_info", resource: @notification %>
   </div>
 </div>

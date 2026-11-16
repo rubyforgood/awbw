@@ -316,43 +316,47 @@ RSpec.describe "Payments", type: :request do
 
       get payment_path(payment)
 
-      expect(response.body).to include("inline_comment_#{comment.id}", "inline_notification_#{notification.id}")
+      expect(response.body).to include("comment_#{comment.id}", "notification_#{notification.id}")
       expect(response.body).to include(edit_comment_path(comment))
       expect(response.body).to include(edit_notification_path(notification))
       expect(response.body).to include("comment[flagged]")
     end
 
 
-    it "saves an inline comment edit and returns to the payment" do
+    it "saves an inline comment edit" do
       payment = create(:payment, person:)
       comment = create(:comment, commentable: payment, body: "Original")
 
-      patch comment_path(comment), params: { comment: { body: "Updated" }, inline: 1 }
+      patch comment_path(comment), params: { comment: { body: "Updated" }, inline: 1 },
+            headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
-      expect(response).to redirect_to(payment_path(payment))
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("comment_#{comment.id}", "Updated")
       expect(comment.reload.body).to eq("Updated")
     end
 
-    it "returns the read-only comment row when the payment frame reloads it" do
+    it "returns the read-only comment row when Cancel is clicked" do
       payment = create(:payment, person:)
       comment = create(:comment, commentable: payment, body: "Original")
 
-      get comment_path(comment), headers: { "Turbo-Frame" => "inline_comment_#{comment.id}" }
+      get comment_path(comment), headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("inline_comment_#{comment.id}", "Original", "Edit")
+      expect(response.body).to include("comment_#{comment.id}", "Original", "Edit")
     end
 
-    it "renders the inline add forms without requiring a page visit" do
+    it "renders the inline add forms in the add slot" do
       payment = create(:payment, person:)
 
-      get new_comment_path(commentable_sgid: payment.to_sgid.to_s)
+      get new_comment_path(commentable_sgid: payment.to_sgid.to_s),
+          headers: { "Accept" => "text/vnd.turbo-stream.html" }
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("activity-new-slot", "New comment")
+      expect(response.body).to include("activity-new-form-slot", "comment[body]")
 
-      get new_notification_path(noticeable_sgid: payment.to_sgid.to_s)
+      get new_notification_path(noticeable_sgid: payment.to_sgid.to_s),
+          headers: { "Accept" => "text/vnd.turbo-stream.html" }
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("activity-new-slot", "New communication")
+      expect(response.body).to include("activity-new-form-slot", "notification[email_subject]")
     end
 
 
@@ -362,11 +366,11 @@ RSpec.describe "Payments", type: :request do
       expect {
         post comments_path, params: { comment: { body: "Added inline" },
                                       commentable_sgid: payment.to_sgid.to_s, inline: 1 },
-                            headers: { "Turbo-Frame" => "activity-new-slot" }
+                            headers: { "Accept" => "text/vnd.turbo-stream.html" }
       }.to change { payment.comments.count }.by(1)
 
       expect(response.body).to include("activity-list", "Added inline")
-      expect(response.body).to include("activity-new-slot")
+      expect(response.body).to include("activity-new-form-slot")
     end
 
     it "logs a communication against the payment from its add slot" do
@@ -378,7 +382,7 @@ RSpec.describe "Payments", type: :request do
           noticeable_sgid: payment.to_sgid.to_s,
           inline: 1,
           notification: { channel: "email", direction: "outgoing", email_subject: "Left a voicemail" }
-        }, headers: { "Turbo-Frame" => "activity-new-slot" }
+        }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
       }.to change(Notification, :count).by(1)
 
       notification = Notification.last
@@ -386,22 +390,23 @@ RSpec.describe "Payments", type: :request do
       expect(notification.noticeable_type).to eq("Payment")
       expect(notification.recipient_email).to eq(payment.communications_email)
       expect(response.body).to include("activity-list", "Left a voicemail")
-      expect(response.body).to include("activity-new-slot")
+      expect(response.body).to include("activity-new-form-slot")
     end
 
 
 
 
-    it "re-renders a communication's edit frame when its subject is blank" do
+    it "re-renders a communication's inline edit form when its subject is blank" do
       payment = create(:payment, person:)
       notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
                                            email_subject: "Called about the check", recipient_email: person.email)
 
       patch notification_path(notification),
-            params: { notification: { email_subject: "" }, inline: 1 }
+            params: { notification: { email_subject: "" }, inline: 1 },
+            headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
       expect(response).to have_http_status(:unprocessable_content)
-      expect(response.body).to include("inline_notification_#{notification.id}")
+      expect(response.body).to include("notification_#{notification.id}", "notification[email_subject]")
     end
 
     it "files a comment against another record through the signed context" do

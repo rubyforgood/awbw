@@ -24,6 +24,11 @@ class NotificationsController < ApplicationController
     authorize!
     @notification = Notification.new
     @noticeable = inline_noticeable
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
   end
 
   # Log a communication by hand against a person — mirrors the nested
@@ -45,13 +50,23 @@ class NotificationsController < ApplicationController
 
   def show
     authorize! @notification
-    track_view @notification
+
+    respond_to do |format|
+      format.html { track_view @notification }
+      format.turbo_stream
+    end
   end
 
   def edit
     authorize! @notification
     unless @notification.manual_log?
       redirect_to @notification, alert: "Only manually logged communications can be edited."
+      return
+    end
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
     end
   end
 
@@ -67,8 +82,10 @@ class NotificationsController < ApplicationController
       combined_feed_person
 
       if params[:inline].present?
-        redirect_to helpers.inline_record_path(@notification.noticeable, fallback: notifications_path),
-                    status: :see_other
+        respond_to do |format|
+          format.turbo_stream
+          format.html { redirect_to helpers.inline_record_path(@notification.noticeable, fallback: notifications_path), status: :see_other }
+        end
       else
         respond_to do |format|
           format.turbo_stream
@@ -76,7 +93,10 @@ class NotificationsController < ApplicationController
         end
       end
     elsif params[:inline].present?
-      render :edit, status: :unprocessable_content
+      respond_to do |format|
+        format.turbo_stream { render :edit, status: :unprocessable_content }
+        format.html { render :edit, status: :unprocessable_content }
+      end
     else
       respond_to do |format|
         format.turbo_stream { head :unprocessable_content }
@@ -127,9 +147,7 @@ class NotificationsController < ApplicationController
     record = inline_noticeable
     return create_inline_for(record) if record
 
-    @notification = Notification.new(notification_params)
-    @notification.errors.add(:base, "Select a record to log this communication against")
-    render :new, status: :unprocessable_content
+    redirect_to notifications_path, alert: "Select a record to log this communication against"
   end
 
   def create_for_person
@@ -163,14 +181,15 @@ class NotificationsController < ApplicationController
     @notification.recipient_email = record.communications_email.presence || "n/a"
 
     if @notification.save
-      if turbo_frame_request?
-        render :create, formats: :turbo_stream
-      else
-        redirect_to helpers.inline_record_path(record, fallback: notifications_path),
-                    notice: "Communication logged."
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to helpers.inline_record_path(record, fallback: notifications_path), notice: "Communication logged." }
       end
     else
-      render :new, status: :unprocessable_content
+      respond_to do |format|
+        format.turbo_stream { render :create, status: :unprocessable_content }
+        format.html { render :new, status: :unprocessable_content }
+      end
     end
   end
 

@@ -1,0 +1,8 @@
+<div class="flex min-w-0 grow items-start gap-x-2">
+  <div class="w-1/3 shrink-0">
+    <%= f.input_field :topic, placeholder: "Topic", class: inline_field_class %>
+    <p class="mt-1 text-xs text-gray-500">Reason for this note</p>
+  </div>
+  <%= f.input_field :body, as: :text, rows: 2, required: true, placeholder: "Type your comment",
+                    class: "#{inline_field_class} grow" %>
+</div>

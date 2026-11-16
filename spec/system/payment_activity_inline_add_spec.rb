@@ -32,4 +32,19 @@ RSpec.describe "Payment activity inline add", type: :system, js: true do
     expect(page).not_to have_css("textarea[name='comment[body]']")
     expect(page).to have_link("Add comment")
   end
+
+  it "edits a comment inline" do
+    comment = create(:comment, commentable: payment, body: "Original")
+
+    visit payment_path(payment)
+
+    within("#comment_#{comment.id}") { click_on "Edit" }
+    expect(page).to have_css("textarea[name='comment[body]']")
+
+    find("textarea[name='comment[body]']").set("Updated inline")
+    click_on "Save"
+
+    expect(page).to have_text("Updated inline")
+    within("#comment_#{comment.id}") { expect(page).to have_link("Edit") }
+  end
 end

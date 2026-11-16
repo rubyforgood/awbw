@@ -1,0 +1,16 @@
+<%= simple_form_for comment, url: url, data: { turbo: false } do |f| %>
+  <%= render "shared/errors", resource: comment if comment.errors.any? %>
+  <%= hidden_field_tag :commentable_sgid, record.to_sgid.to_s if local_assigns[:include_commentable_sgid] %>
+  <%= hidden_field_tag :inline, 1 if local_assigns[:inline] %>
+
+  <div class="space-y-4">
+    <%= f.input :topic, label: "Topic", required: false, input_html: { class: "bg-white" } %>
+    <%= f.input :body, as: :text, label: "Comment", required: true,
+                input_html: { rows: 4, class: "bg-white" } %>
+  </div>
+
+  <div class="mt-6 flex items-center justify-end gap-3">
+    <%= link_to "Cancel", cancel_path, class: button_classes(:secondary_outline) %>
+    <%= f.button :submit, "Save", class: button_classes(:primary) %>
+  </div>
+<% end %>

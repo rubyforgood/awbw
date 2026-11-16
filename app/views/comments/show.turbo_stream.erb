@@ -1,0 +1,3 @@
+<%= turbo_stream.replace dom_id(@comment) do %>
+  <%= render "comments/inline_row", comment: @comment %>
+<% end %>

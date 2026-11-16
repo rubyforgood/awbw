@@ -1,4 +1,8 @@
-<% if params[:combined] %>
+<% if params[:inline].present? %>
+  <%= turbo_stream.replace dom_id(@comment) do %>
+    <%= render "comments/inline_row", comment: @comment %>
+  <% end %>
+<% elsif params[:combined] %>
   <%= turbo_stream.replace dom_id(@comment) do %>
     <%= render "comments_and_communications/comment_row", entry: @comment, person: @aggregator_person, record_targets: @comment_targets %>
   <% end %>

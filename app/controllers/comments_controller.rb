@@ -29,18 +29,29 @@ class CommentsController < ApplicationController
   def show
     authorize! @comment
 
-    if turbo_frame_request?
-      render partial: "comments/inline_row", locals: { comment: @comment }
+    respond_to do |format|
+      format.html
+      format.turbo_stream
     end
   end
 
   def new
     authorize!
     @comment = Comment.new
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
   end
 
   def edit
     authorize! @comment
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
   end
 
   def create
@@ -49,7 +60,10 @@ class CommentsController < ApplicationController
 
     if @comment.save
       if params[:inline].present?
-        create_inline
+        respond_to do |format|
+          format.turbo_stream
+          format.html { redirect_to helpers.inline_record_path(@commentable, fallback: comments_path), notice: "Comment created successfully." }
+        end
       else
         @created_comment = @comment
         setup_aggregated_context if aggregated?
@@ -59,7 +73,10 @@ class CommentsController < ApplicationController
         end
       end
     elsif params[:inline].present?
-      render :new, status: :unprocessable_content
+      respond_to do |format|
+        format.turbo_stream { render :create, status: :unprocessable_content }
+        format.html { render :new, status: :unprocessable_content }
+      end
     else
       redirect_back_or_to root_path, alert: "Failed to create comment."
     end
@@ -74,8 +91,10 @@ class CommentsController < ApplicationController
       flash.now[:notice] = "Saved" if params[:toggle].present?
 
       if params[:inline].present?
-        redirect_to helpers.inline_record_path(@comment.commentable, fallback: comment_path(@comment)),
-                    status: :see_other
+        respond_to do |format|
+          format.turbo_stream
+          format.html { redirect_to helpers.inline_record_path(@comment.commentable, fallback: comment_path(@comment)), status: :see_other }
+        end
       else
         setup_aggregated_context
         respond_to do |format|
@@ -84,7 +103,10 @@ class CommentsController < ApplicationController
         end
       end
     elsif params[:inline].present?
-      render :edit, status: :unprocessable_content
+      respond_to do |format|
+        format.turbo_stream { render :edit, status: :unprocessable_content }
+        format.html { render :edit, status: :unprocessable_content }
+      end
     else
       setup_aggregated_context
       respond_to do |format|
@@ -122,15 +144,6 @@ class CommentsController < ApplicationController
       comments_and_communications_path(person_id: params[:for_person_id])
     else
       request.referer || root_path
-    end
-  end
-
-  def create_inline
-    if turbo_frame_request?
-      render :create, formats: :turbo_stream
-    else
-      redirect_to helpers.inline_record_path(@commentable, fallback: comments_path),
-                  notice: "Comment created successfully."
     end
   end
 

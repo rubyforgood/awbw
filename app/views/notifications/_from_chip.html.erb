@@ -1,0 +1,17 @@
+<% if notification.persisted? %>
+  <% decorated = notification.decorate %>
+  <% name = decorated.from_name %>
+  <% first = name.to_s.split.first.presence || name %>
+  <% color = chip_color(notification.incoming? ? decorated.contact_person&.id : notification.sender_id) %>
+  <% title = decorated.from_title.presence || name %>
+<% else %>
+  <% name = current_user&.full_name %>
+  <% first = current_user&.person&.first_name || current_user&.name.to_s.split.first %>
+  <% color = chip_color(current_user&.id) %>
+  <% title = name %>
+<% end %>
+<span class="inline-flex w-20 shrink-0 items-center">
+  <span class="<%= color[0] %> <%= color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= title %>">
+    <%= truncate(first.presence || "--", length: 10, omission: "..") %>
+  </span>
+</span>

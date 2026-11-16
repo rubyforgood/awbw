@@ -23,13 +23,10 @@
 
   <div class="rounded-lg bg-white p-6">
     <% if @noticeable %>
-      <% frame_id = "activity-new-slot" %>
-      <% if params[:cancel].present? %>
-        <%= turbo_frame_tag frame_id do %><% end %>
-      <% else %>
-        <%= render "notifications/inline_form", notification: @notification, record: @noticeable,
-                   frame_id: frame_id, cancel_slot: (turbo_frame_request? ? frame_id : nil) %>
-      <% end %>
+      <%= render "notifications/page_form", notification: @notification, record: @noticeable,
+                 url: notifications_path,
+                 cancel_path: inline_record_path(@noticeable, fallback: notifications_path),
+                 include_noticeable_sgid: true, inline: true %>
     <% else %>
     <%= simple_form_for @notification, url: notifications_path do |f| %>
       <%= render "shared/errors", resource: @notification if @notification.errors.any? %>

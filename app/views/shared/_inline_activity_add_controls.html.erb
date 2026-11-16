@@ -1,7 +1,7 @@
 <div class="flex flex-wrap items-center gap-2">
   <% if allowed_to?(:manage?, Comment) %>
     <%= link_to new_comment_path(commentable_sgid: record.to_sgid.to_s),
-          data: { turbo_frame: "activity-new-slot" },
+          data: { turbo_stream: true },
           class: button_classes(:secondary_outline, size: :sm, extra: "inline-flex items-center gap-1.5") do %>
       <i class="fa-solid fa-plus text-2xs"></i>
       <%= t("communications.add_comment") %>
@@ -9,7 +9,7 @@
   <% end %>
   <% if record.respond_to?(:communications_scope) && allowed_to?(:create?, Notification) %>
     <%= link_to new_notification_path(noticeable_sgid: record.to_sgid.to_s),
-          data: { turbo_frame: "activity-new-slot" },
+          data: { turbo_stream: true },
           class: button_classes(:secondary_outline, size: :sm, extra: "inline-flex items-center gap-1.5") do %>
       <i class="fa-solid fa-plus text-2xs"></i>
       <%= t("communications.add") %>
@@ -17,4 +17,4 @@
   <% end %>
 </div>
 
-<%= turbo_frame_tag "activity-new-slot", class: "mt-2 block" do %><% end %>
+<div id="activity-new-form-slot" class="mt-2"></div>
