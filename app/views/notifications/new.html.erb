@@ -24,11 +24,11 @@
   <div class="rounded-lg bg-white p-6">
     <% if @noticeable %>
       <%= render "notifications/page_form", notification: @notification, record: @noticeable,
-                 url: notifications_path,
+                 url: notifications_path(format: :html),
                  cancel_path: notifications_path,
                  include_noticeable_sgid: true %>
     <% else %>
-    <%= simple_form_for @notification, url: notifications_path do |f| %>
+    <%= simple_form_for @notification, url: notifications_path(format: :html) do |f| %>
       <%= render "shared/errors", resource: @notification if @notification.errors.any? %>
 
       <div class="space-y-5">

@@ -8,7 +8,7 @@
 
   <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
     <%= render "comments/page_form", comment: @comment, record: @commentable,
-               url: comments_path,
+               url: comments_path(format: :html),
                cancel_path: comments_path,
                include_commentable_sgid: true %>
   </div>

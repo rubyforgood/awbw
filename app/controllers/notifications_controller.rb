@@ -41,7 +41,7 @@ class NotificationsController < ApplicationController
   def create
     authorize!
 
-    if params[:inline].present? || (params[:noticeable_sgid].present? && params[:person_id].blank?)
+    if params[:noticeable_sgid].present? && params[:person_id].blank?
       create_inline
     else
       create_for_person
@@ -53,7 +53,9 @@ class NotificationsController < ApplicationController
 
     respond_to do |format|
       format.html { track_view @notification }
-      format.turbo_stream
+      # Turbo reuses the form submission's stream Accept header on the success
+      # redirect, so only the inline Cancel link asks for the row fragment.
+      format.turbo_stream if params[:cancel].present?
     end
   end
 
@@ -81,28 +83,27 @@ class NotificationsController < ApplicationController
       track_incoming_body_change(body_was)
       combined_feed_person
 
-      if params[:inline].present?
-        respond_to do |format|
-          format.turbo_stream
-          format.html { redirect_to notification_path(@notification), status: :see_other }
-        end
-      else
-        respond_to do |format|
-          format.turbo_stream
-          format.html { redirect_to notification_path(@notification), status: :see_other }
-          format.any { head :ok }
-        end
-      end
-    elsif params[:inline].present?
       respond_to do |format|
-        format.turbo_stream { render :edit, status: :unprocessable_content }
-        format.html { render :edit, status: :unprocessable_content }
+        format.turbo_stream
+        format.html do
+          if params[:combined].present? || params[:toggle].present?
+            redirect_back_or_to notification_path(@notification)
+          else
+            redirect_to notification_path(@notification), status: :see_other
+          end
+        end
+        format.any { head :ok }
+      end
+    elsif params[:combined].present? || params[:toggle].present?
+      respond_to do |format|
+        format.turbo_stream { head :unprocessable_content }
+        format.html { redirect_back_or_to notification_path(@notification), alert: "Failed to update communication." }
+        format.any { head :unprocessable_content }
       end
     else
       respond_to do |format|
-        format.turbo_stream { head :unprocessable_content }
+        format.turbo_stream { render :edit, status: :unprocessable_content }
         format.html { render :edit, status: :unprocessable_content }
-        format.any { head :unprocessable_content }
       end
     end
   end

@@ -1,4 +1,4 @@
-<% if params[:inline].present? && @comment.commentable %>
+<% if @comment.commentable && @aggregator_person.blank? %>
   <% record = @comment.commentable %>
   <% if @comment.errors.any? %>
     <%= turbo_stream.update "activity-new-form-slot" do %>

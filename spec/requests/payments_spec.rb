@@ -327,7 +327,7 @@ RSpec.describe "Payments", type: :request do
       payment = create(:payment, person:)
       comment = create(:comment, commentable: payment, body: "Original")
 
-      patch comment_path(comment), params: { comment: { body: "Updated" }, inline: 1 },
+      patch comment_path(comment), params: { comment: { body: "Updated" } },
             headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
       expect(response).to have_http_status(:ok)
@@ -339,7 +339,7 @@ RSpec.describe "Payments", type: :request do
       payment = create(:payment, person:)
       comment = create(:comment, commentable: payment, body: "Original")
 
-      get comment_path(comment), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      get comment_path(comment, cancel: 1), headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("comment_#{comment.id}", "Original", "Edit")
@@ -365,7 +365,7 @@ RSpec.describe "Payments", type: :request do
 
       expect {
         post comments_path, params: { comment: { body: "Added inline" },
-                                      commentable_sgid: payment.to_sgid.to_s, inline: 1 },
+                                      commentable_sgid: payment.to_sgid.to_s },
                             headers: { "Accept" => "text/vnd.turbo-stream.html" }
       }.to change { payment.comments.count }.by(1)
 
@@ -380,7 +380,6 @@ RSpec.describe "Payments", type: :request do
       expect {
         post notifications_path, params: {
           noticeable_sgid: payment.to_sgid.to_s,
-          inline: 1,
           notification: { channel: "email", direction: "outgoing", email_subject: "Left a voicemail" }
         }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
       }.to change(Notification, :count).by(1)
@@ -402,7 +401,7 @@ RSpec.describe "Payments", type: :request do
                                            email_subject: "Called about the check", recipient_email: person.email)
 
       patch notification_path(notification),
-            params: { notification: { email_subject: "" }, inline: 1 },
+            params: { notification: { email_subject: "" } },
             headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
       expect(response).to have_http_status(:unprocessable_content)

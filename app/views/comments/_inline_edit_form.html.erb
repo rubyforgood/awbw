@@ -2,7 +2,6 @@
 <div class="rounded-md border <%= comment_card_class(warning: comment.body&.include?("[AGE_RANGE_DATA]")) %> px-3 py-2">
   <%= simple_form_for comment, url: url do |f| %>
     <%= render "shared/errors", resource: comment if comment.errors.any? %>
-    <%= hidden_field_tag :inline, 1 %>
 
     <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
       <%= render "comments_and_communications/entry_date", time: comment.created_at || Time.current %>
@@ -11,7 +10,7 @@
 
       <div class="flex shrink-0 items-center gap-x-2">
         <%= f.button :submit, "Save", class: button_classes(:secondary_outline, size: :sm) %>
-        <%= link_to "Cancel", comment_path(comment), class: "text-sm #{eyebrow_link_class}", data: { turbo_stream: true } %>
+        <%= link_to "Cancel", comment_path(comment, cancel: 1), class: "text-sm #{eyebrow_link_class}", data: { turbo_stream: true } %>
         <%= render "comments/delete_link", comment: comment, class_name: "shrink-0 whitespace-nowrap" %>
       </div>
     </div>

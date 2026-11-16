@@ -1,4 +1,4 @@
-<%= simple_form_for notification, url: url, data: { turbo: false } do |f| %>
+<%= simple_form_for notification, url: url do |f| %>
   <%= render "shared/errors", resource: notification if notification.errors.any? %>
   <%= hidden_field_tag :noticeable_sgid, record.to_sgid.to_s if local_assigns[:include_noticeable_sgid] %>
 

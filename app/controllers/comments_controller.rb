@@ -31,7 +31,7 @@ class CommentsController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.turbo_stream
+      format.turbo_stream if params[:cancel].present?
     end
   end
 
@@ -59,7 +59,7 @@ class CommentsController < ApplicationController
     @comment = @commentable.comments.build(comment_params)
 
     if @comment.save
-      if params[:inline].present?
+      if inline_activity?
         respond_to do |format|
           format.turbo_stream
           format.html { redirect_to comment_path(@comment), notice: "Comment created successfully." }
@@ -69,22 +69,14 @@ class CommentsController < ApplicationController
         setup_aggregated_context if aggregated?
         respond_to do |format|
           format.turbo_stream
-          format.html do
-            if params[:commentable_sgid].present? && !aggregated? && params[:for_person_id].blank?
-              redirect_to comment_path(@comment), notice: "Comment created successfully."
-            else
-              redirect_to after_create_html_path, notice: "Comment created successfully."
-            end
-          end
+          format.html { redirect_to after_create_html_path, notice: "Comment created successfully." }
         end
       end
-    elsif params[:inline].present?
+    elsif inline_activity?
       respond_to do |format|
         format.turbo_stream { render :create, status: :unprocessable_content }
         format.html { render :new, status: :unprocessable_content }
       end
-    elsif params[:commentable_sgid].present? && !aggregated? && params[:for_person_id].blank?
-      render :new, status: :unprocessable_content
     else
       redirect_back_or_to root_path, alert: "Failed to create comment."
     end
@@ -97,26 +89,19 @@ class CommentsController < ApplicationController
 
     if @comment.update(comment_params)
       flash.now[:notice] = "Saved" if params[:toggle].present?
+      setup_aggregated_context
 
-      if params[:inline].present?
-        respond_to do |format|
-          format.turbo_stream
-          format.html { redirect_to comment_path(@comment), status: :see_other }
-        end
-      else
-        setup_aggregated_context
-        respond_to do |format|
-          format.turbo_stream
-          format.html do
-            if params[:combined].present?
-              redirect_back_or_to root_path
-            else
-              redirect_to comment_path(@comment), status: :see_other
-            end
+      respond_to do |format|
+        format.turbo_stream
+        format.html do
+          if activity_update?
+            redirect_to comment_path(@comment), status: :see_other
+          else
+            redirect_back_or_to root_path
           end
         end
       end
-    elsif params[:inline].present?
+    elsif activity_update?
       respond_to do |format|
         format.turbo_stream { render :edit, status: :unprocessable_content }
         format.html { render :edit, status: :unprocessable_content }
@@ -125,13 +110,7 @@ class CommentsController < ApplicationController
       setup_aggregated_context
       respond_to do |format|
         format.turbo_stream
-        format.html do
-          if params[:combined].present?
-            redirect_back_or_to root_path, alert: "Failed to update comment."
-          else
-            render :edit, status: :unprocessable_content
-          end
-        end
+        format.html { redirect_back_or_to root_path, alert: "Failed to update comment." }
       end
     end
   end
@@ -154,6 +133,14 @@ class CommentsController < ApplicationController
   # still resolves the real commentable from the route rather than the person.
   def aggregated?
     params[:aggregated].present?
+  end
+
+  def inline_activity?
+    params[:commentable_sgid].present? && !aggregated? && params[:for_person_id].blank?
+  end
+
+  def activity_update?
+    params[:combined].blank? && params[:aggregated].blank? && params[:toggle].blank?
   end
 
   # The combined feed's composer posts a plain (non-stream) comment and names the

@@ -2,7 +2,6 @@
   <%= simple_form_for comment, url: url do |f| %>
     <%= render "shared/errors", resource: comment if comment.errors.any? %>
     <%= hidden_field_tag :commentable_sgid, record.to_sgid.to_s %>
-    <%= hidden_field_tag :inline, 1 %>
 
     <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
       <%= render "comments_and_communications/entry_date", time: Time.current %>

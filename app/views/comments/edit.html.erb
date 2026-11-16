@@ -9,7 +9,7 @@
 
   <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
     <%= render "comments/page_form", comment: @comment, record: record,
-               url: comment_path(@comment),
+               url: comment_path(@comment, format: :html),
                cancel_path: comment_path(@comment) %>
     <%= render "shared/audit_info", resource: @comment %>
   </div>
