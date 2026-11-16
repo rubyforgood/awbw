@@ -15,14 +15,14 @@
   </div>
 
   <div class="space-y-2 p-4">
-    <%= render "shared/comments_and_communications_add_controls", record: record %>
+    <%= render "comments_and_communications/record_section_add_controls", record: record %>
 
     <div id="comments-and-communications-list" class="flex flex-col gap-2">
       <% entries.each do |entry| %>
         <% if entry.is_a?(Comment) %>
-          <%= render "comments/inline_row", comment: entry %>
+          <%= render "comments/record_section_row", comment: entry %>
         <% else %>
-          <%= render "notifications/inline_row", notification: entry %>
+          <%= render "notifications/record_section_row", notification: entry %>
         <% end %>
       <% end %>
     </div>

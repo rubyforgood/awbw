@@ -6,7 +6,7 @@
     <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
       <%= render "comments_and_communications/entry_date", time: Time.current %>
       <%= render "comments/author_chip", created_user: current_user, updated_user: nil %>
-      <%= render "comments/inline_fields", f: f %>
+      <%= render "comments/record_section_fields", f: f %>
 
       <div class="flex shrink-0 items-center gap-x-2">
         <%= f.button :submit, "Save", class: button_classes(:secondary_outline, size: :sm) %>

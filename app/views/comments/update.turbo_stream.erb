@@ -12,7 +12,7 @@
   <% end %>
 <% else %>
   <%= turbo_stream.replace dom_id(@comment) do %>
-    <%= render "comments/inline_row", comment: @comment %>
+    <%= render "comments/record_section_row", comment: @comment %>
   <% end %>
 <% end %>
 <%= turbo_flash %>

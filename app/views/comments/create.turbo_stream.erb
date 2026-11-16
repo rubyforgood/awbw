@@ -2,14 +2,14 @@
   <% record = @comment.commentable %>
   <% if @comment.errors.any? %>
     <%= turbo_stream.update "comments-and-communications-new-form-slot" do %>
-      <%= render "comments/inline_new_form", comment: @comment, record: record,
+      <%= render "comments/record_section_new_form", comment: @comment, record: record,
                  url: comments_path,
                  cancel_path: new_comment_path(commentable_sgid: record.to_sgid.to_s, cancel: 1) %>
     <% end %>
   <% else %>
     <%= turbo_stream.update "comments-and-communications-new-form-slot", "" %>
     <%= turbo_stream.prepend "comments-and-communications-list" do %>
-      <%= render "comments/inline_row", comment: @comment %>
+      <%= render "comments/record_section_row", comment: @comment %>
     <% end %>
     <%= turbo_stream.remove "comments-and-communications-list-empty" %>
   <% end %>

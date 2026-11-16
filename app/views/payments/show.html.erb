@@ -108,7 +108,7 @@
       </dl>
     </section>
 
-    <%= render "shared/comments_and_communications_section", record: @payment, entries: @entries,
+    <%= render "comments_and_communications/record_section", record: @payment, entries: @entries,
                feed_person: @payment.person %>
 
     <% if @allocations.any? %>

@@ -12,7 +12,7 @@
   <% end %>
 <% else %>
   <%= turbo_stream.replace dom_id(@notification) do %>
-    <%= render "notifications/inline_row", notification: @notification %>
+    <%= render "notifications/record_section_row", notification: @notification %>
   <% end %>
 <% end %>
 <%= turbo_flash %>
