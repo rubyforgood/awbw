@@ -84,10 +84,10 @@ class PaymentsController < ApplicationController
     @payment = Payment.find(params[:id])
     authorize! @payment, with: PaymentPolicy
 
-    @comments = @payment.comments.includes(created_by: :person, updated_by: :person).to_a
-    @communications = authorized_scope(@payment.communications_scope, with: NotificationPolicy)
+    comments = @payment.comments.includes(created_by: :person, updated_by: :person).to_a
+    communications = authorized_scope(@payment.communications_scope, with: NotificationPolicy)
       .includes(sender: :person).to_a
-    @activity_entries = (@comments + @communications).sort_by { |entry| entry.created_at || Time.current }.reverse
+    @activity_entries = (comments + communications).sort_by { |entry| entry.created_at || Time.current }.reverse
 
     @allocations = @payment.allocations.includes(:allocatable).order(created_at: :desc).to_a
     # Registration rows name their registrant and event; allocatables are polymorphic,

@@ -308,7 +308,7 @@ RSpec.describe "Payments", type: :request do
       expect(comment.created_by).to eq(admin)
     end
 
-    it "renders each row in its own inline-edit frame, with live toggles" do
+    it "renders each row with an inline edit link and live toggles" do
       payment = create(:payment, person:)
       comment = create(:comment, commentable: payment, body: "Called about the remaining balance")
       notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
@@ -321,7 +321,6 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include(edit_notification_path(notification))
       expect(response.body).to include("comment[flagged]")
     end
-
 
     it "saves an inline comment edit" do
       payment = create(:payment, person:)
@@ -359,7 +358,6 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("activity-new-form-slot", "notification[email_subject]")
     end
 
-
     it "creates a comment from the payment's add slot" do
       payment = create(:payment, person:)
 
@@ -392,9 +390,6 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("activity-new-form-slot")
     end
 
-
-
-
     it "re-renders a communication's inline edit form when its subject is blank" do
       payment = create(:payment, person:)
       notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
@@ -407,7 +402,6 @@ RSpec.describe "Payments", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("notification_#{notification.id}", "notification[email_subject]")
     end
-
 
   end
 
