@@ -280,6 +280,12 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/grants/edit.html.erb"                   => "admin-only bg-blue-100",
     "app/views/organizations/edit.html.erb"            => "admin-only bg-blue-100",
     "app/views/payments/edit.html.erb"                 => "admin-only bg-blue-100",
+    "app/views/payments/index.html.erb"                => "admin-only bg-blue-100",
+    "app/views/payments/show.html.erb"                 => "admin-only bg-blue-100",
+    # new.html.erb renders this form, so the marker lives in the partial
+    "app/views/payments/_form.html.erb"                => "admin-only bg-blue-100",
+    "app/views/allocations/new.html.erb"               => "admin-only bg-blue-100",
+    "app/views/refunds/new.html.erb"                   => "admin-only bg-blue-100",
     "app/views/professional_licenses/index.html.erb"   => "admin-only bg-blue-100",
     "app/views/professional_licenses/new.html.erb"     => "admin-only bg-blue-100",
     "app/views/professional_licenses/edit.html.erb"    => "admin-only bg-blue-100",
