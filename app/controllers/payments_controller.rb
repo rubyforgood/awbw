@@ -6,13 +6,15 @@ class PaymentsController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 10
+    return unless turbo_frame_request?
 
-    if turbo_frame_request?
-      @payments = Payment.search_by_params(params).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
-      render :payments_results
-    else
-      @payments = Payment.search_by_params(params).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
-    end
+    filtered = Payment.search_by_params(params)
+    # Totals across every filtered payment, not just this page; the count doubles
+    # as the paginator's total so it isn't counted twice.
+    @totals = filtered.pick(Arel.sql("COUNT(*)"), Arel.sql("COALESCE(SUM(payments.amount_cents), 0)"), Arel.sql("COALESCE(SUM(payments.amount_cents_remaining), 0)"))
+    @payments = filtered.includes(:person, :organization).order(created_at: :desc)
+      .paginate(page: params[:page], per_page: per_page, total_entries: @totals.first)
+    render :payments_results
   end
 
   def new
@@ -80,7 +82,12 @@ class PaymentsController < ApplicationController
 
   def show
     @payment = Payment.find(params[:id])
-    @allocations = @payment.allocations.order(created_at: :desc)
+    @allocations = @payment.allocations.includes(:allocatable).order(created_at: :desc).to_a
+    # Registration rows name their registrant and event; allocatables are polymorphic,
+    # so preload those only on the registrations.
+    ActiveRecord::Associations::Preloader.new(
+      records: @allocations.map(&:allocatable).grep(EventRegistration), associations: %i[registrant event]
+    ).call
     @refunds = @payment.refunds.order(created_at: :desc)
     authorize! @payment, with: PaymentPolicy
   end
@@ -253,7 +260,7 @@ class PaymentsController < ApplicationController
   end
 
   def edit_payment_params
-    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id, :payer_sgid, :additional_designation_sgid, :filemaker_code)
+    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id, :payer_sgid, :additional_designation_sgid, :filemaker_code, :check_number, :memo)
   end
 
   def redirect_path_for(allocatable)
