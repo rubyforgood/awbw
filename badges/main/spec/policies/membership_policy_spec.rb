@@ -117,6 +117,12 @@ RSpec.describe MembershipPolicy, type: :policy do
       allow(Membership).to receive(:enabled?).and_return(false)
       expect(policy_for(user: owner)).not_to be_allowed_to(:enable_autopay?)
     end
+
+    it "denies a membership with renewal off" do
+      membership.update!(renewal_off_at: Time.current)
+
+      expect(policy_for(user: owner)).not_to be_allowed_to(:enable_autopay?)
+    end
   end
 
   describe "#disable_autopay?" do

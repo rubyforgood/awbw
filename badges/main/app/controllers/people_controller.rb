@@ -773,7 +773,6 @@ class PeopleController < ApplicationController
     return unless @membership
 
     @membership_invoices = membership_invoices_for_profile(@membership.object)
-    @membership_autopay_invoice = @membership.object.next_autopay_invoice
     @membership_has_card = @person.stripe_customer&.payment_methods&.exists? || false
   end
 

@@ -1,0 +1,16 @@
+Your membership invoice
+
+Hello <%= @person.first_name %>,
+
+<% if @custom_message %>
+<%= @custom_message %>
+<% end %>
+<% if @invoice -%>
+
+Invoice for <%= @invoice.start_date.strftime("%b %-d, %Y") %> - <%= @invoice.end_date.strftime("%b %-d, %Y") %>: <%= dollars_from_cents(@invoice.cost_cents) %>
+<% end -%>
+
+View your invoice: <%= @invoice_url %>
+
+Thank you,
+AWBW Staff

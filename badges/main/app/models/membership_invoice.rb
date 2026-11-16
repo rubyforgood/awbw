@@ -33,12 +33,12 @@ class MembershipInvoice < ApplicationRecord
     not_paid_in_full.where(start_date: ..as_of)
   }
 
-  scope :autopay_issued, ->(as_of = Date.current) {
-    where(start_date: ..(as_of + Membership.renewal_window_days))
+  scope :autopay_window, ->(as_of = Date.current) {
+    where(start_date: ..(as_of + Membership.autopay_window_days))
   }
 
   scope :autopay_chargeable, ->(as_of = Date.current) {
-    autopay_issued(as_of).where(start_date: (as_of - MembershipChargeAttempt::RETRY_WINDOW_DAYS)..)
+    autopay_window(as_of).where(start_date: (as_of - MembershipChargeAttempt::RETRY_WINDOW_DAYS)..)
   }
 
   scope :with_positive_allocation, -> {
@@ -121,12 +121,12 @@ class MembershipInvoice < ApplicationRecord
     start_date.present? && start_date > as_of
   end
 
-  def autopay_issued?(as_of = Date.current)
-    start_date.present? && start_date <= as_of + Membership.renewal_window_days
+  def in_autopay_window?(as_of = Date.current)
+    start_date.present? && start_date <= as_of + Membership.autopay_window_days
   end
 
   def autopay_chargeable?(as_of = Date.current)
-    autopay_issued?(as_of) &&
+    in_autopay_window?(as_of) &&
       start_date >= as_of - MembershipChargeAttempt::RETRY_WINDOW_DAYS
   end
 

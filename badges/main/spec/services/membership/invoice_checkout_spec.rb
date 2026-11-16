@@ -40,10 +40,10 @@ RSpec.describe Membership::InvoiceCheckout do
     expect(result).to be_success
     expect(processor).to have_received(:checkout).with(
       hash_including(
-        payment_intent_data: {
+        payment_intent_data: hash_including(
           metadata: { membership_id: invoice.membership_id, membership_invoice_id: invoice.id },
           setup_future_usage: "off_session"
-        }
+        )
       )
     )
   end

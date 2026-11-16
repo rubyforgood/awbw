@@ -12,6 +12,7 @@ class Membership < ApplicationRecord
 
   def self.annual_cost_cents = Setting.annual_membership_cents
   def self.renewal_window_days = Setting.membership_renewal_window_days
+  def self.autopay_window_days = Setting.membership_autopay_window_days
 
   DIRECTORY_STATUSES = %w[all active ending upcoming ended].freeze
 
@@ -76,14 +77,6 @@ class Membership < ApplicationRecord
 
   def next_invoice
     membership_invoices.where("start_date > ?", Date.current).order(:start_date).first
-  end
-
-  def next_autopay_invoice
-    membership_invoices
-      .not_paid_in_full
-      .autopay_issued
-      .order(:start_date)
-      .first
   end
 
   def invoice_coverage_start = membership_invoices.minimum(:start_date)
