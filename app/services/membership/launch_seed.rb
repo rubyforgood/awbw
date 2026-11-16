@@ -1,7 +1,6 @@
 # Creates the initial membership for every active facilitator with portal access.
 #
-# Two passes, judged on the day the task runs (we can't know who will still be an
-# active facilitator on the term's start date):
+# Two passes, judged on the day the task runs
 #
 #   * $0 pass — people actively facilitating at one of the supplied zero-cost orgs.
 #     Their membership is locked at $0, so it renews free until an admin changes it.
