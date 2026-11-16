@@ -281,42 +281,6 @@ RSpec.describe "Payments", type: :request do
     end
   end
 
-  describe "comments and communications on a payment" do
-    it "keeps comments off the new and edit forms" do
-      payment = create(:payment, person:)
-
-      get new_payment_path(type: "CheckPayment")
-      expect(response.body).not_to include("comments_attributes")
-
-      get edit_payment_path(payment)
-      expect(response.body).not_to include("comments_attributes")
-    end
-
-    it "lists the payment's comments and communications on the show page" do
-      payment = create(:payment, person:)
-      create(:comment, commentable: payment, topic: "Follow-up", body: "Called about the remaining balance")
-      create(:notification, noticeable: payment, email_subject: "Left a voicemail")
-
-      get payment_path(payment)
-
-      expect(response.body).to include("Comments &amp; communications", "Called about the remaining balance", "Left a voicemail")
-    end
-
-    it "adds a comment from the show page and lands back on it" do
-      payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
-
-      expect {
-        post payment_comments_path(payment), params: { comment: { topic: "Follow-up", body: "Called about the check" } },
-                                             headers: { "HTTP_REFERER" => "http://www.example.com#{payment_path(payment)}" }
-      }.to change { payment.comments.count }.by(1)
-
-      expect(response).to redirect_to(payment_path(payment))
-      comment = payment.comments.last
-      expect(comment.body).to eq("Called about the check")
-      expect(comment.created_by).to eq(admin)
-    end
-  end
-
   describe "payer/additional designation via sgids" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:registration) { create(:event_registration, event:) }

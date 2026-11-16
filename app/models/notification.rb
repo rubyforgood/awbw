@@ -87,7 +87,6 @@ class Notification < ApplicationRecord
     EventRegistration
     FormSubmission
     Grant
-    Payment
     Person
     ProfileChangeRequest
     Report
