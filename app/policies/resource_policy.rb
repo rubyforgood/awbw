@@ -5,8 +5,10 @@ class ResourcePolicy < ApplicationPolicy
     true
   end
 
+  # Publicly visible only counts once published (matching the publicly_visible
+  # scope), so an unpublished resource stays closed to guests by direct link.
   def show?
-    admin? || record.publicly_visible? || (authenticated? && record.published?)
+    admin? || (record.published? && (record.publicly_visible? || authenticated?))
   end
 
   def create?

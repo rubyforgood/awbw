@@ -8,6 +8,14 @@ RSpec.describe ResourcePolicy, type: :policy do
   let(:public_resource) do
     build_stubbed(
       :resource,
+      published: true,
+      publicly_visible: true
+    )
+  end
+
+  let(:unpublished_public_resource) do
+    build_stubbed(
+      :resource,
       published: false,
       publicly_visible: true
     )
@@ -81,6 +89,11 @@ RSpec.describe ResourcePolicy, type: :policy do
         expect(policy_for(record: public_resource, user: regular_user))
           .to be_allowed_to(:show?)
       end
+
+      it "cannot see a publicly visible resource that is unpublished" do
+        expect(policy_for(record: unpublished_public_resource, user: regular_user))
+          .not_to be_allowed_to(:show?)
+      end
     end
 
     context "guest" do
@@ -91,6 +104,11 @@ RSpec.describe ResourcePolicy, type: :policy do
 
       it "cannot see published-only resource" do
         expect(policy_for(record: published_resource, user: guest_user))
+          .not_to be_allowed_to(:show?)
+      end
+
+      it "cannot see a publicly visible resource that is unpublished" do
+        expect(policy_for(record: unpublished_public_resource, user: guest_user))
           .not_to be_allowed_to(:show?)
       end
     end
