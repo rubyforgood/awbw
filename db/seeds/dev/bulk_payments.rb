@@ -148,7 +148,7 @@ recorded_payment = ->(submission, kind:, amount_cents:, created_at:) do
     created_at: created_at
   }
   if kind == :check
-    CheckPayment.create!(**attrs, check_number: "CHK-BPD-#{submission.id}")
+    CheckPayment.create!(**attrs, check_number: "1000-#{submission.id}")
   else
     CashPayment.create!(**attrs)
   end
