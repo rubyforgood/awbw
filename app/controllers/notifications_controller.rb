@@ -24,6 +24,9 @@ class NotificationsController < ApplicationController
     authorize!
     @notification = Notification.new
     @noticeable = inline_noticeable
+    if params[:noticeable_sgid].present? && @noticeable.nil?
+      return redirect_to notifications_path, alert: "Select a record to log this communication against"
+    end
 
     respond_to do |format|
       format.html

@@ -91,9 +91,9 @@ class PaymentsController < ApplicationController
     @refunds = @payment.refunds.order(created_at: :desc)
     authorize! @payment, with: PaymentPolicy
 
-    comments = @payment.comments.includes(created_by: :person, updated_by: :person).to_a
+    comments = @payment.comments.includes(:commentable, created_by: :person, updated_by: :person).to_a
     communications = authorized_scope(@payment.communications_scope, with: NotificationPolicy)
-      .includes(sender: :person).to_a
+      .includes(:noticeable, sender: :person).to_a
     @entries = (comments + communications).sort_by { |entry| entry.created_at || Time.current }.reverse
   end
 
