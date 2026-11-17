@@ -85,6 +85,29 @@ RSpec.describe AffiliationServices::ImportPersonnel do
     end
   end
 
+  describe "activity" do
+    after { Current.reset }
+
+    it "logs one create event per new affiliation, dated and credited as FileMaker recorded it, and nothing else" do
+      staff = create(:user)
+      create(:staff_alias, name: "Dana Whitfield", user: staff)
+      personnel("PS0001", EnteredBy: "Dana Whitfield", Notes: "Runs Tuesday groups")
+
+      import
+
+      event = Ahoy::Event.sole
+      expect(event).to have_attributes(name: "create.affiliation", user_id: staff.id, time: Date.new(2015, 3, 1).in_time_zone)
+      expect(event.properties).to include("resource_id" => person.affiliations.sole.id, "source" => "fm_import_personnel")
+    end
+
+    it "logs nothing for an affiliation it links" do
+      create(:affiliation, person:, organization: program, title: "Facilitator", start_date: nil, end_date: nil)
+      personnel("PS0001")
+
+      expect { import }.not_to change(Ahoy::Event, :count)
+    end
+  end
+
   describe "a Facilitator affiliation the portal already holds" do
     it "links an undated, open one to an Active row, filling its start date" do
       existing = create(:affiliation, person:, organization: program, title: "Facilitator", start_date: nil, end_date: nil, primary_contact: false)

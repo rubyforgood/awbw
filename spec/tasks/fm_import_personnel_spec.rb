@@ -53,10 +53,12 @@ RSpec.describe "fm:import_personnel" do
       expect(ActiveStorage::Blob.last.download).to include("== Result ==", "Skipped, by reason")
     end
 
-    it "logs its activity under the run's source" do
+    it "logs one summary event for the run, pointing at the saved report" do
       run_task
 
-      expect(Current.source).to eq("fm_import_personnel")
+      summary = Ahoy::Event.find_by!(name: "import.affiliation")
+      expect(summary.properties).to include("source" => "fm_import_personnel", "created" => 1, "skipped" => 1,
+                                            "report_blob_id" => ActiveStorage::Blob.last.id)
     end
   end
 end

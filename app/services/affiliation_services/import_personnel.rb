@@ -2,6 +2,10 @@ module AffiliationServices
   # Round one of ADR-0011: each FileMaker Personnel row becomes a Facilitator affiliation at the
   # one org carrying its project's code. A row the ADR leaves an open question about is skipped
   # with its reason, for staff to review, rather than guessed at.
+  #
+  # Activity: each new affiliation keeps its one create event, dated when FileMaker entered the
+  # row and credited to who entered it; every other event the run would log is dropped, so a
+  # bulk run doesn't write thousands of them. The task logs one summary event for the run.
   class ImportPersonnel
     include FilemakerValues
 
@@ -13,6 +17,8 @@ module AffiliationServices
     EARLIEST_START = Date.new(1990, 1, 1)
     COMMENT_TOPIC = "FileMaker import"
     PERSONNEL_CODE = /\APS/i
+    SOURCE = "fm_import_personnel"
+    CREATE_EVENT = "create.affiliation"
 
     attr_reader :results, :skip_reasons, :roles, :statuses
 
@@ -24,19 +30,22 @@ module AffiliationServices
       @skip_reasons = Hash.new(0)
       @roles = Hash.new(0)
       @statuses = Hash.new(0)
+      @created = {}
+      @trackers = {}
     end
 
     def call
       load_indexes
-      tracker = Ahoy::Tracker.new
       read = 0
-      ordered_rows.each_slice(BATCH_SIZE) do |rows|
-        ActiveRecord::Base.transaction(requires_new: true) do
-          ActiveRecord::Base.no_touching { rows.each { |row| import_row(row) } }
-          Analytics::LifecycleBuffer.flush_to(tracker)
+      Current.set(source: Current.source || SOURCE) do
+        ordered_rows.each_slice(BATCH_SIZE) do |rows|
+          ActiveRecord::Base.transaction(requires_new: true) do
+            ActiveRecord::Base.no_touching { rows.each { |row| import_row(row) } }
+            log_creations
+          end
+          read += rows.size
+          @progress&.call(read)
         end
-        read += rows.size
-        @progress&.call(read)
       end
       self
     end
@@ -207,7 +216,26 @@ module AffiliationServices
 
       note(affiliation, row)
       @imported.add(row.fm_id, affiliation.id)
+      @created[affiliation.id] = affiliation
       record(:created, "#{label} → affiliation ##{affiliation.id}")
+    end
+
+    def log_creations
+      Analytics::LifecycleBuffer.store.each do |payload|
+        next unless payload[:name] == CREATE_EVENT
+
+        affiliation = @created[payload.dig(:properties, :resource_id)]
+        next unless affiliation
+
+        tracker_for(affiliation.created_by_id).track(payload[:name], payload[:properties], time: affiliation.created_at)
+      end
+    ensure
+      Analytics::LifecycleBuffer.store.clear
+      @created.clear
+    end
+
+    def tracker_for(user_id)
+      @trackers[user_id] ||= Ahoy::Tracker.new(user: user_id && User.find_by(id: user_id))
     end
 
     def note(affiliation, row)

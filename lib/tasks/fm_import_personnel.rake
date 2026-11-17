@@ -14,6 +14,8 @@ namespace :fm do
 
     say.("Reading #{total} FileMaker Personnel rows…")
     progress = ->(read) { puts "  #{read} / #{total} rows read — #{(Time.current - started).round}s" }
+    import = nil
+    blob = nil
 
     begin
       import = AffiliationServices::ImportPersonnel.new(progress:).call
@@ -57,6 +59,13 @@ namespace :fm do
         puts "\nReport saved. Read it back with: bin/rails runner 'puts ActiveStorage::Blob.find(#{blob.id}).download'"
       rescue StandardError => e
         puts "\nCould not save the report (#{e.class}: #{e.message}) — copy the output above."
+      end
+      if import
+        Ahoy::Tracker.new(user: Setting.import_user).track(
+          "import.affiliation",
+          { source: Current.source, report_blob_id: blob&.id,
+            **import.results.transform_values(&:size), skip_reasons: import.skip_reasons }
+        )
       end
     end
   end
