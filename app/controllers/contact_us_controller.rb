@@ -2,7 +2,7 @@ class ContactUsController < ApplicationController
   rescue_from(*EmailDeliveryErrorHandler::ERRORS) { |e| EmailDeliveryErrorHandler.handle(e, self) }
 
   skip_before_action :authenticate_user!, only: [ :index, :create ]
-  rate_limit to: 5, within: 1.minute, only: :create,
+  rate_limit to: 10, within: 1.minute, only: :create,
     with: -> { redirect_to contact_us_return_path, alert: "Too many submissions — please wait a minute." }
 
   # Subject presets offered on the Story Share portal variant; picking one fills
