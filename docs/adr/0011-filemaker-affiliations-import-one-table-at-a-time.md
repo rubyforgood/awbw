@@ -13,7 +13,7 @@
   FileMaker holds; `fm:end_inactive_personnel` (built) then gives the rows FileMaker marks inactive an
   end date, so program status, which reads only affiliation dates, sees them as ended.
 - **Jobs come second.** Round two reads `fm_people_to_organizations` (1,128 rows in
-  production): a row with a title becomes a job affiliation (JA), one with no title an FA.
+  production), and every row becomes a job affiliation (JA), titled or not.
 - **Each round is its own task, shaped like `fm:import_orgs`** (#2957): `fm:import_personnel`
   (`AffiliationServices::ImportPersonnel`), then `fm:import_people_to_orgs`
   (`AffiliationServices::ImportPeopleToOrgs`). Each writes, commits in batches, skips finished
@@ -74,8 +74,7 @@ and reconciliation read (ADR-0001, ADR-0003 D1). Jobs feed none of that.
 - **The two tables are separate.** Neither round reads the other's table.
 - **So a title that mentions facilitating is a job.** A people-to-organizations title like
   "Group Facilitator" is a job staff typed, not a program assignment; if the person ran a
-  program, their Personnel row says so. A row with no title at all is read as facilitating
-  (round two).
+  program, their Personnel row says so.
 
 ## Decision — round one: Personnel → Facilitator affiliations
 
@@ -310,11 +309,10 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
   - Several orgs carry it (the code was spread across programs): the row is **skipped and
     listed** so staff can place it by hand. We don't guess between an umbrella's programs.
   - No matching by name. Codes only.
-- **A row with no title is a Facilitator affiliation** (decided 2026-11-17; 805 rows, 71% of
-  the table). With nothing saying what their job was, the link FileMaker recorded is read as
-  the person facilitating there. It takes the same dates as any row here; when the notes say
-  they left it has no start date, so program status (which needs a start) doesn't count it.
-- **Every titled row is a job affiliation** (decided 2026-11-13). Titles come in as written, so
+- **A row with no title is an untitled job affiliation** (decided 2026-11-17; 805 rows, 71% of
+  the table). It still records that the person was at the organization, with the same dates
+  as any row here.
+- **Every row is a job affiliation** (decided 2026-11-13). Titles come in as written, so
   nothing this round makes counts toward program status or is touched by reconciliation
   (ADR-0003 D1).
   - The one `facilitator` row keeps its lowercase title. The portal's Facilitator test is an
