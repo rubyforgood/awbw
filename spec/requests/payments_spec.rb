@@ -282,7 +282,6 @@ RSpec.describe "Payments", type: :request do
   end
 
   describe "comments and communications on a payment" do
-
     it "lists the payment's comments and communications on the show page" do
       payment = create(:payment, person:)
       create(:comment, commentable: payment, topic: "Follow-up", body: "Called about the remaining balance")
@@ -402,7 +401,6 @@ RSpec.describe "Payments", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("notification_#{notification.id}", "notification[email_subject]")
     end
-
   end
 
   describe "payer/additional designation via sgids" do
