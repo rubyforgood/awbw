@@ -24,6 +24,7 @@ namespace :fm do
       import.results.each { |outcome, messages| say.("#{outcome.to_s.humanize.ljust(18)} #{messages.size}") }
 
       tallies = {
+        "End dates of ended rows, by where they came from" => import.end_sources.transform_keys { |source| AffiliationServices::ImportPersonnel::END_SOURCES[source] },
         "Skipped, by reason (review with the saved Blazer queries)" => import.skip_reasons,
         "Roles read" => import.roles,
         "Statuses read" => import.statuses,
@@ -44,7 +45,6 @@ namespace :fm do
         messages.each { |message| say.("  #{message}") }
       end
 
-      say.("\nEnded rows with no end date read as running until fm:end_inactive_personnel dates them.")
       say.("Took #{(Time.current - started).round}s.")
       say.("Done.")
     rescue StandardError => e

@@ -9,9 +9,9 @@
   every row becomes a Facilitator affiliation (FA).
 - **Only rows with no open question are imported.** The rest are skipped with their reason
   and listed for staff in a saved Blazer query, so nothing is guessed.
-- **Round one has two passes.** `fm:import_personnel` (built) brings the rows in with the dates
-  FileMaker holds; `fm:end_inactive_personnel` (built) then gives the rows FileMaker marks inactive an
-  end date, so program status, which reads only affiliation dates, sees them as ended.
+- **Round one is one task,** `fm:import_personnel` (built). It brings each row in with the dates
+  FileMaker holds, and gives an Inactive row with no recorded end an inferred one, so program
+  status (which reads only dates) sees it as ended.
 - **Jobs come second.** Round two reads `fm_people_to_organizations` (1,128 rows in
   production), and every row becomes a job affiliation (JA), titled or not.
 - **Each round is its own task, shaped like `fm:import_orgs`** (#2957): `fm:import_personnel`
@@ -109,7 +109,11 @@ org's program status and is hard to find again.
   Active, blank included), only 832 sit on a project with a `CloseDate`; **6,431 have no end
   date anywhere** in Personnel or Projects. Three Active rows sit on a closed project.
 - **Person matches:** across all 9,037 rows, 8,665 find exactly one person, 370 find nobody
-  (the person wasn't imported) and 2 find several. Of the 8,828 rows placed at an org, 8,483
+  and 2 find several. Of the rows naming a person code nobody carries (2026-11-17): 194 name an
+  agency card (193 of them a card that names a contact), 120 name a code with no Rolodex card in
+  the archive at all (102 codes), and 8 name a card missing a first or last name. Each is
+  skipped under its own reason. A name-and-email match of the remaining cards to portal people
+  found nothing to link: every unlinked card the rows need is one of these. Of the 8,828 rows placed at an org, 8,483
   find exactly one person; 345 find nobody or several people and are skipped.
 - **What's already in the portal** for those 8,483 rows: 6,648 have nothing there, 1,823
   have a Facilitator row there (1,371 of them undated, 2 made by a training), 155 have an
@@ -164,13 +168,38 @@ org's program status and is hard to find again.
   `already_imported`.
 - **Dates:**
   - **Start:** the row's `DateEntered`, when FileMaker put them on the program.
-  - **End:** the project's `CloseDate`, else its `EndDate`.
-  - **Status:** `Active` stays open; `Inactive` is saved `inactive`, with the project's end
-    date when it has one.
+  - **Status:** `Active` stays open, with no end date; `Inactive` is saved `inactive`.
   - **Program status reads only affiliation dates** (decided 2026-11-14), and that stays.
-    `FacilitatorProgramStatus` and `AffiliationPeriods` ignore `inactive`, so a row with a
-    start date and no end date counts as running to today. The import leaves about 6,400 ended
-    rows in that state; pass two (below) dates them, so run it right after.
+    `FacilitatorProgramStatus` and `AffiliationPeriods` ignore `inactive`, so an Inactive row
+    with no end date would count as running to today. So every Inactive row gets one.
+  - **End date of an Inactive row, first that fits** (any candidate before its start or after
+    yesterday is passed over):
+    1. the project's `CloseDate`, else its `EndDate`;
+    2. their own last workshop log on that project (`fm_workshop_logs` `LeaderID` + `ProjectID`);
+    3. the Personnel row's `DateTimeModified`, when staff last saved it — moved ahead of the
+       workshop log when the row's own `Notes` say the person left, since that's when staff
+       wrote it down (ADR-0008's pass read those notes too);
+    4. the project's last workshop log, by anyone;
+    5. December 31 of the year the row started, never later than yesterday (decided
+       2026-11-17): a stand-in, since FileMaker says they stopped but not when, and a date is
+       what keeps their history in program status.
+  - **The comment says where the end date came from,** and for anything but the project's close
+    date that FileMaker never recorded when they stopped.
+  - **Evidence in production** (2026-11-13, ended rows with no project `CloseDate`, each counted
+    under its best source):
+
+    | Best evidence | Rows | Range |
+    |---|---|---|
+    | Their own last workshop log on that project | 324 | 2019-11 to 2026-01 |
+    | The project's last workshop log, by anyone | 2,094 | 2019-12 to 2026-02 |
+    | Only the row's `DateTimeModified` | 570 | 2021-02 to 2026-09 |
+    | Nothing (Dec 31 stand-in) | 3,443 | |
+
+    Workshop logs only go back to late 2019 and `DateTimeModified` to early 2021, so neither
+    reaches most of this history.
+  - **One task, not two** (decided 2026-11-17). The end dates were first a separate pass, to keep
+    the inferred dates apart for review. Once the rule was settled, one task was simpler and
+    leaves no gap where ended rows read as running; the report counts end dates by source.
 - **Linking an existing affiliation:** a Facilitator affiliation (exact title) for the same
   person and org is linked when their dates agree (each the same or blank on one side, start
   still before end) and it doesn't already carry another Personnel code. It takes the code
@@ -225,46 +254,6 @@ org's program status and is hard to find again.
 - **Round one doesn't do:** the AWBW Placeholder, rows with no project (ADR-0008 used the
   person's Rolodex org), following merged projects (`MergerWithID`), addresses, or name
   matching.
-
-## Decision — round one, pass two: end dates for FileMaker-inactive rows
-
-A separate task, `fm:end_inactive_personnel` (`AffiliationServices::EndInactivePersonnel`), run
-right after `fm:import_personnel`. Kept apart so the import only records what FileMaker holds,
-and the inferred end dates can be reviewed, rerun or undone on their own.
-
-- **Scope:** Facilitator affiliations carrying a `PS…` code whose Personnel row isn't Active,
-  that are `inactive` and have no end date. Rows the import skipped for review carry no code,
-  so they're out of scope.
-- **End date, first that fits:**
-  1. their own last workshop log on that project (`fm_workshop_logs` `LeaderID` + `ProjectID`);
-  2. the Personnel row's `DateTimeModified`, when staff last saved it — first choice when the
-     row's own `Notes` say the person left (the `LEFT_NOTE` wording), which ADR-0008's pass
-     also read (`Notes` is filled on 7,621 Personnel rows; how many say "left" is unmeasured);
-  3. the project's last workshop log, by anyone;
-  4. December 31 of the year the row started (decided 2026-11-17), never later than
-     yesterday — a stand-in that keeps the history in program status; the comment says so.
-
-  A candidate before the row's start date or after today is skipped for the next one. A row
-  with no start date gets none of these and is listed.
-- **Evidence in production** (2026-11-13, ended rows with no project `CloseDate`):
-
-    | Best evidence | Rows | Range |
-    |---|---|---|
-    | Their own last workshop log on that project | 324 | 2019-11 to 2026-01 |
-    | The project's last workshop log, by anyone | 2,094 | 2019-12 to 2026-02 |
-    | Only the row's `DateTimeModified` | 570 | 2021-02 to 2026-09 |
-    | Nothing | 3,443 | |
-
-    Workshop logs only go back to late 2019 and `DateTimeModified` to early 2021, so
-    neither reaches most of this history.
-- **Each dated row gets a comment**, topic "FileMaker import", naming the source and saying
-  FileMaker never recorded the real end date.
-- **Running it:** dry run by default (`DRY_RUN=false` writes), since every date it sets is
-  inferred. Batches, rerun-safe (a dated row is out of scope), `Current.source =
-  "fm_end_inactive_personnel"`, and a saved report counting rows per source.
-- **Activity:** the affiliations already exist, so no per-row events are kept; the run logs
-  one `end_dates.affiliation` summary event with its counts and the saved report.
-- **Built (2026-11-17).**
 
 ## Decision — round two: people-to-organizations → job affiliations
 

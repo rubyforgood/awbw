@@ -43,12 +43,14 @@ RSpec.describe AffiliationServices::ImportPersonnel do
       expect(person.affiliations.sole).to have_attributes(end_date: Date.new(2022, 6, 30), inactive: true, primary_contact: false)
     end
 
-    it "leaves an Inactive row on an open project ended with no end date" do
+    it "ends an Inactive row FileMaker gives no evidence for on December 31 of its start year, and says so" do
       personnel("PS0001", Status: "Inactive")
 
       import
 
-      expect(person.affiliations.sole).to have_attributes(end_date: nil, inactive: true)
+      affiliation = person.affiliations.sole
+      expect(affiliation).to have_attributes(end_date: Date.new(2015, 12, 31), inactive: true)
+      expect(affiliation.comments.sole.body).to include("Ends 2015-12-31, from December 31 of the year they started (a stand-in).")
     end
 
     it "records the role, status and notes FileMaker gave in a comment" do
@@ -108,6 +110,63 @@ RSpec.describe AffiliationServices::ImportPersonnel do
     end
   end
 
+  describe "the end date of an Inactive row on a project FileMaker never closed" do
+    def workshop_log(fm_id, leader:, date:)
+      FmWorkshopLog.create!(fm_id:, data: { "LeaderID" => leader, "ProjectID" => "P0001", "WorkshopDate" => date })
+    end
+
+    def ends_on
+      person.affiliations.sole.end_date
+    end
+
+    it "is their own last workshop log on the project first" do
+      personnel("PS0001", Status: "Inactive", DateTimeModified: "2021-02-05 21:11:53")
+      workshop_log("W1", leader: "00006", date: "2019-11-12")
+      workshop_log("W2", leader: "00006", date: "2020-01-28")
+      workshop_log("W3", leader: "00999", date: "2022-06-01")
+
+      result = import
+
+      expect(ends_on).to eq(Date.new(2020, 1, 28))
+      expect(result.end_sources).to eq(own_log: 1)
+    end
+
+    it "is the day the row was last saved first when its notes say they left" do
+      personnel("PS0001", Status: "Inactive", Notes: "No longer with organization", DateTimeModified: "2021-02-05 21:11:53")
+      workshop_log("W1", leader: "00006", date: "2019-11-12")
+
+      import
+
+      expect(ends_on).to eq(Date.new(2021, 2, 5))
+    end
+
+    it "falls back to the project's last workshop log by anyone" do
+      personnel("PS0001", Status: "Inactive")
+      workshop_log("W1", leader: "00999", date: "2018-04-09")
+
+      import
+
+      expect(ends_on).to eq(Date.new(2018, 4, 9))
+    end
+
+    it "skips evidence dated before the row started" do
+      personnel("PS0001", Status: "Inactive")
+      workshop_log("W1", leader: "00006", date: "2014-06-01")
+
+      import
+
+      expect(ends_on).to eq(Date.new(2015, 12, 31))
+    end
+
+    it "is never later than yesterday" do
+      personnel("PS0001", Status: "Inactive", DateEntered: 3.days.ago.to_date.iso8601)
+
+      import
+
+      expect(ends_on).to eq(Date.yesterday)
+    end
+  end
+
   describe "a Facilitator affiliation the portal already holds" do
     it "links an undated, open one to an Active row, filling its start date" do
       existing = create(:affiliation, person:, organization: program, title: "Facilitator", start_date: nil, end_date: nil, primary_contact: false)
@@ -164,7 +223,7 @@ RSpec.describe AffiliationServices::ImportPersonnel do
       "a status that's neither Active nor Inactive" => [ { Status: "ActiveInactive" }, "status is neither Active nor Inactive" ],
       "a blank start date" => [ { DateEntered: "" }, "no readable start date" ],
       "a start date before 1990" => [ { DateEntered: "10/23/0209" }, "start date before 1990" ],
-      "a person nobody carries" => [ { PersonID: "99999" }, "person wasn't imported" ],
+      "a person with no Rolodex card in the archive" => [ { PersonID: "99999" }, "no Rolodex card for the person in the FileMaker archive" ],
       "no project" => [ { ProjectID: "" }, "names no project" ],
       "a project no org carries" => [ { ProjectID: "P0404" }, "no org carries the project code" ]
     }.each do |description, (data, reason)|
@@ -176,6 +235,13 @@ RSpec.describe AffiliationServices::ImportPersonnel do
         expect(person.affiliations).to be_empty
         expect(result.skip_reasons).to eq(reason => 1)
       end
+    end
+
+    it "skips a person whose Rolodex card the people import never brought in" do
+      FmRolodex.create!(fm_id: "00888", data: { "FirstName" => "Ada", "LastName" => "Lovelace" })
+      personnel("PS0001", PersonID: "00888")
+
+      expect(import.skip_reasons).to eq("person wasn't imported" => 1)
     end
 
     it "skips a row naming an agency card, which is an organization, not a person" do

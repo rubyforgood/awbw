@@ -3,6 +3,10 @@ module AffiliationServices
   # one org carrying its project's code. A row the ADR leaves an open question about is skipped
   # with its reason, for staff to review, rather than guessed at.
   #
+  # An Inactive row ends on its project's close date. With none, program status (which reads only
+  # dates) would count it as running, so it ends on the first evidence that fits, else December 31
+  # of the year it started; its comment names which, since FileMaker never recorded when.
+  #
   # Activity: each new affiliation keeps its one create event, dated when FileMaker entered the
   # row and credited to who entered it; every other event the run would log is dropped, so a
   # bulk run doesn't write thousands of them. The task logs one summary event for the run.
@@ -19,8 +23,16 @@ module AffiliationServices
     PERSONNEL_CODE = /\APS/i
     SOURCE = "fm_import_personnel"
     CREATE_EVENT = "create.affiliation"
+    LEFT_NOTE = /\bno longer (with|at|works|employed)\b|\bleft\b/i
+    END_SOURCES = {
+      project_closed: "the project's close date",
+      own_log: "their own last workshop log on that project",
+      saved: "the day FileMaker last saved the Personnel row",
+      project_log: "the project's last workshop log",
+      stand_in: "December 31 of the year they started (a stand-in)"
+    }.freeze
 
-    attr_reader :results, :skip_reasons, :roles, :statuses
+    attr_reader :results, :skip_reasons, :roles, :statuses, :end_sources
 
     def unmatched_staff = @staff.unmatched
 
@@ -30,6 +42,8 @@ module AffiliationServices
       @skip_reasons = Hash.new(0)
       @roles = Hash.new(0)
       @statuses = Hash.new(0)
+      @end_sources = Hash.new(0)
+      @ends = {}
       @created = {}
       @trackers = {}
     end
@@ -58,8 +72,28 @@ module AffiliationServices
       @imported = FilemakerCodeIndex.new(Affiliation)
       @projects = FmProject.all.index_by(&:fm_id)
       @agency_cards = FmRolodex.agency_cards.pluck(:fm_id).to_set
+      @rolodex_cards = FmRolodex.pluck(:fm_id).to_set
+      load_workshop_logs
       @staff = StaffTranslation.new
       @import_user_id = Setting.import_user&.id
+    end
+
+    def load_workshop_logs
+      @own_logs = {}
+      @project_logs = {}
+      FmWorkshopLog.pluck(Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(data, '$.LeaderID'))"),
+                          Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(data, '$.ProjectID'))"),
+                          Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(data, '$.WorkshopDate'))")).each do |leader, project, date|
+        held_on = parse_date(date)
+        next unless held_on && project.present?
+
+        latest(@project_logs, project.strip, held_on)
+        latest(@own_logs, [ leader.to_s.strip, project.strip ], held_on) if leader.present?
+      end
+    end
+
+    def latest(index, key, date)
+      index[key] = date if index[key].nil? || date > index[key]
     end
 
     # Active rows first, then newest first, so when one person has several rows at an org the
@@ -93,7 +127,7 @@ module AffiliationServices
       return person_question(data["PersonID"]) if person_id(row).nil?
       return organization_question(data["ProjectID"]) if organization_id(row).nil?
 
-      finish = end_date(row)
+      finish = project_closed_on(row)
       return [ "Active in FileMaker, but its project is closed", finish.iso8601 ] if status(row) == ACTIVE && finish
       [ "project closed before the row was entered", finish.iso8601 ] if finish && finish < start
     end
@@ -101,6 +135,7 @@ module AffiliationServices
     def person_question(code)
       return [ "names no person" ] if code.blank?
       return [ "names an agency card, not a person", code ] if @agency_cards.include?(code)
+      return [ "no Rolodex card for the person in the FileMaker archive", code ] unless @rolodex_cards.include?(code)
 
       [ @people.ids(code).empty? ? "person wasn't imported" : "person code is on several people", code ]
     end
@@ -137,7 +172,7 @@ module AffiliationServices
       {
         title: Affiliation::FACILITATOR_TITLE,
         start_date: parse_date(row.data["DateEntered"]),
-        end_date: active ? nil : end_date(row),
+        end_date: active ? nil : ended_on(row).first,
         inactive: !active,
         primary_contact: primary_contact?(row)
       }
@@ -246,7 +281,42 @@ module AffiliationServices
              "role #{data["Role"].to_s.squish.presence || "(blank)"}, status #{data["Status"].to_s.squish}."
       notes = data["Notes"].to_s.squish
       body += " Notes: \"#{notes}\"" if notes.present?
+      body += end_note(affiliation, row)
       affiliation.comments.create!(topic: COMMENT_TOPIC, body:)
+    end
+
+    def end_note(affiliation, row)
+      ends_on, source = ended_on(row)
+      return "" unless source && status(row) == INACTIVE && affiliation.end_date == ends_on
+
+      @end_sources[source] += 1
+      note = " Ends #{ends_on.iso8601}, from #{END_SOURCES[source]}."
+      source == :project_closed ? note : "#{note} FileMaker recorded that they stopped, but not when."
+    end
+
+    # The project's close date, else the first evidence on or after the start and before today.
+    # A left note makes the day the row was last saved the best evidence: that's when staff wrote it.
+    def ended_on(row)
+      @ends[row.fm_id] ||= find_end(row)
+    end
+
+    def find_end(row)
+      data = row.data
+      start = parse_date(data["DateEntered"])
+      closed = project_closed_on(row)
+      return [ closed, :project_closed ] if closed
+      return [] unless start
+
+      project = data["ProjectID"].to_s.strip
+      candidates = {
+        own_log: @own_logs[[ data["PersonID"].to_s.strip, project ]],
+        saved: parse_date(data["DateTimeModified"]),
+        project_log: @project_logs[project],
+        stand_in: [ start.end_of_year, Date.yesterday ].min
+      }
+      order = data["Notes"].to_s.match?(LEFT_NOTE) ? %i[saved own_log project_log stand_in] : %i[own_log saved project_log stand_in]
+      source = order.find { |key| candidates[key]&.between?(start, Date.yesterday) }
+      source ? [ candidates[source], source ] : []
     end
 
     def status(row)
@@ -258,7 +328,7 @@ module AffiliationServices
       PRIMARY_ROLES.include?(row.data["Role"].to_s.squish.downcase)
     end
 
-    def end_date(row)
+    def project_closed_on(row)
       project = @projects[row.data["ProjectID"].to_s.strip]
       return unless project
 
