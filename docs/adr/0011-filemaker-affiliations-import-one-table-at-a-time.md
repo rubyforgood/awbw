@@ -363,6 +363,13 @@ org's program status and is hard to find again.
 3. **Rolodex card `OrgID` + `Title` → job affiliation.** This overlaps round two. The card
    has no ID of its own, so a rerun matches on person + org + title.
 4. **Work addresses → the organization** (ADR-0008, ADR-0010).
+5. **Better end dates for the Dec 31 stand-ins, from FileMaker's notes.** An ended program stays
+   ended; the stand-in only marks that FileMaker never said when. A later pass reads the notes
+   FileMaker kept — the Personnel row's own `Notes` (filled on 7,621 rows), the project's
+   `Comments` and `MessageText`, and `fm_notes` (616 dated notes on a project, org or Rolodex
+   card) — and moves a stand-in end date to what a note says, leaving its comment saying where
+   the date came from. It touches only affiliations whose comment names the stand-in. Blazer SN1
+   sizes it: how many stand-in rows have a note that might say.
 
 Also in ADR-0008's pass, left out on purpose until a round decides them:
 
