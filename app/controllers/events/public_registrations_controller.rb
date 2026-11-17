@@ -6,6 +6,8 @@ module Events
     before_action :set_event
     before_action :ensure_registerable, only: [ :new, :create ]
     before_action :set_discount, only: [ :new, :create ]
+    rate_limit to: 5, within: 1.minute, only: :create,
+      with: -> { redirect_to new_event_public_registration_path(@event), alert: "Too many submissions — please wait a minute." }
 
     def new
       authorize! :public_registration, to: :new?

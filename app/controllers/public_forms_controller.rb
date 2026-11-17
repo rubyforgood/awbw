@@ -7,6 +7,8 @@ class PublicFormsController < ApplicationController
   before_action :noindex!, only: %i[show create thank_you]
   before_action :set_form
   before_action :set_event, only: %i[show create thank_you]
+  rate_limit to: 5, within: 1.minute, only: :create,
+    with: -> { redirect_to public_form_path(@form.slug), alert: "Too many submissions — please wait a minute." }
 
   def show
     authorize! @form, to: :public_show?
