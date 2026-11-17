@@ -235,13 +235,14 @@ org's program status and is hard to find again.
   - It writes. There's no dry run.
   - Batches of 500 rows each commit in their own transaction, so a stopped run keeps what
     it finished and a rerun picks up the rest.
-  - **Activity** (decided 2026-11-17): each new affiliation keeps one `create.affiliation` event,
+  - **Activity** (decided 2026-11-17): the import runs with no `Current.source`, so its saves log
+    no events of their own. It then writes one `create.affiliation` event per new affiliation,
     dated with FileMaker's `DateEntered` and credited to the staff FileMaker named (else the
-    import user), so its history shows when FileMaker recorded it, not when the import ran.
-    Every other event the run would log (comments, links to existing rows, org status updates)
-    is dropped, and the run logs one `import.affiliation` summary event with its counts and the
-    saved report, so a bulk run doesn't write thousands of events. Undo doesn't need them: every
-    affiliation the import touches carries its `PS…` code and a "FileMaker import" comment.
+    import user), so the history shows when FileMaker recorded it, not when the import ran.
+    Comments, links to existing rows and org status updates log nothing, and the run logs one
+    `import.affiliation` summary event with its counts and the saved report. Undo doesn't need
+    events: every affiliation the import touches carries its `PS…` code and a "FileMaker
+    import" comment.
   - It never runs reconciliation. That stays an admin's bulk action on an event, previewed
     row by row before anything changes.
   - The report is printed and saved as an ActiveStorage blob.

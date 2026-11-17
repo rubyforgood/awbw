@@ -7,9 +7,9 @@ module AffiliationServices
   # dates) would count it as running, so it ends on the first evidence that fits, else December 31
   # of the year it started; its comment names which, since FileMaker never recorded when.
   #
-  # Activity: each new affiliation keeps its one create event, dated when FileMaker entered the
-  # row and credited to who entered it; every other event the run would log is dropped, so a
-  # bulk run doesn't write thousands of them. The task logs one summary event for the run.
+  # Activity: runs with no Current.source, so its saves log nothing, then writes one create event
+  # per new affiliation, dated when FileMaker entered the row and credited to who entered it. A
+  # bulk run doesn't log thousands of comment and status events. The task logs one summary event.
   class ImportPersonnel
     include FilemakerValues
 
@@ -51,12 +51,12 @@ module AffiliationServices
     def call
       load_indexes
       read = 0
-      Current.set(source: Current.source || SOURCE) do
+      Current.set(source: nil, user: nil) do
         ordered_rows.each_slice(BATCH_SIZE) do |rows|
           ActiveRecord::Base.transaction(requires_new: true) do
             ActiveRecord::Base.no_touching { rows.each { |row| import_row(row) } }
-            log_creations
           end
+          log_creations
           read += rows.size
           @progress&.call(read)
         end
@@ -258,16 +258,12 @@ module AffiliationServices
     end
 
     def log_creations
-      Analytics::LifecycleBuffer.store.each do |payload|
-        next unless payload[:name] == CREATE_EVENT
-
-        affiliation = @created[payload.dig(:properties, :resource_id)]
-        next unless affiliation
-
-        tracker_for(affiliation.created_by_id).track(payload[:name], payload[:properties], time: affiliation.created_at)
+      @created.each_value do |affiliation|
+        properties = Analytics::EventBuilder.lifecycle("create", affiliation)[:properties]
+          .merge(attributes: affiliation.attributes.except("created_at", "updated_at").compact_blank, source: SOURCE)
+        tracker_for(affiliation.created_by_id).track(CREATE_EVENT, properties, time: affiliation.created_at)
       end
     ensure
-      Analytics::LifecycleBuffer.store.clear
       @created.clear
     end
 

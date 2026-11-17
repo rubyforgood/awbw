@@ -10,7 +10,6 @@ namespace :fm do
     $stdout.sync = true
     started = Time.current
     total = FmPersonnel.count
-    Current.source = "fm_import_personnel"
 
     say.("Reading #{total} FileMaker Personnel rows…")
     progress = ->(read) { puts "  #{read} / #{total} rows read — #{(Time.current - started).round}s" }
@@ -63,7 +62,7 @@ namespace :fm do
       if import
         Ahoy::Tracker.new(user: Setting.import_user).track(
           "import.affiliation",
-          { source: Current.source, report_blob_id: blob&.id,
+          { source: AffiliationServices::ImportPersonnel::SOURCE, report_blob_id: blob&.id,
             **import.results.transform_values(&:size), skip_reasons: import.skip_reasons }
         )
       end
