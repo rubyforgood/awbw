@@ -5,6 +5,8 @@ module Events
     before_action :noindex!, only: [ :new, :create, :show, :ticket, :resend_confirmation ]
     before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
+    rate_limit to: 10, within: 1.minute, only: :create,
+      with: -> { redirect_to new_event_bulk_payment_path(@event), alert: "Too many submissions — please wait a minute." }
 
     def new
       authorize! :form_submission
