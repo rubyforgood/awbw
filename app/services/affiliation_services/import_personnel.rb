@@ -24,7 +24,14 @@ module AffiliationServices
     SOURCE = "fm_import_personnel"
     CREATE_EVENT = "create.affiliation"
     LEFT_NOTE = /\bno longer (with|at|works|employed)\b|\bleft\b/i
+    SAME_STRETCH_DAYS = 90
+    FULL_DATE = %r{\b\d{1,2}/\d{1,2}/\d{2,4}\b}
+    MONTH_YEAR = %r{\b(\d{1,2})/(\d{4})\b}
+    STOPPED = /no longer|inactiv|removed|not active/i
+    NEVER_STARTED = /never started/i
     END_SOURCES = {
+      never_started: "their FileMaker notes, which say the program never started",
+      notes: "the latest dated entry in their FileMaker notes saying they stopped",
       project_closed: "the project's close date",
       own_log: "their own last workshop log on that project",
       saved: "the day FileMaker last saved the Personnel row",
@@ -160,6 +167,8 @@ module AffiliationServices
 
       disagreeing = facilitators.find { |affiliation| dates_agree?(affiliation, attributes) && open?(affiliation) != open_attributes?(attributes) }
       return skip(label, *status_disagreement(disagreeing, attributes)) if disagreeing
+      same = open_attributes?(attributes) && facilitators.find { |affiliation| same_stretch?(affiliation, attributes) }
+      return link(same, row, label, attributes) if same
       if open_attributes?(attributes) && (other = facilitators.find { |affiliation| open?(affiliation) })
         return skip(label, "Active in FileMaker, and the portal has an open Facilitator affiliation there with other dates", "##{other.id}")
       end
@@ -182,6 +191,14 @@ module AffiliationServices
       affiliation.filemaker_codes.none? { |code| code.match?(PERSONNEL_CODE) } &&
         dates_agree?(affiliation, attributes) &&
         open?(affiliation) == open_attributes?(attributes)
+    end
+
+    # A current portal FA starting near FileMaker's date is the same stretch, usually one a
+    # training made: it keeps its own dates, which come from the training.
+    def same_stretch?(affiliation, attributes)
+      open?(affiliation) && affiliation.start_date &&
+        (affiliation.start_date - attributes[:start_date]).abs <= SAME_STRETCH_DAYS &&
+        affiliation.filemaker_codes.none? { |code| code.match?(PERSONNEL_CODE) }
     end
 
     def dates_agree?(affiliation, attributes)
@@ -278,6 +295,10 @@ module AffiliationServices
       notes = data["Notes"].to_s.squish
       body += " Notes: \"#{notes}\"" if notes.present?
       body += end_note(affiliation, row)
+      entered_on = parse_date(data["DateEntered"])
+      if affiliation.start_date && entered_on && affiliation.start_date != entered_on
+        body += " FileMaker entered them on #{entered_on.iso8601}; this affiliation keeps its own start date."
+      end
       affiliation.comments.create!(topic: COMMENT_TOPIC, body:)
     end
 
@@ -287,7 +308,7 @@ module AffiliationServices
 
       @end_sources[source] += 1
       note = " Ends #{ends_on.iso8601}, from #{END_SOURCES[source]}."
-      source == :project_closed ? note : "#{note} FileMaker recorded that they stopped, but not when."
+      %i[project_closed notes never_started].include?(source) ? note : "#{note} FileMaker recorded that they stopped, but not when."
     end
 
     # The project's close date, else the first evidence on or after the start and before today.
@@ -299,6 +320,11 @@ module AffiliationServices
     def find_end(row)
       data = row.data
       start = parse_date(data["DateEntered"])
+      return [ start, :never_started ] if start && data["Notes"].to_s.match?(NEVER_STARTED)
+
+      noted = start && noted_end(data["Notes"].to_s, start)
+      return [ noted, :notes ] if noted
+
       closed = project_closed_on(row)
       return [ closed, :project_closed ] if closed
       return [] unless start
@@ -313,6 +339,28 @@ module AffiliationServices
       order = data["Notes"].to_s.match?(LEFT_NOTE) ? %i[saved own_log project_log stand_in] : %i[own_log saved project_log stand_in]
       source = order.find { |key| candidates[key]&.between?(start, Date.yesterday) }
       source ? [ candidates[source], source ] : []
+    end
+
+    # Notes read as dated entries ("1/5/2012: No longer at agency.", "no longer at program 01/2011").
+    # Each date owns the text after it, or the text before it when nothing follows. The latest
+    # entry saying they stopped wins; a month and year means the 1st of that month.
+    def noted_end(notes, start)
+      tokens = []
+      notes.scan(FULL_DATE) { tokens << [ Regexp.last_match.begin(0), Regexp.last_match.end(0), parse_date(Regexp.last_match[0]) ] }
+      notes.scan(MONTH_YEAR) do
+        match = Regexp.last_match
+        next if tokens.any? { |from, to, _| match.begin(0) >= from && match.begin(0) < to }
+
+        tokens << [ match.begin(0), match.end(0), Date.new(match[2].to_i, match[1].to_i.clamp(1, 12), 1) ]
+      end
+      tokens.sort_by!(&:first)
+      stopped = tokens.each_with_index.filter_map do |(from, to, date), index|
+        following = notes[to...(tokens[index + 1]&.first || notes.length)]
+        preceding = notes[(index.zero? ? 0 : tokens[index - 1][1])...from]
+        text = following.strip.length > 2 ? following : preceding
+        date if date && text.match?(STOPPED) && date.between?(start, Date.yesterday)
+      end
+      stopped.max
     end
 
     def status(row)

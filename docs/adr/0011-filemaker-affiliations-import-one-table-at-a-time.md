@@ -118,6 +118,11 @@ org's program status and is hard to find again.
 - **What's already in the portal** for those 8,483 rows: 6,648 have nothing there, 1,823
   have a Facilitator row there (1,371 of them undated, 2 made by a training), 155 have an
   old-app title there, and 1 row's code is already on an affiliation.
+- **Where every row lands** (Blazer AR2, 2026-11-17, before the notes and same-stretch rules):
+  2,251 import as-is (1,379 of them links to an FA the portal holds), 5,858 import with an
+  inferred end date, and 927 need a person — the largest groups two current stretches (264,
+  now mostly linked by the 90-day rule), an agency card as the person (239), no org with the
+  project code (106) and person not in the portal (98).
 - **Separate stretches are few.** Of the person-and-org pairs, 7,789 have one Personnel row
   (1,711 Active, 6,075 not, 3 with a blank status). 336 have two rows (30 with one Active,
   306 with none) and 7 have three or more (none Active). No pair has two Active rows.
@@ -174,17 +179,27 @@ org's program status and is hard to find again.
     with no end date would count as running to today. So every Inactive row gets one.
   - **End date of an Inactive row, first that fits** (any candidate before its start or after
     yesterday is passed over):
-    1. the project's `CloseDate`, else its `EndDate`;
-    2. their own last workshop log on that project (`fm_workshop_logs` `LeaderID` + `ProjectID`);
-    3. the Personnel row's `DateTimeModified`, when staff last saved it — moved ahead of the
+    1. **their own notes** (decided 2026-11-17): the latest dated entry in the Personnel row's
+       `Notes` saying they stopped ("no longer", "inactive", "removed", "not active"). Notes
+       read as dated entries ("1/5/2012: No longer at agency.", "no longer at program
+       01/2011"); each date owns the text after it, or the text before it when nothing follows.
+       A full date is used as is; a month and year means the 1st of that month, the earliest
+       day we know they were gone. Entries about starting ("Now children's leader. Activated")
+       are ignored, and a year alone isn't read. Notes saying the **program never started** end
+       it on its start date, so the FA is zero-length and program status skips it (ADR-0001
+       D8a): no program ran;
+    2. the project's `CloseDate`, else its `EndDate`;
+    3. their own last workshop log on that project (`fm_workshop_logs` `LeaderID` + `ProjectID`);
+    4. the Personnel row's `DateTimeModified`, when staff last saved it — moved ahead of the
        workshop log when the row's own `Notes` say the person left, since that's when staff
        wrote it down (ADR-0008's pass read those notes too);
-    4. the project's last workshop log, by anyone;
-    5. December 31 of the year the row started, never later than yesterday (decided
+    5. the project's last workshop log, by anyone;
+    6. December 31 of the year the row started, never later than yesterday (decided
        2026-11-17): a stand-in, since FileMaker says they stopped but not when, and a date is
-       what keeps their history in program status.
-  - **The comment says where the end date came from,** and for anything but the project's close
-    date that FileMaker never recorded when they stopped.
+       what keeps their history in program status. An ended program stays ended.
+  - **The comment says where the end date came from,** and for the workshop logs, last-saved
+    date and stand-in that FileMaker never recorded when they stopped. Notes that name other
+    people stay in FileMaker; the comment quotes only the row's own notes, as before.
   - **Evidence in production** (2026-11-13, ended rows with no project `CloseDate`, each counted
     under its best source):
 
@@ -196,7 +211,10 @@ org's program status and is hard to find again.
     | Nothing (Dec 31 stand-in) | 3,443 | |
 
     Workshop logs only go back to late 2019 and `DateTimeModified` to early 2021, so neither
-    reaches most of this history.
+    reaches most of this history. The notes do (2026-11-17, rows that would otherwise get the
+    stand-in): 1,360 have Personnel notes mentioning a year, mostly dated sign-offs like "no
+    longer at program 01/2011"; 1,199 have notes with no year; 811 more have project comments
+    mentioning a year; 9 have a note on the project; 38 have nothing.
   - **One task, not two** (decided 2026-11-17). The end dates were first a separate pass, to keep
     the inferred dates apart for review. Once the rule was settled, one task was simpler and
     leaves no gap where ended rows read as running; the report counts end dates by source.
@@ -207,6 +225,12 @@ org's program status and is hard to find again.
   its primary contact on (never off). Any other dates are a separate stretch, so the row comes
   in as a new affiliation. Rows titled with an old-app role (Leader, Liaison, …) aren't
   matched; Data health already lists them.
+  - **The same stretch, dated by a training** (decided 2026-11-17): an Active row links to a
+    current portal FA (no other Personnel code) starting within 90 days of FileMaker's date,
+    which keeps its own dates — they come from the training — and takes the code; the comment
+    notes FileMaker's date. In production 242 of the 264 rows the portal and FileMaker both
+    showed as current were 2026 trainings, half within 12 days of each other and 80% within
+    about 3½ weeks. Starts further apart still go to staff.
   - **Undated portal rows** (1,371 have no dates, so program status ignores them today): an
     Active Personnel row links and fills the start date — 1,302 person-and-org pairs in
     production — and from then on the org's program status counts it.
@@ -222,7 +246,7 @@ org's program status and is hard to find again.
   - an Active row on a project FileMaker closed (3), or a close date before the row was
     entered;
   - an Active row where the portal already has an open Facilitator affiliation for that
-    person and org with other dates (two open stretches at once);
+    person and org starting more than 90 days from FileMaker's date (two open stretches);
   - a row whose open/ended state disagrees with a Facilitator affiliation the portal holds
     for the same dates — including the 43 undated, open portal rows FileMaker calls
     Inactive. The portal row is left untouched; it doesn't even take the code.
@@ -363,13 +387,11 @@ org's program status and is hard to find again.
 3. **Rolodex card `OrgID` + `Title` → job affiliation.** This overlaps round two. The card
    has no ID of its own, so a rerun matches on person + org + title.
 4. **Work addresses → the organization** (ADR-0008, ADR-0010).
-5. **Better end dates for the Dec 31 stand-ins, from FileMaker's notes.** An ended program stays
-   ended; the stand-in only marks that FileMaker never said when. A later pass reads the notes
-   FileMaker kept — the Personnel row's own `Notes` (filled on 7,621 rows), the project's
-   `Comments` and `MessageText`, and `fm_notes` (616 dated notes on a project, org or Rolodex
-   card) — and moves a stand-in end date to what a note says, leaving its comment saying where
-   the date came from. It touches only affiliations whose comment names the stand-in. Blazer SN1
-   sizes it: how many stand-in rows have a note that might say.
+5. **More end dates from FileMaker's other notes.** The import reads each Personnel row's own
+   notes. The project's `Comments` and `MessageText` (811 stand-in rows mention a year there)
+   and `fm_notes` (616 dated notes on a project, org or Rolodex card) aren't read yet; a later
+   pass could move a stand-in end date to what they say, touching only affiliations whose
+   comment names the stand-in.
 
 Also in ADR-0008's pass, left out on purpose until a round decides them:
 

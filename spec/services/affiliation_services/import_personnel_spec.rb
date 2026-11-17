@@ -158,6 +158,42 @@ RSpec.describe AffiliationServices::ImportPersonnel do
       expect(ends_on).to eq(Date.new(2015, 12, 31))
     end
 
+    it "is the latest dated entry in their notes saying they stopped, ahead of every other clue" do
+      close_project("2022-06-30 00:00:00")
+      personnel("PS0001", Status: "Inactive", DateEntered: "2008-03-01 00:00:00",
+                          Notes: "6/24/2013: No longer at the agency. Removed permissions. 10/15/2012: Now children's leader. Activated.")
+
+      result = import
+
+      expect(ends_on).to eq(Date.new(2013, 6, 24))
+      expect(result.end_sources).to eq(notes: 1)
+    end
+
+    it "reads a month and year in their notes as the 1st of that month" do
+      personnel("PS0001", Status: "Inactive", DateEntered: "2008-03-01 00:00:00", Notes: "no longer at program 01/2011")
+
+      import
+
+      expect(ends_on).to eq(Date.new(2011, 1, 1))
+    end
+
+    it "ignores an entry that's about starting" do
+      personnel("PS0001", Status: "Inactive", Notes: "3/12/2013: Now children's leader. Activated and gave permissions.")
+
+      import
+
+      expect(ends_on).to eq(Date.new(2015, 12, 31))
+    end
+
+    it "ends on the start date when their notes say the program never started" do
+      personnel("PS0001", Status: "Inactive", Notes: "7/10/2015: Program never started. Removed permissions.")
+
+      result = import
+
+      expect(person.affiliations.sole).to have_attributes(start_date: Date.new(2015, 3, 1), end_date: Date.new(2015, 3, 1))
+      expect(result.end_sources).to eq(never_started: 1)
+    end
+
     it "is never later than yesterday" do
       personnel("PS0001", Status: "Inactive", DateEntered: 3.days.ago.to_date.iso8601)
 
@@ -195,6 +231,16 @@ RSpec.describe AffiliationServices::ImportPersonnel do
 
       expect(existing.reload).to have_attributes(filemaker_code: nil, start_date: nil, inactive: false)
       expect(result.skip_reasons).to eq("ended in FileMaker, but the portal's Facilitator affiliation there is open" => 1)
+    end
+
+    it "links an Active row to a current one starting within 90 days, keeping its training dates" do
+      training_row = create(:affiliation, person:, organization: program, title: "Facilitator",
+                                          start_date: Date.new(2015, 3, 20), end_date: nil, primary_contact: false)
+      personnel("PS0001")
+
+      expect(import.results[:linked].size).to eq(1)
+      expect(training_row.reload).to have_attributes(filemaker_code: "PS0001", start_date: Date.new(2015, 3, 20), primary_contact: true)
+      expect(training_row.comments.sole.body).to include("FileMaker entered them on 2015-03-01; this affiliation keeps its own start date.")
     end
 
     it "leaves an open one with other dates alone when FileMaker says Active" do
