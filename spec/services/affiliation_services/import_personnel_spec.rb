@@ -178,6 +178,13 @@ RSpec.describe AffiliationServices::ImportPersonnel do
       end
     end
 
+    it "skips a row naming an agency card, which is an organization, not a person" do
+      FmRolodex.create!(fm_id: "00777", data: { "isAgency__c" => "1", "Organization" => "Harbor House" })
+      personnel("PS0001", PersonID: "00777")
+
+      expect(import.skip_reasons).to eq("names an agency card, not a person" => 1)
+    end
+
     it "skips a project whose code is on several orgs" do
       create(:organization, filemaker_code: "P0001")
       personnel("PS0001")

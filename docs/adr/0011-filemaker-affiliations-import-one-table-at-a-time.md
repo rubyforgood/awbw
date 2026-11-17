@@ -10,7 +10,7 @@
 - **Only rows with no open question are imported.** The rest are skipped with their reason
   and listed for staff in a saved Blazer query, so nothing is guessed.
 - **Round one has two passes.** `fm:import_personnel` (built) brings the rows in with the dates
-  FileMaker holds; `fm:end_inactive_personnel` then gives the rows FileMaker marks inactive an
+  FileMaker holds; `fm:end_inactive_personnel` (built) then gives the rows FileMaker marks inactive an
   end date, so program status, which reads only affiliation dates, sees them as ended.
 - **Jobs come second.** Round two reads `fm_people_to_organizations` (1,128 rows in
   production), and every row becomes a job affiliation.
@@ -241,16 +241,30 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
      row's own `Notes` say the person left (the `LEFT_NOTE` wording), which ADR-0008's pass
      also read (`Notes` is filled on 7,621 Personnel rows; how many say "left" is unmeasured);
   3. the project's last workshop log, by anyone;
-  4. a stand-in for rows with none of these (open question below), never later than
-     yesterday.
+  4. December 31 of the year the row started (decided 2026-11-17), never later than
+     yesterday — a stand-in that keeps the history in program status; the comment says so.
 
   A candidate before the row's start date or after today is skipped for the next one. A row
   with no start date gets none of these and is listed.
+- **Evidence in production** (2026-11-13, ended rows with no project `CloseDate`):
+
+    | Best evidence | Rows | Range |
+    |---|---|---|
+    | Their own last workshop log on that project | 324 | 2019-11 to 2026-01 |
+    | The project's last workshop log, by anyone | 2,094 | 2019-12 to 2026-02 |
+    | Only the row's `DateTimeModified` | 570 | 2021-02 to 2026-09 |
+    | Nothing | 3,443 | |
+
+    Workshop logs only go back to late 2019 and `DateTimeModified` to early 2021, so
+    neither reaches most of this history.
 - **Each dated row gets a comment**, topic "FileMaker import", naming the source and saying
   FileMaker never recorded the real end date.
 - **Running it:** dry run by default (`DRY_RUN=false` writes), since every date it sets is
   inferred. Batches, rerun-safe (a dated row is out of scope), `Current.source =
   "fm_end_inactive_personnel"`, and a saved report counting rows per source.
+- **Activity:** the affiliations already exist, so no per-row events are kept; the run logs
+  one `end_dates.affiliation` summary event with its counts and the saved report.
+- **Built (2026-11-17).**
 
 ## Decision — round two: people-to-organizations → job affiliations
 
@@ -318,6 +332,10 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
   - **Start:** `DateEntered`, the first day FileMaker records the person at the org. A job
     affiliation is normally undated (ADR-0003 D1) because we rarely know when it began; here
     we know at least this much.
+  - **No start when the notes say they left** (decided 2026-11-17). Staff often entered the row
+    and marked the person gone in one sitting, so `DateEntered` would read as a one-day job, and
+    "Left in 2016" was entered in 2020 or later, after its own end. The row reads "was there,
+    had left by this date".
   - **End:** only when `Notes` say the person left: "no longer with/at/works/employed" (the
     `LEFT_NOTE` wording ADR-0008 used) or "left" (decided 2026-11-14, for the one note reading
     "Left in 2016"). A note naming the year they left ends on December 31 of that year, the
@@ -352,13 +370,13 @@ and the inferred end dates can be reviewed, rerun or undone on their own.
 3. **Rolodex card `OrgID` + `Title` → job affiliation.** This overlaps round two. The card
    has no ID of its own, so a rerun matches on person + org + title.
 4. **Work addresses → the organization** (ADR-0008, ADR-0010).
-5. **People named on agency cards.** `fm:import_people` skipped every agency card
-   (`FmRolodex.agency_cards`); ADR-0008's pass ran `PersonServices::ImportFromRolodex` over them
-   so the contact person each names became a `Person`. That service still exists; a small task
-   can run it over agency cards alone.
 
 Also in ADR-0008's pass, left out on purpose until a round decides them:
 
+- **Agency cards are organizations, not people** (decided 2026-11-17). The organizations import
+  already read them. A Personnel or job row naming an agency card as its person is skipped
+  ("names an agency card, not a person") for staff; production has 158 such cards on those
+  rows. No round turns an agency card's contact into a person.
 - **AWBW Placeholder** — a Personnel row naming no person gave an otherwise empty org one
   Facilitator affiliation for a placeholder person, to keep the program's history.
 - **Personnel rows with no project** (27) — placed at the org on the person's Rolodex card.
@@ -387,31 +405,6 @@ Also in ADR-0008's pass, left out on purpose until a round decides them:
     org is close enough: for a job affiliation the exact program matters little, and it's
     usually the org already holding the affiliations. Rows whose own clues point at several
     orgs, or with no clue, go to staff.
-- **Round two: the start date of a row whose notes say the person left.** Entered and marked
-  left in the same sitting, `DateEntered` reads as a one-day job; and "Left in 2016" was
-  entered in 2020 or later, so its start would fall after its end. Leaning: leave the start
-  blank on any row whose notes say the person left ("was there, had left by this date").
-  Blazer L1 counts how many left-rows were entered and marked left on the same day.
-
-- **Pass two: the stand-in end date for ended rows with no evidence** (about 3,440 rows).
-  - **What FileMaker has** (production, 2026-11-13; each row counted under its best source):
-
-    | Best evidence | Rows | Range |
-    |---|---|---|
-    | Their own last workshop log on that project | 324 | 2019-11 to 2026-01 |
-    | The project's last workshop log, by anyone | 2,094 | 2019-12 to 2026-02 |
-    | Only the row's `DateTimeModified` | 570 | 2021-02 to 2026-09 |
-    | Nothing | 3,443 | |
-
-    Workshop logs only go back to late 2019 and `DateTimeModified` to early 2021, so
-    neither reaches most of this history.
-  - **Options:** December 31 of the year they started (recommended: keeps the history, and
-    the comment says it's a stand-in; January 1 of that year would fall before the start
-    date, and January 1 of the next year is the same choice a day later); the day after the start (same idea, shorter); or no
-    end date and a listing for staff (the row keeps reading as running). An end date equal
-    to the start is out: program status skips zero-length rows (ADR-0001 D8a), so the
-    history would drop out.
-
 - **Round one: reconcile vs history** (open since ADR-0008). Imported Facilitator rows have no
   registration, so the event reconcile page (which includes hand-entered rows) can end them
   when no attended training backs them. Exempt rows carrying a `PS…` code?

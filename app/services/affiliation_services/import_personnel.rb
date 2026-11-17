@@ -57,6 +57,7 @@ module AffiliationServices
       @organizations = FilemakerCodeIndex.new(Organization)
       @imported = FilemakerCodeIndex.new(Affiliation)
       @projects = FmProject.all.index_by(&:fm_id)
+      @agency_cards = FmRolodex.agency_cards.pluck(:fm_id).to_set
       @staff = StaffTranslation.new
       @import_user_id = Setting.import_user&.id
     end
@@ -99,6 +100,7 @@ module AffiliationServices
 
     def person_question(code)
       return [ "names no person" ] if code.blank?
+      return [ "names an agency card, not a person", code ] if @agency_cards.include?(code)
 
       [ @people.ids(code).empty? ? "person wasn't imported" : "person code is on several people", code ]
     end
