@@ -199,6 +199,69 @@ RSpec.describe "Profile change requests", type: :request do
       expect(response.body).not_to include("Change requests")
     end
 
+    it "puts the change-requests link in the profile's top menu" do
+      create(:profile_change_request, :primary_email, person: person)
+
+      get person_path(person)
+
+      expect(response.body).to include(ERB::Util.html_escape(profile_change_requests_path(person_id: person.id, status: "pending")))
+      expect(response.body).to include("Change requests (1 pending)")
+    end
+
+    it "links the profile's affiliations section to the person's change request options" do
+      get person_path(person, section: "affiliations"), headers: { "Turbo-Frame" => "person_affiliations_section" }
+
+      expect(response.body).to include("Change request options")
+      expect(response.body).to include(ERB::Util.html_escape(new_profile_change_request_path(person_id: person, field: "affiliation")))
+    end
+
+    it "marks a request staff filed for someone, naming whose profile it's for" do
+      create(:profile_change_request, :primary_email, person: person, requested_by: admin)
+      create(:profile_change_request, :secondary_email, person: person, requested_by: owner_user)
+
+      get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+      expect(response.body).to include("#{admin.full_name} for", person_path(person))
+      expect(response.body.scan("fa-user-shield").size).to eq(1)
+      expect(response.body).to include(owner_user.full_name)
+    end
+
+    it "says a staff-filed request's review email goes to the admin only" do
+      create(:profile_change_request, :primary_email, person: person, requested_by: admin)
+
+      get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+      expect(response.body).to include("An email will be sent to admin only")
+    end
+
+    it "filters the queue to staff-filed or self-submitted requests" do
+      create(:profile_change_request, :primary_email, person: person, requested_by: admin, requested_value: "staff-filed@example.com")
+      create(:profile_change_request, :secondary_email, person: person, requested_by: owner_user, requested_value: "self-sent@example.com")
+      frame = { "Turbo-Frame" => "profile_change_requests_results" }
+
+      get profile_change_requests_path(status: "pending", submitted_by: "staff"), headers: frame
+      expect(response.body).to include("staff-filed@example.com")
+      expect(response.body).not_to include("self-sent@example.com")
+      expect(response.body).to include(ERB::Util.html_escape(profile_change_requests_path(status: "resolved", submitted_by: "staff")))
+
+      get profile_change_requests_path(status: "pending", submitted_by: "person"), headers: frame
+      expect(response.body).to include("self-sent@example.com")
+      expect(response.body).not_to include("staff-filed@example.com")
+
+      get profile_change_requests_path(status: "pending"), headers: frame
+      expect(response.body).to include("self-sent@example.com", "staff-filed@example.com")
+    end
+
+    it "sends an admin on the options page back to the profile" do
+      create(:affiliation, person: person, organization: create(:organization))
+      create(:affiliation, person: person, organization: create(:organization))
+
+      get new_profile_change_request_path(person_id: person, field: "affiliation")
+
+      expect(response.body).to include("Which organization?")
+      expect(response.body).to include("Back to profile", person_path(person, anchor: "affiliations"))
+    end
+
     it "filters the queue to one person" do
       create(:profile_change_request, :primary_email, person: person, requested_value: "mine@example.com")
       create(:profile_change_request, :primary_email, requested_value: "someone-else@example.com")

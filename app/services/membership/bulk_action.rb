@@ -5,12 +5,16 @@ class Membership::BulkAction
 
   ACTIONS = [
     Membership::BulkAction::SetFee,
-    Membership::BulkAction::LockAccount
+    Membership::BulkAction::LockAccount,
+    Membership::BulkAction::EmailMembers
   ].freeze
 
   def self.all = ACTIONS.map(&:new)
 
   def self.for(key) = all.find { |action| action.key == key.to_s }
+
+  def submit_label = "Apply"
+  def failure_verb = "updated"
 
   # Each action requires the following:
   # key

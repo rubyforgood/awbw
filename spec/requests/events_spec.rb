@@ -854,6 +854,163 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("$30")
       end
 
+      context "event type checkboxes" do
+        def headers_and_rows
+          Nokogiri::HTML(response.body)
+        end
+
+        it "defaults to facilitator trainings, both checked" do
+          sign_in admin
+          get scholarships_events_path
+          page = headers_and_rows
+          checked = page.css("select#event_kinds option[selected]").map { |option| option["value"] }
+          expect(checked).to contain_exactly("live", "on_demand")
+          expect(response.body).to include("All facilitator trainings")
+          expect(response.body).not_to include("Paid webinar")
+        end
+
+        it "narrows to the checked kinds" do
+          sign_in admin
+          get scholarships_events_path(event_kinds: [ "", "other" ])
+          expect(response.body).to include("Paid webinar", "All events")
+          expect(response.body).not_to include("TAC 261")
+        end
+
+        it "covers every event when submitted with nothing checked" do
+          sign_in admin
+          get scholarships_events_path(event_kinds: [ "" ])
+          expect(response.body).to include("Paid webinar", "TAC 261", "Self-paced training")
+        end
+
+        it "carries the checked kinds into the registrations index links" do
+          paid = create(:event_registration, event: webinar, registrant: create(:person), status: "attended")
+          award = create(:scholarship, recipient: paid.registrant, amount_cents: 1_500, grant: nil)
+          create(:allocation, source: award, allocatable: paid, amount: 1_500)
+          sign_in admin
+
+          get scholarships_events_path(event_kinds: [ "", "live", "other" ])
+          expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "live,other", funder: "awbw", organization_id: "none")))
+
+          get scholarships_events_path(event_kinds: [ "" ])
+          expect(response.body).to include(CGI.escapeHTML(event_registrations_path(funder: "awbw", organization_id: "none")))
+        end
+      end
+
+      it "lists the organizations whose trainees received scholarships, with location" do
+        org = create(:organization, name: "Harbor Program")
+        create(:address, addressable: org, city: "Long Beach", state: "CA")
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        create(:event_registration_organization, event_registration: reg, organization: org)
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 2_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 2_500)
+
+        sign_in admin
+        get scholarships_events_path
+
+        expect(response.body).to include("Organizations with scholarships", "Harbor Program", "Long Beach, CA", "$25")
+        # Across trainings, figures drill into the registrations index.
+        expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "trainings", scholarship: "yes", organization_id: org.id)))
+      end
+
+      it "adds a No organization row whose figures link to unlinked registrations" do
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 1_500)
+
+        sign_in admin
+        get scholarships_events_path
+
+        expect(response.body).to include("No organization")
+        expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "trainings", funder: "awbw", organization_id: "none")))
+      end
+
+      it "lists the No organization row first" do
+        org = create(:organization, name: "Aardvark Program")
+        linked = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        create(:event_registration_organization, event_registration: linked, organization: org)
+        unlinked = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        [ linked, unlinked ].each do |reg|
+          award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_000, grant: nil)
+          create(:allocation, source: award, allocatable: reg, amount: 1_000)
+        end
+
+        sign_in admin
+        get scholarships_events_path
+
+        section = Nokogiri::HTML(response.body).xpath("//section[.//h3[contains(., 'Organizations with scholarships')]]")
+        first_cells = section.css("tbody tr").map { |row| row.at_css("td").text.strip }
+        expect(first_cells).to eq([ "No organization", "Aardvark Program" ])
+      end
+
+      it "carries the report's event search into the registrations index links" do
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 1_500)
+
+        sign_in admin
+        get scholarships_events_path(search: "TAC")
+
+        expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "trainings", event_search: "TAC", funder: "awbw", organization_id: "none")))
+      end
+
+      it "drills into the training's registrants when filtered to one event" do
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 1_500)
+
+        sign_in admin
+        get scholarships_events_path(event_id: training.id)
+
+        expect(response.body).to include(CGI.escapeHTML(registrants_event_path(training, scholarship: "yes", organization_id: "none")))
+        expect(response.body).not_to include(event_registrations_path(event_type: "trainings"))
+      end
+
+      it "links a year subtotal to that year's registrations" do
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 1_500)
+        create(:event, facilitator_training: true, start_date: Date.new(2025, 5, 1))
+
+        sign_in admin
+        get scholarships_events_path
+
+        expect(response.body).to include(CGI.escapeHTML(event_registrations_path(event_type: "trainings", event_year: 2026, funder: "awbw")))
+        # A training row drills into that training's roster.
+        expect(response.body).to include(CGI.escapeHTML(registrants_event_path(training, funder: "awbw")))
+      end
+
+      it "drops the funded/unfunded columns when the funding toggle is set to totals" do
+        org = create(:organization, name: "Harbor Program")
+        reg = create(:event_registration, event: training, registrant: create(:person), status: "attended")
+        create(:event_registration_organization, event_registration: reg, organization: org)
+        award = create(:scholarship, recipient: reg.registrant, amount_cents: 2_500, grant: nil)
+        create(:allocation, source: award, allocatable: reg, amount: 2_500)
+        sign_in admin
+
+        get scholarships_events_path
+        headers = Nokogiri::HTML(response.body).css("th").map { |th| th.text.strip }
+        expect(headers).to include("Funded", "Unfunded", "Total")
+        # One toggle on the training table, one on the organizations table.
+        expect(Nokogiri::HTML(response.body).css("nav[aria-label='Funded vs unfunded']").size).to eq(2)
+
+        get scholarships_events_path(funding: "totals")
+        page = Nokogiri::HTML(response.body)
+        headers = page.css("th").map { |th| th.text.strip }
+        expect(headers).not_to include("Funded", "Unfunded")
+        expect(headers).to include("Total")
+        expect(response.body).to include("Harbor Program")
+        # The filter form keeps the toggle when filters change.
+        expect(page.at_css("input[type=hidden][name=funding]")["value"]).to eq("totals")
+      end
+
+      it "combines the totals-only and combined layouts" do
+        sign_in admin
+        get scholarships_events_path(funding: "totals", view: "combined")
+        expect(response).to have_http_status(:ok)
+        headers = Nokogiri::HTML(response.body).css("th").map { |th| th.text.strip }
+        expect(headers).not_to include("Funded", "Unfunded")
+      end
+
       it "renders the combined-cell layout when the view toggle is set" do
         sign_in admin
         get scholarships_events_path(view: "combined")
@@ -1569,6 +1726,20 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("$50 due")
     end
 
+    it "filters the roster by linked organization" do
+      organization = create(:organization)
+      linked = create(:event_registration, event: event, registrant: create(:person, first_name: "Linda", last_name: "Linked"))
+      create(:event_registration_organization, event_registration: linked, organization: organization)
+
+      get registrants_event_path(event, organization_id: organization.id)
+      expect(response.body).to include("Linda")
+      expect(response.body).not_to include(person.last_name)
+
+      get registrants_event_path(event, organization_id: EventRegistration::NO_ORGANIZATION)
+      expect(response.body).to include(person.last_name)
+      expect(response.body).not_to include("Linda")
+    end
+
     context "eyebrow back link" do
       it "returns to the dashboard by default" do
         get registrants_event_path(event)
@@ -2082,6 +2253,16 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Transfer incomplete — no destination event recorded yet")
       end
 
+      it "keeps a no-show on record in the badge after the registrant transfers out" do
+        reg = create(:event_registration, event: event, status: "no_show")
+        reg.update!(status: "transferred_out")
+
+        get registrants_event_path(event, params: { attendance_status: "transferred_out" })
+
+        badge = Capybara.string(response.body).find("##{ActionView::RecordIdentifier.dom_id(reg, :attendance_status)}")
+        expect(badge.text.squish).to include("No show Transferred out")
+      end
+
       it "drops the warning once the transfer destination is recorded" do
         source = create(:event_registration, event: event, status: "transferred_out")
         create(:event_registration, registrant: source.registrant, transferred_from_registration: source)
@@ -2441,6 +2622,30 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include('fa-file-lines')
       end
 
+      it "shows a transferred-in registrant's pending scholarship request as Requested" do
+        source = create(:event_registration, registrant: person, status: "transferred_out", scholarship_requested: true)
+        registration.update!(transferred_from_registration: source, scholarship_requested: true)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("/scholarships/new?allocatable_sgid=")
+      end
+
+      it "shows a transferred-in registrant's answers from the original event in teal" do
+        source_event = create(:event, title: "Origin training")
+        source = create(:event_registration, event: source_event, registrant: person, status: "transferred_out")
+        registration.update!(transferred_from_registration: source)
+        create(:event_form, event: source_event, form: reg_form, role: "registration")
+        create(:form_submission, person: person, form: reg_form, event: source_event)
+
+        get registrants_event_path(event)
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{event_registrant_submissions_path(source_event, person_id: person.id, return_to: "registrants", event_registration_id: registration.id)}']")
+        expect(link).to be_present
+        expect(link["class"]).to include("text-teal-600")
+        expect(link["title"]).to start_with("From the original registration for Origin training")
+      end
+
       it "shows no form icon when the only submission is for a bulk payment form" do
         bulk_payment_form = create(:form, :standalone, name: "Bulk Payment Form")
         create(:event_form, event: event, form: reg_form, role: "registration")
@@ -2797,6 +3002,17 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("License #")
       expect(response.body).to include("Event attendance")
       expect(response.body).to include("Onboard")
+    end
+
+    it "shows a transferred-in recipient's award from the original registration, not Requested" do
+      source = create(:event_registration, registrant: registration.registrant, status: "transferred_out", scholarship_requested: true)
+      create(:allocation, source: create(:scholarship, recipient: source.registrant, amount_cents: 4_200), allocatable: source, amount: 1)
+      registration.update!(transferred_from_registration: source, scholarship_requested: true)
+
+      get onboarding_event_path(event)
+
+      expect(response.body).to include("$42")
+      expect(response.body).not_to include("/scholarships/new?allocatable_sgid=")
     end
 
     it "offers a Create scholarship link when the registrant has none" do

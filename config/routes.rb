@@ -119,6 +119,8 @@ Rails.application.routes.draw do
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
   get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
   get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
+  get "registration/:slug/scholarship/application", to: "events/callouts#scholarship_application", as: :registration_scholarship_application
+  post "registration/:slug/scholarship/application", to: "events/callouts#submit_scholarship_application"
   post "registration/:slug/scholarship/agreement", to: "events/callouts#sign_agreement", as: :registration_scholarship_agreement
   post "registration/:slug/scholarship/decline", to: "events/callouts#decline_agreement", as: :registration_scholarship_decline
   post "registration/:slug/scholarship/request-support", to: "events/callouts#request_scholarship_support", as: :registration_scholarship_request_support
@@ -400,6 +402,7 @@ Rails.application.routes.draw do
   resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ] do
     get :receipt, on: :member
     resource :checkout, only: [ :create ], controller: "membership_invoices/checkouts"
+    post :subscribe, on: :member, to: "membership_invoices/subscribe_checkouts#create"
     get :cancel_checkout, on: :member, to: "membership_invoices/checkouts#cancel"
     resource :reconciliation, only: [ :show, :create, :destroy ],
              controller: "membership_invoices/reconciliations"

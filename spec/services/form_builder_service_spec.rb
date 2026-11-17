@@ -63,7 +63,7 @@ RSpec.describe FormBuilderService do
         keys = form.form_fields.pluck(:field_identifier).compact
         expect(keys).to include(
           "organization_name", "organization_position", "organization_website", "organization_type",
-          "organization_street", "organization_city", "organization_state", "organization_zip"
+          "organization_phone", "organization_street", "organization_city", "organization_state", "organization_zip"
         )
         expect(keys.grep(/\Aagency_/)).to be_empty
       end

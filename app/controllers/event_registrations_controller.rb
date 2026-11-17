@@ -8,6 +8,8 @@ class EventRegistrationsController < ApplicationController
   # A transferred-out reg is locked (issue #1944): its inline write endpoints are
   # blocked with a warning rather than silently ignored. The full-form `update` is
   # handled separately (it keeps comments/communications editable).
+  before_action -> { Current.source = OrganizationServices::LinkSubmittedOrganization::CHANGE_SOURCE },
+                only: %i[select_organization create_organization]
   before_action :block_locked_registration, only: [ :update_onboarding, :toggle_certificate_issued, :toggle_ce_certificate_issued, :update_attendance, :toggle_post_survey ]
 
   def index
@@ -247,6 +249,7 @@ class EventRegistrationsController < ApplicationController
     # so the new reg points straight there and the middle stop is dropped. (#1944)
     source = @event_registration.transferred_from_registration || @event_registration
     destination.intends_to_pay ||= @event_registration.intends_to_pay?
+    destination.scholarship_requested ||= @event_registration.scholarship_requested?
 
     if destination == source
       # Transferring back to the origin event undoes the whole chain: restore the
@@ -279,15 +282,26 @@ class EventRegistrationsController < ApplicationController
         EventRegistrationServices::TransferContinuingEducation.new(
           transferred_out: @event_registration, destination: previous
         ).revert
-        previous.update!(transferred_from_registration: nil)
+        previous.detach_from_transfer!
       end
       next false unless destination.save
       # Carry the transferring reg's org links onto the destination so the new reg
       # shares the same linked organizations — copied, not moved, so the source
       # keeps its own. Read before the middle reg is dropped below. (#1944)
-      @event_registration.organizations.each do |organization|
-        destination.event_registration_organizations.find_or_create_by!(organization: organization)
+      # The pinned submission and the "filled from the form" note travel with the
+      # link, so the linking page keeps pairing each org with the answers that named it.
+      @event_registration.event_registration_organizations.each do |source_link|
+        destination.event_registration_organizations.find_or_create_by!(organization_id: source_link.organization_id) do |link|
+          link.form_submission_id = source_link.form_submission_id
+          link.form_autofill_changes = source_link.read_attribute(:form_autofill_changes)
+        end
       end
+      # The facilitator affiliation the transferring reg created follows it, before a
+      # collapsing middle reg is dropped (ADR-0003 D6d). A re-pointed destination
+      # gives back only the row an earlier transfer moved onto it.
+      AffiliationServices::FollowTransfer.call(
+        to: destination, from: [ @event_registration, source ], moved_only_from: [ previous ]
+      )
       # Split/relocate CE before dropping a collapsing middle reg, so its record
       # moves forward instead of being cascade-destroyed with the reg. (#1944)
       EventRegistrationServices::TransferContinuingEducation.new(
@@ -711,14 +725,17 @@ class EventRegistrationsController < ApplicationController
     @registration_submission_entries[registration.id] ||= build_registration_submission_entries(registration)
   end
 
+  # A transferred-in registrant who didn't also register at the new event
+  # answered on the original, so read the answers from wherever they live. (#1944)
   def build_registration_submission_entries(registration)
-    form = registration.event.registration_form
+    answers_registration = registration.form_answers_registration
+    form = answers_registration.event.registration_form
     return [] unless form
 
     entries = registration.registrant.form_submissions
-      .where(form: form, event: registration.event)
+      .where(form: form, event: answers_registration.event)
       .order(:created_at)
-      .includes(form_answers: :form_field)
+      .includes(:event, form_answers: :form_field)
       .map(&:org_entry)
 
     # Attach the matching DB org (if any) for each submitted name, so the view can
@@ -805,9 +822,9 @@ class EventRegistrationsController < ApplicationController
     OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: entry)
   end
 
-  # Link the org to the registration, fill what it's missing from the submission
-  # that names it (blanks only — curated values are kept and reported as
-  # discrepancies instead), and build the flash notice — via the linking core
+  # Link the org to the registration, write the answers of the submission that
+  # names it onto the org (a valid answer replaces what's saved; the flash names
+  # what it replaced so newer edits can be reapplied), and build the flash notice — via the linking core
   # shared with the form submission editor. The link row is created first so
   # submission_entry_for counts it when deciding whether the pairing is
   # unambiguous. `record_fills` keeps a persistent note of what the form changed.
@@ -823,12 +840,11 @@ class EventRegistrationsController < ApplicationController
       organization: organization,
       entry: entry,
       scenario: @event_registration.event.linking_scenario,
-      training_date: @event_registration.event.start_date,
+      training_date: @event_registration.event.starts_on,
       event_registration: @event_registration
     )
 
-    # Pin the pairing even when nothing was filled — an org whose every answer
-    # conflicts fills nothing, and that's exactly the one whose note has to survive.
+    # Pin the pairing even when nothing was saved, so the per-card notes survive.
     link.record_form_submission(entry[:submission]) if entry
     # Back-apply the resolution onto every submission this org describes, so each
     # reads as linked in its own editor too (even under a name mismatch). A

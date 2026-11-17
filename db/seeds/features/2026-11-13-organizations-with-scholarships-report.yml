@@ -1,0 +1,13 @@
+name: "See which organizations got scholarships, and where they are"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-13
+pr_number: 2992
+action_path: "/events/scholarships"
+summary: >-
+  The scholarships report now has an Organizations with scholarships table: one
+  row per organization with its locations, recipients, number of scholarships,
+  and funded, unfunded, and total dollars. It follows the report's filters.
+pro_tips:
+  - "Locations come from recipients' facilitator affiliations in effect during the report's timeframe; job affiliations don't count."
+  - "A registration linked to several organizations counts under each one."

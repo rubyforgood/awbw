@@ -9,6 +9,7 @@
       selected      – array of selected values, type-matched to the option values
       placeholder   – text shown while nothing is selected (optional)
       wrapper_class – optional wrapper width (defaults to w-full md:w-64)
+      hide_placeholder – true hides the placeholder once anything is selected
       hint          – optional HTML rendered as muted help text under the select %>
 <div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-64") %>">
   <%= label_tag param, label, class: search_label_class %>
@@ -18,7 +19,8 @@
                  multiple: true,
                  include_blank: false,
                  class: search_field_class(extra: "ts-flat"),
-                 data: { searchable_checkbox_target: "select", placeholder: local_assigns[:placeholder] } %>
+                 data: { searchable_checkbox_target: "select", placeholder: local_assigns[:placeholder],
+                         hide_placeholder: local_assigns[:hide_placeholder] } %>
   <% if local_assigns[:hint].present? %>
     <p class="mt-1 text-xs text-gray-500"><%= local_assigns[:hint] %></p>
   <% end %>

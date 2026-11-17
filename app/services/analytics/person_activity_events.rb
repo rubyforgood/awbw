@@ -20,6 +20,7 @@ module Analytics
       "Membership" => { "person_id" => "Person" },
       "Address" => { "addressable" => %w[Person] },
       "ContactMethod" => { "contactable" => %w[Person] },
+      "ProfileChangeRequest" => { "person_id" => "Person" },
       "EventRegistration" => { "registrant_id" => "Person" },
       "ContinuingEducationRegistration" => { "event_registration_id" => "EventRegistration" },
       "EventRegistrationChecklistCompletion" => { "event_registration_id" => "EventRegistration" },
@@ -207,6 +208,8 @@ module Analytics
         "Membership" => @person.memberships.select(:id),
         "Address" => @person.addresses.select(:id),
         "ContactMethod" => @person.contact_methods.select(:id),
+        # Change requests for this person — sent by them or filed by staff for them.
+        "ProfileChangeRequest" => @person.profile_change_requests.select(:id),
         # Every comment connected to the person, not just profile comments —
         # reuses PersonCommentAggregator so History and the comments page agree.
         "Comment" => comment_aggregator.comments.reorder(nil).select(:id),

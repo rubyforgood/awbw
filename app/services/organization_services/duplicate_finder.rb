@@ -3,8 +3,9 @@ require "set"
 module OrganizationServices
   # Surfaces likely-duplicate organizations for the deduper's candidate list.
   # Clusters organizations by several signals — normalized name, name minus a
-  # legal suffix (Inc/LLC/…), name minus a trailing audience word (Children's/
-  # Adult/Combined/…), FileMaker code, and shared address — then annotates
+  # legal suffix (Inc/LLC/…), name minus trailing audience words (Women's/
+  # Children's/Combined/…) and FileMaker codes (the "(ORG00001)" the import gives
+  # a namesake), FileMaker code, and shared address — then annotates
   # each cluster with why it was flagged. FileMaker is the source of truth, so a
   # cluster whose members carry different FileMaker codes is surfaced as a
   # conflict for an admin to resolve, never silently treated as a clean merge.
@@ -14,8 +15,13 @@ module OrganizationServices
     # Trailing audience descriptors that distinguish programs for the same org
     # (e.g. "… Children's" vs "… Adult"); ignored at the end of a name for
     # matching. Apostrophes are already stripped by #normalized_name, so
-    # "children's" arrives as "childrens" and "adult's" as "adults".
-    AUDIENCE_WORDS = %w[combined childrens children adult adults].freeze
+    # "children's" arrives as "childrens" and "adult's" as "adults". Women and
+    # Men also end real names ("Safe Place for Women"), so only their
+    # possessives count.
+    AUDIENCE_WORDS = %w[combined childrens children adult adults womens mens].freeze
+    # A FileMaker org or project code as a name word, once #normalized_name has
+    # dropped its parentheses: "Hope Center (ORG00001)" ends in "org00001".
+    FILEMAKER_CODE_WORD = /\A(?:org|p)\d{4,}\z/
 
     Group = Struct.new(:key, :label, :records, :reasons, keyword_init: true)
 
@@ -35,7 +41,7 @@ module OrganizationServices
       union = UnionFind.new(@organizations.map(&:id))
       cluster(union) { |org| [ normalized_name(org).presence ].compact }
       cluster(union) { |org| [ suffixless_name(org).presence ].compact }
-      cluster(union) { |org| [ audience_stripped_name(org).presence ].compact }
+      cluster(union) { |org| [ core_name(org).presence ].compact }
       cluster(union) { |org| org.filemaker_codes }
       cluster(union) { |org| address_keys(org) }
 
@@ -70,8 +76,11 @@ module OrganizationServices
       suffixless = records.map { |org| suffixless_name(org) }.reject(&:blank?).uniq
       reasons << "Same name aside from Inc/LLC/etc." if normalized.size > 1 && suffixless.size == 1
 
-      audience = records.map { |org| audience_stripped_name(org) }.reject(&:blank?).uniq
-      reasons << "Same name aside from audience (children's/adult/etc.)" if normalized.size > 1 && suffixless.size > 1 && audience.size == 1
+      codeless = records.map { |org| codeless_name(org) }.reject(&:blank?).uniq
+      reasons << "Same name aside from a FileMaker code in the name" if normalized.size > 1 && codeless.size == 1
+
+      core = records.map { |org| core_name(org) }.reject(&:blank?).uniq
+      reasons << "Same name aside from audience (women's/children's/adult/etc.)" if normalized.size > 1 && suffixless.size > 1 && codeless.size > 1 && core.size == 1
 
       reasons.concat(filemaker_reasons(records))
 
@@ -98,10 +107,23 @@ module OrganizationServices
       self.class.suffixless_name(org.name)
     end
 
-    def audience_stripped_name(org)
+    def codeless_name(org)
       tokens = normalized_name(org).split
-      tokens.pop while tokens.size > 1 && AUDIENCE_WORDS.include?(tokens.last)
+      tokens.pop while tokens.size > 1 && tokens.last.match?(FILEMAKER_CODE_WORD)
       tokens.join(" ")
+    end
+
+    # The name with its legal suffix and any trailing audience words and
+    # FileMaker codes dropped, in whatever order they're stacked
+    # ("Hope Center Women's (ORG00001)" → "hope center").
+    def core_name(org)
+      tokens = suffixless_name(org).split
+      tokens.pop while tokens.size > 1 && trailing_noise?(tokens.last)
+      tokens.join(" ")
+    end
+
+    def trailing_noise?(token)
+      AUDIENCE_WORDS.include?(token) || token.match?(FILEMAKER_CODE_WORD)
     end
 
     def address_keys(org)

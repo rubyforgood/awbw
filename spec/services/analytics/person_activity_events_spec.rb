@@ -50,6 +50,16 @@ RSpec.describe Analytics::PersonActivityEvents do
       expect(described_class.new(person).relation).to include(target)
     end
 
+    it "includes events about the person's profile change requests, including ones staff filed for them" do
+      own = create(:profile_change_request, person: person, requested_by: person.user)
+      staff_filed = create(:profile_change_request, :secondary_email, person: person, requested_by: create(:user, :admin))
+      targets = [ own, staff_filed ].map { |request| event(resource_type: "ProfileChangeRequest", resource_id: request.id, name: "create.profile_change_request") }
+      other = event(resource_type: "ProfileChangeRequest", resource_id: create(:profile_change_request).id, name: "create.profile_change_request")
+
+      expect(described_class.new(person).relation).to include(*targets)
+      expect(described_class.new(person).relation).not_to include(other)
+    end
+
     it "includes events about comments on the person's affiliations" do
       comment = create(:comment, commentable: create(:affiliation, person: person))
       target = event(resource_type: "Comment", resource_id: comment.id, name: "create.comment")

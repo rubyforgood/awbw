@@ -76,5 +76,24 @@
         <% end %>
       </div>
     <% end %>
+
+    <% if event_registration.scholarship_requested? &&
+          event_registration.slug.present? &&
+          event_registration.event.scholarship_form.present? &&
+          !event_registration.scholarship_application_completed? %>
+      <% share_url = registration_scholarship_application_url(event_registration.slug) %>
+      <div class="rounded-md border border-fuchsia-200 bg-fuchsia-50 px-2.5 py-2">
+        <p class="text-xs font-medium text-fuchsia-800">Scholarship form not completed</p>
+        <div class="mt-1.5 flex items-center gap-1.5">
+          <input type="text" value="<%= share_url %>" readonly onclick="this.select()"
+                 class="min-w-0 flex-1 rounded border border-fuchsia-200 bg-white px-2 py-1 font-mono text-2xs text-gray-600">
+          <button type="button"
+                  onclick="navigator.clipboard.writeText('<%= j share_url %>').then(() => { this.textContent = 'Copied!'; setTimeout(() => { this.textContent = 'Copy' }, 2000) })"
+                  class="<%= button_classes(:utility_outline, size: :sm, extra: "whitespace-nowrap") %>">
+            Copy
+          </button>
+        </div>
+      </div>
+    <% end %>
   </div>
 </section>

@@ -2,19 +2,27 @@
 <% highlighted = params[:highlight].to_s == request.object.id.to_s %>
 <div class="scroll-mt-24 rounded-lg border p-4 shadow-sm transition-colors duration-150 <%= highlighted ? "border-yellow-500 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200 bg-white" %>"
      id="<%= dom_id(request.object) %>">
-  <div class="flex flex-wrap items-start justify-between gap-2">
-    <div>
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="font-semibold text-gray-800"><%= request.field_label %></span>
-        <%= request.status_badge %>
-        <% if request.resolution_note %>
-          <span class="text-xs text-gray-500"><%= request.resolution_note %></span>
-        <% end %>
-      </div>
-      <p class="mt-1 text-sm text-gray-500">
-        Requested by <%= request.requested_by.full_name %> on <%= request.requested_on %>
-      </p>
+  <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="font-semibold text-gray-800"><%= request.field_label %></span>
+      <%= request.status_badge %>
+      <% if request.resolution_note %>
+        <span class="text-xs text-gray-500"><%= request.resolution_note %></span>
+      <% end %>
     </div>
+    <%# Who sent it and when. Staff can file a request for someone from their
+        profile, so a staff-filed one also names whose profile it's for. %>
+    <p class="ml-auto flex flex-wrap items-center justify-end gap-x-1.5 text-sm text-gray-500">
+      <% if request.staff_filed? %>
+        <span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-800">
+          <i class="fa-solid fa-user-shield"></i> Staff
+        </span>
+        <span><%= request.requested_by.full_name %> for <%= link_to request.person.full_name, person_path(request.person), class: "underline hover:text-gray-700", data: { turbo_frame: "_top" } %></span>
+      <% else %>
+        <span><%= request.requested_by.full_name %></span>
+      <% end %>
+      <span>· <%= request.requested_on %></span>
+    </p>
   </div>
 
   <dl class="mt-3 space-y-1 text-sm">

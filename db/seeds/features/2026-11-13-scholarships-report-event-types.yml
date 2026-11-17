@@ -1,0 +1,12 @@
+name: "Choose which event types the scholarships report covers"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-13
+pr_number: 2992
+action_path: "/events/scholarships"
+summary: >-
+  Check Live trainings, On-demand trainings, Other events, or any mix to set
+  which events the scholarships report includes. It starts with both training
+  types checked, as before.
+pro_tips:
+  - "Uncheck everything to include every event."

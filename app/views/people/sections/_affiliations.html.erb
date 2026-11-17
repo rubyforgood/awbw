@@ -14,4 +14,13 @@
   <% else %>
     <p class="text-gray-500 italic">No active affiliations.</p>
   <% end %>
+  <%# Admins see the same "which organization / what to change" options the person gets. %>
+  <% if allowed_to?(:index?, ProfileChangeRequest) %>
+    <div class="mt-4">
+      <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation"),
+                  data: { turbo_frame: "_top" }, class: admin_button_classes do %>
+        <i class="fa-solid fa-list-check"></i> Change request options
+      <% end %>
+    </div>
+  <% end %>
 <% end %>

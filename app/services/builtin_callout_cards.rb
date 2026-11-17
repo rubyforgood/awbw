@@ -82,8 +82,9 @@ class BuiltinCalloutCards
   # has no payment card, an event with no scholarship form has no scholarship
   # card, an event that offers no CE hours has no CE card) — or nil when the event
   # is configured for it. The card builders below enforce these same gaps at
-  # render time; the editor surfaces the phrase as an amber "won't show" badge so
-  # admins know a published callout still won't reach the ticket.
+  # render time (except a scholarship request or award carried in by a transfer); the
+  # editor surfaces the phrase as an amber "won't show" badge so admins know a
+  # published callout still won't reach the ticket.
   def self.config_gap(event, builtin_key)
     case builtin_key
     when "payment"
@@ -249,9 +250,9 @@ class BuiltinCalloutCards
   # confirmation — but with nothing left to act on. The newest award decides
   # whether the card reads as declined.
   def scholarship_status_card
-    return if config_gap?("scholarship")
-    # A transferred-in recipient's award lives on the source; keep the card so they
-    # can respond to it from this ticket. (#1944)
+    # A transfer can land a request or award at an event with no scholarship form, and a
+    # transferred-in award lives on the source; keep the card so they respond from this ticket. (#1944)
+    return if config_gap?("scholarship") && !registration.transferred_in? && !registration.scholarship_recipient?
     return unless registration.scholarship_requested? || registration.scholarship_recipient?
     # Awarded is display-only: the scholarship record exists earlier, but the award
     # is only shown as awarded once the recipient signs the agreement. Until then

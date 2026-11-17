@@ -97,7 +97,7 @@ class Membership::InvoiceCheckout
     processor = person.stripe_payment_processor
 
     metadata = { membership_id: @invoice.membership_id, membership_invoice_id: @invoice.id }
-    payment_intent_data = { metadata: metadata }
+    payment_intent_data = { metadata: metadata, description: DESCRIPTION }
     payment_intent_data[:setup_future_usage] = "off_session" if @save_card
 
     session = processor.checkout(

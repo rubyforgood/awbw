@@ -1553,6 +1553,27 @@ if facilitator_training && registration_form
     org.addresses.create!(street_address: "100 Demo Way", city: "Riverside", locality: "Riverside", state: "CA", zip_code: "92501", primary: true) if org.addresses.none?
   end
 
+  # The first two Riverside orgs are the org deduper's demo pair: give each different audit
+  # stamps and linked records so the merge preview has values on both sides to compare.
+  riverside_parent = Organization.find_by!(name: "Riverside Wellness Collective")
+  [
+    { name: "Riverside Counseling Center", created_at: 6.years.ago, creator: "umberto.user@example.com", editor: "amy.user@example.com",
+      location: { city: "Riverside", state: "CA" }, windows_type: "Adult" },
+    { name: "Riverside Family Services", created_at: 2.years.ago, creator: "amy.user@example.com", editor: "aisha.user@example.com",
+      location: { city: "Moreno Valley", state: "CA" }, windows_type: "Children",
+      parent: riverside_parent }
+  ].each do |attrs|
+    location = Location.find_or_create_by!(**attrs[:location], country: "US")
+    Organization.find_by!(name: attrs[:name]).update_columns(
+      created_at: attrs[:created_at],
+      created_by_id: User.find_by(email: attrs[:creator])&.id,
+      updated_by_id: User.find_by(email: attrs[:editor])&.id,
+      location_id: location.id,
+      windows_type_id: WindowsType.find_by(short_name: attrs[:windows_type])&.id,
+      parent_id: attrs[:parent]&.id
+    )
+  end
+
   link_org = ->(registration, organization) do
     Affiliation.find_or_create_by!(person: registration.registrant, organization: organization) do |aff|
       aff.title = "Facilitator"

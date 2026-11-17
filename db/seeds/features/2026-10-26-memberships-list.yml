@@ -1,0 +1,13 @@
+name: "Memberships list with coverage and payment filters"
+area: payments
+display_status: admin_facing
+released_on: 2026-10-26
+pr_number: 2764
+action_path: "/memberships"
+summary: >-
+  See every membership in one list with its status, payment, autopay, price, and
+  term. Filter by coverage (active, ending, upcoming, ended), person, organization,
+  and payment (balance due or paid).
+pro_tips:
+  - "\"Ending\" means renewal is off but the member is still covered today."
+  - "The organization filter matches anyone ever affiliated with that organization, including ended affiliations."

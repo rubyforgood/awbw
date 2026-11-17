@@ -35,7 +35,7 @@
         as the source answer admins reconcile against; rendered grey/neutral. A
         registrant can have more than one submission, so each is listed with its
         own green link to that submission's public view. === %>
-    <%# Each submitted org that isn't in the DB gets a "Create and link" row, the
+    <%# Each submitted org that isn't in the DB gets a "Create org and link" row, the
         expected next step — so those take the solid (primary) style and "Link
         organization" is demoted to the outline style. %>
     <details class="mb-8" open>
@@ -53,15 +53,23 @@
                 <%# The whole card links to this specific submission's public view;
                     the green form-submission icon (also used on the registrants list)
                     sits inline as the affordance. %>
-                <%= link_to event_registrant_submissions_path(@event_registration.event, person_id: @person.id, return_to: "link_organization", event_registration_id: @event_registration.id, link_org_return_to: params[:return_to], anchor: "form-submission-#{entry[:submission].id}"),
+                <%# A transferred-in registrant's answers can live on the original
+                    registration: link to that event's page, in the teal transfer-in color. %>
+                <% submission_event = entry[:submission].event || @event_registration.event %>
+                <% original_event_title = submission_event.title if submission_event != @event_registration.event %>
+                <%= link_to event_registrant_submissions_path(submission_event, person_id: @person.id, return_to: "link_organization", event_registration_id: @event_registration.id, link_org_return_to: params[:return_to], anchor: "form-submission-#{entry[:submission].id}"),
                             target: "_blank", rel: "noopener",
-                            class: "flex items-start gap-2 group hover:text-green-800",
-                            title: multiple ? "View submission ##{i + 1}" : "View form submission",
+                            class: "flex items-start gap-2 group #{original_event_title ? "hover:text-teal-800" : "hover:text-green-800"}",
+                            title: [ ("From the original registration for #{original_event_title}" if original_event_title),
+                                     multiple ? "View submission ##{i + 1}" : "View form submission" ].compact.join("\n"),
                             data: { turbo_frame: "_top" } do %>
-                  <i class="fa-solid fa-file-lines text-green-600 group-hover:text-green-800 mt-1 shrink-0"></i>
+                  <i class="fa-solid fa-file-lines mt-1 shrink-0 <%= original_event_title ? "text-teal-600 group-hover:text-teal-800" : "text-green-600 group-hover:text-green-800" %>"></i>
                   <div class="min-w-0">
                     <p class="text-base text-gray-800">Organization: <strong><%= entry[:org_name].presence || "—" %></strong><% if entry[:organization]&.city_state.present? %> <span class="text-sm text-gray-500">· <%= entry[:organization].city_state %></span><% end %><%# Mirror the roster's amber "Pending" chip so it's clear why this registrant was flagged — shown only while nothing is linked. %><% if entry[:org_name].present? && @linked_organizations.none? %> <%= render "shared/badge", label: "Pending", classes: "bg-amber-50 text-amber-700 border-amber-200", icon: "fa-solid fa-circle-exclamation text-2xs", extra: "ml-1", title: "The registrant submitted this organization, but none is linked to the registration yet." %><% end %></p>
                     <p class="text-base text-gray-800">Position / title: <strong><%= entry[:position].presence || "—" %></strong></p>
+                    <% if original_event_title %>
+                      <p class="text-xs text-teal-700">From the original registration for <%= original_event_title %></p>
+                    <% end %>
                   </div>
                 <% end %>
               </li>
@@ -79,7 +87,7 @@
                      always: true %>
         <% elsif @form_submission %>
           <p class="text-sm text-gray-500">
-            No organization was submitted on the <%= link_to "registration form submission", event_registrant_submissions_path(@event_registration.event, person_id: @person.id, return_to: "link_organization", event_registration_id: @event_registration.id, link_org_return_to: params[:return_to], anchor: "form-submission-#{@form_submission.id}"), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %>.
+            No organization was submitted on the <%= link_to "registration form submission", event_registrant_submissions_path(@form_submission.event || @event_registration.event, person_id: @person.id, return_to: "link_organization", event_registration_id: @event_registration.id, link_org_return_to: params[:return_to], anchor: "form-submission-#{@form_submission.id}"), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %>.
           </p>
         <% else %>
           <p class="text-sm text-gray-500">No registration form was submitted.</p>
@@ -131,7 +139,7 @@
                   </div>
                 <% end %>
                 <%# Persistent flag: the registrant's submitted type/website differ from what's
-                    saved on this org, so the fill-blanks sync left them unapplied. %>
+                    saved on this org, so the sync couldn't apply them. %>
                 <% conflicts = @profile_conflicts_by_org[org] || [] %>
                 <% if conflicts.any? %>
                   <div class="relative z-10 mt-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
@@ -141,7 +149,7 @@
                     </p>
                     <ul class="mt-1 space-y-0.5">
                       <% conflicts.each do |conflict| %>
-                        <li><span class="font-medium"><%= conflict.label %></span> — form: “<%= conflict.submitted %>”, saved: “<%= conflict.saved %>”</li>
+                        <li><span class="font-medium"><%= conflict.label %></span> — <%= conflict.summary %></li>
                       <% end %>
                     </ul>
                   </div>
@@ -159,10 +167,23 @@
           <% end %>
         </ul>
       <% else %>
-        <p class="text-gray-500 mb-4">No linked organizations.</p>
+        <%# Amber warning only while a submitted org is waiting to be linked (the
+            "Pending" state above); with nothing submitted, no link is expected. %>
+        <% if @submitted_org_name.present? %>
+          <div class="mb-4 flex items-start gap-2 text-amber-800">
+            <i class="fa-solid fa-triangle-exclamation mt-1 text-amber-500"></i>
+            <div class="min-w-0">
+              <p>No linked organizations.</p>
+              <p class="text-sm text-amber-700">Until one is linked, this registration won't be counted in reporting or profiles.</p>
+            </div>
+          </div>
+        <% else %>
+          <p class="text-gray-500 mb-4">No linked organizations.</p>
+        <% end %>
       <% end %>
 
       <%# Adding an org is part of managing the links, so it's nested in the same card. %>
+      <%= render "shared/link_organization_effects", effects: @event_registration.decorate.link_organization_effects(position: @submitted_position) %>
       <%= render "shared/link_organization_actions",
                  select_url: select_organization_event_registration_path(@event_registration),
                  create_url: create_organization_event_registration_path(@event_registration),

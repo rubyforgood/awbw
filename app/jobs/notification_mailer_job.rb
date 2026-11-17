@@ -19,6 +19,7 @@ class NotificationMailerJob < ApplicationJob
       "workshop_log_submitted"     => ->(n) { NotificationMailer.workshop_log_submitted(n) },
       "workshop_log_submitted_fyi" => ->(n) { NotificationMailer.workshop_log_submitted_fyi(n) },
       "reset_password_fyi"   => ->(n) { NotificationMailer.reset_password_fyi(n) },
+      "account_email_changed" => ->(n) { NotificationMailer.account_email_changed(n) },
       "event_registration_confirmation" => ->(n) { EventMailer.event_registration_confirmation(n.noticeable) },
       "event_registration_confirmation_fyi" => ->(n) { NotificationMailer.event_registration_confirmation_fyi(n) },
       "event_registration_duplicate" => ->(n) { EventMailer.event_registration_confirmation(n.noticeable, duplicate: true, changes_message: n.custom_message) },
@@ -33,7 +34,8 @@ class NotificationMailerJob < ApplicationJob
       "form_link_request" => ->(n) { NotificationMailer.form_link_request(n) },
       "profile_change_requested" => ->(n) { NotificationMailer.profile_change_requested(n) },
       "profile_change_requested_fyi" => ->(n) { NotificationMailer.profile_change_requested_fyi(n) },
-      "profile_change_reviewed" => ->(n) { NotificationMailer.profile_change_reviewed(n) }
+      "profile_change_reviewed" => ->(n) { NotificationMailer.profile_change_reviewed(n) },
+      "membership_invoice" => ->(n) { NotificationMailer.membership_invoice(n) }
     }
 
     mailer = mailer_map[notification.kind]&.call(notification)

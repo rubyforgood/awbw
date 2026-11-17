@@ -144,6 +144,9 @@ class Person < ApplicationRecord
   # Anonymity isn't one of these — it's the separate `anonymous_contributions` flag,
   # since a person still has to be listed somehow on the people index.
   DISPLAY_NAME_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only].freeze
+  # The one switch for the name format a new person starts with.
+  DEFAULT_DISPLAY_NAME_PREFERENCE = "first_name_last_initial"
+  attribute :display_name_preference, :string, default: DEFAULT_DISPLAY_NAME_PREFERENCE
 
   DISPLAY_NAME_PREFERENCE_LABELS = {
     "full_name" => "First and last name",
@@ -152,7 +155,7 @@ class Person < ApplicationRecord
     "last_name_only" => "Last name only"
   }.freeze
 
-  validates :display_name_preference, inclusion: { in: DISPLAY_NAME_PREFERENCES }, allow_blank: true
+  validates :display_name_preference, inclusion: { in: DISPLAY_NAME_PREFERENCES }
   # Mirrors SectorsTaggable's single-primary rule for age ranges — the chip
   # editor's single-star JS is the first line of defense, this guards imports,
   # the console, and bad form posts. Person-only: organizations aggregate
@@ -247,18 +250,18 @@ class Person < ApplicationRecord
   LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
 
   SHARED_CONTACT_MATCH_SQL = <<~SQL.squish
-    (people.first_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden))
-    OR (people.last_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden))
+    (people.first_name LIKE :pattern AND people.display_name_preference NOT IN (:first_name_hidden))
+    OR (people.last_name LIKE :pattern AND people.display_name_preference NOT IN (:last_name_hidden))
     OR (people.profile_show_email AND (people.email LIKE :pattern OR users.email LIKE :pattern))
   SQL
 
   # Spaces and periods are dropped on both sides so an initialled name ("Cathy S.") finds itself.
   DISPLAYED_NAME_MATCH_SQL = <<~SQL.squish
-    (COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden)
+    (people.display_name_preference NOT IN (:first_name_hidden)
       AND LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name)
-    OR (COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden)
+    OR (people.display_name_preference NOT IN (:last_name_hidden)
       AND LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name)
-    OR (COALESCE(people.display_name_preference, '') IN ('', 'full_name')
+    OR (people.display_name_preference = 'full_name'
       AND LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name)
     OR (people.display_name_preference = 'first_name_last_initial'
       AND LOWER(REPLACE(CONCAT(people.first_name, LEFT(people.last_name, 1)), ' ', '')) LIKE :name)
@@ -469,6 +472,31 @@ class Person < ApplicationRecord
     true => "Keep all my content anonymous"
   }.freeze
 
+  # The profile's on/off visibility toggles => the label the edit page shows beside
+  # each, in the order it lists them. Each column is also a form smart field (asked
+  # Yes/No; see PersonServices::SyncSharingPreferences).
+  PROFILE_VISIBILITY_LABELS = {
+    "profile_is_searchable" => "Profile is searchable",
+    "profile_show_credentials" => "Show credentials",
+    "profile_show_pronouns" => "Show pronouns",
+    "profile_show_email" => "Show email",
+    "profile_show_phone" => "Show phone",
+    "profile_show_social_media" => "Show social media",
+    "profile_show_bio" => "Show bio",
+    "profile_show_member_since" => "Show facilitator since",
+    "profile_show_affiliations" => "Show affiliations",
+    "profile_show_sectors" => "Show sectors",
+    "profile_show_age_ranges" => "Show age ranges",
+    "profile_show_events_registered" => "Show registrations",
+    "profile_show_resources" => "Show resources",
+    "profile_show_stories" => "Show stories",
+    "profile_show_workshop_variations" => "Show workshop variations",
+    "profile_show_workshops" => "Show workshops"
+  }.freeze
+
+  # A profile visibility toggle's stored boolean => the answer a form asks it with.
+  PROFILE_VISIBILITY_OPTIONS = { true => "Yes", false => "No" }.freeze
+
   # Drives the people index and the profile header. Author credits pass an explicit
   # preference (the record's own, which outranks the profile) through `name_for`.
   def name
@@ -479,6 +507,8 @@ class Person < ApplicationRecord
   # that stored its own credit preference can win over the profile.
   def name_for(preference)
     case preference
+    when "full_name"
+      full_name
     when "first_name_last_initial"
       initial = last_name&.first
       initial.present? ? "#{first_name} #{initial}." : first_name.to_s
@@ -486,8 +516,6 @@ class Person < ApplicationRecord
       first_name
     when "last_name_only"
       last_name
-    else # full_name — the default, and the fallback for any unknown value
-      full_name
     end
   end
 
@@ -495,7 +523,7 @@ class Person < ApplicationRecord
   # without affecting how they're listed on the people index.
   def effective_author_credit_preference
     return "anonymous" if anonymous_contributions?
-    display_name_preference.presence || "full_name"
+    display_name_preference
   end
 
   def full_name

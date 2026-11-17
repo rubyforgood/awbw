@@ -52,6 +52,8 @@ class Notification < ApplicationRecord
     profile_change_requested_fyi
     profile_change_reviewed
 
+    membership_invoice
+
     manual_log
   ].freeze
 
@@ -87,6 +89,7 @@ class Notification < ApplicationRecord
     EventRegistration
     FormSubmission
     Grant
+    Membership
     Person
     ProfileChangeRequest
     Report
@@ -127,6 +130,7 @@ class Notification < ApplicationRecord
     [ "Idea: confirmation (all)", "has been received" ],
     [ "Story: promotion confirmation", "is now a story" ],
     [ "Idea: confirmation: workshop log", "workshop log has been received" ],
+    [ "Membership: bulk invoice", "Your membership invoice" ],
     [ "User: confirm new email", "Confirm your new email address" ],
     [ "User: password reset", "Password reset request" ],
     [ "User: unlock instructions", "Unlock instructions" ],

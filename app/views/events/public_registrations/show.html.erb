@@ -6,8 +6,8 @@
 <% if params[:return_to] == "registrants" && reg && allowed_to?(:index?, EventRegistration) %>
   <% back_path = registrants_event_row_path(@event, params[:return_registration_id].presence || reg.id) %>
   <% back_label = "Back to registrants" %>
-<% elsif reg&.slug.present? %>
-  <% back_path = registration_ticket_path(reg.slug) %>
+<% elsif (ticket_reg = reg&.current_registration)&.slug.present? %>
+  <% back_path = registration_ticket_path(ticket_reg.slug) %>
   <% back_label = "Back to ticket" %>
 <% else %>
   <% back_path = event_path(@event) %>

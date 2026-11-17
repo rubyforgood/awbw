@@ -1,4 +1,9 @@
 module ProfileChangeRequestsHelper
+  # The queue with its current person/status/submitter filters, overriding any given.
+  def change_requests_queue_path(status: @status, submitted_by: @submitted_by, person: @person)
+    profile_change_requests_path(status: status, person_id: person&.id, submitted_by: submitted_by)
+  end
+
   # [path, label] for the change-request queue's eyebrow. A "From change request"
   # link in a change log (Ahoy::EventDecorator#return_to_params) names the log it
   # came from and the row it sat on, so the eyebrow returns there rather than to a

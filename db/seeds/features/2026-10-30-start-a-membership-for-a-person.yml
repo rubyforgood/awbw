@@ -1,0 +1,12 @@
+name: "Start a membership for a person"
+area: payments
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2920
+action_path: "/people"
+summary: >-
+  From a person's memberships page, start a 12-month membership: pick the start
+  date, an optional locked price, and the first invoice amount (0 for a free
+  first year). The first invoice is created with it.
+pro_tips:
+  - "Any other active membership the person has becomes a locked, historical one."

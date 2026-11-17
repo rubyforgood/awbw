@@ -1,11 +1,12 @@
 <%# Featured-year headline for the scholarship report: funded vs unfunded money
     and award counts, plus attended trainees. Pass `report:` (an
-    EventScholarshipReport). Shared by the events scholarship report and the
+    EventScholarshipReport) and optionally `all_label:` for the all-time heading
+    (defaults to "All trainings"). Shared by the events scholarship report and the
     /scholarships index. %>
 <% featured = report.featured_year %>
 <section class="mb-8">
   <div class="flex items-baseline gap-2 mb-3">
-    <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500"><%= featured.year || "All trainings" %></h2>
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500"><%= featured.year || local_assigns.fetch(:all_label, "All trainings") %></h2>
     <% if featured.in_progress %>
       <span class="text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">In progress</span>
     <% end %>

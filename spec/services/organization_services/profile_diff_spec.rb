@@ -25,6 +25,26 @@ RSpec.describe OrganizationServices::ProfileDiff do
     expect(diff).to be_empty
   end
 
+  # The sync never saves a non-address answer, so the admin should see it wasn't applied.
+  it "flags a website answer that isn't a web address" do
+    organization.update!(website_url: "https://acme.org")
+
+    diff = described_class.call(organization: organization, website: "Acme Unified School District")
+
+    expect(diff.first).to have_attributes(field: :website_url, submitted: "Acme Unified School District", saved: "https://acme.org",
+                                          reason: "not a web address")
+    expect(diff.first.summary).to eq("form: “Acme Unified School District”, saved: “https://acme.org” — not a web address")
+  end
+
+  it "flags a website answer that isn't a web address even when the org has no website" do
+    organization.update!(website_url: nil)
+
+    diff = described_class.call(organization: organization, website: "Acme Unified School District")
+
+    expect(diff.first).to have_attributes(field: :website_url, saved: nil, reason: "not a web address")
+    expect(diff.first.summary).to eq("form: “Acme Unified School District” — not a web address")
+  end
+
   it "flags a website that differs from the saved one" do
     organization.update!(website_url: "https://acme.org")
 
@@ -71,16 +91,24 @@ RSpec.describe OrganizationServices::ProfileDiff do
   end
 
   describe "address" do
-    it "flags street, ZIP and country that differ from the org's same-city address" do
+    it "flags ZIP and country that differ from the org's same-street address" do
       create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78701", country: "USA")
 
       diff = described_class.call(organization: organization, address: {
-        street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78702", country: "Canada"
+        street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78702", country: "Canada"
       })
 
-      expect(diff.map(&:field)).to contain_exactly(:address_street, :address_zip, :address_country)
-      street = diff.find { |d| d.field == :address_street }
-      expect(street).to have_attributes(label: "Address – street", submitted: "1 Main St", saved: "5 Oak Ave")
+      expect(diff.map(&:field)).to contain_exactly(:address_zip, :address_country)
+      zip = diff.find { |d| d.field == :address_zip }
+      expect(zip).to have_attributes(label: "Address – ZIP", submitted: "78702", saved: "78701")
+    end
+
+    it "does not flag a different street in the same city (it's added as a new address)" do
+      create(:address, addressable: organization, street_address: "5 Oak Ave", city: "Austin", state: "TX", zip_code: "78701")
+
+      diff = described_class.call(organization: organization, address: { street_address: "1 Main St", city: "Austin", state: "TX" })
+
+      expect(diff).to be_empty
     end
 
     it "does not flag address fields that match (case/whitespace insensitive)" do
@@ -88,6 +116,16 @@ RSpec.describe OrganizationServices::ProfileDiff do
 
       diff = described_class.call(organization: organization, address: {
         street_address: " 1 main st ", city: "austin", state: "tx", zip_code: "78701"
+      })
+
+      expect(diff).to be_empty
+    end
+
+    it "does not flag a street that differs only in spelling the address matcher treats as the same" do
+      create(:address, addressable: organization, street_address: "12 E Main St.", city: "Austin", state: "TX", zip_code: "78701")
+
+      diff = described_class.call(organization: organization, address: {
+        street_address: "12 East Main Street", city: "Austin", state: "TX", zip_code: "78701"
       })
 
       expect(diff).to be_empty
@@ -122,6 +160,30 @@ RSpec.describe OrganizationServices::ProfileDiff do
       diff = described_class.call(organization: organization, address: {
         street_address: "1 Main St", city: "Austin", state: "TX"
       })
+
+      expect(diff).to be_empty
+    end
+
+    it "flags an address with no city, which can't be saved" do
+      diff = described_class.call(organization: organization, address: { street_address: "1 Main St", zip_code: "78701" })
+
+      expect(diff.sole).to have_attributes(field: :address, label: "Address", submitted: "1 Main St, 78701", saved: nil,
+                                           reason: "no city, so it wasn't saved")
+    end
+
+    it "flags an address with no state that matches none of the org's addresses, which can't be saved" do
+      create(:address, addressable: organization, city: "Dallas", state: "TX")
+
+      diff = described_class.call(organization: organization, address: { street_address: "1 Main St", city: "Austin" })
+
+      expect(diff.sole).to have_attributes(field: :address, submitted: "1 Main St, Austin", reason: "no state, so it wasn't saved")
+      expect(diff.sole.summary).to eq("form: “1 Main St, Austin” — no state, so it wasn't saved")
+    end
+
+    it "does not flag a stateless address that matches one the org already has (it updates that one)" do
+      create(:address, addressable: organization, street_address: "1 Main St", city: "Austin", state: "TX")
+
+      diff = described_class.call(organization: organization, address: { street_address: "1 Main St", city: "Austin" })
 
       expect(diff).to be_empty
     end

@@ -1,0 +1,13 @@
+<%# Side-by-side read-only rows; the deleted record's differing values go with it.
+    Locals: columns, record_to_delete, record_to_keep, border, display (lambda(col, record)). %>
+<% columns.each do |col| %>
+  <% delete_val = record_to_delete.public_send(col.name) %>
+  <% dropped = delete_val.to_s.strip.present? && delete_val != record_to_keep.public_send(col.name) %>
+  <% [ record_to_delete, record_to_keep ].each do |record| %>
+    <div class="border-x border-b <%= border %> flex flex-wrap items-center gap-x-2 bg-white px-5 py-3 text-sm">
+      <span class="w-full text-gray-400 sm:w-auto"><%= col.name.humanize %></span>
+      <span class="text-gray-900"><%= display.call(col, record) %></span>
+      <%= render "dedupes/outcome_chip", kind: :dropped if dropped && record == record_to_delete %>
+    </div>
+  <% end %>
+<% end %>

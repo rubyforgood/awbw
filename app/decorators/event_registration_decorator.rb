@@ -1,4 +1,14 @@
 class EventRegistrationDecorator < ApplicationDecorator
+  # What linking an organization from this registration's editor does, mirroring
+  # EventRegistrationsController#link_and_report. `position` is the title the
+  # registrant submitted (the editor's primary submitted entry).
+  def link_organization_effects(position:)
+    OrganizationServices::LinkSubmittedOrganization.effects(
+      record_noun: "registration", person: object.registrant,
+      scenario: object.event.linking_scenario, position: position
+    )
+  end
+
   # The CE lifecycle badge, shared by every surface that shows CE status (the
   # registrants index, the CE callout, the CE card on the registration edit page).
   # One progression: Requested → Needs license # → $X due → Approved → Issued, with an
@@ -133,7 +143,19 @@ class EventRegistrationDecorator < ApplicationDecorator
   # Pill bundle for the profile event card's status marker, reusing the shared
   # status SSOT so label, icon, and colors stay in one place.
   def attendance_status_badge
-    { label: attendance_status_label, icon: attendance_status_icon, classes: attendance_status_classes }
+    { label: attendance_status_label, icon: attendance_status_icon, classes: attendance_status_classes,
+      outcome: pre_transfer_outcome }
+  end
+
+  PRE_TRANSFER_OUTCOME_CLASSES = {
+    "no_show" => "text-red-600",
+    "incomplete_attendance" => "text-amber-600"
+  }.freeze
+
+  def pre_transfer_outcome
+    return unless pre_transfer_outcome_label
+
+    { label: pre_transfer_outcome_label, classes: PRE_TRANSFER_OUTCOME_CLASSES[status_before_transfer] }
   end
 
   def title

@@ -1,0 +1,16 @@
+Your login email was changed
+<% if @first_name -%>
+
+Dear <%= @first_name %>,
+<% end -%>
+
+The login email for your AWBW Portal account is now <%= @new_email %>.
+<% if @sent_to_previous -%>
+
+We're sending this to your previous address so you know about the change.
+<% end -%>
+
+If you didn't make this change, please contact us right away at <%= Setting.programs_email %>.
+
+Thank you,
+AWBW Staff

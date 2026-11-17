@@ -1,12 +1,14 @@
-<%# The form icon linking to a registrant's submissions page, badged with how many times they submitted. locals: sittings (FormSubmissionSittings), path, scholarship_requested (optional) %>
+<%# The form icon linking to a registrant's submissions page, badged with how many times they submitted. Teal (the transfer-in color) when the answers are on a transfer's original registration. locals: sittings (FormSubmissionSittings), path, scholarship_requested (optional), original_event_title (optional) %>
+<% original_event_title = local_assigns[:original_event_title] %>
 <% tooltip_parts = sittings.groups.map { |group| "#{group.map(&:form_name).join(" + ")} — Submitted #{group.first.created_at.strftime('%B %d, %Y at %l:%M %P')}" } %>
+<% tooltip_parts.unshift("From the original registration for #{original_event_title}") if original_event_title %>
 <% tooltip_parts << "Scholarship requested" if local_assigns[:scholarship_requested] %>
 <%= link_to path,
-            class: "relative shrink-0 text-blue-600 hover:text-blue-800",
+            class: "relative shrink-0 #{original_event_title ? "text-teal-600 hover:text-teal-800" : "text-blue-600 hover:text-blue-800"}",
             title: tooltip_parts.join("\n"),
             data: { turbo_frame: "_top" } do %>
   <i class="fa-regular fa-file-lines"></i>
   <% if sittings.count > 1 %>
-    <span class="text-3xs absolute -top-1.5 -right-2 rounded-full bg-blue-600 px-1 leading-tight font-semibold text-white"><%= sittings.count %></span>
+    <span class="text-3xs absolute -top-1.5 -right-2 rounded-full <%= original_event_title ? "bg-teal-600" : "bg-blue-600" %> px-1 leading-tight font-semibold text-white"><%= sittings.count %></span>
   <% end %>
 <% end %>

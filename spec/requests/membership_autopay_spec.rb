@@ -36,75 +36,39 @@ RSpec.describe "Membership autopay", type: :request do
     expect(membership.reload.autopay_on?).to be(false)
   end
 
-  it "pays an issued invoice and saves the card when subscribing" do
+  it "starts a card setup instead of charging an issued invoice" do
     invoice = create(:membership_invoice, membership: membership, start_date: Date.current,
       end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
-    fake_session = double(id: "cs_subscribe", url: "https://stripe.test/subscribe", status: "open")
     checkout_args = {}
     allow_any_instance_of(Pay::Stripe::Customer).to receive(:checkout) do |**args|
       checkout_args.merge!(args)
-      fake_session
+      double(url: "https://stripe.test/setup")
     end
     sign_in create(:user, person: person)
 
     post membership_autopayments_path(membership)
 
-    expect(response).to redirect_to(fake_session.url)
-    expect(checkout_args[:mode]).to eq("payment")
-    expect(checkout_args.dig(:payment_intent_data, :setup_future_usage)).to eq("off_session")
-    expect(invoice.reload.checkout_session_id).to eq("cs_subscribe")
+    expect(response).to redirect_to("https://stripe.test/setup")
+    expect(checkout_args[:mode]).to eq("setup")
+    expect(invoice.reload.checkout_session_id).to be_nil
+    expect(invoice.reload).not_to be_payment_in_progress
     expect(session[:autopay_setup_membership_id]).to eq(membership.id)
+    expect(membership.reload.autopay_on?).to be(false)
   end
 
-  it "does not subscribe over an open one-time checkout" do
+  it "leaves an issued invoice and its open checkout untouched" do
     invoice = create(:membership_invoice, membership: membership, start_date: Date.current,
       end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
     invoice.update_column(:checkout_session_id, "cs_open")
-    allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_open")
-      .and_return(double(status: "open"))
+    allow_any_instance_of(Pay::Stripe::Customer).to receive(:checkout)
+      .and_return(double(url: "https://stripe.test/setup"))
     sign_in create(:user, person: person)
 
     post membership_autopayments_path(membership)
 
-    expect(response).to redirect_to(person_path(person))
-    expect(flash[:alert]).to match(/already in progress/)
-    expect(membership.reload.autopay_on?).to be(false)
+    expect(response).to redirect_to("https://stripe.test/setup")
     expect(invoice.reload.checkout_session_id).to eq("cs_open")
-  end
-
-  it "turns autopay on after the combined checkout returns" do
-    create(:membership_invoice, membership: membership, start_date: Date.current,
-      end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
-    allow_any_instance_of(Pay::Stripe::Customer).to receive(:checkout)
-      .and_return(double(id: "cs_subscribe", url: "https://stripe.test/subscribe", status: "open"))
-    sign_in create(:user, person: person)
-
-    post membership_autopayments_path(membership)
-    get person_path(person, membership_invoice_checkout: "success", autopay: "1")
-
-    expect(membership.reload.autopay_on?).to be(true)
-    expect(flash[:notice]).to match(/Payment received/)
-  end
-
-  it "returns to the profile when the combined checkout is cancelled" do
-    invoice = create(:membership_invoice, membership: membership, start_date: Date.current,
-      end_date: Date.current + 1.year - 1.day, cost_cents: 10_000)
-    allow_any_instance_of(Pay::Stripe::Customer).to receive(:checkout)
-      .and_return(double(id: "cs_subscribe", url: "https://stripe.test/subscribe", status: "open"))
-    allow(Stripe::Checkout::Session).to receive(:retrieve)
-      .with("cs_subscribe")
-      .and_return(double(status: "open"))
-    allow(Stripe::Checkout::Session).to receive(:expire)
-      .with("cs_subscribe")
-      .and_return(double(status: "expired"))
-    sign_in create(:user, person: person)
-
-    post membership_autopayments_path(membership)
-    get cancel_checkout_membership_invoice_path(invoice, return_to: "autopay")
-
-    expect(response).to redirect_to(person_path(person, autopay_setup: "cancelled"))
-    expect(invoice.reload.checkout_session_id).to be_nil
+    expect(membership.reload.autopay_on?).to be(false)
   end
 
   it "lets an admin turn autopay off" do

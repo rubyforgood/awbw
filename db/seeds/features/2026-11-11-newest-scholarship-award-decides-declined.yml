@@ -1,0 +1,10 @@
+name: "The newest scholarship award decides whether a ticket reads as declined"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-11
+pr_number: 2982
+action_path: "/events"
+summary: >-
+  When awards go back and forth, the newest one now decides. A new offer after a
+  decline shows as awarded on the ticket and in readiness, and a decline after
+  an earlier award shows as declined.

@@ -2,7 +2,7 @@ class Organization < ApplicationRecord
   include RemoteSearchable, Trendable, WindowsTypeFilterable # Publishable
   include Communicable
   include FilemakerCoded
-  filemaker_archived_in FmProject, FmOrganization
+  filemaker_archived_in FmProject, FmOrganization, FmRolodex
   belongs_to :organization_status, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
@@ -455,6 +455,18 @@ class Organization < ApplicationRecord
   end
 
   remote_searchable_by :name
+
+  # Whether a typed answer looks like a web address ("awbw.org",
+  # "https://www.awbw.org/about") rather than something else typed into the
+  # website field — most often the org's own name. Form syncs only take a website
+  # answer that passes, so a misplaced answer can't overwrite a real website.
+  def self.website_address?(value)
+    candidate = value.to_s.strip
+    return false if candidate.blank? || candidate.match?(/\s/)
+    candidate = "https://#{candidate}" unless candidate.match?(/\Ahttps?:\/\//i)
+    uri = URI.parse(candidate) rescue nil
+    uri.is_a?(URI::HTTP) && uri.host.to_s.include?(".")
+  end
 
   # Returns the website as a clickable, scheme-qualified URL — prepending
   # https:// to a bare domain like "awbw.org" — or nil when the value is blank or

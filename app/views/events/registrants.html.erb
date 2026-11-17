@@ -49,6 +49,7 @@
         clear_url: registrants_event_path(@event),
         text_fields: [ { param: :keyword, label: "Keyword", placeholder: "Name, email, phone, city, or org", primary: true, search: true } ],
         include_readiness: true,
+        include_report_filters: true,
         status_filter_hidden: true %>
 
   <%= render "registrants_results" %>

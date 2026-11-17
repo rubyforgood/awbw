@@ -7,7 +7,7 @@ Thank you for your submission. We have received your <%= @noticeable_klass.model
 <% if @noticeable.respond_to?(:title) %>
 <%= @noticeable.title %>
 Submitted on <%= @noticeable.created_at
-                            .in_time_zone("Pacific Time (US & Canada)")
+                            .in_time_zone(@time_zone)
                             .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
 <% end %>
 

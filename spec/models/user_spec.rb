@@ -522,19 +522,17 @@ RSpec.describe User do
   describe "#create_email_changed_notification" do
     let(:user) { create(:user, email: "old@example.com") }
 
-    it "creates an account_email_changed notification when email changes" do
+    it "emails an account_email_changed notice to both the new and previous address" do
       user.skip_reconfirmation!
 
       expect {
         user.update!(email: "changed@example.com")
-      }.to change(Notification, :count).by(1)
+      }.to change(Notification, :count).by(2)
+        .and have_enqueued_job(NotificationMailerJob).exactly(2).times
 
-      notification = Notification.last
-      expect(notification.kind).to eq("account_email_changed")
-      expect(notification.recipient_role).to eq("person")
-      expect(notification.recipient_email).to eq("changed@example.com")
-      expect(notification.noticeable).to eq(user)
-      expect(notification.delivered_at).to be_nil
+      notifications = Notification.where(kind: "account_email_changed", noticeable: user)
+      expect(notifications.pluck(:recipient_email)).to contain_exactly("changed@example.com", "old@example.com")
+      expect(notifications.pluck(:recipient_role).uniq).to eq([ "person" ])
     end
 
     it "does not create notification when email does not change" do

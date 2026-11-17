@@ -131,7 +131,7 @@
       </td>
 
     <% when :scholarship_amount %>
-      <% scholarship = registration.scholarships.first %>
+      <% scholarship = registration.effective_scholarship %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= scholarship ? scholarship.amount_cents : -1 %>">
         <% if scholarship %>
           <%= link_to edit_scholarship_path(scholarship, return_to: "onboarding"), class: "hover:underline", data: { turbo_frame: "_top" } do %>
@@ -159,7 +159,7 @@
       </td>
 
     <% when :funder %>
-      <% scholarship = registration.scholarships.first %>
+      <% scholarship = registration.effective_scholarship %>
       <% funder = scholarship ? (scholarship.grant&.name.presence || "Unfunded") : nil %>
       <td class="<%= td_classes.join(" ") %> text-sm text-gray-600" data-sort-value="<%= funder.to_s.downcase %>">
         <% if scholarship %>
@@ -170,8 +170,8 @@
       </td>
 
     <% when :scholarship_tasks %>
-      <% scholarship = registration.scholarships.first %>
-      <% done = scholarship && registration.scholarships.all?(&:tasks_completed?) %>
+      <% scholarship = registration.effective_scholarship %>
+      <% done = scholarship && registration.effective_scholarships.all?(&:tasks_completed?) %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= scholarship ? (done ? 1 : 0) : -1 %>">
         <% if scholarship %>
           <%= render "shared/badge",

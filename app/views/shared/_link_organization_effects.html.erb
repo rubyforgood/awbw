@@ -1,0 +1,14 @@
+<%# What linking an organization does from this editor, shown beside the link
+    actions on both org-linking editors. Locals:
+      effects – from the record's decorator (OrganizationServices::LinkSubmittedOrganization.effects) %>
+<div class="mb-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+  <p class="flex items-start gap-1.5 font-semibold">
+    <i class="fa-solid fa-circle-info mt-0.5"></i>
+    Linking an organization here:
+  </p>
+  <ul class="mt-1 list-inside list-disc space-y-0.5">
+    <% effects.each do |effect| %>
+      <li><%= effect %></li>
+    <% end %>
+  </ul>
+</div>

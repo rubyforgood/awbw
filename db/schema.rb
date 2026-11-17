@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_13_131756) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -423,7 +423,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_120000) do
   end
 
   create_table "community_news", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "author_credit_preference", default: "full_name"
+    t.string "author_credit_preference"
     t.bigint "author_id"
     t.text "body"
     t.datetime "created_at", null: false
@@ -1706,7 +1706,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_120000) do
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date_of_birth"
-    t.string "display_name_preference", default: "first_name_last_initial"
+    t.string "display_name_preference", null: false
     t.string "email"
     t.string "email_2"
     t.string "email_2_type"
@@ -2117,6 +2117,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_120000) do
     t.integer "import_user_id"
     t.integer "home_featured_stories_limit"
     t.bigint "participant_credit_person_id"
+    t.integer "membership_autopay_window_days"
     t.bigint "story_share_hero_story_id"
     t.index ["ce_administrator_id"], name: "index_settings_on_ce_administrator_id"
     t.index ["created_by_id"], name: "index_settings_on_created_by_id"

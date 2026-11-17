@@ -113,6 +113,21 @@ RSpec.describe Organization do
     end
   end
 
+  describe ".website_address?" do
+    it "accepts a bare domain, a scheme-qualified URL, and a path" do
+      expect(described_class.website_address?("awbw.org")).to be(true)
+      expect(described_class.website_address?(" https://www.awbw.org/ ")).to be(true)
+      expect(described_class.website_address?("http://awbw.org/about")).to be(true)
+    end
+
+    it "rejects blanks, names, and hosts without a dot" do
+      expect(described_class.website_address?(nil)).to be(false)
+      expect(described_class.website_address?("")).to be(false)
+      expect(described_class.website_address?("Acme Unified School District")).to be(false)
+      expect(described_class.website_address?("Acme-Unified")).to be(false)
+    end
+  end
+
   describe "#website_link_url" do
     it "prepends https:// to a bare domain" do
       org = build(:organization, website_url: "awbw.org")

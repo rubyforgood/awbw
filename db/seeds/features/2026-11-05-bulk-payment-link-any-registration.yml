@@ -1,0 +1,14 @@
+name: "Link a bulk payment to a registration from any event"
+area: payments
+display_status: admin_facing
+released_on: 2026-11-05
+pr_number: 2954
+action_path: "/bulk_payments"
+summary: >-
+  When matching a bulk payment's names, "Manually link a registration" now
+  searches registrations from every event and every status, including
+  transferred and cancelled ones, so you can allocate to a transferred-in
+  registration.
+pro_tips:
+  - "Inactive registrations show their status after the ID, like \"cancelled\"."
+  - "Registrations already linked to the payment don't appear in the search."

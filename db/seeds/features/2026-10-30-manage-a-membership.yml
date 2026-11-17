@@ -1,0 +1,13 @@
+name: "Manage a membership's term and renewal"
+area: payments
+display_status: admin_facing
+released_on: 2026-10-30
+pr_number: 2920
+action_path: "/memberships"
+summary: >-
+  On a membership's page, edit its start and end dates and locked price, issue
+  next year's invoice early, turn renewal off or on, remove an unstarted
+  renewal, or delete a membership that has no payments.
+pro_tips:
+  - "Turning renewal off also turns off automatic payments."
+  - "A \"locked\" membership is an older one, frozen when the person got a newer membership. It isn't a login lock."

@@ -1,0 +1,12 @@
+name: "Collect professional licenses on any form"
+area: people
+display_status: admin_facing
+released_on: 2026-11-12
+action_path: "/forms/smart_form_settings#professional_license"
+pr_number: 2987
+summary: >-
+  License questions (license_number, license_kind, and so on) now save a license on the person's profile
+  from any registration or standalone form, whether or not it's for CE credit.
+pro_tips:
+  - "Add the \"Professional license\" section from the question library. CE enrollment still comes only from the event's continuing education form."
+  - "A license already on file with the same number is updated rather than duplicated."

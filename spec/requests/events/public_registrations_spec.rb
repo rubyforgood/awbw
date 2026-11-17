@@ -993,6 +993,20 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
         expect(response.body).not_to include("Back to ticket")
       end
     end
+
+    context "when the registration transferred out" do
+      let!(:registration) { create(:event_registration, event: event, registrant: person, status: "transferred_out") }
+      let!(:destination) { create(:event_registration, registrant: person, transferred_from_registration: registration) }
+
+      it "returns the eyebrow to the new registration's ticket" do
+        sign_out admin
+
+        get event_public_registration_path(event, reg: registration.slug)
+
+        expect(response.body).to include("Back to ticket")
+        expect(response.body).to include(registration_ticket_path(destination.slug))
+      end
+    end
   end
 
   describe "POST create stamps the submission id on lifecycle events" do

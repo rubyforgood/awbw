@@ -39,6 +39,8 @@ class FormBuilderService
     day_2_survey: { label: "Day 2 survey", method: :build_day_2_survey_fields },
     recipient_survey: { label: "Scholarship recipient survey", method: :build_recipient_survey_fields },
     content_sharing_preferences: { label: "Content sharing preferences", method: :build_content_sharing_preferences_fields },
+    profile_display_preferences: { label: "Profile display preferences", method: :build_profile_display_preferences_fields },
+    professional_license: { label: "Professional license", method: :build_professional_license_fields },
     bulk_payment: { label: "Bulk payment", method: :build_bulk_payment_fields }
   }.freeze
 
@@ -64,12 +66,25 @@ class FormBuilderService
     form
   end
 
+  # Toggles whose edit-page label doesn't read as a question with "my" added.
+  PROFILE_VISIBILITY_QUESTION_OVERRIDES = {
+    "profile_is_searchable" => "Make my profile searchable?",
+    "profile_show_member_since" => "Show my facilitator since date?"
+  }.freeze
+
+  # The question each profile visibility toggle is asked with, derived from the label
+  # the profile edit page shows beside it ("Show bio" → "Show my bio?") so the two
+  # can't drift. Keyed by column (and field identifier), in the edit page's order.
+  PROFILE_VISIBILITY_QUESTIONS = Person::PROFILE_VISIBILITY_LABELS.to_h do |flag, label|
+    [ flag, PROFILE_VISIBILITY_QUESTION_OVERRIDES.fetch(flag) { "#{label.sub(/\AShow /, "Show my ")}?" } ]
+  end.freeze
+
   SECTION_FIELD_IDENTIFIERS = {
     person_identifier: %w[first_name last_name primary_email confirm_email],
     person_contact_info: %w[
       primary_email_type legal_first_name pronouns secondary_email secondary_email_type
       mailing_street mailing_address_type mailing_city mailing_state mailing_zip mailing_country
-      phone phone_type organization_name organization_position organization_website organization_type
+      phone phone_type organization_name organization_position organization_website organization_type organization_phone
       organization_street organization_city organization_state organization_zip organization_country
     ],
     person_background: %w[racial_ethnic_identity],
@@ -87,6 +102,8 @@ class FormBuilderService
     day_2_survey: %w[],
     recipient_survey: %w[],
     content_sharing_preferences: %w[anonymous_contributions display_name_preference],
+    profile_display_preferences: Person::PROFILE_VISIBILITY_LABELS.keys,
+    professional_license: %w[license_kind license_number license_issuing_state license_issuing_country license_expires_on],
     bulk_payment: %w[first_name last_name primary_email phone organization_name number_of_attendees payment_method bulk_payment_attendees]
   }.freeze
 
@@ -106,6 +123,8 @@ class FormBuilderService
     day_2_survey: [ "Day 2 evaluation" ],
     recipient_survey: [ "Post-training recipient questions" ],
     content_sharing_preferences: [ "Sharing preferences" ],
+    profile_display_preferences: [ "Profile display preferences" ],
+    professional_license: [ "Professional license" ],
     bulk_payment: [ "Payer Information", "Payment Information", "Attendees" ]
   }.freeze
 
@@ -120,7 +139,7 @@ class FormBuilderService
     person_contact_info: [
       "Primary Email Type", "Other first name (optional)", "Pronouns", "Secondary Email", "Secondary Email Type",
       "Street Address", "Address Type", "City", "State / Province", "Zip / Postal Code", "Country",
-      "Phone", "Phone Type", "Organization Name", "Position / Title", "Organization Website", "Organization Type",
+      "Phone", "Phone Type", "Organization Name", "Position / Title", "Organization Website", "Organization Type", "Organization Phone",
       "Organization Street Address", "Organization City", "Organization State / Province", "Organization Zip / Postal Code",
       "Organization Country"
     ],
@@ -189,6 +208,14 @@ class FormBuilderService
       "Display my name as…",
       "How may we display the content you share (reflections, quotes, artwork)?"
     ],
+    profile_display_preferences: PROFILE_VISIBILITY_QUESTIONS.values,
+    professional_license: [
+      "What is your license type? (e.g. LMFT, LCSW, LPCC, LEP)",
+      "What is your license number?",
+      "In which state was your license issued?",
+      "In which country was your license issued?",
+      "When does your license expire?"
+    ],
     bulk_payment: [
       "Payer first name", "Payer last name", "Payer email", "Phone", "Organization",
       "Payment method", "Number of attendees", "Attendees"
@@ -227,6 +254,8 @@ class FormBuilderService
     day_2_survey: %w[day_2_survey],
     recipient_survey: %w[recipient_survey],
     content_sharing_preferences: %w[content_sharing],
+    profile_display_preferences: %w[profile_display],
+    professional_license: %w[professional_license],
     bulk_payment: %w[bulk_payment]
   }.freeze
 
@@ -513,6 +542,8 @@ class FormBuilderService
     position = add_field(form, position, "Organization Type", :single_select_radio,
                          key: "organization_type", group: "person_contact_info", required: false,
                          options: Organization::ORGANIZATION_TYPES)
+    position = add_field(form, position, "Organization Phone", :free_form_input_one_line,
+                         key: "organization_phone", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization Street Address", :free_form_input_one_line,
                          key: "organization_street", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization City", :free_form_input_one_line,
@@ -823,6 +854,37 @@ class FormBuilderService
     position = add_field(form, position, "How may we display the content you share (reflections, quotes, artwork)?", :single_select_radio,
                          key: "anonymous_contributions", group: "content_sharing",
                          options: Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS.values)
+    position
+  end
+
+  def build_profile_display_preferences_fields(form, position)
+    position = add_header(form, position, "Profile display preferences", group: "profile_display")
+
+    PROFILE_VISIBILITY_QUESTIONS.each do |key, question|
+      position = add_field(form, position, question, :single_select_radio,
+                           key: key, group: "profile_display", required: false, width: :third,
+                           options: Person::PROFILE_VISIBILITY_OPTIONS.values)
+    end
+    position
+  end
+
+  # Any professional license, CE or not, for any form: the answers save the license on
+  # the person's profile (PersonServices::CaptureFromSubmission). The CE form keeps its
+  # own ce_license_* questions, which go with the CE opt-in.
+  def build_professional_license_fields(form, position)
+    position = add_header(form, position, "Professional license", group: "professional_license")
+
+    position = add_field(form, position, "What is your license type? (e.g. LMFT, LCSW, LPCC, LEP)", :free_form_input_one_line,
+                         key: "license_kind", group: "professional_license", required: false, width: :half)
+    position = add_field(form, position, "What is your license number?", :free_form_input_one_line,
+                         key: "license_number", group: "professional_license", required: false, width: :half)
+    position = add_field(form, position, "In which state was your license issued?", :free_form_input_one_line,
+                         key: "license_issuing_state", group: "professional_license", required: false)
+    position = add_field(form, position, "In which country was your license issued?", :free_form_input_one_line,
+                         key: "license_issuing_country", group: "professional_license", required: false)
+    position = add_field(form, position, "When does your license expire?", :free_form_input_one_line,
+                         key: "license_expires_on", group: "professional_license", required: false,
+                         datatype: :date)
     position
   end
 

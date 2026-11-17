@@ -2,7 +2,8 @@
   # Opened from several pages (often in a new tab), so the eyebrow returns to whichever one linked in.
   back_link = case params[:return_to]
   when "registrants"
-    { label: "Back to registrants", path: registrants_event_row_path(@event, params[:event_registration_id]) } if params[:event_registration_id].present?
+    # A transferred-in registration links here from its own event's roster, not the event holding the answers.
+    { label: "Back to registrants", path: registrants_event_row_path(EventRegistration.where(id: params[:event_registration_id]).pick(:event_id) || @event, params[:event_registration_id]) } if params[:event_registration_id].present?
   when "event_registration"
     { label: "Back to registration", path: edit_event_registration_path(params[:event_registration_id], return_to: params[:registration_return_to].presence) } if params[:event_registration_id].present?
   when "index"

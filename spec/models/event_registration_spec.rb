@@ -160,6 +160,23 @@ RSpec.describe EventRegistration, type: :model do
       expect(source.attendance_status_report_label).to eq("Transferred out")
     end
 
+    it "keeps a no-show or partial attendance on record after the reg transfers out" do
+      no_show = create(:event_registration, status: "no_show")
+      no_show.update!(status: "transferred_out")
+      partial = create(:event_registration, status: "incomplete_attendance")
+      partial.update!(status: "transferred_out")
+      expect(no_show.pre_transfer_outcome_label).to eq("No show")
+      expect(no_show.attendance_status_report_label).to eq("No show → Transferred out")
+      expect(partial.pre_transfer_outcome_label).to eq("Partial")
+    end
+
+    it "notes no prior outcome when the reg transferred out while registered or attended" do
+      attended = create(:event_registration, status: "attended")
+      attended.update!(status: "transferred_out")
+      expect(attended.pre_transfer_outcome_label).to be_nil
+      expect(source.pre_transfer_outcome_label).to be_nil
+    end
+
     it "offers a Transferred in filter option backed by the FK value" do
       expect(EventRegistration::ATTENDANCE_FILTER_OPTIONS).to include([ "Transferred in", "transferred_in" ])
     end
@@ -1764,6 +1781,34 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".event_type with a comma-separated mix of kinds" do
+    it "matches registrations at events of any listed kind" do
+      live = create(:event_registration, event: create(:event, facilitator_training: true, on_demand: false))
+      on_demand = create(:event_registration, event: create(:event, facilitator_training: true, on_demand: true))
+      other = create(:event_registration, event: create(:event, facilitator_training: false))
+
+      matched = EventRegistration.event_type("live,other")
+      expect(matched).to include(live, other)
+      expect(matched).not_to include(on_demand)
+    end
+  end
+
+  describe ".linked_organization" do
+    it "matches registrations linked to the organization, or to none" do
+      organization = create(:organization)
+      linked = create(:event_registration)
+      create(:event_registration_organization, event_registration: linked, organization: organization)
+      other = create(:event_registration)
+      create(:event_registration_organization, event_registration: other)
+      unlinked = create(:event_registration)
+
+      expect(EventRegistration.linked_organization(organization.id)).to contain_exactly(linked)
+      none = EventRegistration.linked_organization(EventRegistration::NO_ORGANIZATION)
+      expect(none).to include(unlinked)
+      expect(none).not_to include(linked, other)
+    end
+  end
+
   describe ".organization_status scope" do
     let(:event) { create(:event) }
 
@@ -2155,7 +2200,7 @@ RSpec.describe EventRegistration, type: :model do
 
   describe "#program_statuses" do
     let(:registration) { create(:event_registration) }
-    let(:training_date) { registration.event.start_date.to_date }
+    let(:training_date) { registration.event.starts_on }
     let(:linked_org) { create(:organization, name: "Registration Org") }
     let(:other_org) { create(:organization, name: "Other Org") }
 
@@ -2420,6 +2465,35 @@ RSpec.describe EventRegistration, type: :model do
         expect(registration.forgotten_sign_out_at(late)).to be_nil
         expect(registration.forgotten_sign_out_entry).to be_nil
       end
+    end
+  end
+
+  describe "#form_answers_registration" do
+    let(:person) { create(:person) }
+    let(:original) { create(:event_registration, registrant: person, status: "transferred_out") }
+    let(:registration) { create(:event_registration, registrant: person, transferred_from_registration: original) }
+
+    before do
+      form = create(:form)
+      create(:event_form, :registration, event: original.event, form: form)
+      create(:form_submission, person: person, form: form, event: original.event)
+    end
+
+    it "is the original for a transferred-in registrant who answered there" do
+      expect(registration.form_answers_registration).to eq(original)
+      expect(original).to be_registration_form_submitted
+    end
+
+    it "is itself once the registrant also answered at the new event" do
+      form = create(:form)
+      create(:event_form, :registration, event: registration.event, form: form)
+      create(:form_submission, person: person, form: form, event: registration.event)
+
+      expect(registration.form_answers_registration).to eq(registration)
+    end
+
+    it "is itself without a transfer" do
+      expect(original.form_answers_registration).to eq(original)
     end
   end
 end

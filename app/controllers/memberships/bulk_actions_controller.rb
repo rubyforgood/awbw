@@ -13,15 +13,17 @@ module Memberships
 
       ids = Array(params[@action.param_name]).reject(&:blank?).map(&:to_i)
       @selected_ids = ids
-      @cost_cents = fee_action? ? MoneyParser.cents(params[:cost_dollars]) : nil
+      cost_cents = fee_action? ? MoneyParser.cents(params[:cost_dollars]) : nil
+      custom_message = params[:custom_message].to_s.strip
 
       return render_confirm_error("Select at least one row.") if ids.empty?
 
-      if fee_action? && MoneyParser.invalid?(@cost_cents)
+      if fee_action? && MoneyParser.invalid?(cost_cents)
         return render_confirm_error("Enter the fee as a number, e.g. 20 or 19.50.")
       end
 
-      result = @action.perform(@directory, ids: ids, cost_cents: @cost_cents)
+      result = @action.perform(@directory, ids: ids, cost_cents: cost_cents,
+        custom_message: custom_message)
 
       if result.failed_ids.any?
         @result = result

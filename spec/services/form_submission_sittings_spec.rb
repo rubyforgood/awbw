@@ -92,4 +92,40 @@ RSpec.describe FormSubmissionSittings do
       expect(described_class.for_events(event.id, person.id)[[ person.id, event.id ]].count).to eq(1)
     end
   end
+
+  describe ".placements_for" do
+    let(:person) { create(:person) }
+    let(:reg_form) { create(:form) }
+    let(:original_event) { create(:event, title: "Origin training") }
+    let(:original) { create(:event_registration, event: original_event, registrant: person, status: "transferred_out") }
+    let(:registration) { create(:event_registration, registrant: person, transferred_from_registration: original) }
+
+    before do
+      create(:event_form, :registration, event: original_event, form: reg_form)
+      create(:form_submission, person: person, event: original_event, form: reg_form)
+    end
+
+    it "places a transferred-in registrant's answers on the original event" do
+      placement = described_class.placements_for([ registration ])[registration.id]
+
+      expect(placement.event_id).to eq(original_event.id)
+      expect(placement.original_event_title).to eq("Origin training")
+      expect(placement).to be_from_original
+    end
+
+    it "keeps answers given at the new event there" do
+      new_form = create(:form)
+      create(:event_form, :registration, event: registration.event, form: new_form)
+      create(:form_submission, person: person, event: registration.event, form: new_form)
+
+      placement = described_class.placements_for([ registration ])[registration.id]
+
+      expect(placement.event_id).to eq(registration.event_id)
+      expect(placement).not_to be_from_original
+    end
+
+    it "leaves out a registration with no registration-form answers anywhere" do
+      expect(described_class.placements_for([ create(:event_registration, registrant: person) ])).to be_empty
+    end
+  end
 end

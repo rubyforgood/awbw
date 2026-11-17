@@ -3,9 +3,9 @@ module OrganizationServices
   # rather than create a duplicate. Tries, in order of how strongly each pins the
   # address down:
   #
-  #   1. same city + same state, preferring one whose street also matches — an org
-  #      with several offices in one city can't be told apart by state alone, and
-  #      picking the wrong one would rewrite a real address into a duplicate
+  #   1. same city + same state + same street — or, when either side has no
+  #      street, the same city + state. A different street is a different office,
+  #      so it's no match (UpsertAddress adds it rather than rewriting another)
   #   2. same city + same street — unifies an address we already have with a
   #      submission that merely adds the state/country we were missing
   #   3. same street + same ZIP, in any city — a ZIP pins a place far more tightly
@@ -32,7 +32,7 @@ module OrganizationServices
 
       state_key = AddressNormalizer.state(state)
       in_state = in_city.select { |address| AddressNormalizer.state(address.state) == state_key }
-      by_state = same_street(in_state, street) || in_state.first
+      by_state = street.blank? ? in_state.first : same_street(in_state, street) || in_state.find { |address| address.street_address.blank? }
       return by_state if by_state
 
       return if street.blank?
