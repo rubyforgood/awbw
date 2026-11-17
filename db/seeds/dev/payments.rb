@@ -212,7 +212,7 @@ record_payment = ->(registration, payer:, amount_cents:, kind: :cash) do
   created_at = rand(3..30).days.ago
   payment = case kind
   when :check
-    CheckPayment.create!(**payer_attrs, amount_cents: amount_cents, check_number: "CHK-#{rand(10_000..99_999)}", created_at: created_at)
+    CheckPayment.create!(**payer_attrs, amount_cents: amount_cents, check_number: rand(10_000..99_999).to_s, created_at: created_at)
   else
     CashPayment.create!(**payer_attrs, amount_cents: amount_cents, created_at: created_at)
   end
