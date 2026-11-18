@@ -10,7 +10,7 @@ module EventRegistrationServices
   # was flagged. Registrants grouped by name but carrying different FileMaker codes
   # are surfaced as a caution to verify, never silently treated as a clean merge.
   class DuplicateFinder
-    Group = Struct.new(:key, :label, :records, :reasons, keyword_init: true)
+    Group = Struct.new(:key, :label, :records, :reasons, :tier, keyword_init: true)
 
     def initialize(scope = EventRegistration.all)
       @registrations = scope.includes(:registrant, :event).to_a
