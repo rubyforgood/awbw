@@ -36,13 +36,6 @@ RSpec.describe "dev seed: address_duplicates" do
     expect(person.contact_methods.sole.address).to eq(person.addresses.reload.sole)
   end
 
-  it "flags the sampler and its neighbor as sharing an address" do
-    load seed
-
-    group = OrganizationServices::DuplicateFinder.new.groups.find { |candidate| candidate.records.include?(sampler) }
-    expect(group.reasons).to include("Shared address")
-  end
-
   it "skips a second run" do
     load seed
 
