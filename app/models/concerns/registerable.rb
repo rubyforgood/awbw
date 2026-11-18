@@ -33,6 +33,11 @@ module Registerable
     allocations.where(source_type: "Discount").sum(:amount)
   end
 
+  def scholarship_sum
+    return allocations.to_a.select { |a| a.source_type == "Scholarship" }.sum(&:amount) if allocations.loaded?
+    allocations.where(source_type: "Scholarship").sum(:amount)
+  end
+
   def discounted?
     return allocations.to_a.any? { |a| a.source_type == "Discount" } if allocations.loaded?
     allocations.where(source_type: "Discount").exists?

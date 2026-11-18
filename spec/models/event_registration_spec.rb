@@ -2304,6 +2304,27 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#scholarship_sum" do
+    it "counts only scholarship allocations, excluding payment and discount" do
+      event = create(:event, cost_cents: 3_000)
+      reg = create(:event_registration, event: event)
+      create(:allocation, source: create(:payment, amount_cents: 1_000, amount_cents_remaining: nil), allocatable: reg, amount: 1_000)
+      create(:allocation, source: create(:scholarship, recipient: reg.registrant, amount_cents: 1_200), allocatable: reg, amount: 1_200)
+      create(:allocation, source: create(:discount, amount_cents: 800), allocatable: reg, amount: 800)
+
+      expect(reg.reload.scholarship_sum).to eq(1_200)
+      expect(EventRegistration.includes(:allocations).find(reg.id).scholarship_sum).to eq(1_200)
+    end
+
+    it "carries the source's scholarship onto a transferred-in reg" do
+      source = create(:event_registration, event: create(:event, cost_cents: 3_000))
+      create(:allocation, source: create(:scholarship, recipient: source.registrant, amount_cents: 1_500), allocatable: source, amount: 1_500)
+      transferred_in = create(:event_registration, registrant: source.registrant, transferred_from_registration: source)
+
+      expect(transferred_in.scholarship_sum).to eq(1_500)
+    end
+  end
+
   describe "#receipt_available?" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:reg) { create(:event_registration, event: event) }
