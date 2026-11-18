@@ -681,6 +681,10 @@ class EventRegistration < ApplicationRecord
     status.in?(ACTIVE_STATUSES)
   end
 
+  def cancelled?
+    status == "cancelled"
+  end
+
   def holding_money?
     status.in?(MONEY_STATUSES)
   end
