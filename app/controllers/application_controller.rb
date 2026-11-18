@@ -29,6 +29,11 @@ class ApplicationController < ActionController::Base
     head :not_acceptable
   end
 
+  # Mangled links (e.g. "&sect" decoded to "§") send a non-numeric page, which will_paginate raises on.
+  rescue_from WillPaginate::InvalidPage do
+    head :bad_request
+  end
+
   private
 
   def count_display(shown, total = shown)
