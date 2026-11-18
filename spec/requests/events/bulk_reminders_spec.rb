@@ -356,4 +356,72 @@ RSpec.describe "Events::BulkReminders", type: :request do
       expect(Nokogiri::HTML(response.body).at_css("#hide_event_card")["checked"]).to be_nil
     end
   end
+
+  # The optional "Open …" button straight to one ticket callout (or a resource on
+  # it), personalized per registrant.
+  describe "linking a ticket callout" do
+    let(:resource) { create(:resource, title: "Training notes") }
+    let!(:callout) { create(:registration_ticket_callout, event:, title: "After the training", resource:) }
+
+    it "offers each published callout and its resources on the compose page" do
+      create(:registration_ticket_callout, :hidden, event:, title: "Draft callout")
+
+      get preview_reminder_event_path(event)
+
+      select = Nokogiri::HTML(response.body).at_css("select#callout_link")
+      expect(select).to be_present
+      values = select.css("option").map { |o| o["value"] }
+      expect(values).to include(callout.id.to_s, "#{callout.id}-#{resource.id}")
+      expect(select.text).not_to include("Draft callout")
+    end
+
+    it "stores the pick on each reminder and sends each registrant their own button" do
+      perform_enqueued_jobs do
+        post send_reminder_event_path(event), params: { registration_ids: [ jane.id, sam.id ], callout_link: "#{callout.id}-#{resource.id}" }
+      end
+
+      reminders = Notification.where(kind: "event_registration_reminder")
+      expect(reminders.map(&:linked_callout)).to all(eq(callout))
+      expect(reminders.map(&:linked_resource)).to all(eq(resource))
+
+      email = ActionMailer::Base.deliveries.find { |m| m.to == [ jane.registrant.preferred_email ] }
+      body = email.html_part.body.decoded
+      expect(body).to include("Open <span>Training notes</span>")
+      expect(body).to include(registration_callout_link_path(jane.slug, callout, resource_id: resource.id))
+      expect(body).not_to include(sam.slug)
+    end
+
+    it "leaves the button out for a registrant whose ticket hides the callout, and says so on the confirm page" do
+      callout.update!(attended_gated: true)
+      jane.update!(status: "attended")
+
+      post confirm_reminder_event_path(event), params: { registration_ids: [ jane.id, sam.id ], callout_link: callout.id.to_s }
+      expect(response.body).to include("1 of 2 won't get it")
+      expect(response.body).to include("Sam Cole")
+
+      perform_enqueued_jobs do
+        post send_reminder_event_path(event), params: { registration_ids: [ jane.id, sam.id ], callout_link: callout.id.to_s }
+      end
+
+      jane_email = ActionMailer::Base.deliveries.find { |m| m.to == [ jane.registrant.preferred_email ] }
+      sam_email = ActionMailer::Base.deliveries.find { |m| m.to == [ sam.registrant.preferred_email ] }
+      expect(jane_email.html_part.body.decoded).to include("Open <span>After the training</span>")
+      expect(sam_email.html_part.body.decoded).not_to include("After the training")
+    end
+
+    it "ignores a pick from another event" do
+      other = create(:registration_ticket_callout)
+
+      post send_reminder_event_path(event), params: { registration_ids: [ jane.id ], callout_link: other.id.to_s }
+
+      expect(Notification.where(kind: "event_registration_reminder").pick(:linked_callout_id)).to be_nil
+    end
+
+    it "keeps the pick when bouncing back to the compose page" do
+      post confirm_reminder_event_path(event), params: { registration_ids: [], callout_link: callout.id.to_s }
+
+      follow_redirect!
+      expect(Nokogiri::HTML(response.body).at_css("select#callout_link option[selected]")["value"]).to eq(callout.id.to_s)
+    end
+  end
 end

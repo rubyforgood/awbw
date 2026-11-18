@@ -345,6 +345,19 @@ module Events
       @handout_cards = resource_cards_for(callout, icon: "fa-solid fa-file-pdf", return_to: "handouts")
     end
 
+    # The per-registrant landing link a bulk email's "open this callout" button
+    # points at: sends the registrant to the callout's page (or one resource on
+    # it) exactly as their ticket card would, resolved now so drip dates and gates
+    # reflect click time. Anything the ticket wouldn't show them — an unpublished
+    # or gated card, a resource no longer on the callout — falls back to the ticket.
+    def go
+      callout = @event.registration_ticket_callouts.find_by(id: params[:callout_id])
+      resource = Resource.find_by(id: params[:resource_id]) if params[:resource_id].present?
+      path = callout && RegistrantCalloutLink.new(@event_registration, callout, resource:).path
+
+      redirect_to(path || registration_ticket_path(@event_registration.slug))
+    end
+
     # Registrant-facing page for a single Resource, shown in the shared callout
     # chrome: the PDF first-page preview and a download button. Reached from the
     # handouts/forms callouts so a registrant views a document without leaving the

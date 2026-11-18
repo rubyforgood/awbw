@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_13_131756) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1453,6 +1453,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_131756) do
     t.boolean "hide_event_card", default: false, null: false
     t.boolean "hide_ticket_button", default: false, null: false
     t.string "kind", null: false
+    t.bigint "linked_callout_id"
+    t.integer "linked_resource_id"
     t.integer "noticeable_id"
     t.string "noticeable_type"
     t.integer "notification_type"
@@ -1467,6 +1469,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_131756) do
     t.integer "updated_by_id"
     t.index ["created_by_id"], name: "index_notifications_on_created_by_id"
     t.index ["kind"], name: "index_notifications_on_kind"
+    t.index ["linked_callout_id"], name: "index_notifications_on_linked_callout_id"
+    t.index ["linked_resource_id"], name: "index_notifications_on_linked_resource_id"
     t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
     t.index ["parent_notification_id"], name: "index_notifications_on_parent_notification_id"
     t.index ["person_id"], name: "index_notifications_on_person_id"
@@ -2876,6 +2880,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_131756) do
   add_foreign_key "notifications", "notifications", column: "parent_notification_id"
   add_foreign_key "notifications", "notifications", column: "root_notification_id"
   add_foreign_key "notifications", "people"
+  add_foreign_key "notifications", "registration_ticket_callouts", column: "linked_callout_id", on_delete: :nullify
+  add_foreign_key "notifications", "resources", column: "linked_resource_id", on_delete: :nullify
   add_foreign_key "notifications", "users", column: "created_by_id"
   add_foreign_key "notifications", "users", column: "sender_id"
   add_foreign_key "notifications", "users", column: "updated_by_id"

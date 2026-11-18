@@ -87,6 +87,38 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  # The per-registrant link a bulk email's "Open …" button points at.
+  describe "GET /registration/:slug/callouts/:callout_id" do
+    let(:resource) { create(:resource) }
+    let(:callout) { create(:registration_ticket_callout, event:, resource:) }
+
+    it "sends the registrant to their copy of the callout page" do
+      get registration_callout_link_path(registration.slug, callout)
+
+      expect(response).to redirect_to(event_registration_ticket_callout_path(event, callout, reg: registration.slug))
+    end
+
+    it "sends the registrant to one resource on the callout" do
+      get registration_callout_link_path(registration.slug, callout, resource_id: resource.id)
+
+      expect(response).to redirect_to(registration_resource_path(registration.slug, resource, return_to: "callout", callout_id: callout.id))
+    end
+
+    it "falls back to the ticket once the callout is unpublished" do
+      callout.update!(hidden: true)
+
+      get registration_callout_link_path(registration.slug, callout)
+
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+
+    it "falls back to the ticket for another event's callout" do
+      get registration_callout_link_path(registration.slug, create(:registration_ticket_callout))
+
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+  end
+
   describe "GET /registration/:slug/handouts" do
     it "renders the handouts page when its callout is published" do
       create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false)

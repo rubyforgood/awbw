@@ -19,6 +19,21 @@
   <% end %>
 
   <%#
+    The optional button to one ticket callout (or a resource on it), chosen on
+    the bulk-reminder page and personalized per registrant. In preview the
+    wrapper always renders (hidden when none is picked) so the reminder-preview
+    controller can swap its label/link live as the admin picks one.
+  %>
+  <% if @callout_link_url || @preview %>
+    <%= content_tag :div,
+          id: ("reminder-callout-link" if @preview),
+          data: ({ reminder_preview_target: "calloutLink" } if @preview),
+          style: "margin: 16px 0;#{' display: none;' if @preview && @callout_link_url.blank?}" do %>
+      <%= link_to @callout_link_url || "#", class: "button", data: ({ reminder_preview_target: "calloutLinkButton" } if @preview) do %>Open <%= content_tag :span, @callout_link_label, data: ({ reminder_preview_target: "calloutLinkLabel" } if @preview) %><% end %>
+    <% end %>
+  <% end %>
+
+  <%#
     The grey event-details card. In preview the wrapper always renders (hidden
     when the admin ticked "hide") so the reminder-preview controller can toggle it
     live; a real send just omits it when hidden.

@@ -685,6 +685,18 @@ RSpec.describe "Notifications", type: :request do
           expect(resent.hide_ticket_button).to be(true)
         end
 
+        it "carries the linked callout and resource onto the resent copy" do
+          callout = create(:registration_ticket_callout, event: reminder.noticeable.event)
+          resource = create(:resource)
+          reminder.update!(linked_callout: callout, linked_resource: resource)
+
+          post resend_notification_path(reminder)
+
+          resent = Notification.last
+          expect(resent.linked_callout).to eq(callout)
+          expect(resent.linked_resource).to eq(resource)
+        end
+
         it "delivers the same email the registrant originally received" do
           perform_enqueued_jobs { post resend_notification_path(reminder) }
 
