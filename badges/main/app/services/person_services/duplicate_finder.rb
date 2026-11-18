@@ -8,7 +8,7 @@ module PersonServices
   # name but carrying different FileMaker codes are surfaced as a caution for an
   # admin to verify, never silently treated as a clean merge.
   class DuplicateFinder
-    Group = Struct.new(:key, :label, :records, :reasons, keyword_init: true)
+    Group = Struct.new(:key, :label, :records, :reasons, :tier, keyword_init: true)
 
     def initialize(scope = Person.all)
       @people = scope.to_a

@@ -59,54 +59,25 @@
         <h2 class="mb-3 text-lg font-semibold text-gray-900">
           Possible duplicate groups (<%= number_with_delimiter(@possible_duplicate_groups.count) %>)
         </h2>
-        <div class="space-y-4">
-          <% @possible_duplicate_groups.each do |group| %>
-            <% keep_record = group.records.first %>
-            <div class="border-primary/10 rounded-2xl border bg-white p-4">
-              <div class="mb-2 flex items-start justify-between gap-4">
-                <h3 class="font-semibold text-gray-900">
-                  <%= group.label.presence || "(no name)" %>
-                  <span class="font-normal text-gray-400">· <%= group.records.count %> <%= @dedupe[:model_label_plural].downcase %></span>
-                </h3>
-              </div>
-              <% if group.reasons.any? %>
-                <div class="mb-3 flex flex-wrap gap-1.5">
-                  <% group.reasons.each do |reason| %>
-                    <span class="text-xs font-medium <%= reason.start_with?("⚠") ? "text-amber-800 bg-amber-100 border-amber-200" : "text-gray-600 bg-gray-50 border-gray-200" %> rounded-full border px-2 py-0.5">
-                      <%= reason %>
-                    </span>
-                  <% end %>
+        <% if @possible_duplicate_groups.any?(&:tier) %>
+          <div class="space-y-3">
+            <% @possible_duplicate_groups.chunk_while { |group, following| group.tier == following.tier }.each_with_index do |chunk, index| %>
+              <details class="border-primary/10 rounded-2xl border bg-white" <%= "open" if index.zero? %>>
+                <summary class="cursor-pointer select-none px-4 py-3 font-semibold text-gray-900">
+                  <%= chunk.first.tier %>
+                  <span class="font-normal text-gray-400">(<%= chunk.count %>)</span>
+                </summary>
+                <div class="space-y-4 px-4 pb-4">
+                  <%= render partial: "dedupes/group", collection: chunk, as: :group %>
                 </div>
-              <% end %>
-              <ul class="divide-y divide-gray-100">
-                <% group.records.each do |record| %>
-                  <li id="dedupe-record-<%= record.id %>" class="flex scroll-mt-24 items-center justify-between gap-3 py-1.5">
-                    <% if @dedupe[:record_partial] %>
-                      <%= render @dedupe[:record_partial], record: record %>
-                    <% else %>
-                      <span class="text-gray-800">
-                        <%= @dedupe[:record_label].call(record).presence || "(no name)" %>
-                        <span class="text-sm text-gray-400">
-                          · ID <%= record.id %><% if @dedupe[:record_extras] && (extra = @dedupe[:record_extras].call(record)).present? %> · <%= extra %><% end %>
-                        </span>
-                      </span>
-                    <% end %>
-                    <% if record == keep_record %>
-                      <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-700">Suggested keeper</span>
-                    <% else %>
-                      <%= link_to "Preview merge →",
-                                  url_for(action: :dedupe_preview,
-                                          @dedupe[:delete_id_param] => record.id,
-                                          @dedupe[:keep_id_param] => keep_record.id),
-                                  data: { turbo: false },
-                                  class: "text-sm #{DomainTheme.text_class_for(@dedupe[:domain], intensity: 700)} hover:underline whitespace-nowrap" %>
-                    <% end %>
-                  </li>
-                <% end %>
-              </ul>
-            </div>
-          <% end %>
-        </div>
+              </details>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="space-y-4">
+            <%= render partial: "dedupes/group", collection: @possible_duplicate_groups, as: :group %>
+          </div>
+        <% end %>
       </div>
     <% else %>
       <div class="border-primary/10 rounded-2xl border bg-white py-10 text-center">
