@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Rebuilds spec/parallel_runtime_rspec.log, which CI uses to split the suite
+# into runtime-balanced groups, from a CI run's rspec JSON results.
+#
+#   bin/parallel_runtime_log           # latest successful CI run
+#   bin/parallel_runtime_log RUN_ID    # a specific run
+require "json"
+require "tmpdir"
+
+LOG_PATH = File.expand_path("../spec/parallel_runtime_rspec.log", __dir__)
+
+run_id = ARGV.first || `gh run list --workflow ci.yml --status success --limit 1 --json databaseId -q '.[0].databaseId'`.strip
+abort("No successful CI run found") if run_id.empty?
+
+Dir.mktmpdir do |dir|
+  system("gh", "run", "download", run_id, "--pattern", "rspec-results*", "--dir", dir, exception: true)
+
+  examples = Dir[File.join(dir, "**", "*.json")].flat_map { |path| JSON.parse(File.read(path))["examples"] }
+  abort("No rspec results in run #{run_id}") if examples.empty?
+
+  # The id names the spec file that ran the example; file_path can point at a shared example.
+  times = Hash.new(0.0)
+  examples.each { |example| times[example["id"][%r{\A\./(.+?)\[}, 1]] += example["run_time"] }
+
+  lines = times.sort_by { |_file, seconds| -seconds }.map { |file, seconds| "#{file}:#{seconds.round(3)}" }
+  File.write(LOG_PATH, lines.join("\n") + "\n")
+  puts "Wrote #{lines.size} spec files (#{(times.values.sum / 60).round(1)} min) from run #{run_id} to #{LOG_PATH}"
+end

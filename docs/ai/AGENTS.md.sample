@@ -662,7 +662,7 @@ bundle exec bundle-audit check --update
 ### ci.yml
 
 1. **scan_ruby**: Brakeman security analysis + bundler-audit
-2. **build-and-test**: MySQL 8.0 service, Ruby + Node 22 setup, `npm ci`, `parallel:create parallel:load_schema`, then `parallel_rspec spec/` across 4 processes (`PARALLEL_TEST_PROCESSORS=4`)
+2. **build-and-test**: MySQL 8.0 service, Ruby + Node 22 setup, `npm ci`, `parallel:create parallel:load_schema`, then `parallel_rspec` split into 8 runtime-balanced groups across two matrix shards of 4 processes each (`--only-group`, `PARALLEL_TEST_PROCESSORS=8`). Grouping reads the committed `spec/parallel_runtime_rspec.log`; refresh it from a green CI run with `bin/parallel_runtime_log`
 
 ### rubocop.yml
 
