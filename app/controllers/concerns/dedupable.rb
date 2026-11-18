@@ -7,7 +7,7 @@ module Dedupable
     helper_method :dedupe_return
   end
 
-  CandidateGroup = Struct.new(:label, :records, :reasons, keyword_init: true)
+  CandidateGroup = Struct.new(:label, :records, :reasons, :tier, keyword_init: true)
 
   # The fallback for models with no candidate finder: records sharing a name.
   def self.name_groups(model_class)
