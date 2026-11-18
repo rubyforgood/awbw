@@ -1,5 +1,10 @@
 <% if (w9 = presenter.w9_resource) %>
   <p class="mt-1">
-    <%= link_to "W-9 (PDF)", resource_path(w9), class: "font-medium text-gray-700 underline underline-offset-2 hover:text-primary" %>
+    <%= link_to resource_path(w9),
+                class: "inline-flex items-center gap-1.5 font-medium text-blue-600 hover:text-blue-800 hover:underline",
+                target: "_blank", rel: "noopener" do %>
+      W-9 (PDF)
+      <i class="fa-solid fa-arrow-up-right-from-square text-2xs" aria-hidden="true"></i>
+    <% end %>
   </p>
 <% end %>
