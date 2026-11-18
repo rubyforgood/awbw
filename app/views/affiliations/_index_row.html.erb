@@ -1,0 +1,99 @@
+<%# One admin affiliations index row, styled like the person form's affiliation row.
+    Dates and the inactive flag autosave to #save_inline, which streams back the flag and accent. %>
+<% decorated = affiliation.decorate %>
+<% person = affiliation.person %>
+<% organization = affiliation.organization %>
+<% address = affiliation.organization_address %>
+<% first_comment = affiliation.comments.first %>
+<% date_class = "w-full rounded-md border-gray-300 bg-white text-sm focus:border-blue-500 focus:ring-blue-500" %>
+<div id="<%= dom_id(affiliation) %>" class="relative mb-2"
+     data-controller="autosave"
+     data-autosave-url-value="<%= save_inline_affiliation_path(affiliation) %>"
+     data-autosave-id-value="<%= affiliation.id %>"
+     data-autosave-stream-value="true">
+  <%= render "affiliations/index_accent", affiliation: affiliation %>
+  <div class="<%= AffiliationDecorator::INDEX_GRID %> items-center rounded-lg border px-3 py-2 <%= decorated.index_row_classes %>">
+    <div class="min-w-0">
+      <% if person %>
+        <%= person_edit_button(person, truncate_at: 25, compact: true, subtitle: person.preferred_email,
+                               tint: decorated.index_pill_tint, data: { turbo_frame: "_top" }) %>
+      <% end %>
+    </div>
+    <div class="min-w-0">
+      <% if organization %>
+        <%= organization_profile_button(organization, truncate_at: 25, compact: true,
+                                        tint: decorated.index_pill_tint, data: { turbo_frame: "_top" }) %>
+      <% end %>
+    </div>
+    <div class="min-w-0">
+      <span class="flex h-[42px] items-center truncate rounded-md border px-3 text-sm <%= decorated.index_title_classes %>"
+            title="<%= affiliation.title %>"><%= affiliation.title.presence || "—" %></span>
+    </div>
+    <div class="min-w-0">
+      <%= date_field_tag "affiliation[start_date]", affiliation.start_date,
+            id: dom_id(affiliation, :start_date), class: date_class, style: "height: 42px;",
+            "aria-label": "Start date", data: { action: "change->autosave#save" } %>
+      <%= render "shared/autosave_status", field_name: "affiliation[start_date]", classes: "mt-1 block" %>
+    </div>
+    <div class="min-w-0">
+      <%= date_field_tag "affiliation[end_date]", affiliation.end_date,
+            id: dom_id(affiliation, :end_date), class: date_class, style: "height: 42px;",
+            "aria-label": "End date", data: { action: "change->autosave#save" } %>
+      <%= render "shared/autosave_status", field_name: "affiliation[end_date]", classes: "mt-1 block" %>
+    </div>
+    <div class="min-w-0 text-sm text-gray-700">
+      <% if address %>
+        <span class="block font-mono text-xs text-gray-500">#<%= address.id %></span>
+        <span class="block truncate" title="<%= address.name %>"><%= address.city.presence || address.street_address %></span>
+      <% else %>
+        <span class="text-gray-400">—</span>
+      <% end %>
+    </div>
+    <div>
+      <span class="relative inline-block h-5 w-9 rounded-full <%= affiliation.primary_contact? ? "bg-purple-600" : "bg-gray-300" %>"
+            title="<%= affiliation.primary_contact? ? "Primary contact" : "Not the primary contact" %>">
+        <span class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow <%= "translate-x-4" if affiliation.primary_contact? %>"></span>
+      </span>
+    </div>
+    <div class="min-w-0 text-xs text-gray-700">
+      <% if first_comment %>
+        <span class="line-clamp-2" title="<%= first_comment.body %>"><%= first_comment.body %></span>
+        <%= link_to edit_affiliation_path(affiliation, anchor: "comments-section"),
+                    data: { turbo_frame: "_top" }, class: "font-medium text-indigo-600 hover:underline" do %>
+          <%= affiliation.comments.size > 1 ? "All #{affiliation.comments.size} comments →" : "Open →" %>
+        <% end %>
+      <% else %>
+        <span class="text-gray-400">—</span>
+      <% end %>
+    </div>
+    <div class="min-w-0">
+      <%= render "affiliations/index_event", affiliation: affiliation, choices: choices %>
+      <%= render "shared/autosave_status", field_name: "affiliation[event_registration_id]", classes: "mt-1 block" %>
+    </div>
+    <div class="min-w-0 truncate text-xs text-gray-400">
+      <%= filemaker_code_links(affiliation, link_class: "font-mono text-gray-500 underline decoration-dotted hover:text-gray-700") || "—" %>
+    </div>
+    <div>
+      <%= render "affiliations/index_inactive", affiliation: affiliation %>
+      <%= render "shared/autosave_status", field_name: "affiliation[inactive]", classes: "mt-1 block" %>
+    </div>
+    <div class="text-xs">
+      <%= link_to affiliation.id, edit_affiliation_path(affiliation), title: "Edit affiliation",
+                  data: { turbo_frame: "_top" }, class: "font-mono text-blue-600 hover:underline" %>
+    </div>
+    <div class="sticky right-0 flex h-full items-center justify-end gap-3 pl-2 <%= decorated.index_row_bg %>">
+      <%= link_to edit_affiliation_path(affiliation), title: "Edit affiliation", "aria-label": "Edit affiliation",
+                  data: { turbo_frame: "_top" }, class: "text-gray-400 hover:text-gray-600" do %>
+        <i class="fa-solid fa-gear"></i>
+      <% end %>
+      <%= link_to affiliation_path(affiliation), title: "Delete affiliation", "aria-label": "Delete affiliation",
+                  data: { turbo_method: :delete,
+                          turbo_confirm: "Delete #{person&.full_name}'s affiliation with #{organization&.name}?\n\n" \
+                                         "If they've just left, cancel and add an end date instead — that keeps their history. " \
+                                         "Deleting can't be undone." },
+                  class: "text-gray-400 hover:text-red-600" do %>
+        <i class="fa-solid fa-trash"></i>
+      <% end %>
+    </div>
+  </div>
+</div>

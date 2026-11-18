@@ -1,0 +1,10 @@
+<% disagrees = affiliation.decorate.inactive_flag_disagrees? %>
+<div id="<%= dom_id(affiliation, :index_inactive) %>">
+  <label class="inline-flex cursor-pointer items-center rounded-full p-1.5 <%= "border border-orange-300 bg-orange-100" if disagrees %>"
+         title="<%= disagrees ? "Flagged inactive, but its dates are still current" : "Legacy inactive flag — start and end dates decide status" %>">
+    <%= check_box_tag "affiliation[inactive]", "1", affiliation.inactive?,
+          id: dom_id(affiliation, :inactive_flag), "aria-label": "Inactive",
+          class: "h-3.5 w-3.5 rounded #{disagrees ? "border-orange-400 text-orange-600" : "border-gray-300 text-gray-400"}",
+          data: { action: "change->autosave#save" } %>
+  </label>
+</div>

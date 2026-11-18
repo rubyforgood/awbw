@@ -417,7 +417,9 @@ Rails.application.routes.draw do
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
-  resources :affiliations, only: [ :edit, :update, :destroy ]
+  resources :affiliations, only: [ :index, :edit, :update, :destroy ] do
+    patch :save_inline, on: :member
+  end
   resources :quotes
 
   resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }

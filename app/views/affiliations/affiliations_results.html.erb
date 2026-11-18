@@ -1,0 +1,39 @@
+<% sort_base = params.permit(:query, :comment_text, :filemaker_code, :kind, :status, :source, :address, :comments,
+                             :primary, :registrations, :start_year, :end_year, :person_id, :organization_id, :number_of_items_per_page).to_h.symbolize_keys %>
+<% sort_link = sort_header_link(frame: "affiliations_results", path: ->(p) { affiliations_path(p) }, base: sort_base) %>
+<%= turbo_frame_tag :affiliations_results do %>
+  <div class="animate-fade overflow-hidden rounded-xl bg-white p-3 blur-on-submit">
+    <% total = @affiliations.total_entries %>
+    <p class="mb-3 text-sm text-gray-500"><%= pluralize(total, "affiliation") %></p>
+    <% if @affiliations.any? %>
+      <div class="overflow-x-auto pb-2">
+        <div class="w-max">
+          <div class="<%= AffiliationDecorator::INDEX_GRID %> mb-1 border border-transparent px-3 text-sm font-medium">
+            <span><%= sort_link.call("person", "Person") %></span>
+            <span><%= sort_link.call("organization", "Organization") %></span>
+            <span><%= sort_link.call("title", "Title") %></span>
+            <span><%= sort_link.call("start_date", "Start") %></span>
+            <span><%= sort_link.call("end_date", "End") %></span>
+            <span><%= sort_link.call("address", "Address") %></span>
+            <span><%= sort_link.call("primary_contact", "Primary") %></span>
+            <span class="text-gray-700">Comments</span>
+            <span><%= sort_link.call("event", "Event") %></span>
+            <span class="italic opacity-60" title="Legacy FileMaker data"><%= sort_link.call("filemaker_code", "FM code") %></span>
+            <span class="italic opacity-60" title="Legacy flag — start and end dates decide status"><%= sort_link.call("inactive", "Inactive") %></span>
+            <span><%= sort_link.call("id", "ID") %></span>
+            <span></span>
+          </div>
+          <% @affiliations.each do |affiliation| %>
+            <%= render "affiliations/index_row", affiliation: affiliation, choices: @registration_choices.fetch(affiliation.id) %>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <p class="py-6 text-center text-gray-500">No affiliations match these filters.</p>
+    <% end %>
+  </div>
+
+  <div class="mt-6 flex justify-center">
+    <div class="pagination"><%= tailwind_paginate @affiliations %></div>
+  </div>
+<% end %>

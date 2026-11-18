@@ -24,7 +24,13 @@ module FilemakerCoded
     end
 
     def with_filemaker_code(code)
-      where("FIND_IN_SET(?, REGEXP_REPLACE(filemaker_code, '[[:space:]]', ''))", strip_filemaker_code(code))
+      where("FIND_IN_SET(?, REGEXP_REPLACE(#{table_name}.filemaker_code, '[[:space:]]', ''))", strip_filemaker_code(code))
+    end
+
+    # Records carrying at least one code that names a row in the given Fm* archive.
+    def with_code_in_archive(archive)
+      where("EXISTS (SELECT 1 FROM #{archive.table_name} fm " \
+            "WHERE FIND_IN_SET(fm.fm_id, REGEXP_REPLACE(#{table_name}.filemaker_code, '[[:space:]]', '')))")
     end
 
     def with_any_filemaker_code(codes)

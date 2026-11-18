@@ -1,4 +1,45 @@
 class AffiliationDecorator < ApplicationDecorator
+  # Shared by the admin affiliations index header and rows so columns line up.
+  INDEX_GRID = "grid grid-cols-[200px_200px_130px_140px_140px_110px_64px_160px_170px_110px_64px_60px_56px] gap-x-3".freeze
+
+  # The person-form row palette: role is the hue (FA purple, JA blue), ended rows go light.
+  def index_pill_tint
+    if facilitator?
+      inactive_on? ? :facilitator_light : :facilitator
+    else
+      inactive_on? ? :nonfac_light : :nonfac
+    end
+  end
+
+  # Flagged inactive while its dates still read current — the legacy flag disagrees.
+  def inactive_flag_disagrees?
+    inactive? && !(end_date && end_date < Date.current)
+  end
+
+  def index_row_classes
+    "#{index_row_bg} #{facilitator? ? "border-purple-200" : "border-blue-200"}"
+  end
+
+  def index_row_bg
+    facilitator? ? "bg-purple-50" : "bg-blue-50"
+  end
+
+  def index_accent_class
+    if facilitator?
+      inactive_on? ? "bg-purple-300" : "bg-purple-500"
+    else
+      inactive_on? ? "bg-blue-300" : "bg-blue-500"
+    end
+  end
+
+  def index_title_classes
+    if facilitator?
+      inactive_on? ? "bg-purple-50 text-purple-500 border-purple-200" : "bg-purple-100 text-purple-700 font-semibold border-purple-300"
+    else
+      inactive_on? ? "bg-blue-50 text-blue-500 border-blue-200" : "bg-blue-100 text-blue-700 font-semibold border-blue-300"
+    end
+  end
+
   def detail(length: nil)
     "#{[ person.full_name, title ].compact.join(": ")} - #{organization.name}"
   end

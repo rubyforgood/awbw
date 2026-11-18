@@ -1,0 +1,11 @@
+<%= turbo_stream.replace dom_id(@affiliation, :index_inactive) do %>
+  <%= render "affiliations/index_inactive", affiliation: @affiliation %>
+<% end %>
+<%= turbo_stream.replace dom_id(@affiliation, :index_accent) do %>
+  <%= render "affiliations/index_accent", affiliation: @affiliation %>
+<% end %>
+<% if @affiliation.saved_change_to_event_registration_id? %>
+  <%= turbo_stream.replace dom_id(@affiliation, :index_event) do %>
+    <%= render "affiliations/index_event", affiliation: @affiliation, choices: @choices %>
+  <% end %>
+<% end %>

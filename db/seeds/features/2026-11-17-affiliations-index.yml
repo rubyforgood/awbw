@@ -1,0 +1,14 @@
+name: "Affiliations index"
+area: people
+display_status: admin_facing
+released_on: 2026-11-17
+action_path: "/affiliations"
+summary: >-
+  One admin list of every facilitator (FA) and job (JA) affiliation, person first, laid out
+  like the person form's rows. Sort by any column header, filter by kind, status (including
+  zero-length), where it came from (FileMaker Personnel or people-to-organizations, a training, or by hand),
+  org address, primary contact, whether the person has any registrations, comments and their text, FileMaker code, and start or end year.
+  Start and end dates, the legacy inactive flag, and the linked event (picked from the person's
+  registrations) save right from the list and are logged as activity. An orange flag marks rows
+  flagged inactive whose dates are still current. Each row has edit and delete buttons; delete
+  asks first and suggests adding an end date instead.
