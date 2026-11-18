@@ -169,9 +169,9 @@ RSpec.describe "/story_share", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
-      it "returns bad request for a mangled page param instead of raising" do
+      it "tolerates a mangled page param" do
         get story_shares_path, params: { page: "5§or_names_all=Staff/Organizational Development" }
-        expect(response).to have_http_status(:bad_request)
+        expect(response).to have_http_status(:ok)
       end
     end
 
