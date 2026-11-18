@@ -19,6 +19,12 @@ class MembershipInvoicePresenter
   def reference = nil
   def client_id = person.id
 
+  def description = "#{DESCRIPTION}\n#{period_range}"
+
+  def period_range
+    "#{period_date(invoice.start_date)} – #{period_date(invoice.end_date)}"
+  end
+
   def invoicee = invoice.invoicee || person
 
   def bill_to_name
@@ -26,6 +32,14 @@ class MembershipInvoicePresenter
 
     invoicee.respond_to?(:full_name) ? invoicee.full_name : invoicee.name
   end
+
+  def organization_name
+    return if invoice.hide_invoicee?
+
+    invoice.organization&.name
+  end
+
+  def w9_resource = Resource.for_role("w9")
 
   def bill_to_address_lines
     return [] if invoice.hide_address?
@@ -36,10 +50,10 @@ class MembershipInvoicePresenter
 
   def additional_info = invoice.bill_to_additional_info.to_s.strip.presence
   def attention = invoice.attention_person&.full_name
-  def show_bill_to? = bill_to_name.present? || bill_to_address_lines.any? || additional_info.present?
+  def show_bill_to? = bill_to_name.present? || bill_to_address_lines.any? || additional_info.present? || organization_name.present?
 
   def line_items
-    items = [ LineItem.new(date: invoice.start_date, description: DESCRIPTION, quantity: 1, unit_price_cents: invoice.cost_cents.to_i) ]
+    items = [ LineItem.new(date: invoice.start_date, description: description, quantity: 1, unit_price_cents: invoice.cost_cents.to_i) ]
     discount = invoice.discount_sum
     items << LineItem.new(date: invoice.start_date, description: "Discount", quantity: 1, unit_price_cents: -discount) if discount.positive?
     items
@@ -53,4 +67,8 @@ class MembershipInvoicePresenter
   def issuer_email = issuer.email
   def payable_to_note = issuer.payable_to_note
   def remittance_address_lines = issuer.remittance_address_lines
+
+  private
+
+  def period_date(date) = date&.strftime("%b %-d, %Y")
 end

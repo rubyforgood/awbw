@@ -17,6 +17,7 @@ class MembershipInvoice < ApplicationRecord
   belongs_to :invoicee, polymorphic: true, optional: true
   belongs_to :bill_to_address, class_name: "Address", optional: true
   belongs_to :attention_person, class_name: "Person", optional: true
+  belongs_to :organization, optional: true
 
   delegate :person, to: :membership
   alias_method :registrant, :person
@@ -228,6 +229,7 @@ class MembershipInvoice < ApplicationRecord
     self.invoicee ||= previous.invoicee
     self.bill_to_address ||= previous.bill_to_address
     self.attention_person ||= previous.attention_person
+    self.organization ||= previous.organization
     self.hide_invoicee = previous.hide_invoicee if hide_invoicee.nil?
     self.hide_address = previous.hide_address if hide_address.nil?
     self.bill_to_additional_info = previous.bill_to_additional_info if bill_to_additional_info.nil?

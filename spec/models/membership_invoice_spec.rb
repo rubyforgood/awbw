@@ -476,4 +476,19 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(described_class.by_person_name(nil)).to include(invoice)
     end
   end
+
+  describe "#inherit_invoice_details" do
+    it "carries the reimbursement organization onto the next invoice" do
+      membership = create(:membership)
+      organization = create(:organization, name: "Acme Family Services")
+      previous = create(:membership_invoice, membership: membership, organization: organization)
+
+      next_invoice = build(:membership_invoice, membership: membership,
+        start_date: previous.end_date + 1.day,
+        end_date: previous.end_date + 1.year)
+      next_invoice.valid?
+
+      expect(next_invoice.organization).to eq(organization)
+    end
+  end
 end

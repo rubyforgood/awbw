@@ -136,6 +136,19 @@ class MembershipInvoicesController < ApplicationController
   def set_invoice_detail_options
     @bill_to_organizations = bill_to_organizations
     @bill_to_address_options = bill_to_address_options
+    @member_organizations = member_organizations
+  end
+
+  def member_organizations
+    organizations = @membership_invoice.person.affiliations.active_or_pending
+      .includes(:organization)
+      .map(&:organization)
+      .compact
+
+    current = @membership_invoice.organization
+    organizations << current if current
+
+    organizations.uniq.sort_by(&:name)
   end
 
   def bill_to_organizations
@@ -167,7 +180,7 @@ class MembershipInvoicesController < ApplicationController
   def invoice_details_params
     params.expect(membership_invoice: [
       :bill_to_organization_id, :bill_to_address_id, :hide_invoicee, :hide_address,
-      :bill_to_additional_info, :attention_person_id, :cost_dollars
+      :bill_to_additional_info, :attention_person_id, :organization_id, :cost_dollars
     ])
   end
 end

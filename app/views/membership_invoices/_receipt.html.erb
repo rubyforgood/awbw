@@ -27,6 +27,9 @@
         <% receipt.bill_to_address_lines.each do |line| %>
           <p><%= line %></p>
         <% end %>
+        <% if receipt.organization_name.present? %>
+          <p class="mt-4"><%= receipt.organization_name %></p>
+        <% end %>
         <% if receipt.additional_info.present? %>
           <p class="whitespace-pre-line"><%= receipt.additional_info %></p>
         <% end %>
@@ -70,7 +73,7 @@
       <% receipt.line_items.each do |item| %>
         <tr class="border-b border-gray-100">
           <td class="py-2 pr-3 align-top whitespace-nowrap"><%= item.date&.strftime("%m/%d/%y") %></td>
-          <td class="py-2 pr-3 align-top"><%= item.description %></td>
+          <td class="py-2 pr-3 align-top whitespace-pre-line"><%= item.description %></td>
           <td class="px-3 py-2 text-right align-top tabular-nums"><%= item.quantity %></td>
           <td class="px-3 py-2 text-right align-top whitespace-nowrap tabular-nums"><%= dollars_from_cents(item.unit_price_cents) %></td>
           <td class="py-2 pl-3 text-right align-top whitespace-nowrap tabular-nums"><%= dollars_from_cents(item.amount_cents) %></td>
@@ -126,6 +129,7 @@
   </div>
 
   <footer class="mt-12 text-sm">
-    <p><%= receipt.thank_you_note %></p>
+    <%= render "shared/w9_link", presenter: receipt %>
+    <p class="mt-1"><%= receipt.thank_you_note %></p>
   </footer>
 </article>

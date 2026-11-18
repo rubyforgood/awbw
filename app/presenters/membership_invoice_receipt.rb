@@ -20,13 +20,13 @@ class MembershipInvoiceReceipt
   def client_id = invoice.person.id
 
   delegate :bill_to_name, :bill_to_address_lines, :additional_info,
-           :attention, :show_bill_to?, to: :presenter
+           :attention, :show_bill_to?, :organization_name, :w9_resource, to: :presenter
 
   def line_items
     [
       LineItem.new(
         date: invoice.start_date,
-        description: MembershipInvoicePresenter::DESCRIPTION,
+        description: presenter.description,
         quantity: 1,
         unit_price_cents: invoice.cost_cents.to_i
       )

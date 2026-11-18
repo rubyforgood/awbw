@@ -51,6 +51,18 @@
             label: "Address",
             hint: "Default uses the bill-to's invoice address, else their oldest active address.",
             input_html: { class: "bg-white" } %>
+
+      <%= f.input :organization_id,
+            collection: @member_organizations.map { |organization| [ organization.name, organization.id ] },
+            selected: @membership_invoice.organization_id,
+            include_blank: true,
+            required: false,
+            label: "Member's organization",
+            hint: "Printed under the member's name as a reimbursement reference. Inherited from the previous invoice; search to pick any other organization.",
+            input_html: {
+              class: "bg-white",
+              data: { controller: "remote-select", remote_select_model_value: "organization" }
+            } %>
     </div>
 
     <%= f.input :hide_invoicee,

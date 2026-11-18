@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_13_131756) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_130000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1388,8 +1388,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_131756) do
     t.bigint "attention_person_id"
     t.datetime "payment_in_progress_at"
     t.string "checkout_session_id"
+    t.integer "organization_id"
     t.index ["created_by_id"], name: "index_membership_invoices_on_created_by_id"
     t.index ["membership_id"], name: "index_membership_invoices_on_membership_id"
+    t.index ["organization_id"], name: "index_membership_invoices_on_organization_id"
     t.index ["start_date", "end_date"], name: "index_membership_invoices_on_start_date_and_end_date"
     t.index ["updated_by_id"], name: "index_membership_invoices_on_updated_by_id"
   end
@@ -2866,6 +2868,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_131756) do
   add_foreign_key "membership_charge_attempts", "membership_invoices"
   add_foreign_key "membership_charge_attempts", "pay_charges"
   add_foreign_key "membership_invoices", "memberships"
+  add_foreign_key "membership_invoices", "organizations"
   add_foreign_key "membership_invoices", "users", column: "created_by_id"
   add_foreign_key "membership_invoices", "users", column: "updated_by_id"
   add_foreign_key "memberships", "people"

@@ -7,6 +7,8 @@ class InvoicePresenter
 
   def bill_to_name = show_invoicee? ? invoicee_name : nil
   def invoicee = invoice.invoicee
+  def organization_name = nil
+  def w9_resource = nil
   def bill_to_address_lines = show_address? ? address_lines(invoice.bill_to_address) : []
   def additional_info = invoice.bill_to_additional_info.to_s.strip.presence
   def show_invoicee? = !invoice.hide_invoicee?

@@ -24,6 +24,9 @@
         <% invoice.bill_to_address_lines.each do |line| %>
           <p><%= line %></p>
         <% end %>
+        <% if invoice.organization_name.present? %>
+          <p class="mt-4"><%= invoice.organization_name %></p>
+        <% end %>
         <% if invoice.additional_info.present? %>
           <p class="whitespace-pre-line"><%= invoice.additional_info %></p>
         <% end %>
@@ -71,9 +74,7 @@
       <% invoice.line_items.each do |item| %>
         <tr class="border-b border-gray-100">
           <td class="py-2 pr-3 align-top whitespace-nowrap"><%= item.date&.strftime("%m/%d/%y") %></td>
-          <td class="py-2 pr-3 align-top">
-            <%= item.description %>
-          </td>
+          <td class="py-2 pr-3 align-top whitespace-pre-line"><%= item.description %></td>
           <td class="px-3 py-2 text-right align-top tabular-nums"><%= item.quantity %></td>
           <td class="px-3 py-2 text-right align-top whitespace-nowrap tabular-nums"><%= dollars_from_cents(item.unit_price_cents) %></td>
           <td class="py-2 pl-3 text-right align-top whitespace-nowrap tabular-nums"><%= dollars_from_cents(item.amount_cents) %></td>
@@ -97,6 +98,7 @@
       Mail to:
       <span class="font-medium"><%= safe_join(invoice.remittance_address_lines, ", ") %></span>
     </p>
+    <%= render "shared/w9_link", presenter: invoice %>
     <p class="mt-1 font-bold">Thank you.</p>
   </footer>
 </article>
