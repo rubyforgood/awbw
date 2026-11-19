@@ -115,10 +115,18 @@ RSpec.describe "Events::BulkReminders", type: :request do
       expect(response.body).to include("Include 5 inactive registrants")
     end
 
-    it "doesn't offer the Inactive registrants filter in invite mode" do
-      get preview_reminder_event_path(event, mode: "invite")
+    it "applies the same Inactive registrants filter in invite mode" do
+      [ jane, sam, cancelled, no_show, transferred_out ].each { |reg| reg.registrant.user&.update_columns(confirmed_at: nil) }
 
-      expect(response.body).not_to include("Exclude inactive")
+      get preview_reminder_event_path(event, mode: "invite")
+      expect(response.body).to include("Exclude inactive")
+      expect(response.body).to include("Jane Adams")
+      expect(response.body).not_to include("Casey Gone")
+
+      get preview_reminder_event_path(event, mode: "invite", inactive: "include"),
+          headers: { "Turbo-Frame" => "reminder_recipients" }
+      expect(checked?(response.body, cancelled)).to be(true)
+      expect(checked?(response.body, transferred_out)).to be(true)
     end
   end
 
