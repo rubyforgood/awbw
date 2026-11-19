@@ -4,9 +4,12 @@
   data: { controller: "collection", turbo_frame: "affiliations_results" },
   autocomplete: "off",
   class: "mb-6 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4") do %>
-  <div class="flex items-center gap-2 text-gray-600">
-    <i class="fa-solid fa-filter text-xs"></i>
-    <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
+  <div class="flex items-center justify-between gap-2 text-gray-600">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-filter text-xs"></i>
+      <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
+    </div>
+    <%= render "shared/search_clear", url: affiliations_path %>
   </div>
   <%= hidden_field_tag :person_id, params[:person_id] if params[:person_id].present? %>
   <%= hidden_field_tag :organization_id, params[:organization_id] if params[:organization_id].present? %>
@@ -25,12 +28,12 @@
           selected: params[:status], blank: "Any status", field_class: field_class, wrapper_class: "w-full md:w-44" %>
     <%= render "shared/filter_select", param: :source, label: "Where it came from", options: Affiliation::INDEX_SOURCES.to_a,
           selected: params[:source], blank: "Anywhere", field_class: field_class, wrapper_class: "w-full md:w-52" %>
-    <%= render "shared/filter_select", param: :registrations, label: "Person has registrations", options: yes_no,
+    <%= render "shared/filter_select", param: :registrations, label: "Has registrations", options: yes_no,
           selected: params[:registrations], blank: "With or without", field_class: field_class, wrapper_class: "w-full md:w-44" %>
     <%= render "shared/filter_select", param: :trained_at, label: "Trained at",
           options: Affiliation.training_event_choices.map { |event| [ [ event.start_date&.strftime("%Y-%m-%d"), event.decorate.compact_label ].compact.join(" · "), event.id ] },
           selected: params[:trained_at], blank: "Any event", field_class: field_class, wrapper_class: "w-full md:w-64",
-          hint: "The affiliation's linked event, else the person's facilitator trainings" %>
+          tooltip: "The affiliation's linked event, else the person's facilitator trainings" %>
     <%= render "shared/filter_select", param: :address, label: "Org address", options: yes_no,
           selected: params[:address], blank: "With or without", field_class: field_class, wrapper_class: "w-full md:w-36" %>
     <%= render "shared/filter_select", param: :comments, label: "Has comments", options: yes_no,
@@ -41,9 +44,5 @@
           wrapper_class: "w-full md:w-24", input_options: { inputmode: "numeric", maxlength: 4 } %>
     <%= render "shared/filter_text", param: :end_year, label: "End year", placeholder: "YYYY",
           wrapper_class: "w-full md:w-24", input_options: { inputmode: "numeric", maxlength: 4 } %>
-    <div class="w-full md:ml-auto md:w-auto">
-      <span class="<%= search_label_class(extra: "invisible") %>" aria-hidden="true">Clear</span>
-      <%= render "shared/search_clear", url: affiliations_path %>
-    </div>
   </div>
 <% end %>

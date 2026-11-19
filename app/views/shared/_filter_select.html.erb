@@ -13,9 +13,15 @@
                      its first option is a real value rather than a neutral
                      placeholder — see collection#clearAndSubmit.
       hint         – optional HTML rendered as muted help text under the select
-                     (e.g. a link to manage the underlying records). %>
+                     (e.g. a link to manage the underlying records).
+      tooltip      – optional help text shown as a title on an info icon beside the label %>
 <div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-44") %>">
-  <%= label_tag param, label, class: search_label_class %>
+  <%= label_tag param, nil, class: search_label_class do %>
+    <%= label %>
+    <% if local_assigns[:tooltip].present? %>
+      <i class="fa-solid fa-circle-info ml-0.5 text-[0.65rem] text-gray-400" title="<%= local_assigns[:tooltip] %>"></i>
+    <% end %>
+  <% end %>
   <%= select_tag param,
                  options_for_select(options, selected),
                  include_blank: blank,
