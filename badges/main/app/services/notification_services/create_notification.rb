@@ -11,6 +11,8 @@ module NotificationServices
       custom_subject: nil,
       hide_event_card: false,
       hide_ticket_button: false,
+      linked_callout: nil,
+      linked_resource: nil,
       sender: nil,
       bulk: false,
       deliver: true,
@@ -28,6 +30,8 @@ module NotificationServices
         custom_subject: custom_subject,
         hide_event_card: hide_event_card,
         hide_ticket_button: hide_ticket_button,
+        linked_callout: linked_callout,
+        linked_resource: linked_resource,
         sender: sender,
         bulk: bulk
       )

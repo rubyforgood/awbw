@@ -126,13 +126,10 @@
           real-ticket render doesn't issue a second query for the same rows. %>
       <% callouts = preview && show_all ? event_registration.event.registration_ticket_callouts : event_registration.event.registration_ticket_callouts.select(&:published?) %>
       <% callouts.each do |callout| %>
-        <%# A transferred-out registrant withdrew from this event: keep their financial/
-            credit records (payment, scholarship, CE, certificate), hide participation
-            material (videoconference, staff, handouts, FAQ, custom callouts). (#1944) %>
-        <% next if event_registration.transferred_out? && !callout.financial_record? %>
-        <% next if callout.payment_access_gated && !payment_access && !(preview && show_all) %>
-        <% next if callout.ce_payment_access_gated && !event_registration.ce_access_granted? && !(preview && show_all) %>
-        <% next if callout.attended_gated && !event_registration.attended? && !(preview && show_all) %>
+        <%# The real ticket's visibility rule (published, transferred-out keeps only
+            financial records (#1944), payment/CE/attended gates) lives on the model,
+            shared with the bulk-email callout link. "Show all options" bypasses it. %>
+        <% next unless (preview && show_all) || callout.shown_to?(event_registration, payment_access:) %>
         <% if callout.behavioral_builtin? %>
           <% card = builtin_cards.card_for(callout) %>
           <% if card %>
@@ -155,9 +152,7 @@
           <%# A form-bearing callout opens its own person-first page where the
               registrant fills the form out; other custom callouts use the generic
               event-scoped content page. Preview always uses the event-scoped page. %>
-          <% real_href = callout.delivers_form? ?
-               registration_callout_form_path(event_registration.slug, callout) :
-               event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug) %>
+          <% real_href = RegistrantCalloutLink.custom_callout_path(event_registration, callout) unless preview %>
           <%= render "event_registrations/callout_card",
                      callout: callout,
                      href: preview ?

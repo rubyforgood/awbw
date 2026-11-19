@@ -31,6 +31,12 @@
     <%= render "event_details_card", event: @event, time_zone: @time_zone %>
   <% end %>
 
+  <% if @callout_link_label %>
+    <p style="font-size: 12px; color: #6b7280; margin: 8px 0 0;">
+      Registrants who can see it on their ticket also received a personalized "Open <%= @callout_link_label %>" button.
+    </p>
+  <% end %>
+
   <% unless @hide_ticket_button %>
     <p style="font-size: 12px; color: #6b7280; margin: 8px 0 0;">
       Each registrant also received a personalized "View ticket" link.
