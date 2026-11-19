@@ -1,0 +1,9 @@
+name: "Filter the affiliations index"
+area: people
+display_status: admin_facing
+released_on: 2026-11-18
+action_path: "/affiliations"
+summary: >-
+  Narrow affiliations by name, comment text, FileMaker code, kind, status (incl. zero-length), where
+  it came from (FileMaker, a training, by hand), registrations, org address, comments, primary
+  contact, and start or end year.
