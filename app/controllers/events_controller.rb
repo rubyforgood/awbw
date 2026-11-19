@@ -435,6 +435,11 @@ class EventsController < ApplicationController
       .to_a
 
     @event_registrations = all_registrations.select { |r| r.registrant.preferred_email.present? }
+    # Inactive registrants (cancelled, no show, transferred out) stay off the list
+    # unless the admin opts them back in.
+    unless ReminderRecipientFilter.include_inactive?(params)
+      @inactive_left_out, @event_registrations = @event_registrations.partition { |r| r.status.in?(EventRegistration::INACTIVE_STATUSES) }
+    end
 
     @not_auto_comped = []
     if @invite_mode

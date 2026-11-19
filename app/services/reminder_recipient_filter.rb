@@ -36,6 +36,19 @@ class ReminderRecipientFilter
   # reg_org, email) exist only here.
   SHARED_ROSTER_KEYS = (DROPDOWN_KEYS + DATE_KEYS + %i[ funder_name comment city ]).freeze
 
+  # Value of the picker-only `inactive` dropdown that puts inactive registrants
+  # (cancelled, no show, transferred out) back on the list. Bulk emails leave them
+  # out by default — they aren't coming, and a cancelled ticket link is blocked.
+  INCLUDE_INACTIVE = "include".freeze
+
+  # True when inactive registrants belong on the bulk-email list: the admin chose
+  # to include them, or asked for an inactive status outright via the Attendance
+  # filter (which would otherwise match nobody).
+  def self.include_inactive?(params)
+    params[:inactive] == INCLUDE_INACTIVE ||
+      params[:attendance_status].to_s.in?(EventRegistration::INACTIVE_STATUSES)
+  end
+
   def initialize(event_registrations, params, event: nil)
     @event_registrations = event_registrations
     @params = params
