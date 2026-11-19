@@ -149,6 +149,43 @@ class Affiliation < ApplicationRecord
     Event.facilitator_trainings.or(Event.where(id: linked)).order(start_date: :desc)
   end
 
+  INDEX_IMPORT_ACTIONS = {
+    "Created by the import" => "created",
+    "Linked to an existing affiliation" => "linked",
+    "Not touched by the import" => "untouched"
+  }.freeze
+
+  scope :with_personnel_import_note, -> {
+    where(id: Comment.where(commentable_type: name, topic: AffiliationServices::PersonnelImportNote::COMMENT_TOPIC)
+                     .select(:commentable_id))
+  }
+
+  scope :created_by_personnel_import, -> {
+    where(id: Ahoy::Event.where(name: AffiliationServices::PersonnelImportNote::CREATE_EVENT, resource_type: name)
+                         .where("JSON_UNQUOTE(JSON_EXTRACT(ahoy_events.properties, '$.source')) = ?",
+                                AffiliationServices::PersonnelImportNote::SOURCE)
+                         .select(:resource_id))
+  }
+
+  scope :personnel_import_action, ->(action) {
+    case action
+    when "created" then created_by_personnel_import
+    when "linked" then with_personnel_import_note.where.not(id: created_by_personnel_import.select(:id))
+    when "untouched" then where.not(id: with_personnel_import_note.select(:id))
+    else all
+    end
+  }
+
+  scope :personnel_import_end_source, ->(source) {
+    key = AffiliationServices::PersonnelImportNote::END_SOURCES.keys.find { |candidate| candidate.to_s == source.to_s }
+    next none unless key
+
+    phrase = AffiliationServices::PersonnelImportNote.end_phrase(key)
+    where(id: Comment.where(commentable_type: name, topic: AffiliationServices::PersonnelImportNote::COMMENT_TOPIC)
+                     .where("comments.body LIKE ?", "%#{sanitize_sql_like(phrase)}%")
+                     .select(:commentable_id))
+  }
+
   scope :from_source, ->(source) {
     case source
     when "fm_personnel" then with_code_in_archive(FmPersonnel)
@@ -185,6 +222,8 @@ class Affiliation < ApplicationRecord
     results = results.from_source(params[:source]) if params[:source].present?
     results = results.person_has_registrations(yes.call(:registrations)) if params[:registrations].present?
     results = results.trained_at_event(params[:trained_at]) if params[:trained_at].present?
+    results = results.personnel_import_action(params[:import]) if params[:import].present?
+    results = results.personnel_import_end_source(params[:end_source]) if params[:end_source].present?
     results
   end
 
