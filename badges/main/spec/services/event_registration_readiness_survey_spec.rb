@@ -62,19 +62,6 @@ RSpec.describe EventRegistrationReadiness, "post-event survey gating" do
     expect(readiness.status).to eq(:certificate_due)
   end
 
-  it "does not gate a dateless survey before the training ends" do
-    open_recipient_survey(display_from: nil)
-
-    expect(readiness.status).to eq(:certificate_due)
-  end
-
-  it "gates a dateless survey once the training has ended" do
-    event.update!(start_date: 3.days.ago, end_date: 2.days.ago)
-    open_recipient_survey(display_from: nil)
-
-    expect(readiness.status).to eq(:survey_pending)
-  end
-
   it "orders survey_pending between ready and certificate_due" do
     expect(EventRegistrationReadiness::STATUS_ORDER.index(:survey_pending))
       .to be_between(

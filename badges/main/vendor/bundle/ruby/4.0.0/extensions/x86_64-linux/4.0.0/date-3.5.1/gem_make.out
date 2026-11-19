@@ -6,10 +6,10 @@ checking for altzone in time.h with -Werror... no
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/date-3.5.1/ext/date
-make DESTDIR\= sitearchdir\=./.gem.20261119-2844-cm9bb8 sitelibdir\=./.gem.20261119-2844-cm9bb8 clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-5pdp8f sitelibdir\=./.gem.20261119-3142-5pdp8f clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/date-3.5.1/ext/date
-make DESTDIR\= sitearchdir\=./.gem.20261119-2844-cm9bb8 sitelibdir\=./.gem.20261119-2844-cm9bb8
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-5pdp8f sitelibdir\=./.gem.20261119-3142-5pdp8f
 compiling date_core.c
 compiling date_parse.c
 compiling date_strftime.c
@@ -17,8 +17,8 @@ compiling date_strptime.c
 linking shared-object date_core.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/date-3.5.1/ext/date
-make DESTDIR\= sitearchdir\=./.gem.20261119-2844-cm9bb8 sitelibdir\=./.gem.20261119-2844-cm9bb8 install
-/usr/bin/install -c -m 0755 date_core.so ./.gem.20261119-2844-cm9bb8
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-5pdp8f sitelibdir\=./.gem.20261119-3142-5pdp8f install
+/usr/bin/install -c -m 0755 date_core.so ./.gem.20261119-3142-5pdp8f
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/date-3.5.1/ext/date
-make DESTDIR\= sitearchdir\=./.gem.20261119-2844-cm9bb8 sitelibdir\=./.gem.20261119-2844-cm9bb8 clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-5pdp8f sitelibdir\=./.gem.20261119-3142-5pdp8f clean

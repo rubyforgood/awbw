@@ -829,21 +829,12 @@ class EventRegistration < ApplicationRecord
   end
 
   # The recipients survey becomes available once the recipient has signed their
-  # agreement and the survey has opened — not on scholarship tasks, which can run
-  # alongside it. It's what gates the survey's display on the scholarship page, the
-  # ticket card, and readiness.
-  def recipient_survey_available?
-    recipient_survey_agreement_signed? && recipient_survey_open?
-  end
-
-  # Opens like the CE form: on its display date when one is set, otherwise once the
-  # training has ended and this registrant has signed out.
-  def recipient_survey_open?
-    link = event.recipient_survey_form_link
-    return false unless link
-    return !link.dripping? if link.available_from
-
-    signouts_complete?
+  # agreement and any drip date on the scholarship callout row has passed — not on
+  # scholarship tasks, which can run alongside it. Reads preloaded scholarships + the
+  # event's memoized survey row, so it adds no per-row roster query. It's what
+  # gates the survey's display on the scholarship page, the ticket card, and readiness.
+  def recipient_survey_available?(now = Time.current)
+    recipient_survey_agreement_signed? && event.recipient_survey_drip_open?(now)
   end
 
   # The per-recipient half of the survey gate: every live (undeclined) award signed.
@@ -1032,9 +1023,9 @@ class EventRegistration < ApplicationRecord
   end
 
   # Whether the training's sign-in/out phase is finished for this registrant: the
-  # event has ended and no attendance entry is still open. Opens a dateless CE form
-  # (see RegistrantCeForm) and recipients survey.
-  def signouts_complete?
+  # event has ended and no attendance entry is still open. Opens a CE callout form
+  # that has no display date (see RegistrantCeForm).
+  def ce_signouts_complete?
     event.ended? && event_attendance_time_entries.none?(&:open?)
   end
 

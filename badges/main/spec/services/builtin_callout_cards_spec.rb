@@ -330,7 +330,7 @@ RSpec.describe BuiltinCalloutCards do
 
       it "says the recipients survey waits on their acceptance" do
         callout = create(:registration_ticket_callout, event:, builtin_key: "scholarship")
-        callout.registration_ticket_callout_forms.create!(form: create(:form, role: "recipient_survey"), display_from: 1.day.ago)
+        callout.registration_ticket_callout_forms.create!(form: create(:form, role: "recipient_survey"))
 
         expect(described_class.new(registration.reload).card_for(callout).badge).to eq("Survey opens once you accept")
       end
@@ -513,7 +513,6 @@ RSpec.describe BuiltinCalloutCards do
   end
 
   describe "Scholarship card recipients survey chip" do
-    let(:event) { create(:event, start_date: 3.days.ago, end_date: 2.days.ago) }
     let(:survey_form) { create(:form) }
     let(:callout) { create(:registration_ticket_callout, event:, builtin_key: "scholarship", title: "Scholarship") }
     let!(:survey_link) { callout.registration_ticket_callout_forms.create!(form: survey_form) }
@@ -536,24 +535,6 @@ RSpec.describe BuiltinCalloutCards do
     it "says the survey opens once the recipient accepts" do
       award(signed: false)
       expect(scholarship_card.badge).to eq("Survey opens once you accept")
-    end
-
-    it "names the drip date, not the agreement, when the date is still ahead" do
-      award(signed: false)
-      survey_link.update!(display_from: 1.week.from_now)
-      expect(scholarship_card.badge).to eq("Survey opens #{1.week.from_now.strftime("%b %-d")}")
-    end
-
-    it "holds a dateless survey until the training ends" do
-      event.update!(start_date: 2.days.from_now, end_date: 3.days.from_now)
-      award(signed: true)
-      expect(scholarship_card.badge).to eq("$250 · Survey opens after the training")
-    end
-
-    it "holds a dateless survey until the recipient signs out" do
-      award(signed: true)
-      create(:event_attendance_time_entry, :open, event_registration: registration)
-      expect(scholarship_card.badge).to eq("$250 · Survey opens once you sign out")
     end
 
     it "names the drip date while the survey is held" do

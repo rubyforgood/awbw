@@ -33,7 +33,7 @@ class RegistrantCeForm
   def available?
     return !link.dripping? if link&.display_from
 
-    @event_registration.signouts_complete?
+    @event_registration.ce_signouts_complete?
   end
 
   # This registrant's submission for the CE callout's form, if one exists. Keyed

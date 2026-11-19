@@ -3,20 +3,20 @@ current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/deb
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-2844-jji6bo sitelibdir\=./.gem.20261119-2844-jji6bo clean
+make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-3142-gbx6na sitelibdir\=./.gem.20261119-3142-gbx6na clean
 make: warning: -j3 forced in submake: resetting jobserver mode.
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-2844-jji6bo sitelibdir\=./.gem.20261119-2844-jji6bo
+make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-3142-gbx6na sitelibdir\=./.gem.20261119-3142-gbx6na
 make: warning: -j3 forced in submake: resetting jobserver mode.
-compiling debug.c
 compiling iseq_collector.c
+compiling debug.c
 linking shared-object debug/debug.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-2844-jji6bo sitelibdir\=./.gem.20261119-2844-jji6bo install
+make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-3142-gbx6na sitelibdir\=./.gem.20261119-3142-gbx6na install
 make: warning: -j3 forced in submake: resetting jobserver mode.
-/usr/bin/install -c -m 0755 debug.so ./.gem.20261119-2844-jji6bo/debug
+/usr/bin/install -c -m 0755 debug.so ./.gem.20261119-3142-gbx6na/debug
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make DESTDIR\= sitearchdir\=./.gem.20261119-2844-jji6bo sitelibdir\=./.gem.20261119-2844-jji6bo clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-gbx6na sitelibdir\=./.gem.20261119-3142-gbx6na clean

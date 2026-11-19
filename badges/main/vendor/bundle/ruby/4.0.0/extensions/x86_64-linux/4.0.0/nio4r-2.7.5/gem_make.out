@@ -13,10 +13,10 @@ checking for sys/resource.h... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make DESTDIR\= sitearchdir\=./.gem.20261119-2844-wjdxth sitelibdir\=./.gem.20261119-2844-wjdxth clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-rlufm0 sitelibdir\=./.gem.20261119-3142-rlufm0 clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make DESTDIR\= sitearchdir\=./.gem.20261119-2844-wjdxth sitelibdir\=./.gem.20261119-2844-wjdxth
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-rlufm0 sitelibdir\=./.gem.20261119-3142-rlufm0
 compiling bytebuffer.c
 compiling monitor.c
 compiling nio4r_ext.c
@@ -251,8 +251,8 @@ cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ 
 linking shared-object nio4r_ext.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make DESTDIR\= sitearchdir\=./.gem.20261119-2844-wjdxth sitelibdir\=./.gem.20261119-2844-wjdxth install
-/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20261119-2844-wjdxth
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-rlufm0 sitelibdir\=./.gem.20261119-3142-rlufm0 install
+/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20261119-3142-rlufm0
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make DESTDIR\= sitearchdir\=./.gem.20261119-2844-wjdxth sitelibdir\=./.gem.20261119-2844-wjdxth clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-rlufm0 sitelibdir\=./.gem.20261119-3142-rlufm0 clean

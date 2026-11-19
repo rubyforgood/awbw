@@ -8,19 +8,16 @@ checking for whether -std=c99 is accepted as CFLAGS... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bootsnap-1.22.0/ext/bootsnap
-make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-2844-511rwr sitelibdir\=./.gem.20261119-2844-511rwr clean
-make: warning: -j3 forced in submake: resetting jobserver mode.
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-ldwfvy sitelibdir\=./.gem.20261119-3142-ldwfvy clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bootsnap-1.22.0/ext/bootsnap
-make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-2844-511rwr sitelibdir\=./.gem.20261119-2844-511rwr
-make: warning: -j3 forced in submake: resetting jobserver mode.
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-ldwfvy sitelibdir\=./.gem.20261119-3142-ldwfvy
 compiling bootsnap.c
 linking shared-object bootsnap/bootsnap.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bootsnap-1.22.0/ext/bootsnap
-make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-2844-511rwr sitelibdir\=./.gem.20261119-2844-511rwr install
-make: warning: -j3 forced in submake: resetting jobserver mode.
-/usr/bin/install -c -m 0755 bootsnap.so ./.gem.20261119-2844-511rwr/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-ldwfvy sitelibdir\=./.gem.20261119-3142-ldwfvy install
+/usr/bin/install -c -m 0755 bootsnap.so ./.gem.20261119-3142-ldwfvy/bootsnap
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bootsnap-1.22.0/ext/bootsnap
-make DESTDIR\= sitearchdir\=./.gem.20261119-2844-511rwr sitelibdir\=./.gem.20261119-2844-511rwr clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-3142-ldwfvy sitelibdir\=./.gem.20261119-3142-ldwfvy clean

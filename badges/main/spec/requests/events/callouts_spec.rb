@@ -713,7 +713,7 @@ RSpec.describe "Events::Callouts", type: :request do
       before do
         scholarship.update!(agreement_signed: true, tasks_completed: false)
         scholarship_callout.update!(hidden: false)
-        scholarship_callout.registration_ticket_callout_forms.create!(form: survey, display_from: 1.day.ago)
+        scholarship_callout.registration_ticket_callout_forms.create!(form: survey)
       end
 
       it "opens the survey in its expanded form card once the agreement is signed" do
@@ -739,7 +739,7 @@ RSpec.describe "Events::Callouts", type: :request do
       before do
         scholarship.update!(agreement_signed: true, tasks_completed: true)
         scholarship_callout.update!(hidden: false)
-        scholarship_callout.registration_ticket_callout_forms.create!(form: survey, display_from: 1.day.ago)
+        scholarship_callout.registration_ticket_callout_forms.create!(form: survey)
       end
 
       it "records the answers anonymously and shows the survey as completed without the answers" do
@@ -947,7 +947,7 @@ RSpec.describe "Events::Callouts", type: :request do
 
         before do
           scholarship_callout.update!(hidden: false)
-          scholarship_callout.registration_ticket_callout_forms.create!(form: survey, display_from: 1.day.ago)
+          scholarship_callout.registration_ticket_callout_forms.create!(form: survey)
         end
 
         it "stays closed until the agreement is signed" do

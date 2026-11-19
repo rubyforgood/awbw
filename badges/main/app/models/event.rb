@@ -336,6 +336,15 @@ class Event < ApplicationRecord
       end
   end
 
+  # Whether the recipient survey's own drip date (if any) has passed — the
+  # event-level half of its availability. The per-recipient half (agreement signed)
+  # lives on EventRegistration#recipient_survey_available?.
+  def recipient_survey_drip_open?(now = Time.current)
+    link = recipient_survey_form_link
+    return false unless link
+    !link.dripping?(now)
+  end
+
   def registerable?
     !ended? && (registration_close_date.nil? || registration_close_date >= Time.current)
   end

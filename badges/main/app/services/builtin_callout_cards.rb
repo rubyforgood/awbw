@@ -294,17 +294,14 @@ class BuiltinCalloutCards
   end
 
   # The recipients survey's gate, for a recipient whose event delivers one on the
-  # scholarship callout: the survey's display date if set, otherwise the end of the
-  # training and their sign-out, then their agreement. Nil without a survey or
-  # award, or once it's in.
+  # scholarship callout: opens once they accept their agreement, then on the
+  # survey's drip date if one is set. Nil without a survey or award, or once it's in.
   def recipient_survey_badge
     link = event.recipient_survey_form_link
     return unless link && registration.scholarship_recipient?
     return if registration.post_survey_completed?
-    return "Survey opens #{ce_deadline_text(link.available_from)}" if link.dripping?
-    return "Survey opens after the training" unless link.available_from || event.ended?
-    return "Survey opens once you sign out" unless registration.recipient_survey_open?
     return "Survey opens once you accept" unless registration.recipient_survey_agreement_signed?
+    return "Survey opens #{ce_deadline_text(link.available_from)}" if link.dripping?
 
     RECIPIENT_SURVEY_DUE
   end
