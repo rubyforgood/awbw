@@ -40,6 +40,13 @@ class Affiliation < ApplicationRecord
 
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
 
+  def save_index_note(body)
+    note = comments.newest_first.first
+    return note.update!(body: body.to_s) if note
+
+    comments.create!(body: body) if body.present?
+  end
+
   # A communication logged on an affiliation is addressed to the affiliated person.
   def communications_email
     person&.preferred_email

@@ -1,6 +1,6 @@
 class AffiliationDecorator < ApplicationDecorator
   # Shared by the admin affiliations index header and rows so columns line up.
-  INDEX_GRID = "grid grid-cols-[190px_190px_130px_132px_132px_110px_64px_150px_150px_110px_64px_40px_88px] gap-x-3".freeze
+  INDEX_GRID = "grid grid-cols-[180px_180px_130px_132px_132px_110px_64px_190px_150px_110px_64px_40px_88px] gap-x-3".freeze
 
   # The person-form row palette: role is the hue (FA purple, JA blue), ended rows go light.
   def index_pill_tint
@@ -9,6 +9,12 @@ class AffiliationDecorator < ApplicationDecorator
     else
       inactive_on? ? :nonfac_light : :nonfac
     end
+  end
+
+  # Numbered like the org address editor's "Address #N", then the city (or street).
+  def index_address_label(address, number)
+    place = address.city.presence || address.street_address
+    [ number, (address.inactive? ? "#{place} [INACTIVE]" : place) ].compact_blank.join(" · ")
   end
 
   # Flagged inactive while its dates still read current — the legacy flag disagrees.

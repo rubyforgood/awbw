@@ -419,6 +419,7 @@ Rails.application.routes.draw do
   resources :organization_statuses
   resources :affiliations, only: [ :index, :edit, :update, :destroy ] do
     patch :save_inline, on: :member
+    patch :save_note, on: :member
   end
   resources :quotes
 

@@ -1,7 +1,7 @@
 class AffiliationsController < ApplicationController
   SORTS = {
+    "organization" => "organizations.name %{dir}, people.last_name %{dir}, people.first_name %{dir}",
     "person" => "people.last_name %{dir}, people.first_name %{dir}",
-    "organization" => "organizations.name %{dir}",
     "title" => "affiliations.title %{dir}",
     "start_date" => "affiliations.start_date %{dir}",
     "end_date" => "affiliations.end_date %{dir}",
@@ -15,19 +15,19 @@ class AffiliationsController < ApplicationController
     "id" => "affiliations.id %{dir}"
   }.freeze
 
-  before_action :set_affiliation, only: %i[ edit update save_inline destroy ]
+  before_action :set_affiliation, only: %i[ edit update save_inline save_note destroy ]
   before_action :set_registration_choices, only: %i[ edit update ]
 
   def index
     authorize!
     return render :index unless turbo_frame_request?
 
-    @sort = SORTS.key?(params[:sort]) ? params[:sort] : "person"
+    @sort = SORTS.key?(params[:sort]) ? params[:sort] : "organization"
     @sort_direction = params[:direction] == "desc" ? "desc" : "asc"
     order = format(SORTS[@sort], dir: @sort_direction)
     @affiliations = Affiliation.search_by_params(params)
       .left_joins(:person, :organization, :event_registration)
-      .includes(:person, :organization, :organization_address, :comments, event_registration: :event)
+      .includes(:person, :organization_address, :comments, organization: :addresses, event_registration: :event)
       .reorder(Arel.sql("#{order}, affiliations.id ASC"))
       .paginate(page: params[:page], per_page: params[:number_of_items_per_page].presence || 50)
     @registration_choices = registration_choices_for(@affiliations)
@@ -51,16 +51,26 @@ class AffiliationsController < ApplicationController
     end
   end
 
-  # The index's inline autosave: one start date, end date, inactive flag, or linked registration at a time.
+  # The index's inline autosave: one start date, end date, inactive flag, primary contact, address, FileMaker code, or linked registration at a time.
   def save_inline
     authorize! @affiliation, to: :update?
-    attrs = params.require(:affiliation).permit(:start_date, :end_date, :inactive, :event_registration_id)
+    attrs = params.require(:affiliation).permit(:start_date, :end_date, :inactive, :primary_contact, :organization_address_id, :filemaker_code, :event_registration_id)
     @affiliation.inactive_supplied = attrs.key?(:inactive)
     @affiliation.assign_attributes(attrs)
     return render json: { error: save_error }, status: :unprocessable_content unless @affiliation.save
 
     @choices = registration_choices_for([ @affiliation ]).fetch(@affiliation.id)
 
+    respond_to do |format|
+      format.turbo_stream
+      format.any { head :ok }
+    end
+  end
+
+  # The index's inline comment: edits the newest comment, or adds one when there's none.
+  def save_note
+    authorize! @affiliation, to: :update?
+    @affiliation.save_index_note(params[:note])
     respond_to do |format|
       format.turbo_stream
       format.any { head :ok }

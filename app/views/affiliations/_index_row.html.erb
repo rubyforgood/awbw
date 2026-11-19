@@ -12,13 +12,7 @@
      data-autosave-id-value="<%= affiliation.id %>"
      data-autosave-stream-value="true">
   <%= render "affiliations/index_accent", affiliation: affiliation %>
-  <div class="<%= AffiliationDecorator::INDEX_GRID %> items-center rounded-lg border px-3 py-2 <%= decorated.index_row_classes %>">
-    <div class="min-w-0">
-      <% if person %>
-        <%= person_edit_button(person, truncate_at: 25, compact: true, subtitle: person.preferred_email,
-                               tint: decorated.index_pill_tint, data: { turbo_frame: "_top" }) %>
-      <% end %>
-    </div>
+  <div class="<%= AffiliationDecorator::INDEX_GRID %> aff-row items-center rounded-lg border px-3 py-2 <%= decorated.index_row_classes %>">
     <div class="min-w-0">
       <% if organization %>
         <%= organization_profile_button(organization, truncate_at: 25, compact: true,
@@ -26,8 +20,13 @@
       <% end %>
     </div>
     <div class="min-w-0">
-      <span class="flex h-[42px] items-center truncate rounded-md border px-3 text-sm <%= decorated.index_title_classes %>"
-            title="<%= affiliation.title %>"><%= affiliation.title.presence || "—" %></span>
+      <% if person %>
+        <%= person_edit_button(person, truncate_at: 25, compact: true, subtitle: person.preferred_email,
+                               tint: decorated.index_pill_tint, data: { turbo_frame: "_top" }) %>
+      <% end %>
+    </div>
+    <div class="min-w-0">
+      <%= render "affiliations/index_title", affiliation: affiliation %>
     </div>
     <div class="min-w-0">
       <%= date_field_tag "affiliation[start_date]", affiliation.start_date,
@@ -41,37 +40,50 @@
             "aria-label": "End date", data: { action: "change->autosave#save" } %>
       <%= render "shared/autosave_status", field_name: "affiliation[end_date]", classes: "mt-1 block" %>
     </div>
-    <div class="min-w-0 text-sm text-gray-700">
-      <% if address %>
-        <span class="block font-mono text-xs text-gray-500">#<%= address.id %></span>
-        <span class="block truncate" title="<%= address.name %>"><%= address.city.presence || address.street_address %></span>
+    <div class="min-w-0 text-xs">
+      <% org_addresses = organization&.addresses.to_a %>
+      <% if org_addresses.any? %>
+        <%= select_tag "affiliation[organization_address_id]",
+              options_for_select(org_addresses.each_with_index.map { |org_address, i| [ decorated.index_address_label(org_address, i + 1), org_address.id, { title: org_address.name } ] },
+                                 affiliation.organization_address_id),
+              include_blank: "—",
+              id: dom_id(affiliation, :organization_address),
+              title: address&.name,
+              "aria-label": "Organization address",
+              class: "w-full truncate rounded-md border-gray-300 bg-white py-1 pr-6 pl-2 text-xs focus:border-blue-500 focus:ring-blue-500",
+              data: { action: "change->autosave#save" } %>
+        <%= render "shared/autosave_status", field_name: "affiliation[organization_address_id]", classes: "mt-1 block" %>
       <% else %>
-        <span class="text-gray-400">—</span>
+        <span class="text-gray-400" title="This organization has no addresses">—</span>
       <% end %>
     </div>
     <div>
-      <span class="relative inline-block h-5 w-9 rounded-full <%= affiliation.primary_contact? ? "bg-purple-600" : "bg-gray-300" %>"
-            title="<%= affiliation.primary_contact? ? "Primary contact" : "Not the primary contact" %>">
-        <span class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow <%= "translate-x-4" if affiliation.primary_contact? %>"></span>
-      </span>
+      <label class="flex cursor-pointer items-center select-none" title="Primary contact for this organization">
+        <%= check_box_tag "affiliation[primary_contact]", "1", affiliation.primary_contact?,
+              id: dom_id(affiliation, :primary_contact), class: "peer sr-only", "aria-label": "Primary contact",
+              data: { action: "change->autosave#save" } %>
+        <span class="relative inline-block h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-purple-600 after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:after:translate-x-4"></span>
+      </label>
+      <%= render "shared/autosave_status", field_name: "affiliation[primary_contact]", classes: "mt-1 block" %>
     </div>
-    <div class="min-w-0 text-xs text-gray-700">
-      <% if first_comment %>
-        <span class="line-clamp-2" title="<%= first_comment.body %>"><%= first_comment.body %></span>
-        <%= link_to edit_affiliation_path(affiliation, anchor: "comments-section"),
-                    data: { turbo_frame: "_top" }, class: "font-medium text-indigo-600 hover:underline" do %>
-          <%= affiliation.comments.size > 1 ? "All #{affiliation.comments.size} comments →" : "Open →" %>
-        <% end %>
-      <% else %>
-        <span class="text-gray-400">—</span>
+    <div class="min-w-0">
+      <%= render "shared/index_note", record: affiliation, url: save_note_affiliation_path(affiliation), comment: first_comment %>
+      <% if affiliation.comments.size > 1 %>
+        <%= link_to "All #{affiliation.comments.size} comments →", edit_affiliation_path(affiliation, anchor: "comments-section"),
+                    data: { turbo_frame: "_top" }, class: "text-xs font-medium text-indigo-600 hover:underline" %>
       <% end %>
     </div>
     <div class="min-w-0">
       <%= render "affiliations/index_event", affiliation: affiliation, choices: choices %>
       <%= render "shared/autosave_status", field_name: "affiliation[event_registration_id]", classes: "mt-1 block" %>
     </div>
-    <div class="min-w-0 truncate text-xs text-gray-400">
-      <%= filemaker_code_links(affiliation, link_class: "font-mono text-gray-500 underline decoration-dotted hover:text-gray-700") || "—" %>
+    <div class="min-w-0">
+      <%= text_field_tag "affiliation[filemaker_code]", affiliation.filemaker_code,
+            id: dom_id(affiliation, :filemaker_code), placeholder: "—", "aria-label": "FileMaker code",
+            class: "w-full rounded-md border-gray-300 bg-white px-2 py-1 font-mono text-xs text-gray-500 focus:border-blue-500 focus:ring-blue-500",
+            data: { action: "change->autosave#save" } %>
+      <%= render "affiliations/index_fm_links", affiliation: affiliation %>
+      <%= render "shared/autosave_status", field_name: "affiliation[filemaker_code]", classes: "mt-1 block" %>
     </div>
     <div>
       <%= render "affiliations/index_inactive", affiliation: affiliation %>

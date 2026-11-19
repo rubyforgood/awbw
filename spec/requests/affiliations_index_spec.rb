@@ -43,7 +43,7 @@ RSpec.describe "Affiliations index", type: :request do
       expect(response.body).to include("affiliations_results")
     end
 
-    it "lists every affiliation with person first, sorted by person" do
+    it "lists every affiliation sorted by organization, then person" do
       expect(ids_in(results)).to eq([ facilitator_row.id, job_row.id ])
     end
 
@@ -151,7 +151,7 @@ RSpec.describe "Affiliations index", type: :request do
       expect(ids_in(results(organization_id: alpha_org.id))).to eq([ facilitator_row.id ])
     end
 
-    it "shows the first comment with a link to the rest" do
+    it "puts the newest comment in an editable box, with a link to the rest" do
       create(:comment, commentable: facilitator_row, body: "Older note", created_at: 2.days.ago)
       create(:comment, commentable: facilitator_row, body: "Newest note")
       body = results
@@ -181,8 +181,8 @@ RSpec.describe "Affiliations index", type: :request do
       job_row.update_column(:inactive, true)
       body = Capybara.string(results)
 
-      expect(body).to have_css("#index_inactive_affiliation_#{facilitator_row.id} .bg-orange-100")
-      expect(body).to have_no_css("#index_inactive_affiliation_#{job_row.id} .bg-orange-100")
+      expect(body).to have_css("#index_inactive_affiliation_#{facilitator_row.id} .ring-orange-300")
+      expect(body).to have_no_css("#index_inactive_affiliation_#{job_row.id} .ring-orange-300")
       expect(body).to have_checked_field("inactive_flag_affiliation_#{job_row.id}")
     end
 
@@ -204,6 +204,25 @@ RSpec.describe "Affiliations index", type: :request do
 
       expect(response.body).to include(%(action="remove"), %(target="affiliation_#{job_row.id}"))
       expect(Affiliation.exists?(job_row.id)).to be(false)
+    end
+  end
+
+  describe "PATCH /affiliations/:id/save_note" do
+    before { sign_in admin }
+
+    it "adds a comment when there's none, then edits the newest one" do
+      patch save_note_affiliation_path(job_row), params: { note: "Checked in FileMaker" }, as: :turbo_stream
+      expect(job_row.comments.pluck(:body)).to eq([ "Checked in FileMaker" ])
+      expect(response.body).to include("note_hint_affiliation_#{job_row.id}")
+
+      patch save_note_affiliation_path(job_row), params: { note: "Dates confirmed" }, as: :turbo_stream
+      expect(job_row.comments.reload.pluck(:body)).to eq([ "Dates confirmed" ])
+    end
+
+    it "is not allowed for non-admins" do
+      sign_in create(:user)
+      patch save_note_affiliation_path(job_row), params: { note: "Nope" }, as: :turbo_stream
+      expect(job_row.comments).to be_empty
     end
   end
 
@@ -262,6 +281,71 @@ RSpec.describe "Affiliations index", type: :request do
       patch save_inline_affiliation_path(job_row), params: { affiliation: { event_registration_id: "" } }, as: :turbo_stream
 
       expect(job_row.reload.event_registration_id).to be_nil
+    end
+
+    it "toggles primary contact and logs it" do
+      allow(Analytics::LifecycleBuffer).to receive(:push).and_call_original
+
+      patch save_inline_affiliation_path(facilitator_row), params: { affiliation: { primary_contact: "1" } }, as: :turbo_stream
+      expect(facilitator_row.reload).to be_primary_contact
+      expect(Analytics::LifecycleBuffer).to have_received(:push).with(
+        hash_including(name: "update.affiliation", properties: hash_including(changes: hash_including("primary_contact")))
+      )
+
+      patch save_inline_affiliation_path(facilitator_row), params: { affiliation: { primary_contact: "0" } }, as: :turbo_stream
+      expect(facilitator_row.reload).not_to be_primary_contact
+    end
+
+    it "renders an editable primary contact switch" do
+      body = Capybara.string(results)
+      expect(body).to have_checked_field("primary_contact_affiliation_#{job_row.id}", visible: :all)
+      expect(body).to have_unchecked_field("primary_contact_affiliation_#{facilitator_row.id}", visible: :all)
+    end
+
+    it "sets the organization address and logs it" do
+      allow(Analytics::LifecycleBuffer).to receive(:push).and_call_original
+      address = create(:address, addressable: beta_org)
+
+      patch save_inline_affiliation_path(job_row), params: { affiliation: { organization_address_id: address.id } }, as: :turbo_stream
+
+      expect(job_row.reload.organization_address).to eq(address)
+      expect(Analytics::LifecycleBuffer).to have_received(:push).with(
+        hash_including(name: "update.affiliation", properties: hash_including(changes: hash_including("organization_address_id")))
+      )
+    end
+
+    it "rejects another organization's address" do
+      address = create(:address, addressable: alpha_org)
+
+      patch save_inline_affiliation_path(job_row), params: { affiliation: { organization_address_id: address.id } }, as: :turbo_stream
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(job_row.reload.organization_address_id).to be_nil
+    end
+
+    it "offers the organization's own addresses, numbered" do
+      first = create(:address, addressable: beta_org, city: "Riverton")
+      create(:address, addressable: beta_org, city: "Lakeside")
+      job_row.update_column(:organization_address_id, first.id)
+
+      select = Capybara.string(results).find("#organization_address_affiliation_#{job_row.id}")
+      expect(select.all("option").map(&:text)).to eq([ "—", "1 · Riverton", "2 · Lakeside" ])
+      expect(select.find("option[selected]").text).to eq("1 · Riverton")
+    end
+
+    it "saves the FileMaker code and streams back its archive links" do
+      patch save_inline_affiliation_path(job_row), params: { affiliation: { filemaker_code: " RC9 , PS7 " } }, as: :turbo_stream
+
+      expect(job_row.reload.filemaker_code).to eq("PS7, RC9")
+      expect(response.body).to include("fm_links_affiliation_#{job_row.id}")
+    end
+
+    it "marks the row ended once a past end date is saved, and clears it when removed" do
+      patch save_inline_affiliation_path(facilitator_row), params: { affiliation: { end_date: "2020-01-01" } }, as: :turbo_stream
+      expect(response.body).to include("aff-ended-marker")
+
+      patch save_inline_affiliation_path(facilitator_row), params: { affiliation: { end_date: "" } }, as: :turbo_stream
+      expect(response.body).not_to include("aff-ended-marker")
     end
 
     it "only touches the dates and inactive flag" do
