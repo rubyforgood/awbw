@@ -29,12 +29,12 @@
           selected: params[:comments], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-32" %>
   <%= render "shared/filter_select", param: :primary, label: "Primary contact", options: yes_no,
           selected: params[:primary], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-32" %>
+<% end %>
+<% more = capture do %>
   <%= render "shared/filter_text", param: :start_year, label: "Start year", placeholder: "YYYY",
           wrapper_class: "w-full md:w-24", input_options: { inputmode: "numeric", maxlength: 4 } %>
   <%= render "shared/filter_text", param: :end_year, label: "End year", placeholder: "YYYY",
           wrapper_class: "w-full md:w-24", input_options: { inputmode: "numeric", maxlength: 4 } %>
-<% end %>
-<% more = capture do %>
   <%= render "shared/filter_select", param: :import, label: "What the import did", options: Affiliation::INDEX_IMPORT_ACTIONS.to_a,
         selected: params[:import], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-44" %>
   <%= render "shared/filter_select", param: :end_source, label: "Import end date from",
@@ -42,5 +42,5 @@
         selected: params[:end_source], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-44" %>
 <% end %>
 <%= render "events/filter_bar", url: affiliations_path, frame: "affiliations_results",
-      clear_url: affiliations_path, more_active: params[:import].present? || params[:end_source].present?,
+      clear_url: affiliations_path, more_active: params.values_at(:import, :end_source, :start_year, :end_year).any?(&:present?),
       hidden: hidden, primary: primary, more: more %>
