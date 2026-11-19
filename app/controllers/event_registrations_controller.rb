@@ -690,7 +690,7 @@ class EventRegistrationsController < ApplicationController
 
   def csv_export(registrations)
     CSV.generate(headers: true) do |csv|
-      csv << [ "First name", "Last name", "Email", "Phone", "Event", "Status", "Scholarship", "Scholarship completed", "Payment status", "Intends to pay", "Payment total", "CE status", "CE paid", "CE due" ]
+      csv << [ "First name", "Last name", "Email", "Phone", "Event", "Status", "Scholarship", "Scholarship completed", "Payment status", "Intends to pay", "Payment total", "Paid amount", "Scholarship amount", "Discounted amount", "CE status", "CE paid", "CE due" ]
       registrations.find_each do |er|
         r = er.registrant
         e = er.event
@@ -708,6 +708,9 @@ class EventRegistrationsController < ApplicationController
           cost_required ? er.payment_status_label : "",
           er.intends_to_pay? ? "Yes" : "No",
           csv_dollars(total_cents),
+          csv_dollars(er.payments_sum),
+          csv_dollars(er.scholarship_sum),
+          csv_dollars(er.discount_sum),
           er.ce_registered? ? er.ce_status_label.to_s : "",
           csv_dollars(er.ce_amount_paid_cents),
           csv_dollars(er.ce_amount_due_cents)

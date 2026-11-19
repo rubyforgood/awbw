@@ -930,6 +930,10 @@ class EventRegistration < ApplicationRecord
     super + transferred_from_registration&.discount_sum.to_i
   end
 
+  def scholarship_sum
+    super + transferred_from_registration&.scholarship_sum.to_i
+  end
+
   def discounted?
     super || transferred_from_registration&.discounted? || false
   end
