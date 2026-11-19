@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
 # Start development services (web + vite).
-# Uses WORKSPACE_PORT (the workspace's assigned port) if set, otherwise probes
-# for a free port starting at 3000.
-# Derives a unique Vite port (server_port + 1) to avoid collisions.
+# Starts at WORKSPACE_PORT (the workspace's assigned port) if set, otherwise 3000,
+# and steps up until both the server port and its Vite port (server_port + 1) are free.
 set -euo pipefail
 source "$(dirname "$0")/.ruby-env"
 
-if [ -n "${WORKSPACE_PORT:-}" ]; then
-  server_port="$WORKSPACE_PORT"
-else
-  server_port=3000
-  while lsof -iTCP:"$server_port" -sTCP:LISTEN -n -P >/dev/null 2>&1; do
-    server_port=$((server_port + 1))
-  done
-  echo "ai/server: WORKSPACE_PORT unset, picked free port $server_port"
-fi
+listening() { lsof -iTCP:"$1" -sTCP:LISTEN -n -P >/dev/null 2>&1; }
+
+preferred_port="${WORKSPACE_PORT:-3000}"
+server_port="$preferred_port"
+while listening "$server_port" || listening "$((server_port + 1))"; do
+  server_port=$((server_port + 1))
+done
+[ "$server_port" != "$preferred_port" ] && echo "ai/server: port $preferred_port (or its Vite port) is taken, using $server_port"
 
 export VITE_RUBY_PORT=$((server_port + 1))
 bin/dev -p "$server_port"
