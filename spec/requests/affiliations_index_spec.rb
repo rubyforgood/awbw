@@ -51,6 +51,12 @@ RSpec.describe "Affiliations index", type: :request do
       expect(ids_in(results(sort: "start_date", direction: "desc"))).to eq([ job_row.id, facilitator_row.id ])
     end
 
+    it "sorts by number of comments" do
+      create(:comment, commentable: job_row)
+      expect(ids_in(results(sort: "comments", direction: "desc"))).to eq([ job_row.id, facilitator_row.id ])
+      expect(ids_in(results(sort: "comments", direction: "asc"))).to eq([ facilitator_row.id, job_row.id ])
+    end
+
     it "filters by kind" do
       expect(ids_in(results(kind: "facilitator"))).to eq([ facilitator_row.id ])
       expect(ids_in(results(kind: "job"))).to eq([ job_row.id ])

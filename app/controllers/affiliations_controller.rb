@@ -10,6 +10,8 @@ class AffiliationsController < ApplicationController
     "address" => "affiliations.organization_address_id %{dir}",
     "filemaker_code" => "affiliations.filemaker_code %{dir}",
     "event" => "event_registrations.event_id %{dir}",
+    "comments" => "(SELECT COUNT(*) FROM comments WHERE comments.commentable_type = 'Affiliation' " \
+                  "AND comments.commentable_id = affiliations.id) %{dir}",
     "id" => "affiliations.id %{dir}"
   }.freeze
 
