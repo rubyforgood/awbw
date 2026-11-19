@@ -63,6 +63,73 @@ RSpec.describe "Events::BulkReminders", type: :request do
     expect(checked?(response.body, sam)).to be(false)
   end
 
+  describe "inactive registrants" do
+    let!(:cancelled) do
+      create(:event_registration, event: event, status: "cancelled",
+             registrant: create(:person, first_name: "Casey", last_name: "Gone"))
+    end
+    let!(:no_show) do
+      create(:event_registration, event: event, status: "no_show",
+             registrant: create(:person, first_name: "Nico", last_name: "Absent"))
+    end
+    let!(:transferred_out) do
+      create(:event_registration, event: event, status: "transferred_out",
+             registrant: create(:person, first_name: "Tess", last_name: "Moved"))
+    end
+
+    it "leaves cancelled, no-show, and transferred-out registrants off the list by default" do
+      get preview_reminder_event_path(event)
+
+      expect(response.body).to include("Jane Adams")
+      expect(response.body).not_to include("Casey Gone")
+      expect(response.body).not_to include("Nico Absent")
+      expect(response.body).not_to include("Tess Moved")
+      expect(response.body).to include('<select name="inactive"')
+    end
+
+    it "lists and checks them when the Inactive registrants filter includes them" do
+      get preview_reminder_event_path(event, inactive: "include"),
+          headers: { "Turbo-Frame" => "reminder_recipients" }
+
+      expect(checked?(response.body, cancelled)).to be(true)
+      expect(checked?(response.body, no_show)).to be(true)
+      expect(checked?(response.body, transferred_out)).to be(true)
+      expect(checked?(response.body, jane)).to be(true)
+    end
+
+    it "includes them when the Attendance filter asks for an inactive status" do
+      get preview_reminder_event_path(event, attendance_status: "no_show"),
+          headers: { "Turbo-Frame" => "reminder_recipients" }
+
+      expect(checked?(response.body, no_show)).to be(true)
+      expect(checked?(response.body, cancelled)).to be(false)
+      expect(checked?(response.body, jane)).to be(false)
+    end
+
+    it "offers to include them when everyone left is inactive" do
+      jane.update!(status: "cancelled")
+      sam.update!(status: "no_show")
+
+      get preview_reminder_event_path(event)
+
+      expect(response.body).to include("Include 5 inactive registrants")
+    end
+
+    it "applies the same Inactive registrants filter in invite mode" do
+      [ jane, sam, cancelled, no_show, transferred_out ].each { |reg| reg.registrant.user&.update_columns(confirmed_at: nil) }
+
+      get preview_reminder_event_path(event, mode: "invite")
+      expect(response.body).to include('<select name="inactive"')
+      expect(response.body).to include("Jane Adams")
+      expect(response.body).not_to include("Casey Gone")
+
+      get preview_reminder_event_path(event, mode: "invite", inactive: "include"),
+          headers: { "Turbo-Frame" => "reminder_recipients" }
+      expect(checked?(response.body, cancelled)).to be(true)
+      expect(checked?(response.body, transferred_out)).to be(true)
+    end
+  end
+
   describe "confirm interstitial" do
     it "lists the selected recipients and the message preview without sending yet" do
       expect {

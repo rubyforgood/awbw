@@ -7,9 +7,10 @@
       url                     – form action path
       frame                   – turbo frame id the form submits into
       clear_url               – "Clear filters" href
-      text_fields             – [{ param:, label:, placeholder:, primary:, search: }]
+      text_fields             – [{ param:, label:, placeholder:, primary:, search:, wrapper_class: }]
                                 primary fields sit in the first row (search adds a
-                                magnifier + flex width); the rest collapse
+                                magnifier + flex width); the rest collapse.
+                                wrapper_class overrides a primary field's width
       include_readiness       – show the readiness "Progress" select (roster only)
       include_report_filters  – show the Organization and Funding selects the
                                 scholarship report drills in with (roster only)
@@ -17,7 +18,12 @@
       hidden_params           – { name => value } carried as hidden fields so they
                                 survive the GET filter submit (e.g. mode: "invite")
       topic_subscription_types – topic subscription lists to offer as a filter
-                                (picker only; omitted elsewhere) %>
+                                (picker only; omitted elsewhere)
+      inactive_filter         – show the include/exclude inactive select (bulk
+                                email + invite picker only)
+      single_row              – keep the primary row on one line on wide screens,
+                                narrowing the Attendance select to make room
+                                (picker only) %>
 <% field_class = search_field_class %>
 <% label_class = search_label_class %>
 <% include_readiness = local_assigns.fetch(:include_readiness, false) %>
@@ -25,6 +31,8 @@
 <% include_report_filters = local_assigns.fetch(:include_report_filters, false) %>
 <% has_cost = @event.cost_cents.to_i > 0 %>
 <% topic_subscription_types = local_assigns.fetch(:topic_subscription_types, []) %>
+<% inactive_filter = local_assigns.fetch(:inactive_filter, false) %>
+<% single_row = local_assigns.fetch(:single_row, false) %>
 <% primary_text, more_text = Array(text_fields).partition { |f| f[:primary] } %>
 <%# Open the collapsed section on load when any control inside it already carries
     a value, so an active filter is never hidden behind the toggle. %>
@@ -45,7 +53,7 @@
     <%= render "shared/filter_text", param: f[:param], label: f[:label], placeholder: f[:placeholder],
           field_class: field_class, label_class: label_class, submit: f[:search],
           tooltip: ContactSearchable::SEARCH_SYNTAX_HINT,
-          wrapper_class: f[:search] ? "w-full md:flex-1 md:min-w-0" : "w-full md:w-48" %>
+          wrapper_class: f[:wrapper_class] || (f[:search] ? "w-full md:flex-1 md:min-w-0" : "w-full md:w-48") %>
   <% end %>
 
   <%# Org linking sits beside the search, then the top three in the order an admin
@@ -66,7 +74,17 @@
 
   <%= render "shared/filter_select", param: :attendance_status, label: "Attendance",
         options: EventRegistration::ATTENDANCE_FILTER_OPTIONS,
-        selected: params[:attendance_status], blank: "All statuses", field_class: field_class %>
+        selected: params[:attendance_status], blank: "All statuses", field_class: field_class,
+        wrapper_class: (single_row ? "w-full md:w-36" : "w-full md:w-44") %>
+
+  <% if inactive_filter %>
+    <%# Picker-only: cancelled, no-show, and transferred-out registrants are left
+        off the bulk-email list unless included here (see
+        ReminderRecipientFilter.include_inactive?). %>
+    <%= render "shared/filter_select", param: :inactive, label: "Inactive",
+          options: [ [ "Include", ReminderRecipientFilter::INCLUDE_INACTIVE ] ],
+          selected: params[:inactive], blank: "Exclude", field_class: field_class, wrapper_class: "w-full md:w-28" %>
+  <% end %>
 
   <% if has_cost %>
     <%= render "shared/filter_select", param: :payment_status, label: "Payment status",
@@ -164,5 +182,5 @@
   <%= render "events/filter_date", param: :registered_to, label: "Registered to", field_class: field_class %>
 <% end %>
 
-<%= render "events/filter_bar", url: url, frame: frame, clear_url: clear_url,
+<%= render "events/filter_bar", url: url, frame: frame, clear_url: clear_url, single_row: single_row,
       more_active: more_active, hidden: hidden, primary: primary, more: more %>
