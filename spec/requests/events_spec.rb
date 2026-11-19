@@ -193,6 +193,39 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "videoconference details for a cancelled registrant" do
+      let(:registrant) { create(:user, :with_person) }
+      let(:vc_event) do
+        create(:event, :published, :publicly_visible, cost_cents: 0, autoshow_videoconference_link: true,
+                       start_date: 10.minutes.from_now, end_date: 2.hours.from_now,
+                       videoconference_url: "https://awbw.zoom.us/j/88285411273",
+                       videoconference_passcode: "secret123")
+      end
+      let!(:registration) { create(:event_registration, event: vc_event, registrant: registrant.person, status: "cancelled") }
+
+      it "shows no join link or calendar details when signed in" do
+        sign_in registrant
+        get event_path(vc_event)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("88285411273")
+        expect(response.body).not_to include("secret123")
+      end
+
+      it "shows no join link or calendar details via the ticket's reg link" do
+        get event_path(vc_event, reg: registration.slug)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("88285411273")
+        expect(response.body).not_to include("secret123")
+      end
+
+      it "shows the join link once the registration is active again" do
+        registration.update!(status: "registered")
+        sign_in registrant
+        get event_path(vc_event)
+        expect(response.body).to include("88285411273")
+      end
+    end
+
     context "display templates" do
       let(:templated_event) { create(:event, :published, :publicly_visible, title: "Templated event") }
 

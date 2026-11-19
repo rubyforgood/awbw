@@ -11,6 +11,7 @@ module Events
     before_action :noindex!
     before_action :set_event_registration
     before_action :authorize_callout
+    before_action :require_callout_access, unless: :sample_preview?
     before_action :set_event
     before_action :require_scholarship_form, only: %i[ scholarship_application submit_scholarship_application ]
     # These pages carry an editable intro (the built-in row's "Callout page text")
@@ -620,6 +621,12 @@ module Events
       else
         authorize! @event_registration, to: :show_public?
       end
+    end
+
+    def require_callout_access
+      return if allowed_to?(:access_callouts?, @event_registration)
+
+      redirect_to registration_ticket_path(@event_registration.slug), alert: "This registration is cancelled."
     end
 
     def set_event

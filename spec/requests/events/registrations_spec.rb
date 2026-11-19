@@ -151,6 +151,19 @@ RSpec.describe "Events::Registrations", type: :request do
         expect(response.body).not_to include("Worksheets and resources for the event")
         expect(response.body).not_to include("Frequently asked questions")
       end
+
+      it "hides every callout card on a cancelled ticket but still shows the status" do
+        create(:registration_ticket_callout, event:, title: "Bring your sketchbook", hidden: false)
+        registration.update!(status: "cancelled")
+
+        get registration_ticket_path(registration.slug)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Registration cancelled")
+        expect(response.body).not_to include("Your balance and payment history")
+        expect(response.body).not_to include("Frequently asked questions")
+        expect(response.body).not_to include("Bring your sketchbook")
+      end
     end
 
     context "with an invalid slug" do
