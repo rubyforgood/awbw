@@ -57,6 +57,7 @@ class Payment < ApplicationRecord
     results = results.where(organization_id: params[:organization_id]) if params[:organization_id].present?
     results = results.has_remaining(params[:has_remaining]) if params[:has_remaining].present? && params[:has_remaining] != "all"
     results = results.matching_search(params[:search]) if params[:search].present?
+    results = results.with_filemaker_code(params[:filemaker_code]) if params[:filemaker_code].present?
     results = results.where("amount_cents >= ?", (params[:amount_min].to_d * 100).to_i) if params[:amount_min].present?
     results = results.where("amount_cents <= ?", (params[:amount_max].to_d * 100).to_i) if params[:amount_max].present?
     results = results.created_between(parse_date(params[:start_date]), parse_date(params[:end_date]))
@@ -70,10 +71,10 @@ class Payment < ApplicationRecord
     nil
   end
 
-  # Free-text search across the JSON metadata blob and the Stripe charge id.
+  # Free-text search across the JSON metadata blob, the Stripe charge id, and the check number.
   def self.matching_search(query)
     pattern = "%#{sanitize_sql_like(query)}%"
-    where("CAST(metadata AS CHAR) LIKE :q OR stripe_charge_id LIKE :q", q: pattern)
+    where("CAST(metadata AS CHAR) LIKE :q OR stripe_charge_id LIKE :q OR check_number LIKE :q", q: pattern)
   end
 
   def payer
