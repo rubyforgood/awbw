@@ -12,25 +12,25 @@
   <%= hidden_field_tag :organization_id, params[:organization_id] if params[:organization_id].present? %>
   <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-start">
     <%= render "shared/filter_text", param: :query, label: "Person or org name", submit: true,
-          wrapper_class: "w-full md:w-52" %>
+          wrapper_class: "w-full md:w-40" %>
     <%= render "shared/filter_text", param: :comment_text, label: "Comments contain", submit: true,
           tooltip: "Searches comment text and topics, e.g. \"FileMaker import\" or \"stand-in\"",
-          wrapper_class: "w-full md:w-52" %>
-    <%= render "shared/filter_text", param: :filemaker_code, label: "FM code", wrapper_class: "w-full md:w-28" %>
+          wrapper_class: "w-full md:w-40" %>
+    <%= render "shared/filter_text", param: :filemaker_code, label: "FM code", wrapper_class: "w-full md:w-24" %>
     <%= render "shared/filter_select", param: :kind, label: "Kind", options: Affiliation::INDEX_KINDS.to_a,
           selected: params[:kind], blank: "FA & JA", field_class: field_class, wrapper_class: "w-full md:w-32" %>
     <%= render "shared/filter_select", param: :status, label: "Status", options: Affiliation::INDEX_STATUSES,
-          selected: params[:status], blank: "Any status", field_class: field_class, wrapper_class: "w-full md:w-36" %>
+          selected: params[:status], blank: "Any status", field_class: field_class, wrapper_class: "w-full md:w-32" %>
     <%= render "shared/filter_select", param: :source, label: "Where it came from", options: Affiliation::INDEX_SOURCES.to_a,
-          selected: params[:source], blank: "Anywhere", field_class: field_class, wrapper_class: "w-full md:w-44" %>
+          selected: params[:source], blank: "Anywhere", field_class: field_class, wrapper_class: "w-full md:w-40" %>
+    <%= render "shared/filter_select", param: :address, label: "Org address", options: yes_no,
+          selected: params[:address], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-28" %>
     <%= render "shared/filter_select", param: :registrations, label: "Has registrations", options: yes_no,
           selected: params[:registrations], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-40" %>
     <%= render "shared/filter_select", param: :trained_at, label: "Trained at",
           options: Affiliation.training_event_choices.map { |event| [ [ event.start_date&.strftime("%Y-%m-%d"), event.decorate.compact_label ].compact.join(" · "), event.id ] },
-          selected: params[:trained_at], blank: "Any event", field_class: field_class, wrapper_class: "w-full md:w-52",
+          selected: params[:trained_at], blank: "Any event", field_class: field_class, wrapper_class: "w-full md:w-48",
           tooltip: "The affiliation's linked event, else the person's facilitator trainings" %>
-    <%= render "shared/filter_select", param: :address, label: "Org address", options: yes_no,
-          selected: params[:address], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-32" %>
     <%= render "shared/filter_select", param: :comments, label: "Has comments", options: yes_no,
           selected: params[:comments], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-32" %>
     <%= render "shared/filter_select", param: :primary, label: "Primary contact", options: yes_no,
