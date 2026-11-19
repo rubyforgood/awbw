@@ -41,8 +41,9 @@
       <%= render "shared/filter_text", param: :person_name, label: "Person name", placeholder: "e.g. Jane Doe",
             field_class: field_class, label_class: label_class, wrapper_class: "md:col-span-2" %>
 
-      <%= render "shared/filter_text", param: :search, label: "Search metadata / Stripe ID / check #",
-            placeholder: "Metadata, Stripe ID, or check #",
+      <%= render "shared/filter_text", param: :search, label: "Search",
+            tooltip: "Matches metadata, Stripe charge/transaction ID, or check number",
+            placeholder: "Stripe ID, check #",
             field_class: field_class, label_class: label_class, wrapper_class: "md:col-span-2" %>
 
       <%= render "shared/filter_text", param: :filemaker_code, label: "FileMaker code", placeholder: "e.g. D12345",

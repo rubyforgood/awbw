@@ -1,0 +1,13 @@
+name: "Search payments by check number or Stripe ID"
+area: payments
+display_status: admin_facing
+released_on: 2026-11-18
+pr_number: 3019
+action_path: "/payments"
+summary: >-
+  The payments Search box finds a payment by its check number, Stripe charge ID,
+  or Stripe transaction ID, so you can match a FileMaker payment even when the
+  dates don't line up.
+pro_tips:
+  - "Part of a number works: 00482 finds check 100482."
+  - "From FileMaker, paste the ID after \"Trans ID:\" in Payment Details. If it doesn't hit, drop the pi_/ch_ prefix."
