@@ -81,7 +81,7 @@
       <%= link_to affiliation.id, edit_affiliation_path(affiliation), title: "Edit affiliation",
                   data: { turbo_frame: "_top" }, class: "font-mono text-blue-600 hover:underline" %>
     </div>
-    <div class="sticky right-0 flex h-full items-center justify-end gap-3 pl-2 <%= decorated.index_row_bg %>">
+    <div class="sticky right-0 flex h-full items-center gap-5 pr-4 pl-1 <%= decorated.index_row_bg %>">
       <%= link_to edit_affiliation_path(affiliation), title: "Edit affiliation", "aria-label": "Edit affiliation",
                   data: { turbo_frame: "_top" }, class: "text-gray-400 hover:text-gray-600" do %>
         <i class="fa-solid fa-gear"></i>

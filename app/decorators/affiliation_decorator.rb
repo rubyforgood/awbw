@@ -1,6 +1,6 @@
 class AffiliationDecorator < ApplicationDecorator
   # Shared by the admin affiliations index header and rows so columns line up.
-  INDEX_GRID = "grid grid-cols-[200px_200px_130px_140px_140px_110px_64px_160px_170px_110px_64px_60px_56px] gap-x-3".freeze
+  INDEX_GRID = "grid grid-cols-[200px_200px_130px_140px_140px_110px_64px_160px_170px_110px_64px_40px_72px] gap-x-3".freeze
 
   # The person-form row palette: role is the hue (FA purple, JA blue), ended rows go light.
   def index_pill_tint
