@@ -70,10 +70,19 @@ class Payment < ApplicationRecord
     nil
   end
 
-  # Free-text search across the JSON metadata blob and the Stripe charge id.
+  FILEMAKER_CODE_QUERY = /\A[A-Za-z]+\d+\z/
+
+  # Free-text search: partial match on the JSON metadata blob, Stripe charge id, and
+  # check number; whole-code match on the FileMaker code(s), so D1234 never finds
+  # D12345. A code-shaped query (letters then digits) only checks FileMaker codes —
+  # imported payments also carry their codes in metadata, which would match partially.
   def self.matching_search(query)
+    query = query.to_s.strip
+    return with_filemaker_code(query) if query.match?(FILEMAKER_CODE_QUERY)
+
     pattern = "%#{sanitize_sql_like(query)}%"
-    where("CAST(metadata AS CHAR) LIKE :q OR stripe_charge_id LIKE :q", q: pattern)
+    where("CAST(metadata AS CHAR) LIKE :q OR stripe_charge_id LIKE :q OR check_number LIKE :q", q: pattern)
+      .or(with_filemaker_code(query))
   end
 
   def payer
