@@ -170,14 +170,14 @@ RSpec.describe "Affiliations index", type: :request do
         expect(ids_in(results(import: "untouched"))).to eq([ job_row.id ])
       end
 
-      it "keeps the import and year filters in the More filters drawer, open only when one is set" do
+      it "keeps the import, comments, and primary filters in the More filters drawer, open only when one is set" do
         get affiliations_path
         expect(Capybara.string(response.body)).to have_unchecked_field("more-filters-toggle", visible: :all)
 
         get affiliations_path(import: "linked")
         expect(Capybara.string(response.body)).to have_checked_field("more-filters-toggle", visible: :all)
 
-        get affiliations_path(start_year: "2015")
+        get affiliations_path(primary: "yes")
         expect(Capybara.string(response.body)).to have_checked_field("more-filters-toggle", visible: :all)
       end
 
