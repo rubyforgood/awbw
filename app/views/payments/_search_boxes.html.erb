@@ -42,11 +42,8 @@
             field_class: field_class, label_class: label_class, wrapper_class: "md:col-span-2" %>
 
       <%= render "shared/filter_text", param: :search, label: "Search",
-            tooltip: "Matches metadata, Stripe charge/transaction ID, or check number",
-            placeholder: "Stripe ID, check #",
-            field_class: field_class, label_class: label_class, wrapper_class: "md:col-span-2" %>
-
-      <%= render "shared/filter_text", param: :filemaker_code, label: "FileMaker code", placeholder: "e.g. D12345",
+            tooltip: "Matches FileMaker code, check number, Stripe charge/transaction ID, or metadata",
+            placeholder: "FM code, check #, Stripe ID",
             field_class: field_class, label_class: label_class, wrapper_class: "md:col-span-2" %>
 
       <div class="md:col-span-2">

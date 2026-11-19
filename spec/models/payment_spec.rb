@@ -174,7 +174,7 @@ RSpec.describe Payment, type: :model do
         expect(result).not_to include(person_payment, org_payment)
       end
 
-      describe "search (metadata / stripe charge id / check number)" do
+      describe "search (metadata / stripe charge id / check number / filemaker code)" do
         let!(:metadata_match) { create(:payment, metadata: { "note" => "reunion gala" }) }
         let!(:stripe_match) { create(:payment, stripe_charge_id: "ch_ABC123") }
         let!(:no_match) { create(:payment, metadata: { "note" => "something else" }) }
@@ -197,19 +197,14 @@ RSpec.describe Payment, type: :model do
           expect(result.ids).to eq([ check_match.id ])
         end
 
+        it "matches on any one of a payment's FileMaker codes" do
+          coded = create(:payment, filemaker_code: "D10001, D10002")
+          expect(Payment.search_by_params({ search: " D10002 " }).ids).to eq([ coded.id ])
+        end
+
         it "escapes LIKE wildcards in the query" do
           result = Payment.search_by_params({ search: "%" })
           expect(result).not_to include(metadata_match, stripe_match, no_match)
-        end
-      end
-
-      describe "filemaker code" do
-        let!(:coded) { create(:payment, filemaker_code: "1234, 5678") }
-        let!(:other_code) { create(:payment, filemaker_code: "12345") }
-
-        it "matches any one of a payment's codes exactly" do
-          expect(Payment.search_by_params({ filemaker_code: "5678" }).ids).to eq([ coded.id ])
-          expect(Payment.search_by_params({ filemaker_code: " 1234 " }).ids).to eq([ coded.id ])
         end
       end
 
