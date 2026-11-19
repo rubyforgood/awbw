@@ -2180,6 +2180,25 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "payment breakdown in the CSV export" do
+      let(:event) { create(:event, cost_cents: 10_000) }
+
+      it "splits the payment total into paid, scholarship, and discounted amounts beside it" do
+        registration = create(:event_registration, event: event, registrant: create(:person, first_name: "Splitpay", last_name: "Payer"))
+        create(:allocation, source: create(:payment, amount_cents: 4_000, amount_cents_remaining: nil), allocatable: registration, amount: 4_000)
+        create(:allocation, source: create(:scholarship, recipient: registration.registrant, amount_cents: 3_500), allocatable: registration, amount: 3_500)
+        create(:allocation, source: create(:discount, amount_cents: 2_500), allocatable: registration, amount: 2_500)
+
+        get registrants_event_path(event, format: :csv)
+
+        rows = CSV.parse(response.body, headers: true)
+        total_index = rows.headers.index("Payment total")
+        expect(rows.headers[total_index + 1, 3]).to eq([ "Paid amount", "Scholarship amount", "Discounted amount" ])
+        row = rows.find { |r| r["First name"] == "Splitpay" }
+        expect(row.fields[total_index, 4]).to eq([ "$100", "$40", "$35", "$25" ])
+      end
+    end
+
     context "funder filter" do
       it "narrows the roster to org-subsidized (unfunded) scholarship recipients" do
         subsidized = create(:event_registration, event: event, registrant: create(:person, first_name: "Orgsubsidized", last_name: "Recipient"))

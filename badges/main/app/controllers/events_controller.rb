@@ -1165,7 +1165,7 @@ class EventsController < ApplicationController
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
     include_ce = @event.ce_eligible?
-    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Expected payment method", "Intends to pay", "Someone else will pay", "Payment total" ]
+    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Expected payment method", "Intends to pay", "Someone else will pay", "Payment total", "Paid amount", "Scholarship amount", "Discounted amount" ]
     headers += [ "CE status", "CE paid", "CE due" ] if include_ce
     headers += survey_csv_headers
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
@@ -1196,7 +1196,10 @@ class EventsController < ApplicationController
       cost_required ? registration.expected_payment_method.presence || "" : "",
       registration.intends_to_pay? ? "Yes" : "No",
       cost_required ? (registration.someone_else_will_pay? ? "Yes" : "No") : "",
-      payment_total
+      payment_total,
+      csv_dollars(registration.payments_sum),
+      csv_dollars(registration.scholarship_sum),
+      csv_dollars(registration.discount_sum)
     ]
     if include_ce
       row << registration.ce_status_label.to_s
