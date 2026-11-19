@@ -281,6 +281,128 @@ RSpec.describe "Payments", type: :request do
     end
   end
 
+  describe "comments and communications on a payment" do
+    it "lists the payment's comments and communications on the show page" do
+      payment = create(:payment, person:)
+      create(:comment, commentable: payment, topic: "Follow-up", body: "Called about the remaining balance")
+      create(:notification, noticeable: payment, email_subject: "Left a voicemail")
+
+      get payment_path(payment)
+
+      expect(response.body).to include("Comments &amp; communications", "Called about the remaining balance", "Left a voicemail")
+    end
+
+    it "adds a comment from the show page and lands on the comment" do
+      payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
+
+      expect {
+        post comments_path, params: { comment: { topic: "Follow-up", body: "Called about the check" },
+                                      commentable_sgid: payment.to_sgid.to_s },
+                            headers: { "HTTP_REFERER" => "http://www.example.com#{payment_path(payment)}" }
+      }.to change { payment.comments.count }.by(1)
+
+      comment = payment.comments.last
+      expect(response).to redirect_to(comment_path(comment))
+      expect(comment.body).to eq("Called about the check")
+      expect(comment.created_by).to eq(admin)
+    end
+
+    it "renders each row with an inline edit link and live toggles" do
+      payment = create(:payment, person:)
+      comment = create(:comment, commentable: payment, body: "Called about the remaining balance")
+      notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
+                                          email_subject: "Left a voicemail", recipient_email: person.email)
+
+      get payment_path(payment)
+
+      expect(response.body).to include("comment_#{comment.id}", "notification_#{notification.id}")
+      expect(response.body).to include(edit_comment_path(comment))
+      expect(response.body).to include(edit_notification_path(notification))
+      expect(response.body).to include("comment[flagged]")
+    end
+
+    it "saves an inline comment edit" do
+      payment = create(:payment, person:)
+      comment = create(:comment, commentable: payment, body: "Original")
+
+      patch comment_path(comment), params: { comment: { body: "Updated" } },
+            headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("comment_#{comment.id}", "Updated")
+      expect(comment.reload.body).to eq("Updated")
+    end
+
+    it "returns the read-only comment row when Cancel is clicked" do
+      payment = create(:payment, person:)
+      comment = create(:comment, commentable: payment, body: "Original")
+
+      get comment_path(comment, cancel: 1), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("comment_#{comment.id}", "Original", "Edit")
+    end
+
+    it "renders the inline add forms in the add slot" do
+      payment = create(:payment, person:)
+
+      get new_comment_path(commentable_sgid: payment.to_sgid.to_s),
+          headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("comments-and-communications-new-form-slot", "comment[body]")
+
+      get new_notification_path(noticeable_sgid: payment.to_sgid.to_s),
+          headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("comments-and-communications-new-form-slot", "notification[email_subject]")
+    end
+
+    it "creates a comment from the payment's add slot" do
+      payment = create(:payment, person:)
+
+      expect {
+        post comments_path, params: { comment: { body: "Added inline" },
+                                      commentable_sgid: payment.to_sgid.to_s },
+                            headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      }.to change { payment.comments.count }.by(1)
+
+      expect(response.body).to include("comments-and-communications-list", "Added inline")
+      expect(response.body).to include("comments-and-communications-new-form-slot")
+    end
+
+    it "logs a communication against the payment from its add slot" do
+      payment = create(:payment, person:)
+      expect(payment.communications_email).to be_present
+
+      expect {
+        post notifications_path, params: {
+          noticeable_sgid: payment.to_sgid.to_s,
+          notification: { channel: "email", direction: "outgoing", email_subject: "Left a voicemail" }
+        }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.last
+      expect(notification.noticeable_id).to eq(payment.id)
+      expect(notification.noticeable_type).to eq("Payment")
+      expect(notification.recipient_email).to eq(payment.communications_email)
+      expect(response.body).to include("comments-and-communications-list", "Left a voicemail")
+      expect(response.body).to include("comments-and-communications-new-form-slot")
+    end
+
+    it "re-renders a communication's inline edit form when its subject is blank" do
+      payment = create(:payment, person:)
+      notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
+                                           email_subject: "Called about the check", recipient_email: person.email)
+
+      patch notification_path(notification),
+            params: { notification: { email_subject: "" } },
+            headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("notification_#{notification.id}", "notification[email_subject]")
+    end
+  end
+
   describe "payer/additional designation via sgids" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:registration) { create(:event_registration, event:) }

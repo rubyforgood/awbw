@@ -18,25 +18,11 @@
 <% leading = local_assigns[:leading] %>
 <% trailing = local_assigns[:trailing] %>
 <% expandable = local_assigns.fetch(:expandable, false) && (truncate_body || comment.body.present?) %>
-<% created_user = comment.created_by %>
-<% updated_user = comment.updated_by %>
-<% show_updated = updated_user.present? && updated_user != created_user %>
-<% created_name = person_name(created_user) %>
-<% created_first_name = created_user&.person&.first_name || created_user&.name.to_s.split.first %>
-<% created_color = chip_color(created_user&.id) %>
 <% is_age_range_data = comment.body&.include?("[AGE_RANGE_DATA]") %>
 <% body_class = is_age_range_data ? "text-amber-700" : "text-gray-900" %>
 <%= render "comments_and_communications/entry_date", time: comment.created_at,
            path: local_assigns[:date_path], new_tab: local_assigns[:date_new_tab] %>
-<span class="inline-flex w-20 shrink-0 items-center gap-x-1">
-  <% if show_updated %>
-    <% updated_color = chip_color(updated_user.id) %>
-    <span class="<%= created_color[0] %> <%= created_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="<%= created_name %>"><%= created_user&.decorate&.initials.presence || "--" %></span>
-    <span class="<%= updated_color[0] %> <%= updated_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="Edited by <%= person_name(updated_user) %>"><%= updated_user.decorate.initials.presence || "--" %></span>
-  <% else %>
-    <span class="<%= created_color[0] %> <%= created_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
-  <% end %>
-</span>
+<%= render "comments/author_chip", created_user: comment.created_by, updated_user: comment.updated_by %>
 <% if truncate_body %>
   <div class="flex min-w-0 flex-1 items-start gap-1 text-sm <%= body_class %>">
     <% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0"></i><% end %>

@@ -1,7 +1,7 @@
 class NotificationsController < ApplicationController
   include AhoyTracking
 
-  before_action :set_notification, only: [ :show, :update, :resend ]
+  before_action :set_notification, only: [ :show, :edit, :update, :resend ]
 
   def index
     authorize!
@@ -21,8 +21,17 @@ class NotificationsController < ApplicationController
   end
 
   def new
-    authorize! Notification, to: :new?
+    authorize!
     @notification = Notification.new
+    @noticeable = inline_noticeable
+    if params[:noticeable_sgid].present? && @noticeable.nil?
+      return redirect_to notifications_path, alert: "Select a record to log this communication against"
+    end
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
   end
 
   # Log a communication by hand against a person — mirrors the nested
@@ -33,46 +42,72 @@ class NotificationsController < ApplicationController
   # of the person's other records instead (a signed GlobalID, so the type/id
   # can't be tampered with).
   def create
-    authorize! Notification, to: :create?
+    authorize!
 
-    @person = Person.find_by(id: params[:person_id])
-    @notification = Notification.new(notification_params)
-    @notification.sender = current_user
-
-    if @person
-      @notification.noticeable = noticeable_target || @person
-      @notification.person = @person
-      @notification.recipient_email = @person.communications_email.presence || "n/a"
+    if params[:noticeable_sgid].present? && params[:person_id].blank?
+      create_inline
     else
-      @notification.errors.add(:base, "Select a person to log this communication against")
-    end
-
-    if @person && @notification.save
-      redirect_to after_create_path, notice: "Communication logged."
-    elsif combined_feed_person
-      redirect_to after_create_path, alert: @notification.errors.full_messages.to_sentence.presence || "Failed to log the communication."
-    else
-      render :new, status: :unprocessable_content
+      create_for_person
     end
   end
 
   def show
     authorize! @notification
-    track_view @notification
+
+    respond_to do |format|
+      format.html { track_view @notification }
+      # Turbo reuses the form submission's stream Accept header on the success
+      # redirect, so only the inline Cancel link asks for the row fragment.
+      format.turbo_stream if params[:cancel].present?
+    end
+  end
+
+  def edit
+    authorize! @notification
+    unless @notification.manual_log?
+      redirect_to @notification, alert: "Only manually logged communications can be edited."
+      return
+    end
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
   end
 
   def update
     authorize! @notification
     responded_was = @notification.responded?
     body_was = @notification.email_body_text
-    @notification.update!(notification_params)
-    track_responded_change(responded_was)
-    track_incoming_body_change(body_was)
-    combined_feed_person
 
-    respond_to do |format|
-      format.turbo_stream
-      format.any { head :ok }
+    if @notification.update(notification_params)
+      flash.now[:notice] = "Saved" if params[:toggle].present?
+      track_responded_change(responded_was)
+      track_incoming_body_change(body_was)
+      combined_feed_person
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html do
+          if combined_or_toggle?
+            redirect_back_or_to notification_path(@notification)
+          else
+            redirect_to notification_path(@notification), status: :see_other
+          end
+        end
+        format.any { head :ok }
+      end
+    elsif combined_or_toggle?
+      respond_to do |format|
+        format.turbo_stream { head :unprocessable_content }
+        format.html { redirect_back_or_to notification_path(@notification), alert: "Failed to update communication." }
+        format.any { head :unprocessable_content }
+      end
+    else
+      respond_to do |format|
+        format.turbo_stream { render :edit, status: :unprocessable_content }
+        format.html { render :edit, status: :unprocessable_content }
+      end
     end
   end
 
@@ -114,12 +149,73 @@ class NotificationsController < ApplicationController
 
   private
 
+  def create_inline
+    record = inline_noticeable
+    return create_inline_for(record) if record
+
+    redirect_to notifications_path, alert: "Select a record to log this communication against"
+  end
+
+  def create_for_person
+    @person = Person.find_by(id: params[:person_id])
+    @notification = Notification.new(notification_params)
+    @notification.sender = current_user
+
+    if @person
+      @notification.noticeable = noticeable_target || @person
+      @notification.person = @person
+      @notification.recipient_email = @person.communications_email.presence || "n/a"
+    else
+      @notification.errors.add(:base, "Select a person to log this communication against")
+    end
+
+    if @person && @notification.save
+      redirect_to after_create_path, notice: "Communication logged."
+    elsif combined_feed_person
+      redirect_to after_create_path, alert: @notification.errors.full_messages.to_sentence.presence || "Failed to log the communication."
+    else
+      render :new, status: :unprocessable_content
+    end
+  end
+
+  def create_inline_for(record)
+    @noticeable = record
+    @notification = Notification.new(notification_params)
+    @notification.sender = current_user
+    @notification.noticeable = record
+    @notification.person = record.is_a?(Person) ? record : record.try(:person)
+    @notification.recipient_email = record.communications_email.presence || "n/a"
+
+    if @notification.save
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to notification_path(@notification), notice: "Communication logged." }
+      end
+    else
+      respond_to do |format|
+        format.turbo_stream { render :create, status: :unprocessable_content }
+        format.html { render :new, status: :unprocessable_content }
+      end
+    end
+  end
+
+  def inline_noticeable
+    return if params[:noticeable_sgid].blank?
+
+    record = noticeable_target
+    record if record.respond_to?(:communications_email)
+  end
+
   # The record the communication is filed against when the composer offers a
   # picker. Signed, so a hostile value can't point at an arbitrary record.
   def noticeable_target
     return if params[:noticeable_sgid].blank?
 
     GlobalID::Locator.locate_signed(params[:noticeable_sgid])
+  end
+
+  def combined_or_toggle?
+    params[:combined].present? || params[:toggle].present?
   end
 
   # Set when a person's combined feed posted this — the composer lands the log

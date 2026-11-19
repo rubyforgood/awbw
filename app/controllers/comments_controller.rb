@@ -1,11 +1,12 @@
 class CommentsController < ApplicationController
   include AhoyTracking
 
-  before_action :set_commentable, only: :create
+  before_action :set_commentable, only: [ :new, :create ]
+  before_action :set_comment, only: [ :show, :edit, :update, :destroy ]
 
   # Global, admin-only index of every comment, with the same search boxes as a
-  # person's aggregated feed plus remote person/event filters. The nested
-  # create/update actions below manage a single record's comments.
+  # person's aggregated feed plus remote person/event filters. The actions below
+  # manage a single record's comments.
   def index
     authorize!
 
@@ -25,44 +26,102 @@ class CommentsController < ApplicationController
     end
   end
 
+  def show
+    authorize! @comment
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream if params[:cancel].present?
+    end
+  end
+
+  def new
+    authorize!
+    @comment = Comment.new
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
+  end
+
+  def edit
+    authorize! @comment
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
+  end
+
   def create
     authorize!
     @comment = @commentable.comments.build(comment_params)
 
     if @comment.save
-      @created_comment = @comment
-      setup_aggregated_context if aggregated?
+      if record_section_create?
+        respond_to do |format|
+          format.turbo_stream
+          format.html { redirect_to comment_path(@comment), notice: "Comment created successfully." }
+        end
+      else
+        @created_comment = @comment
+        setup_aggregated_context if aggregated?
+        respond_to do |format|
+          format.turbo_stream
+          format.html { redirect_to after_create_html_path, notice: "Comment created successfully." }
+        end
+      end
+    elsif record_section_create?
       respond_to do |format|
-        format.turbo_stream
-        format.html { redirect_to after_create_html_path, notice: "Comment created successfully." }
+        format.turbo_stream { render :create, status: :unprocessable_content }
+        format.html { render :new, status: :unprocessable_content }
       end
     else
-      redirect_back fallback_location: root_path, alert: "Failed to create comment."
+      redirect_back_or_to root_path, alert: "Failed to create comment."
     end
   end
 
   def update
-    @comment = Comment.find(params[:id])
     authorize! @comment
     target = commentable_target
     @comment.commentable = target if target
-    @comment.update(comment_params)
-    setup_aggregated_context
 
-    respond_to do |format|
-      format.turbo_stream
-      format.html { redirect_back fallback_location: root_path }
+    if @comment.update(comment_params)
+      flash.now[:notice] = "Saved" if params[:toggle].present?
+      setup_aggregated_context
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html do
+          if record_section_update?
+            redirect_to comment_path(@comment), status: :see_other
+          else
+            redirect_back_or_to root_path
+          end
+        end
+      end
+    elsif record_section_update?
+      respond_to do |format|
+        format.turbo_stream { render :edit, status: :unprocessable_content }
+        format.html { render :edit, status: :unprocessable_content }
+      end
+    else
+      setup_aggregated_context
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_back_or_to root_path, alert: "Failed to update comment." }
+      end
     end
   end
 
   def destroy
-    @comment = Comment.find(params[:id])
     authorize! @comment
     @comment.destroy!
 
     respond_to do |format|
       format.turbo_stream
-      format.html { redirect_back fallback_location: root_path, notice: "Comment deleted." }
+      format.html { redirect_back_or_to root_path, notice: "Comment deleted." }
     end
   end
 
@@ -74,6 +133,18 @@ class CommentsController < ApplicationController
   # still resolves the real commentable from the route rather than the person.
   def aggregated?
     params[:aggregated].present?
+  end
+
+  # A create from the record's comments & communications section: the signed
+  # sgid names the record, and there is no person-feed context.
+  def record_section_create?
+    params[:commentable_sgid].present? && !aggregated? && params[:for_person_id].blank?
+  end
+
+  # An update from that same record section (inline row or full-page form), not
+  # the combined/aggregated feeds or a live toggle.
+  def record_section_update?
+    params[:combined].blank? && params[:aggregated].blank? && params[:toggle].blank?
   end
 
   # The combined feed's composer posts a plain (non-stream) comment and names the
@@ -91,6 +162,10 @@ class CommentsController < ApplicationController
     return if params[:for_person_id].blank?
     @aggregator_person = Person.find(params[:for_person_id]).decorate
     @comment_targets = helpers.person_record_targets(@aggregator_person)
+  end
+
+  def set_comment
+    @comment = Comment.find(params[:id])
   end
 
   def set_commentable

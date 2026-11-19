@@ -1,0 +1,10 @@
+name: "Comments & communications on payments"
+area: communications
+display_status: admin_facing
+released_on: 2026-11-13
+summary: >-
+  A payment's page now lists its comments and communications and lets you add a comment
+  right there, so notes about a payment stay with the payment.
+pro_tips:
+  - "To add a comment to a new payment, save it first; you land on its page, where the comment box is."
+  - "A payment's comments also show in the combined feed of the person named on it (as payer or additional designation), where you can edit them or log a communication against the payment."

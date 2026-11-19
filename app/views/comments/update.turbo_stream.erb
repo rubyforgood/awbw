@@ -6,8 +6,13 @@
   <%= turbo_stream.replace dom_id(@comment) do %>
     <%= render "comments/aggregated_comment", comment: @comment.decorate, person: @aggregator_person, record_targets: @comment_targets %>
   <% end %>
-<% else %>
+<% elsif params[:toggle].present? %>
   <%= turbo_stream.replace dom_id(@comment, :flag) do %>
     <%= render "comments/flag_toggle", comment: @comment %>
   <% end %>
+<% else %>
+  <%= turbo_stream.replace dom_id(@comment) do %>
+    <%= render "comments/record_section_row", comment: @comment %>
+  <% end %>
 <% end %>
+<%= turbo_flash %>

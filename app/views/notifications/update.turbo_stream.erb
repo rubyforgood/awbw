@@ -2,8 +2,17 @@
   <%= turbo_stream.replace dom_id(@notification) do %>
     <%= render "comments_and_communications/communication_row", entry: @notification, person: @combined_feed_person %>
   <% end %>
-<% else %>
+<% elsif params[:toggle] == "responded" %>
+  <%= turbo_stream.replace dom_id(@notification, :responded) do %>
+    <%= render "notifications/responded_toggle", notification: @notification %>
+  <% end %>
+<% elsif params[:toggle].present? %>
   <%= turbo_stream.replace dom_id(@notification, :flag) do %>
     <%= render "notifications/flag_toggle", notification: @notification %>
   <% end %>
+<% else %>
+  <%= turbo_stream.replace dom_id(@notification) do %>
+    <%= render "notifications/record_section_row", notification: @notification %>
+  <% end %>
 <% end %>
+<%= turbo_flash %>

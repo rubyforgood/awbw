@@ -28,12 +28,32 @@ RSpec.describe "Comments", type: :request do
     it "toggles the flagged state" do
       comment = create(:comment, commentable: person, body: "Called the family.")
 
-      patch person_comment_path(person, comment), params: { comment: { flagged: "true" } }, as: :turbo_stream
+      patch person_comment_path(person, comment), params: { toggle: "flagged", comment: { flagged: "true" } }, as: :turbo_stream
       expect(comment.reload).to be_flagged
-      expect(response.body).to include("text-orange-500")
+      expect(response.body).to include("text-orange-500", "Saved")
 
-      patch person_comment_path(person, comment), params: { comment: { flagged: "false" } }, as: :turbo_stream
+      patch person_comment_path(person, comment), params: { toggle: "flagged", comment: { flagged: "false" } }, as: :turbo_stream
       expect(comment.reload).not_to be_flagged
+    end
+  end
+
+  describe "GET /comments/:id" do
+    it "renders the comment's detail page" do
+      comment = create(:comment, commentable: person, body: "Staff note")
+
+      get comment_path(comment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Staff note")
+    end
+
+    it "renders the edit page without a payment context" do
+      comment = create(:comment, commentable: person, body: "Staff note")
+
+      get edit_comment_path(comment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Staff note", "Save")
     end
   end
 

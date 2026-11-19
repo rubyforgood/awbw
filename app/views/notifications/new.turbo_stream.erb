@@ -1,0 +1,9 @@
+<% if params[:cancel].present? %>
+  <%= turbo_stream.update "comments-and-communications-new-form-slot", "" %>
+<% else %>
+  <%= turbo_stream.update "comments-and-communications-new-form-slot" do %>
+    <%= render "notifications/record_section_new_form", notification: @notification, record: @noticeable,
+               url: notifications_path,
+               cancel_path: new_notification_path(noticeable_sgid: @noticeable.to_sgid.to_s, cancel: 1) %>
+  <% end %>
+<% end %>

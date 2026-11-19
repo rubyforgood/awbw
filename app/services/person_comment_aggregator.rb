@@ -2,15 +2,15 @@
 # their own profile comments plus the comments left on the records that hang off
 # them: affiliations, event registrations, scholarships, CE registrations, form
 # submissions, staff tags, monthly reports, workshop ideas/logs/variations/variation
-# ideas, the stories and story ideas they're credited on, the grants they fund, and
-# their login account. Returns one ActiveRecord::Relation of Comment so callers can
-# filter, paginate, and preload uniformly. Payments carry no comments, so they never
-# appear here.
+# ideas, the stories and story ideas they're credited on, the grants they fund, the
+# payments they're on (as payer or additional designation), and their login account.
+# Returns one ActiveRecord::Relation of Comment so callers can filter, paginate, and
+# preload uniformly.
 class PersonCommentAggregator
   # commentable_type => class, in the order sources are surfaced. Kept as strings
   # so the query never has to instantiate the classes. "Report" keys MonthlyReport
   # comments — STI stores the base class name.
-  SOURCE_TYPES = %w[ Person Affiliation EventRegistration Scholarship ContinuingEducationRegistration TopicSubscription FormSubmission StaffTagging Report WorkshopIdea WorkshopLog WorkshopVariation WorkshopVariationIdea Story StoryIdea Grant User ].freeze
+  SOURCE_TYPES = %w[ Person Affiliation EventRegistration Scholarship ContinuingEducationRegistration TopicSubscription FormSubmission StaffTagging Report WorkshopIdea WorkshopLog WorkshopVariation WorkshopVariationIdea Story StoryIdea Grant Payment User ].freeze
 
   def initialize(person)
     @person = person
@@ -42,6 +42,7 @@ class PersonCommentAggregator
       "Story" => story_ids,
       "StoryIdea" => story_idea_ids,
       "Grant" => grant_ids,
+      "Payment" => payment_ids,
       "User" => user_ids
     }
   end
@@ -114,6 +115,12 @@ class PersonCommentAggregator
   # their scholarship's comments stay on the scholarship, not here.
   def grant_ids
     person.grants.ids
+  end
+
+  # Payments naming the person — as payer or as the additional designation on an
+  # organization's payment. STI stores comments under the base class, "Payment".
+  def payment_ids
+    Payment.where(person_id: person.id).ids
   end
 
   def user_ids
