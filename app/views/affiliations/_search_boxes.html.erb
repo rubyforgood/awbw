@@ -34,5 +34,13 @@
   <%= render "shared/filter_text", param: :end_year, label: "End year", placeholder: "YYYY",
           wrapper_class: "w-full md:w-24", input_options: { inputmode: "numeric", maxlength: 4 } %>
 <% end %>
+<% more = capture do %>
+  <%= render "shared/filter_select", param: :import, label: "What the import did", options: Affiliation::INDEX_IMPORT_ACTIONS.to_a,
+        selected: params[:import], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-44" %>
+  <%= render "shared/filter_select", param: :end_source, label: "Import end date from",
+        options: AffiliationServices::PersonnelImportNote::END_SOURCE_LABELS.map { |key, label| [ label, key ] },
+        selected: params[:end_source], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-44" %>
+<% end %>
 <%= render "events/filter_bar", url: affiliations_path, frame: "affiliations_results",
-      clear_url: affiliations_path, more_active: false, hidden: hidden, primary: primary %>
+      clear_url: affiliations_path, more_active: params[:import].present? || params[:end_source].present?,
+      hidden: hidden, primary: primary, more: more %>
