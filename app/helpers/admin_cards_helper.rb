@@ -118,7 +118,7 @@ module AdminCardsHelper
       custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :sky, intensity: 100),
       custom_card("Invoices", invoices_path, icon: "🧾", color: :sky, intensity: 100),
       custom_card("Timesheets", signins_events_path, icon: "⏱️", color: :sky, intensity: 100),
-      disabled_card("Affiliations", icon: "🤝"),
+      custom_card("Affiliations", affiliations_path, icon: "🤝", color: :sky, intensity: 100),
       disabled_card("Reports", icon: "📄"),
       disabled_card("Discounts", icon: "💲"),
       disabled_card("Refunds", icon: "↩️"),

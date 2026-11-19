@@ -1,0 +1,8 @@
+name: "Affiliations index"
+area: people
+display_status: admin_facing
+released_on: 2026-11-18
+action_path: "/affiliations"
+summary: >-
+  One admin list of every facilitator (FA) and job (JA) affiliation, person first, laid out like
+  the person form's rows. Sort by any column header, including comment count.

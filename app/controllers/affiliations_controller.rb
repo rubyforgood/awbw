@@ -1,6 +1,38 @@
 class AffiliationsController < ApplicationController
-  before_action :set_affiliation, only: %i[ edit update destroy ]
+  SORTS = {
+    "organization" => "organizations.name %{dir}, people.last_name %{dir}, people.first_name %{dir}",
+    "person" => "people.last_name %{dir}, people.first_name %{dir}",
+    "title" => "affiliations.title %{dir}",
+    "start_date" => "affiliations.start_date %{dir}",
+    "end_date" => "affiliations.end_date %{dir}",
+    "primary_contact" => "affiliations.primary_contact %{dir}",
+    "inactive" => "affiliations.inactive %{dir}",
+    "address" => "affiliations.organization_address_id %{dir}",
+    "filemaker_code" => "affiliations.filemaker_code %{dir}",
+    "event" => "event_registrations.event_id %{dir}",
+    "comments" => "(SELECT COUNT(*) FROM comments WHERE comments.commentable_type = 'Affiliation' " \
+                  "AND comments.commentable_id = affiliations.id) %{dir}",
+    "id" => "affiliations.id %{dir}"
+  }.freeze
+
+  before_action :set_affiliation, only: %i[ edit update save_inline save_note destroy ]
   before_action :set_registration_choices, only: %i[ edit update ]
+
+  def index
+    authorize!
+    return render :index unless turbo_frame_request?
+
+    @sort = SORTS.key?(params[:sort]) ? params[:sort] : "organization"
+    @sort_direction = params[:direction] == "desc" ? "desc" : "asc"
+    order = format(SORTS[@sort], dir: @sort_direction)
+    @affiliations = Affiliation.search_by_params(params)
+      .left_joins(:person, :organization, :event_registration)
+      .includes(:person, :organization_address, :comments, organization: :addresses, event_registration: :event)
+      .reorder(Arel.sql("#{order}, affiliations.id ASC"))
+      .paginate(page: params[:page], per_page: params[:number_of_items_per_page].presence || 50)
+    @registration_choices = registration_choices_for(@affiliations)
+    render :affiliations_results
+  end
 
   def edit
     authorize! @affiliation
@@ -16,6 +48,32 @@ class AffiliationsController < ApplicationController
       redirect_to affiliation_return_path, notice: "Affiliation was successfully updated.", status: :see_other
     else
       render :edit, status: :unprocessable_content
+    end
+  end
+
+  # The index's inline autosave: one start date, end date, inactive flag, primary contact, address, FileMaker code, or linked registration at a time.
+  def save_inline
+    authorize! @affiliation, to: :update?
+    attrs = params.require(:affiliation).permit(:start_date, :end_date, :inactive, :primary_contact, :organization_address_id, :filemaker_code, :event_registration_id)
+    @affiliation.inactive_supplied = attrs.key?(:inactive)
+    @affiliation.assign_attributes(attrs)
+    return render json: { error: save_error }, status: :unprocessable_content unless @affiliation.save
+
+    @choices = registration_choices_for([ @affiliation ]).fetch(@affiliation.id)
+
+    respond_to do |format|
+      format.turbo_stream
+      format.any { head :ok }
+    end
+  end
+
+  # The index's inline comment: edits the newest comment, or adds one when there's none.
+  def save_note
+    authorize! @affiliation, to: :update?
+    @affiliation.save_index_note(params[:note])
+    respond_to do |format|
+      format.turbo_stream
+      format.any { head :ok }
     end
   end
 
@@ -58,6 +116,27 @@ class AffiliationsController < ApplicationController
   end
 
   private
+
+  # Each affiliation's pickable registrations, newest event first: its person's own,
+  # plus the one it's linked to now (which may be someone else's).
+  def registration_choices_for(affiliations)
+    affiliations = affiliations.to_a
+    registrations = EventRegistration.where(registrant_id: affiliations.map(&:person_id))
+      .or(EventRegistration.where(id: affiliations.filter_map(&:event_registration_id)))
+      .includes(:event).to_a
+    by_person = registrations.group_by(&:registrant_id)
+    by_id = registrations.index_by(&:id)
+
+    affiliations.to_h do |affiliation|
+      choices = by_person.fetch(affiliation.person_id, []) | [ by_id[affiliation.event_registration_id] ].compact
+      [ affiliation.id, choices.sort_by { |registration| -registration.event&.start_date.to_i } ]
+    end
+  end
+
+  # skip_if_duplicate aborts the save without adding an error.
+  def save_error
+    @affiliation.errors.full_messages.to_sentence.presence || "matches another affiliation"
+  end
 
   def set_affiliation
     @affiliation = Affiliation.find(params[:id])

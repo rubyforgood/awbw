@@ -40,6 +40,13 @@ class Affiliation < ApplicationRecord
 
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
 
+  def save_index_note(body)
+    note = comments.newest_first.first
+    return note.update!(body: body.to_s) if note
+
+    comments.create!(body: body) if body.present?
+  end
+
   # A communication logged on an affiliation is addressed to the affiliated person.
   def communications_email
     person&.preferred_email
@@ -80,6 +87,106 @@ class Affiliation < ApplicationRecord
   # Exactly "Facilitator" (case-sensitive; BINARY on the literal keeps the plain
   # title index usable). Titles are normalized on write, so no TRIM is needed.
   scope :facilitators, -> { where("affiliations.title = BINARY ?", FACILITATOR_TITLE) }
+  scope :jobs, -> { where("affiliations.title IS NULL OR affiliations.title <> BINARY ?", FACILITATOR_TITLE) }
+
+  # Admin affiliations index filter options (label => param value).
+  INDEX_KINDS = { "Facilitator (FA)" => "facilitator", "Job (JA)" => "job", "Job, untitled" => "untitled" }.freeze
+  INDEX_SOURCES = {
+    "FileMaker Personnel (FA)" => "fm_personnel",
+    "FileMaker people to organizations (JA)" => "fm_people_to_organizations",
+    "Any FileMaker code" => "filemaker",
+    "Made by a training" => "registration",
+    "Entered by hand" => "manual"
+  }.freeze
+  ZERO_LENGTH = "Zero-length".freeze
+  INDEX_STATUSES = (FILTER_STATUSES + [ ZERO_LENGTH ]).freeze
+  INDEX_YES_NO = { "Yes" => "yes", "No" => "no" }.freeze
+
+  scope :of_kind, ->(kind) {
+    case kind
+    when "facilitator" then facilitators
+    when "job" then jobs
+    when "untitled" then where(title: nil)
+    else all
+    end
+  }
+
+  scope :matching_name, ->(query) {
+    where(person_id: Person.search_name_email(query).select(:id))
+      .or(where(organization_id: Organization.search(query).select(:id)))
+  }
+
+  scope :matching_comments, ->(query) {
+    like = "%#{sanitize_sql_like(query)}%"
+    where(id: Comment.where(commentable_type: name)
+                     .where("comments.body LIKE :q OR comments.topic LIKE :q", q: like)
+                     .select(:commentable_id))
+  }
+
+  scope :with_comments, ->(present) {
+    ids = Comment.where(commentable_type: name).select(:commentable_id)
+    present ? where(id: ids) : where.not(id: ids)
+  }
+
+  scope :with_address, ->(present) {
+    present ? where.not(organization_address_id: nil) : where(organization_address_id: nil)
+  }
+
+  scope :person_has_registrations, ->(present) {
+    ids = EventRegistration.where.not(registrant_id: nil).select(:registrant_id)
+    present ? where(person_id: ids) : where.not(person_id: ids)
+  }
+
+  # Its own linked registration's event; with no link, any facilitator training the person registered for and didn't drop.
+  scope :trained_at_event, ->(event_id) {
+    trainings = EventRegistration.active.where(event_id: Event.facilitator_trainings.where(id: event_id).select(:id))
+    where(event_registration_id: EventRegistration.where(event_id:).select(:id))
+      .or(where(event_registration_id: nil, person_id: trainings.select(:registrant_id)))
+  }
+
+  def self.training_event_choices
+    linked = EventRegistration.where(id: where.not(event_registration_id: nil).select(:event_registration_id)).select(:event_id)
+    Event.facilitator_trainings.or(Event.where(id: linked)).order(start_date: :desc)
+  end
+
+  scope :from_source, ->(source) {
+    case source
+    when "fm_personnel" then with_code_in_archive(FmPersonnel)
+    when "fm_people_to_organizations" then with_code_in_archive(FmPeopleToOrganization)
+    when "filemaker" then where.not(filemaker_code: nil)
+    when "registration" then where.not(event_registration_id: nil)
+    when "manual" then where(filemaker_code: nil, event_registration_id: nil)
+    else all
+    end
+  }
+
+  scope :with_index_status, ->(status) { status == ZERO_LENGTH ? zero_length : with_status(status) }
+
+  scope :in_year, ->(column, year) {
+    first = Date.new(year.to_i)
+    where(column => first..first.end_of_year)
+  }
+
+  def self.search_by_params(params)
+    yes = ->(key) { params[key] == "yes" }
+    results = all
+    results = results.where(person_id: params[:person_id]) if params[:person_id].present?
+    results = results.where(organization_id: params[:organization_id]) if params[:organization_id].present?
+    results = results.of_kind(params[:kind]) if params[:kind].present?
+    results = results.with_index_status(params[:status]) if params[:status].present?
+    results = results.in_year(:start_date, params[:start_year]) if params[:start_year].to_s.match?(/\A\d{4}\z/)
+    results = results.in_year(:end_date, params[:end_year]) if params[:end_year].to_s.match?(/\A\d{4}\z/)
+    results = results.matching_name(params[:query]) if params[:query].present?
+    results = results.matching_comments(params[:comment_text]) if params[:comment_text].present?
+    results = results.with_filemaker_code(params[:filemaker_code]) if params[:filemaker_code].present?
+    results = results.with_comments(yes.call(:comments)) if params[:comments].present?
+    results = results.with_address(yes.call(:address)) if params[:address].present?
+    results = results.where(primary_contact: yes.call(:primary)) if params[:primary].present?
+    results = results.from_source(params[:source]) if params[:source].present?
+    results = results.person_has_registrations(yes.call(:registrations)) if params[:registrations].present?
+    results = results.trained_at_event(params[:trained_at]) if params[:trained_at].present?
+    results
+  end
 
   # SQL twin of #zero_length? — a row that starts and ends on the same day, and so
   # records no facilitation (ADR-0001 D8a). `with_duration` is its complement: an
