@@ -71,7 +71,7 @@ RSpec.describe "fm:import_organizations" do
       expect(Organization.pluck(:filemaker_code)).to eq([ "ORG00001, P0001" ])
     end
 
-    it "makes the organization, leaving its affiliations to fm:import_affiliations" do
+    it "makes the organization, leaving its affiliations to the affiliation imports" do
       run_task(dry_run: false)
 
       expect(Organization.sole.filemaker_code).to eq("ORG00001, P0001")
@@ -88,7 +88,7 @@ RSpec.describe "fm:import_organizations" do
       expect(Organization.find_by!(name: "Elm Street Clinic").addresses.sole).to have_attributes(street_address: "9 Elm St", address_type: "work")
     end
 
-    it "creates only organizations, leaving the person an agency card names to fm:import_affiliations" do
+    it "creates only organizations, leaving the person an agency card names alone" do
       FmRolodex.create!(fm_id: "00301", data: { "isAgency__c" => "1", "Organization" => "Harbor Clinic", "Title" => "Director",
                                                 "FirstName" => "Grace", "LastName" => "Hopper" })
 
