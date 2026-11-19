@@ -51,6 +51,41 @@ RSpec.describe Resource do
     end
   end
 
+  describe "#kind_options" do
+    it "offers only the published kinds for a new record" do
+      expect(Resource.new.kind_options).to eq(Resource::PUBLISHED_KINDS)
+    end
+
+    it "keeps an unsearchable kind the record already has" do
+      expect(Resource.new(kind: "Story").kind_options).to eq(Resource::PUBLISHED_KINDS + [ "Story" ])
+    end
+
+    it "leaves out other unsearchable kinds" do
+      expect(Resource.new(kind: "Story").kind_options).not_to include("Resource", "Theme")
+    end
+
+    it "offers every kind when asked for all" do
+      expect(Resource.new(kind: "Handout").kind_options(all: true)).to eq(Resource::KINDS)
+    end
+  end
+
+  describe ".sorted_by" do
+    let!(:older) { create(:resource, title: "Bravo", kind: "Toolkit", created_at: 2.days.ago, updated_at: 1.hour.ago) }
+    let!(:newer) { create(:resource, title: "Alpha", kind: "Handout", created_at: 1.day.ago, updated_at: 2.hours.ago) }
+
+    it "sorts by created, modified, title, and kind" do
+      expect(Resource.sorted_by("created")).to eq([ newer, older ])
+      expect(Resource.sorted_by("modified")).to eq([ older, newer ])
+      expect(Resource.sorted_by("title")).to eq([ newer, older ])
+      expect(Resource.sorted_by("kind")).to eq([ newer, older ])
+    end
+
+    it "falls back to featured first" do
+      older.update!(featured: true)
+      expect(Resource.sorted_by(nil)).to eq([ older, newer ])
+    end
+  end
+
   describe 'validations' do
     # Requires associations for create
     it { should validate_presence_of(:title) }

@@ -14,7 +14,6 @@
           </div>
 
         <% if params[:admin] == 'true' %>
-          <div class="my-4"><%= render "assets/form", owner: @resource %></div>
           <%= turbo_frame_tag "editor_assets_lazy", src: edit_resource_path(@resource) do %>
             <%= render "shared/loading" %>
           <% end %>
