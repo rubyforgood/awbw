@@ -29,4 +29,21 @@ module AllocationsHelper
   rescue NoMethodError, ActionController::UrlGenerationError
     nil
   end
+
+  # Hover text for the who/when icon on each allocation row: who created it,
+  # plus who last changed it when it was touched after creation.
+  def allocation_audit_title(allocation)
+    lines = [ "Created #{allocation_audit_stamp(allocation.created_at, allocation.created_by)}" ]
+    if allocation.updated_at.present? && allocation.updated_at != allocation.created_at
+      lines << "Updated #{allocation_audit_stamp(allocation.updated_at, allocation.updated_by)}"
+    end
+    lines.join("\n")
+  end
+
+  private
+
+  def allocation_audit_stamp(time, user)
+    who = user ? (person_name(user).presence || user.email) : "unknown"
+    "#{time&.strftime("%b %-d, %Y at %-l:%M %p")} by #{who}"
+  end
 end

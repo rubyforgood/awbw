@@ -181,6 +181,38 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  describe "cancelled registration" do
+    before do
+      BuiltinCallouts.seed(event)
+      event.registration_ticket_callouts.builtin.each { |callout| callout.update!(hidden: false) }
+      registration.update!(status: "cancelled")
+    end
+
+    it "sends every callout page back to the ticket" do
+      callout = create(:registration_ticket_callout, event:, hidden: false)
+      [
+        registration_faq_path(registration.slug),
+        registration_payment_path(registration.slug),
+        registration_handouts_path(registration.slug),
+        registration_videoconference_path(registration.slug),
+        registration_staff_path(registration.slug),
+        registration_ce_path(registration.slug),
+        registration_certificate_path(registration.slug),
+        registration_callout_form_path(registration.slug, callout),
+        registration_callout_link_path(registration.slug, callout)
+      ].each do |path|
+        get path
+        expect(response).to redirect_to(registration_ticket_path(registration.slug)), path
+        expect(flash[:alert]).to eq("This registration is cancelled."), path
+      end
+    end
+
+    it "blocks callout actions" do
+      post registration_ce_request_path(registration.slug)
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+  end
+
   describe "callout page header" do
     let(:event) { create(:event, title: "Windows workshop", start_date: Date.new(2020, 1, 12), end_date: Date.new(2099, 12, 12)) }
 

@@ -91,6 +91,20 @@ RSpec.describe "Allocations", type: :request do
       expect(response.body).not_to include("transferred-out registration")
     end
 
+    it "shows who created and last updated each allocation on hover" do
+      creator = create(:user, :admin, :with_person)
+      editor = create(:user, :admin, :with_person)
+      allocation = create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: reg,
+                                       amount: 2_500, created_by: creator, updated_by: creator)
+      allocation.update_columns(updated_by_id: editor.id, updated_at: 1.hour.from_now)
+
+      get allocations_path(allocatable_sgid: reg.to_sgid.to_s)
+
+      expect(response.body).to include("by #{creator.person.full_name}")
+      expect(response.body).to include("Updated ")
+      expect(response.body).to include("by #{editor.person.full_name}")
+    end
+
     it "renders the results turbo frame" do
       get allocations_path, headers: { "Turbo-Frame" => "allocations_results" }
 
