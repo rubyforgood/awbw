@@ -130,6 +130,18 @@ class Affiliation < ApplicationRecord
     present ? where(person_id: ids) : where.not(person_id: ids)
   }
 
+  # Its own linked registration's event; with no link, any facilitator training the person registered for and didn't drop.
+  scope :trained_at_event, ->(event_id) {
+    trainings = EventRegistration.active.where(event_id: Event.facilitator_trainings.where(id: event_id).select(:id))
+    where(event_registration_id: EventRegistration.where(event_id:).select(:id))
+      .or(where(event_registration_id: nil, person_id: trainings.select(:registrant_id)))
+  }
+
+  def self.training_event_choices
+    linked = EventRegistration.where(id: where.not(event_registration_id: nil).select(:event_registration_id)).select(:event_id)
+    Event.facilitator_trainings.or(Event.where(id: linked)).order(start_date: :desc)
+  end
+
   scope :from_source, ->(source) {
     case source
     when "fm_personnel" then with_code_in_archive(FmPersonnel)
@@ -165,6 +177,7 @@ class Affiliation < ApplicationRecord
     results = results.where(primary_contact: yes.call(:primary)) if params[:primary].present?
     results = results.from_source(params[:source]) if params[:source].present?
     results = results.person_has_registrations(yes.call(:registrations)) if params[:registrations].present?
+    results = results.trained_at_event(params[:trained_at]) if params[:trained_at].present?
     results
   end
 

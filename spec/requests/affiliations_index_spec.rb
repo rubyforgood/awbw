@@ -112,6 +112,39 @@ RSpec.describe "Affiliations index", type: :request do
       expect(ids_in(results)).to eq([ facilitator_row.id, job_row.id ])
     end
 
+    describe "trained at" do
+      let(:training) { create(:event, facilitator_training: true) }
+      let(:other_event) { create(:event, facilitator_training: false) }
+
+      it "uses the affiliation's own linked event first" do
+        job_row.update_column(:event_registration_id, create(:event_registration, registrant: zed, event: other_event).id)
+        create(:event_registration, registrant: zed, event: training)
+
+        expect(ids_in(results(trained_at: other_event.id))).to eq([ job_row.id ])
+        expect(ids_in(results(trained_at: training.id))).to be_empty
+      end
+
+      it "falls back to the person's active facilitator-training registrations when unlinked" do
+        create(:event_registration, registrant: ana, event: training)
+        create(:event_registration, registrant: zed, event: training, status: "cancelled")
+
+        expect(ids_in(results(trained_at: training.id))).to eq([ facilitator_row.id ])
+      end
+
+      it "doesn't fall back to events that aren't facilitator trainings" do
+        create(:event_registration, registrant: ana, event: other_event)
+        expect(ids_in(results(trained_at: other_event.id))).to be_empty
+      end
+
+      it "offers facilitator trainings and events affiliations link to" do
+        job_row.update_column(:event_registration_id, create(:event_registration, registrant: zed, event: other_event).id)
+        unrelated = create(:event, facilitator_training: false)
+
+        expect(Affiliation.training_event_choices).to include(training, other_event)
+        expect(Affiliation.training_event_choices).not_to include(unrelated)
+      end
+    end
+
     it "filters by FileMaker code and by person or organization id" do
       expect(ids_in(results(filemaker_code: "PS100"))).to eq([ facilitator_row.id ])
       expect(ids_in(results(person_id: zed.id))).to eq([ job_row.id ])

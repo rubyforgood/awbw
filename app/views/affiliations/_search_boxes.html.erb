@@ -27,6 +27,10 @@
           selected: params[:source], blank: "Anywhere", field_class: field_class, wrapper_class: "w-full md:w-52" %>
     <%= render "shared/filter_select", param: :registrations, label: "Person has registrations", options: yes_no,
           selected: params[:registrations], blank: "With or without", field_class: field_class, wrapper_class: "w-full md:w-44" %>
+    <%= render "shared/filter_select", param: :trained_at, label: "Trained at",
+          options: Affiliation.training_event_choices.map { |event| [ [ event.start_date&.strftime("%Y-%m-%d"), event.decorate.compact_label ].compact.join(" · "), event.id ] },
+          selected: params[:trained_at], blank: "Any event", field_class: field_class, wrapper_class: "w-full md:w-64",
+          hint: "The affiliation's linked event, else the person's facilitator trainings" %>
     <%= render "shared/filter_select", param: :address, label: "Org address", options: yes_no,
           selected: params[:address], blank: "With or without", field_class: field_class, wrapper_class: "w-full md:w-36" %>
     <%= render "shared/filter_select", param: :comments, label: "Has comments", options: yes_no,
