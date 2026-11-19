@@ -150,9 +150,9 @@ class Affiliation < ApplicationRecord
   end
 
   INDEX_IMPORT_ACTIONS = {
-    "Created by the import" => "created",
-    "Linked to an existing affiliation" => "linked",
-    "Not touched by the import" => "untouched"
+    "Created it" => "created",
+    "Linked existing" => "linked",
+    "Didn't touch" => "untouched"
   }.freeze
 
   scope :with_personnel_import_note, -> {
