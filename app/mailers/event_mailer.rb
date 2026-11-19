@@ -52,7 +52,7 @@ class EventMailer < ApplicationMailer
     )
   end
 
-  def event_registration_reminder(event_registration, custom_message: nil, custom_subject: nil, hide_event_card: false, hide_ticket_button: false, preview: false)
+  def event_registration_reminder(event_registration, custom_message: nil, custom_subject: nil, hide_event_card: false, hide_ticket_button: false, linked_callout: nil, linked_resource: nil, preview: false)
     @event_registration = event_registration
     @event = event_registration.event.decorate
     @person = event_registration.registrant
@@ -68,6 +68,9 @@ class EventMailer < ApplicationMailer
     # when blank) with hooks the on-page preview's Stimulus controller fills in
     # live. Never set on a real send.
     @preview = preview
+    # Optional button straight to one of the ticket's callouts (or one resource on
+    # it), personalized per registrant. See #reminder_callout_link.
+    @callout_link_label, @callout_link_url = reminder_callout_link(event_registration, linked_callout, linked_resource)
 
     @notification_type = "Event registration reminder"
 
@@ -91,8 +94,10 @@ class EventMailer < ApplicationMailer
   # is passed as "Name <email>" labels (not records), so the job that delivers
   # this needs no extra lookups. The per-recipient reminders are tracked
   # notifications; this is just an at-a-glance heads-up for the team.
-  def event_registration_reminder_fyi(event, recipient_labels, custom_message: nil, hide_event_card: false, hide_ticket_button: false)
+  def event_registration_reminder_fyi(event, recipient_labels, custom_message: nil, hide_event_card: false, hide_ticket_button: false, callout_link_label: nil)
     @event = event.decorate
+    # Mirror what registrants received: name the callout the button opened.
+    @callout_link_label = callout_link_label.presence
     @recipient_labels = Array(recipient_labels)
     @custom_message = custom_message.presence
     # Mirror what registrants received: drop the card from the admin copy too.
@@ -132,6 +137,21 @@ class EventMailer < ApplicationMailer
   end
 
   private
+
+  # [label, url] for the reminder's callout button, or nil when there isn't one.
+  # The url is the per-registrant redirect (Events::CalloutsController#go), which
+  # resolves the destination at click time. A real send only includes the button
+  # when the ticket currently shows this card to the registrant, so nobody gets a
+  # button that just bounces to their ticket; the compose-page preview always
+  # shows it, since it's previewing the admin's choice, not one registrant's gates.
+  def reminder_callout_link(registration, callout, resource)
+    return unless callout && registration.persisted? && registration.slug.present?
+
+    link = RegistrantCalloutLink.new(registration, callout, resource:)
+    return unless @preview || link.path
+
+    [ link.label, registration_callout_link_url(registration.slug, callout, resource_id: resource&.id) ]
+  end
 
   def confirmation_subject(changes)
     noun = @event_registration.registration_subject_noun

@@ -171,6 +171,21 @@ class RegistrationTicketCallout < ApplicationRecord
     builtin_key.in?(FINANCIAL_RECORD_BUILTIN_KEYS)
   end
 
+  # Whether this callout's card appears on a registrant's real ticket: published,
+  # not withheld from a transferred-out registrant (#1944), and past each gate the
+  # admin ticked. The one rule for both the ticket and the bulk-email callout link
+  # (RegistrantCalloutLink), so an email can't link to a card the ticket hides.
+  # `payment_access` lets the ticket pass in a just-paid checkout status.
+  def shown_to?(registration, payment_access: registration.payment_access_granted?)
+    return false unless published?
+    return false if registration.transferred_out? && !financial_record?
+    return false if payment_access_gated && !payment_access
+    return false if ce_payment_access_gated && !registration.ce_access_granted?
+    return false if attended_gated && !registration.attended?
+
+    true
+  end
+
   def anonymous_responses?
     builtin_key.in?(ANONYMOUS_BUILTIN_KEYS)
   end

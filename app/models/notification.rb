@@ -6,6 +6,10 @@ class Notification < ApplicationRecord
   belongs_to :noticeable, polymorphic: true, optional: true
   belongs_to :parent_notification, class_name: "Notification", optional: true
   belongs_to :root_notification, class_name: "Notification", optional: true
+  # A bulk reminder's optional button to one ticket callout (or one resource on
+  # it). Kept on the row so a resend rebuilds the same email.
+  belongs_to :linked_callout, class_name: "RegistrationTicketCallout", optional: true
+  belongs_to :linked_resource, class_name: "Resource", optional: true
   has_many :child_notifications, class_name: "Notification", foreign_key: :parent_notification_id, dependent: :nullify
 
   # enum notification_type: { created_record: 0, updated_record: 1 } # TODO - convert integer enum data to symbols

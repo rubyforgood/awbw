@@ -152,6 +152,22 @@
               </p>
               <p class="sr-only" role="status" aria-live="polite" data-reminder-preview-target="ticketStatus"></p>
             </div>
+            <% if @callout_link_options.any? %>
+              <div>
+                <h3 class="mb-2 font-semibold text-gray-700">Link to a ticket callout</h3>
+                <p class="mb-2 text-gray-600">
+                  Adds an "Open …" button that takes each recipient straight to their own copy of
+                  that callout — or one document on it — instead of a general Portal link.
+                  Recipients whose ticket doesn't show that callout (unpublished, gated, or
+                  transferred out) get the email without the button.
+                </p>
+                <%= select_tag :callout_link,
+                      grouped_options_for_select(@callout_link_options, @callout_link),
+                      include_blank: "No callout button",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm bg-white",
+                      data: { reminder_preview_target: "calloutLinkSelect", action: "reminder-preview#updateCalloutLink" } %>
+              </div>
+            <% end %>
           </div>
         </div>
       <% end %>
