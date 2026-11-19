@@ -1,18 +1,18 @@
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-/opt/hostedtoolcache/Ruby/4.0.9/x64/bin/ruby extconf.rb
+/opt/hostedtoolcache/Ruby/4.0.10/x64/bin/ruby extconf.rb
 checking for prism.h in /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/include... yes
 checking for prism/extension.h in /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext... yes
 checking for whether -fvisibility=hidden is accepted as CFLAGS... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-inmux6 sitelibdir\=./.gem.20261024-2385-inmux6 clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-860cb7 sitelibdir\=./.gem.20261119-2844-860cb7 clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-inmux6 sitelibdir\=./.gem.20261024-2385-inmux6
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-860cb7 sitelibdir\=./.gem.20261119-2844-860cb7
 compiling api_node.c
-compiling extension.c
 compiling api_pack.c
+compiling extension.c
 compiling ./../../src/diagnostic.c
 compiling ./../../src/encoding.c
 compiling ./../../src/node.c
@@ -45,8 +45,8 @@ compiling ./../../src/util/pm_strpbrk.c
 linking shared-object prism/prism.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-inmux6 sitelibdir\=./.gem.20261024-2385-inmux6 install
-/usr/bin/install -c -m 0755 prism.so ./.gem.20261024-2385-inmux6/prism
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-860cb7 sitelibdir\=./.gem.20261119-2844-860cb7 install
+/usr/bin/install -c -m 0755 prism.so ./.gem.20261119-2844-860cb7/prism
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20261024-2385-inmux6 sitelibdir\=./.gem.20261024-2385-inmux6 clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-860cb7 sitelibdir\=./.gem.20261119-2844-860cb7 clean

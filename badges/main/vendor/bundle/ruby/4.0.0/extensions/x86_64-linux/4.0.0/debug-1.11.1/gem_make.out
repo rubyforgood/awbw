@@ -1,19 +1,22 @@
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-/opt/hostedtoolcache/Ruby/4.0.9/x64/bin/ruby extconf.rb
+/opt/hostedtoolcache/Ruby/4.0.10/x64/bin/ruby extconf.rb
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-fwgjkz sitelibdir\=./.gem.20261024-2385-fwgjkz clean
+make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-2844-jji6bo sitelibdir\=./.gem.20261119-2844-jji6bo clean
+make: warning: -j3 forced in submake: resetting jobserver mode.
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-fwgjkz sitelibdir\=./.gem.20261024-2385-fwgjkz
+make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-2844-jji6bo sitelibdir\=./.gem.20261119-2844-jji6bo
+make: warning: -j3 forced in submake: resetting jobserver mode.
 compiling debug.c
 compiling iseq_collector.c
 linking shared-object debug/debug.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-fwgjkz sitelibdir\=./.gem.20261024-2385-fwgjkz install
-/usr/bin/install -c -m 0755 debug.so ./.gem.20261024-2385-fwgjkz/debug
+make -j3 DESTDIR\= sitearchdir\=./.gem.20261119-2844-jji6bo sitelibdir\=./.gem.20261119-2844-jji6bo install
+make: warning: -j3 forced in submake: resetting jobserver mode.
+/usr/bin/install -c -m 0755 debug.so ./.gem.20261119-2844-jji6bo/debug
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make DESTDIR\= sitearchdir\=./.gem.20261024-2385-fwgjkz sitelibdir\=./.gem.20261024-2385-fwgjkz clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-jji6bo sitelibdir\=./.gem.20261119-2844-jji6bo clean

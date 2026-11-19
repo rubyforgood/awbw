@@ -1,5 +1,5 @@
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-/opt/hostedtoolcache/Ruby/4.0.9/x64/bin/ruby extconf.rb
+/opt/hostedtoolcache/Ruby/4.0.10/x64/bin/ruby extconf.rb
 checking for rb_syserr_fail_str(0, Qnil)... yes
 checking for rb_interned_str_cstr()... yes
 checking for rb_io_path() in ruby/io.h... yes
@@ -16,16 +16,16 @@ checking for ttyname_r()... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-usoiu3 sitelibdir\=./.gem.20261024-2385-usoiu3 clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-jn7ukw sitelibdir\=./.gem.20261119-2844-jn7ukw clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-usoiu3 sitelibdir\=./.gem.20261024-2385-usoiu3
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-jn7ukw sitelibdir\=./.gem.20261119-2844-jn7ukw
 compiling console.c
 linking shared-object io/console.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-usoiu3 sitelibdir\=./.gem.20261024-2385-usoiu3 install
-/usr/bin/install -c -m 0755 console.so ./.gem.20261024-2385-usoiu3/io
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-jn7ukw sitelibdir\=./.gem.20261119-2844-jn7ukw install
+/usr/bin/install -c -m 0755 console.so ./.gem.20261119-2844-jn7ukw/io
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make DESTDIR\= sitearchdir\=./.gem.20261024-2385-usoiu3 sitelibdir\=./.gem.20261024-2385-usoiu3 clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-jn7ukw sitelibdir\=./.gem.20261119-2844-jn7ukw clean

@@ -1,5 +1,5 @@
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-/opt/hostedtoolcache/Ruby/4.0.9/x64/bin/ruby extconf.rb
+/opt/hostedtoolcache/Ruby/4.0.10/x64/bin/ruby extconf.rb
 checking for unistd.h... yes
 checking for rb_io_descriptor()... yes
 checking for linux/aio_abi.h... yes
@@ -13,14 +13,13 @@ checking for sys/resource.h... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-5w0fva sitelibdir\=./.gem.20261024-2385-5w0fva clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-wjdxth sitelibdir\=./.gem.20261119-2844-wjdxth clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-5w0fva sitelibdir\=./.gem.20261024-2385-5w0fva
-compiling nio4r_ext.c
-compiling selector.c
-compiling monitor.c
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-wjdxth sitelibdir\=./.gem.20261119-2844-wjdxth
 compiling bytebuffer.c
+compiling monitor.c
+compiling nio4r_ext.c
 In file included from nio4r_ext.c:6:
 ../libev/ev.c:234:5: warning: ‘EV_NO_THREADS’ is not defined, evaluates to ‘0’ [-Wundef]
   234 | #if EV_NO_THREADS
@@ -236,6 +235,7 @@ In file included from ../libev/ev.c:3095:
 ../libev/ev.c:2845:11: warning: ignoring return value of ‘read’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
  2845 |           read (evpipe [0], &dummy, sizeof (dummy));
       |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compiling selector.c
 selector.c: In function ‘NIO_Selector_wakeup’:
 selector.c:525:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
   525 |     write(selector->wakeup_writer, "\0", 1);
@@ -251,8 +251,8 @@ cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ 
 linking shared-object nio4r_ext.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-5w0fva sitelibdir\=./.gem.20261024-2385-5w0fva install
-/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20261024-2385-5w0fva
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-wjdxth sitelibdir\=./.gem.20261119-2844-wjdxth install
+/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20261119-2844-wjdxth
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make DESTDIR\= sitearchdir\=./.gem.20261024-2385-5w0fva sitelibdir\=./.gem.20261024-2385-5w0fva clean
+make DESTDIR\= sitearchdir\=./.gem.20261119-2844-wjdxth sitelibdir\=./.gem.20261119-2844-wjdxth clean
