@@ -78,7 +78,13 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-nowrap text-gray-500"><%= allocation.created_at.strftime("%B %d, %Y") %></td>
+                <td class="px-4 py-2 text-sm text-nowrap text-gray-500">
+                  <%= allocation.created_at.strftime("%B %d, %Y") %>
+                  <span class="group relative ml-1 inline-block cursor-help" tabindex="0">
+                    <i class="fa-solid fa-user-pen text-xs text-gray-400 group-hover:text-gray-600" aria-hidden="true"></i>
+                    <span class="absolute right-0 bottom-full z-50 mb-1 hidden rounded-lg bg-blue-100 px-3 py-2 text-xs whitespace-pre text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover:block group-focus:block"><%= allocation_audit_title(allocation) %></span>
+                  </span>
+                </td>
 
                 <td class="px-4 py-2 text-left text-sm font-medium">
                   <% link_class = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer" %>
