@@ -4,12 +4,9 @@
   data: { controller: "collection", turbo_frame: "affiliations_results" },
   autocomplete: "off",
   class: "mb-6 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4") do %>
-  <div class="flex items-center justify-between gap-2 text-gray-600">
-    <div class="flex items-center gap-2">
-      <i class="fa-solid fa-filter text-xs"></i>
-      <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
-    </div>
-    <%= render "shared/search_clear", url: affiliations_path %>
+  <div class="flex items-center gap-2 text-gray-600">
+    <i class="fa-solid fa-filter text-xs"></i>
+    <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
   </div>
   <%= hidden_field_tag :person_id, params[:person_id] if params[:person_id].present? %>
   <%= hidden_field_tag :organization_id, params[:organization_id] if params[:organization_id].present? %>
@@ -44,5 +41,9 @@
           wrapper_class: "w-full md:w-24", input_options: { inputmode: "numeric", maxlength: 4 } %>
     <%= render "shared/filter_text", param: :end_year, label: "End year", placeholder: "YYYY",
           wrapper_class: "w-full md:w-24", input_options: { inputmode: "numeric", maxlength: 4 } %>
+    <div class="w-full md:ml-auto md:w-auto">
+      <span class="<%= search_label_class(extra: "invisible") %>" aria-hidden="true">Clear</span>
+      <%= render "shared/search_clear", url: affiliations_path %>
+    </div>
   </div>
 <% end %>
