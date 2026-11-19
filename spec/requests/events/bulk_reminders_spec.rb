@@ -84,7 +84,7 @@ RSpec.describe "Events::BulkReminders", type: :request do
       expect(response.body).not_to include("Casey Gone")
       expect(response.body).not_to include("Nico Absent")
       expect(response.body).not_to include("Tess Moved")
-      expect(response.body).to include("Exclude inactive")
+      expect(response.body).to include('<select name="inactive"')
     end
 
     it "lists and checks them when the Inactive registrants filter includes them" do
@@ -119,7 +119,7 @@ RSpec.describe "Events::BulkReminders", type: :request do
       [ jane, sam, cancelled, no_show, transferred_out ].each { |reg| reg.registrant.user&.update_columns(confirmed_at: nil) }
 
       get preview_reminder_event_path(event, mode: "invite")
-      expect(response.body).to include("Exclude inactive")
+      expect(response.body).to include('<select name="inactive"')
       expect(response.body).to include("Jane Adams")
       expect(response.body).not_to include("Casey Gone")
 

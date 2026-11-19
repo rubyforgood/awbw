@@ -65,8 +65,7 @@
         account that was never confirmed. A Portal invite (confirmation) email is for
         people who can't sign in. Inactive registrants (cancelled, no show,
         transferred out) are left out unless you include them with the Inactive
-        registrants filter. Filters keep everyone in the list and check the
-        matches. Separate multiple values with
+        filter. Filters keep everyone in the list and check the matches. Separate multiple values with
         <code class="font-mono">'--'</code> to match multiple values (e.g.
         <code class="font-mono">amy--aisha</code>).
       </p>
@@ -74,7 +73,7 @@
       <p class="mb-3 text-gray-600">
         Choose who will receive this reminder. Inactive registrants (cancelled, no
         show, transferred out) are left out unless you include them with the
-        Inactive registrants filter. Filters keep everyone in the list and check the
+        Inactive filter. Filters keep everyone in the list and check the
         matches. Separate multiple values with
         <code class="font-mono">'--'</code> to match multiple values (e.g.
         <code class="font-mono">amy--aisha</code>).
@@ -87,9 +86,10 @@
           hidden_params: (@invite_mode ? { mode: "invite" } : {}),
           topic_subscription_types: @topic_subscription_types,
           inactive_filter: true,
+          single_row: true,
           text_fields: [
-            { param: :name, label: "Name", placeholder: "Registrant name", primary: true },
-            { param: :email, label: "Email", placeholder: "Email address", primary: true },
+            { param: :name, label: "Name", placeholder: "Registrant name", primary: true, wrapper_class: "w-full md:flex-1 md:min-w-32" },
+            { param: :email, label: "Email", placeholder: "Email address", primary: true, wrapper_class: "w-full md:flex-1 md:min-w-32" },
             { param: :reg_org, label: "Organization", placeholder: "Organization name" }
           ] %>
     <%# Turbo disabled: this POST renders the confirmation interstitial (a full
