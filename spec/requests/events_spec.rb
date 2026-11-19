@@ -2147,6 +2147,27 @@ RSpec.describe "Events", type: :request do
         expect(cells).to include("Card", "Check", "Buddy")
       end
 
+      it "splits paid, scholarship, and discount amounts into columns one Amounts switch reveals" do
+        create(:allocation, source: create(:payment, amount_cents: 4_000, amount_cents_remaining: 4_000),
+                            allocatable: check, amount: 4_000)
+        create(:allocation, source: create(:scholarship, recipient: check.registrant, amount_cents: 3_000),
+                            allocatable: check, amount: 3_000)
+        create(:allocation, source: create(:discount, amount_cents: 1_000), allocatable: check, amount: 1_000)
+
+        get registrants_event_path(event)
+
+        page = Capybara.string(response.body)
+        headers = page.all("th[data-column-toggle-col='amounts']", visible: :all).map { |th| th.text(:all).squish }
+        expect(headers).to eq([ "Amount paid", "Scholarship amount", "Discount amount" ])
+
+        amounts_for = ->(name) {
+          page.find("tbody tr", text: name, visible: :all)
+              .all("td[data-column-toggle-col='amounts']", visible: :all).map { |td| td.text(:all).squish }
+        }
+        expect(amounts_for.("Checkwriter")).to eq([ "$40.00", "$30.00", "$10.00" ])
+        expect(amounts_for.("Cardnow")).to eq([ "—", "—", "—" ])
+      end
+
       it "offers every method plus the buddy option in the filter" do
         get registrants_event_path(event)
 
