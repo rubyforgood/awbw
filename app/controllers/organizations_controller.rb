@@ -205,6 +205,7 @@ class OrganizationsController < ApplicationController
   def populations_served
     authorize! @organization
     @sort = params[:sort].presence_in(Organization::BREAKDOWN_SORTS) || Organization::BREAKDOWN_SORTS.first
+    @sort_direction = params[:direction].presence_in(%w[asc desc]) || Organization.breakdown_default_direction(@sort)
   end
 
   # The org's workshop logs on their own page: the date rows of the one group a

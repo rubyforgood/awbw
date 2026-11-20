@@ -193,7 +193,7 @@ RSpec.describe "Organization sector and age-group roll-up", type: :request do
       get populations_served_organization_path(harbor, sort: "total")
 
       expect(body).to have_css("a[aria-current='true']", text: "Total")
-      expect(body).to have_css("a", text: "A–Z")
+      expect(body).to have_css("a", text: "Name")
     end
 
     it "counts only the active facilitator for an org with an ended one" do
