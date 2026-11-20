@@ -84,7 +84,18 @@
         <% details.each_with_index do |(label, value, emphasis), index| %>
           <div class="bg-white px-4 py-3 <%= "sm:col-span-2" if details.size.odd? && index == details.size - 1 %>">
             <dt class="<%= label_class %>"><%= label %></dt>
-            <dd class="mt-1 min-w-0 <%= emphasis ? "text-2xl font-bold text-gray-900" : "text-sm text-gray-900" %> tabular-nums"><%= value %></dd>
+            <dd class="mt-1 min-w-0 <%= emphasis ? "text-2xl font-bold text-gray-900" : "text-sm text-gray-900" %> tabular-nums">
+              <%= value %>
+              <% if label == "Payer" && @payment.is_a?(ExternalProcessorPayment) && @payment.cardholder_differs_from_payer? %>
+                <div class="mt-2">
+                  <%= render "shared/badge",
+                        label: "Cardholder: #{@payment.stripe_cardholder_name}",
+                        classes: "bg-amber-50 text-amber-800 border-amber-200",
+                        icon: "fa-solid fa-credit-card",
+                        title: "Name on the card used at checkout. The payer above is the account owner who initiated the payment." %>
+                </div>
+              <% end %>
+            </dd>
           </div>
         <% end %>
         <% if @payment.metadata.present? %>

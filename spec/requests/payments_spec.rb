@@ -76,6 +76,38 @@ RSpec.describe "Payments", type: :request do
     end
   end
 
+  describe "GET /payments/:id cardholder badge" do
+    let(:payer) { create(:person, first_name: "Andrea-Isabel", last_name: "Magat") }
+    let(:cardholder_name) { "Lisa Wilson" }
+    let(:payment) do
+      create(
+        :external_processor_payment,
+        person: payer,
+        metadata: { "stripe_charge" => { "billing_details" => { "name" => cardholder_name } } }
+      )
+    end
+
+    it "shows the cardholder when it differs from the payer" do
+      get payment_path(payment)
+
+      expect(response.body).to include("Cardholder: Lisa Wilson")
+    end
+
+    it "hides the cardholder badge when the names match" do
+      payment.update!(metadata: { "stripe_charge" => { "billing_details" => { "name" => "Andrea-Isabel Magat" } } })
+
+      get payment_path(payment)
+
+      expect(response.body).not_to include("Cardholder:")
+    end
+
+    it "hides the cardholder badge for non-Stripe payments" do
+      get payment_path(create(:payment, person: payer))
+
+      expect(response.body).not_to include("Cardholder:")
+    end
+  end
+
   describe "POST /payments" do
     context "when allocating a manual payment to a membership invoice with an open checkout" do
       let(:invoice) { create(:membership_invoice, cost_cents: 5_000) }

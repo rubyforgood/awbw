@@ -46,4 +46,60 @@ RSpec.describe ExternalProcessorPayment do
       expect(payment).to be_valid
     end
   end
+
+  describe "cardholder name" do
+    def payment_for(cardholder_name:, payer: person)
+      create(
+        :external_processor_payment,
+        person: payer,
+        metadata: { "stripe_charge" => { "billing_details" => { "name" => cardholder_name } } }
+      )
+    end
+
+    it "reads the name from the Stripe charge metadata" do
+      payment = payment_for(cardholder_name: "Lisa Wilson")
+
+      expect(payment.stripe_cardholder_name).to eq("Lisa Wilson")
+    end
+
+    it "returns nil when the payment has no Stripe charge metadata" do
+      payment = create(:external_processor_payment, person: person)
+
+      expect(payment.stripe_cardholder_name).to be_nil
+    end
+
+    it "doesn't flag a matching name" do
+      payer = create(:person, first_name: "Andrea-Isabel", last_name: "Magat")
+      payment = payment_for(cardholder_name: "Andrea-Isabel Magat", payer: payer)
+
+      expect(payment.cardholder_differs_from_payer?).to be(false)
+    end
+
+    it "ignores case, whitespace, name order, and middle initials" do
+      payer = create(:person, first_name: "Lisa", last_name: "Wilson")
+      payment = payment_for(cardholder_name: "  wilson,   LISA d. ", payer: payer)
+
+      expect(payment.cardholder_differs_from_payer?).to be(false)
+    end
+
+    it "treats a hyphenated first name as the same as its first part" do
+      payer = create(:person, first_name: "Andrea-Isabel", last_name: "Magat")
+      payment = payment_for(cardholder_name: "Andrea Magat", payer: payer)
+
+      expect(payment.cardholder_differs_from_payer?).to be(false)
+    end
+
+    it "flags a different cardholder" do
+      payer = create(:person, first_name: "Andrea-Isabel", last_name: "Magat")
+      payment = payment_for(cardholder_name: "Lisa Wilson", payer: payer)
+
+      expect(payment.cardholder_differs_from_payer?).to be(true)
+    end
+
+    it "doesn't flag a blank cardholder" do
+      payment = payment_for(cardholder_name: nil)
+
+      expect(payment.cardholder_differs_from_payer?).to be(false)
+    end
+  end
 end
