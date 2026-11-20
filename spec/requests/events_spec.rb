@@ -362,7 +362,7 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Event revenue")
         expect(response.body).to include("Revenue by year")
-        expect(response.body).to include("Fees collected")
+        expect(response.body).to include("Reg fees", "Registration fees", "CE fees", "Fees collected", "Net incl. scholarships")
         expect(response.body).to include("TAC 261")
         expect(response.body).to include("Paid webinar")
         expect(response.body).to include("2026", "2025", "2024")
@@ -405,10 +405,27 @@ RSpec.describe "Events", type: :request do
       it "links each drillable revenue KPI to its filtered registrant list" do
         sign_in admin
         get revenue_events_path
-        expect(response.body).to include("payment_status=paid")   # Fees collected
+        expect(response.body).to include("payment_status=paid")   # Registration fees
         expect(response.body).to include("payment_status=unpaid") # Outstanding
         expect(response.body).to include("funder=external")       # Scholarships (grant-funded)
         expect(response.body).to include("funder=awbw")           # Org subsidy
+      end
+
+      it "headlines registration fees on their own, apart from CE and scholarships" do
+        registration = create(:event_registration, event: paid_training, status: "registered")
+        create(:allocation, source: create(:payment, amount_cents: 4_000, amount_cents_remaining: 4_000),
+                            allocatable: registration, amount: 4_000)
+        ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 1_500)
+        create(:allocation, source: create(:payment, amount_cents: 1_500, amount_cents_remaining: 1_500),
+                            allocatable: ce, amount: 1_500)
+
+        sign_in admin
+        get revenue_events_path(event_id: paid_training.id)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("a", exact_text: "Reg fees $40 (no scholarships or CE)", normalize_ws: true)
+        expect(page).to have_css("div", exact_text: "CE fees $15 (CE paid)", normalize_ws: true)
+        expect(page).to have_css("div", exact_text: "Fees collected $55 (reg + CE paid)", normalize_ws: true)
       end
 
       it "expands a subtotal to the registrants behind it with their amounts" do
@@ -3326,6 +3343,22 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Dashboard")
         expect(response.body).to include("Overview Org")
+      end
+
+      it "shows reg fees paid apart from CE fees paid beside the all-sources grand total" do
+        create(:allocation, source: create(:payment, amount_cents: 4_000, amount_cents_remaining: 4_000),
+                            allocatable: registration, amount: 4_000)
+        ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 1_500)
+        create(:allocation, source: create(:payment, amount_cents: 1_500, amount_cents_remaining: 1_500),
+                            allocatable: ce, amount: 1_500)
+
+        get dashboard_event_path(event)
+
+        page = Capybara.string(response.body)
+        expect(response.body).to include("all sources, incl. scholarships + CE")
+        expect(page).to have_css("span", exact_text: "Reg fees paid $40", normalize_ws: true)
+        expect(page).to have_css("span", exact_text: "CE fees paid $15", normalize_ws: true)
+        expect(page).to have_css("span", exact_text: "Fees collected $55", normalize_ws: true)
       end
 
       it "lists a transferred-out registrant beside the money left on this event" do
