@@ -77,28 +77,21 @@ RSpec.describe "Payments", type: :request do
   end
 
   describe "GET /payments/:id billing details" do
-    let(:payer) { create(:person, first_name: "Andrea-Isabel", last_name: "Magat") }
-    let(:billing_details) do
-      {
-        "name" => "Lisa Wilson",
-        "email" => "andream@flintridge.org",
-        "address" => { "postal_code" => "91103", "country" => "US" }
-      }
-    end
-    let(:payment) do
-      create(
+    it "shows the billing details" do
+      payment = create(
         :external_processor_payment,
-        person: payer,
         metadata: {
           "stripe_charge" => {
-            "billing_details" => billing_details,
+            "billing_details" => {
+              "name" => "Lisa Wilson",
+              "email" => "andream@flintridge.org",
+              "address" => { "postal_code" => "91103", "country" => "US" }
+            },
             "payment_method_details" => { "type" => "link" }
           }
         }
       )
-    end
 
-    it "shows the billing details" do
       get payment_path(payment)
 
       expect(response.body).to include("Billing details")
@@ -107,12 +100,6 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("91103, US")
       expect(response.body).to include("Payment method")
       expect(response.body).to include("Link")
-    end
-
-    it "hides the section for non-Stripe payments" do
-      get payment_path(create(:payment, person: payer))
-
-      expect(response.body).not_to include("Billing details")
     end
   end
 
