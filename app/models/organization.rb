@@ -301,6 +301,18 @@ class Organization < ApplicationRecord
     addresses.active.first&.state
   end
 
+  # The addresses the profile header shows everyone: every active one marked
+  # primary, else the first active one so an org with no primary still shows a location.
+  def profile_addresses
+    active = profile_active_addresses
+    active.select(&:primary?).presence || active.first(1)
+  end
+
+  # The rest of the active addresses, which only admins see on the profile.
+  def profile_other_addresses
+    profile_active_addresses - profile_addresses
+  end
+
   def city_state
     first_active = if addresses.loaded?
       addresses.find { |a| !a.inactive? }
@@ -481,6 +493,10 @@ class Organization < ApplicationRecord
   end
 
   private
+
+  def profile_active_addresses
+    addresses.reject(&:inactive?).sort_by(&:id)
+  end
 
   def tag_breakdown(tag_and_primary_pairs, sort)
     tag_and_primary_pairs.group_by(&:first)
