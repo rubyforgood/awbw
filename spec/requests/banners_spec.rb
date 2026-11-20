@@ -59,6 +59,15 @@ RSpec.describe "/banners", type: :request do
       get edit_banner_url(banner)
       expect(response).to be_successful
     end
+
+    it "uses a single datetime picker per schedule field" do
+      pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+      banner = Banner.create! valid_attributes.merge(started_at: pacific.local(2026, 11, 1, 9, 30))
+      get edit_banner_url(banner)
+      expect(response.body).to include('type="datetime-local"')
+      expect(response.body).to include('value="2026-11-01T09:30:00"')
+      expect(response.body).not_to include("banner[started_at(1i)]")
+    end
   end
 
   describe "POST /create" do
