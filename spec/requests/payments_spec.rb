@@ -98,7 +98,7 @@ RSpec.describe "Payments", type: :request do
       )
     end
 
-    it "shows the billing details and whether they differ from the payer" do
+    it "shows the billing details" do
       get payment_path(payment)
 
       expect(response.body).to include("Billing details")
@@ -107,21 +107,6 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("91103, US")
       expect(response.body).to include("Payment method")
       expect(response.body).to include("Link")
-      expect(response.body).to include("Differs from payer")
-    end
-
-    it "hides the differs pill when the names match" do
-      payment.update!(metadata: {
-        "stripe_charge" => {
-          "billing_details" => billing_details.merge("name" => "Andrea-Isabel Magat"),
-          "payment_method_details" => { "type" => "link" }
-        }
-      })
-
-      get payment_path(payment)
-
-      expect(response.body).to include("Billing details")
-      expect(response.body).not_to include("Differs from payer")
     end
 
     it "hides the section for non-Stripe payments" do

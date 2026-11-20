@@ -131,12 +131,7 @@
             <% billing_rows.each_with_index do |(label, value), index| %>
               <div class="bg-white px-4 py-3 <%= "sm:col-span-2" if billing_rows.size.odd? && index == billing_rows.size - 1 %>">
                 <dt class="<%= label_class %>"><%= label %></dt>
-                <dd class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-900">
-                  <%= value %>
-                  <% if label == "Billing name" && @payment.billing_name_differs_from_payer? %>
-                    <%= render "shared/badge", label: "Differs from payer", classes: "bg-amber-50 text-amber-800 border-amber-200" %>
-                  <% end %>
-                </dd>
+                <dd class="mt-1 text-sm text-gray-900"><%= value %></dd>
               </div>
             <% end %>
           </dl>

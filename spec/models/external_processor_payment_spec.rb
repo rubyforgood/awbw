@@ -83,39 +83,5 @@ RSpec.describe ExternalProcessorPayment do
       expect(payment.stripe_billing_details).to eq({})
       expect(payment.stripe_billing_name).to be_nil
     end
-
-    it "doesn't flag a matching name" do
-      payer = create(:person, first_name: "Andrea-Isabel", last_name: "Magat")
-      payment = payment_for(billing_details: { "name" => "Andrea-Isabel Magat" }, payer: payer)
-
-      expect(payment.billing_name_differs_from_payer?).to be(false)
-    end
-
-    it "ignores case, whitespace, name order, and middle initials" do
-      payer = create(:person, first_name: "Lisa", last_name: "Wilson")
-      payment = payment_for(billing_details: { "name" => "  wilson,   LISA d. " }, payer: payer)
-
-      expect(payment.billing_name_differs_from_payer?).to be(false)
-    end
-
-    it "treats a hyphenated first name as the same as its first part" do
-      payer = create(:person, first_name: "Andrea-Isabel", last_name: "Magat")
-      payment = payment_for(billing_details: { "name" => "Andrea Magat" }, payer: payer)
-
-      expect(payment.billing_name_differs_from_payer?).to be(false)
-    end
-
-    it "flags a different billing name" do
-      payer = create(:person, first_name: "Andrea-Isabel", last_name: "Magat")
-      payment = payment_for(billing_details: { "name" => "Lisa Wilson" }, payer: payer)
-
-      expect(payment.billing_name_differs_from_payer?).to be(true)
-    end
-
-    it "doesn't flag a blank billing name" do
-      payment = payment_for(billing_details: { "name" => nil })
-
-      expect(payment.billing_name_differs_from_payer?).to be(false)
-    end
   end
 end

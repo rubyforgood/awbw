@@ -48,28 +48,7 @@ class ExternalProcessorPayment < Payment
       pay_charge&.data&.dig("payment_method_type")
   end
 
-  def billing_name_differs_from_payer?
-    return false if stripe_billing_name.blank?
-
-    payer_name = payer.is_a?(Person) ? payer.full_name : payer&.name
-    return false if payer_name.blank?
-
-    name_key(stripe_billing_name) != name_key(payer_name)
-  end
-
   private
-
-  def name_key(name)
-    words = Person.normalize_name(name).to_s
-      .downcase
-      .gsub(/['’]/, "")
-      .gsub(/[[:punct:]]/, " ")
-      .split
-
-    words = words.reject { |word| word.length == 1 } if words.count { |word| word.length > 1 } >= 2
-
-    [ words.first, words.last ].compact.sort
-  end
 
   def clear_check_only_fields
     self.check_number = nil
