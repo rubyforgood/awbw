@@ -51,6 +51,28 @@ RSpec.describe "Comment feed chip preloading", type: :request do
     expect(queries_for(path, "comments_and_communications_results")).to eq(baseline)
   end
 
+  def add_communications(count)
+    count.times do
+      contact = create(:person)
+      create(:affiliation, person: contact, start_date: 1.year.ago)
+      training = create(:event, facilitator_training: true, start_date: 1.month.ago, end_date: 1.month.ago + 1.day)
+      create(:event_registration, registrant: contact, event: training, status: "attended")
+      membership = create(:membership, person: contact)
+      create(:membership_invoice, membership: membership, start_date: membership.start_date, end_date: membership.end_date)
+      create(:notification, person: contact, recipient_email: contact.email, email_subject: "Hello",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+    end
+  end
+
+  it "does not issue more queries on the everyone feed as more people's hover cards render" do
+    add_communications(1)
+    queries_for(comments_and_communications_path, "comments_and_communications_results")
+    baseline = queries_for(comments_and_communications_path, "comments_and_communications_results")
+
+    add_communications(3)
+    expect(queries_for(comments_and_communications_path, "comments_and_communications_results")).to eq(baseline)
+  end
+
   it "does not issue more queries on /comments as more chips render" do
     add_comments(1)
     queries_for(comments_path, "comments_results")

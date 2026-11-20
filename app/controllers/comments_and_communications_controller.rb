@@ -26,7 +26,9 @@ class CommentsAndCommunicationsController < ApplicationController
         shown = @entries.total_entries
         @count_display = count_display(shown, @total_count)
       end
-      FeedRecordPreloader.new(@groups ? @groups.flat_map(&:entries) : @entries).call
+      entries = @groups ? @groups.flat_map(&:entries) : @entries
+      FeedRecordPreloader.new(entries).call
+      @hover_card_people = HoverCardPeople.new(entries.map { |entry| helpers.feed_person_id(entry) }).by_id
       render :comments_and_communications_results
     else
       feed = PersonCommentAndCommunicationAggregator.new(@person)

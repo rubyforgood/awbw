@@ -205,6 +205,20 @@ class PersonDecorator < ApplicationDecorator
     "Inactive"
   end
 
+  # Facilitator rows running now, earliest first.
+  def active_facilitator_affiliations
+    affiliations.select { |affiliation| affiliation.facilitator? && affiliation.active? }
+                .sort_by { |affiliation| affiliation.start_date || Date.current }
+  end
+
+  # Their latest facilitator-training registrations, newest event first, whatever
+  # the attendance outcome. Reads preloaded registrations when a feed loaded them.
+  def recent_facilitator_training_registrations(limit: 3)
+    registrations = event_registrations.loaded? ? event_registrations : event_registrations.includes(:event)
+    registrations.select { |registration| registration.event&.facilitator_training? }
+                 .max_by(limit) { |registration| registration.event.start_date || Time.zone.at(0) }
+  end
+
   def facilitator_since_range
     date_range_display(facilitator_since_date, facilitation_end_date, ended_title: "No active facilitator affiliations")
   end
