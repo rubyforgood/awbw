@@ -15,7 +15,7 @@ RSpec.describe "/story_ideas", type: :request do
       title: "The Future of Festivals",
       rhino_body: "<p>An exploration of how technology transforms community events.</p>",
       author_credit_preference: "full_name",
-      sharing_choice: "public",
+      permission_given: true,
       windows_type_id: windows_type.id,
       story_idea_workshops_attributes: [ { workshop_id: workshop.id } ],
       organization_id: organization.id,
@@ -320,21 +320,14 @@ RSpec.describe "/story_ideas", type: :request do
         expect(response).to have_http_status(:unprocessable_content)
       end
 
-      it "shares only with the funder when the submitter picks that option" do
-        post story_ideas_url, params: { story_idea: valid_attributes.merge(sharing_choice: "funder_only") }
-        expect(StoryIdea.last).to have_attributes(funder_only: true, permission_given: false)
+      it "persists funder_only when the submitter checks the box" do
+        post story_ideas_url, params: { story_idea: valid_attributes.merge(funder_only: "1") }
+        expect(StoryIdea.last).to be_funder_only
       end
 
-      it "grants public sharing permission when the submitter picks that option" do
+      it "defaults funder_only to false when the box is left unchecked" do
         post story_ideas_url, params: { story_idea: valid_attributes }
-        expect(StoryIdea.last).to have_attributes(funder_only: false, permission_given: true)
-      end
-
-      it "rejects a submission with no sharing option picked" do
-        expect {
-          post story_ideas_url, params: { story_idea: valid_attributes.except(:sharing_choice) }
-        }.not_to change(StoryIdea, :count)
-        expect(response).to have_http_status(:unprocessable_content)
+        expect(StoryIdea.last).not_to be_funder_only
       end
 
       it "confirms to the idea's authors and an admin" do

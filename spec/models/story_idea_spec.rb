@@ -17,29 +17,6 @@ RSpec.describe StoryIdea, type: :model do
     expect(idea.errors[:organization_id]).to be_present
   end
 
-  describe "#sharing_choice" do
-    it "is blank until the submitter picks one" do
-      expect(StoryIdea.new.sharing_choice).to be_nil
-    end
-
-    it "grants public sharing permission and leaves funder-only off" do
-      idea = build(:story_idea, sharing_choice: "public")
-      expect(idea).to have_attributes(permission_given: true, funder_only: false)
-    end
-
-    it "shares only with the funder and withholds public sharing permission" do
-      idea = build(:story_idea, sharing_choice: "funder_only")
-      expect(idea).to have_attributes(permission_given: false, funder_only: true)
-      expect(idea.tap(&:validate).errors[:sharing_choice]).to be_empty
-    end
-
-    it "requires a choice" do
-      idea = build(:story_idea, permission_given: false, funder_only: false)
-      expect(idea).not_to be_valid
-      expect(idea.errors[:sharing_choice]).to be_present
-    end
-  end
-
   describe "a second author" do
     let(:first_author) { create(:person, first_name: "Ada", last_name: "Lovelace", display_name_preference: "full_name") }
     let(:second_author) { create(:person, first_name: "Grace", last_name: "Hopper", display_name_preference: "full_name") }

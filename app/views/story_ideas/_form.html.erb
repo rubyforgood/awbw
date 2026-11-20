@@ -19,7 +19,8 @@
       <%= f.hidden_field :title, value: f.object.title %>
       <%= f.hidden_field :rhino_body, value: f.object.rhino_body %>
       <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
-      <%= f.hidden_field :sharing_choice, value: f.object.sharing_choice %>
+      <%= f.hidden_field :permission_given, value: f.object.permission_given %>
+      <%= f.hidden_field :funder_only, value: f.object.funder_only %>
     <% end %>
     <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
 
@@ -275,30 +276,34 @@
       </div>
     <% end %>
 
-    <fieldset class="my-12">
-      <legend class="mb-3 font-medium text-gray-700">How can we share your story? <abbr title="required">*</abbr></legend>
-      <div class="space-y-3">
-        <label class="flex items-start gap-3 rounded-lg border border-gray-200 p-4">
-          <%= f.radio_button :sharing_choice, "public", disabled: promoted_to_story, class: "mt-1" %>
-          <span class="text-gray-800">
-            I give <%= app_organization_name %> permission to share the words and images I am submitting online,
-            via social media, and in external communications, including with my fellow Windows Facilitators.
-            If there is any identifying information in my images, such as names or faces, I certify that I have
-            received permission from the subject, or their caregiver, to display their likeness online.
-          </span>
-        </label>
-        <label class="flex items-start gap-3 rounded-lg border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> p-4">
-          <%= f.radio_button :sharing_choice, "funder_only", disabled: promoted_to_story, class: "mt-1" %>
-          <span>
-            <span class="block text-gray-800">Share my story only with the funder who provided my training scholarship and not on Story Share.</span>
-            <span class="mt-1 block text-sm text-gray-500">It won't appear on Story Share — only <%= app_organization_name %> staff and the funder will see it.</span>
-          </span>
-        </label>
+    <div class="my-12">
+      <%= f.input :permission_given,
+                  as: :boolean,
+                  required: true,
+                  disabled: promoted_to_story,
+                  label: "I give #{app_organization_name} permission to share the words and images I am submitting" +
+                    " online, via social media, and in external communications, including with my fellow " +
+                    "Windows Facilitators. If there is any identifying information in my images, " +
+                    "such as names or faces, I certify that I have received permission from the subject, " +
+                    "or their caregiver, to display their likeness online.",
+                  input_html: {
+                    class: ("readonly" if promoted_to_story)
+                  } %>
+    </div>
+
+    <% if allowed_to?(:manage?, StoryIdea) %>
+      <div class="admin-only my-12 rounded-lg bg-blue-100 p-4">
+        <%= f.input :funder_only,
+                    as: :boolean,
+                    disabled: promoted_to_story,
+                    label: "Share this story only with the funder who provided the training scholarship, not on Story Share.",
+                    hint: "Only #{app_organization_name} staff and the funder will see it. Carries over when the idea is promoted to a story.",
+                    input_html: {
+                      class: ("readonly" if promoted_to_story)
+                    } %>
       </div>
-      <% if f.object.errors[:sharing_choice].any? %>
-        <p class="mt-2 text-sm text-red-600">Pick how we can share your story.</p>
-      <% end %>
-    </fieldset>
+    <% end %>
+
 
     <% if f.object.persisted? %>
       <%# ---- Combined comments & communications — shown once the story idea
