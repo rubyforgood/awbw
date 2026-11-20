@@ -1,0 +1,9 @@
+name: "Connecting an organization on a registration records the registrant's affiliations"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-19
+pr_number: 3029
+summary: >-
+  Connecting an organization from a registration's edit page now does what the
+  linking page does: it records the registrant's affiliation there, as a
+  Facilitator for a facilitator training (live or on-demand).
