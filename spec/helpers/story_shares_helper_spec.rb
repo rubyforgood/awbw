@@ -12,4 +12,16 @@ RSpec.describe StorySharesHelper, type: :helper do
       expect(helper.audience_tag_chip_class(category)).to eq(StorySharesHelper::AUDIENCE_TAG_CHIP)
     end
   end
+
+  describe "#audience_pill_colors" do
+    it "uses rust orange for an age range category" do
+      category = build(:category, category_type: build(:category_type, name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE))
+      expect(helper.audience_pill_colors(category)).to eq(StorySharesHelper::AGE_RANGE_COLORS)
+    end
+
+    it "uses yellow for a story population category" do
+      category = build(:category, category_type: build(:category_type, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE))
+      expect(helper.audience_pill_colors(category)).to eq(StorySharesHelper::STORY_POPULATION_COLORS)
+    end
+  end
 end
