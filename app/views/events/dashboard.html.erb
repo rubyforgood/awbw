@@ -65,18 +65,18 @@
            color = DomainTheme.color_for(domain)
            "leading-tight rounded-lg border border-transparent px-3 py-2 transition-colors hover:bg-#{color}-50 hover:border-#{color}-300"
          end %>
-      <div class="rounded-xl border <%= DomainTheme.border_class_for(:event_dashboard, intensity: 200) %> <%= DomainTheme.bg_class_for(:event_dashboard, intensity: 50) %> p-4 shadow-sm">
-        <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:event_dashboard, intensity: 600) %> text-xs font-semibold tracking-wide uppercase">
-          <i class="fa-solid fa-coins"></i>
-          <span>Grand total</span>
-          <span class="font-normal tracking-normal text-gray-500 normal-case">— all sources, incl. scholarships + CE</span>
-        </div>
-        <div class="mt-2 flex flex-col gap-x-6 gap-y-3 lg:flex-row lg:items-start lg:justify-between">
+      <div class="rounded-xl border <%= DomainTheme.border_class_for(:event_dashboard, intensity: 200) %> <%= DomainTheme.bg_class_for(:event_dashboard, intensity: 50) %> flex flex-col gap-x-6 gap-y-3 p-4 shadow-sm lg:flex-row lg:items-start lg:justify-between">
+        <div class="lg:shrink-0">
+          <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:event_dashboard, intensity: 600) %> text-xs font-semibold tracking-wide uppercase">
+            <i class="fa-solid fa-coins"></i>
+            <span>Grand total</span>
+            <span class="font-normal tracking-normal text-gray-500 normal-case">— all sources, incl. scholarships + CE</span>
+          </div>
           <%# The equation stays on one line at every width: below lg the per-addend
               labels collapse so it reads as numbers only ($grand = $reg + $sch + $ce),
               with a compact label key beneath; the full labels return inline at lg+.
               Each addend links to where its money is managed. %>
-          <div class="lg:shrink-0 lg:pt-2">
+          <div class="mt-2 lg:pt-2">
             <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
               <%= link_to dollars_from_cents(@dashboard.grand_total_cents), revenue_events_path(return_to: "dashboard", event_id: @event.id),
                     class: "text-3xl sm:text-4xl font-bold #{DomainTheme.text_class_for(:event_dashboard, intensity: 700)} tabular-nums #{addend_class.call(:event_dashboard)}",
@@ -117,31 +117,31 @@
             </div>
             <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees + bulk payments</p>
           </div>
+        </div>
 
-          <%# Cash view of the same money, excluding scholarships: registration paid
-              + CE paid = collected; collected + due = monies made. Kept neutral grey so the equation stays the focus. %>
-          <div class="flex flex-col gap-1 text-xs text-gray-500 lg:shrink-0 lg:border-l lg:border-gray-200 lg:pl-6">
-            <span class="flex items-center justify-between gap-3" title="Registration payments only — no scholarships or CE">
-              <span>Registration paid</span>
-              <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.received_cents) %></span>
-            </span>
-            <span class="flex items-center justify-between gap-3">
-              <span>CE paid</span>
-              <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_paid_cents) %></span>
-            </span>
-            <span class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1">
-              <span>Collected</span>
-              <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.collected_cents) %></span>
-            </span>
-            <span class="flex items-center justify-between gap-3">
-              <span>Due</span>
-              <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.due_cents) %></span>
-            </span>
-            <span class="mt-1 flex items-center justify-between gap-3 border-t border-gray-200 pt-1">
-              <span class="font-bold text-gray-700">Monies</span>
-              <span class="font-bold text-gray-700 tabular-nums"><%= dollars_from_cents(@dashboard.monies_made_cents) %></span>
-            </span>
-          </div>
+        <%# Cash view of the same money, excluding scholarships: registration paid
+            + CE paid = collected; collected + due = monies made. Kept neutral grey so the equation stays the focus. %>
+        <div class="flex flex-col gap-1 text-xs text-gray-500 lg:shrink-0 lg:border-l lg:border-gray-200 lg:pl-6">
+          <span class="flex items-center justify-between gap-3" title="Registration payments only — no scholarships or CE">
+            <span>Registration paid</span>
+            <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.received_cents) %></span>
+          </span>
+          <span class="flex items-center justify-between gap-3">
+            <span>CE paid</span>
+            <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_paid_cents) %></span>
+          </span>
+          <span class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1">
+            <span>Collected</span>
+            <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.collected_cents) %></span>
+          </span>
+          <span class="flex items-center justify-between gap-3">
+            <span>Due</span>
+            <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.due_cents) %></span>
+          </span>
+          <span class="mt-1 flex items-center justify-between gap-3 border-t border-gray-200 pt-1">
+            <span class="font-bold text-gray-700">Monies</span>
+            <span class="font-bold text-gray-700 tabular-nums"><%= dollars_from_cents(@dashboard.monies_made_cents) %></span>
+          </span>
         </div>
       </div>
 
