@@ -69,6 +69,7 @@
         <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:event_dashboard, intensity: 600) %> text-xs font-semibold tracking-wide uppercase">
           <i class="fa-solid fa-coins"></i>
           <span>Grand total</span>
+          <span class="font-normal tracking-normal text-gray-500 normal-case">— all sources, incl. scholarships + CE</span>
         </div>
         <div class="mt-2 flex flex-col gap-x-6 gap-y-3 lg:flex-row lg:items-start lg:justify-between">
           <%# The equation stays on one line at every width: below lg the per-addend
@@ -117,14 +118,16 @@
             <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees + bulk payments</p>
           </div>
 
-          <%# Cash view of the same money: what's collected (registration paid +
-              cont ed paid), what's still owed, and the fee revenue earned
-              (registration + cont ed, excluding scholarships). Collected + due =
-              monies made. Kept neutral grey so the equation stays the focus. %>
+          <%# Cash view of the same money, excluding scholarships: registration paid
+              + CE paid + due = monies made. Kept neutral grey so the equation stays the focus. %>
           <div class="flex flex-col gap-1 text-xs text-gray-500 lg:shrink-0 lg:border-l lg:border-gray-200 lg:pl-6">
+            <span class="flex items-center justify-between gap-3" title="Registration payments only — no scholarships or CE">
+              <span class="font-semibold text-gray-700">Registration paid</span>
+              <span class="font-semibold text-gray-700 tabular-nums"><%= dollars_from_cents(@dashboard.received_cents) %></span>
+            </span>
             <span class="flex items-center justify-between gap-3">
-              <span>Collected</span>
-              <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.collected_cents) %></span>
+              <span>CE paid</span>
+              <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_paid_cents) %></span>
             </span>
             <span class="flex items-center justify-between gap-3">
               <span>Due</span>
