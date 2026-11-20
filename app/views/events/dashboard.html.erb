@@ -122,8 +122,8 @@
               + CE paid + due = monies made. Kept neutral grey so the equation stays the focus. %>
           <div class="flex flex-col gap-1 text-xs text-gray-500 lg:shrink-0 lg:border-l lg:border-gray-200 lg:pl-6">
             <span class="flex items-center justify-between gap-3" title="Registration payments only — no scholarships or CE">
-              <span class="font-semibold text-gray-700">Registration paid</span>
-              <span class="font-semibold text-gray-700 tabular-nums"><%= dollars_from_cents(@dashboard.received_cents) %></span>
+              <span>Registration paid</span>
+              <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.received_cents) %></span>
             </span>
             <span class="flex items-center justify-between gap-3">
               <span>CE paid</span>
