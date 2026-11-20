@@ -362,7 +362,7 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Event revenue")
         expect(response.body).to include("Revenue by year")
-        expect(response.body).to include("Registration fees", "Reg + CE collected", "Net incl. scholarships")
+        expect(response.body).to include("Reg fees", "Registration fees", "Reg + CE collected", "Net incl. scholarships")
         expect(response.body).to include("TAC 261")
         expect(response.body).to include("Paid webinar")
         expect(response.body).to include("2026", "2025", "2024")
@@ -423,7 +423,7 @@ RSpec.describe "Events", type: :request do
         get revenue_events_path(event_id: paid_training.id)
 
         page = Capybara.string(response.body)
-        expect(page).to have_css("a", exact_text: "Registration fees $40 (paid, no scholarships or CE)", normalize_ws: true)
+        expect(page).to have_css("a", exact_text: "Reg fees $40 (no scholarships or CE)", normalize_ws: true)
         expect(page).to have_css("div", exact_text: "Reg + CE collected $55 (reg + CE paid)", normalize_ws: true)
       end
 

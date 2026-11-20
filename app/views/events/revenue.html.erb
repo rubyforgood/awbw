@@ -45,8 +45,8 @@
           <% end %>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-[repeat(5,minmax(0,1fr))_minmax(0,1.5fr)_minmax(0,1.2fr)] gap-3">
-          <%= render "revenue_kpi", label: "Registration fees", value: dollars_from_cents(featured.registration_payments_cents),
-                value_class: "text-blue-700", card_class: "border-blue-300 bg-blue-100", note: "paid, no scholarships or CE", cents: featured.registration_payments_cents,
+          <%= render "revenue_kpi", label: "Reg fees", value: dollars_from_cents(featured.registration_payments_cents),
+                value_class: "text-blue-700", card_class: "border-blue-300 bg-blue-100", note: "no scholarships or CE", cents: featured.registration_payments_cents,
                 prior_cents: prior&.registration_payments_cents, prior_year: prior&.year,
                 href: revenue_drilldown_path(payment_status: "paid", event_year: featured.year) %>
           <%= render "revenue_kpi", label: "Reg + CE collected", value: dollars_from_cents(featured.fees_cents),
