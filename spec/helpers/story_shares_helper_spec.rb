@@ -24,4 +24,16 @@ RSpec.describe StorySharesHelper, type: :helper do
       expect(helper.audience_pill_colors(category)).to eq(StorySharesHelper::STORY_POPULATION_COLORS)
     end
   end
+
+  describe "#audience_tagging_label_colors" do
+    it "gives an age range category rust orange with white text" do
+      category = build(:category, category_type: build(:category_type, name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE))
+      expect(helper.audience_tagging_label_colors(category)).to include(bg_color: "bg-brand-rust", text_color: "text-white")
+    end
+
+    it "gives a story population category yellow" do
+      category = build(:category, category_type: build(:category_type, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE))
+      expect(helper.audience_tagging_label_colors(category)).to include(bg_color: "bg-brand-amber-100", text_color: "text-brand-amber-800")
+    end
+  end
 end

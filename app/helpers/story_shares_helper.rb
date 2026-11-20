@@ -37,6 +37,18 @@ module StorySharesHelper
     age_range_category?(category) ? AGE_RANGE_COLORS : STORY_POPULATION_COLORS
   end
 
+  # Color locals for categories/_tagging_label so a story's audience chip on the
+  # Stories index matches its Story Share colors.
+  def audience_tagging_label_colors(category)
+    if age_range_category?(category)
+      { bg_color: "bg-brand-rust", bg_hover_color: "bg-brand-rust/85", text_color: "text-white",
+        border_class: "border-brand-rust", border_hover_class: "border-brand-rust" }
+    else
+      { bg_color: "bg-brand-amber-100", bg_hover_color: "bg-brand-amber-200", text_color: "text-brand-amber-800",
+        border_class: "border-brand-amber-200", border_hover_class: "border-brand-amber-300" }
+    end
+  end
+
   def age_range_category?(category)
     category.category_type&.name == AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE
   end
