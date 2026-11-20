@@ -76,6 +76,33 @@ RSpec.describe "Payments", type: :request do
     end
   end
 
+  describe "GET /payments/:id billing details" do
+    it "shows the billing details" do
+      payment = create(
+        :external_processor_payment,
+        metadata: {
+          "stripe_charge" => {
+            "billing_details" => {
+              "name" => "Lisa Wilson",
+              "email" => "andream@flintridge.org",
+              "address" => { "postal_code" => "91103", "country" => "US" }
+            },
+            "payment_method_details" => { "type" => "link" }
+          }
+        }
+      )
+
+      get payment_path(payment)
+
+      expect(response.body).to include("Billing details")
+      expect(response.body).to include("Lisa Wilson")
+      expect(response.body).to include("andream@flintridge.org")
+      expect(response.body).to include("91103, US")
+      expect(response.body).to include("Payment method")
+      expect(response.body).to include("Link")
+    end
+  end
+
   describe "POST /payments" do
     context "when allocating a manual payment to a membership invoice with an open checkout" do
       let(:invoice) { create(:membership_invoice, cost_cents: 5_000) }
