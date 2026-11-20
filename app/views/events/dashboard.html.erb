@@ -119,7 +119,7 @@
           </div>
 
           <%# Cash view of the same money, excluding scholarships: registration paid
-              + CE paid + due = monies made. Kept neutral grey so the equation stays the focus. %>
+              + CE paid = collected; collected + due = monies made. Kept neutral grey so the equation stays the focus. %>
           <div class="flex flex-col gap-1 text-xs text-gray-500 lg:shrink-0 lg:border-l lg:border-gray-200 lg:pl-6">
             <span class="flex items-center justify-between gap-3" title="Registration payments only — no scholarships or CE">
               <span>Registration paid</span>
@@ -128,6 +128,10 @@
             <span class="flex items-center justify-between gap-3">
               <span>CE paid</span>
               <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_paid_cents) %></span>
+            </span>
+            <span class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1">
+              <span>Collected</span>
+              <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.collected_cents) %></span>
             </span>
             <span class="flex items-center justify-between gap-3">
               <span>Due</span>
