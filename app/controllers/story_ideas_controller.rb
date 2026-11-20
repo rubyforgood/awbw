@@ -120,7 +120,7 @@ class StoryIdeasController < ApplicationController
   def story_idea_params
     params.require(:story_idea).permit(
       :title, :rhino_body, :youtube_url,
-      :permission_given, :funder_only, :author_credit_preference,
+      :sharing_choice, :author_credit_preference,
       :co_author_id, :co_author_credit_preference, :spotlighted_facilitator_id,
       :windows_type_id, :organization_id,
       :created_by_id, :updated_by_id,

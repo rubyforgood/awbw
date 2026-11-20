@@ -21,6 +21,7 @@ FactoryBot.define do
 
     trait :funder_only do
       funder_only { true }
+      permission_given { false }
     end
 
     trait :with_story do

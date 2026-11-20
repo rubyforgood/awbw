@@ -1084,7 +1084,7 @@ RSpec.describe "/story_share", type: :request do
           rhino_body: "<p>My workshop story</p>",
           organization_id: organization.id,
           windows_type_id: windows_type.id,
-          permission_given: true,
+          sharing_choice: "public",
           author_credit_preference: "anonymous"
         }
       }

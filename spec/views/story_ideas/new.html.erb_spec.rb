@@ -69,4 +69,17 @@ RSpec.describe "story_ideas/new", type: :view do
       include_examples "hidden organization field"
     end
   end
+
+  describe "sharing choice" do
+    before { allow(view).to receive(:current_user).and_return(user) }
+
+    it "offers public sharing and funder-only as one pick-one radio group, neither preselected" do
+      render
+
+      assert_select "input[type=radio][name=?]", "story_idea[sharing_choice]", count: 2
+      assert_select "input[type=radio][name=?][checked]", "story_idea[sharing_choice]", count: 0
+      assert_select "input[type=checkbox][name=?]", "story_idea[permission_given]", count: 0
+      assert_select "input[type=checkbox][name=?]", "story_idea[funder_only]", count: 0
+    end
+  end
 end

@@ -49,6 +49,8 @@ class StoryIdea < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
 
+  SHARING_CHOICES = %w[public funder_only].freeze
+
   # The column stays optional so admins can file an idea without one; the form
   # sets this flag to require organization from everyone else.
   attr_accessor :organization_required
@@ -58,7 +60,7 @@ class StoryIdea < ApplicationRecord
   validates :updated_by_id, presence: true
   validates :organization_id, presence: true, if: :organization_required
   validates :windows_type_id, presence: true
-  validates :permission_given, presence: true
+  validates :sharing_choice, inclusion: { in: SHARING_CHOICES, message: "can't be blank" }
   validates :rhino_body, presence: true
   validates :youtube_url, length: { maximum: 255 }
   normalizes :co_author_credit_preference, with: ->(value) { value.presence }
@@ -90,6 +92,17 @@ class StoryIdea < ApplicationRecord
 
   def name
     "StoryIdea ##{id}"
+  end
+
+  # Public sharing and funder-only are mutually exclusive, so the form asks for one pick across both columns.
+  def sharing_choice
+    return "funder_only" if funder_only?
+    "public" if permission_given?
+  end
+
+  def sharing_choice=(choice)
+    self.funder_only = choice == "funder_only"
+    self.permission_given = choice == "public"
   end
 
   def communications_email
