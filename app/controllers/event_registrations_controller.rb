@@ -95,9 +95,11 @@ class EventRegistrationsController < ApplicationController
   def update
     authorize! @event_registration
     warn_if_locked_fields_submitted
+    linked_organization_ids = @event_registration.organization_ids
     @event_registration.assign_attributes(event_registration_update_params)
 
     if @event_registration.save
+      link_notices = link_connected_organizations(@event_registration.organization_ids - linked_organization_ids)
       # Marking transferred out — from the edit-form save OR the inline roster/
       # onboarding status chip (Turbo) — with no destination yet sends the admin
       # to the transfer screen to create/link the incoming registration. Handled
@@ -108,7 +110,7 @@ class EventRegistrationsController < ApplicationController
         return redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to]), status: :see_other
       end
 
-      notice = "Registration was successfully updated."
+      notice = [ "Registration was successfully updated.", *link_notices ].join(" ")
       respond_to do |format|
         format.turbo_stream
         format.html {
@@ -823,6 +825,13 @@ class EventRegistrationsController < ApplicationController
     return [] unless entry
 
     OrganizationServices::ProfileDiff.for_entry(organization: organization, entry: entry)
+  end
+
+  # Orgs connected from the edit form get the same linking core as the linking editor.
+  def link_connected_organizations(organization_ids)
+    Organization.where(id: organization_ids).map do |organization|
+      link_and_report(organization, verb: "linked", record_fills: true)
+    end
   end
 
   # Link the org to the registration, write the answers of the submission that

@@ -1010,6 +1010,43 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(existing_registration.reload.organizations).to be_empty
       end
 
+      context "when connecting an organization on a facilitator training" do
+        let(:event) { create(:event, title: "On-demand training", facilitator_training: true, on_demand: true) }
+        let(:organization) { create(:organization) }
+
+        it "makes the registrant a facilitator there, like the linking editor" do
+          patch event_registration_path(existing_registration),
+                params: { event_registration: { organization_ids: [ "", organization.id.to_s ] } }
+
+          expect(existing_registration.reload.organizations).to contain_exactly(organization)
+          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+            .to contain_exactly("Facilitator")
+        end
+
+        it "applies the submitted position to the connected organization" do
+          reg_form = create(:form)
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
+          field = create(:form_field, form: reg_form, field_identifier: FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Counselor")
+
+          patch event_registration_path(existing_registration),
+                params: { event_registration: { organization_ids: [ "", organization.id.to_s ] } }
+
+          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+            .to contain_exactly("Counselor", "Facilitator")
+        end
+
+        it "leaves orgs that were already connected alone" do
+          existing_registration.organizations << organization
+
+          expect {
+            patch event_registration_path(existing_registration),
+                  params: { event_registration: { organization_ids: [ "", organization.id.to_s ], expected_payment_method: "Check" } }
+          }.not_to change { regular_user.person.affiliations.count }
+        end
+      end
+
       it "returns to the attendance report after saving when opened from it" do
         patch event_registration_path(existing_registration, return_to: "attendance"),
               params: { event_registration: { expected_payment_method: "Check" } }

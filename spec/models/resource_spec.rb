@@ -70,8 +70,9 @@ RSpec.describe Resource do
   end
 
   describe ".sorted_by" do
-    let!(:older) { create(:resource, title: "Bravo", kind: "Toolkit", created_at: 2.days.ago, updated_at: 1.hour.ago) }
-    let!(:newer) { create(:resource, title: "Alpha", kind: "Handout", created_at: 1.day.ago, updated_at: 2.hours.ago) }
+    # update_columns after create: the factory's sector join touches updated_at back to now.
+    let!(:older) { create(:resource, title: "Bravo", kind: "Toolkit", created_at: 2.days.ago).tap { |r| r.update_columns(updated_at: 1.hour.ago) } }
+    let!(:newer) { create(:resource, title: "Alpha", kind: "Handout", created_at: 1.day.ago).tap { |r| r.update_columns(updated_at: 2.hours.ago) } }
 
     it "sorts by created, modified, title, and kind" do
       expect(Resource.sorted_by("created")).to eq([ newer, older ])
