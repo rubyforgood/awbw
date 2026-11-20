@@ -87,6 +87,7 @@ class Person < ApplicationRecord
 
   before_validation :normalize_names
   before_destroy :destroy_memberships, prepend: true
+  before_destroy :prevent_external_payer_destroy, prepend: true
 
   # Unicode-aware, plus the zero-width characters [[:space:]] skips; pasted addresses carry both.
   EMAIL_WHITESPACE = /[[:space:]\u200B-\u200D\u2060\uFEFF]/
@@ -112,6 +113,7 @@ class Person < ApplicationRecord
   validates :youtube_url, length: { maximum: 255 }
   validates :twitter_url, length: { maximum: 255 }
   validate :unique_name_and_email_combination
+  validate :external_payer_name_is_fixed, on: :update
 
   # Autocorrect and pasted text swap in look-alike dashes; storing a plain hyphen keeps "Smith-Jones" one person.
   DASH_VARIANTS = /[\u2010-\u2015\u2212]/
@@ -707,6 +709,17 @@ class Person < ApplicationRecord
       .first
   end
 
+  def self.external_payer
+    find_by(external_payer: true) || begin
+      payer = find_by(first_name: "External", last_name: "Payer") ||
+              new(first_name: "External", last_name: "Payer")
+      payer.update!(external_payer: true)
+      payer
+    rescue ActiveRecord::RecordNotUnique
+      find_by!(external_payer: true)
+    end
+  end
+
   remote_searchable_by :first_name, :last_name, :email, :legal_first_name, :email_2
 
   def remote_search_label
@@ -773,6 +786,20 @@ class Person < ApplicationRecord
       membership.skip_deletion_guard = true
       membership.destroy!
     end
+  end
+
+  def external_payer_name_is_fixed
+    return unless external_payer?
+    return unless will_save_change_to_first_name? || will_save_change_to_last_name?
+
+    errors.add(:base, "The External Payer record can't be renamed — unmatched payments fall back to it.")
+  end
+
+  def prevent_external_payer_destroy
+    return unless external_payer?
+
+    errors.add(:base, "The External Payer record can't be deleted — unmatched payments fall back to it.")
+    throw :abort
   end
 
   def unique_name_and_email_combination
