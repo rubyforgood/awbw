@@ -60,7 +60,7 @@
                   <%= render "sectors/tagging_label", sector: sector, is_primary: sector == story.primary_sector, compact: true %>
                 <% end %>
                 <% if (category = story.lead_tag_audience_category) %>
-                  <%= render "categories/tagging_label", category: category, is_primary: category == story.primary_category, name_only: true, compact: true %>
+                  <%= render "categories/tagging_label", category: category, is_primary: category == story.primary_category, name_only: true, compact: true, **audience_tagging_label_colors(category) %>
                 <% end %>
                 <% if more_tag_links.any? %>
                   <div class="group relative">
