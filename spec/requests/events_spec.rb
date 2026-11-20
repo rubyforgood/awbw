@@ -362,7 +362,7 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Event revenue")
         expect(response.body).to include("Revenue by year")
-        expect(response.body).to include("Reg fees", "Registration fees", "Reg + CE collected", "Net incl. scholarships")
+        expect(response.body).to include("Reg fees", "Registration fees", "CE fees", "Collected", "Net incl. scholarships")
         expect(response.body).to include("TAC 261")
         expect(response.body).to include("Paid webinar")
         expect(response.body).to include("2026", "2025", "2024")
@@ -424,7 +424,8 @@ RSpec.describe "Events", type: :request do
 
         page = Capybara.string(response.body)
         expect(page).to have_css("a", exact_text: "Reg fees $40 (no scholarships or CE)", normalize_ws: true)
-        expect(page).to have_css("div", exact_text: "Reg + CE collected $55 (reg + CE paid)", normalize_ws: true)
+        expect(page).to have_css("div", exact_text: "CE fees $15 (CE paid)", normalize_ws: true)
+        expect(page).to have_css("div", exact_text: "Collected $55 (reg + CE paid)", normalize_ws: true)
       end
 
       it "expands a subtotal to the registrants behind it with their amounts" do
@@ -3357,6 +3358,7 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("all sources, incl. scholarships + CE")
         expect(page).to have_css("span", exact_text: "Registration paid $40", normalize_ws: true)
         expect(page).to have_css("span", exact_text: "CE paid $15", normalize_ws: true)
+        expect(page).to have_css("span", exact_text: "Collected $55", normalize_ws: true)
       end
 
       it "lists a transferred-out registrant beside the money left on this event" do
