@@ -291,16 +291,19 @@
                   } %>
     </div>
 
-    <div class="my-12 rounded-lg border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> p-4">
-      <%= f.input :funder_only,
-                  as: :boolean,
-                  disabled: promoted_to_story,
-                  label: "Share my story only with the funder who provided my training scholarship and not on Story Share.",
-                  hint: "Check this if your story is a training-scholarship deliverable. It won't appear on Story Share — only #{app_organization_name} staff and the funder will see it.",
-                  input_html: {
-                    class: ("readonly" if promoted_to_story)
-                  } %>
-    </div>
+    <% if allowed_to?(:manage?, StoryIdea) %>
+      <div class="admin-only my-12 rounded-lg bg-blue-100 p-4">
+        <%= f.input :funder_only,
+                    as: :boolean,
+                    disabled: promoted_to_story,
+                    label: "Share this story only with the funder who provided the training scholarship, not on Story Share.",
+                    hint: "Only #{app_organization_name} staff and the funder will see it. Carries over when the idea is promoted to a story.",
+                    input_html: {
+                      class: ("readonly" if promoted_to_story)
+                    } %>
+      </div>
+    <% end %>
+
 
     <% if f.object.persisted? %>
       <%# ---- Combined comments & communications — shown once the story idea

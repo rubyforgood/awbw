@@ -1,0 +1,10 @@
+name: "Staff mark story ideas funder-only"
+area: stories
+display_status: admin_facing
+released_on: 2026-11-19
+summary: >-
+  The funder-only option no longer appears on the story submission form, so
+  submitters only give sharing permission. Admins mark an idea funder-only from
+  the story idea form, and it carries over when the idea is promoted to a story.
+action_path: "/story_ideas"
+pr_number: 3031

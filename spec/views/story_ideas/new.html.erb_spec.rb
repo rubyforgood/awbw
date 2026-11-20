@@ -69,4 +69,23 @@ RSpec.describe "story_ideas/new", type: :view do
       include_examples "hidden organization field"
     end
   end
+
+  describe "funder-only option" do
+    it "is hidden from submitters" do
+      allow(view).to receive(:current_user).and_return(user)
+      allow(view).to receive(:allowed_to?).and_return(false)
+      render
+
+      assert_select "input[type=checkbox][name=?]", "story_idea[permission_given]"
+      assert_select "input[type=checkbox][name=?]", "story_idea[funder_only]", count: 0
+    end
+
+    it "is offered to admins" do
+      allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
+      render
+
+      assert_select ".admin-only input[type=checkbox][name=?]", "story_idea[funder_only]"
+    end
+  end
 end
