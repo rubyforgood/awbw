@@ -1,0 +1,10 @@
+name: "Story sharing is one choice: public or funder-only"
+area: stories
+display_status: admin_facing
+released_on: 2026-11-19
+summary: >-
+  When submitting a story idea, facilitators now pick one sharing option: give
+  permission to share it publicly, or share it only with their scholarship funder.
+  They can no longer select both.
+action_path: "/story_ideas/new"
+pr_number: 3031
