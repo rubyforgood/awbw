@@ -60,6 +60,14 @@ RSpec.describe "/users", type: :request do
         expect(response.body).to include("direction=desc&amp;search=sort%40example&amp;sort=email")
       end
 
+      it "marks the active sort on the small-screen sort strip" do
+        get users_url(sort: "email", direction: "asc"), headers: { "Turbo-Frame" => "users_results" }
+
+        active = Capybara.string(response.body).find("a[aria-current='true']")
+        expect(active).to have_text("Email")
+        expect(active).to have_css("i.fa-arrow-up")
+      end
+
       it "sorts by person alongside a search" do
         get users_url(sort: "person", search: "example"), headers: { "Turbo-Frame" => "users_results" }
 
