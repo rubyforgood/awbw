@@ -53,7 +53,7 @@
                 value_class: DomainTheme.text_class_for(:continuing_education, intensity: 700),
                 card_class: "#{DomainTheme.border_class_for(:continuing_education)} #{DomainTheme.bg_class_for(:continuing_education)}",
                 note: "CE paid", cents: featured.ce_paid_cents, prior_cents: prior&.ce_paid_cents, prior_year: prior&.year %>
-          <%= render "revenue_kpi", label: "Collected", value: dollars_from_cents(featured.fees_cents),
+          <%= render "revenue_kpi", label: "Fees collected", value: dollars_from_cents(featured.fees_cents),
                 value_class: "text-gray-700", card_class: "border-gray-300 bg-white", note: "reg + CE paid", cents: featured.fees_cents,
                 prior_cents: prior&.fees_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Scholarships", value: dollars_from_cents(featured.funded_scholarship_cents),
@@ -103,7 +103,7 @@
           <div>Event</div>
           <div class="text-right">Registration fees</div>
           <div class="text-right">CE fees</div>
-          <div class="text-right">Collected</div>
+          <div class="text-right">Fees collected</div>
           <div class="text-right">Scholarships</div>
           <div class="text-right">Org subsidy</div>
           <div class="text-right">Outstanding</div>
@@ -198,7 +198,7 @@
         <p class="mt-3 text-xs text-gray-500">
           <span class="font-medium">Registration fees</span> = registration payments only — no scholarships or CE.
           <span class="font-medium">CE fees</span> = CE paid.
-          <span class="font-medium">Collected</span> = registration + CE paid.
+          <span class="font-medium">Fees collected</span> = registration + CE paid.
           <span class="font-medium">Scholarships</span> = grant-funded only.
           <span class="font-medium">Org subsidy</span> = unfunded scholarships + discounts (paid from the org's own funds).
           <span class="font-medium">Outstanding</span> = registration + CE still owed.
