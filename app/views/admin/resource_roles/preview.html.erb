@@ -1,0 +1,102 @@
+<% content_for(:page_title, "#{@slot[:label]} preview") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% content_for :head do %>
+  <style>
+    @media print {
+      @page { size: landscape; margin: 0; }
+      .printed-logo { display: none !important; }
+      .certificate, .certificate img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+<% end %>
+<% frame_file = @frame&.signature_file %>
+<% frame_file = nil unless frame_file&.image? %>
+<% signature_file = @signature&.signature_file %>
+<% signature_role = @slot[:signature_role] %>
+
+<div class="mx-auto max-w-5xl space-y-4 px-4 pt-4 sm:px-8 print:hidden">
+  <div class="flex flex-wrap items-center gap-2">
+    <%= link_to admin_resource_roles_path(anchor: @slot[:role]), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Resource roles
+    <% end %>
+    <button onclick="window.print();"
+            class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
+      <i class="fa-solid fa-file-arrow-down"></i> Download PDF
+    </button>
+  </div>
+
+  <h1 class="text-2xl font-semibold text-gray-900"><%= @slot[:label] %></h1>
+
+  <div class="rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm">
+    <p class="mb-3 text-sm text-gray-600">Pick a resource to try it on the sample below. Nothing changes until you save.</p>
+    <%= form_with url: admin_resource_role_preview_path(@slot[:role]), method: :get,
+          class: "grid gap-4 #{"sm:grid-cols-2" if signature_role}" do %>
+      <div>
+        <label class="mb-1 block text-xs font-semibold text-gray-700">Background</label>
+        <select name="frame_id"
+                data-controller="remote-select"
+                data-remote-select-model-value="resource"
+                data-remote-select-submit-on-change-value="true"
+                class="w-full rounded border-gray-300 bg-white px-2 py-1 text-sm shadow-sm">
+          <option value="">Built-in design</option>
+          <% if @frame %>
+            <option value="<%= @frame.id %>" selected><%= @frame.title %></option>
+          <% end %>
+        </select>
+        <% if @frame && frame_file.nil? %>
+          <p class="mt-1 text-xs text-amber-700">“<%= @frame.title %>” has no image attached — showing the built-in design.</p>
+        <% elsif @frame.nil? %>
+          <p class="mt-1 text-xs text-gray-500">Using the built-in design.</p>
+        <% end %>
+      </div>
+
+      <% if signature_role %>
+        <div>
+          <label class="mb-1 block text-xs font-semibold text-gray-700">Signature</label>
+          <select name="signature_id"
+                  data-controller="remote-select"
+                  data-remote-select-model-value="resource"
+                  data-remote-select-submit-on-change-value="true"
+                  class="w-full rounded border-gray-300 bg-white px-2 py-1 text-sm shadow-sm">
+            <option value="">No signature</option>
+            <% if @signature %>
+              <option value="<%= @signature.id %>" selected><%= @signature.title %></option>
+            <% end %>
+          </select>
+          <% if @signature.nil? %>
+            <p class="mt-1 text-xs text-amber-700">No signature connected — the certificate prints without one.</p>
+          <% elsif !signature_file&.variable? %>
+            <p class="mt-1 text-xs text-amber-700">“<%= @signature.title %>” has no image the certificate can show — attach a PNG or JPG.</p>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+    <% unless signature_role %>
+      <p class="mt-3 text-xs text-gray-500">This certificate has no signature.</p>
+    <% end %>
+
+    <% if @unsaved %>
+      <div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+        <p class="text-sm text-amber-800">Previewing unsaved choices.</p>
+        <%= link_to "Discard", admin_resource_role_preview_path(@slot[:role]),
+              class: "ml-auto text-sm font-medium text-gray-700 underline hover:text-gray-900" %>
+        <%= form_with url: admin_resource_role_preview_path(@slot[:role]), method: :patch do %>
+          <%= hidden_field_tag :frame_id, @frame&.id %>
+          <% if signature_role %>
+            <%= hidden_field_tag :signature_id, @signature&.id %>
+          <% end %>
+          <%= submit_tag "Save", class: button_classes(:primary, size: :sm) %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<% full_bleed = frame_file.present? || @slot[:role].in?(%w[training_frame on_demand_frame]) %>
+<div class="px-4 py-6 sm:px-8 <%= full_bleed ? "print:p-0" : "print:p-[0.4in]" %>">
+  <%= render @slot[:preview_partial],
+        event: @preview_event, recipient: @preview_recipient,
+        frame_file:, signature_file:,
+        license_label: "LMFT 00000", hours_label: 6,
+        facilitator_names: [ "Sample Facilitator" ], issued_on: Date.current %>
+</div>
