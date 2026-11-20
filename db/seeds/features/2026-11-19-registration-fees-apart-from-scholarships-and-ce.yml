@@ -5,8 +5,8 @@ released_on: 2026-11-19
 action_path: "/events/revenue"
 pr_number: 3032
 summary: >-
-  The revenue report, reports page, and event dashboard now show registration
-  payments on their own, so a training's income isn't double counted with
-  grant-funded scholarships or CE fees.
+  The revenue report and event dashboard now show registration fees and CE
+  fees separately, then collected for both, so a training's income isn't double
+  counted with grant-funded scholarships.
 pro_tips:
   - "Totals that still add scholarships and CE are labeled \"incl. scholarships\" or \"all sources\"."
