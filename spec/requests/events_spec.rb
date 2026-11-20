@@ -3345,7 +3345,7 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Overview Org")
       end
 
-      it "shows registration paid apart from CE paid beside the all-sources grand total" do
+      it "shows reg fees paid apart from CE fees paid beside the all-sources grand total" do
         create(:allocation, source: create(:payment, amount_cents: 4_000, amount_cents_remaining: 4_000),
                             allocatable: registration, amount: 4_000)
         ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 1_500)
@@ -3356,8 +3356,8 @@ RSpec.describe "Events", type: :request do
 
         page = Capybara.string(response.body)
         expect(response.body).to include("all sources, incl. scholarships + CE")
-        expect(page).to have_css("span", exact_text: "Registration paid $40", normalize_ws: true)
-        expect(page).to have_css("span", exact_text: "CE paid $15", normalize_ws: true)
+        expect(page).to have_css("span", exact_text: "Reg fees paid $40", normalize_ws: true)
+        expect(page).to have_css("span", exact_text: "CE fees paid $15", normalize_ws: true)
         expect(page).to have_css("span", exact_text: "Fees collected $55", normalize_ws: true)
       end
 
