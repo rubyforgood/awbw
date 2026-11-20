@@ -404,33 +404,37 @@ class Organization < ApplicationRecord
       .sort_by { |group, count| [ -count, group.position || 0, group.name.to_s ] }.map(&:first)
   end
 
-  BREAKDOWN_SORT_OPTIONS = [ [ "Primary first", "primary" ], [ "Total", "total" ], [ "A–Z", "name" ] ].freeze
+  BREAKDOWN_SORT_OPTIONS = [ [ "Primary", "primary" ], [ "Total", "total" ], [ "Name", "name" ] ].freeze
   BREAKDOWN_SORTS = BREAKDOWN_SORT_OPTIONS.map(&:last).freeze
+
+  def self.breakdown_default_direction(sort) = sort == "name" ? "asc" : "desc"
 
   TagBreakdown = Data.define(:tag, :primary_count, :additional_count) do
     def total = primary_count + additional_count
 
-    def sort_key(sort)
+    # Counts flip with the direction; ties stay A–Z.
+    def sort_key(sort, direction)
       name = tag.name.to_s.downcase
+      sign = direction == "asc" ? 1 : -1
       case sort
-      when "total" then [ -total, -primary_count, name ]
+      when "total" then [ sign * total, sign * primary_count, name ]
       when "name" then [ name ]
-      else [ -primary_count, -additional_count, name ]
+      else [ sign * primary_count, sign * additional_count, name ]
       end
     end
   end
 
   # Every sector active facilitators hold, primary or additional, for the full breakdown page.
-  def active_facilitator_sector_breakdown(sort: nil)
+  def active_facilitator_sector_breakdown(sort: nil, direction: nil)
     tag_breakdown(active_facilitators.flat_map { |person|
       person.sectorable_items.filter_map { |item| [ item.sector, item.is_primary? ] if item.sector && item.sector.name != Sector::OTHER_SECTOR_NAME }
-    }, sort)
+    }, sort, direction)
   end
 
-  def active_facilitator_age_group_breakdown(sort: nil)
+  def active_facilitator_age_group_breakdown(sort: nil, direction: nil)
     tag_breakdown(active_facilitators.flat_map { |person|
       person.primary_age_groups.map { |group| [ group, true ] } + person.additional_age_groups.map { |group| [ group, false ] }
-    }, sort)
+    }, sort, direction)
   end
 
   # Reads preloaded affiliations, so a list page that nests PEOPLE_TAGGINGS under
@@ -482,10 +486,12 @@ class Organization < ApplicationRecord
 
   private
 
-  def tag_breakdown(tag_and_primary_pairs, sort)
-    tag_and_primary_pairs.group_by(&:first)
+  def tag_breakdown(tag_and_primary_pairs, sort, direction)
+    direction ||= Organization.breakdown_default_direction(sort)
+    rows = tag_and_primary_pairs.group_by(&:first)
       .map { |tag, pairs| TagBreakdown.new(tag:, primary_count: pairs.count(&:last), additional_count: pairs.count { |pair| !pair.last }) }
-      .sort_by { |row| row.sort_key(sort) }
+      .sort_by { |row| row.sort_key(sort, direction) }
+    sort == "name" && direction == "desc" ? rows.reverse : rows
   end
 
   def affiliation_dates_locked
