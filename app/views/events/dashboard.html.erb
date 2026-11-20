@@ -123,11 +123,11 @@
             + CE paid = collected; collected + due = monies made. Kept neutral grey so the equation stays the focus. %>
         <div class="flex flex-col gap-1 text-xs text-gray-500 lg:shrink-0 lg:border-l lg:border-gray-200 lg:pl-6">
           <span class="flex items-center justify-between gap-3" title="Registration payments only — no scholarships or CE">
-            <span>Registration paid</span>
+            <span>Reg fees paid</span>
             <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.received_cents) %></span>
           </span>
           <span class="flex items-center justify-between gap-3">
-            <span>CE paid</span>
+            <span>CE fees paid</span>
             <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_paid_cents) %></span>
           </span>
           <span class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1">
@@ -135,7 +135,7 @@
             <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.collected_cents) %></span>
           </span>
           <span class="flex items-center justify-between gap-3">
-            <span>Due</span>
+            <span>Fees due</span>
             <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.due_cents) %></span>
           </span>
           <span class="mt-1 flex items-center justify-between gap-3 border-t border-gray-200 pt-1">
