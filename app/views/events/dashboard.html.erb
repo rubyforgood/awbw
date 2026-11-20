@@ -84,7 +84,7 @@
               <span class="text-2xl font-light text-gray-300 select-none">=</span>
               <%= link_to registrants_event_path(@event), class: addend_class.call(:payments), title: "Manage registrations" do %>
                 <p class="text-lg font-semibold sm:text-xl <%= DomainTheme.text_class_for(:payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.registration_subtotal_cents) %></p>
-                <p class="hidden text-xs text-gray-500 lg:block">Registration fees</p>
+                <p class="hidden text-xs text-gray-500 lg:block">Registration fees (paid + due)</p>
               <% end %>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
               <%= link_to recipients_event_path(@event), class: addend_class.call(:scholarships), title: "View scholarships" do %>
