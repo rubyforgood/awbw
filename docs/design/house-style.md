@@ -134,7 +134,8 @@ table's small-screen card list uses the strip.
   segment with `aria-current`. Pass `link_data: { turbo_frame: … }` inside a
   results frame. For a reversible sort, point the active segment's href at the
   opposite direction and pass `active_icon:` (`fa-arrow-up` / `fa-arrow-down`).
-  My Bookmarks and the users small-screen cards are the reference.
+  My Bookmarks, the users small-screen cards, and the org sectors page are the
+  reference. Keep labels direction-neutral ("Name", not "A–Z") on a reversible sort.
 - Options are a `{ label => value }` constant beside the sort logic (e.g.
   `WorkshopSearchService::SORT_OPTIONS`); labels are sentence case.
 - Place it at the right end of the count row (`ml-auto`) on index pages.
