@@ -16,17 +16,45 @@ class ExternalProcessorPayment < Payment
 
   validate :pay_charge_presence, on: :create, unless: :skip_pay_charge_validation
 
-  def stripe_cardholder_name
-    metadata&.dig("stripe_charge", "billing_details", "name").presence
+  def stripe_billing_details
+    metadata&.dig("stripe_charge", "billing_details") || {}
   end
 
-  def cardholder_differs_from_payer?
-    return false if stripe_cardholder_name.blank?
+  def stripe_billing_name
+    stripe_billing_details["name"].presence
+  end
+
+  def stripe_billing_email
+    stripe_billing_details["email"].presence
+  end
+
+  def stripe_billing_phone
+    stripe_billing_details["phone"].presence
+  end
+
+  def stripe_billing_address
+    address = stripe_billing_details["address"] || {}
+
+    [
+      address["line1"],
+      address["line2"],
+      [ address["city"], address["state"], address["postal_code"] ].compact_blank.join(", ").presence,
+      address["country"]
+    ].compact_blank.join(", ").presence
+  end
+
+  def stripe_payment_method_type
+    metadata&.dig("stripe_charge", "payment_method_details", "type") ||
+      pay_charge&.data&.dig("payment_method_type")
+  end
+
+  def billing_name_differs_from_payer?
+    return false if stripe_billing_name.blank?
 
     payer_name = payer.is_a?(Person) ? payer.full_name : payer&.name
     return false if payer_name.blank?
 
-    name_key(stripe_cardholder_name) != name_key(payer_name)
+    name_key(stripe_billing_name) != name_key(payer_name)
   end
 
   private

@@ -47,59 +47,75 @@ RSpec.describe ExternalProcessorPayment do
     end
   end
 
-  describe "cardholder name" do
-    def payment_for(cardholder_name:, payer: person)
+  describe "billing details" do
+    def payment_for(billing_details:, payer: person, payment_method_type: nil)
+      stripe_charge = { "billing_details" => billing_details }
+      stripe_charge["payment_method_details"] = { "type" => payment_method_type } if payment_method_type
+
       create(
         :external_processor_payment,
         person: payer,
-        metadata: { "stripe_charge" => { "billing_details" => { "name" => cardholder_name } } }
+        metadata: { "stripe_charge" => stripe_charge }
       )
     end
 
-    it "reads the name from the Stripe charge metadata" do
-      payment = payment_for(cardholder_name: "Lisa Wilson")
+    it "reads the billing fields from Stripe metadata" do
+      payment = payment_for(
+        billing_details: {
+          "name" => "Lisa Wilson",
+          "email" => "andream@flintridge.org",
+          "phone" => "+1 555 0100",
+          "address" => { "postal_code" => "91103", "country" => "US" }
+        },
+        payment_method_type: "link"
+      )
 
-      expect(payment.stripe_cardholder_name).to eq("Lisa Wilson")
+      expect(payment.stripe_billing_name).to eq("Lisa Wilson")
+      expect(payment.stripe_billing_email).to eq("andream@flintridge.org")
+      expect(payment.stripe_billing_phone).to eq("+1 555 0100")
+      expect(payment.stripe_billing_address).to eq("91103, US")
+      expect(payment.stripe_payment_method_type).to eq("link")
     end
 
-    it "returns nil when the payment has no Stripe charge metadata" do
+    it "returns empty billing details when the payment has no Stripe charge metadata" do
       payment = create(:external_processor_payment, person: person)
 
-      expect(payment.stripe_cardholder_name).to be_nil
+      expect(payment.stripe_billing_details).to eq({})
+      expect(payment.stripe_billing_name).to be_nil
     end
 
     it "doesn't flag a matching name" do
       payer = create(:person, first_name: "Andrea-Isabel", last_name: "Magat")
-      payment = payment_for(cardholder_name: "Andrea-Isabel Magat", payer: payer)
+      payment = payment_for(billing_details: { "name" => "Andrea-Isabel Magat" }, payer: payer)
 
-      expect(payment.cardholder_differs_from_payer?).to be(false)
+      expect(payment.billing_name_differs_from_payer?).to be(false)
     end
 
     it "ignores case, whitespace, name order, and middle initials" do
       payer = create(:person, first_name: "Lisa", last_name: "Wilson")
-      payment = payment_for(cardholder_name: "  wilson,   LISA d. ", payer: payer)
+      payment = payment_for(billing_details: { "name" => "  wilson,   LISA d. " }, payer: payer)
 
-      expect(payment.cardholder_differs_from_payer?).to be(false)
+      expect(payment.billing_name_differs_from_payer?).to be(false)
     end
 
     it "treats a hyphenated first name as the same as its first part" do
       payer = create(:person, first_name: "Andrea-Isabel", last_name: "Magat")
-      payment = payment_for(cardholder_name: "Andrea Magat", payer: payer)
+      payment = payment_for(billing_details: { "name" => "Andrea Magat" }, payer: payer)
 
-      expect(payment.cardholder_differs_from_payer?).to be(false)
+      expect(payment.billing_name_differs_from_payer?).to be(false)
     end
 
-    it "flags a different cardholder" do
+    it "flags a different billing name" do
       payer = create(:person, first_name: "Andrea-Isabel", last_name: "Magat")
-      payment = payment_for(cardholder_name: "Lisa Wilson", payer: payer)
+      payment = payment_for(billing_details: { "name" => "Lisa Wilson" }, payer: payer)
 
-      expect(payment.cardholder_differs_from_payer?).to be(true)
+      expect(payment.billing_name_differs_from_payer?).to be(true)
     end
 
-    it "doesn't flag a blank cardholder" do
-      payment = payment_for(cardholder_name: nil)
+    it "doesn't flag a blank billing name" do
+      payment = payment_for(billing_details: { "name" => nil })
 
-      expect(payment.cardholder_differs_from_payer?).to be(false)
+      expect(payment.billing_name_differs_from_payer?).to be(false)
     end
   end
 end

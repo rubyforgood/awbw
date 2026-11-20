@@ -84,18 +84,7 @@
         <% details.each_with_index do |(label, value, emphasis), index| %>
           <div class="bg-white px-4 py-3 <%= "sm:col-span-2" if details.size.odd? && index == details.size - 1 %>">
             <dt class="<%= label_class %>"><%= label %></dt>
-            <dd class="mt-1 min-w-0 <%= emphasis ? "text-2xl font-bold text-gray-900" : "text-sm text-gray-900" %> tabular-nums">
-              <%= value %>
-              <% if label == "Payer" && @payment.is_a?(ExternalProcessorPayment) && @payment.cardholder_differs_from_payer? %>
-                <div class="mt-2">
-                  <%= render "shared/badge",
-                        label: "Cardholder: #{@payment.stripe_cardholder_name}",
-                        classes: "bg-amber-50 text-amber-800 border-amber-200",
-                        icon: "fa-solid fa-credit-card",
-                        title: "Name on the card used at checkout. The payer above is the account owner who initiated the payment." %>
-                </div>
-              <% end %>
-            </dd>
+            <dd class="mt-1 min-w-0 <%= emphasis ? "text-2xl font-bold text-gray-900" : "text-sm text-gray-900" %> tabular-nums"><%= value %></dd>
           </div>
         <% end %>
         <% if @payment.metadata.present? %>
@@ -118,6 +107,42 @@
         <% end %>
       </dl>
     </section>
+
+    <% if @payment.is_a?(ExternalProcessorPayment) %>
+      <% billing_rows = [
+           [ "Billing name", @payment.stripe_billing_name ],
+           [ "Email", @payment.stripe_billing_email ],
+           [ "Phone", @payment.stripe_billing_phone ],
+           [ "Address", @payment.stripe_billing_address ],
+           [ "Payment method", @payment.stripe_payment_method_type&.titleize ]
+         ].reject { |_label, value| value.blank? } %>
+      <% if billing_rows.any? %>
+        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+            <span class="<%= section_icon_class %>"><i class="fa-solid fa-credit-card"></i></span>
+            <h2 class="text-sm font-semibold text-gray-700">Billing details</h2>
+          </div>
+
+          <p class="border-b border-gray-100 px-4 py-3 text-sm text-gray-600">
+            Stripe records these details with the payment method at checkout. They can name a cardholder, a Link profile, or an organization, and they are not necessarily the payer. The payer is the account that initiated the payment.
+          </p>
+
+          <dl class="grid grid-cols-1 gap-px bg-gray-100 sm:grid-cols-2">
+            <% billing_rows.each_with_index do |(label, value), index| %>
+              <div class="bg-white px-4 py-3 <%= "sm:col-span-2" if billing_rows.size.odd? && index == billing_rows.size - 1 %>">
+                <dt class="<%= label_class %>"><%= label %></dt>
+                <dd class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-900">
+                  <%= value %>
+                  <% if label == "Billing name" && @payment.billing_name_differs_from_payer? %>
+                    <%= render "shared/badge", label: "Differs from payer", classes: "bg-amber-50 text-amber-800 border-amber-200" %>
+                  <% end %>
+                </dd>
+              </div>
+            <% end %>
+          </dl>
+        </section>
+      <% end %>
+    <% end %>
 
     <% if @allocations.any? %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
