@@ -46,4 +46,30 @@ RSpec.describe ExternalProcessorPayment do
       expect(payment).to be_valid
     end
   end
+
+  describe "billing details" do
+    it "reads the billing fields from Stripe metadata" do
+      payment = create(
+        :external_processor_payment,
+        person: person,
+        metadata: {
+          "stripe_charge" => {
+            "billing_details" => {
+              "name" => "Lisa Wilson",
+              "email" => "andream@flintridge.org",
+              "phone" => "+1 555 0100",
+              "address" => { "postal_code" => "91103", "country" => "US" }
+            },
+            "payment_method_details" => { "type" => "link" }
+          }
+        }
+      )
+
+      expect(payment.stripe_billing_name).to eq("Lisa Wilson")
+      expect(payment.stripe_billing_email).to eq("andream@flintridge.org")
+      expect(payment.stripe_billing_phone).to eq("+1 555 0100")
+      expect(payment.stripe_billing_address).to eq("91103, US")
+      expect(payment.stripe_payment_method_type).to eq("link")
+    end
+  end
 end
