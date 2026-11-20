@@ -588,6 +588,19 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(event_line.text).to include(existing_registration.event.title)
       end
 
+      it "links the amount allocated box to the registration's allocations, with a tooltip explaining the total" do
+        existing_registration.event.update!(cost_cents: 10_000)
+
+        get edit_event_registration_path(existing_registration)
+
+        box = Nokogiri::HTML5(response.body).css("a[href^='/allocations?']").find { |a| a.text.include?("Amount allocated") }
+        expect(box).to be_present
+        expect(GlobalID::Locator.locate_signed(Rack::Utils.parse_query(URI(box["href"]).query)["allocatable_sgid"])).to eq(existing_registration)
+        expect(box.at_css("i.fa-circle-info")).to be_present
+        expect(box.at_css("[role=tooltip]").text)
+          .to eq("Amount allocated is the total for all payments + scholarships + discounts")
+      end
+
       it "renders the expected payment method as an editable select with the registrant's answer selected" do
         existing_registration.update!(expected_payment_method: "Check")
 
