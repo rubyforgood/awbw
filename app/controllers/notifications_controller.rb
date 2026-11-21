@@ -29,8 +29,8 @@ class NotificationsController < ApplicationController
     end
 
     respond_to do |format|
-      format.html
       format.turbo_stream
+      format.html
     end
   end
 
@@ -55,10 +55,10 @@ class NotificationsController < ApplicationController
     authorize! @notification
 
     respond_to do |format|
-      format.html { track_view @notification }
       # Turbo reuses the form submission's stream Accept header on the success
       # redirect, so only the inline Cancel link asks for the row fragment.
       format.turbo_stream if params[:cancel].present?
+      format.html { track_view @notification }
     end
   end
 
@@ -70,8 +70,8 @@ class NotificationsController < ApplicationController
     end
 
     respond_to do |format|
-      format.html
       format.turbo_stream
+      format.html
     end
   end
 
@@ -81,7 +81,7 @@ class NotificationsController < ApplicationController
     body_was = @notification.email_body_text
 
     if @notification.update(notification_params)
-      flash.now[:notice] = "Saved" if params[:toggle].present?
+      flash.now[:notice] = "Saved"
       track_responded_change(responded_was)
       track_incoming_body_change(body_was)
       combined_feed_person

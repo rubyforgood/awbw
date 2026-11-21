@@ -40,8 +40,8 @@ class CommentsController < ApplicationController
     @comment = Comment.new
 
     respond_to do |format|
-      format.html
       format.turbo_stream
+      format.html
     end
   end
 
@@ -49,8 +49,8 @@ class CommentsController < ApplicationController
     authorize! @comment
 
     respond_to do |format|
-      format.html
       format.turbo_stream
+      format.html
     end
   end
 
@@ -88,7 +88,7 @@ class CommentsController < ApplicationController
     @comment.commentable = target if target
 
     if @comment.update(comment_params)
-      flash.now[:notice] = "Saved" if params[:toggle].present?
+      flash.now[:notice] = "Saved"
       setup_aggregated_context
 
       respond_to do |format|
