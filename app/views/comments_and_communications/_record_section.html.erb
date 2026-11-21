@@ -1,25 +1,27 @@
-<section id="comments-and-communications-section"
-         class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-  <div class="flex flex-wrap items-center gap-3 border-b border-gray-100 px-4 py-3">
-    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
-      <i class="fa-solid fa-comments"></i>
-    </span>
-    <h2 class="text-sm font-semibold text-gray-700"><%= t("communications.section_title") %></h2>
-    <% if local_assigns[:feed_person].present? %>
-      <%= link_to comments_and_communications_path(person_id: feed_person.id),
-            class: "ml-auto inline-flex items-center gap-1 text-sm #{eyebrow_link_class}",
-            title: "Open #{person_name(feed_person)}'s comments and communications feed" do %>
-        View in feed <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+<% if allowed_to?(:manage?, record) %>
+  <section id="comments-and-communications-section"
+           class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div class="flex flex-wrap items-center gap-3 border-b border-gray-100 px-4 py-3">
+      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
+        <i class="fa-solid fa-comments"></i>
+      </span>
+      <h2 class="text-sm font-semibold text-gray-700"><%= t("communications.section_title") %></h2>
+      <% if local_assigns[:feed_person].present? %>
+        <%= link_to comments_and_communications_path(person_id: feed_person.id),
+              class: "ml-auto inline-flex items-center gap-1 text-sm #{eyebrow_link_class}",
+              title: "Open #{person_name(feed_person)}'s comments and communications feed" do %>
+          View in feed <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+        <% end %>
       <% end %>
-    <% end %>
-  </div>
+    </div>
 
-  <div class="space-y-2 p-4">
-    <%= render "comments_and_communications/record_section_add_controls", record: record %>
+    <div class="space-y-2 p-4">
+      <%= render "comments_and_communications/record_section_add_controls", record: record %>
 
-    <%= turbo_frame_tag "comments-and-communications-entries",
-          src: comments_and_communication_path(record.to_sgid.to_s) do %>
-      <p class="text-sm text-gray-400"><%= t("communications.section_loading") %></p>
-    <% end %>
-  </div>
-</section>
+      <%= turbo_frame_tag "comments-and-communications-entries",
+            src: comments_and_communication_path(record.to_sgid.to_s) do %>
+        <p class="text-sm text-gray-400"><%= t("communications.section_loading") %></p>
+      <% end %>
+    </div>
+  </section>
+<% end %>

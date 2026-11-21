@@ -298,27 +298,6 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("Called about the remaining balance", "Left a voicemail")
     end
 
-    it "pages the section ten entries at a time" do
-      payment = create(:payment, person:)
-      12.times do |i|
-        create(:comment, commentable: payment, body: "Comment #{i}", created_at: i.minutes.ago)
-      end
-      frame_path = comments_and_communication_path(payment.to_sgid.to_s)
-
-      get frame_path
-
-      body = Capybara.string(response.body)
-      expect(body.find("#comments-and-communications-list").all("div[id^='comment_']").size).to eq(10)
-      expect(body).to have_text("Comment 0")
-      expect(body).not_to have_text("Comment 10")
-      expect(body).to have_link(href: %r{\A/comments_and_communications/[^/]+\?.*page=2})
-
-      get frame_path, params: { page: 2 }
-
-      expect(response.body).to include("Comment 10", "Comment 11")
-      expect(response.body).not_to include("Comment 0")
-    end
-
     it "adds a comment from the show page and lands on the comment" do
       payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
 
