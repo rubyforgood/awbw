@@ -282,52 +282,41 @@ RSpec.describe "Payments", type: :request do
   end
 
   describe "comments and communications on a payment" do
-    it "lists the payment's comments and communications on the show page" do
+    it "lists the payment's comments and communications in the section frame" do
       payment = create(:payment, person:)
       create(:comment, commentable: payment, topic: "Follow-up", body: "Called about the remaining balance")
       create(:notification, noticeable: payment, email_subject: "Left a voicemail")
 
       get payment_path(payment)
 
-      expect(response.body).to include("Comments &amp; communications", "Called about the remaining balance", "Left a voicemail")
+      frame = Capybara.string(response.body).find("turbo-frame#comments-and-communications-entries")
+      expect(frame[:src]).to start_with("/comments_and_communications/")
+
+      get frame[:src]
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Called about the remaining balance", "Left a voicemail")
     end
 
-    it "shows ten entries per page with a link to the next page" do
+    it "pages the section ten entries at a time" do
       payment = create(:payment, person:)
       12.times do |i|
         create(:comment, commentable: payment, body: "Comment #{i}", created_at: i.minutes.ago)
       end
+      frame_path = comments_and_communication_path(payment.to_sgid.to_s)
 
-      get payment_path(payment)
+      get frame_path
 
       body = Capybara.string(response.body)
-      list = body.find("#comments-and-communications-list")
-      expect(list.all("div[id^='comment_']").size).to eq(10)
+      expect(body.find("#comments-and-communications-list").all("div[id^='comment_']").size).to eq(10)
       expect(body).to have_text("Comment 0")
-      expect(body).to have_text("Comment 9")
       expect(body).not_to have_text("Comment 10")
-      expect(body.find("#comments-and-communications-section")).to have_link(href: payment_path(payment, page: 2))
-    end
+      expect(body).to have_link(href: %r{\A/comments_and_communications/[^/]+\?.*page=2})
 
-    it "renders the next page of entries" do
-      payment = create(:payment, person:)
-      12.times do |i|
-        create(:comment, commentable: payment, body: "Comment #{i}", created_at: i.minutes.ago)
-      end
-
-      get payment_path(payment, page: 2)
+      get frame_path, params: { page: 2 }
 
       expect(response.body).to include("Comment 10", "Comment 11")
       expect(response.body).not_to include("Comment 0")
-    end
-
-    it "hides the pager when every entry fits on one page" do
-      payment = create(:payment, person:)
-      create(:comment, commentable: payment, body: "Only comment")
-
-      get payment_path(payment)
-
-      expect(Capybara.string(response.body).find("#comments-and-communications-section")).not_to have_link(href: payment_path(payment, page: 2))
     end
 
     it "adds a comment from the show page and lands on the comment" do
@@ -351,7 +340,7 @@ RSpec.describe "Payments", type: :request do
       notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
                                           email_subject: "Left a voicemail", recipient_email: person.email)
 
-      get payment_path(payment)
+      get comments_and_communication_path(payment.to_sgid.to_s)
 
       expect(response.body).to include("comment_#{comment.id}", "notification_#{notification.id}")
       expect(response.body).to include(edit_comment_path(comment))

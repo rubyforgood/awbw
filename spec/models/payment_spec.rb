@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe Payment, type: :model do
+  it_behaves_like "a comments and communications record"
+
   describe "associations" do
     subject { create(:payment) }
 

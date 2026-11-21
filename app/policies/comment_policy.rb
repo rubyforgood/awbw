@@ -4,4 +4,9 @@ class CommentPolicy < ApplicationPolicy
   def manage?
     admin?
   end
+
+  relation_scope do |relation|
+    next relation if admin?
+    relation.none
+  end
 end

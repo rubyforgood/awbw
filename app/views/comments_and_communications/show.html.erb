@@ -1,0 +1,22 @@
+<%= turbo_frame_tag "comments-and-communications-entries" do %>
+  <div id="comments-and-communications-list" class="flex flex-col gap-2">
+    <% @entries.each do |entry| %>
+      <% if entry.is_a?(Comment) %>
+        <%= render "comments/record_section_row", comment: entry %>
+      <% else %>
+        <%= render "notifications/record_section_row", notification: entry %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @entries.empty? %>
+    <p id="comments-and-communications-list-empty" class="text-sm text-gray-400"><%= t("communications.section_none") %></p>
+  <% end %>
+
+  <% if @entries.total_pages > 1 %>
+    <div class="mt-4 flex justify-center">
+      <%= tailwind_paginate @entries, url_for_page: ->(page) {
+            comments_and_communication_path(@record.to_sgid.to_s, page: page) } %>
+    </div>
+  <% end %>
+<% end %>

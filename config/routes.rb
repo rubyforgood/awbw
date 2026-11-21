@@ -322,7 +322,7 @@ Rails.application.routes.draw do
     resources :memberships, only: [ :index, :new, :create ], controller: "people/memberships"
     resource :billing_portal, only: [ :create ], controller: "people/billing_portals"
   end
-  resources :comments_and_communications, only: [ :index ] do
+  resources :comments_and_communications, only: [ :index, :show ] do
     collection do
       get :composers
     end

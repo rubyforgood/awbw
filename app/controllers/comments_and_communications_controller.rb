@@ -52,4 +52,21 @@ class CommentsAndCommunicationsController < ApplicationController
     @new_notification = Notification.new
     @record_targets = @person ? helpers.person_record_targets(@person) : []
   end
+
+  def show
+    @record = GlobalID::Locator.locate_signed(params[:id])
+    raise ActiveRecord::RecordNotFound unless @record
+
+    authorize! @record, to: :show?
+
+    comments = authorized_scope(@record.comments, with: CommentPolicy)
+      .includes(:commentable, created_by: :person, updated_by: :person).to_a
+    communications = authorized_scope(@record.communications_scope, with: NotificationPolicy)
+      .includes(:noticeable, sender: :person).to_a
+
+    @entries = (comments + communications)
+      .sort_by { |entry| entry.created_at || Time.current }
+      .reverse
+      .paginate(page: params[:page], per_page: 10)
+  end
 end
