@@ -67,6 +67,6 @@ class CommentsAndCommunicationsController < ApplicationController
     @entries = (comments + communications)
       .sort_by { |entry| entry.created_at || Time.current }
       .reverse
-      .paginate(page: params[:page], per_page: 10)
+      .paginate(page: params[:page], per_page: 5)
   end
 end
