@@ -352,7 +352,6 @@ RSpec.describe "Event registration edit page", type: :system do
       expect(notification).to be_present
       expect(notification.channel).to eq("email")
     end
-
   end
 
   describe "comments box" do
