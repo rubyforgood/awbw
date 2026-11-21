@@ -30,8 +30,8 @@ class CommentsController < ApplicationController
     authorize! @comment
 
     respond_to do |format|
-      format.html
       format.turbo_stream if params[:cancel].present?
+      format.html
     end
   end
 
