@@ -57,7 +57,7 @@ class CommentsAndCommunicationsController < ApplicationController
     @record = GlobalID::Locator.locate_signed(params[:id])
     raise ActiveRecord::RecordNotFound unless @record
 
-    authorize! @record, to: :show?
+    authorize! @record, to: :manage?
 
     comments = authorized_scope(@record.comments, with: CommentPolicy)
       .includes(:commentable, created_by: :person, updated_by: :person).to_a
