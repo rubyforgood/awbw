@@ -292,6 +292,44 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("Comments &amp; communications", "Called about the remaining balance", "Left a voicemail")
     end
 
+    it "shows ten entries per page with a link to the next page" do
+      payment = create(:payment, person:)
+      12.times do |i|
+        create(:comment, commentable: payment, body: "Comment #{i}", created_at: i.minutes.ago)
+      end
+
+      get payment_path(payment)
+
+      body = Capybara.string(response.body)
+      list = body.find("#comments-and-communications-list")
+      expect(list.all("div[id^='comment_']").size).to eq(10)
+      expect(body).to have_text("Comment 0")
+      expect(body).to have_text("Comment 9")
+      expect(body).not_to have_text("Comment 10")
+      expect(body.find("#comments-and-communications-section")).to have_link(href: payment_path(payment, page: 2))
+    end
+
+    it "renders the next page of entries" do
+      payment = create(:payment, person:)
+      12.times do |i|
+        create(:comment, commentable: payment, body: "Comment #{i}", created_at: i.minutes.ago)
+      end
+
+      get payment_path(payment, page: 2)
+
+      expect(response.body).to include("Comment 10", "Comment 11")
+      expect(response.body).not_to include("Comment 0")
+    end
+
+    it "hides the pager when every entry fits on one page" do
+      payment = create(:payment, person:)
+      create(:comment, commentable: payment, body: "Only comment")
+
+      get payment_path(payment)
+
+      expect(Capybara.string(response.body).find("#comments-and-communications-section")).not_to have_link(href: payment_path(payment, page: 2))
+    end
+
     it "adds a comment from the show page and lands on the comment" do
       payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
 

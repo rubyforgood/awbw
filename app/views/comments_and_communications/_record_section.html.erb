@@ -30,5 +30,11 @@
     <% if entries.empty? %>
       <p id="comments-and-communications-list-empty" class="text-sm text-gray-400"><%= t("communications.section_none") %></p>
     <% end %>
+
+    <% if entries.respond_to?(:total_pages) && entries.total_pages > 1 %>
+      <div class="mt-4 flex justify-center">
+        <%= tailwind_paginate entries %>
+      </div>
+    <% end %>
   </div>
 </section>

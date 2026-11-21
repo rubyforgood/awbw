@@ -94,7 +94,10 @@ class PaymentsController < ApplicationController
     comments = @payment.comments.includes(:commentable, created_by: :person, updated_by: :person).to_a
     communications = authorized_scope(@payment.communications_scope, with: NotificationPolicy)
       .includes(:noticeable, sender: :person).to_a
-    @entries = (comments + communications).sort_by { |entry| entry.created_at || Time.current }.reverse
+    @entries = (comments + communications)
+      .sort_by { |entry| entry.created_at || Time.current }
+      .reverse
+      .paginate(page: params[:page], per_page: 10)
   end
 
   def edit
