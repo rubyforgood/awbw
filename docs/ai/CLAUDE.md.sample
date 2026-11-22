@@ -620,10 +620,22 @@ exempt; this is for the message that says the work is finished.
 
 ## Response formatting
 
-**Answer in short bullets and sub-bullets — never paragraphs.** This is the default for
-every reply, not just long ones. Prose is the exception, allowed only when the user asks
-for prose or when a single sentence genuinely says everything.
+**Answer in short bullets and sub-bullets — never paragraphs.** This is a hard rule for
+every reply — questions, status updates, final summaries, recaps — not just long ones.
+Prose is allowed only when the user asks for it or one sentence says everything. The user
+has had to re-ask for this repeatedly; a long reply is a rule violation, not a style choice.
 
+- **Hard limits:**
+  - **No paragraphs.** Never two sentences in a row outside a bullet.
+  - **~12 words per bullet.** Longer → split into sub-bullets or cut.
+  - **~6 top-level bullets per section.** More → group under headers or cut the least useful.
+- **Cut on sight:**
+  - Preamble and restating the question.
+  - Narrating each step you took.
+  - Closing offers ("let me know if…", "happy to…").
+  - Hedging and caveats that don't change the decision.
+- **Self-check before sending.** Reread the reply; shorten any line that wraps or any bullet
+  the user could skip without losing anything.
 - **Bullets, not sentences.** One fact per bullet. Fragments are good. Drop "this", "the",
   filler verbs, and hedging where the meaning survives.
 - **Sub-bullets for detail**, nested under the bullet they belong to — not trailing clauses
