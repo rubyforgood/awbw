@@ -1,0 +1,23 @@
+<%# The row's linked event, picked from the person's registrations. Locals: affiliation, choices. %>
+<% event = affiliation.event_registration&.event %>
+<div id="<%= dom_id(affiliation, :index_event) %>" class="flex min-w-0 items-center gap-1.5 text-xs">
+  <% if choices.any? %>
+    <%= select_tag "affiliation[event_registration_id]",
+          options_for_select(choices.map { |registration| [ registration.decorate.affiliation_event_label, registration.id ] },
+                             affiliation.event_registration_id),
+          include_blank: "—",
+          id: dom_id(affiliation, :event_registration),
+          title: event&.title,
+          "aria-label": "Linked event",
+          class: "min-w-0 flex-1 truncate rounded-md border-gray-300 bg-white py-1 pr-6 pl-2 text-xs focus:border-blue-500 focus:ring-blue-500",
+          data: { action: "change->autosave#save" } %>
+    <% if event %>
+      <%= link_to event_path(event), title: "Open #{event.title}", "aria-label": "Open event",
+                  data: { turbo_frame: "_top" }, class: "text-gray-400 hover:text-gray-600" do %>
+        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      <% end %>
+    <% end %>
+  <% else %>
+    <span class="text-gray-400" title="This person has no registrations to link">—</span>
+  <% end %>
+</div>

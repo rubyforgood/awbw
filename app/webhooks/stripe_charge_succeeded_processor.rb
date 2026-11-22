@@ -47,6 +47,6 @@ class StripeChargeSucceededProcessor
   end
 
   def external_payer
-    Person.find_or_create_by!(first_name: "External", last_name: "Payer")
+    Person.external_payer
   end
 end

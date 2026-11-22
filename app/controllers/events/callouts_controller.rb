@@ -11,6 +11,7 @@ module Events
     before_action :noindex!
     before_action :set_event_registration
     before_action :authorize_callout
+    before_action :require_callout_access, unless: :sample_preview?
     before_action :set_event
     before_action :require_scholarship_form, only: %i[ scholarship_application submit_scholarship_application ]
     # These pages carry an editable intro (the built-in row's "Callout page text")
@@ -345,6 +346,19 @@ module Events
       @handout_cards = resource_cards_for(callout, icon: "fa-solid fa-file-pdf", return_to: "handouts")
     end
 
+    # The per-registrant landing link a bulk email's "open this callout" button
+    # points at: sends the registrant to the callout's page (or one resource on
+    # it) exactly as their ticket card would, resolved now so drip dates and gates
+    # reflect click time. Anything the ticket wouldn't show them — an unpublished
+    # or gated card, a resource no longer on the callout — falls back to the ticket.
+    def go
+      callout = @event.registration_ticket_callouts.find_by(id: params[:callout_id])
+      resource = Resource.find_by(id: params[:resource_id]) if params[:resource_id].present?
+      path = callout && RegistrantCalloutLink.new(@event_registration, callout, resource:).path
+
+      redirect_to(path || registration_ticket_path(@event_registration.slug))
+    end
+
     # Registrant-facing page for a single Resource, shown in the shared callout
     # chrome: the PDF first-page preview and a download button. Reached from the
     # handouts/forms callouts so a registrant views a document without leaving the
@@ -607,6 +621,12 @@ module Events
       else
         authorize! @event_registration, to: :show_public?
       end
+    end
+
+    def require_callout_access
+      return if allowed_to?(:access_callouts?, @event_registration)
+
+      redirect_to registration_ticket_path(@event_registration.slug), alert: "This registration is cancelled."
     end
 
     def set_event

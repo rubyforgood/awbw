@@ -36,6 +36,12 @@ RSpec.describe "Admin home", type: :request do
     expect(response.body).to include(%(href="#{form_submissions_path}"))
   end
 
+  it "links to the affiliations index" do
+    get "/admin"
+
+    expect(response.body).to include(%(href="#{affiliations_path}"))
+  end
+
   it "opens the Activity card on the Activity tab" do
     get "/admin"
 

@@ -63,6 +63,73 @@ RSpec.describe "Events::BulkReminders", type: :request do
     expect(checked?(response.body, sam)).to be(false)
   end
 
+  describe "inactive registrants" do
+    let!(:cancelled) do
+      create(:event_registration, event: event, status: "cancelled",
+             registrant: create(:person, first_name: "Casey", last_name: "Gone"))
+    end
+    let!(:no_show) do
+      create(:event_registration, event: event, status: "no_show",
+             registrant: create(:person, first_name: "Nico", last_name: "Absent"))
+    end
+    let!(:transferred_out) do
+      create(:event_registration, event: event, status: "transferred_out",
+             registrant: create(:person, first_name: "Tess", last_name: "Moved"))
+    end
+
+    it "leaves cancelled, no-show, and transferred-out registrants off the list by default" do
+      get preview_reminder_event_path(event)
+
+      expect(response.body).to include("Jane Adams")
+      expect(response.body).not_to include("Casey Gone")
+      expect(response.body).not_to include("Nico Absent")
+      expect(response.body).not_to include("Tess Moved")
+      expect(response.body).to include('<select name="inactive"')
+    end
+
+    it "lists and checks them when the Inactive registrants filter includes them" do
+      get preview_reminder_event_path(event, inactive: "include"),
+          headers: { "Turbo-Frame" => "reminder_recipients" }
+
+      expect(checked?(response.body, cancelled)).to be(true)
+      expect(checked?(response.body, no_show)).to be(true)
+      expect(checked?(response.body, transferred_out)).to be(true)
+      expect(checked?(response.body, jane)).to be(true)
+    end
+
+    it "includes them when the Attendance filter asks for an inactive status" do
+      get preview_reminder_event_path(event, attendance_status: "no_show"),
+          headers: { "Turbo-Frame" => "reminder_recipients" }
+
+      expect(checked?(response.body, no_show)).to be(true)
+      expect(checked?(response.body, cancelled)).to be(false)
+      expect(checked?(response.body, jane)).to be(false)
+    end
+
+    it "offers to include them when everyone left is inactive" do
+      jane.update!(status: "cancelled")
+      sam.update!(status: "no_show")
+
+      get preview_reminder_event_path(event)
+
+      expect(response.body).to include("Include 5 inactive registrants")
+    end
+
+    it "applies the same Inactive registrants filter in invite mode" do
+      [ jane, sam, cancelled, no_show, transferred_out ].each { |reg| reg.registrant.user&.update_columns(confirmed_at: nil) }
+
+      get preview_reminder_event_path(event, mode: "invite")
+      expect(response.body).to include('<select name="inactive"')
+      expect(response.body).to include("Jane Adams")
+      expect(response.body).not_to include("Casey Gone")
+
+      get preview_reminder_event_path(event, mode: "invite", inactive: "include"),
+          headers: { "Turbo-Frame" => "reminder_recipients" }
+      expect(checked?(response.body, cancelled)).to be(true)
+      expect(checked?(response.body, transferred_out)).to be(true)
+    end
+  end
+
   describe "confirm interstitial" do
     it "lists the selected recipients and the message preview without sending yet" do
       expect {
@@ -354,6 +421,74 @@ RSpec.describe "Events::BulkReminders", type: :request do
       expect(response.headers["Location"]).to include("hide_event_card=0")
       follow_redirect!
       expect(Nokogiri::HTML(response.body).at_css("#hide_event_card")["checked"]).to be_nil
+    end
+  end
+
+  # The optional "Open …" button straight to one ticket callout (or a resource on
+  # it), personalized per registrant.
+  describe "linking a ticket callout" do
+    let(:resource) { create(:resource, title: "Training notes") }
+    let!(:callout) { create(:registration_ticket_callout, event:, title: "After the training", resource:) }
+
+    it "offers each published callout and its resources on the compose page" do
+      create(:registration_ticket_callout, :hidden, event:, title: "Draft callout")
+
+      get preview_reminder_event_path(event)
+
+      select = Nokogiri::HTML(response.body).at_css("select#callout_link")
+      expect(select).to be_present
+      values = select.css("option").map { |o| o["value"] }
+      expect(values).to include(callout.id.to_s, "#{callout.id}-#{resource.id}")
+      expect(select.text).not_to include("Draft callout")
+    end
+
+    it "stores the pick on each reminder and sends each registrant their own button" do
+      perform_enqueued_jobs do
+        post send_reminder_event_path(event), params: { registration_ids: [ jane.id, sam.id ], callout_link: "#{callout.id}-#{resource.id}" }
+      end
+
+      reminders = Notification.where(kind: "event_registration_reminder")
+      expect(reminders.map(&:linked_callout)).to all(eq(callout))
+      expect(reminders.map(&:linked_resource)).to all(eq(resource))
+
+      email = ActionMailer::Base.deliveries.find { |m| m.to == [ jane.registrant.preferred_email ] }
+      body = email.html_part.body.decoded
+      expect(body).to include("Open <span>Training notes</span>")
+      expect(body).to include(registration_callout_link_path(jane.slug, callout, resource_id: resource.id))
+      expect(body).not_to include(sam.slug)
+    end
+
+    it "leaves the button out for a registrant whose ticket hides the callout, and says so on the confirm page" do
+      callout.update!(attended_gated: true)
+      jane.update!(status: "attended")
+
+      post confirm_reminder_event_path(event), params: { registration_ids: [ jane.id, sam.id ], callout_link: callout.id.to_s }
+      expect(response.body).to include("1 of 2 won't get it")
+      expect(response.body).to include("Sam Cole")
+
+      perform_enqueued_jobs do
+        post send_reminder_event_path(event), params: { registration_ids: [ jane.id, sam.id ], callout_link: callout.id.to_s }
+      end
+
+      jane_email = ActionMailer::Base.deliveries.find { |m| m.to == [ jane.registrant.preferred_email ] }
+      sam_email = ActionMailer::Base.deliveries.find { |m| m.to == [ sam.registrant.preferred_email ] }
+      expect(jane_email.html_part.body.decoded).to include("Open <span>After the training</span>")
+      expect(sam_email.html_part.body.decoded).not_to include("After the training")
+    end
+
+    it "ignores a pick from another event" do
+      other = create(:registration_ticket_callout)
+
+      post send_reminder_event_path(event), params: { registration_ids: [ jane.id ], callout_link: other.id.to_s }
+
+      expect(Notification.where(kind: "event_registration_reminder").pick(:linked_callout_id)).to be_nil
+    end
+
+    it "keeps the pick when bouncing back to the compose page" do
+      post confirm_reminder_event_path(event), params: { registration_ids: [], callout_link: callout.id.to_s }
+
+      follow_redirect!
+      expect(Nokogiri::HTML(response.body).at_css("select#callout_link option[selected]")["value"]).to eq(callout.id.to_s)
     end
   end
 end

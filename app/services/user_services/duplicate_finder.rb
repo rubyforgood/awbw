@@ -3,7 +3,7 @@ module UserServices
   # both people's logins. A login that can sign in leads each group, most recently
   # updated first, so the deduper suggests keeping the one the person uses.
   class DuplicateFinder
-    Group = Struct.new(:key, :label, :records, :reasons, keyword_init: true)
+    Group = Struct.new(:key, :label, :records, :reasons, :tier, keyword_init: true)
 
     def initialize(scope = User.all)
       @scope = scope

@@ -87,6 +87,38 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  # The per-registrant link a bulk email's "Open …" button points at.
+  describe "GET /registration/:slug/callouts/:callout_id" do
+    let(:resource) { create(:resource) }
+    let(:callout) { create(:registration_ticket_callout, event:, resource:) }
+
+    it "sends the registrant to their copy of the callout page" do
+      get registration_callout_link_path(registration.slug, callout)
+
+      expect(response).to redirect_to(event_registration_ticket_callout_path(event, callout, reg: registration.slug))
+    end
+
+    it "sends the registrant to one resource on the callout" do
+      get registration_callout_link_path(registration.slug, callout, resource_id: resource.id)
+
+      expect(response).to redirect_to(registration_resource_path(registration.slug, resource, return_to: "callout", callout_id: callout.id))
+    end
+
+    it "falls back to the ticket once the callout is unpublished" do
+      callout.update!(hidden: true)
+
+      get registration_callout_link_path(registration.slug, callout)
+
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+
+    it "falls back to the ticket for another event's callout" do
+      get registration_callout_link_path(registration.slug, create(:registration_ticket_callout))
+
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+  end
+
   describe "GET /registration/:slug/handouts" do
     it "renders the handouts page when its callout is published" do
       create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false)
@@ -146,6 +178,38 @@ RSpec.describe "Events::Callouts", type: :request do
       get registration_payment_path(registration.slug)
 
       expect(response).to have_http_status(:success)
+    end
+  end
+
+  describe "cancelled registration" do
+    before do
+      BuiltinCallouts.seed(event)
+      event.registration_ticket_callouts.builtin.each { |callout| callout.update!(hidden: false) }
+      registration.update!(status: "cancelled")
+    end
+
+    it "sends every callout page back to the ticket" do
+      callout = create(:registration_ticket_callout, event:, hidden: false)
+      [
+        registration_faq_path(registration.slug),
+        registration_payment_path(registration.slug),
+        registration_handouts_path(registration.slug),
+        registration_videoconference_path(registration.slug),
+        registration_staff_path(registration.slug),
+        registration_ce_path(registration.slug),
+        registration_certificate_path(registration.slug),
+        registration_callout_form_path(registration.slug, callout),
+        registration_callout_link_path(registration.slug, callout)
+      ].each do |path|
+        get path
+        expect(response).to redirect_to(registration_ticket_path(registration.slug)), path
+        expect(flash[:alert]).to eq("This registration is cancelled."), path
+      end
+    end
+
+    it "blocks callout actions" do
+      post registration_ce_request_path(registration.slug)
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
     end
   end
 
@@ -713,7 +777,7 @@ RSpec.describe "Events::Callouts", type: :request do
       before do
         scholarship.update!(agreement_signed: true, tasks_completed: false)
         scholarship_callout.update!(hidden: false)
-        scholarship_callout.registration_ticket_callout_forms.create!(form: survey)
+        scholarship_callout.registration_ticket_callout_forms.create!(form: survey, display_from: 1.day.ago)
       end
 
       it "opens the survey in its expanded form card once the agreement is signed" do
@@ -739,7 +803,7 @@ RSpec.describe "Events::Callouts", type: :request do
       before do
         scholarship.update!(agreement_signed: true, tasks_completed: true)
         scholarship_callout.update!(hidden: false)
-        scholarship_callout.registration_ticket_callout_forms.create!(form: survey)
+        scholarship_callout.registration_ticket_callout_forms.create!(form: survey, display_from: 1.day.ago)
       end
 
       it "records the answers anonymously and shows the survey as completed without the answers" do
@@ -947,7 +1011,7 @@ RSpec.describe "Events::Callouts", type: :request do
 
         before do
           scholarship_callout.update!(hidden: false)
-          scholarship_callout.registration_ticket_callout_forms.create!(form: survey)
+          scholarship_callout.registration_ticket_callout_forms.create!(form: survey, display_from: 1.day.ago)
         end
 
         it "stays closed until the agreement is signed" do

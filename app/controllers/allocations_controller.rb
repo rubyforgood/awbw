@@ -15,7 +15,7 @@ class AllocationsController < ApplicationController
     # scope (no :source includes — polymorphic associations can't be eager-loaded
     # for an aggregate).
     @allocations_total_cents = base.sum(:amount)
-    @allocations = base.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+    @allocations = base.includes(:source, created_by: :person, updated_by: :person).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
     render :allocations_results if turbo_frame_request? && @allocatable.blank?
   end
 

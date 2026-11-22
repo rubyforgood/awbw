@@ -141,6 +141,7 @@ Rails.application.routes.draw do
   patch "registration/:slug/ce/attendance", to: "events/callouts#update_ce_attendance", as: :registration_ce_attendance
   get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
   get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
+  get "registration/:slug/callouts/:callout_id", to: "events/callouts#go", as: :registration_callout_link
   get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference
   get "registration/:slug/staff", to: "events/callouts#staff", as: :registration_staff
   get "registration/:slug/forms/:callout_id", to: "events/callouts#callout", as: :registration_callout_form
@@ -424,7 +425,10 @@ Rails.application.routes.draw do
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
-  resources :affiliations, only: [ :edit, :update, :destroy ]
+  resources :affiliations, only: [ :index, :edit, :update, :destroy ] do
+    patch :save_inline, on: :member
+    patch :save_note, on: :member
+  end
   resources :quotes
 
   resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }

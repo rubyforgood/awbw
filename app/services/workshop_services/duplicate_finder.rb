@@ -8,7 +8,7 @@ module WorkshopServices
   # linked through workshop_variations, so only near-identical titles cluster —
   # not a shared theme word.
   class DuplicateFinder
-    Group = Struct.new(:key, :label, :records, :reasons, keyword_init: true)
+    Group = Struct.new(:key, :label, :records, :reasons, :tier, keyword_init: true)
 
     def initialize(scope = Workshop.all)
       @workshops = scope.to_a

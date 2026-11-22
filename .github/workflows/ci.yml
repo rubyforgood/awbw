@@ -42,10 +42,16 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    # GitHub-hosted ubuntu-latest runners have 4 vCPUs; split the suite across
-    # 4 parallel_tests processes (each with its own database) to cut wall time.
+    # The suite splits into 8 runtime-balanced groups; each shard runs 4 of them
+    # on its runner's 4 vCPUs. Group N uses database awbw_testN, so every shard
+    # creates all 8. Both shards read the same committed runtime log, so they
+    # agree on the grouping — refresh it with bin/parallel_runtime_log.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [ "1,2,3,4", "5,6,7,8" ]
     env:
-      PARALLEL_TEST_PROCESSORS: 4
+      PARALLEL_TEST_PROCESSORS: 8
 
     services:
       mysql:
@@ -98,7 +104,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
 
       - name: Run tests and publish results
-        run: bundle exec parallel_rspec spec/
+        run: bundle exec parallel_rspec spec/ -n 8 --only-group ${{ matrix.shard }} --group-by runtime --runtime-log spec/parallel_runtime_rspec.log
         env:
           RAILS_ENV: test
           # Assets are prebuilt above; never let a test process rebuild them
@@ -120,5 +126,5 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: rspec-results
+          name: rspec-results-${{ strategy.job-index }}
           path: tmp/rspec_results/

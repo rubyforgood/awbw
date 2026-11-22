@@ -193,6 +193,39 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "videoconference details for a cancelled registrant" do
+      let(:registrant) { create(:user, :with_person) }
+      let(:vc_event) do
+        create(:event, :published, :publicly_visible, cost_cents: 0, autoshow_videoconference_link: true,
+                       start_date: 10.minutes.from_now, end_date: 2.hours.from_now,
+                       videoconference_url: "https://awbw.zoom.us/j/88285411273",
+                       videoconference_passcode: "secret123")
+      end
+      let!(:registration) { create(:event_registration, event: vc_event, registrant: registrant.person, status: "cancelled") }
+
+      it "shows no join link or calendar details when signed in" do
+        sign_in registrant
+        get event_path(vc_event)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("88285411273")
+        expect(response.body).not_to include("secret123")
+      end
+
+      it "shows no join link or calendar details via the ticket's reg link" do
+        get event_path(vc_event, reg: registration.slug)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("88285411273")
+        expect(response.body).not_to include("secret123")
+      end
+
+      it "shows the join link once the registration is active again" do
+        registration.update!(status: "registered")
+        sign_in registrant
+        get event_path(vc_event)
+        expect(response.body).to include("88285411273")
+      end
+    end
+
     context "display templates" do
       let(:templated_event) { create(:event, :published, :publicly_visible, title: "Templated event") }
 
@@ -2147,6 +2180,27 @@ RSpec.describe "Events", type: :request do
         expect(cells).to include("Card", "Check", "Buddy")
       end
 
+      it "splits paid, scholarship, and discount amounts into columns one Amounts switch reveals" do
+        create(:allocation, source: create(:payment, amount_cents: 4_000, amount_cents_remaining: 4_000),
+                            allocatable: check, amount: 4_000)
+        create(:allocation, source: create(:scholarship, recipient: check.registrant, amount_cents: 3_000),
+                            allocatable: check, amount: 3_000)
+        create(:allocation, source: create(:discount, amount_cents: 1_000), allocatable: check, amount: 1_000)
+
+        get registrants_event_path(event)
+
+        page = Capybara.string(response.body)
+        headers = page.all("th[data-column-toggle-col='amounts']", visible: :all).map { |th| th.text(:all).squish }
+        expect(headers).to eq([ "Amount paid", "Scholarship amount", "Discount amount" ])
+
+        amounts_for = ->(name) {
+          page.find("tbody tr", text: name, visible: :all)
+              .all("td[data-column-toggle-col='amounts']", visible: :all).map { |td| td.text(:all).squish }
+        }
+        expect(amounts_for.("Checkwriter")).to eq([ "$40.00", "$30.00", "$10.00" ])
+        expect(amounts_for.("Cardnow")).to eq([ "—", "—", "—" ])
+      end
+
       it "offers every method plus the buddy option in the filter" do
         get registrants_event_path(event)
 
@@ -2177,6 +2231,25 @@ RSpec.describe "Events", type: :request do
         expect(rows.headers).to include("Expected payment method", "Someone else will pay")
         expect(rows.find { |r| r["First name"] == "Cardnow" }["Expected payment method"]).to eq("Credit card (now)")
         expect(rows.find { |r| r["First name"] == "Sponsored" }["Someone else will pay"]).to eq("Yes")
+      end
+    end
+
+    context "payment breakdown in the CSV export" do
+      let(:event) { create(:event, cost_cents: 10_000) }
+
+      it "splits the payment total into paid, scholarship, and discounted amounts beside it" do
+        registration = create(:event_registration, event: event, registrant: create(:person, first_name: "Splitpay", last_name: "Payer"))
+        create(:allocation, source: create(:payment, amount_cents: 4_000, amount_cents_remaining: nil), allocatable: registration, amount: 4_000)
+        create(:allocation, source: create(:scholarship, recipient: registration.registrant, amount_cents: 3_500), allocatable: registration, amount: 3_500)
+        create(:allocation, source: create(:discount, amount_cents: 2_500), allocatable: registration, amount: 2_500)
+
+        get registrants_event_path(event, format: :csv)
+
+        rows = CSV.parse(response.body, headers: true)
+        total_index = rows.headers.index("Payment total")
+        expect(rows.headers[total_index + 1, 3]).to eq([ "Paid amount", "Scholarship amount", "Discounted amount" ])
+        row = rows.find { |r| r["First name"] == "Splitpay" }
+        expect(row.fields[total_index, 4]).to eq([ "$100", "$40", "$35", "$25" ])
       end
     end
 

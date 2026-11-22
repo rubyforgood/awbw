@@ -31,6 +31,7 @@
         <%= render "shared/column_toggle_switch", group: "scholarship", label: "Scholarship", on: scholarship_on, stacked: true %>
         <% if @event.cost_cents.to_i > 0 %>
           <%= render "shared/column_toggle_switch", group: "payment_method", label: "Payment method", stacked: true %>
+          <%= render "shared/column_toggle_switch", group: "amounts", label: "Amounts", stacked: true %>
         <% end %>
         <%= render "shared/column_toggle_switch", group: "date", label: "Date", stacked: true %>
         <%= render "shared/column_toggle_switch", group: "attendance", label: "Attendance", on: true, stacked: true %>
@@ -65,8 +66,8 @@
       <div class="overflow-x-auto">
         <% payment_col = @event.cost_cents.to_i > 0 %>
         <% ce_col = @ce_eligible %>
-        <% extra_cols = (payment_col ? 2 : 0) + (ce_col ? 1 : 0) %>
-        <%# Column order: Name, Organization, [CE status], Scholarship, [Payment, Payment method (hidden)],
+        <% extra_cols = (payment_col ? 5 : 0) + (ce_col ? 1 : 0) %>
+        <%# Column order: Name, Organization, [CE status], Scholarship, [Payment, Payment method (hidden), Paid/Scholarship/Discount amounts (hidden)],
             Confirmed (hidden), Attendance, Date registered, Progress, Edit (far right).
             The Name button also links to editing the registration. %>
         <% ce_index = 2 %>
@@ -106,6 +107,12 @@
                   <%= render "shared/sortable_header", label: "Payment", index: payment_index %>
                 </th>
                 <th class="hidden px-4 py-2 text-center text-sm font-semibold text-gray-700" data-column-toggle-col="payment_method">Payment method</th>
+                <%# One Amounts switch reveals all three; each column is cents of its source type. %>
+                <% [ "Amount paid", "Scholarship amount", "Discount amount" ].each_with_index do |label, offset| %>
+                  <th class="hidden px-4 py-2 text-right text-sm font-semibold whitespace-nowrap text-gray-700" aria-sort="none" data-column-toggle-col="amounts">
+                    <%= render "shared/sortable_header", label: label, index: payment_index + 2 + offset %>
+                  </th>
+                <% end %>
               <% end %>
 
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col="confirmed">User account</th>
@@ -398,6 +405,16 @@
                       <span class="text-gray-300">—</span>
                     <% end %>
                   </td>
+                  <%# Paid = money actually received (cash/check/card); scholarships and discounts are their own columns. %>
+                  <% [ registration.payments_sum, registration.scholarship_sum, registration.discount_sum ].each do |amount_cents| %>
+                    <td class="hidden px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums" data-column-toggle-col="amounts" data-sort-value="<%= amount_cents %>">
+                      <% if amount_cents.positive? %>
+                        <%= dollars_from_cents(amount_cents, always_cents: true) %>
+                      <% else %>
+                        <span class="text-gray-300">—</span>
+                      <% end %>
+                    </td>
+                  <% end %>
                 <% end %>
 
                 <td class="hidden px-4 py-2 text-center align-top" data-column-toggle-col="confirmed">

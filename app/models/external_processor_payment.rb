@@ -16,6 +16,38 @@ class ExternalProcessorPayment < Payment
 
   validate :pay_charge_presence, on: :create, unless: :skip_pay_charge_validation
 
+  def stripe_billing_details
+    metadata&.dig("stripe_charge", "billing_details") || {}
+  end
+
+  def stripe_billing_name
+    stripe_billing_details["name"].presence
+  end
+
+  def stripe_billing_email
+    stripe_billing_details["email"].presence
+  end
+
+  def stripe_billing_phone
+    stripe_billing_details["phone"].presence
+  end
+
+  def stripe_billing_address
+    address = stripe_billing_details["address"] || {}
+
+    [
+      address["line1"],
+      address["line2"],
+      [ address["city"], address["state"], address["postal_code"] ].compact_blank.join(", ").presence,
+      address["country"]
+    ].compact_blank.join(", ").presence
+  end
+
+  def stripe_payment_method_type
+    metadata&.dig("stripe_charge", "payment_method_details", "type") ||
+      pay_charge&.data&.dig("payment_method_type")
+  end
+
   private
 
   def clear_check_only_fields

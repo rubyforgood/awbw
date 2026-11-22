@@ -1,0 +1,10 @@
+name: "See paid, scholarship, and discounted amounts in registrant exports"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-18
+action_path: "/events/1/registrants"
+pr_number: 3016
+summary: >-
+  The registrant and registrations CSV exports now split each payment total
+  into the amount paid, the scholarship amount, and the discounted amount,
+  in columns right beside the total.

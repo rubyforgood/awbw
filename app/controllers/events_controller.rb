@@ -277,7 +277,7 @@ class EventsController < ApplicationController
       .order(:name)
 
     @submitted_org_names = submitted_org_names_for(@event_registrations)
-    preload_ce_certificate_reads(@event_registrations)
+    preload_signout_reads(@event_registrations)
     @readiness = @event_registrations.to_h do |registration|
       [ registration.id, EventRegistrationReadiness.new(registration) ]
     end
@@ -438,10 +438,8 @@ class EventsController < ApplicationController
 
     @not_auto_comped = []
     if @invite_mode
-      @event_registrations = all_registrations.select do |registration|
-        registration.status.in?(EventRegistration::ACTIVE_STATUSES) &&
-          registration.registrant.preferred_email.present? &&
-          (registration.registrant.user.nil? || registration.registrant.user.confirmed_at.nil?)
+      @event_registrations = @event_registrations.select do |registration|
+        registration.registrant.user.nil? || registration.registrant.user.confirmed_at.nil?
       end
 
       if @comp_membership_on_invite
@@ -451,6 +449,12 @@ class EventsController < ApplicationController
             registration.registrant.memberships.empty?
         end
       end
+    end
+
+    # Inactive registrants (cancelled, no show, transferred out) stay off the list
+    # in both modes unless the admin opts them back in.
+    unless ReminderRecipientFilter.include_inactive?(params)
+      @inactive_left_out, @event_registrations = @event_registrations.partition { |r| r.status.in?(EventRegistration::INACTIVE_STATUSES) }
     end
 
     # Filters keep every registrant in the list and only flag who still matches,
@@ -487,11 +491,14 @@ class EventsController < ApplicationController
     @hide_event_card = params.key?(:hide_event_card) ? hide_event_card_param : @event.on_demand?
     # The ticket button shows by default — only hidden when the admin explicitly ticks it.
     @hide_ticket_button = hide_ticket_button_param
+    @callout_link = params[:callout_link].presence
+    linked_callout, linked_resource = reminder_callout_link_param
+    @callout_link_options = reminder_callout_link_options(@sample_registration)
 
     if @sample_registration
       # Render in preview mode so the custom-message container is always present
       # in the markup for the live preview, even before any text is typed.
-      mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, hide_ticket_button: @hide_ticket_button, preview: true)
+      mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, hide_ticket_button: @hide_ticket_button, linked_callout:, linked_resource:, preview: true)
       @reminder_preview_html = mail.html_part&.body&.decoded
     end
   end
@@ -508,9 +515,11 @@ class EventsController < ApplicationController
     @custom_subject = params[:custom_subject].to_s
     @hide_event_card = hide_event_card_param
     @hide_ticket_button = hide_ticket_button_param
+    @callout_link = params[:callout_link].presence
+    linked_callout, linked_resource = reminder_callout_link_param
 
     if @event_registrations.empty?
-      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: (hide_event_card_param ? "1" : "0"), hide_ticket_button: (hide_ticket_button_param ? "1" : "0")), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, **reminder_draft_params), alert: "Please select at least one recipient."
       return
     end
 
@@ -520,7 +529,14 @@ class EventsController < ApplicationController
       return
     end
 
-    mail = EventMailer.event_registration_reminder(@event_registrations.first, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, hide_ticket_button: @hide_ticket_button)
+    if linked_callout
+      @callout_link_label = RegistrantCalloutLink.new(@event_registrations.first, linked_callout, resource: linked_resource).label
+      # Recipients whose ticket doesn't show this card right now get the email
+      # without the button — name them so the admin isn't surprised.
+      @callout_link_skipped = @event_registrations.reject { |reg| RegistrantCalloutLink.new(reg, linked_callout, resource: linked_resource).path }
+    end
+
+    mail = EventMailer.event_registration_reminder(@event_registrations.first, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, hide_ticket_button: @hide_ticket_button, linked_callout:, linked_resource:)
     @reminder_subject = mail.subject
     @reminder_preview_html = mail.html_part&.body&.decoded
   end
@@ -530,7 +546,7 @@ class EventsController < ApplicationController
     registrations = selected_reminder_registrations
 
     if registrations.empty?
-      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s, hide_event_card: (hide_event_card_param ? "1" : "0"), hide_ticket_button: (hide_ticket_button_param ? "1" : "0")), alert: "Please select at least one recipient.", status: :see_other
+      redirect_to preview_reminder_event_path(@event, **reminder_draft_params), alert: "Please select at least one recipient.", status: :see_other
       return
     end
 
@@ -540,6 +556,7 @@ class EventsController < ApplicationController
     custom_subject = params[:custom_subject].to_s
     hide_event_card = hide_event_card_param
     hide_ticket_button = hide_ticket_button_param
+    linked_callout, linked_resource = reminder_callout_link_param
 
     # Record an individual notification per recipient (delivered + persisted via
     # NotificationMailerJob), so each reminder shows up in that person's
@@ -557,7 +574,9 @@ class EventsController < ApplicationController
         custom_message: custom_message.presence,
         custom_subject: custom_subject.presence,
         hide_event_card: hide_event_card,
-        hide_ticket_button: hide_ticket_button
+        hide_ticket_button: hide_ticket_button,
+        linked_callout: linked_callout,
+        linked_resource: linked_resource
       )
     end
 
@@ -565,7 +584,8 @@ class EventsController < ApplicationController
     # was sent. Roster passed as plain "Name <email>" labels so the delivery job
     # needs no record lookups.
     recipient_labels = registrations.map { |r| "#{r.registrant.full_name} <#{r.registrant.preferred_email}>" }
-    EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence, hide_event_card: hide_event_card, hide_ticket_button: hide_ticket_button).deliver_later
+    callout_link_label = linked_callout && RegistrantCalloutLink.new(registrations.first, linked_callout, resource: linked_resource).label
+    EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence, hide_event_card: hide_event_card, hide_ticket_button: hide_ticket_button, callout_link_label:).deliver_later
 
     track_view("events.send_reminder", { event_id: @event.id, recipient_count: registrations.size })
     redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}.", status: :see_other
@@ -1124,6 +1144,59 @@ class EventsController < ApplicationController
     ActiveModel::Type::Boolean.new.cast(params[:hide_ticket_button]) || false
   end
 
+  # The compose-page draft carried back to the picker when the admin bounces back
+  # (no recipients picked), so nothing they composed is lost. Nil values drop out
+  # of the URL.
+  def reminder_draft_params
+    {
+      mode: params[:mode].presence,
+      custom_message: params[:custom_message].to_s,
+      custom_subject: params[:custom_subject].to_s,
+      hide_event_card: (hide_event_card_param ? "1" : "0"),
+      hide_ticket_button: (hide_ticket_button_param ? "1" : "0"),
+      callout_link: params[:callout_link].presence
+    }
+  end
+
+  # The admin's pick from the compose page's "Link to a ticket callout" menu:
+  # "<callout id>" for the callout's own page, "<callout id>-<resource id>" for
+  # one resource linked on it. Scoped to this event's published callouts; a stale
+  # or foreign pick yields [nil, nil] (no button) rather than a different target.
+  def reminder_callout_link_param
+    callout_id, resource_id = params[:callout_link].to_s.split("-", 2)
+    return [ nil, nil ] if callout_id.blank?
+
+    callout = @event.registration_ticket_callouts.visible.find_by(id: callout_id)
+    return [ nil, nil ] unless callout
+    return [ callout, nil ] if resource_id.blank?
+
+    resource = callout.resources.find_by(id: resource_id)
+    resource ? [ callout, resource ] : [ nil, nil ]
+  end
+
+  # Grouped options for the "Link to a ticket callout" menu: one group per
+  # published callout that opens a page, offering the callout's page and each
+  # resource linked on it. Each option carries its button label and the sample
+  # registrant's link so the live preview can swap them without a round trip.
+  def reminder_callout_link_options(sample_registration)
+    callouts = @event.registration_ticket_callouts.visible.ordered
+      .includes(:registration_ticket_callout_forms, :resources, registration_ticket_callout_resources: :resource)
+    callouts.filter_map do |callout|
+      next unless callout.behavioral_builtin? || callout.page_content?
+
+      option = lambda do |text, value, label, resource_id|
+        url = sample_registration&.slug.present? ? registration_callout_link_url(sample_registration.slug, callout, resource_id:) : "#"
+        [ text, value, { data: { label:, url: } } ]
+      end
+      options = [ option.call("#{callout.title} (callout page)", callout.id.to_s, callout.title, nil) ]
+      callout.registration_ticket_callout_resources.each do |link|
+        next unless link.resource
+        options << option.call(link.resource.title, "#{callout.id}-#{link.resource_id}", link.resource.title, link.resource_id)
+      end
+      [ callout.title, options ]
+    end
+  end
+
   # The registrations the admin checked on the recipient picker, narrowed to those
   # we can actually email. Shared by the confirm interstitial and the send action
   # so both operate on exactly the same set.
@@ -1135,15 +1208,14 @@ class EventsController < ApplicationController
       .select { |r| r.registrant.preferred_email.present? }
   end
 
-  # CE certificate availability (readiness + the certificate cell) reads each CE
-  # registrant's logged attendance time and CE form completion. Preload both for
-  # the CE rows only, so the roster doesn't query them per row.
-  def preload_ce_certificate_reads(registrations)
+  # Readiness reads CE registrants' and scholarship recipients' sign-outs (the CE
+  # form and recipients survey open on them), and CE form completion. Preload those
+  # rows only, so the roster doesn't query them per row.
+  def preload_signout_reads(registrations)
     ce_rows = registrations.select { |r| r.continuing_education_registrations.any? }
-    return if ce_rows.empty?
-
-    ActiveRecord::Associations::Preloader.new(records: ce_rows, associations: :event_attendance_time_entries).call
-    ActiveRecord::Associations::Preloader.new(records: ce_rows.map(&:registrant), associations: :form_completions).call
+    signout_rows = registrations.select { |r| r.continuing_education_registrations.any? || r.scholarship_recipient? }
+    ActiveRecord::Associations::Preloader.new(records: signout_rows, associations: :event_attendance_time_entries).call if signout_rows.any?
+    ActiveRecord::Associations::Preloader.new(records: ce_rows.map(&:registrant), associations: :form_completions).call if ce_rows.any?
   end
 
   # Maps registrant person_id => the organization name they typed on the
@@ -1165,7 +1237,7 @@ class EventsController < ApplicationController
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
     include_ce = @event.ce_eligible?
-    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Expected payment method", "Intends to pay", "Someone else will pay", "Payment total" ]
+    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Expected payment method", "Intends to pay", "Someone else will pay", "Payment total", "Paid amount", "Scholarship amount", "Discounted amount" ]
     headers += [ "CE status", "CE paid", "CE due" ] if include_ce
     headers += survey_csv_headers
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
@@ -1196,7 +1268,10 @@ class EventsController < ApplicationController
       cost_required ? registration.expected_payment_method.presence || "" : "",
       registration.intends_to_pay? ? "Yes" : "No",
       cost_required ? (registration.someone_else_will_pay? ? "Yes" : "No") : "",
-      payment_total
+      payment_total,
+      csv_dollars(registration.payments_sum),
+      csv_dollars(registration.scholarship_sum),
+      csv_dollars(registration.discount_sum)
     ]
     if include_ce
       row << registration.ce_status_label.to_s

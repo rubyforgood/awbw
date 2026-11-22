@@ -13,6 +13,8 @@
       more        – captured markup for the drawer's fields (optional; when blank
                     the drawer, its toggle and checkbox are omitted entirely)
       hidden      – captured hidden inputs carried through the GET submit (optional)
+      single_row  – keep the primary row on one line from xl up; fields with a
+                    flex width give up space instead of wrapping (optional)
       applied     – captured markup sharing the "Filters" heading row, e.g. the
                     applied-filter chip row (optional). It owns its own placement
                     (ml-auto) so it can be a stable element the results frame
@@ -50,10 +52,10 @@
     </div>
 
     <%# Row 1: the most meaningful filters + More filters toggle + Clear. %>
-    <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
+    <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end <%= "xl:flex-nowrap xl:gap-3" if local_assigns[:single_row] %>">
       <%= primary %>
 
-      <div class="flex w-full items-end gap-4 md:ml-auto md:w-auto">
+      <div class="flex w-full shrink-0 items-end gap-4 md:ml-auto md:w-auto">
         <% if has_more %>
           <label for="more-filters-toggle"
                  class="inline-flex items-center gap-1.5 text-sm <%= eyebrow_link_class %> cursor-pointer transition">

@@ -341,6 +341,13 @@
 .aff-ended input::-webkit-datetime-edit {
   text-decoration: line-through;
 }
+/* Affiliations index rows: the server re-renders .aff-ended-marker after each inline save. */
+.aff-row:has(.aff-ended-marker) :is(input:not([type="checkbox"]), textarea, a .truncate, .aff-title) {
+  text-decoration: line-through;
+}
+.aff-row:has(.aff-ended-marker) input::-webkit-datetime-edit {
+  text-decoration: line-through;
+}
 
 /* An empty date filter renders its mm/dd/yyyy hint in the field's text color,
    not a ::placeholder, so it can't be greyed with placeholder:* utilities. Match

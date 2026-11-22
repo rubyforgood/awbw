@@ -26,7 +26,7 @@ class NotificationMailerJob < ApplicationJob
       "event_registration_duplicate_fyi" => ->(n) { NotificationMailer.event_registration_duplicate_fyi(n) },
       "event_registration_cancelled" => ->(n) { EventMailer.event_registration_cancelled(n.noticeable) },
       "event_registration_cancelled_fyi" => ->(n) { NotificationMailer.event_registration_cancelled_fyi(n) },
-      "event_registration_reminder" => ->(n) { EventMailer.event_registration_reminder(n.noticeable, custom_message: n.custom_message, custom_subject: n.custom_subject, hide_event_card: n.hide_event_card, hide_ticket_button: n.hide_ticket_button) },
+      "event_registration_reminder" => ->(n) { EventMailer.event_registration_reminder(n.noticeable, custom_message: n.custom_message, custom_subject: n.custom_subject, hide_event_card: n.hide_event_card, hide_ticket_button: n.hide_ticket_button, linked_callout: n.linked_callout, linked_resource: n.linked_resource) },
       "bulk_payment_confirmation" => ->(n) { EventMailer.bulk_payment_confirmation(n.noticeable) },
       "bulk_payment_confirmation_fyi" => ->(n) { NotificationMailer.bulk_payment_confirmation_fyi(n) },
       "form_submission_confirmation" => ->(n) { NotificationMailer.form_submission_confirmation(n) },

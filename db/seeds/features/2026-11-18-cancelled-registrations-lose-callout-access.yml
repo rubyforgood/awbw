@@ -1,0 +1,11 @@
+name: "Cancelled registrations lose access to ticket callouts"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-18
+summary: >-
+  Once a registration is cancelled, its ticket shows only the cancelled status: no
+  callout cards, and links to callout pages (payment, CE, handouts, videoconference,
+  forms) go back to the ticket.
+pro_tips:
+  - "Reactivating the registration (Register again on the ticket, or setting the status back) restores the callouts."
+  - "Invoices and receipts are still reachable by direct link."

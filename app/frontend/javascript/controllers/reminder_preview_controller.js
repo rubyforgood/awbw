@@ -7,7 +7,7 @@ import { Controller } from "@hotwired/stimulus"
 // above the rendered email. The actual send re-sanitizes the message server-side,
 // so injecting the raw values here is only for the on-page preview.
 export default class extends Controller {
-  static targets = ["input", "message", "subjectInput", "subjectPreview", "eventCard", "eventCardToggle", "cardStatus", "ticketButton", "ticketButtonToggle", "ticketStatus"]
+  static targets = ["input", "message", "subjectInput", "subjectPreview", "eventCard", "eventCardToggle", "cardStatus", "ticketButton", "ticketButtonToggle", "ticketStatus", "calloutLink", "calloutLinkButton", "calloutLinkLabel", "calloutLinkSelect"]
 
   inputTargetConnected() {
     this.update()
@@ -39,6 +39,14 @@ export default class extends Controller {
 
   ticketButtonToggleTargetConnected() {
     this.syncTicketButton()
+  }
+
+  calloutLinkTargetConnected() {
+    this.updateCalloutLink()
+  }
+
+  calloutLinkSelectTargetConnected() {
+    this.updateCalloutLink()
   }
 
   update() {
@@ -89,5 +97,19 @@ export default class extends Controller {
     if (!this.hasTicketButtonTarget || !this.hasTicketButtonToggleTarget) return
 
     this.ticketButtonTarget.style.display = this.ticketButtonToggleTarget.checked ? "none" : ""
+  }
+
+  // Swaps the preview's "Open …" button to the picked callout (label + the sample
+  // registrant's link, both carried on the <option>), or hides it for no pick.
+  updateCalloutLink() {
+    if (!this.hasCalloutLinkTarget || !this.hasCalloutLinkSelectTarget) return
+
+    const option = this.calloutLinkSelectTarget.selectedOptions[0]
+    const label = option?.value ? option.dataset.label : ""
+    this.calloutLinkTarget.style.display = label ? "" : "none"
+    if (!label) return
+
+    if (this.hasCalloutLinkLabelTarget) this.calloutLinkLabelTarget.textContent = label
+    if (this.hasCalloutLinkButtonTarget) this.calloutLinkButtonTarget.href = option.dataset.url || "#"
   }
 }

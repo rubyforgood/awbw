@@ -1,0 +1,12 @@
+<%# Legacy inactive flag as a switch; orange when it's on but the dates still read current. %>
+<% disagrees = affiliation.decorate.inactive_flag_disagrees? %>
+<div id="<%= dom_id(affiliation, :index_inactive) %>">
+  <% if affiliation.inactive_on? %><span class="aff-ended-marker hidden"></span><% end %>
+  <label class="flex cursor-pointer items-center select-none"
+         title="<%= disagrees ? "Flagged inactive, but its dates are still current" : "Legacy inactive flag — start and end dates decide status" %>">
+    <%= check_box_tag "affiliation[inactive]", "1", affiliation.inactive?,
+          id: dom_id(affiliation, :inactive_flag), class: "peer sr-only", "aria-label": "Inactive",
+          data: { action: "change->autosave#save" } %>
+    <span class="relative inline-block h-5 w-9 rounded-full bg-gray-200 transition-colors <%= disagrees ? "ring-2 ring-orange-300 peer-checked:bg-orange-500" : "peer-checked:bg-gray-500" %> after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:after:translate-x-4"></span>
+  </label>
+</div>

@@ -2,6 +2,8 @@ class ContactUsController < ApplicationController
   rescue_from(*EmailDeliveryErrorHandler::ERRORS) { |e| EmailDeliveryErrorHandler.handle(e, self) }
 
   skip_before_action :authenticate_user!, only: [ :index, :create ]
+  rate_limit to: 10, within: 1.minute, only: :create,
+    with: -> { redirect_to contact_us_return_path, alert: "Too many submissions — please wait a minute." }
 
   # Subject presets offered on the Story Share portal variant; picking one fills
   # the subject line so submissions route to the right team.
@@ -73,6 +75,12 @@ class ContactUsController < ApplicationController
   end
 
   private
+
+  def contact_us_return_path
+    from = "story_share" if params[:from] == "story_share"
+    return_to = params[:return_to].presence
+    contact_us_path(from: from, return_to: return_to)
+  end
 
   # A plain symbol-keyed hash so the mailer args serialize for the background job.
   def contact_us_params

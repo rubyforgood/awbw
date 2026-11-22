@@ -142,7 +142,7 @@ class StorySharesController < ApplicationController
     @lead_stories = first_page? ? in_id_order(lead_ids) : []
     @grid_stories = first_page? ? in_id_order(grid_ids) : []
     @stories = preloaded(filtered.where.not(id: lead_ids + grid_ids)).order(created_at: :desc)
-                                  .paginate(page: params[:page], per_page: per_page)
+                                  .paginate(page: page, per_page: per_page)
                                   .decorate
   end
 
@@ -150,7 +150,7 @@ class StorySharesController < ApplicationController
     @lead_stories = []
     @grid_stories = []
     @stories = preloaded(filtered).title_matches_first(params[:query]).order(publicly_featured: :desc, created_at: :desc)
-                                  .paginate(page: params[:page], per_page: per_page)
+                                  .paginate(page: page, per_page: per_page)
                                   .decorate
     visible_ids = portal_scope.select(:id)
     @matching_sectors = Sector.published.sector_name(params[:query])
@@ -166,7 +166,11 @@ class StorySharesController < ApplicationController
   end
 
   def first_page?
-    params[:page].to_i <= 1
+    page == 1
+  end
+
+  def page
+    params[:page].to_i.clamp(1..)
   end
 
   # The banner/carousel and 3-up cards feature only stories starring the browsed

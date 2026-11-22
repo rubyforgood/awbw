@@ -2,6 +2,10 @@ Event reminder Hello <%= @person.first_name %>,
 <% if @custom_message.present? %>
   <%= strip_tags(@custom_message).strip %>
 <% end %>
+<% if @callout_link_url %>
+  Open <%= @callout_link_label %>:
+  <%= @callout_link_url %>
+<% end %>
 <% unless @hide_event_card %>
 <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
   <%= @event.pre_title %>

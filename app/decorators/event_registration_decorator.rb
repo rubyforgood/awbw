@@ -165,6 +165,13 @@ class EventRegistrationDecorator < ApplicationDecorator
   # Option label for the affiliation editor's linked-registration picker: event
   # date + title with the registration's linked org(s). Omits the registrant,
   # which is already the affiliation's person.
+  # The affiliations index's event picker: event id, then its abbreviation or title.
+  def affiliation_event_label
+    return "Registration ##{object.id}" unless event
+
+    "##{event.id} · #{event.decorate.compact_label}"
+  end
+
   def affiliation_choice_label
     date = event&.start_date&.strftime("%Y-%m-%d")
     orgs = organizations.map(&:name).join(", ").presence

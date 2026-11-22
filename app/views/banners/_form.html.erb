@@ -33,13 +33,15 @@
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
       <%= f.input :started_at,
                   as: :datetime,
+                  html5: true,
                   label: "Show from",
-                  input_html: { class: "rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" },
+                  input_html: { class: "w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" },
                   hint: "Leave blank to show as soon as it is published." %>
       <%= f.input :ended_at,
                   as: :datetime,
+                  html5: true,
                   label: "Show until",
-                  input_html: { class: "rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" },
+                  input_html: { class: "w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" },
                   hint: "Leave blank to show until unpublished." %>
     </div>
 

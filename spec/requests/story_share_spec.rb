@@ -168,6 +168,11 @@ RSpec.describe "/story_share", type: :request do
         get story_shares_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "tolerates a mangled page param" do
+        get story_shares_path, params: { page: "5§or_names_all=Staff/Organizational Development" }
+        expect(response).to have_http_status(:ok)
+      end
     end
 
     describe "GET /show" do

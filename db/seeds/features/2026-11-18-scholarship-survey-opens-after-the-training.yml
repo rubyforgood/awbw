@@ -1,0 +1,14 @@
+name: "Scholarship survey opens after the training"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-11-18
+pr_number: 3020
+action_path: "/registration/sample"
+summary: >-
+  The scholarship recipients survey now opens like the CE form: on its display date
+  if one is set, otherwise once the training has ended and the recipient has signed
+  out. Recipients can't fill it out before the training.
+pro_tips:
+  - "The ticket's Scholarship card shows when it opens: the date, “after the training,” or “once you sign out.”"
+  - "Want it open sooner, or on a set day? Set the display date next to the form on the Scholarship callout."
+  - "Recipients still have to accept their agreement before the survey opens."

@@ -1,0 +1,11 @@
+name: "See paid, scholarship, and discount amounts on the registrants list"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-18
+action_path: "/events"
+summary: >-
+  On a paid event's registrants list, the Amounts switch shows three columns
+  beside Payment method: amount paid, scholarship amount, and discount amount.
+pro_tips:
+  - "Click a column header to sort registrants by that amount."
+  - "Amount paid counts only cash, check, and card payments."

@@ -13,7 +13,42 @@ class Resource < ApplicationRecord
   end
 
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
-  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
+  # Kinds outside the library: hidden from the index unless an admin picks the
+  # "Legacy" chip, which stands for all of them at once. FM Archive records are
+  # neither, so the index never lists them.
+  LEGACY_KINDS = [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship" ]
+  KINDS = PUBLISHED_KINDS + LEGACY_KINDS + [ "FM Archive" ]
+
+  # Kinds offered in the form's dropdown: the published kinds the library index
+  # searches, plus the record's own kind so an unsearchable one (Story, Theme,
+  # legacy Resource, …) stays selectable on records that already have it.
+  # `all: true` (the edit page's admin=true param) offers every kind.
+  def kind_options(all: false)
+    return KINDS if all
+
+    (PUBLISHED_KINDS + [ kind.presence ]).compact.uniq
+  end
+
+  # A kind the resource library index searches by default. Legacy kinds (admin
+  # "Legacy" chip) render with admin-only styling.
+  def library_kind?
+    PUBLISHED_KINDS.include?(kind)
+  end
+
+  # Index sort options: label => param.
+  SORT_OPTIONS = {
+    "Featured" => "featured",
+    "Created" => "created",
+    "Modified" => "modified",
+    "Title" => "title",
+    "Kind" => "kind"
+  }.freeze
+
+  # The sort used when none is chosen: Title once the index is filtered to kinds
+  # (a featured-first mix reads as random there), otherwise Featured.
+  def self.default_sort(kinds)
+    Array(kinds).compact_blank.any? ? "title" : "featured"
+  end
 
   # Each role is a built-in job that one library Resource fills (certificate
   # artwork, the W-9, the training handouts), connected on the admin resource-roles
@@ -185,6 +220,15 @@ class Resource < ApplicationRecord
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
   scope :by_featured_first, -> { order(featured: :desc, created_at: :desc) }
+  scope :sorted_by, ->(sort) {
+    case sort.to_s
+    when "created" then order(created_at: :desc)
+    when "modified" then order(updated_at: :desc)
+    when "title" then order(:title)
+    when "kind" then order(:kind, :title)
+    else by_featured_first
+    end
+  }
   scope :kinds, ->(kinds) {
     kinds = Array(kinds).flatten.map(&:to_s)
     where(kind: kinds) }

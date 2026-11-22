@@ -12,9 +12,15 @@ module StorySharesHelper
     { heading: "text-fuchsia-700", link: "text-fuchsia-700 hover:underline", overlay: "bg-fuchsia-800/80", chip: "bg-fuchsia-700" }
   ].freeze
 
+  # Audience colors by category type: age ranges are AWBW rust orange, story
+  # populations a soft yellow. Shared by the tag chips and the card pills so a
+  # story's audience reads the same color everywhere.
+  AGE_RANGE_COLORS = "bg-brand-rust text-white".freeze
+  STORY_POPULATION_COLORS = "bg-brand-amber-100 text-brand-amber-800".freeze
+
   SECTOR_TAG_CHIP = "bg-brand-magenta-50 text-brand-magenta-700 hover:bg-brand-magenta-100 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
-  AUDIENCE_TAG_CHIP = "bg-brand-amber-100 text-brand-amber-800 hover:bg-brand-amber-200 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
-  AGE_RANGE_TAG_CHIP = "bg-brand-rust text-white hover:bg-brand-rust/85 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
+  AUDIENCE_TAG_CHIP = "#{STORY_POPULATION_COLORS} hover:bg-brand-amber-200 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
+  AGE_RANGE_TAG_CHIP = "#{AGE_RANGE_COLORS} hover:bg-brand-rust/85 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
 
   STORY_IMAGE_ASPECT = "aspect-[3/2]".freeze
   STORY_BANNER_ASPECT = "aspect-[4/3] sm:aspect-[2/1]".freeze
@@ -23,7 +29,28 @@ module StorySharesHelper
     "Some spots trim the edges, so keep the main subject near the center.".freeze
 
   def audience_tag_chip_class(category)
-    category.category_type&.name == AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE ? AGE_RANGE_TAG_CHIP : AUDIENCE_TAG_CHIP
+    age_range_category?(category) ? AGE_RANGE_TAG_CHIP : AUDIENCE_TAG_CHIP
+  end
+
+  # Background + text color for a solid audience pill on a story card.
+  def audience_pill_colors(category)
+    age_range_category?(category) ? AGE_RANGE_COLORS : STORY_POPULATION_COLORS
+  end
+
+  # Color locals for categories/_tagging_label so a story's audience chip on the
+  # Stories index matches its Story Share colors.
+  def audience_tagging_label_colors(category)
+    if age_range_category?(category)
+      { bg_color: "bg-brand-rust", bg_hover_color: "bg-brand-rust/85", text_color: "text-white",
+        border_class: "border-brand-rust", border_hover_class: "border-brand-rust" }
+    else
+      { bg_color: "bg-brand-amber-100", bg_hover_color: "bg-brand-amber-200", text_color: "text-brand-amber-800",
+        border_class: "border-brand-amber-200", border_hover_class: "border-brand-amber-300" }
+    end
+  end
+
+  def age_range_category?(category)
+    category.category_type&.name == AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE
   end
 
   def story_share_slot_theme(index)
