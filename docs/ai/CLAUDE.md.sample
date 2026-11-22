@@ -554,7 +554,10 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
   - **3 Read 📖** — light-logic: small, contained logic changes with low blast radius
   - **5 Inspect 🔬** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
 - Include screenshots for UI changes
-- **On every push**, update the PR title and content to reflect the current diff — preserve any existing images/screenshots in the description
+- **On every push**, update the PR title and content to reflect the current diff
+  - **Never drop or overwrite screenshots/images in the description** — the user adds them by hand, so they can't be regenerated
+  - Before editing, fetch the current body (`gh pr view --json body`) and carry every image (`![…](…)`, `<img …>`, uploaded-asset URLs) and its caption into the new body verbatim
+  - Edit around them: rewrite the text, keep the images where they sit; if a screenshot now looks stale, flag it to the user instead of removing it
 - **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts. Edit the tracked sample in `docs/ai/`, plus the live file if this clone has one
 - **Inline-comment only to flag what matters to the reviewer** — do NOT comment on every push, and don't annotate routine or self-explanatory changes. Add a `gh api` line comment on the diff only when a reviewer genuinely needs something flagged: a non-obvious decision or trade-off, a risky/surprising change, a load-bearing assumption, or something easy to miss. When nothing rises to that bar, post no inline comments
 - **Attribute every AI-authored GitHub comment** — `gh` posts as the authenticated user, so any comment you create (PR review comments, issue/PR comments, replies) MUST be prefixed to identify the AI agent that wrote it. Begin the comment body with `🤖 _From <agent>:_` (e.g. `🤖 _From Claude:_` or `🤖 _From Copilot:_`) followed by the content
