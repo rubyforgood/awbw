@@ -548,7 +548,7 @@ GEM
     pry-rails (0.3.11)
       pry (>= 0.13.0)
     public_suffix (7.0.2)
-    puma (7.2.2)
+    puma (7.2.3)
       nio4r (~> 2.0)
     raabro (1.4.0)
     racc (1.8.1)
@@ -815,7 +815,7 @@ DEPENDENCIES
   premailer-rails
   pry-coolline
   pry-rails
-  puma (~> 7.2, >= 7.2.2)
+  puma (~> 7.2, >= 7.2.3)
   rack-mini-profiler (~> 4.0)
   rails (~> 8.1.0)
   rspec-rails
@@ -1041,7 +1041,7 @@ CHECKSUMS
   pry-coolline (0.2.6) sha256=a8e364207c59e87a4b88a92906417cbd3a9e7ec801176410a7abb3ce433a958f
   pry-rails (0.3.11) sha256=a69e28e24a34d75d1f60bcf241192a54253f8f7ef8a62cba1e75750a9653593d
   public_suffix (7.0.2) sha256=9114090c8e4e7135c1fd0e7acfea33afaab38101884320c65aaa0ffb8e26a857
-  puma (7.2.2) sha256=5970616187dff8d40fd3c2a3defaf75a6e47195aa136f90eddab13d304d1d6cf
+  puma (7.2.3) sha256=8d83ed0bef78f9efa03db026d90fd89b6d2cdc003e4bb1c94d0530c3115730d4
   raabro (1.4.0) sha256=d4fa9ff5172391edb92b242eed8be802d1934b1464061ae5e70d80962c5da882
   racc (1.8.1) sha256=4a7f6929691dbec8b5209a0b373bc2614882b55fc5d2e447a21aaa691303d62f
   rack (3.2.8) sha256=1fecc85e463ebc7a2a945fff829ffcd549babeb1556384796fad946c28dc4ec7
