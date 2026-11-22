@@ -3,7 +3,7 @@
 <% else %>
   <%= turbo_stream.update "comments-and-communications-new-form-slot" do %>
     <%= render "comments/record_section_new_form", comment: @comment, record: @commentable,
-               url: comments_path,
-               cancel_path: new_comment_path(commentable_sgid: @commentable.to_sgid.to_s, cancel: 1) %>
+               url: comments_record_sections_path,
+               cancel_path: new_comments_record_section_path(commentable_sgid: @commentable.to_sgid.to_s, cancel: 1) %>
   <% end %>
 <% end %>

@@ -6,7 +6,7 @@
         <i class="fa-solid fa-comments"></i>
       </span>
       <h2 class="text-sm font-semibold text-gray-700"><%= t("communications.section_title") %></h2>
-      <% if local_assigns[:feed_person].present? %>
+      <% if feed_person.present? %>
         <%= link_to comments_and_communications_path(person_id: feed_person.id),
               class: "ml-auto inline-flex items-center gap-1 text-sm #{eyebrow_link_class}",
               title: "Open #{person_name(feed_person)}'s comments and communications feed" do %>

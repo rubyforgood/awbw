@@ -83,6 +83,9 @@ Rails.application.routes.draw do
   # against any record through its signed GlobalID, and opened or edited by id
   # even when its commentable has no nested comments route (affiliations, staff
   # tags…).
+  namespace :comments do
+    resources :record_sections, only: [ :new, :create, :show, :edit, :update, :destroy ]
+  end
   resources :comments, only: [ :index, :show, :new, :create, :edit, :update, :destroy ]
 
   resources :banners
@@ -339,6 +342,9 @@ Rails.application.routes.draw do
       post :promote
       post :curate
     end
+  end
+  namespace :notifications do
+    resources :record_sections, only: [ :new, :create, :show, :edit, :update ]
   end
   resources :notifications, only: [ :index, :new, :create, :show, :edit, :update ] do
     member do

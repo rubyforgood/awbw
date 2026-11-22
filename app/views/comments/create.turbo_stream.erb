@@ -1,19 +1,4 @@
-<% if @aggregator_person.blank? %>
-  <% record = @comment.commentable %>
-  <% if @comment.errors.any? %>
-    <%= turbo_stream.update "comments-and-communications-new-form-slot" do %>
-      <%= render "comments/record_section_new_form", comment: @comment, record: record,
-                 url: comments_path,
-                 cancel_path: new_comment_path(commentable_sgid: record.to_sgid.to_s, cancel: 1) %>
-    <% end %>
-  <% else %>
-    <%= turbo_stream.update "comments-and-communications-new-form-slot", "" %>
-    <%= turbo_stream.prepend "comments-and-communications-list" do %>
-      <%= render "comments/record_section_row", comment: @comment %>
-    <% end %>
-    <%= turbo_stream.remove "comments-and-communications-list-empty" %>
-  <% end %>
-<% elsif @aggregator_person %>
+<% if @aggregator_person %>
   <%= turbo_stream.prepend "aggregated_comments_list" do %>
     <%= render "comments/aggregated_comment", comment: @created_comment.decorate, person: @aggregator_person, record_targets: @comment_targets %>
   <% end %>

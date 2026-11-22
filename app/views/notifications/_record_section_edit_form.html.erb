@@ -14,7 +14,7 @@
 
       <div class="ml-auto flex shrink-0 items-center gap-x-2">
         <%= f.button :submit, "Save", class: button_classes(:secondary_outline, size: :sm) %>
-        <%= link_to "Cancel", notification_path(notification, cancel: 1), class: "text-sm #{eyebrow_link_class}", data: { turbo_stream: true } %>
+        <%= link_to "Cancel", notifications_record_section_path(notification, cancel: 1), class: "text-sm #{eyebrow_link_class}", data: { turbo_stream: true } %>
       </div>
     </div>
   <% end %>

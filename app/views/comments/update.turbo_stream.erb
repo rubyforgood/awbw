@@ -10,9 +10,5 @@
   <%= turbo_stream.replace dom_id(@comment, :flag) do %>
     <%= render "comments/flag_toggle", comment: @comment %>
   <% end %>
-<% else %>
-  <%= turbo_stream.replace dom_id(@comment) do %>
-    <%= render "comments/record_section_row", comment: @comment %>
-  <% end %>
 <% end %>
 <%= turbo_flash %>

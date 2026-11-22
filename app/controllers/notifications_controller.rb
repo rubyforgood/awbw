@@ -25,12 +25,7 @@ class NotificationsController < ApplicationController
     @notification = Notification.new
     @noticeable = inline_noticeable
     if params[:noticeable_sgid].present? && @noticeable.nil?
-      return redirect_to notifications_path, alert: "Select a record to log this communication against"
-    end
-
-    respond_to do |format|
-      format.turbo_stream
-      format.html
+      redirect_to notifications_path, alert: "Select a record to log this communication against"
     end
   end
 
@@ -43,35 +38,18 @@ class NotificationsController < ApplicationController
   # can't be tampered with).
   def create
     authorize!
-
-    if params[:noticeable_sgid].present? && params[:person_id].blank?
-      create_inline
-    else
-      create_for_person
-    end
+    create_for_person
   end
 
   def show
     authorize! @notification
-
-    respond_to do |format|
-      # Turbo reuses the form submission's stream Accept header on the success
-      # redirect, so only the inline Cancel link asks for the row fragment.
-      format.turbo_stream if params[:cancel].present?
-      format.html { track_view @notification }
-    end
+    track_view @notification
   end
 
   def edit
     authorize! @notification
     unless @notification.manual_log?
       redirect_to @notification, alert: "Only manually logged communications can be edited."
-      return
-    end
-
-    respond_to do |format|
-      format.turbo_stream
-      format.html
     end
   end
 
@@ -112,7 +90,7 @@ class NotificationsController < ApplicationController
   end
 
   def resend
-    authorize! @notification, to: :resend?
+    authorize! @notification
 
     # Determine parent and root for the resend chain
     parent_id = @notification.id
@@ -149,13 +127,6 @@ class NotificationsController < ApplicationController
 
   private
 
-  def create_inline
-    record = inline_noticeable
-    return create_inline_for(record) if record
-
-    redirect_to notifications_path, alert: "Select a record to log this communication against"
-  end
-
   def create_for_person
     @person = Person.find_by(id: params[:person_id])
     @notification = Notification.new(notification_params)
@@ -175,27 +146,6 @@ class NotificationsController < ApplicationController
       redirect_to after_create_path, alert: @notification.errors.full_messages.to_sentence.presence || "Failed to log the communication."
     else
       render :new, status: :unprocessable_content
-    end
-  end
-
-  def create_inline_for(record)
-    @noticeable = record
-    @notification = Notification.new(notification_params)
-    @notification.sender = current_user
-    @notification.noticeable = record
-    @notification.person = record.is_a?(Person) ? record : record.try(:person)
-    @notification.recipient_email = record.communications_email.presence || "n/a"
-
-    if @notification.save
-      respond_to do |format|
-        format.turbo_stream
-        format.html { redirect_to notification_path(@notification), notice: "Communication logged." }
-      end
-    else
-      respond_to do |format|
-        format.turbo_stream { render :create, status: :unprocessable_content }
-        format.html { render :new, status: :unprocessable_content }
-      end
     end
   end
 

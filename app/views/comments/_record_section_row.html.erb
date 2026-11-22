@@ -1,6 +1,6 @@
 <% edit_button = nil %>
 <% if allowed_to?(:update?, comment) %>
-  <% edit_button = link_to edit_comment_path(comment), class: "ml-auto shrink-0 text-xs #{eyebrow_link_class}", data: { turbo_stream: true } do %>
+  <% edit_button = link_to edit_comments_record_section_path(comment), class: "ml-auto shrink-0 text-xs #{eyebrow_link_class}", data: { turbo_stream: true } do %>
     <i class="fa-solid fa-pen text-2xs"></i> Edit
   <% end %>
 <% end %>

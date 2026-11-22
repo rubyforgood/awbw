@@ -10,8 +10,8 @@
 
       <div class="flex shrink-0 items-center gap-x-2">
         <%= f.button :submit, "Save", class: button_classes(:secondary_outline, size: :sm) %>
-        <%= link_to "Cancel", comment_path(comment, cancel: 1), class: "text-sm #{eyebrow_link_class}", data: { turbo_stream: true } %>
-        <%= render "comments/delete_link", comment: comment, class_name: "shrink-0 whitespace-nowrap" %>
+        <%= link_to "Cancel", comments_record_section_path(comment, cancel: 1), class: "text-sm #{eyebrow_link_class}", data: { turbo_stream: true } %>
+        <%= render "comments/delete_link", comment: comment, delete_path: comments_record_section_path(comment), class_name: "shrink-0 whitespace-nowrap" %>
       </div>
     </div>
   <% end %>

@@ -298,17 +298,18 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("Called about the remaining balance", "Left a voicemail")
     end
 
-    it "adds a comment from the show page and lands on the comment" do
+    it "creates a comment from the section" do
       payment = CheckPayment.create!(person:, amount_cents: 5_000, check_number: "1234")
 
       expect {
-        post comments_path, params: { comment: { topic: "Follow-up", body: "Called about the check" },
-                                      commentable_sgid: payment.to_sgid.to_s },
-                            headers: { "HTTP_REFERER" => "http://www.example.com#{payment_path(payment)}" }
+        post comments_record_sections_path, params: { comment: { topic: "Follow-up", body: "Called about the check" },
+                                                     commentable_sgid: payment.to_sgid.to_s },
+                                            headers: { "Accept" => "text/vnd.turbo-stream.html" }
       }.to change { payment.comments.count }.by(1)
 
       comment = payment.comments.last
-      expect(response).to redirect_to(comment_path(comment))
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("comments-and-communications-list", "Called about the check")
       expect(comment.body).to eq("Called about the check")
       expect(comment.created_by).to eq(admin)
     end
@@ -322,8 +323,8 @@ RSpec.describe "Payments", type: :request do
       get comments_and_communication_path(payment.to_sgid.to_s)
 
       expect(response.body).to include("comment_#{comment.id}", "notification_#{notification.id}")
-      expect(response.body).to include(edit_comment_path(comment))
-      expect(response.body).to include(edit_notification_path(notification))
+      expect(response.body).to include(edit_comments_record_section_path(comment))
+      expect(response.body).to include(edit_notifications_record_section_path(notification))
       expect(response.body).to include("comment[flagged]")
     end
 
@@ -331,7 +332,7 @@ RSpec.describe "Payments", type: :request do
       payment = create(:payment, person:)
       comment = create(:comment, commentable: payment, body: "Original")
 
-      patch comment_path(comment), params: { comment: { body: "Updated" } },
+      patch comments_record_section_path(comment), params: { comment: { body: "Updated" } },
             headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
       expect(response).to have_http_status(:ok)
@@ -343,7 +344,7 @@ RSpec.describe "Payments", type: :request do
       payment = create(:payment, person:)
       comment = create(:comment, commentable: payment, body: "Original")
 
-      get comment_path(comment, cancel: 1), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      get comments_record_section_path(comment, cancel: 1), headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("comment_#{comment.id}", "Original", "Edit")
@@ -352,12 +353,12 @@ RSpec.describe "Payments", type: :request do
     it "renders the inline add forms in the add slot" do
       payment = create(:payment, person:)
 
-      get new_comment_path(commentable_sgid: payment.to_sgid.to_s),
+      get new_comments_record_section_path(commentable_sgid: payment.to_sgid.to_s),
           headers: { "Accept" => "text/vnd.turbo-stream.html" }
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("comments-and-communications-new-form-slot", "comment[body]")
 
-      get new_notification_path(noticeable_sgid: payment.to_sgid.to_s),
+      get new_notifications_record_section_path(noticeable_sgid: payment.to_sgid.to_s),
           headers: { "Accept" => "text/vnd.turbo-stream.html" }
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("comments-and-communications-new-form-slot", "notification[email_subject]")
@@ -367,9 +368,9 @@ RSpec.describe "Payments", type: :request do
       payment = create(:payment, person:)
 
       expect {
-        post comments_path, params: { comment: { body: "Added inline" },
-                                      commentable_sgid: payment.to_sgid.to_s },
-                            headers: { "Accept" => "text/vnd.turbo-stream.html" }
+        post comments_record_sections_path, params: { comment: { body: "Added inline" },
+                                                      commentable_sgid: payment.to_sgid.to_s },
+                                            headers: { "Accept" => "text/vnd.turbo-stream.html" }
       }.to change { payment.comments.count }.by(1)
 
       expect(response.body).to include("comments-and-communications-list", "Added inline")
@@ -381,7 +382,7 @@ RSpec.describe "Payments", type: :request do
       expect(payment.communications_email).to be_present
 
       expect {
-        post notifications_path, params: {
+        post notifications_record_sections_path, params: {
           noticeable_sgid: payment.to_sgid.to_s,
           notification: { channel: "email", direction: "outgoing", email_subject: "Left a voicemail" }
         }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
@@ -400,7 +401,7 @@ RSpec.describe "Payments", type: :request do
       notification = create(:notification, noticeable: payment, kind: "manual_log", channel: "email",
                                            email_subject: "Called about the check", recipient_email: person.email)
 
-      patch notification_path(notification),
+      patch notifications_record_section_path(notification),
             params: { notification: { email_subject: "" } },
             headers: { "Accept" => "text/vnd.turbo-stream.html" }
 

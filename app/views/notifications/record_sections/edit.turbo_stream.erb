@@ -1,4 +1,4 @@
 <%= turbo_stream.replace dom_id(@notification) do %>
   <%= render "notifications/record_section_edit_form", notification: @notification,
-             url: notification_path(@notification) %>
+             url: notifications_record_section_path(@notification) %>
 <% end %>

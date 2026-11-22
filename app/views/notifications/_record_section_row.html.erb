@@ -1,6 +1,6 @@
 <% edit_button = nil %>
 <% if notification.manual_log? && allowed_to?(:update?, notification) %>
-  <% edit_button = link_to edit_notification_path(notification), class: "shrink-0 text-xs #{eyebrow_link_class}", data: { turbo_stream: true } do %>
+  <% edit_button = link_to edit_notifications_record_section_path(notification), class: "shrink-0 text-xs #{eyebrow_link_class}", data: { turbo_stream: true } do %>
     <i class="fa-solid fa-pen text-2xs"></i> Edit
   <% end %>
 <% end %>
