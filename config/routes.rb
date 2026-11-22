@@ -79,10 +79,6 @@ Rails.application.routes.draw do
 
   resources :fm_archives, only: [ :index, :show ]
 
-  # Top-level new/create/show/edit/update/destroy lets a comment be filed
-  # against any record through its signed GlobalID, and opened or edited by id
-  # even when its commentable has no nested comments route (affiliations, staff
-  # tags…).
   namespace :comments do
     resources :record_sections, only: [ :new, :create, :show, :edit, :update, :destroy ]
   end
