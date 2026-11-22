@@ -1,0 +1,14 @@
+<% edit_button = nil %>
+<% if notification.manual_log? && allowed_to?(:update?, notification) %>
+  <% edit_button = link_to edit_notifications_record_section_path(notification), class: "shrink-0 text-xs #{eyebrow_link_class}", data: { turbo_stream: true } do %>
+    <i class="fa-solid fa-pen text-2xs"></i> Edit
+  <% end %>
+<% end %>
+<% trailing = content_tag(:span,
+  safe_join([ render("notifications/responded_toggle", notification: notification), edit_button ].compact),
+  class: "ml-auto flex shrink-0 items-center gap-3") %>
+<%= tag.div id: dom_id(notification), data: expandable_feed_row_data(clamp: false, key: dom_id(notification)) do %>
+  <%= render "notifications/communication_line", notification: notification, admin: true,
+             truncate: false, expandable: true, trailing: trailing,
+             flag: render("notifications/flag_toggle", notification: notification) %>
+<% end %>

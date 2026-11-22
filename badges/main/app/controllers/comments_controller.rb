@@ -4,8 +4,8 @@ class CommentsController < ApplicationController
   before_action :set_commentable, only: :create
 
   # Global, admin-only index of every comment, with the same search boxes as a
-  # person's aggregated feed plus remote person/event filters. The nested
-  # create/update actions below manage a single record's comments.
+  # person's aggregated feed plus remote person/event filters. The actions below
+  # manage a single record's comments.
   def index
     authorize!
 
@@ -37,7 +37,7 @@ class CommentsController < ApplicationController
         format.html { redirect_to after_create_html_path, notice: "Comment created successfully." }
       end
     else
-      redirect_back fallback_location: root_path, alert: "Failed to create comment."
+      redirect_back_or_to root_path, alert: "Failed to create comment."
     end
   end
 
@@ -46,12 +46,21 @@ class CommentsController < ApplicationController
     authorize! @comment
     target = commentable_target
     @comment.commentable = target if target
-    @comment.update(comment_params)
-    setup_aggregated_context
 
-    respond_to do |format|
-      format.turbo_stream
-      format.html { redirect_back fallback_location: root_path }
+    if @comment.update(comment_params)
+      flash.now[:notice] = "Saved"
+      setup_aggregated_context
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_back_or_to root_path }
+      end
+    else
+      setup_aggregated_context
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_back_or_to root_path, alert: "Failed to update comment." }
+      end
     end
   end
 
@@ -62,7 +71,7 @@ class CommentsController < ApplicationController
 
     respond_to do |format|
       format.turbo_stream
-      format.html { redirect_back fallback_location: root_path, notice: "Comment deleted." }
+      format.html { redirect_back_or_to root_path, notice: "Comment deleted." }
     end
   end
 

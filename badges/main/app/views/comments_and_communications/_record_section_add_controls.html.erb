@@ -1,0 +1,20 @@
+<div class="flex flex-wrap items-center gap-2">
+  <% if allowed_to?(:create?, Comment) %>
+    <%= link_to new_comments_record_section_path(commentable_sgid: record.to_sgid.to_s),
+          data: { turbo_stream: true },
+          class: button_classes(:secondary_outline, size: :sm, extra: "inline-flex items-center gap-1.5") do %>
+      <i class="fa-solid fa-plus text-2xs"></i>
+      <%= t("communications.add_comment") %>
+    <% end %>
+  <% end %>
+  <% if allowed_to?(:create?, Notification) %>
+    <%= link_to new_notifications_record_section_path(noticeable_sgid: record.to_sgid.to_s),
+          data: { turbo_stream: true },
+          class: button_classes(:secondary_outline, size: :sm, extra: "inline-flex items-center gap-1.5") do %>
+      <i class="fa-solid fa-plus text-2xs"></i>
+      <%= t("communications.add") %>
+    <% end %>
+  <% end %>
+</div>
+
+<div id="comments-and-communications-new-form-slot" class="mt-2"></div>

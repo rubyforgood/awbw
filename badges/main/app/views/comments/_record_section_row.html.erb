@@ -1,0 +1,17 @@
+<% edit_button = nil %>
+<% if allowed_to?(:update?, comment) %>
+  <% edit_button = link_to edit_comments_record_section_path(comment), class: "ml-auto shrink-0 text-xs #{eyebrow_link_class}", data: { turbo_stream: true } do %>
+    <i class="fa-solid fa-pen text-2xs"></i> Edit
+  <% end %>
+<% end %>
+<%= tag.div id: dom_id(comment), data: expandable_feed_row_data(clamp: false, key: dom_id(comment)) do %>
+  <div class="rounded-md border <%= comment_card_class(warning: comment.body&.include?("[AGE_RANGE_DATA]")) %> px-3 py-2">
+    <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
+      <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none">
+        <%= render "comments/flag_toggle", comment: comment %>
+      </span>
+      <%= render "comments/comment_line", comment: comment, truncate: false, expandable: true,
+                 trailing: edit_button %>
+    </div>
+  </div>
+<% end %>

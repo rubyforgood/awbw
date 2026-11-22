@@ -21,7 +21,7 @@ class NotificationsController < ApplicationController
   end
 
   def new
-    authorize! Notification, to: :new?
+    authorize!
     @notification = Notification.new
   end
 
@@ -33,7 +33,7 @@ class NotificationsController < ApplicationController
   # of the person's other records instead (a signed GlobalID, so the type/id
   # can't be tampered with).
   def create
-    authorize! Notification, to: :create?
+    authorize!
 
     @person = Person.find_by(id: params[:person_id])
     @notification = Notification.new(notification_params)
@@ -65,19 +65,29 @@ class NotificationsController < ApplicationController
     authorize! @notification
     responded_was = @notification.responded?
     body_was = @notification.email_body_text
-    @notification.update!(notification_params)
-    track_responded_change(responded_was)
-    track_incoming_body_change(body_was)
-    combined_feed_person
 
-    respond_to do |format|
-      format.turbo_stream
-      format.any { head :ok }
+    if @notification.update(notification_params)
+      flash.now[:notice] = "Saved"
+      track_responded_change(responded_was)
+      track_incoming_body_change(body_was)
+      combined_feed_person
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_back_or_to notification_path(@notification) }
+        format.any { head :ok }
+      end
+    else
+      respond_to do |format|
+        format.turbo_stream { head :unprocessable_content }
+        format.html { redirect_back_or_to notification_path(@notification), alert: "Failed to update communication." }
+        format.any { head :unprocessable_content }
+      end
     end
   end
 
   def resend
-    authorize! @notification, to: :resend?
+    authorize! @notification
 
     # Determine parent and root for the resend chain
     parent_id = @notification.id

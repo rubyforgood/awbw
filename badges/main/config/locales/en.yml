@@ -45,6 +45,7 @@ en:
     done_editing: "Done editing"
     resent: "Communication has been resent successfully."
     section_title: "Comments & communications"
+    section_loading: "Loading comments & communications…"
     section_edit: "Edit"
     group_by_subject: "Group by subject"
     show_label: "Show"

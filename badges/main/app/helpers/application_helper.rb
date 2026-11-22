@@ -530,10 +530,6 @@ module ApplicationHelper
     params[:search] ? params[:search][:page] : 1
   end
 
-  def checked?(param = false)
-    param == "1"
-  end
-
   def months_with_year
     (1..12).collect { |m| "#{m}/#{today.year}" }
   end
@@ -567,17 +563,6 @@ module ApplicationHelper
 
     content_tag(:div, id: "banner-news", class: "bg-yellow-200 text-black text-center px-4 py-2") do
       content_tag(:div, safe_content.html_safe, class: "font-medium")
-    end
-  end
-
-  def sortable_field_display_name(name)
-    case name
-    when :adult
-      "Adult Windows"
-    when :children
-      "Children's Windows"
-    else
-      name.to_s.titleize
     end
   end
 
