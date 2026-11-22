@@ -86,7 +86,7 @@ Rails.application.routes.draw do
   namespace :comments do
     resources :record_sections, only: [ :new, :create, :show, :edit, :update, :destroy ]
   end
-  resources :comments, only: [ :index, :show, :new, :create, :edit, :update, :destroy ]
+  resources :comments, only: [ :index, :update, :destroy ]
 
   resources :banners
   resources :bookmarks do

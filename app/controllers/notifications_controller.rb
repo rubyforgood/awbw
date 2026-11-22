@@ -23,10 +23,6 @@ class NotificationsController < ApplicationController
   def new
     authorize!
     @notification = Notification.new
-    @noticeable = inline_noticeable
-    if params[:noticeable_sgid].present? && @noticeable.nil?
-      redirect_to notifications_path, alert: "Select a record to log this communication against"
-    end
   end
 
   # Log a communication by hand against a person — mirrors the nested
@@ -38,7 +34,26 @@ class NotificationsController < ApplicationController
   # can't be tampered with).
   def create
     authorize!
-    create_for_person
+
+    @person = Person.find_by(id: params[:person_id])
+    @notification = Notification.new(notification_params)
+    @notification.sender = current_user
+
+    if @person
+      @notification.noticeable = noticeable_target || @person
+      @notification.person = @person
+      @notification.recipient_email = @person.communications_email.presence || "n/a"
+    else
+      @notification.errors.add(:base, "Select a person to log this communication against")
+    end
+
+    if @person && @notification.save
+      redirect_to after_create_path, notice: "Communication logged."
+    elsif combined_feed_person
+      redirect_to after_create_path, alert: @notification.errors.full_messages.to_sentence.presence || "Failed to log the communication."
+    else
+      render :new, status: :unprocessable_content
+    end
   end
 
   def show
@@ -126,35 +141,6 @@ class NotificationsController < ApplicationController
   end
 
   private
-
-  def create_for_person
-    @person = Person.find_by(id: params[:person_id])
-    @notification = Notification.new(notification_params)
-    @notification.sender = current_user
-
-    if @person
-      @notification.noticeable = noticeable_target || @person
-      @notification.person = @person
-      @notification.recipient_email = @person.communications_email.presence || "n/a"
-    else
-      @notification.errors.add(:base, "Select a person to log this communication against")
-    end
-
-    if @person && @notification.save
-      redirect_to after_create_path, notice: "Communication logged."
-    elsif combined_feed_person
-      redirect_to after_create_path, alert: @notification.errors.full_messages.to_sentence.presence || "Failed to log the communication."
-    else
-      render :new, status: :unprocessable_content
-    end
-  end
-
-  def inline_noticeable
-    return if params[:noticeable_sgid].blank?
-
-    record = noticeable_target
-    record if record.respond_to?(:communications_email)
-  end
 
   # The record the communication is filed against when the composer offers a
   # picker. Signed, so a hostile value can't point at an arbitrary record.

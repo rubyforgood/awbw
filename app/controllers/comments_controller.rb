@@ -1,8 +1,7 @@
 class CommentsController < ApplicationController
   include AhoyTracking
 
-  before_action :set_commentable, only: [ :new, :create ]
-  before_action :set_comment, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_commentable, only: :create
 
   # Global, admin-only index of every comment, with the same search boxes as a
   # person's aggregated feed plus remote person/event filters. The actions below
@@ -26,19 +25,6 @@ class CommentsController < ApplicationController
     end
   end
 
-  def show
-    authorize! @comment
-  end
-
-  def new
-    authorize!
-    @comment = Comment.new
-  end
-
-  def edit
-    authorize! @comment
-  end
-
   def create
     authorize!
     @comment = @commentable.comments.build(comment_params)
@@ -56,6 +42,7 @@ class CommentsController < ApplicationController
   end
 
   def update
+    @comment = Comment.find(params[:id])
     authorize! @comment
     target = commentable_target
     @comment.commentable = target if target
@@ -78,6 +65,7 @@ class CommentsController < ApplicationController
   end
 
   def destroy
+    @comment = Comment.find(params[:id])
     authorize! @comment
     @comment.destroy!
 
@@ -112,10 +100,6 @@ class CommentsController < ApplicationController
     return if params[:for_person_id].blank?
     @aggregator_person = Person.find(params[:for_person_id]).decorate
     @comment_targets = helpers.person_record_targets(@aggregator_person)
-  end
-
-  def set_comment
-    @comment = Comment.find(params[:id])
   end
 
   def set_commentable
