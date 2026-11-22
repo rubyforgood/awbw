@@ -1,7 +1,7 @@
 class NotificationsController < ApplicationController
   include AhoyTracking
 
-  before_action :set_notification, only: [ :show, :edit, :update, :resend ]
+  before_action :set_notification, only: [ :show, :update, :resend ]
 
   def index
     authorize!
@@ -61,13 +61,6 @@ class NotificationsController < ApplicationController
     track_view @notification
   end
 
-  def edit
-    authorize! @notification
-    unless @notification.manual_log?
-      redirect_to @notification, alert: "Only manually logged communications can be edited."
-    end
-  end
-
   def update
     authorize! @notification
     responded_was = @notification.responded?
@@ -81,25 +74,14 @@ class NotificationsController < ApplicationController
 
       respond_to do |format|
         format.turbo_stream
-        format.html do
-          if combined_or_toggle?
-            redirect_back_or_to notification_path(@notification)
-          else
-            redirect_to notification_path(@notification), status: :see_other
-          end
-        end
+        format.html { redirect_back_or_to notification_path(@notification) }
         format.any { head :ok }
       end
-    elsif combined_or_toggle?
+    else
       respond_to do |format|
         format.turbo_stream { head :unprocessable_content }
         format.html { redirect_back_or_to notification_path(@notification), alert: "Failed to update communication." }
         format.any { head :unprocessable_content }
-      end
-    else
-      respond_to do |format|
-        format.turbo_stream { render :edit, status: :unprocessable_content }
-        format.html { render :edit, status: :unprocessable_content }
       end
     end
   end
@@ -148,10 +130,6 @@ class NotificationsController < ApplicationController
     return if params[:noticeable_sgid].blank?
 
     GlobalID::Locator.locate_signed(params[:noticeable_sgid])
-  end
-
-  def combined_or_toggle?
-    params[:combined].present? || params[:toggle].present?
   end
 
   # Set when a person's combined feed posted this — the composer lands the log

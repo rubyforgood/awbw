@@ -346,7 +346,7 @@ Rails.application.routes.draw do
   namespace :notifications do
     resources :record_sections, only: [ :new, :create, :show, :edit, :update ]
   end
-  resources :notifications, only: [ :index, :new, :create, :show, :edit, :update ] do
+  resources :notifications, only: [ :index, :new, :create, :show, :update ] do
     member do
       post :resend
     end
