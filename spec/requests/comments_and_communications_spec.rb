@@ -219,6 +219,15 @@ RSpec.describe "Comments and communications", type: :request do
       expect(labels).to include("Grant · Legacy Circle Fund")
     end
 
+    it "offers the payments naming the person as targets" do
+      CheckPayment.create!(person:, amount_cents: 245_000, check_number: "1234")
+
+      get comments_and_communications_path(person_id: person.id)
+
+      labels = Nokogiri::HTML(response.body).css("select#noticeable_sgid option").map(&:text)
+      expect(labels.any? { |label| label.start_with?("Payment · Check · $2,450") }).to be(true)
+    end
+
     it "offers the reports and workshop records the person is credited on" do
       create(:monthly_report, author: person)
       create(:workshop_idea, author: person)
@@ -516,7 +525,7 @@ RSpec.describe "Comments and communications", type: :request do
 
       doc = Nokogiri::HTML(response.body)
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
-      expect(row.at_css("[data-controller='autosave'] input[name='notification[responded]'][type=checkbox]")).to be_present
+      expect(row.at_css("form##{ActionView::RecordIdentifier.dom_id(notification, :responded)} button")).to be_present
     end
 
     it "shows a Responded checkbox for a contact-us FYI even though it's an automated, non-editable row" do
@@ -530,11 +539,11 @@ RSpec.describe "Comments and communications", type: :request do
 
       doc = Nokogiri::HTML(response.body)
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(contact_us_fyi)}")
-      expect(row.at_css("[data-controller='autosave'] input[name='notification[responded]'][type=checkbox]")).to be_present
+      expect(row.at_css("form##{ActionView::RecordIdentifier.dom_id(contact_us_fyi, :responded)} button")).to be_present
       expect(row.at_css("button[data-action='edit-toggle#toggle']")).to be_nil
     end
 
-    it "hides the Responded checkbox for a communication that doesn't need one" do
+    it "hides the responded toggle for a communication that doesn't need one" do
       notification = create(:notification, noticeable: person, recipient_email: "primary@example.com",
                                            email_subject: "FYI, no reply needed", kind: "manual_log",
                                            channel: "email", recipient_role: "person", notification_type: 0)
@@ -544,7 +553,7 @@ RSpec.describe "Comments and communications", type: :request do
 
       doc = Nokogiri::HTML(response.body)
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
-      expect(row.at_css("[data-controller='autosave']")).to be_nil
+      expect(row.at_css("form##{ActionView::RecordIdentifier.dom_id(notification, :responded)}")).to be_nil
     end
   end
 

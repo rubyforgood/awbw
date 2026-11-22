@@ -1,0 +1,14 @@
+<% return unless allowed_to?(:update?, notification) && notification.requires_response? %>
+<% responded = notification.responded? %>
+<%= button_to notification_path(notification),
+              method: :patch,
+              params: { toggle: "responded", notification: { responded: !responded } },
+              form: { id: dom_id(notification, :responded), data: { turbo: true } },
+              class: "inline-flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 hover:bg-gray-100",
+              aria: { pressed: responded },
+              title: responded ? "Responded to by staff — click to clear" : "Mark as responded" do %>
+  <span class="relative inline-block h-5 w-9 rounded-full transition-colors <%= responded ? "bg-green-600" : "bg-gray-300" %>">
+    <span class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform <%= "translate-x-4" if responded %>"></span>
+  </span>
+  <span class="text-xs <%= responded ? "text-green-700" : "text-gray-600" %>">Responded</span>
+<% end %>

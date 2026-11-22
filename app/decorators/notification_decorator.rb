@@ -149,15 +149,11 @@ class NotificationDecorator < ApplicationDecorator
     pill(AUDIENCE_META[audience], **options)
   end
 
-  # The Incoming pill doubles as a response tracker: a filled check once the
-  # incoming message has been answered, an empty checkbox while it still needs a
-  # reply. Display-only — the responded flag is toggled in the edit form.
+  # The Incoming pill marks the audience; the responded state is shown by the
+  # live toggle on the communication row.
   def incoming_badge(**options)
     meta = AUDIENCE_META["incoming"]
-    icon = responded? ? "fa-solid fa-square-check" : "fa-regular fa-square"
-    label = h.safe_join([ h.content_tag(:i, "", class: icon, "aria-hidden": "true"), meta[:label] ], " ")
-    classes = "#{DomainTheme.bg_class_for(:notifications, intensity: 600)} text-white"
-    pill(meta.merge(label: label, classes: classes), **options)
+    pill(meta.merge(classes: "#{DomainTheme.bg_class_for(:notifications, intensity: 600)} text-white"), **options)
   end
 
   # Part of a bulk send, so the index can flag it with a "Bulk" pill. Two things

@@ -79,9 +79,9 @@ Rails.application.routes.draw do
 
   resources :fm_archives, only: [ :index, :show ]
 
-  # Top-level update/destroy lets the aggregated feeds flag, edit, or delete any
-  # comment by id, even when its commentable has no nested comments route
-  # (affiliations, staff tags…).
+  namespace :comments do
+    resources :record_sections, only: [ :new, :create, :show, :edit, :update, :destroy ]
+  end
   resources :comments, only: [ :index, :update, :destroy ]
 
   resources :banners
@@ -322,7 +322,7 @@ Rails.application.routes.draw do
     resources :memberships, only: [ :index, :new, :create ], controller: "people/memberships"
     resource :billing_portal, only: [ :create ], controller: "people/billing_portals"
   end
-  resources :comments_and_communications, only: [ :index ] do
+  resources :comments_and_communications, only: [ :index, :show ] do
     collection do
       get :composers
     end
@@ -339,6 +339,9 @@ Rails.application.routes.draw do
       post :promote
       post :curate
     end
+  end
+  namespace :notifications do
+    resources :record_sections, only: [ :new, :create, :show, :edit, :update ]
   end
   resources :notifications, only: [ :index, :new, :create, :show, :update ] do
     member do

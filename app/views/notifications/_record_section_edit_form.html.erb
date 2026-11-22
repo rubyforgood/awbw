@@ -1,0 +1,22 @@
+<%= tag.div id: dom_id(notification) do %>
+<div class="rounded-md border <%= communication_card_class %> px-3 py-2">
+  <%= simple_form_for notification, url: url do |f| %>
+    <%= render "shared/errors", resource: notification if notification.errors.any? %>
+
+    <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
+      <div class="w-40 shrink-0">
+        <%= f.datetime_field :created_at, value: (notification.created_at || Time.current).strftime("%Y-%m-%dT%H:%M"),
+                             class: "w-full bg-white rounded-md border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", aria: { label: "When" } %>
+      </div>
+      <%= render "notifications/from_chip", notification: notification %>
+      <%= render "notifications/record_section_fields", f: f,
+                 channel_default: (Notification::MANUAL_CHANNELS.include?(notification.channel) ? notification.channel : "email") %>
+
+      <div class="ml-auto flex shrink-0 items-center gap-x-2">
+        <%= f.button :submit, "Save", class: button_classes(:secondary_outline, size: :sm) %>
+        <%= link_to "Cancel", notifications_record_section_path(notification, cancel: 1), class: "text-sm #{eyebrow_link_class}", data: { turbo_stream: true } %>
+      </div>
+    </div>
+  <% end %>
+</div>
+<% end %>

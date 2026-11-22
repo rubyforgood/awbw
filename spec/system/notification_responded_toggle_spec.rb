@@ -6,58 +6,62 @@ RSpec.describe "Notification responded toggle", type: :system, js: true do
 
   before { sign_in admin }
 
-  def responded_checkbox
-    find("input[type='checkbox'][name='notification[responded]']")
+  def responded_form_id
+    ActionView::RecordIdentifier.dom_id(fyi, :responded)
+  end
+
+  def responded_toggle
+    find("form##{responded_form_id} button")
   end
 
   describe "on the index page" do
-    it "auto-saves when an admin checks the box" do
+    it "marks responded when clicked" do
       visit notifications_path
 
-      expect(responded_checkbox).not_to be_checked
+      expect(responded_toggle["aria-pressed"]).to eq("false")
 
-      responded_checkbox.check
+      responded_toggle.click
 
-      expect(page).to have_css("input[name='notification[responded]'].ring-green-300", wait: 5)
+      expect(page).to have_css("form##{responded_form_id} button[aria-pressed='true']", wait: 5)
       expect(fyi.reload.responded).to be(true)
     end
 
-    it "auto-saves when an admin unchecks the box" do
+    it "clears responded when clicked again" do
       fyi.update!(responded: true)
 
       visit notifications_path
 
-      expect(responded_checkbox).to be_checked
+      expect(responded_toggle["aria-pressed"]).to eq("true")
 
-      responded_checkbox.uncheck
+      responded_toggle.click
 
-      expect(page).to have_css("input[name='notification[responded]'].ring-green-300", wait: 5)
+      expect(page).to have_css("form##{responded_form_id} button[aria-pressed='false']", wait: 5)
       expect(fyi.reload.responded).to be(false)
     end
   end
 
   describe "on the show page" do
-    it "auto-saves when an admin checks the box" do
+    it "marks responded when clicked" do
       visit notification_path(fyi)
 
-      expect(responded_checkbox).not_to be_checked
+      expect(responded_toggle["aria-pressed"]).to eq("false")
 
-      responded_checkbox.check
+      responded_toggle.click
 
-      expect(page).to have_css("input[name='notification[responded]'].ring-green-300", wait: 5)
+      expect(page).to have_css("form##{responded_form_id} button[aria-pressed='true']", wait: 5)
       expect(fyi.reload.responded).to be(true)
     end
 
-    it "auto-saves when an admin unchecks the box" do
+    it "clears responded when clicked again" do
       fyi.update!(responded: true)
 
       visit notification_path(fyi)
 
-      expect(responded_checkbox).to be_checked
+      expect(responded_toggle["aria-pressed"]).to eq("true")
 
-      responded_checkbox.uncheck
+      responded_toggle.click
 
-      expect(page).to have_css("input[name='notification[responded]'].ring-green-300", wait: 5)
+      expect(page).to have_css("form##{responded_form_id} button[aria-pressed='false']", wait: 5)
       expect(fyi.reload.responded).to be(false)
     end
   end

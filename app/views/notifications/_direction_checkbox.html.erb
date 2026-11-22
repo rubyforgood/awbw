@@ -1,0 +1,10 @@
+<% compact = local_assigns.fetch(:compact, false) %>
+<div class="flex items-center gap-2">
+  <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+    <%= f.check_box :direction, { class: "rounded border-gray-300 text-purple-600 focus:ring-purple-500", "aria-label": "Incoming — sent by the person" }, "incoming", "outgoing" %>
+    <span>Incoming</span>
+  </label>
+  <% unless compact %>
+    <span class="text-xs text-gray-400">Sent <em>by</em> the person (not to them)</span>
+  <% end %>
+</div>

@@ -94,6 +94,7 @@ class Notification < ApplicationRecord
     FormSubmission
     Grant
     Membership
+    Payment
     Person
     ProfileChangeRequest
     Report
