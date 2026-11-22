@@ -44,7 +44,7 @@ module Comments
 
     def set_commentable
       @commentable = GlobalID::Locator.locate_signed(params[:commentable_sgid])
-      redirect_to root_path, alert: "Invalid commentable resource" unless @commentable
+      raise ActiveRecord::RecordNotFound unless @commentable
     end
 
     def set_comment

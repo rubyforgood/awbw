@@ -54,11 +54,7 @@ module Notifications
 
     def set_noticeable
       @noticeable = GlobalID::Locator.locate_signed(params[:noticeable_sgid])
-      redirect_to notifications_path, alert: "Select a record to log this communication against" unless communicable?(@noticeable)
-    end
-
-    def communicable?(record)
-      record.present? && record.respond_to?(:communications_email)
+      raise ActiveRecord::RecordNotFound unless @noticeable
     end
 
     def set_notification
