@@ -32,20 +32,20 @@ RSpec.describe PublicFormSubmission do
       registration = EventRegistration.last
       expect(registration.event).to eq(training)
       expect(registration.registrant).to eq(result.person)
-      # Invited only after completing the external LMS, so the registration
-      # flips straight to attended.
-      expect(registration.status).to eq("attended")
+      expect(registration.status).to eq("registered")
       expect(result.form_submission.event).to eq(training)
     end
 
-    it "does not duplicate an existing registration, but flips it to attended" do
-      person = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
-      existing = create(:event_registration, event: training, registrant: person, status: "registered")
+    { "registered" => "registered", "attended" => "attended", "cancelled" => "registered" }.each do |before, after|
+      it "reuses an existing #{before} registration, leaving it #{after}" do
+        person = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
+        existing = create(:event_registration, event: training, registrant: person, status: before)
 
-      expect { described_class.call(form: form, form_params: params_for) }
-        .not_to change(EventRegistration, :count)
+        expect { described_class.call(form: form, form_params: params_for) }
+          .not_to change(EventRegistration, :count)
 
-      expect(existing.reload.status).to eq("attended")
+        expect(existing.reload.status).to eq(after)
+      end
     end
 
     context "when the submitted organization matches" do
