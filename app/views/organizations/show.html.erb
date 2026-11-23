@@ -61,7 +61,7 @@
             <% if admin_only %>
               <span class="<%= admin_only_chip_class %>" title="Secondary address (admin only)">
                 <i class="fa-solid fa-lock text-xs text-blue-700"></i>
-                <span class="font-semibold">Secondary</span>
+                <span class="text-2xs font-semibold tracking-wide uppercase">Secondary</span>
                 <%= [place.presence, address.street_address.presence].compact.join(" · ") %>
               </span>
             <% else %>
