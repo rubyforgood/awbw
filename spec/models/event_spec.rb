@@ -84,6 +84,50 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "destroying with money allocated" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:registration) { create(:event_registration, event: event) }
+
+    it "is blocked and keeps the registration when a payment is allocated to it" do
+      allocation = create(:allocation, allocatable: registration, amount: 1_000)
+
+      expect(event.destroy).to be(false)
+      expect(event.errors[:base].to_sentence).to include("financial records")
+      expect(EventRegistration.exists?(registration.id)).to be(true)
+      expect(Allocation.exists?(allocation.id)).to be(true)
+    end
+
+    it "is blocked when a scholarship is allocated" do
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 10_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 10_000)
+
+      expect(event.destroy).to be(false)
+      expect(Event.exists?(event.id)).to be(true)
+    end
+
+    it "is blocked when only a CE registration holds the allocation" do
+      ce = create(:continuing_education_registration, event_registration: registration)
+      create(:allocation, allocatable: ce, amount: 1_000)
+
+      expect(event.destroy).to be(false)
+      expect(ContinuingEducationRegistration.exists?(ce.id)).to be(true)
+    end
+
+    it "is allowed when registrations hold no allocations" do
+      registration
+
+      expect(event.destroy).to be_truthy
+      expect(EventRegistration.exists?(registration.id)).to be(false)
+    end
+
+    it "is allowed when another event holds the allocation" do
+      registration
+      create(:allocation, allocatable: create(:event_registration, event: create(:event, cost_cents: 10_000)), amount: 1_000)
+
+      expect(event.destroy).to be_truthy
+    end
+  end
+
   describe "staff uniqueness on update" do
     it "rejects two staff rows for the same person added in one update" do
       event = create(:event)
