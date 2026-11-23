@@ -89,9 +89,7 @@ class PublicFormSubmission
 
     submission.update!(event: event)
     registration = EventRegistration.find_or_create_by!(event: event, registrant: submission.person)
-    # Created "registered" (the column default), then flipped: an on-demand
-    # agreement only arrives after the external LMS training is complete.
-    registration.update!(status: "attended") unless registration.status == "attended"
+    registration.update!(status: "registered") if registration.status == "cancelled"
     registration
   end
 

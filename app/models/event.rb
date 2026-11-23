@@ -180,9 +180,6 @@ class Event < ApplicationRecord
       trainings.upcoming.order(:start_date).first
   end
 
-  # People are invited to an on-demand facilitator training only after they've
-  # completed the external LMS course, so registering here means the training
-  # is already done — registrations flip straight to "attended".
   def on_demand_facilitator_training?
     on_demand? && facilitator_training?
   end

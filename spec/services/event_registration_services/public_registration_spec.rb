@@ -43,14 +43,14 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
   end
 
   describe "registration status" do
-    it "flips an on-demand facilitator-training registration straight to attended" do
+    it "leaves an on-demand facilitator-training registration as registered" do
       on_demand = create(:event, :published, :publicly_visible, facilitator_training: true, on_demand: true)
       on_demand.event_forms.create!(form: form, role: "registration")
 
       result = described_class.call(event: on_demand, registration_form: form,
                                     form_params: base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com"))
 
-      expect(result.event_registration.status).to eq("attended")
+      expect(result.event_registration.status).to eq("registered")
     end
 
     it "leaves a scheduled event's registration as registered" do
