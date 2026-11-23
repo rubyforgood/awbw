@@ -105,8 +105,8 @@ users index (`app/views/users/users_results.html.erb`) is the reference.
 - Each card leads with the row's identity card (e.g. the person button) and its
   actions on one line, then the remaining fields below, ending with a wrapping
   `<dl>` of muted label + value pairs.
-- Keep sorting on small screens: a "Sort by" bar above the cards calls the same
-  `sort_header_link` generator as the table headers.
+- Keep sorting on small screens: render the **Sort by strip** (below) above the
+  cards, in link mode, with the same sort/direction params as the table headers.
 - Let long unbroken values (emails, URLs) wrap with `wrap-anywhere`, plus a
   `<wbr>` at the natural break (before the `@`).
 
@@ -118,3 +118,24 @@ closed and rotating up when open. `events/_charts_toggle_bar` and
 `events/_panel_cta` are the reference. A chevron leads only on a disclosure row
 whose whole row is the click target (an accordion header), where it marks the
 row's state before its title.
+
+## Sort by strip
+
+Card and list pages sort with one control: `shared/_sort_strip`, a "Sort by"
+label beside a segmented strip whose active segment fills with the domain's 700
+color. Tables sort by clicking column headers (`sort_header_link`) instead; a
+table's small-screen card list uses the strip.
+
+- **Radio mode** (no `href:`) — inside a search form wired to the `collection`
+  controller, so a click auto-submits; `has-checked` styles the active segment
+  with no JS. `default:` names the value that submits blank, so the server
+  re-derives the default. Workshops and resources are the reference.
+- **Link mode** (`href: ->(value) { path }`) — the server marks the active
+  segment with `aria-current`. Pass `link_data: { turbo_frame: … }` inside a
+  results frame. For a reversible sort, point the active segment's href at the
+  opposite direction and pass `active_icon:` (`fa-arrow-up` / `fa-arrow-down`).
+  My Bookmarks, the users small-screen cards, and the org sectors page are the
+  reference. Keep labels direction-neutral ("Name", not "A–Z") on a reversible sort.
+- Options are a `{ label => value }` constant beside the sort logic (e.g.
+  `WorkshopSearchService::SORT_OPTIONS`); labels are sentence case.
+- Place it at the right end of the count row (`ml-auto`) on index pages.

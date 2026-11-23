@@ -252,7 +252,7 @@ RSpec.describe "/organizations", type: :request do
       expect(page).not_to have_content("Former Sector")
     end
 
-    it "sorts the breakdown by the chosen option, defaulting to primary first" do
+    it "sorts the breakdown by the chosen option, defaulting to most primary first" do
       person = organization_with_sectors.affiliations.first.person
       %w[Echo Foxtrot].each { |name| create(:sectorable_item, sector: create(:sector, name: name), sectorable: person, is_primary: false) }
       second = create(:person)
@@ -263,7 +263,7 @@ RSpec.describe "/organizations", type: :request do
 
       get populations_served_organization_url(organization_with_sectors)
       expect(sector_order.call).to eq(%w[Alpha Bravo Charlie Delta Echo Foxtrot])
-      expect(Capybara.string(response.body)).to have_css("a[aria-current='true']", exact_text: "Primary first")
+      expect(Capybara.string(response.body)).to have_css("a[aria-current='true']", exact_text: "Primary")
 
       get populations_served_organization_url(organization_with_sectors, sort: "total")
       expect(sector_order.call).to eq(%w[Echo Alpha Bravo Charlie Delta Foxtrot])
@@ -272,7 +272,26 @@ RSpec.describe "/organizations", type: :request do
       expect(sector_order.call).to eq(%w[Alpha Bravo Charlie Delta Echo Foxtrot])
 
       get populations_served_organization_url(organization_with_sectors, sort: "bogus")
-      expect(Capybara.string(response.body)).to have_css("a[aria-current='true']", exact_text: "Primary first")
+      expect(Capybara.string(response.body)).to have_css("a[aria-current='true']", exact_text: "Primary")
+    end
+
+    it "reverses the chosen sort and offers to flip it back" do
+      person = organization_with_sectors.affiliations.first.person
+      %w[Echo Foxtrot].each { |name| create(:sectorable_item, sector: create(:sector, name: name), sectorable: person, is_primary: false) }
+      second = create(:person)
+      create(:affiliation, organization: organization_with_sectors, person: second)
+      create(:sectorable_item, sector: Sector.find_by!(name: "Echo"), sectorable: second, is_primary: false)
+      sector_order = -> { Capybara.string(response.body).all("section", text: "Sectors").first.all("li a").map(&:text) }
+
+      get populations_served_organization_url(organization_with_sectors, sort: "total", direction: "asc")
+      expect(sector_order.call).to eq(%w[Foxtrot Alpha Bravo Charlie Delta Echo])
+
+      get populations_served_organization_url(organization_with_sectors, sort: "name", direction: "desc")
+      expect(sector_order.call).to eq(%w[Foxtrot Echo Delta Charlie Bravo Alpha])
+      active = Capybara.string(response.body).find("a[aria-current='true']")
+      expect(active).to have_text("Name")
+      expect(active).to have_css("i.fa-arrow-down")
+      expect(active[:href]).to include("direction=asc")
     end
 
     it "caps the edit page at three sectors with links to the breakdown that return to the edit page" do
@@ -334,7 +353,7 @@ RSpec.describe "/organizations", type: :request do
         page = Capybara.string(response.body)
         expect(page).to have_content("This organization doesn't show sectors or age groups on its profile.")
         expect(page).not_to have_css("section h2")
-        expect(page).not_to have_link("Primary first")
+        expect(page).not_to have_link("Primary", exact: true)
       end
 
       it "hides the profile and edit links to the breakdown when both are hidden" do

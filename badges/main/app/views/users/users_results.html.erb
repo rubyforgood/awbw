@@ -8,11 +8,11 @@
     <% if @users.any? %>
       <!-- Small screens: one card per user -->
       <div class="rounded border border-gray-200 bg-white lg:hidden">
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 bg-gray-100 px-4 py-2 text-sm font-semibold">
-          <span class="text-gray-500">Sort by</span>
-          <% [ %w[email Email], %w[person Person], %w[confirmed Confirmed], %w[access Access], %w[admin Admin] ].each do |column, label| %>
-            <%= sort_link.call(column, label) %>
-          <% end %>
+        <div class="border-b border-gray-200 bg-gray-100 px-4 py-2">
+          <%= render "shared/sort_strip", options: { "Email" => "email", "Person" => "person", "Confirmed" => "confirmed", "Access" => "access", "Admin" => "admin" },
+                     selected: @sort, domain: :admin_only, link_data: { turbo_frame: "users_results" },
+                     href: ->(column) { users_path(sort_base.merge(sort: column, direction: (@sort == column && @sort_direction == "desc") ? "asc" : "desc", page: nil)) },
+                     active_icon: (@sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down") %>
         </div>
 
         <ul class="divide-y divide-gray-200">
