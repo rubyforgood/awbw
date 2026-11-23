@@ -10,13 +10,13 @@ class OrganizationPolicy < ApplicationPolicy
   end
 
   def show_submitted_content?
-    admin? || member?
+    admin? || affiliated_with?
   end
 
   # The "Show workshop logs" profile toggle hides the org's workshop logs from
-  # members; admins always see them.
+  # affiliated users; admins always see them.
   def show_workshop_logs?
-    admin? || (member? && record.profile_show_workshop_logs?)
+    admin? || (affiliated_with? && record.profile_show_workshop_logs?)
   end
 
   def populations_served?
@@ -56,10 +56,8 @@ class OrganizationPolicy < ApplicationPolicy
     authenticated? && !Rails.env.production?
   end
 
-  def member?
-    @member ||= begin
-      return false unless user&.person_id
-      record.affiliations.exists?(person_id: user.person_id)
-    end
+  def affiliated_with?
+    return false unless user&.person_id
+    record.affiliations.exists?(person_id: user.person_id)
   end
 end

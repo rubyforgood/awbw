@@ -12,15 +12,15 @@ class MonthlyReportPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || owner? || member?
+    admin? || owner? || affiliated_with?
   end
 
   def update?
-    admin? || owner? || member?
+    admin? || owner? || affiliated_with?
   end
 
   def destroy?
-    record.persisted? && (admin? || owner? || member?)
+    record.persisted? && (admin? || owner? || affiliated_with?)
   end
 
   relation_scope do |relation|
@@ -34,11 +34,9 @@ class MonthlyReportPolicy < ApplicationPolicy
 
   private
 
-  def member?
-    @member ||= begin
-                  return false unless authenticated?
-                  return false unless record.organization
-                  record.organization.affiliations.exists?(person_id: user.person_id)
-                end
+  def affiliated_with?
+    return false unless authenticated?
+    return false unless record.organization
+    record.organization.affiliations.exists?(person_id: user.person_id)
   end
 end
