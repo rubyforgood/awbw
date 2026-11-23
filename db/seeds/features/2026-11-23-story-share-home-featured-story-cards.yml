@@ -1,0 +1,11 @@
+name: "Featured stories show as cards on the Story Share home"
+area: stories
+display_status: admin_facing
+released_on: 2026-11-23
+action_path: "/story_share"
+summary: >-
+  Featured stories on the Story Share home now appear as a row of cards you can
+  scroll with arrows, matching the new marketing site. A Browse all stories button
+  sits beside the arrows.
+pro_tips:
+  - "Cards show the story's image or video, title and main tags. The organization name is on the story page."
