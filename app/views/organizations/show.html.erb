@@ -59,8 +59,9 @@
           <% place = [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %>
           <div class="mt-1 flex flex-wrap items-center justify-center gap-2 text-sm text-gray-600 md:justify-start">
             <% if admin_only %>
-              <span class="<%= admin_only_chip_class %>" title="Non-primary address (admin only)">
+              <span class="<%= admin_only_chip_class %>" title="Secondary address (admin only)">
                 <i class="fa-solid fa-lock text-xs text-blue-700"></i>
+                <span class="font-semibold">Secondary</span>
                 <%= [place.presence, address.street_address.presence].compact.join(" · ") %>
               </span>
             <% else %>

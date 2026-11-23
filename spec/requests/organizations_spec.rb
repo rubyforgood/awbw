@@ -115,7 +115,8 @@ RSpec.describe "/organizations", type: :request do
 
       get organization_url(organization)
       expect(response.body).to include("Primaryville", "Secondton", "1 First St", "2 Second St", "Sideburg", "3 Side St")
-      expect(response.body).to include("Non-primary address (admin only)")
+      chips = Capybara.string(response.body).all("span[title='Secondary address (admin only)']")
+      expect(chips.map(&:text).map(&:squish)).to contain_exactly(a_string_matching(/\ASecondary .*Sideburg.*3 Side St\z/))
       expect(response.body).not_to include("Oldham")
 
       create(:affiliation, organization: organization, person: create(:person))
