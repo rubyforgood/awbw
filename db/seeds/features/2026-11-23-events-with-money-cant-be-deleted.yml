@@ -2,6 +2,7 @@ name: "Events with money on them can't be deleted"
 area: events
 display_status: admin_facing
 released_on: 2026-11-23
+pr_number: 3046
 summary: >-
   Deleting an event is blocked while any of its registrations, or their CE, has a
   payment, scholarship, discount, or refund, so financial records are never lost.
