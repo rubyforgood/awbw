@@ -8,7 +8,7 @@ summary: >-
   Someone finishing the on-demand training signs up on the on-demand training
   event's public registration form, like any other training. Linking their
   organization creates their job affiliation and a Facilitator affiliation
-  dated to their sign-up.
+  that starts when they're marked Attended.
 pro_tips:
   - Email the registration link from their person edit page — the "Email form
     links" section lists the current on-demand training and every upcoming

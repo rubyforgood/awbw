@@ -212,6 +212,31 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#facilitator_start_on" do
+    let(:zone) { Time.find_zone(Event::PROGRAM_ZONE) }
+    let(:event) do
+      build(:event, facilitator_training: true, on_demand: true,
+                    start_date: zone.local(2026, 1, 1, 9), end_date: zone.local(2026, 12, 31, 17))
+    end
+
+    it "is the attended day for on-demand, kept within the training" do
+      expect(event.facilitator_start_on(attended_on: Date.new(2026, 3, 3))).to eq(Date.new(2026, 3, 3))
+      expect(event.facilitator_start_on(attended_on: Date.new(2025, 12, 1))).to eq(Date.new(2026, 1, 1))
+      expect(event.facilitator_start_on(attended_on: Date.new(2027, 2, 1))).to eq(Date.new(2026, 12, 31))
+    end
+
+    it "is on-demand's end date until then, or its start when it has no end" do
+      expect(event.facilitator_start_on).to eq(Date.new(2026, 12, 31))
+      event.end_date = nil
+      expect(event.facilitator_start_on).to eq(Date.new(2026, 1, 1))
+    end
+
+    it "is a live training's start date whatever the attendance" do
+      event.on_demand = false
+      expect(event.facilitator_start_on(attended_on: Date.new(2026, 3, 3))).to eq(Date.new(2026, 1, 1))
+    end
+  end
+
   describe ".live and .on_demand" do
     it "partitions events by delivery format" do
       live = create(:event, on_demand: false)
