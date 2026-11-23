@@ -1,5 +1,7 @@
 class BookmarksController < ApplicationController
   VALID_SORTS = %w[created_at title popularity].freeze
+  # Label => value for the personal bookmarks "Sort by" strip (shared/_sort_strip)
+  SORT_OPTIONS = { "Newest" => "created_at", "Title" => "title", "Most bookmarked" => "popularity" }.freeze
 
   def index
     authorize!

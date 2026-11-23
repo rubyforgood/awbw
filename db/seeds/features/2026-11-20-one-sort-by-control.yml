@@ -1,0 +1,12 @@
+name: "One Sort by control on workshops, bookmarks, and users"
+area: content
+display_status: admin_facing
+released_on: 2026-11-20
+pr_number: 2981
+action_path: "/workshops"
+summary: >-
+  Workshops, My Bookmarks, and the users list on small screens now sort with the
+  same Sort by button strip as the resource library and an organization's
+  sectors and age groups page.
+pro_tips:
+  - "On My Bookmarks and the users list, click the highlighted option again to flip between ascending and descending; the arrow shows which way it runs."
