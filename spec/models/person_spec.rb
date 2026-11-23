@@ -1241,6 +1241,78 @@ RSpec.describe Person, "#current_membership" do
   end
 end
 
+RSpec.describe Person, "#paid_member?" do
+  let(:person) { create(:person) }
+
+  it "is true for an active membership with a comped invoice" do
+    membership = create(:membership, person: person)
+    create(:membership_invoice, :comped, membership: membership)
+
+    expect(person.paid_member?).to be(true)
+  end
+
+  it "is true when current invoices are covered by allocations" do
+    membership = create(:membership, person: person)
+    invoice = create(:membership_invoice, membership: membership)
+    payment = create(:payment, person: person,
+      amount_cents: invoice.cost_cents, amount_cents_remaining: invoice.cost_cents)
+
+    create(:allocation, source: payment, allocatable: invoice, amount: invoice.cost_cents)
+
+    expect(person.paid_member?).to be(true)
+  end
+
+  it "is true when renewal is off" do
+    membership = create(:membership, :renewal_off, person: person)
+    create(:membership_invoice, :comped, membership: membership)
+
+    expect(person.paid_member?).to be(true)
+  end
+
+  it "is false when a current invoice is unpaid" do
+    membership = create(:membership, person: person)
+    create(:membership_invoice, membership: membership)
+
+    expect(person.paid_member?).to be(false)
+  end
+
+  it "is false for a locked membership" do
+    membership = create(:membership, person: person, locked_at: Time.current)
+    create(:membership_invoice, :comped, membership: membership)
+
+    expect(person.paid_member?).to be(false)
+  end
+
+  it "is false before the term starts" do
+    membership = create(:membership, person: person,
+      start_date: Date.current + 1.month, end_date: Date.current + 1.year)
+    create(:membership_invoice, :comped, membership: membership,
+      start_date: membership.start_date, end_date: membership.end_date)
+
+    expect(person.paid_member?).to be(false)
+  end
+
+  it "is false after the term ends" do
+    membership = create(:membership, person: person,
+      start_date: Date.current - 1.year, end_date: Date.current - 1.day)
+    create(:membership_invoice, :comped, membership: membership,
+      start_date: membership.start_date, end_date: membership.end_date)
+
+    expect(person.paid_member?).to be(false)
+  end
+
+  it "ignores a future invoice" do
+    membership = create(:membership, person: person,
+      start_date: Date.current, end_date: Date.current + 2.months)
+    create(:membership_invoice, :comped, membership: membership,
+      start_date: Date.current, end_date: Date.current + 1.month - 1.day)
+    create(:membership_invoice, membership: membership,
+      start_date: Date.current + 1.month, end_date: Date.current + 2.months)
+
+    expect(person.paid_member?).to be(true)
+  end
+end
+
 RSpec.describe Person, "#stripe_customer" do
   let(:person) { create(:person) }
 

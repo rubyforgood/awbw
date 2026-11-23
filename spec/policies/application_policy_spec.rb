@@ -26,4 +26,29 @@ RSpec.describe ApplicationPolicy do
       expect(policy_for(user).send(:super_admin?)).to be(false)
     end
   end
+
+  describe "#member?" do
+    it "is true for a global member role" do
+      user = build_stubbed(:user)
+      allow(user).to receive(:has_role?).with(:member).and_return(true)
+
+      expect(policy_for(user).send(:member?)).to be(true)
+    end
+
+    it "is true for a paid member" do
+      user = build_stubbed(:user)
+      allow(user).to receive(:has_role?).with(:member).and_return(false)
+      allow(user).to receive(:paid_member?).and_return(true)
+
+      expect(policy_for(user).send(:member?)).to be(true)
+    end
+
+    it "is false for a non-member" do
+      user = build_stubbed(:user)
+      allow(user).to receive(:has_role?).with(:member).and_return(false)
+      allow(user).to receive(:paid_member?).and_return(false)
+
+      expect(policy_for(user).send(:member?)).to be(false)
+    end
+  end
 end

@@ -194,6 +194,12 @@ class User < ApplicationRecord
     scope.exists?
   end
 
+  def paid_member?
+    return @paid_member if defined?(@paid_member)
+
+    @paid_member = person&.paid_member? || false
+  end
+
   def bookmark_for(record)
     if bookmarks.loaded?
       bookmarks.detect { |b| b.bookmarkable_type == record.class.name && b.bookmarkable_id == record.id && !b.destroyed? }

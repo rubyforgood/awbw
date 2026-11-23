@@ -31,6 +31,12 @@ class ApplicationPolicy < ActionPolicy::Base
     super_admin?
   end
 
+  def member?
+    return @member if defined?(@member)
+
+    @member = user&.has_role?(:member) || user&.paid_member? || false
+  end
+
   def authenticated? = user.present?
 
   def credited_author?
