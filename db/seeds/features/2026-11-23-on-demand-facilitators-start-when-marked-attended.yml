@@ -2,6 +2,7 @@ name: "On-demand facilitators start when marked Attended"
 area: people
 display_status: admin_facing
 released_on: 2026-11-23
+pr_number: 3044
 summary: >-
   Signing up for an on-demand training creates an Upcoming facilitator
   affiliation, dated to the training's end. Marking them Attended starts it that
