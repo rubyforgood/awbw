@@ -48,6 +48,7 @@ class Organization < ApplicationRecord
   has_many :workshop_ideas
   has_many :workshops
   has_many :grants, as: :funder, dependent: :destroy
+  has_many :roles, as: :roleable, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, as: :sectorable, dependent: :destroy

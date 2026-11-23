@@ -21,8 +21,14 @@ class ApplicationPolicy < ActionPolicy::Base
   private
   # Define shared methods useful for most policies.
 
+  def super_admin?
+    return @super_admin if defined?(@super_admin)
+
+    @super_admin = user&.super_user? || user&.has_role?(:super_admin)
+  end
+
   def admin?
-    user&.super_user?
+    super_admin?
   end
 
   def authenticated? = user.present?

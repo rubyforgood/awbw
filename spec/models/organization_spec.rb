@@ -16,6 +16,7 @@ RSpec.describe Organization do
     it { should have_many(:workshop_ideas) }
     it { should have_many(:workshops) }
     it { should have_many(:contact_methods).dependent(:destroy) }
+    it { should have_many(:roles).dependent(:destroy) }
   end
 
   describe "#phone_number" do
