@@ -887,6 +887,30 @@ RSpec.describe "/story_share", type: :request do
   end
 
   # ==========================================================
+  # PAGE GUTTERS
+  # ==========================================================
+  describe "page gutters" do
+    let(:gutter_canceling) { "[class~='-mx-2'], [class~='sm:-mx-6'], [class~='lg:-mx-8']" }
+
+    it "keeps every home section's side padding" do
+      create(:story, :published, :publicly_visible, title: "Featured", story_share_carousel_position: 1)
+      create(:story, :published, :publicly_visible, title: "Recent")
+
+      get story_shares_path
+
+      expect(Capybara.string(response.body).find_by_id("main")).to have_no_css(gutter_canceling)
+    end
+
+    it "keeps the browse page's side padding" do
+      create(:story, :published, :publicly_visible)
+
+      get story_shares_path(page: 1)
+
+      expect(Capybara.string(response.body).find_by_id("main")).to have_no_css(gutter_canceling)
+    end
+  end
+
+  # ==========================================================
   # VIDEO STORIES IN CAROUSELS
   # ==========================================================
   describe "video stories in carousels" do

@@ -1,6 +1,6 @@
 <%# Hero: full-bleed photo or muted video (from a story outside the carousel) under a navy→purple wash, with the
     marketing site's big serif statement + gold accent + CTAs. %>
-<section class="relative -mx-2 overflow-hidden sm:-mx-6 lg:-mx-8">
+<section class="relative overflow-hidden">
   <% if @hero_story %>
     <%= image_tag @hero_story.display_image, alt: "", loading: "eager", class: "absolute inset-0 h-full w-full object-cover" %>
     <%= render "story_shares/banner_video", story: @hero_story %>
@@ -37,7 +37,7 @@
 
 <%# Featured stories: marketing-site story row — header with CTA + arrows, then a peeking row of bordered cards. %>
 <% if @featured_stories.any? %>
-  <section class="bg-brand-cream -mx-2 py-14 sm:-mx-6 lg:-mx-8">
+  <section class="bg-brand-cream py-14">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <p class="text-brand-orange-600 mb-2 text-sm font-semibold tracking-widest uppercase">Story share</p>
       <h2 class="font-display text-brand-navy-900 text-4xl tracking-tight sm:text-5xl">Featured stories</h2>
@@ -47,19 +47,21 @@
         </p>
         <div class="flex shrink-0 flex-wrap items-center gap-3">
           <%= link_to "Browse all stories", story_shares_path(page: 1),
-                      class: "bg-brand-magenta-600 hover:bg-brand-magenta-700 border-brand-magenta-800 mr-2 inline-flex items-center rounded-lg border-b-4 px-6 py-2.5 font-semibold text-white transition-colors" %>
-          <%= render "story_shares/motion_toggle", button_class: StorySharesHelper::STORY_ROW_ARROW %>
-          <button id="featured-stories-prev" aria-label="Previous story" class="<%= StorySharesHelper::STORY_ROW_ARROW %>">
-            <i class="fa-solid fa-chevron-left text-sm"></i>
-          </button>
-          <button id="featured-stories-next" aria-label="Next story" class="<%= StorySharesHelper::STORY_ROW_ARROW %>">
-            <i class="fa-solid fa-chevron-right text-sm"></i>
-          </button>
+                      class: "bg-brand-magenta-600 hover:bg-brand-magenta-700 border-brand-magenta-800 inline-flex items-center rounded-lg border-b-4 px-6 py-2.5 font-semibold text-white transition-colors" %>
+          <div class="flex items-center gap-2 sm:gap-3">
+            <%= render "story_shares/motion_toggle", button_class: StorySharesHelper::STORY_ROW_ARROW %>
+            <button id="featured-stories-prev" aria-label="Previous story" class="<%= StorySharesHelper::STORY_ROW_ARROW %>">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <button id="featured-stories-next" aria-label="Next story" class="<%= StorySharesHelper::STORY_ROW_ARROW %>">
+              <i class="fa-solid fa-chevron-right text-sm"></i>
+            </button>
+          </div>
         </div>
       </div>
 
       <div data-controller="carousel"
-           class="swiper mt-10 p-1!"
+           class="swiper -mx-1! mt-10 p-1!"
            data-carousel-options-value='<%= { autoplay: { delay: 5000, pauseOnMouseEnter: true }, loop: false, spaceBetween: 32,
                                               navigation: { nextEl: "#featured-stories-next", prevEl: "#featured-stories-prev" },
                                               breakpoints: { 0 => { slidesPerView: 1.15 }, 640 => { slidesPerView: 2.15 }, 1024 => { slidesPerView: 3.15 } } }.to_json %>'>
@@ -90,7 +92,7 @@
 <% end %>
 
 <!-- Sector sections -->
-<section class="-mx-2 bg-white py-14 sm:-mx-6 lg:-mx-8">
+<section class="bg-white py-14">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-10 md:grid-cols-3">
       <% @stories_by_sector.each_with_index do |(sector, stories), index| %>
@@ -113,7 +115,7 @@
 
 <%# What others are reading: saturated color-wash tiles that lift on hover. %>
 <% if @recent_stories.any? %>
-  <section class="bg-brand-cream -mx-2 py-14 sm:-mx-6 lg:-mx-8">
+  <section class="bg-brand-cream py-14">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <p class="text-brand-orange-600 mb-2 text-sm font-semibold tracking-widest uppercase">Story share</p>
       <h2 class="text-brand-navy-900 mb-8 font-display text-3xl tracking-tight">What others are reading</h2>

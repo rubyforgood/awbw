@@ -22,7 +22,7 @@ module StorySharesHelper
   AUDIENCE_TAG_CHIP = "#{STORY_POPULATION_COLORS} hover:bg-brand-amber-200 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
   AGE_RANGE_TAG_CHIP = "#{AGE_RANGE_COLORS} hover:bg-brand-rust/85 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
 
-  STORY_ROW_ARROW = "border-brand-navy-700 text-brand-navy-700 hover:bg-brand-navy-700 flex size-12 items-center justify-center rounded-full border-2 transition-colors hover:text-white disabled:pointer-events-none disabled:opacity-30".freeze
+  STORY_ROW_ARROW = "border-brand-navy-700 text-brand-navy-700 hover:bg-brand-navy-700 flex size-10 items-center justify-center rounded-full border-2 sm:size-12 transition-colors hover:text-white disabled:pointer-events-none disabled:opacity-30".freeze
   STORY_IMAGE_ASPECT = "aspect-[3/2]".freeze
   STORY_BANNER_ASPECT = "aspect-[4/3] sm:aspect-[2/1]".freeze
   STORY_IMAGE_GUIDANCE = "Images look best as landscape photos in a 3:2 shape, at least 1800 × 1200 pixels. " \
