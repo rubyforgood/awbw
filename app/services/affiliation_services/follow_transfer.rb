@@ -61,7 +61,7 @@ module AffiliationServices
     end
 
     def move(affiliation)
-      starts_on = @to.event.starts_on || Date.current
+      starts_on = @to.facilitator_start_on || Date.current
       left = affiliation.event_registration&.event
       affiliation.update!(start_date: starts_on, event_registration: @to)
       affiliation.comments.create_as_system!(topic: COMMENT_TOPIC, body: note(affiliation, left, starts_on))

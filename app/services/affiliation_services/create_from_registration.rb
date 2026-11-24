@@ -22,10 +22,11 @@ module AffiliationServices
   # Facilitator") still gets its own standing "Facilitator" affiliation alongside it.
   #
   # Start dates: the facilitator affiliation begins on the training date itself
-  # (that's when they become a facilitator). The job affiliation is left without a
-  # start date — we don't know when the person began that role (they may have been
-  # with the org for years before this training), and dating it to registration
-  # would misrepresent that.
+  # (that's when they become a facilitator); from an on-demand registration it waits on
+  # the training's end date until they're marked attended (EventRegistration#facilitator_start_on).
+  # The job affiliation is left without a start date — we don't know when the person
+  # began that role (they may have been with the org for years before this training),
+  # and dating it to registration would misrepresent that.
   #
   # It then points every current affiliation the person holds at the org at the
   # submitted organization address, returning an OrganizationServices::AutofillChange
@@ -65,6 +66,7 @@ module AffiliationServices
 
     def create_job_affiliation
       return unless @job_title
+      return if on_demand? && @job_title == Affiliation::FACILITATOR_TITLE
 
       return if active_or_pending_affiliations_with_title(@job_title).exists?
 
@@ -74,7 +76,8 @@ module AffiliationServices
     def create_facilitator_affiliation
       return if active_or_pending_facilitator_affiliations.exists?
 
-      create_affiliation(Affiliation::FACILITATOR_TITLE, start_date: facilitator_start_date)
+      affiliation = create_affiliation(Affiliation::FACILITATOR_TITLE, start_date: facilitator_start_date)
+      FollowAttendance.note_start(affiliation) if on_demand? && @event_registration.attended?
     end
 
     # Every active-or-pending affiliation the person holds at the org takes the
@@ -111,7 +114,11 @@ module AffiliationServices
     end
 
     def facilitator_start_date
-      (@training_date || Date.current).to_date
+      (on_demand? ? @event_registration.facilitator_start_on : @training_date).presence&.to_date || Date.current
+    end
+
+    def on_demand?
+      @facilitator_training && @event_registration&.event&.on_demand_facilitator_training?
     end
 
     def active_or_pending_affiliations_with_title(title)

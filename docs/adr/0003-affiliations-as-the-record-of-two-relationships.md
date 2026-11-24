@@ -367,6 +367,23 @@ This is deliberately *not* one of `LinkSubmittedOrganization::SCENARIOS`. Those
 describe what kind of linking is happening; a transfer moves an existing row, with
 nothing being linked.
 
+### D6e — An on-demand affiliation starts when the person is marked attended
+
+A live training has one date everyone trains on; an on-demand one runs all year, so
+its start date says nothing about when a person became a facilitator. The row is
+created at registration like any other, with a start date that waits on the event's
+**end date** (so it reads Upcoming), and moves when attendance does
+(`Event#facilitator_start_on`, `AffiliationServices::FollowAttendance`):
+
+- **Marked attended** — the open row this registration created starts that day, kept
+  within the event's dates. A row that has already started isn't moved later.
+- **Attendance taken back** — it returns to the event's end date, only while it still
+  carries the date attendance gave it. A date staff entered since is kept.
+- **Transferred out** — keeps its date; D6d moves the row.
+
+Each move leaves a system comment (topic "Attendance"), which is also how a date
+attendance set is told apart from one staff entered.
+
 ### D7 — What has to be tested
 
 The arithmetic is what the grant figures rest on, so it is covered directly rather
