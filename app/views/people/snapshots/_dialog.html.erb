@@ -1,0 +1,16 @@
+<dialog data-controller="modal"
+        data-action="click->modal#closeOnBackdrop"
+        data-turbo-temporary
+        aria-labelledby="person_snapshot_title"
+        class="border-primary/10 m-auto max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl border bg-white p-0 text-gray-800 shadow-xl backdrop:bg-black/40">
+  <div class="relative">
+    <button type="button"
+            data-action="modal#close"
+            aria-label="Close snapshot"
+            title="Close"
+            class="absolute top-3 right-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <%= render "people/snapshots/content", snapshot: snapshot %>
+  </div>
+</dialog>

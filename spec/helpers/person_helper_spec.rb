@@ -40,6 +40,7 @@ RSpec.describe PersonHelper, type: :helper do
     before do
       allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(false)
       allow(helper).to receive(:allowed_to?).with(:show_email_change?, person).and_return(authorized)
+      allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(false)
     end
 
     context "when an email change is pending and the viewer may see it" do
@@ -81,6 +82,23 @@ RSpec.describe PersonHelper, type: :helper do
           helper.person_profile_button(person, data: { turbo_frame: "_top" })
         ).at_css("a")
         expect(link["data-turbo-frame"]).to eq("_top")
+      end
+    end
+    context "when the viewer may open a snapshot" do
+      let(:unconfirmed) { nil }
+      let(:authorized) { true }
+
+      before do
+        allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(true)
+      end
+
+      it "renders the snapshot trigger as a sibling of the profile link" do
+        html = Nokogiri::HTML(helper.person_profile_button(person))
+        profile_link = html.at_css("a[href='#{person_path(person)}']")
+        snapshot_link = html.at_css("a[href='#{person_snapshot_path(person)}']")
+
+        expect(snapshot_link).to be_present
+        expect(profile_link.at_css("a")).to be_nil
       end
     end
   end
@@ -159,6 +177,30 @@ RSpec.describe PersonHelper, type: :helper do
       expect(uri.path).to eq(admin_activities_events_path)
       expect(query).to include("person_id" => person.id.to_s, "time_period" => "all_time",
                                "audience" => %w[visitors users staff], "hide_account" => "1", "hide_interactions" => "1")
+    end
+  end
+
+  describe "#person_snapshot_link" do
+    let(:person) { build_stubbed(:person, first_name: "Jane", last_name: "Doe") }
+
+    before do
+      allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(true)
+    end
+
+    it "renders a turbo-stream trigger when the viewer may open a snapshot" do
+      allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(true)
+      link = Nokogiri::HTML(helper.person_snapshot_link(person)).at_css("a")
+
+      expect(link["href"]).to eq(person_snapshot_path(person))
+      expect(link["data-turbo-stream"]).to eq("true")
+      expect(link["aria-label"]).to eq("Snapshot for Jane Doe")
+      expect(link.at_css("i")["class"]).to include("fa-window-restore")
+    end
+
+    it "renders nothing when the viewer may not open a snapshot" do
+      allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(false)
+
+      expect(helper.person_snapshot_link(person)).to be_nil
     end
   end
 

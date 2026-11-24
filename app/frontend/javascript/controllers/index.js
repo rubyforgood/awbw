@@ -141,6 +141,9 @@ application.register("prefetch-lazy", PrefetchLazyController)
 import PrintOptionsController from "./print_options_controller"
 application.register("print-options", PrintOptionsController)
 
+import ModalController from "./modal_controller"
+application.register("modal", ModalController)
+
 import ReminderPreviewController from "./reminder_preview_controller"
 application.register("reminder-preview", ReminderPreviewController)
 
