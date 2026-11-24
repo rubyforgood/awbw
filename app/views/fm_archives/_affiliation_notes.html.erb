@@ -1,0 +1,11 @@
+<%# An affiliation row's own FileMaker notes and its portal affiliation's comments (locals: record:, affiliations:, origin:). The origin's
+    page shows its own notes. %>
+<% link_class = "inline-flex items-center gap-1 text-xs whitespace-nowrap text-primary hover:underline" %>
+<% if record != origin && (notes = record.data["Notes"].to_s.squish.presence) %>
+  <%= link_to fm_archive_record_path(record), class: link_class, title: notes.truncate(300), data: { turbo_frame: "_top" } do %>
+    <i class="fa-solid fa-note-sticky text-gray-400"></i>Notes
+  <% end %>
+<% end %>
+<% affiliations.each do |affiliation| %>
+  <%= fm_affiliation_comments_link(affiliation, origin: origin, link_class: link_class) %>
+<% end %>

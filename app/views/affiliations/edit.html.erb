@@ -5,6 +5,7 @@
 <% back_path = case params[:return_to]
    when "person" then edit_person_path(params[:origin_id], anchor: anchor, admin: params[:admin].presence)
    when "organization" then edit_organization_path(params[:origin_id], anchor: anchor, admin: params[:admin].presence)
+   when "fm_archive" then fm_archive_path(params[:origin_id], table: params[:origin_table].presence)
    end %>
 
 <%# Live field tinting mirrors the inline editor (affiliations/_fields): role is the
@@ -32,7 +33,7 @@
     <% if back_path %>
       <%= link_to back_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i>
-        <%= params[:return_to] == "person" ? @affiliation.person&.full_name : @affiliation.organization&.name %>
+        <%= { "person" => @affiliation.person&.full_name, "fm_archive" => "FileMaker archive" }.fetch(params[:return_to], @affiliation.organization&.name) %>
       <% end %>
     <% else %>
       <span></span>
@@ -49,7 +50,7 @@
   </div>
 
   <%= simple_form_for @affiliation,
-        url: affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, admin: params[:admin].presence),
+        url: affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, origin_table: params[:origin_table].presence, admin: params[:admin].presence),
         method: :patch,
         html: { id: "affiliation_form", data: { turbo: false } } do |f| %>
     <div class="space-y-5 rounded-lg bg-white p-6">
@@ -224,7 +225,7 @@
        "Remove this affiliation?" %>
   <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-6">
     <%= button_to "Delete",
-          affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, admin: params[:admin].presence),
+          affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, origin_table: params[:origin_table].presence, admin: params[:admin].presence),
           method: :delete,
           form: { data: { turbo_confirm: delete_confirm } },
           class: button_classes(:danger_outline) %>
