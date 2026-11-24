@@ -21,7 +21,7 @@ RSpec.describe FmRolodex do
           "Classification & status" => { "Status" => "Active" },
           "Organization" => { "Organization" => "Shelter" }
         },
-        "Affiliations" => { "Job affiliation" => { "Title" => "Director" } }
+        "Affiliations" => { "Facilitator affiliation" => {}, "Job affiliation" => { "Title" => "Director" } }
       )
     end
 

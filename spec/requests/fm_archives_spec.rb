@@ -67,6 +67,30 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to match(/Affiliations.*lg:grid-cols-2.*Facilitator affiliation.*PS1.*Adult Windows at Sample Shelter.*Job affiliation.*Case Manager.*R1.*Sample Shelter/m)
     end
 
+    context "with a person who facilitates and works at the same organization" do
+      before do
+        FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sample Shelter" })
+        FmProject.create!(fm_id: "P1", data: { "ProjectName" => "Adult Windows", "OrgID" => "ORG1" })
+        FmProject.create!(fm_id: "P2", data: { "ProjectName" => "Teen Windows", "OrgID" => "ORG2" })
+        FmPersonnel.create!(fm_id: "PS1", data: { "PersonID" => "00006", "ProjectID" => "P1", "Role" => "Leader", "DateEntered" => "2021-03-30 00:00:00" })
+        FmPersonnel.create!(fm_id: "PS2", data: { "PersonID" => "00006", "ProjectID" => "P2", "Role" => "Leader" })
+        FmPersonnel.create!(fm_id: "PS3", data: { "PersonID" => "00007", "ProjectID" => "P1", "Role" => "Leader" })
+        FmPeopleToOrganization.create!(fm_id: "67001", data: { "PersonID" => "00006", "OrgID" => "ORG1", "Title" => "Case Manager", "DateEntered" => "2021-03-30 00:00:00" })
+        FmPeopleToOrganization.create!(fm_id: "67002", data: { "PersonID" => "00006", "OrgID" => "ORG2" })
+      end
+
+      { "people_to_organizations" => "67001", "personnels" => "PS1" }.each do |table, fm_id|
+        it "shows their facilitator affiliation left of their job affiliation, each with its dates, on #{table}" do
+          get fm_archive_path(fm_id, table: table)
+
+          cards = response.body.split("Available fields &amp; associations").first
+          expect(cards).to match(/lg:grid-cols-2.*Facilitator affiliation.*PS1.*Entered 2021-03-30.*Job affiliation.*67001.*Entered 2021-03-30/m)
+          expect(cards.scan("This record").size).to eq(1)
+          expect(cards).not_to match(/PS2|PS3|67002/)
+        end
+      end
+    end
+
     it "lists a primary phone or address the archive lacks as not found" do
       FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "PrimaryPhoneID" => "75999", "WorksiteAddrsID" => "74999" })
 
@@ -298,7 +322,7 @@ RSpec.describe "FM archives", type: :request do
       get fm_archive_path("67001", table: "people_to_organizations")
 
       cards, reference = response.body.split("Available fields &amp; associations")
-      expect(cards).to match(/>Affiliation<.*Case Manager.*Record keeping.*2021-03-30.*Sample Staff/m)
+      expect(cards).to match(/>Affiliations<.*Facilitator affiliation<.*None in the archive.*Job affiliation<.*Case Manager.*Record keeping.*2021-03-30.*Sample Staff/m)
       expect(cards).not_to include("ModificationTimeStamp")
       expect(reference).to match(/<span class="[^"]*text-gray-400[^"]*"[^>]*>ModificationTimeStamp</)
       expect(reference).to match(%r{<span class="[^"]*bg-white[^"]*">Title</span>})

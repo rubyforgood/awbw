@@ -30,7 +30,7 @@
           <% end %>
           <div class="<%= wide ? "grid items-start gap-4 lg:grid-cols-2" : "space-y-4" %>">
             <% subgroups.each do |sub_label, fields| %>
-              <% if sub_label && @record.single_field_group?(sub_label) %>
+              <% if sub_label && fields.any? && @record.single_field_group?(sub_label) %>
                 <div class="grid grid-cols-5 gap-4 rounded-lg border border-gray-200 px-4 py-3 text-sm">
                   <h3 class="col-span-2 font-semibold text-gray-700"><%= sub_label %></h3>
                   <span class="col-span-3 break-words text-gray-900"><%= fields.values.first %></span>
@@ -40,8 +40,12 @@
                   <% if sub_label %>
                     <h3 class="text-sm font-semibold text-gray-700"><%= sub_label %></h3>
                   <% end %>
+                  <% listed = @record.records_listed_under(sub_label) %>
+                  <% if fields.empty? && listed.empty? %>
+                    <p class="py-3 text-sm text-gray-500 italic">None in the archive</p>
+                  <% end %>
                   <%= render "fields", record: @record, fields: fields %>
-                  <%= render "listed_records", owner: @record, records: @record.records_listed_under(sub_label) %>
+                  <%= render "listed_records", owner: @record, records: listed %>
                 </div>
               <% end %>
             <% end %>

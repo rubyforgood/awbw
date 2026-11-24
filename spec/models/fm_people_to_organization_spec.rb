@@ -6,7 +6,7 @@ RSpec.describe FmPeopleToOrganization do
       people_to_organization = described_class.new(data: { "ModificationTimeStamp" => "2022-05-04 10:00:00", "DateEntered" => "2021-03-30 00:00:00", "Notes" => "", "Title" => "Case Manager" })
 
       expect(people_to_organization.grouped_data).to eq(
-        "Affiliation" => { nil => { "Title" => "Case Manager" } },
+        "Affiliations" => { "Facilitator affiliation" => {}, "Job affiliation" => { "Title" => "Case Manager" } },
         "Record keeping" => { nil => { "DateEntered" => "2021-03-30 00:00:00", "ModificationTimeStamp" => "2022-05-04 10:00:00" } }
       )
     end

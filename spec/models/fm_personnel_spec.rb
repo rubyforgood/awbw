@@ -6,8 +6,9 @@ RSpec.describe FmPersonnel do
       personnel = described_class.new(data: { "Notes" => "Moved away", "Role" => "Leader", "Name" => "Archie Coded", "AgreementStatus" => "Signed", "ModifiedBy" => "Sample Staff", "EnteredBy" => "", "DateEntered" => "2019-03-30" })
 
       expect(personnel.grouped_data).to eq(
-        "Facilitator affiliation" => { nil => { "Name" => "Archie Coded", "Role" => "Leader" } },
+        "Person & project" => { nil => { "Name" => "Archie Coded" } },
         "Agreement & updates" => { nil => { "AgreementStatus" => "Signed" } },
+        "Affiliations" => { "Facilitator affiliation" => { "Role" => "Leader" }, "Job affiliation" => {} },
         "Notes" => { nil => { "Notes" => "Moved away" } },
         "Record keeping" => { nil => { "DateEntered" => "2019-03-30", "ModifiedBy" => "Sample Staff" } }
       )

@@ -43,14 +43,55 @@ class FmPersonnel < ApplicationRecord
   }.freeze
   USER_LOOKUP_FIELDS = %w[EnteredBy ModifiedBy].freeze
 
+  AFFILIATIONS = "Affiliations"
+  FACILITATOR_AFFILIATION = "Facilitator affiliation"
+  JOB_AFFILIATION = "Job affiliation"
+  WIDE_GROUPS = [ AFFILIATIONS ].freeze
+
   FIELD_GROUPS = {
-    "Facilitator affiliation" => %w[Name PersonID ProjectID ProjectType Role Status],
+    "Person & project" => %w[Name PersonID ProjectID ProjectType],
     "Agreement & updates" => %w[AgmtID AgreementStatus Update],
+    AFFILIATIONS => {
+      FACILITATOR_AFFILIATION => %w[Role Status],
+      JOB_AFFILIATION => []
+    },
     "Notes" => %w[Notes],
     "Record keeping" => %w[PrsnlRecID EnteredBy DateEntered ModifiedBy DateTimeModified]
   }.freeze
 
+  # A personnel row names a project, so its organization is the one that project belongs to.
+  def self.for_person_at(person_id, organization_id)
+    return [] if person_id.blank? || organization_id.blank?
+
+    personnel = find_by_data("PersonID", person_id).order(:fm_id).to_a
+    project_ids = FmProject.where(fm_id: personnel.map { |row| row.data["ProjectID"] })
+                           .select { |project| project.data["OrgID"] == organization_id }.map(&:fm_id)
+    personnel.select { |row| project_ids.include?(row.data["ProjectID"]) }
+  end
+
+  def records_listed_under(label)
+    case label
+    when FACILITATOR_AFFILIATION then facilitator_affiliations
+    when JOB_AFFILIATION then job_affiliations
+    else []
+    end
+  end
+
   def name
     fm_phrase(fm_value("Name"), fm_words(fm_value("Role") || "Personnel", fm_with("on", fm_value("ProjectID"))))
+  end
+
+  private
+
+  def organization_id
+    @organization_id ||= FmProject.find_by_fm_id(data["ProjectID"])&.data&.dig("OrgID")
+  end
+
+  def facilitator_affiliations
+    @facilitator_affiliations ||= (self.class.for_person_at(data["PersonID"], organization_id) | [ self ]).select(&:persisted?)
+  end
+
+  def job_affiliations
+    @job_affiliations ||= FmPeopleToOrganization.for_person_at(data["PersonID"], organization_id)
   end
 end
