@@ -88,6 +88,8 @@ class Event < ApplicationRecord
     reject_if: proc { |attrs| attrs["id"].blank? && attrs["title"].blank? }
 
   # Callbacks
+  # prepend so this runs before dependent: :destroy clears the registrations.
+  before_destroy :prevent_destroy_with_allocations, prepend: true
   after_commit :build_public_registration_form, if: :public_registration_just_enabled?
   before_validation :merge_date_time_fields
 
@@ -621,6 +623,21 @@ class Event < ApplicationRecord
   end
 
   private
+
+  # Counts reverted payments too, as EventRegistration#deletable? does.
+  def prevent_destroy_with_allocations
+    return unless allocations_on_registrations?
+
+    errors.add(:base, "This event can't be deleted because its registrations have financial records (payments, scholarships, or the like, including on CE registrations).")
+    throw :abort
+  end
+
+  def allocations_on_registrations?
+    ce_registrations = ContinuingEducationRegistration.where(event_registration_id: event_registrations.select(:id))
+
+    Allocation.where(allocatable_type: "EventRegistration", allocatable_id: event_registrations.select(:id)).exists? ||
+      Allocation.where(allocatable_type: "ContinuingEducationRegistration", allocatable_id: ce_registrations.select(:id)).exists?
+  end
 
   def merge_date_time_fields
     merge_date_time(:start_date)
