@@ -4,12 +4,13 @@ module FmArchive
   FIELD_GROUPS = {}.freeze
   OTHER_FIELDS = "Other fields"
   LISTED_FIELDS = [].freeze
-  TALL_GROUPS = [].freeze
+  WIDE_GROUPS = [].freeze
   PORTAL_COUNTERPARTS = {}.freeze
   PORTAL_FIELDS = {}.freeze
   USER_LOOKUP_FIELDS = [].freeze
   CONTEXT_LINK_MAP = {}.freeze
   PREFIX_LINK_MAP = {}.freeze
+  HAS_MANY = {}.freeze
 
   included do
     before_validation :set_defaults

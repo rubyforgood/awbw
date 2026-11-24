@@ -53,6 +53,28 @@ class FmProject < ApplicationRecord
     "MergerWithID" => "fm_projects"
   }.freeze
 
+  PORTAL_COUNTERPARTS = {
+    "fm_services" => "Monthly reports",
+    "fm_personnels" => "Affiliations",
+    "fm_payments" => "Payments",
+    "fm_participants" => "Event registrations",
+    "fm_notes" => "Comments",
+    "fm_workshop_logs" => "Workshop logs",
+    "fm_projects" => "Organizations",
+    "fm_quotations" => "Quotes"
+  }.freeze
+
+  FIELD_GROUPS = {
+    "Project" => %w[ProjectName ProjectType AgencyType Status ObligationStatus Primary Description],
+    "Organization & mergers" => %w[OrgID FacilityID MergerWithID],
+    "Settings & service areas" => %w[PrimarySetting SecondarySetting PrimaryServiceArea SecondaryAreas LifeExperiences],
+    "Location" => %w[City County State Locality District LASupervisorialDistrict SPA International],
+    "Dates" => %w[StartDate EndDate CloseDate],
+    "Funding" => %w[FeePaidFor FundingPotential],
+    "Notes" => %w[Comments MessageText QuotationID],
+    "Record keeping" => %w[ProjectID CreatedBy EnteredBy DateEntered ModifiedBy DateTimeModified WebID SQLid]
+  }.freeze
+
   HAS_MANY = {
     "fm_services" => { via: "ProjectID", label: "Services" },
     "fm_personnels" => { via: "ProjectID", label: "Personnel" },

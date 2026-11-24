@@ -106,7 +106,8 @@ class FmRolodex < ApplicationRecord
   JOB_AFFILIATION = "Job affiliation"
   FACILITATOR_AFFILIATION = "Facilitator affiliation"
   LISTED_FIELDS = %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID].freeze
-  TALL_GROUPS = [ "Organization & affiliations" ].freeze
+  AFFILIATIONS = "Affiliations"
+  WIDE_GROUPS = [ AFFILIATIONS ].freeze
   PORTAL_FIELDS = {
     "FirstName" => "people.first_name",
     "LastName" => "people.last_name",
@@ -156,14 +157,16 @@ class FmRolodex < ApplicationRecord
       ADDRESSES => %w[PrimaryAddrsID WorksiteAddrsID],
       "Mailing list" => %w[MailingList]
     },
-    "Organization & affiliations" => {
+    "Organization & status" => {
       "Classification & status" => %w[Classification Status],
-      "Organization" => %w[Organization OrgID WebSite Mission PrimaryContact PrimaryContactID],
-      JOB_AFFILIATION => %w[Title Department Dept2ndName],
-      FACILITATOR_AFFILIATION => %w[FacilitatorSinceMonth FacilitatorSinceYear FacilitatorStatusPending
-                                    HowTrained TrainingMotivation LifeExperiences Settings BBSLicense]
+      "Organization" => %w[Organization OrgID WebSite Mission PrimaryContact PrimaryContactID]
     },
     "Sector & age group" => %w[PrimaryServiceArea OtherServiceArea PrimaryAgeGroup],
+    AFFILIATIONS => {
+      FACILITATOR_AFFILIATION => %w[FacilitatorSinceMonth FacilitatorSinceYear FacilitatorStatusPending
+                                    HowTrained TrainingMotivation LifeExperiences Settings BBSLicense],
+      JOB_AFFILIATION => %w[Title Department Dept2ndName]
+    },
     "Record keeping" => %w[ID Delete DuplicateStatus EnteredBy DateEntered ModifiedBy DateTimeModified UserID Password],
     "Notes" => %w[Comments NameNote Keywords Interest SourceOfName],
     "Volunteering" => %w[VolEnrollDate DropDate AvailMon AvailTue AvailWed AvailThu AvailFri AvailSat],

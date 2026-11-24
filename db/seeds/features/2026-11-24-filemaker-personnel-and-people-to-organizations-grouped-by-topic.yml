@@ -1,0 +1,16 @@
+name: "FileMaker personnel and people-to-organizations records grouped by topic"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-24
+action_path: "/fm_archives?table=personnels"
+summary: >-
+  FileMaker personnel and people-to-organizations records now show their fields in
+  labeled sections, including record keeping — who entered and last changed the
+  row, and when — with a reference at the bottom listing every field.
+description: >-
+  <ul><li>Blank fields are left out of the cards. The blue section at the bottom
+  still lists every field, grayed out when blank.</li><li>On personnel records,
+  fields the import copies into the portal are orange — hover one to see which portal
+  field it fills.</li></ul>
+pro_tips:
+  - "Personnel fields marked * name FileMaker staff, matched to a portal user on import."

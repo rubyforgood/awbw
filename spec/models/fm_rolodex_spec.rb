@@ -7,7 +7,7 @@ RSpec.describe FmRolodex do
 
       expect(rolodex.grouped_data).to eq(
         "Identity" => { nil => { "FirstName" => "Abe", "LastName" => "Archer", "EMail" => "abe@example.com" } },
-        "Organization & affiliations" => { "Classification & status" => { "Classification" => "Donor" } },
+        "Organization & status" => { "Classification & status" => { "Classification" => "Donor" } },
         "Notes" => { nil => { "Comments" => "Met at training" } }
       )
       expect(rolodex.grouped_data.dig("Identity", nil).keys).to eq(%w[FirstName LastName EMail])
@@ -17,11 +17,11 @@ RSpec.describe FmRolodex do
       rolodex = described_class.new(data: { "Status" => "Active", "Title" => "Director", "Organization" => "Shelter" })
 
       expect(rolodex.grouped_data).to eq(
-        "Organization & affiliations" => {
+        "Organization & status" => {
           "Classification & status" => { "Status" => "Active" },
-          "Organization" => { "Organization" => "Shelter" },
-          "Job affiliation" => { "Title" => "Director" }
-        }
+          "Organization" => { "Organization" => "Shelter" }
+        },
+        "Affiliations" => { "Job affiliation" => { "Title" => "Director" } }
       )
     end
 
@@ -113,14 +113,14 @@ RSpec.describe FmRolodex do
 
     it "keeps an affiliation subcard when the person has affiliation rows but no affiliation fields" do
       expect(rolodex.grouped_data).to eq(
-        "Organization & affiliations" => { FmRolodex::JOB_AFFILIATION => {}, FmRolodex::FACILITATOR_AFFILIATION => {} }
+        FmRolodex::AFFILIATIONS => { FmRolodex::FACILITATOR_AFFILIATION => {}, FmRolodex::JOB_AFFILIATION => {} }
       )
     end
   end
 
   it "leaves tables without field groups as one unlabeled group" do
-    project = FmProject.new(data: { "ProjectName" => "Adult Windows" })
+    event = FmEvent.new(data: { "Title" => "Spring Art Auction" })
 
-    expect(project.grouped_data).to eq(nil => { nil => { "ProjectName" => "Adult Windows" } })
+    expect(event.grouped_data).to eq(nil => { nil => { "Title" => "Spring Art Auction" } })
   end
 end

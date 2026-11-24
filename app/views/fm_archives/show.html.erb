@@ -20,13 +20,15 @@
       </div>
     <% end %>
 
-    <div class="grid gap-6 lg:grid-cols-2">
+    <%# Dense, so the next card fills the gap a full-width one leaves beside it. %>
+    <div class="grid gap-6 lg:grid-flow-row-dense lg:grid-cols-2">
       <% @record.grouped_data.each do |label, subgroups| %>
-        <section class="<%= class_names("rounded-xl bg-white p-6", "lg:col-span-2": label.nil?, "lg:row-span-2": @record.class::TALL_GROUPS.include?(label)) %>">
+        <% wide = @record.class::WIDE_GROUPS.include?(label) %>
+        <section class="<%= class_names("rounded-xl bg-white p-6", "lg:col-span-2": label.nil? || wide) %>">
           <% if label %>
             <h2 class="mb-1 text-lg font-semibold"><%= label %></h2>
           <% end %>
-          <div class="space-y-4">
+          <div class="<%= wide ? "grid items-start gap-4 lg:grid-cols-2" : "space-y-4" %>">
             <% subgroups.each do |sub_label, fields| %>
               <% if sub_label && @record.single_field_group?(sub_label) %>
                 <div class="grid grid-cols-5 gap-4 rounded-lg border border-gray-200 px-4 py-3 text-sm">

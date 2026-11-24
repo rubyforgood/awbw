@@ -55,7 +55,7 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).not_to include("MailingList</dt>")
     end
 
-    it "lists a rolodex person's job and facilitator affiliations in their subcards" do
+    it "lists a rolodex person's facilitator and job affiliations side by side" do
       FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
       FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sample Shelter" })
       FmProject.create!(fm_id: "P1", data: { "ProjectName" => "Adult Windows", "OrgID" => "ORG1" })
@@ -64,7 +64,7 @@ RSpec.describe "FM archives", type: :request do
 
       get fm_archive_path("00006", table: "rolodexes")
 
-      expect(response.body).to match(/Job affiliation.*Case Manager.*R1.*Sample Shelter.*Facilitator affiliation.*Facilitator.*PS1.*Adult Windows at Sample Shelter/m)
+      expect(response.body).to match(/Affiliations.*lg:grid-cols-2.*Facilitator affiliation.*PS1.*Adult Windows at Sample Shelter.*Job affiliation.*Case Manager.*R1.*Sample Shelter/m)
     end
 
     it "lists a primary phone or address the archive lacks as not found" do
@@ -137,12 +137,12 @@ RSpec.describe "FM archives", type: :request do
     end
 
     it "leaves related records unhighlighted on tables without cards" do
-      FmProject.create!(fm_id: "P2775")
-      FmPersonnel.create!(fm_id: "PS1", data: { "ProjectID" => "P2775" })
+      FmEvent.create!(fm_id: "E1")
+      FmParticipant.create!(fm_id: "72001", data: { "EventID" => "E1" })
 
-      get fm_archive_path("P2775", table: "projects")
+      get fm_archive_path("E1", table: "events")
 
-      expect(response.body).to include("backlink_fm_personnels")
+      expect(response.body).to include("backlink_fm_participants")
       expect(response.body).not_to include("bg-orange-100")
     end
 
@@ -163,9 +163,9 @@ RSpec.describe "FM archives", type: :request do
     end
 
     it "leaves the field reference off tables without field groups" do
-      FmProject.create!(fm_id: "P2775")
+      FmEvent.create!(fm_id: "E1")
 
-      get fm_archive_path("P2775", table: "projects")
+      get fm_archive_path("E1", table: "events")
 
       expect(response.body).not_to include("Available fields")
     end
@@ -260,6 +260,49 @@ RSpec.describe "FM archives", type: :request do
       expect(reference).to match(/<span class="[^"]*bg-white[^"]*text-gray-400[^"]*"[^>]*>FundingPriorities</)
       expect(reference).to include("CreatedBy*")
       expect(reference).to match(/Rolodexes.*\(People\).*via.*OrgID/m)
+    end
+
+    it "groups a project's fields and references every one, with none marked as imported" do
+      FmProject.create!(fm_id: "P1", data: { "ProjectName" => "Adult Windows", "City" => "Venice", "EnteredBy" => "Sample Staff" })
+      FmPersonnel.create!(fm_id: "PS1", data: { "ProjectID" => "P1" })
+
+      get fm_archive_path("P1", table: "projects")
+
+      cards, reference = response.body.split("Available fields &amp; associations")
+      fields, associations = reference.split("Linked from this record")
+      expect(cards).to match(/>Project<.*Adult Windows.*>Location<.*Venice.*>Record keeping<.*Sample Staff/m)
+      expect(cards).to match(/id="backlink_fm_personnels"[^>]*>.*In the portal as affiliations/m)
+      expect(cards).not_to include("CloseDate")
+      expect(fields).to match(/<span class="[^"]*bg-white[^"]*text-gray-400[^"]*"[^>]*>CloseDate</)
+      expect(fields).not_to include("bg-orange-100")
+      expect(associations).to match(%r{>Personnel</a>\s*<span[^>]*>\(Affiliations\)</span>})
+    end
+
+    it "groups a personnel record's fields and references every one, marking what the import fills" do
+      FmPersonnel.create!(fm_id: "PS1", data: { "Name" => "Archie Coded", "Role" => "Leader", "DateEntered" => "2019-03-30", "EnteredBy" => "Sample Staff" })
+
+      get fm_archive_path("PS1", table: "personnels")
+
+      cards, reference = response.body.split("Available fields &amp; associations")
+      expect(cards).to match(/Facilitator affiliation.*Leader.*Record keeping.*Sample Staff.*2019-03-30/m)
+      expect(cards).not_to include("AgreementStatus")
+      expect(reference).to match(/<span class="[^"]*bg-white[^"]*text-gray-400[^"]*"[^>]*>AgreementStatus</)
+      expect(reference).to match(%r{title="Imports to affiliations.start_date and affiliations.created_at">DateEntered</span>})
+      expect(reference).to match(%r{title="Imports to affiliations.created_by_id">EnteredBy\*</span>})
+      expect(reference).not_to include("Records pointing here")
+    end
+
+    it "groups a people-to-organizations record's fields and references every one, with none marked as imported" do
+      FmPeopleToOrganization.create!(fm_id: "67001", data: { "Title" => "Case Manager", "DateEntered" => "2021-03-30 00:00:00", "ModifiedBy" => "Sample Staff" })
+
+      get fm_archive_path("67001", table: "people_to_organizations")
+
+      cards, reference = response.body.split("Available fields &amp; associations")
+      expect(cards).to match(/>Affiliation<.*Case Manager.*Record keeping.*2021-03-30.*Sample Staff/m)
+      expect(cards).not_to include("ModificationTimeStamp")
+      expect(reference).to match(/<span class="[^"]*text-gray-400[^"]*"[^>]*>ModificationTimeStamp</)
+      expect(reference).to match(%r{<span class="[^"]*bg-white[^"]*">Title</span>})
+      expect(reference).not_to include("bg-orange-100", "ModifiedBy*", "Records pointing here")
     end
 
     it "links back to the portal people carrying the archive code" do

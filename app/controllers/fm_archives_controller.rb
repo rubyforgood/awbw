@@ -126,8 +126,6 @@ class FmArchivesController < ApplicationController
 
   def load_backlinks
     @backlinks = {}
-    return unless @record.class.const_defined?(:HAS_MANY)
-
     @record.class::HAS_MANY.each do |table, config|
       model = TABLES.values.find { |c| c[:model].table_name == table }&.dig(:model)
       next unless model
