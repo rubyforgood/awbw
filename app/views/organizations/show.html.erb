@@ -52,18 +52,25 @@
             </span>
           <% end %>
         </div>
-        <% address = if @organization.addresses.loaded?
-                       @organization.addresses.find { |a| !a.inactive? }
-                     else
-                       @organization.addresses.active.first
-                     end %>
-        <% if address %>
+        <% admin_view = allowed_to?(:manage?, Organization) %>
+        <% shown_addresses = @organization.profile_addresses.map { |a| [ a, false ] } %>
+        <% shown_addresses += @organization.profile_other_addresses.map { |a| [ a, true ] } if admin_view %>
+        <% shown_addresses.each do |address, admin_only| %>
+          <% place = [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %>
           <div class="mt-1 flex flex-wrap items-center justify-center gap-2 text-sm text-gray-600 md:justify-start">
-            <span><%= [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %></span>
-            <% if address.street_address.present? && allowed_to?(:manage?, Organization) %>
-              <span class="<%= admin_only_chip_class %>" title="Street address (admin only)">
-                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= address.street_address %>
+            <% if admin_only %>
+              <span class="<%= admin_only_chip_class %>" title="Secondary address (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i>
+                <span class="text-2xs font-semibold tracking-wide uppercase">Secondary</span>
+                <%= [place.presence, address.street_address.presence].compact.join(" · ") %>
               </span>
+            <% else %>
+              <span><%= place %></span>
+              <% if address.street_address.present? && admin_view %>
+                <span class="<%= admin_only_chip_class %>" title="Street address (admin only)">
+                  <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= address.street_address %>
+                </span>
+              <% end %>
             <% end %>
           </div>
         <% end %>

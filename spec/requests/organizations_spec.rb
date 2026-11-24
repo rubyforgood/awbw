@@ -106,6 +106,40 @@ RSpec.describe "/organizations", type: :request do
       expect(response.body).not_to include("13-17")
     end
 
+    it "shows every primary address to everyone and the non-primary ones only to admins" do
+      organization = Organization.create!(valid_attributes)
+      create(:address, addressable: organization, primary: true, city: "Primaryville", street_address: "1 First St")
+      create(:address, addressable: organization, primary: true, city: "Secondton", street_address: "2 Second St")
+      create(:address, addressable: organization, primary: false, city: "Sideburg", street_address: "3 Side St")
+      create(:address, addressable: organization, primary: true, inactive: true, city: "Oldham")
+
+      get organization_url(organization)
+      expect(response.body).to include("Primaryville", "Secondton", "1 First St", "2 Second St", "Sideburg", "3 Side St")
+      chips = Capybara.string(response.body).all("span[title='Secondary address (admin only)']")
+      expect(chips.map(&:text).map(&:squish)).to contain_exactly(a_string_matching(/\ASecondary .*Sideburg.*3 Side St\z/))
+      expect(response.body).not_to include("Oldham")
+
+      create(:affiliation, organization: organization, person: create(:person))
+      sign_in user
+      get organization_url(organization)
+      expect(response).to be_successful
+      expect(response.body).to include("Primaryville", "Secondton")
+      expect(response.body).not_to include("1 First St", "Sideburg", "3 Side St", "Oldham")
+    end
+
+    it "falls back to the first active address when none is primary" do
+      organization = Organization.create!(valid_attributes)
+      create(:address, addressable: organization, primary: false, city: "Firstcity")
+      create(:address, addressable: organization, primary: false, city: "Latercity")
+
+      create(:affiliation, organization: organization, person: create(:person))
+      sign_in user
+      get organization_url(organization)
+      expect(response).to be_successful
+      expect(response.body).to include("Firstcity")
+      expect(response.body).not_to include("Latercity")
+    end
+
     it "leaves the description off the profile, even for admins" do
       organization = Organization.create!(valid_attributes)
 
