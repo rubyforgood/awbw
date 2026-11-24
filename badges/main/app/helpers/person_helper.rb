@@ -27,15 +27,15 @@ module PersonHelper
     unconfirmed_email = person.user&.unconfirmed_email if allowed_to?(:show_email_change?, person)
     show_email_change = unconfirmed_email.present?
 
-    link_to person_path(person, **path_params),
-            data: { turbo_prefetch: false }.merge(data),
-            title: hover_title,
-            class: "group relative flex items-center gap-2
-                    #{width_class} #{padding}
-                    border #{palette[:border]} #{palette[:bg]} #{palette[:hover_bg]} rounded-lg
-                    transition-colors duration-200
-                    font-medium #{shadow} leading-none
-                    overflow-hidden" do
+    snapshot_link = person_snapshot_link(person, link_class: "absolute top-1 right-1 z-10")
+
+    card = link_to person_path(person, **path_params),
+                  data: { turbo_prefetch: false }.merge(data),
+                  title: hover_title,
+                  class: "group flex items-center gap-2
+                          #{padding} #{snapshot_link ? "pr-8" : ""} #{palette[:hover_bg]}
+                          transition-colors duration-200
+                          font-medium leading-none" do
       person = person.decorate
 
       # --- Avatar ---
@@ -75,6 +75,23 @@ module PersonHelper
       end
 
       avatar + text_block + warning_tag
+    end
+
+    content_tag(:div, safe_join([ card, snapshot_link ].compact),
+                class: "relative #{width_class}
+                        border #{palette[:border]} #{palette[:bg]} rounded-lg #{shadow}
+                        overflow-hidden")
+  end
+
+  def person_snapshot_link(person, link_class: nil, data: {})
+    return unless allowed_to?(:snapshot?, person)
+
+    link_to person_snapshot_path(person),
+            data: { turbo_stream: true }.merge(data),
+            title: "Snapshot",
+            aria: { label: "Snapshot for #{person_name(person)}" },
+            class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-700 transition-colors duration-200 hover:bg-blue-200 hover:text-blue-800 #{link_class}".strip do
+      tag.i(class: "fa-solid fa-window-restore text-sm")
     end
   end
 
