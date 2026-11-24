@@ -4,6 +4,7 @@ module People
 
     def show
       authorize! @person, to: :recap?
+      @recap = PersonRecap.new(@person)
 
       respond_to do |format|
         format.turbo_stream
