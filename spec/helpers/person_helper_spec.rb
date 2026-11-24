@@ -162,6 +162,30 @@ RSpec.describe PersonHelper, type: :helper do
     end
   end
 
+  describe "#person_recap_link" do
+    let(:person) { build_stubbed(:person, first_name: "Jane", last_name: "Doe") }
+
+    before do
+      allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(true)
+    end
+
+    it "renders a turbo-stream trigger when the viewer may open a recap" do
+      allow(helper).to receive(:allowed_to?).with(:recap?, person).and_return(true)
+      link = Nokogiri::HTML(helper.person_recap_link(person)).at_css("a")
+
+      expect(link["href"]).to eq(person_recap_path(person))
+      expect(link["data-turbo-stream"]).to eq("true")
+      expect(link["aria-label"]).to eq("Recap for Jane Doe")
+      expect(link.at_css("i")["class"]).to include("fa-window-restore")
+    end
+
+    it "renders nothing when the viewer may not open a recap" do
+      allow(helper).to receive(:allowed_to?).with(:recap?, person).and_return(false)
+
+      expect(helper.person_recap_link(person)).to be_nil
+    end
+  end
+
   describe "#user_link" do
     let(:user) { create(:user, person: create(:person, first_name: "Cara", last_name: "Lang")) }
 

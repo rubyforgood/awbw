@@ -78,6 +78,18 @@ module PersonHelper
     end
   end
 
+  def person_recap_link(person, extra: nil, data: {})
+    return unless allowed_to?(:recap?, person)
+
+    link_to person_recap_path(person),
+            data: { turbo_stream: true }.merge(data),
+            title: "Recap",
+            aria: { label: "Recap for #{person_name(person)}" },
+            class: "inline-flex min-w-8 items-center justify-center rounded-lg border border-gray-200 bg-white px-2 text-gray-500 shadow-sm transition-colors duration-200 hover:bg-gray-50 hover:text-gray-700 #{extra}".strip do
+      tag.i(class: "fa-solid fa-window-restore text-xs")
+    end
+  end
+
   # A person card that links to the person's edit page instead of their profile,
   # for admin-facing contexts. No avatar — an uppercase "Edit" tag reads before
   # the name (layout: :prefix, "EDIT Jane Doe" on one line) or stacked above it

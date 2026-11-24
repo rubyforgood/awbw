@@ -21,13 +21,18 @@
           </thead>
           <tbody class="divide-y divide-gray-300">
             <% @people.each do |person| %>
-              <% cache [ person, allowed_to?(:manage?, Person), allowed_to?(:own_profile?, person) ] do %>
+              <% cache [ person, allowed_to?(:manage?, Person), allowed_to?(:own_profile?, person), allowed_to?(:recap?, Person) ] do %>
               <tr class="transition-colors duration-150 <%= person.published? ? "hover:bg-gray-100" : "admin-only bg-blue-100 hover:bg-blue-200" %>">
                 <% decorated = person.decorate %>
                 <td class="px-4 py-2">
                   <% email = allowed_to?(:manage?, Person) ? person.preferred_email : (decorated.profile_email if person.profile_show_email?) %>
                   <% if allowed_to?(:show?, person) %>
-                    <%= person_profile_button(person, subtitle: email, data: { turbo_frame: "_top" }, width_class: "w-56 max-w-full") %>
+                    <div class="flex items-stretch gap-1">
+                      <div class="min-w-0 flex-1">
+                        <%= person_profile_button(person, subtitle: email, data: { turbo_frame: "_top" }, width_class: "w-56 max-w-full") %>
+                      </div>
+                      <%= person_recap_link(person) %>
+                    </div>
                   <% else %>
                     <span class="font-semibold"><%= person_name(person) %></span>
                     <% if email.present? %>

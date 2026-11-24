@@ -1,0 +1,28 @@
+<div class="p-6">
+  <p id="person_recap_title" class="pr-8 text-sm text-gray-600">
+    <span class="font-semibold text-gray-900"><%= person_name(person) %></span>
+
+    <% if person.preferred_email.present? %>
+      <span class="text-gray-400">·</span>
+      <!-- email_off -->
+      <%= person.preferred_email %>
+      <!-- email_on -->
+    <% end %>
+  </p>
+
+  <div class="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-sm text-gray-500">
+    Recap content.
+  </div>
+
+  <div class="default-link mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 pt-4 text-sm">
+    <%= link_to "Profile", person_path(person) %>
+    <%= link_to "Edit", edit_person_path(person) %>
+
+    <% if person.user.present? %>
+      <%= link_to "User", user_path(person.user) %>
+    <% end %>
+
+    <%= link_to "Activity", person_activity_path(person) %>
+    <%= link_to "Comments & communications", comments_and_communications_path(person_id: person.id) %>
+  </div>
+</div>
