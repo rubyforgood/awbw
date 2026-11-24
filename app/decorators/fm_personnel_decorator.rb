@@ -4,7 +4,8 @@ class FmPersonnelDecorator < ApplicationDecorator
   end
 
   def summary
-    [ program, *data.values_at("Status", "AgreementStatus") ].compact_blank.join(" · ")
+    [ program, *data.values_at("Status", "AgreementStatus"),
+      *h.fm_date_labels(entered: data["DateEntered"], modified: data["DateTimeModified"]) ].compact_blank.join(" · ")
   end
 
   private

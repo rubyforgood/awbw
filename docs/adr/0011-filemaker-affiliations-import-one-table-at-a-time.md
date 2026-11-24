@@ -2,6 +2,7 @@
 
 - **Status:** Proposed
 - **Date:** 2026-11-13
+- **Affiliation research:** 2026-11-24, into Personnel and people-to-organizations
 
 ## TL;DR
 
@@ -13,7 +14,9 @@
   FileMaker holds, and gives an Inactive row with no recorded end an inferred one, so program
   status (which reads only dates) sees it as ended.
 - **Jobs come second.** Round two reads `fm_people_to_organizations` (1,128 rows in
-  production), and every row becomes a job affiliation (JA), titled or not.
+  production). The rules below make every row a job affiliation (JA), titled or not, but
+  **that's reopened** (2026-11-24): 92% of rows name someone already facilitating at that
+  organization. It's settled in Open questions before round two is built.
 - **Each round is its own task, shaped like `fm:import_orgs`** (#2957): `fm:import_personnel`
   (`AffiliationServices::ImportPersonnel`), then `fm:import_people_to_orgs`
   (`AffiliationServices::ImportPeopleToOrgs`). Each writes, commits in batches, skips finished
@@ -69,9 +72,11 @@ and reconciliation read (ADR-0001, ADR-0003 D1). Jobs feed none of that.
   (`prj_PRS__Personnel`): one row per person staffing one art program, with the `Role`
   FileMaker gave them (Leader, Liaison, Assistant; counts in ADR-0008). It hangs off a
   project, never an organization directly.
-- **People-to-organizations is a job record.** It ties a person to an organization (`OrgID`),
+- **People-to-organizations was read as a job record** (reopened 2026-11-24, Open questions). It ties a person to an organization (`OrgID`),
   not a project, and its `Title` is free text staff typed. It has no role, status or program.
-- **The two tables are separate.** Neither round reads the other's table.
+- **The two tables are separate, but name mostly the same people at the same organizations**
+  (Research — 2026-11-24). Neither round's rules read the other's table to decide what
+  kind of affiliation a row is.
 - **So a title that mentions facilitating is a job.** A people-to-organizations title like
   "Group Facilitator" is a job staff typed, not a program assignment; if the person ran a
   program, their Personnel row says so.
@@ -280,6 +285,92 @@ org's program status and is hard to find again.
   person's Rolodex org), following merged projects (`MergerWithID`), addresses, or name
   matching.
 
+## Research — 2026-11-24: Personnel and people-to-organizations
+
+Run against production's FileMaker archive to find out what a people-to-organizations row
+records. It covers all 1,128 rows (1,035 people) and changed no data.
+
+### Who the rows are about
+
+| What else FileMaker says about the person | Rows | % | Untitled | Title mentions facilitating | Other title |
+|---|---|---|---|---|---|
+| Personnel row on a project of this same organization | 1,038 | 92.0 | 752 | 7 | 279 |
+| Personnel rows, but only at other organizations | 39 | 3.5 | 20 | 0 | 19 |
+| No Personnel row, but led a workshop log or has a facilitator-since year | 2 | 0.2 | 2 | 0 | 0 |
+| No sign of facilitating | 49 | 4.3 | 31 | 0 | 18 |
+
+- **Nearly all are facilitators there,** but that's who the rows are about, not what each row
+  records: someone who facilitates at an organization can also work there.
+- **Of the 1,038,** 65 have several Personnel rows at the organization, 331 have led a workshop
+  log anywhere, and 1,014 have a facilitator-since year on their Rolodex card.
+- **No title is "Leader".** Leader is a Personnel role, and round one makes every Personnel row
+  it imports a Facilitator affiliation. The one row titled `Liaison` has a Personnel row at the
+  same organization.
+
+### Whether the rows mirror Personnel
+
+The 1,038 rows with a Personnel row at the same organization. Dates compare against the
+Personnel row entered closest in time; "Active" is any Personnel row there.
+
+| `DateEntered` apart | Rows | Untitled | Left, none Active | Left, one Active | Not left, one Active | Not left, none Active |
+|---|---|---|---|---|---|---|
+| Same day | 2 | 2 | 0 | 0 | 1 | 1 |
+| Within 30 days | 21 | 14 | 3 | 0 | 0 | 18 |
+| Within a year | 277 | 208 | 163 | 0 | 7 | 107 |
+| Over a year | 738 | 528 | 525 | 11 | 5 | 197 |
+
+- **They were entered separately:** 23 rows (2.2%) are within 30 days; 738 (71%) are over a year
+  apart.
+- **They're about facilitators who stopped:** 24 rows (2.3%) have an Active Personnel row there;
+  about 21% of all Personnel person-and-org pairs do.
+- **The notes don't track Personnel's status:** nothing there is Active for 98% of the rows that
+  say the person left (691 of 702), and for 96% of those that don't (323 of 336).
+- **Those 323 would come in open as Facilitator affiliations,** making ended facilitators count
+  toward program status.
+- **11 rows say the person left while Personnel there is Active.**
+
+### Whether the rows match the Rolodex card
+
+| The row's `OrgID` | Rows | Says they left | No left note | Untitled | Titled |
+|---|---|---|---|---|---|
+| Same as the card's | 47 | 14 | 33 | 32 | 15 |
+| Different from the card's | 239 | 148 | 91 | 145 | 94 |
+| The card has none | 842 | 596 | 246 | 628 | 214 |
+
+- **Where a card names an organization, 84% of rows (239 of 286) name a different one,** so the
+  table reads mostly as other or earlier organizations.
+- **The 842 show less.** How many cards lack an `OrgID` in general isn't profiled.
+
+### Titles, notes, and who saved the rows
+
+- **Titled (323):** almost all real job titles; 304 (94%) say the person left.
+- **Untitled (805):** 454 (56%) say the person left. The row shows a link to an organization;
+  nothing shows it's a job.
+- **When:** 1,108 rows were entered in 2022 or later.
+- **Who:** 12 names appear in `ModifiedBy`, some of them the same person twice. One last saved
+  764 rows (68%) and 615 of the untitled ones (76%); another's 21 rows are all untitled and
+  dated the same day. Asking those staff what an untitled row meant is the next step.
+
+### Where else affiliation dates can be found
+
+| Source | Start | End |
+|---|---|---|
+| Personnel | `DateEntered` (round one's start) | None of its own; dated `Notes` and `DateTimeModified` stand in |
+| People-to-organizations | `DateEntered` | `ModificationTimeStamp`, when `Notes` say they left |
+| Rolodex | `FacilitatorSinceYear` and `FacilitatorSinceMonth`: when the person became a facilitator | Facilitator end dates can be found here too; the field isn't confirmed. `DropDate` is the candidate, though it sits beside the volunteer fields |
+| Project | `StartDate`: when the program began | `CloseDate`, else `EndDate`: when the program ended |
+
+- **A Rolodex date is the person's, not one organization's.** With Personnel rows at several
+  organizations, it can't say which one it dates.
+- **A project date is the program's.** It could bound a Facilitator affiliation's start and end,
+  or potentially supply them.
+- **Already used:** round one ends Inactive rows on `CloseDate`, else `EndDate`. The people
+  import reads the facilitator-since fields into `people.member_since`.
+- **Not used for affiliations:** the Rolodex dates, and a project's `StartDate`.
+- **Coverage known:** `CloseDate` is on 353 projects and `EndDate` on none (2026-11-13); a
+  facilitator-since year is on the cards of 1,051 of these 1,128 rows.
+- **Not profiled:** `DropDate` and `StartDate` coverage, and how either agrees with Personnel.
+
 ## Decision — round two: people-to-organizations → job affiliations
 
 ### What production holds (profiled 2026-11-13 and 2026-11-14)
@@ -308,8 +399,10 @@ org's program status and is hard to find again.
   organization's code on every program org it found. Only 22 of the 69 codes (67 rows) are
   audience copies of one name ("… Women's" / "… Combined"); 47 (193 rows) are differently
   named programs or sites.
-- **Little is already in the portal:** of the 845 matched rows, 103 have some affiliation at
-  that org, none with the same title, and none already carries the row's code.
+- **Little is already in the portal** (2026-11-14, before the Personnel import): of the 845
+  matched rows, 103 have some affiliation at that org, none with the same title, and none
+  already carries the row's code.
+- **How it compares to Personnel and the Rolodex** is in Research — 2026-11-24.
 - **Staff stamps all resolve.** Every name in `ModifiedBy` answers to a recorded staff alias,
   so no row falls back to the import user for want of one.
 - **Repeats:** 16 person-and-org pairs appear more than once (33 rows); 10 of them with the
@@ -323,6 +416,8 @@ org's program status and is hard to find again.
   - Several orgs carry it (the code was spread across programs): the row is **skipped and
     listed** so staff can place it by hand. We don't guess between an umbrella's programs.
   - No matching by name. Codes only.
+- **Reopened 2026-11-24:** the next two rules, on what kind of affiliation a row is, wait on
+  Open questions. The rest of round two assumes them.
 - **A row with no title is an untitled job affiliation** (decided 2026-11-17; 805 rows, 71% of
   the table). It still records that the person was at the organization, with the same dates
   as any row here.
@@ -407,6 +502,26 @@ Also in ADR-0008's pass, left out on purpose until a round decides them:
 
 ## Open questions
 
+- **Round two: is a people-to-organizations row a job affiliation, a Facilitator affiliation,
+  or both?** (reopened 2026-11-24; settle before building `fm:import_people_to_orgs`). 1,038 of
+  1,128 rows name someone with a Personnel row at the same organization; 752 of those have no
+  title.
+  - **Ways a row could come in:**
+    - A job affiliation, titled or not (the rules as written).
+    - Titled rows as job affiliations; untitled rows on hold until staff say what they meant.
+    - Both: the Facilitator affiliation and the job affiliation share the row's dates.
+  - **What to weigh:** the research argues against a mirror of Personnel, and against Facilitator
+    affiliations sharing these rows' dates. A titled row is well supported as a job; an untitled
+    one isn't.
+  - **Also to settle:**
+    - The 90 rows with no Personnel row at that organization: whether to infer a Facilitator
+      affiliation for any, or list them for staff.
+    - The 91 rows with no left note whose card names a different organization: open jobs as
+      written, open and listed for staff, or skipped for staff.
+    - Whether Rolodex and project dates should fill or check affiliation dates.
+  - **Meanwhile** the FileMaker archive shows a person's facilitator and job affiliations side
+    by side, with each row's dates (#3048). That's display only: people-to-organizations rows
+    sit under "Job affiliation" there, and nothing is imported by it.
 - **Round two: the 260 rows whose `OrgID` is on several orgs** (decided below). A same-name merge (`fm:merge_same_named_organizations`) would settle only the
   22 audience-copy codes (67 rows). Candidate rules, strongest first: the one org carrying a
   project the person staffed (their own Personnel row); the one org where they already have an

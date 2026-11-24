@@ -1,0 +1,14 @@
+name: "FileMaker facilitator and job affiliations side by side"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-24
+pr_number: 3048
+action_path: "/fm_archives?table=rolodexes"
+summary: >-
+  FileMaker rolodex, personnel, and people-to-organizations records show facilitator
+  affiliations on the left and job affiliations on the right, with the dates on file
+  for each.
+description: >-
+  <ul><li>Personnel and people-to-organizations records list that person's
+  affiliations at the same organization.</li><li>An empty side says "None in the
+  archive".</li></ul>
