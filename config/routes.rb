@@ -321,7 +321,7 @@ Rails.application.routes.draw do
     resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ], controller: "people/memberships"
     resource :billing_portal, only: [ :create ], controller: "people/billing_portals"
-    resource :recap, only: [ :show ], controller: "people/recaps"
+    resource :snapshot, only: [ :show ], controller: "people/snapshots"
   end
   resources :comments_and_communications, only: [ :index, :show ] do
     collection do

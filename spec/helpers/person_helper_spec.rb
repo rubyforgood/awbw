@@ -40,7 +40,7 @@ RSpec.describe PersonHelper, type: :helper do
     before do
       allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(false)
       allow(helper).to receive(:allowed_to?).with(:show_email_change?, person).and_return(authorized)
-      allow(helper).to receive(:allowed_to?).with(:recap?, person).and_return(false)
+      allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(false)
     end
 
     context "when an email change is pending and the viewer may see it" do
@@ -84,20 +84,20 @@ RSpec.describe PersonHelper, type: :helper do
         expect(link["data-turbo-frame"]).to eq("_top")
       end
     end
-    context "when the viewer may open a recap" do
+    context "when the viewer may open a snapshot" do
       let(:unconfirmed) { nil }
       let(:authorized) { true }
 
       before do
-        allow(helper).to receive(:allowed_to?).with(:recap?, person).and_return(true)
+        allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(true)
       end
 
-      it "renders the recap trigger as a sibling of the profile link" do
+      it "renders the snapshot trigger as a sibling of the profile link" do
         html = Nokogiri::HTML(helper.person_profile_button(person))
         profile_link = html.at_css("a[href='#{person_path(person)}']")
-        recap_link = html.at_css("a[href='#{person_recap_path(person)}']")
+        snapshot_link = html.at_css("a[href='#{person_snapshot_path(person)}']")
 
-        expect(recap_link).to be_present
+        expect(snapshot_link).to be_present
         expect(profile_link.at_css("a")).to be_nil
       end
     end
@@ -180,27 +180,27 @@ RSpec.describe PersonHelper, type: :helper do
     end
   end
 
-  describe "#person_recap_link" do
+  describe "#person_snapshot_link" do
     let(:person) { build_stubbed(:person, first_name: "Jane", last_name: "Doe") }
 
     before do
       allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(true)
     end
 
-    it "renders a turbo-stream trigger when the viewer may open a recap" do
-      allow(helper).to receive(:allowed_to?).with(:recap?, person).and_return(true)
-      link = Nokogiri::HTML(helper.person_recap_link(person)).at_css("a")
+    it "renders a turbo-stream trigger when the viewer may open a snapshot" do
+      allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(true)
+      link = Nokogiri::HTML(helper.person_snapshot_link(person)).at_css("a")
 
-      expect(link["href"]).to eq(person_recap_path(person))
+      expect(link["href"]).to eq(person_snapshot_path(person))
       expect(link["data-turbo-stream"]).to eq("true")
-      expect(link["aria-label"]).to eq("Recap for Jane Doe")
+      expect(link["aria-label"]).to eq("Snapshot for Jane Doe")
       expect(link.at_css("i")["class"]).to include("fa-window-restore")
     end
 
-    it "renders nothing when the viewer may not open a recap" do
-      allow(helper).to receive(:allowed_to?).with(:recap?, person).and_return(false)
+    it "renders nothing when the viewer may not open a snapshot" do
+      allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(false)
 
-      expect(helper.person_recap_link(person)).to be_nil
+      expect(helper.person_snapshot_link(person)).to be_nil
     end
   end
 

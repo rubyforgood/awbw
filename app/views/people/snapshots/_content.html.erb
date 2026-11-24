@@ -1,6 +1,6 @@
-<% person = recap.person %>
+<% person = snapshot.person %>
 <div class="p-6">
-  <p id="person_recap_title" class="pr-8 text-sm text-gray-600">
+  <p id="person_snapshot_title" class="pr-8 text-sm text-gray-600">
     <span class="font-semibold text-gray-900"><%= person_name(person) %></span>
 
     <% if person.preferred_email.present? %>
@@ -9,18 +9,18 @@
     <% end %>
   </p>
 
-  <% if recap.affiliated_since.present? %>
-    <p class="mt-3 text-sm text-gray-500">Affiliated since <%= recap.affiliated_since.strftime("%B %Y") %></p>
+  <% if snapshot.affiliated_since.present? %>
+    <p class="mt-3 text-sm text-gray-500">Affiliated since <%= snapshot.affiliated_since.strftime("%B %Y") %></p>
   <% end %>
 
-  <% if recap.empty? %>
-    <p class="mt-4 text-sm text-gray-500 italic">No recap content yet.</p>
+  <% if snapshot.empty? %>
+    <p class="mt-4 text-sm text-gray-500 italic">No snapshot content yet.</p>
   <% else %>
-    <% if recap.affiliations.any? %>
+    <% if snapshot.affiliations.any? %>
       <section class="mt-5">
         <h2 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Affiliations</h2>
         <ul class="space-y-3">
-          <% recap.affiliations.each do |affiliation| %>
+          <% snapshot.affiliations.each do |affiliation| %>
             <% affiliation = affiliation.decorate %>
             <li class="flex items-start gap-3">
               <span class="shrink-0"><%= affiliation.status_badge %></span>
@@ -35,11 +35,11 @@
       </section>
     <% end %>
 
-    <% if recap.trainings.any? %>
+    <% if snapshot.trainings.any? %>
       <section class="mt-5">
         <h2 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Facilitator trainings</h2>
         <ul class="space-y-3">
-          <% recap.trainings.each do |registration| %>
+          <% snapshot.trainings.each do |registration| %>
             <% registration = registration.decorate %>
             <li class="flex items-start gap-3">
               <span class="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium <%= registration.attendance_status_classes %>">
@@ -59,7 +59,7 @@
       </section>
     <% end %>
 
-    <% if (membership = recap.membership) %>
+    <% if (membership = snapshot.membership) %>
       <% membership = membership.decorate %>
       <section class="mt-5">
         <h2 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Membership</h2>

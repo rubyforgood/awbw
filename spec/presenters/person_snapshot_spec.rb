@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe PersonRecap do
+RSpec.describe PersonSnapshot do
   let(:person) { create(:person) }
 
   describe "#affiliations" do
@@ -12,8 +12,8 @@ RSpec.describe PersonRecap do
       create(:affiliation, person:, organization: create(:organization),
              title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
 
-      recap = described_class.new(person)
-      dates = recap.affiliations.map(&:start_date)
+      snapshot = described_class.new(person)
+      dates = snapshot.affiliations.map(&:start_date)
 
       expect(dates.size).to eq(8)
       expect(dates).to eq(dates.sort.reverse)
@@ -30,13 +30,13 @@ RSpec.describe PersonRecap do
       other = create(:event, facilitator_training: false, start_date: 1.month.ago)
       create(:event_registration, registrant: person, event: other, status: "attended")
 
-      recap = described_class.new(person)
-      dates = recap.trainings.map { |registration| registration.event.start_date }
+      snapshot = described_class.new(person)
+      dates = snapshot.trainings.map { |registration| registration.event.start_date }
 
       expect(dates.size).to eq(8)
       expect(dates).to eq(dates.sort.reverse)
-      expect(recap.trainings.map(&:status)).to include("no_show")
-      expect(recap.trainings.map { |registration| registration.event.facilitator_training? }).to all(be(true))
+      expect(snapshot.trainings.map(&:status)).to include("no_show")
+      expect(snapshot.trainings.map { |registration| registration.event.facilitator_training? }).to all(be(true))
     end
   end
 

@@ -39,7 +39,7 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner? || (profiles_visible_to_users? && record.published?)
   end
 
-  def recap? = admin?
+  def snapshot? = admin?
 
   # Admins get a lock on cards for profiles non-admins can't open.
   def hidden_profile_marker?

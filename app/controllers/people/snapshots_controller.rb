@@ -1,10 +1,10 @@
 module People
-  class RecapsController < ApplicationController
+  class SnapshotsController < ApplicationController
     before_action :set_person
 
     def show
-      authorize! @person, to: :recap?
-      @recap = PersonRecap.new(@person)
+      authorize! @person, to: :snapshot?
+      @snapshot = PersonSnapshot.new(@person)
 
       respond_to do |format|
         format.turbo_stream

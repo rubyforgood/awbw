@@ -1,4 +1,4 @@
-class PersonRecap
+class PersonSnapshot
   AFFILIATION_LIMIT = 8
   TRAINING_LIMIT = 8
 
