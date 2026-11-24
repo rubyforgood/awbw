@@ -36,6 +36,15 @@ RSpec.describe AffiliationServices::FollowTransfer do
     expect(row.comments.last.body).to include("transferred out of #{source_event.title}")
   end
 
+  it "waits on an on-demand destination's end date" do
+    [ source_event, destination_event ].each { |event| event.update!(on_demand: true) }
+    row = facilitator_row(registration: source)
+
+    described_class.call(to: destination, from: [ source ])
+
+    expect(row.reload.start_date).to eq(destination_event.ends_on)
+  end
+
   it "leaves an older or hand-entered row alone, so the years before stay on record" do
     older = facilitator_row(start_date: 5.years.ago.to_date)
 

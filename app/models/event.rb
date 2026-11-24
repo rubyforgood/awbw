@@ -359,6 +359,16 @@ class Event < ApplicationRecord
     end_date&.in_time_zone(PROGRAM_ZONE)&.to_date
   end
 
+  # The day a facilitator affiliation from this training starts. On-demand has no
+  # shared training day: it starts when the person is marked attended, and waits on
+  # the training's last day until then.
+  def facilitator_start_on(attended_on: nil)
+    return starts_on unless on_demand_facilitator_training?
+    return ends_on || starts_on unless attended_on
+
+    [ [ attended_on, starts_on ].compact.max, ends_on ].compact.min
+  end
+
   def multi_day?
     starts_on.present? && ends_on.present? && ends_on > starts_on
   end

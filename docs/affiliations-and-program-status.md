@@ -47,6 +47,8 @@ They can legitimately disagree. An org can read **Ongoing** at a training in 202
 - **Registering someone for a facilitator training** and linking them to an
   organization creates their facilitator affiliation, **dated to the training's start
   date** — not to the day they registered.
+  - **On-demand training:** it's **Upcoming**, dated to the training's end date, until
+    you mark them **Attended**; then it starts that day. Un-marking Attended puts it back.
 - **Registering for anything that isn't a facilitator training** creates the job
   affiliation only. Attending an event does not make anyone a facilitator.
 - **By hand** — you can add, edit, and end affiliations on the person's edit page, the
