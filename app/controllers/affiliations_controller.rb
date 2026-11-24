@@ -164,14 +164,16 @@ class AffiliationsController < ApplicationController
     )
   end
 
-  # Return to whichever edit page the gear was clicked from, scrolled to the row
-  # (or the affiliations section after a delete removes the row).
+  # Return to whichever page the editor was opened from; a person or organization page is
+  # scrolled to the row (or the affiliations section after a delete removes the row).
   def affiliation_return_path(anchor: @affiliation.decorate.return_anchor)
     case params[:return_to]
     when "person"
       edit_person_path(params[:origin_id], anchor: anchor, admin: params[:admin].presence)
     when "organization"
       edit_organization_path(params[:origin_id], anchor: anchor, admin: params[:admin].presence)
+    when "fm_archive"
+      fm_archive_path(params[:origin_id], table: params[:origin_table].presence)
     else
       edit_affiliation_path(@affiliation, admin: params[:admin].presence)
     end

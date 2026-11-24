@@ -107,9 +107,15 @@ class FmArchivesController < ApplicationController
     @table_label = TABLES.dig(@table_key, :label)
     load_backlinks
     load_portal_records
+    @affiliation_comments = FmAffiliationComments.new(affiliation_rows)
   end
 
   private
+
+  def affiliation_rows
+    listed = @record.is_a?(FmRolodex) ? @record.job_affiliations + @record.facilitator_affiliations : []
+    listed + @backlinks.values.flat_map { |info| info[:records].to_a }
+  end
 
   def load_portal_records
     @portal_records = PORTAL_MODELS

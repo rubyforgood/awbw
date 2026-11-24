@@ -1,0 +1,10 @@
+name: "Affiliation notes and comments in the FileMaker archive"
+area: people
+display_status: admin_facing
+released_on: 2026-11-24
+action_path: "/fm_archives"
+summary: >-
+  Wherever the FileMaker archive lists an affiliation, it now links to the FileMaker notes on it and
+  to its comments in the portal, with a back link to the archive record you came from.
+pro_tips:
+  - "Hover a Notes or comments link to preview what it says."

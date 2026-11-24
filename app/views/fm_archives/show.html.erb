@@ -12,9 +12,13 @@
     <% if @portal_records.any? %>
       <div class="rounded-xl bg-white p-6">
         <h2 class="mb-3 text-lg font-semibold">In the portal</h2>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <% @portal_records.each do |record| %>
-            <%= filemaker_portal_link(record) %>
+            <%= filemaker_portal_link(record, origin: @record) %>
+            <% if record.is_a?(Affiliation) %>
+              <%= fm_affiliation_comments_link(record, origin: @record,
+                                                       link_class: "inline-flex items-center gap-1 text-sm whitespace-nowrap text-primary hover:underline") %>
+            <% end %>
           <% end %>
         </div>
       </div>
@@ -79,6 +83,7 @@
                       <span class="text-gray-700"><%= truncate(record.name, length: 40) %></span>
                     <% end %>
                   <% end %>
+                  <%= render "affiliation_notes", record: record, affiliations: @affiliation_comments.affiliations(record), origin: @record if FmAffiliationComments::ARCHIVES.include?(record.class) %>
                 <% end %>
               </div>
               <% if info[:records].total_pages > 1 %>

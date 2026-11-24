@@ -405,6 +405,72 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to include(ERB::Util.html_escape("#{affiliation.person.full_name} at #{affiliation.organization.name}"))
     end
 
+    it "links a portal affiliation's comments from the section naming it" do
+      FmPersonnel.create!(fm_id: "PS9999")
+      affiliation = create(:affiliation, filemaker_code: "PS9999")
+      affiliation.comments.create!(topic: "FileMaker import", body: "Left in spring")
+
+      get fm_archive_path("PS9999", table: "personnels")
+
+      link = Nokogiri::HTML(response.body).at_css("a[href$='#comments-section']")
+      expect(link.text).to eq("1 comment")
+      expect(link["title"]).to eq("FileMaker import: Left in spring")
+      expect(link["href"]).to eq(edit_affiliation_path(affiliation, return_to: "fm_archive", origin_id: "PS9999",
+                                                                    origin_table: "personnels", anchor: "comments-section"))
+    end
+
+    it "leaves the comments link off an affiliation with none" do
+      FmPersonnel.create!(fm_id: "PS9999")
+      create(:affiliation, filemaker_code: "PS9999")
+
+      get fm_archive_path("PS9999", table: "personnels")
+
+      expect(response.body).not_to include("#comments-section")
+    end
+
+    context "with affiliation rows on a rolodex record" do
+      let(:affiliation) { create(:affiliation, filemaker_code: "P1, PS1") }
+      let(:job_row) { Nokogiri::HTML(response.body).at_xpath("//li[contains(., 'Case Manager')]") }
+      let(:facilitator_row) { Nokogiri::HTML(response.body).at_xpath("//li[contains(., 'Leader') and contains(., 'PS1')]") }
+
+      before do
+        FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
+        FmPeopleToOrganization.create!(fm_id: "R1", data: { "PersonID" => "00006", "OrgID" => "ORG1", "Title" => "Case Manager", "Notes" => "Prefers email" })
+        FmPersonnel.create!(fm_id: "PS1", data: { "PersonID" => "00006", "ProjectID" => "P1", "Role" => "Leader" })
+        affiliation.comments.create!(body: "Met her & staff")
+        affiliation.comments.create!(body: "Trained")
+
+        get fm_archive_path("00006", table: "rolodexes")
+      end
+
+      it "links a row's own FileMaker notes, only where it has some" do
+        notes = job_row.at_xpath(".//a[contains(., 'Notes')]")
+        expect(notes["href"]).to eq(fm_archive_path("R1", table: "people_to_organizations"))
+        expect(notes["title"]).to eq("Prefers email")
+        expect(facilitator_row.text).not_to include("Notes")
+      end
+
+      it "links the portal affiliation's comments beside the row whose code it carries" do
+        comments = facilitator_row.at_css("a[href$='#comments-section']")
+        expect(comments.text).to eq("2 comments")
+        expect(comments["href"]).to start_with(edit_affiliation_path(affiliation))
+        expect(job_row.at_css("a[href$='#comments-section']")).to be_nil
+      end
+    end
+
+    it "links notes and comments beside a project's related personnel, breaking out of the frame" do
+      FmProject.create!(fm_id: "P1")
+      FmPersonnel.create!(fm_id: "PS1", data: { "ProjectID" => "P1", "Notes" => "Left & moved" })
+      affiliation = create(:affiliation, filemaker_code: "PS1")
+      affiliation.comments.create!(body: %q(Moved & "retired"))
+
+      get fm_archive_path("P1", table: "projects")
+
+      links = Nokogiri::HTML(response.body).css("#backlink_fm_personnels a[data-turbo-frame='_top']")
+      expect(links.map { |link| link["title"] }).to include("Left & moved", %q(Moved & "retired"))
+      expect(links.last["href"]).to include("origin_id=P1", "origin_table=projects")
+    end
+
     it "links an archived payment back to its portal payment" do
       FmPayment.create!(fm_id: "D29186")
       person = create(:person)
