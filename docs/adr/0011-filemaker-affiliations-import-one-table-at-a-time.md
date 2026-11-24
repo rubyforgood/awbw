@@ -343,6 +343,17 @@ org's program status and is hard to find again.
     say the person left, and for 96% of those that don't.
   - **323 rows say nothing about leaving while Personnel isn't Active.** As Facilitator
     affiliations they'd come in open, and make ended facilitators count toward program status.
+- **Few rows name the organization on the person's Rolodex card** (profiled 2026-11-24, every row):
+
+  | The row's `OrgID` | Rows | Says they left | No left note | Untitled | Titled |
+  |---|---|---|---|---|---|
+  | Same as the card's | 47 | 14 | 33 | 32 | 15 |
+  | Different from the card's | 239 | 148 | 91 | 145 | 94 |
+  | The card has none | 842 | 596 | 246 | 628 | 214 |
+
+  - **Where a card names an organization, 84% of rows (239 of 286) name a different one,** so the
+    table reads mostly as other or earlier organizations.
+  - **The 842 show less.** How many cards lack an `OrgID` in general isn't profiled.
 - **Staff stamps all resolve.** Every name in `ModifiedBy` answers to a recorded staff alias,
   so no row falls back to the import user for want of one.
 - **Repeats:** 16 person-and-org pairs appear more than once (33 rows); 10 of them with the
@@ -455,8 +466,9 @@ Also in ADR-0008's pass, left out on purpose until a round decides them:
     duplicate round one's. The 90 other rows are few enough for staff to place.
   - **Leaning: job affiliations, as the rules are written.** The profile above argues against
     both a mirror of Personnel and Facilitator affiliations sharing these rows' dates.
-  - **Still to profile:** whether a row names the organization on the person's Rolodex card or a
-    different one, which would make the table a history of where people were.
+  - **Also to settle:** 91 rows have no left note, but the person's card names a different
+    organization. As written they come in as open jobs; they could come in open and be listed
+    for staff.
   - **Meanwhile** the FileMaker archive shows a person's facilitator and job affiliations side
     by side, with each row's dates (#3048). That's display only: people-to-organizations rows
     sit under "Job affiliation" there, and nothing is imported by it.
