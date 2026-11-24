@@ -326,6 +326,23 @@ org's program status and is hard to find again.
 
   - This shows who the rows are about, not what each row records: someone who facilitates at
     an organization can also work there.
+- **The rows don't mirror Personnel** (profiled 2026-11-24; the 1,038 rows with a Personnel row
+  at the same organization, against the Personnel row entered closest in time):
+
+  | `DateEntered` apart | Rows | Untitled | Left, no Active Personnel | Left, Active Personnel | Not left, Active Personnel | Not left, no Active Personnel |
+  |---|---|---|---|---|---|---|
+  | Same day | 2 | 2 | 0 | 0 | 1 | 1 |
+  | Within 30 days | 21 | 14 | 3 | 0 | 0 | 18 |
+  | Within a year | 277 | 208 | 163 | 0 | 7 | 107 |
+  | Over a year | 738 | 528 | 525 | 11 | 5 | 197 |
+
+  - **They were entered separately:** 23 rows (2.2%) are within 30 days.
+  - **They're about facilitators who stopped:** 24 rows (2.3%) have an Active Personnel row there;
+    about 21% of all Personnel person-and-org pairs do.
+  - **The notes don't track Personnel's status:** Personnel isn't Active for 98% of the rows that
+    say the person left, and for 96% of those that don't.
+  - **323 rows say nothing about leaving while Personnel isn't Active.** As Facilitator
+    affiliations they'd come in open, and make ended facilitators count toward program status.
 - **Staff stamps all resolve.** Every name in `ModifiedBy` answers to a recorded staff alias,
   so no row falls back to the import user for want of one.
 - **Repeats:** 16 person-and-org pairs appear more than once (33 rows); 10 of them with the
@@ -436,9 +453,10 @@ Also in ADR-0008's pass, left out on purpose until a round decides them:
     - Both: the Facilitator affiliation and the job affiliation share the row's dates.
   - **What to weigh:** a new Facilitator affiliation for each of the 1,038 would mostly
     duplicate round one's. The 90 other rows are few enough for staff to place.
-  - **Still to profile:** whether a row was entered alongside its Personnel row (same or nearby
-    `DateEntered`), whether "no longer with" notes agree with Personnel's status, and what
-    share of facilitators entered since 2020 have a row here.
+  - **Leaning: job affiliations, as the rules are written.** The profile above argues against
+    both a mirror of Personnel and Facilitator affiliations sharing these rows' dates.
+  - **Still to profile:** whether a row names the organization on the person's Rolodex card or a
+    different one, which would make the table a history of where people were.
   - **Meanwhile** the FileMaker archive shows a person's facilitator and job affiliations side
     by side, with each row's dates (#3048). That's display only: people-to-organizations rows
     sit under "Job affiliation" there, and nothing is imported by it.
