@@ -229,7 +229,7 @@ module EventRegistrationServices
     end
 
     def create_event_registration(person)
-      registration = @event.event_registrations.create!(
+      @event.event_registrations.create!(
         registrant: person,
         scholarship_requested: @scholarship_requested,
         w9_requested: w9_requested?,
@@ -237,10 +237,6 @@ module EventRegistrationServices
         expected_payment_method: field_value("payment_method")&.strip.presence,
         someone_else_will_pay: someone_else_will_pay_answer || false
       )
-      # Created "registered", then flipped: on-demand training invites only go
-      # out after the external LMS course is complete (Event#on_demand_facilitator_training?).
-      registration.update!(status: "attended") if @event.on_demand_facilitator_training?
-      registration
     end
 
     # "Will someone else be paying?" — "Yes" means a sponsor or partner covers the

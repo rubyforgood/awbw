@@ -107,9 +107,14 @@ class FmArchivesController < ApplicationController
     @table_label = TABLES.dig(@table_key, :label)
     load_backlinks
     load_portal_records
+    @affiliation_comments = FmAffiliationComments.new(affiliation_rows)
   end
 
   private
+
+  def affiliation_rows
+    @record.listed_records + @backlinks.values.flat_map { |info| info[:records].to_a }
+  end
 
   def load_portal_records
     @portal_records = PORTAL_MODELS
@@ -129,11 +134,7 @@ class FmArchivesController < ApplicationController
     @record.class::HAS_MANY.each do |table, config|
       model = TABLES.values.find { |c| c[:model].table_name == table }&.dig(:model)
       next unless model
-      scope = if config[:via] == :fm_id
-        model.where(fm_id: @record.fm_id)
-      else
-        model.find_by_data(config[:via], @record.fm_id)
-      end
+      scope = backlink_scope(model, config)
       page_param = "#{table}_page"
       paginated = scope.order(:fm_id).paginate(page: params[page_param], per_page: 50)
       next unless paginated.any?
@@ -143,5 +144,27 @@ class FmArchivesController < ApplicationController
         page_param: page_param
       }
     end
+  end
+
+  # `shared` matches records holding this one's own value for the field, leaving out the ones its
+  # cards list; `through` matches those pointing at the records of another table that point here.
+  def backlink_scope(model, config)
+    return model.where(fm_id: @record.fm_id) if config[:via] == :fm_id
+    return shared_scope(model, config[:via]) if config[:shared]
+    return model.find_by_data(config[:via], through_ids(config[:through])) if config[:through]
+
+    model.find_by_data(config[:via], @record.fm_id)
+  end
+
+  def shared_scope(model, field)
+    value = @record.data[field].presence
+    return model.none unless value
+
+    model.find_by_data(field, value).where.not(id: @record.listed_records.grep(model).map(&:id))
+  end
+
+  def through_ids(table)
+    model = TABLES.fetch(table.delete_prefix("fm_"))[:model]
+    model.find_by_data(@record.class::HAS_MANY.dig(table, :via), @record.fm_id).pluck(:fm_id)
   end
 end

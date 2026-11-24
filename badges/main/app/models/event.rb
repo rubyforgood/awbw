@@ -182,9 +182,6 @@ class Event < ApplicationRecord
       trainings.upcoming.order(:start_date).first
   end
 
-  # People are invited to an on-demand facilitator training only after they've
-  # completed the external LMS course, so registering here means the training
-  # is already done — registrations flip straight to "attended".
   def on_demand_facilitator_training?
     on_demand? && facilitator_training?
   end
@@ -360,6 +357,16 @@ class Event < ApplicationRecord
 
   def ends_on
     end_date&.in_time_zone(PROGRAM_ZONE)&.to_date
+  end
+
+  # The day a facilitator affiliation from this training starts. On-demand has no
+  # shared training day: it starts when the person is marked attended, and waits on
+  # the training's last day until then.
+  def facilitator_start_on(attended_on: nil)
+    return starts_on unless on_demand_facilitator_training?
+    return ends_on || starts_on unless attended_on
+
+    [ [ attended_on, starts_on ].compact.max, ends_on ].compact.min
   end
 
   def multi_day?

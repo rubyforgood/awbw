@@ -1,0 +1,11 @@
+name: "On-demand registrations start as Registered"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-23
+pr_number: 3043
+summary: >-
+  Signing up for an on-demand training now leaves the registrant as Registered,
+  like any other training. Mark them Attended from the registrants roster once
+  they complete it.
+pro_tips:
+  - "Registrations already marked Attended are unchanged."

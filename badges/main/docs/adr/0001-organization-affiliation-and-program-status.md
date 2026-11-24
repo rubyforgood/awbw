@@ -236,7 +236,8 @@ basis the numbers don't have.
 A facilitator-training registration creates the registrant's Facilitator
 affiliation at submission time (`AffiliationServices::CreateFromRegistration`,
 from both the public registration flow and admin org-linking), with
-`start_date = event.start_date`. Dating it to the training rather than to the
+`start_date = event.start_date` — except an on-demand training's, which starts when the
+person is marked attended (ADR-0003 D6e). Dating it to the training rather than to the
 submission is what lets D5 drop self-exclusion: the minted row is never "prior
 history" for its own training. An event with no start date is the one gap — the
 affiliation then falls back to the creation date. That event has no anchor either,

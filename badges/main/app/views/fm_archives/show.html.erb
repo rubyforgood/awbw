@@ -12,9 +12,13 @@
     <% if @portal_records.any? %>
       <div class="rounded-xl bg-white p-6">
         <h2 class="mb-3 text-lg font-semibold">In the portal</h2>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <% @portal_records.each do |record| %>
-            <%= filemaker_portal_link(record) %>
+            <%= filemaker_portal_link(record, origin: @record) %>
+            <% if record.is_a?(Affiliation) %>
+              <%= fm_affiliation_comments_link(record, origin: @record,
+                                                       link_class: "inline-flex items-center gap-1 text-sm whitespace-nowrap text-primary hover:underline") %>
+            <% end %>
           <% end %>
         </div>
       </div>
@@ -71,14 +75,19 @@
               <% end %>
               <div class="mt-2 flex flex-wrap gap-1">
                 <% info[:records].each do |record| %>
-                  <%= link_to fm_archive_path(record.fm_id, table: info[:table].sub("fm_", "")),
-                        class: "text-xs text-primary hover:underline bg-gray-50 px-2 py-1 rounded",
-                        title: record.name, data: { turbo_frame: "_top" } do %>
-                    <span class="font-mono"><%= record.fm_id %></span>
-                    <% if record.name != record.fm_id %>
-                      <span class="text-gray-700"><%= truncate(record.name, length: 40) %></span>
+                  <div class="flex max-w-full flex-wrap items-center gap-x-2 gap-y-1">
+                    <%= link_to fm_archive_path(record.fm_id, table: info[:table].sub("fm_", "")),
+                          class: "text-xs text-primary hover:underline bg-gray-50 px-2 py-1 rounded",
+                          title: record.name, data: { turbo_frame: "_top" } do %>
+                      <span class="font-mono"><%= record.fm_id %></span>
+                      <% if record.name != record.fm_id %>
+                        <span class="text-gray-700"><%= truncate(record.name, length: 40) %></span>
+                      <% end %>
                     <% end %>
-                  <% end %>
+                    <% if FmAffiliationComments::ARCHIVES.include?(record.class) %>
+                      <%= render "affiliation_notes", record: record, affiliations: @affiliation_comments.affiliations(record), origin: @record %>
+                    <% end %>
+                  </div>
                 <% end %>
               </div>
               <% if info[:records].total_pages > 1 %>
