@@ -15,7 +15,7 @@ RSpec.describe "Person recaps", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Jordan Sample")
-      expect(response.body).to include("Recap content coming soon")
+      expect(response.body).to include("Recap content.")
     end
 
     it "answers a turbo stream request by filling the recap mount with the dialog" do

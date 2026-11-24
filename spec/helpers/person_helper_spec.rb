@@ -40,6 +40,7 @@ RSpec.describe PersonHelper, type: :helper do
     before do
       allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(false)
       allow(helper).to receive(:allowed_to?).with(:show_email_change?, person).and_return(authorized)
+      allow(helper).to receive(:allowed_to?).with(:recap?, person).and_return(false)
     end
 
     context "when an email change is pending and the viewer may see it" do
@@ -81,6 +82,23 @@ RSpec.describe PersonHelper, type: :helper do
           helper.person_profile_button(person, data: { turbo_frame: "_top" })
         ).at_css("a")
         expect(link["data-turbo-frame"]).to eq("_top")
+      end
+    end
+    context "when the viewer may open a recap" do
+      let(:unconfirmed) { nil }
+      let(:authorized) { true }
+
+      before do
+        allow(helper).to receive(:allowed_to?).with(:recap?, person).and_return(true)
+      end
+
+      it "renders the recap trigger as a sibling of the profile link" do
+        html = Nokogiri::HTML(helper.person_profile_button(person))
+        profile_link = html.at_css("a[href='#{person_path(person)}']")
+        recap_link = html.at_css("a[href='#{person_recap_path(person)}']")
+
+        expect(recap_link).to be_present
+        expect(profile_link.at_css("a")).to be_nil
       end
     end
   end

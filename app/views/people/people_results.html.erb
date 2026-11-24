@@ -27,12 +27,7 @@
                 <td class="px-4 py-2">
                   <% email = allowed_to?(:manage?, Person) ? person.preferred_email : (decorated.profile_email if person.profile_show_email?) %>
                   <% if allowed_to?(:show?, person) %>
-                    <div class="flex items-stretch gap-1">
-                      <div class="min-w-0 flex-1">
-                        <%= person_profile_button(person, subtitle: email, data: { turbo_frame: "_top" }, width_class: "w-56 max-w-full") %>
-                      </div>
-                      <%= person_recap_link(person) %>
-                    </div>
+                    <%= person_profile_button(person, subtitle: email, data: { turbo_frame: "_top" }, width_class: "w-56 max-w-full") %>
                   <% else %>
                     <span class="font-semibold"><%= person_name(person) %></span>
                     <% if email.present? %>
