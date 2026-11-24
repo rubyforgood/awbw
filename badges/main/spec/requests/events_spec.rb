@@ -1722,6 +1722,20 @@ RSpec.describe "Events", type: :request do
           expect(flash[:alert]).to be_present
         end
       end
+
+      context "when a registration has money allocated" do
+        before do
+          event.update!(cost_cents: 10_000)
+          create(:allocation, allocatable: create(:event_registration, event: event), amount: 1_000)
+        end
+
+        it "keeps the event and says why" do
+          expect { delete event_path(event) }.not_to change(Event, :count)
+
+          expect(response).to redirect_to(event_path(event))
+          expect(flash[:alert]).to include("financial records")
+        end
+      end
     end
 
     context "as non-admin" do
