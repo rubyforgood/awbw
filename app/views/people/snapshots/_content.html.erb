@@ -81,16 +81,16 @@
     <% end %>
   <% end %>
 
-  <% button_class = admin_button_classes(size: nil, extra: "px-2.5 py-1 text-xs") %>
-  <div class="mt-5 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
-    <%= link_to "Profile", person_path(person), class: button_class %>
-    <%= link_to "Edit", edit_person_path(person), class: button_class %>
+  <% footer_link_class = "#{eyebrow_link_class} hover:underline" %>
+  <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 pt-4 text-sm">
+    <%= link_to "Profile", person_path(person), class: footer_link_class %>
+    <%= link_to "Edit", edit_person_path(person), class: footer_link_class %>
 
     <% if person.user.present? %>
-      <%= link_to "User", user_path(person.user), class: button_class %>
+      <%= link_to "User", user_path(person.user), class: footer_link_class %>
     <% end %>
 
-    <%= link_to "Activity", person_activity_path(person), class: button_class %>
-    <%= link_to "Comments & communications", comments_and_communications_path(person_id: person.id), class: button_class %>
+    <%= link_to "Activity", person_activity_path(person), class: footer_link_class %>
+    <%= link_to "Comments & communications", comments_and_communications_path(person_id: person.id), class: footer_link_class %>
   </div>
 </div>
