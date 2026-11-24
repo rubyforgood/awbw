@@ -145,58 +145,6 @@ RSpec.describe "Affiliations index", type: :request do
       end
     end
 
-    describe "FileMaker Personnel import filters" do
-      let(:note) { AffiliationServices::PersonnelImportNote }
-
-      def import_comment(affiliation, end_source: nil)
-        ends = end_source ? " Ends 2015-12-31, #{note.end_phrase(end_source)}" : ""
-        create(:comment, commentable: affiliation, topic: note::COMMENT_TOPIC, body: "FileMaker Personnel PS100: status Inactive.#{ends}")
-      end
-
-      def import_create_event(affiliation)
-        create(:ahoy_event, name: note::CREATE_EVENT, properties: {
-          resource_type: "Affiliation", resource_id: affiliation.id, source: note::SOURCE
-        })
-      end
-
-      it "sorts rows by what the import did: created, linked, or untouched" do
-        linked = create(:affiliation, person: zed, organization: alpha_org, title: "Facilitator", start_date: Date.new(2010, 1, 1))
-        import_comment(facilitator_row)
-        import_create_event(facilitator_row)
-        import_comment(linked)
-
-        expect(ids_in(results(import: "created"))).to eq([ facilitator_row.id ])
-        expect(ids_in(results(import: "linked"))).to eq([ linked.id ])
-        expect(ids_in(results(import: "untouched"))).to eq([ job_row.id ])
-      end
-
-      it "keeps the import, comments, and primary filters in the More filters drawer, open only when one is set" do
-        get affiliations_path
-        expect(Capybara.string(response.body)).to have_unchecked_field("more-filters-toggle", visible: :all)
-
-        get affiliations_path(import: "linked")
-        expect(Capybara.string(response.body)).to have_checked_field("more-filters-toggle", visible: :all)
-
-        get affiliations_path(primary: "yes")
-        expect(Capybara.string(response.body)).to have_checked_field("more-filters-toggle", visible: :all)
-      end
-
-      it "ignores create events from other sources" do
-        create(:ahoy_event, name: note::CREATE_EVENT, properties: { resource_type: "Affiliation", resource_id: job_row.id })
-        expect(ids_in(results(import: "created"))).to be_empty
-      end
-
-      it "filters by where the import took the end date from, and badges the row" do
-        import_comment(facilitator_row, end_source: :stand_in)
-        import_comment(job_row, end_source: :project_closed)
-
-        expect(ids_in(results(end_source: "stand_in"))).to eq([ facilitator_row.id ])
-        expect(ids_in(results(end_source: "project_closed"))).to eq([ job_row.id ])
-        expect(ids_in(results(end_source: "bogus"))).to be_empty
-        expect(results).to include("FM: Dec 31 stand-in", "FM: Project closed")
-      end
-    end
-
     it "filters by FileMaker code and by person or organization id" do
       expect(ids_in(results(filemaker_code: "PS100"))).to eq([ facilitator_row.id ])
       expect(ids_in(results(person_id: zed.id))).to eq([ job_row.id ])

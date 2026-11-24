@@ -21,9 +21,8 @@ module FmArchive
       find_by(fm_id: id)
     end
 
-    # Rows whose data field holds `value`, or any of several.
     def find_by_data(column, value)
-      where("JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$.', ?))) IN (?)", column.to_s, value)
+      where("JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$.', ?))) = ?", column.to_s, value)
     end
 
     # FIELD_GROUPS with each card's subcards lifted to the top level.
@@ -66,10 +65,6 @@ module FmArchive
   # Related records a subcard lists below its fields.
   def records_listed_under(_label)
     []
-  end
-
-  def listed_records
-    self.class.flat_field_groups.keys.flat_map { |label| records_listed_under(label) }
   end
 
   # The archive table a field's ID points at. A polymorphic field, mapped to nil in FM_LINKS, resolves

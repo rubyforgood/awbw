@@ -38,10 +38,6 @@
       <%= date_field_tag "affiliation[end_date]", affiliation.end_date,
             id: dom_id(affiliation, :end_date), class: date_class, style: "height: 42px;",
             "aria-label": "End date", data: { action: "change->autosave#save" } %>
-      <% if (end_source = decorated.personnel_import_end_source_label) %>
-        <span class="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-2xs font-medium text-gray-600"
-              title="Where the FileMaker import took this end date from">FM: <%= end_source %></span>
-      <% end %>
       <%= render "shared/autosave_status", field_name: "affiliation[end_date]", classes: "mt-1 block" %>
     </div>
     <div class="min-w-0 text-xs">

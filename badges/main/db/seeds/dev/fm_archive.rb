@@ -182,7 +182,6 @@ seed_fm FmPersonnel, fm_ids[:personnel] do |i|
     "Role" => %w[Facilitator Supervisor Facilitator][i],
     "ProjectType" => "Windows",
     "Status" => %w[Active Active Dropped][i],
-    "Notes" => [ "Trained with the spring cohort.", nil, "No longer at program." ][i],
     "AgreementStatus" => %w[Signed Signed Pending][i],
     "Update" => %w[Current Current Overdue][i],
     "EnteredBy" => entered_by[i],
@@ -641,7 +640,6 @@ seed_fm FmPeopleToOrganization, fm_ids[:people_to_organization] do |i|
     "PersonID" => fm_ref[:rolodex, i],
     "OrgID" => fm_ref[:organization, i],
     "Title" => [ "Program Director", "Case Manager", "Volunteer" ][i],
-    "Notes" => [ "Best reached by email.", nil, nil ][i],
     "DateEntered" => entered_dates[i]
   }
 end

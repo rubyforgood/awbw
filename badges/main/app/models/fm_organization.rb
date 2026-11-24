@@ -62,8 +62,7 @@ class FmOrganization < ApplicationRecord
     "fm_projects" => "Organizations",
     "fm_organizations" => "Organizations",
     "fm_invoices" => "Invoices",
-    "fm_people_to_organizations" => "Affiliations",
-    "fm_personnels" => "Affiliations"
+    "fm_people_to_organizations" => "Affiliations"
   }.freeze
 
   FIELD_GROUPS = {
@@ -87,8 +86,7 @@ class FmOrganization < ApplicationRecord
     "fm_email_addresses" => { via: "OrgID", label: "Email Addresses" },
     "fm_form_submissions" => { via: "OrgID", label: "Form Submissions" },
     "fm_invoices" => { via: "OrgID", label: "Invoices" },
-    "fm_people_to_organizations" => { via: "OrgID", label: "People Affiliations" },
-    "fm_personnels" => { via: "ProjectID", through: "fm_projects", label: "Personnel", note: "Through its projects" }
+    "fm_people_to_organizations" => { via: "OrgID", label: "People Affiliations" }
   }.freeze
 
   def name

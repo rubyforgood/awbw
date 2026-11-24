@@ -17,13 +17,6 @@ class AffiliationDecorator < ApplicationDecorator
     [ number, (address.inactive? ? "#{place} [INACTIVE]" : place) ].compact_blank.join(" · ")
   end
 
-  # Where the FileMaker Personnel import took this row's end date from, read off its import comment.
-  def personnel_import_end_source_label
-    note = comments.find { |comment| comment.topic == AffiliationServices::PersonnelImportNote::COMMENT_TOPIC }
-    source = AffiliationServices::PersonnelImportNote.end_source_in(note&.body)
-    AffiliationServices::PersonnelImportNote::END_SOURCE_LABELS[source] if source
-  end
-
   # Flagged inactive while its dates still read current — the legacy flag disagrees.
   def inactive_flag_disagrees?
     inactive? && !(end_date && end_date < Date.current)

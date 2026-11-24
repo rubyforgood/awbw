@@ -37,16 +37,6 @@ class FmPeopleToOrganization < ApplicationRecord
     "Record keeping" => %w[RecordID DateEntered ModifiedBy ModificationTimeStamp]
   }.freeze
 
-  PORTAL_COUNTERPARTS = {
-    "fm_personnels" => "Affiliations",
-    "fm_people_to_organizations" => "Affiliations"
-  }.freeze
-
-  HAS_MANY = {
-    "fm_people_to_organizations" => { via: "PersonID", shared: true, label: "Person’s other org affiliations" },
-    "fm_personnels" => { via: "PersonID", shared: true, label: "Person’s other personnel records" }
-  }.freeze
-
   def self.for_person_at(person_id, organization_id)
     return [] if person_id.blank? || organization_id.blank?
 

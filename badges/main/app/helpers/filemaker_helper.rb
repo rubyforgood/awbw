@@ -37,12 +37,12 @@ module FilemakerHelper
                                                  link_class: link_class, label: label, linked_only: linked_only)
   end
 
-  # The way back from an archive row (`origin`) to the portal record carrying its code.
-  def filemaker_portal_link(record, origin:)
+  # The way back from an archive row to the portal record carrying its code.
+  def filemaker_portal_link(record)
     text, path = case record
     when Person then [ record.full_name, person_path(record) ]
     when Organization then [ record.name, organization_path(record) ]
-    when Affiliation then [ "#{record.person&.full_name} at #{record.organization&.name}", edit_affiliation_path(record, fm_archive_return_params(origin)) ]
+    when Affiliation then [ "#{record.person&.full_name} at #{record.organization&.name}", edit_affiliation_path(record) ]
     when Payment then [ [ dollars_from_cents(record.amount_cents), person_name(record.payer) ].compact.join(" from "), payment_path(record) ]
     when Workshop then [ record.title, workshop_path(record) ]
     when Address then [ "#{record.addressable.name}: #{record.street_address}", polymorphic_path(record.addressable) ]
@@ -51,22 +51,6 @@ module FilemakerHelper
     end
 
     link_to text, path, class: button_classes(:primary)
-  end
-
-  # A portal affiliation's comments, opened from the archive page showing `origin`.
-  def fm_affiliation_comments_link(affiliation, origin:, link_class: nil)
-    return if affiliation.comments.empty?
-
-    newest = affiliation.comments.first
-    path = edit_affiliation_path(affiliation, fm_archive_return_params(origin).merge(anchor: "comments-section"))
-    link_to path, class: link_class, title: [ newest.topic, newest.body ].compact_blank.join(": ").truncate(300),
-                  data: { turbo_frame: "_top" } do
-      safe_join([ tag.i(class: "fa-solid fa-comment text-gray-400"), pluralize(affiliation.comments.size, "comment") ])
-    end
-  end
-
-  def fm_archive_return_params(origin)
-    { return_to: "fm_archive", origin_id: origin.fm_id, origin_table: fm_archive_table_key(origin) }
   end
 
   # The archive records an ID field points at, one per ID it lists, with an unsaved placeholder
@@ -101,11 +85,7 @@ module FilemakerHelper
   end
 
   def fm_archive_record_path(record)
-    fm_archive_path(record.fm_id, table: fm_archive_table_key(record))
-  end
-
-  def fm_archive_table_key(record)
-    record.class.table_name.delete_prefix("fm_")
+    fm_archive_path(record.fm_id, table: record.class.table_name.delete_prefix("fm_"))
   end
 
   # The portal's name for a related table's counterpart, when the archive's label doesn't already lead with it.

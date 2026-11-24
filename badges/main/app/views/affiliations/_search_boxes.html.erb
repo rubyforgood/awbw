@@ -25,22 +25,14 @@
           options: Affiliation.training_event_choices.map { |event| [ [ event.start_date&.strftime("%Y-%m-%d"), event.decorate.compact_label ].compact.join(" · "), event.id ] },
           selected: params[:trained_at], blank: "Any event", field_class: field_class, wrapper_class: "w-full md:w-48",
           tooltip: "The affiliation's linked event, else the person's facilitator trainings" %>
+  <%= render "shared/filter_select", param: :comments, label: "Has comments", options: yes_no,
+          selected: params[:comments], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-32" %>
+  <%= render "shared/filter_select", param: :primary, label: "Primary contact", options: yes_no,
+          selected: params[:primary], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-32" %>
   <%= render "shared/filter_text", param: :start_year, label: "Start year", placeholder: "YYYY",
           wrapper_class: "w-full md:w-24", input_options: { inputmode: "numeric", maxlength: 4 } %>
   <%= render "shared/filter_text", param: :end_year, label: "End year", placeholder: "YYYY",
           wrapper_class: "w-full md:w-24", input_options: { inputmode: "numeric", maxlength: 4 } %>
 <% end %>
-<% more = capture do %>
-  <%= render "shared/filter_select", param: :comments, label: "Has comments", options: yes_no,
-          selected: params[:comments], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-32" %>
-  <%= render "shared/filter_select", param: :primary, label: "Primary contact", options: yes_no,
-          selected: params[:primary], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-32" %>
-  <%= render "shared/filter_select", param: :import, label: "What the import did", options: Affiliation::INDEX_IMPORT_ACTIONS.to_a,
-        selected: params[:import], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-44" %>
-  <%= render "shared/filter_select", param: :end_source, label: "Import end date from",
-        options: AffiliationServices::PersonnelImportNote::END_SOURCE_LABELS.map { |key, label| [ label, key ] },
-        selected: params[:end_source], blank: "Any", field_class: field_class, wrapper_class: "w-full md:w-44" %>
-<% end %>
 <%= render "events/filter_bar", url: affiliations_path, frame: "affiliations_results",
-      clear_url: affiliations_path, more_active: params.values_at(:comments, :primary, :import, :end_source).any?(&:present?),
-      hidden: hidden, primary: primary, more: more %>
+      clear_url: affiliations_path, more_active: false, hidden: hidden, primary: primary %>

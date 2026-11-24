@@ -1,5 +1,5 @@
 <% sort_base = params.permit(:query, :comment_text, :filemaker_code, :kind, :status, :source, :address, :comments,
-                             :primary, :registrations, :trained_at, :import, :end_source, :start_year, :end_year, :person_id, :organization_id, :number_of_items_per_page).to_h.symbolize_keys %>
+                             :primary, :registrations, :trained_at, :start_year, :end_year, :person_id, :organization_id, :number_of_items_per_page).to_h.symbolize_keys %>
 <% sort_link = sort_header_link(frame: "affiliations_results", path: ->(p) { affiliations_path(p) }, base: sort_base) %>
 <%= turbo_frame_tag :affiliations_results do %>
   <div class="animate-fade overflow-hidden rounded-xl bg-white p-3 blur-on-submit">

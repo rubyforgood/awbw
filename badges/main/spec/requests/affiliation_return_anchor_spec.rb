@@ -16,22 +16,6 @@ RSpec.describe "where the affiliation editor sends you back to", type: :request 
     expect(response).to redirect_to(edit_person_path(person, anchor: "affiliation_#{aff.id}"))
   end
 
-  it "returns to the FileMaker archive record it was opened from" do
-    aff = create(:affiliation, person: person, organization: org)
-    origin = { return_to: "fm_archive", origin_id: "PS1", origin_table: "personnels" }
-    archive_path = fm_archive_path("PS1", table: "personnels")
-
-    get edit_affiliation_path(aff, origin)
-    eyebrow = Nokogiri::HTML(response.body).at_xpath("//a[contains(., 'FileMaker archive')]")
-    expect(eyebrow["href"]).to eq(archive_path)
-
-    patch affiliation_path(aff, origin), params: { affiliation: { title: "Counselor" } }
-    expect(response).to redirect_to(archive_path)
-
-    delete affiliation_path(aff, origin)
-    expect(response).to redirect_to(archive_path)
-  end
-
   it "anchors to the section when inactive" do
     aff = create(:affiliation, person: person, organization: org,
                  start_date: 2.years.ago.to_date, end_date: 1.year.ago.to_date)

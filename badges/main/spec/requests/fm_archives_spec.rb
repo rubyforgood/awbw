@@ -83,32 +83,11 @@ RSpec.describe "FM archives", type: :request do
         it "shows their facilitator affiliation left of their job affiliation, each with its dates, on #{table}" do
           get fm_archive_path(fm_id, table: table)
 
-          cards = response.body.split("Related Records").first
+          cards = response.body.split("Available fields &amp; associations").first
           expect(cards).to match(/lg:grid-cols-2.*Facilitator affiliation.*PS1.*Entered 2021-03-30.*Job affiliation.*67001.*Entered 2021-03-30/m)
           expect(cards.scan("This record").size).to eq(1)
           expect(cards).not_to match(/PS2|PS3|67002/)
         end
-
-        it "lists only their affiliations at other organizations under related records on #{table}" do
-          get fm_archive_path(fm_id, table: table)
-
-          frames = Nokogiri::HTML(response.body).css("turbo-frame[id^='backlink_']").index_by { |frame| frame["id"] }
-          expect(frames["backlink_fm_personnels"].css("a .font-mono").map(&:text)).to eq([ "PS2" ])
-          expect(frames["backlink_fm_people_to_organizations"].css("a .font-mono").map(&:text)).to eq([ "67002" ])
-        end
-      end
-
-      it "links notes and comments on the other rows its card lists, leaving its own notes to the notes card" do
-        FmPersonnel.find_by_fm_id("PS1").update!(data: FmPersonnel.find_by_fm_id("PS1").data.merge("Notes" => "Own notes"))
-        job = FmPeopleToOrganization.find_by_fm_id("67001")
-        job.update!(data: job.data.merge("Notes" => "Best by email"))
-        create(:affiliation, filemaker_code: "67001").comments.create!(body: "Called in May")
-
-        get fm_archive_path("PS1", table: "personnels")
-
-        titles = Nokogiri::HTML(response.body).css("section a[title]").map { |link| link["title"] }
-        expect(titles).to include("Best by email", "Called in May")
-        expect(titles).not_to include("Own notes")
       end
     end
 
@@ -334,8 +313,7 @@ RSpec.describe "FM archives", type: :request do
       expect(reference).to match(/<span class="[^"]*bg-white[^"]*text-gray-400[^"]*"[^>]*>AgreementStatus</)
       expect(reference).to match(%r{title="Imports to affiliations.start_date and affiliations.created_at">DateEntered</span>})
       expect(reference).to match(%r{title="Imports to affiliations.created_by_id">EnteredBy\*</span>})
-      expect(reference).to match(/Records pointing here.*Form submissions.*PersonnelID/m)
-      expect(reference).not_to include("Person’s other")
+      expect(reference).not_to include("Records pointing here")
     end
 
     it "groups a people-to-organizations record's fields and references every one, with none marked as imported" do
@@ -425,145 +403,6 @@ RSpec.describe "FM archives", type: :request do
 
       expect(response.body).to include(edit_affiliation_path(affiliation))
       expect(response.body).to include(ERB::Util.html_escape("#{affiliation.person.full_name} at #{affiliation.organization.name}"))
-    end
-
-    it "links a portal affiliation's comments from the section naming it" do
-      FmPersonnel.create!(fm_id: "PS9999")
-      affiliation = create(:affiliation, filemaker_code: "PS9999")
-      affiliation.comments.create!(topic: "FileMaker import", body: "Left in spring")
-
-      get fm_archive_path("PS9999", table: "personnels")
-
-      link = Nokogiri::HTML(response.body).at_css("a[href$='#comments-section']")
-      expect(link.text).to eq("1 comment")
-      expect(link["title"]).to eq("FileMaker import: Left in spring")
-      expect(link["href"]).to eq(edit_affiliation_path(affiliation, return_to: "fm_archive", origin_id: "PS9999",
-                                                                    origin_table: "personnels", anchor: "comments-section"))
-    end
-
-    it "leaves the comments link off an affiliation with none" do
-      FmPersonnel.create!(fm_id: "PS9999")
-      create(:affiliation, filemaker_code: "PS9999")
-
-      get fm_archive_path("PS9999", table: "personnels")
-
-      expect(response.body).not_to include("#comments-section")
-    end
-
-    context "with affiliation rows on a rolodex record" do
-      let(:affiliation) { create(:affiliation, filemaker_code: "P1, PS1") }
-      let(:job_row) { Nokogiri::HTML(response.body).at_xpath("//li[contains(., 'Case Manager')]") }
-      let(:facilitator_row) { Nokogiri::HTML(response.body).at_xpath("//li[contains(., 'Leader') and contains(., 'PS1')]") }
-
-      before do
-        FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
-        FmPeopleToOrganization.create!(fm_id: "R1", data: { "PersonID" => "00006", "OrgID" => "ORG1", "Title" => "Case Manager", "Notes" => "Prefers email" })
-        FmPersonnel.create!(fm_id: "PS1", data: { "PersonID" => "00006", "ProjectID" => "P1", "Role" => "Leader" })
-        affiliation.comments.create!(body: "Met her & staff")
-        affiliation.comments.create!(body: "Trained")
-
-        get fm_archive_path("00006", table: "rolodexes")
-      end
-
-      it "links a row's own FileMaker notes, only where it has some" do
-        notes = job_row.at_xpath(".//a[contains(., 'Notes')]")
-        expect(notes["href"]).to eq(fm_archive_path("R1", table: "people_to_organizations"))
-        expect(notes["title"]).to eq("Prefers email")
-        expect(facilitator_row.text).not_to include("Notes")
-      end
-
-      it "links the portal affiliation's comments beside the row whose code it carries" do
-        comments = facilitator_row.at_css("a[href$='#comments-section']")
-        expect(comments.text).to eq("2 comments")
-        expect(comments["href"]).to start_with(edit_affiliation_path(affiliation))
-        expect(job_row.at_css("a[href$='#comments-section']")).to be_nil
-      end
-    end
-
-    it "links notes and comments beside a project's related personnel, breaking out of the frame" do
-      FmProject.create!(fm_id: "P1")
-      FmPersonnel.create!(fm_id: "PS1", data: { "ProjectID" => "P1", "Notes" => "Left & moved" })
-      affiliation = create(:affiliation, filemaker_code: "PS1")
-      affiliation.comments.create!(body: %q(Moved & "retired"))
-
-      get fm_archive_path("P1", table: "projects")
-
-      links = Nokogiri::HTML(response.body).css("#backlink_fm_personnels a[data-turbo-frame='_top']")
-      expect(links.map { |link| link["title"] }).to include("Left & moved", %q(Moved & "retired"))
-      expect(links.last["href"]).to include("origin_id=P1", "origin_table=projects")
-    end
-
-    it "lists an organization's personnel through its projects, with their notes and comments" do
-      FmOrganization.create!(fm_id: "ORG1")
-      FmProject.create!(fm_id: "P1", data: { "OrgID" => "ORG1" })
-      FmProject.create!(fm_id: "P2", data: { "OrgID" => "ORG1" })
-      FmProject.create!(fm_id: "P3", data: { "OrgID" => "ORG2" })
-      FmPersonnel.create!(fm_id: "PS1", data: { "ProjectID" => "P1", "Notes" => "Trained in spring" })
-      FmPersonnel.create!(fm_id: "PS2", data: { "ProjectID" => "P2" })
-      FmPersonnel.create!(fm_id: "PS3", data: { "ProjectID" => "P3" })
-      create(:affiliation, filemaker_code: "PS2").comments.create!(body: "Retired")
-
-      get fm_archive_path("ORG1", table: "organizations")
-
-      frame = Nokogiri::HTML(response.body).at_css("#backlink_fm_personnels")
-      expect(frame.text).to include("Personnel (2)", "PS1", "PS2", "In the portal as affiliations")
-      expect(frame.text).not_to include("PS3")
-      expect(frame.css("a").map { |link| link["title"] }).to include("Trained in spring", "Retired")
-    end
-
-    it "leaves personnel off an organization with no projects" do
-      FmOrganization.create!(fm_id: "ORG1")
-      FmPersonnel.create!(fm_id: "PS1", data: { "ProjectID" => "" })
-
-      get fm_archive_path("ORG1", table: "organizations")
-
-      expect(response.body).not_to include("backlink_fm_personnels")
-    end
-
-    it "lists the same person's other affiliations and form submissions on a personnel record" do
-      FmPersonnel.create!(fm_id: "PS1", data: { "PersonID" => "00006" })
-      FmPersonnel.create!(fm_id: "PS2", data: { "PersonID" => "00006", "Notes" => "Second program" })
-      FmPersonnel.create!(fm_id: "PS3", data: { "PersonID" => "00007" })
-      FmPeopleToOrganization.create!(fm_id: "R1", data: { "PersonID" => "00006" })
-      FmFormSubmission.create!(fm_id: "F1", data: { "PersonnelID" => "PS1" })
-
-      get fm_archive_path("PS1", table: "personnels")
-
-      frames = Nokogiri::HTML(response.body).css("turbo-frame[id^='backlink_']").index_by { |frame| frame["id"] }
-      expect(frames["backlink_fm_personnels"].text).to include("Person’s other personnel records (1)", "PS2")
-      expect(frames["backlink_fm_personnels"].at_css("a[title='Second program']").text).to include("Notes")
-      expect(frames["backlink_fm_people_to_organizations"].text).to include("Person’s other org affiliations (1)", "R1")
-      expect(frames["backlink_fm_form_submissions"].text).to include("Form submissions (1)")
-    end
-
-    it "lists the same person's other affiliations on a people-to-organizations record" do
-      FmPeopleToOrganization.create!(fm_id: "R1", data: { "PersonID" => "00006" })
-      FmPeopleToOrganization.create!(fm_id: "R2", data: { "PersonID" => "00006" })
-      FmPersonnel.create!(fm_id: "PS1", data: { "PersonID" => "00006" })
-
-      get fm_archive_path("R1", table: "people_to_organizations")
-
-      frames = Nokogiri::HTML(response.body).css("turbo-frame[id^='backlink_']").index_by { |frame| frame["id"] }
-      expect(frames["backlink_fm_people_to_organizations"].text).to include("Person’s other org affiliations (1)", "R2")
-      expect(frames["backlink_fm_personnels"].text).to include("Person’s other personnel records (1)", "PS1")
-    end
-
-    it "lists no related affiliations for a row naming no person" do
-      FmPersonnel.create!(fm_id: "PS1", data: { "PersonID" => "" })
-      FmPersonnel.create!(fm_id: "PS2", data: { "PersonID" => "" })
-
-      get fm_archive_path("PS1", table: "personnels")
-
-      expect(response.body).not_to include("Related Records")
-    end
-
-    it "links a form submission's PersonnelID to its personnel record" do
-      FmPersonnel.create!(fm_id: "PS1")
-      FmFormSubmission.create!(fm_id: "F1", data: { "PersonnelID" => "PS1" })
-
-      get fm_archive_path("F1", table: "form_submissions")
-
-      expect(response.body).to include(fm_archive_path("PS1", table: "personnels"))
     end
 
     it "links an archived payment back to its portal payment" do
