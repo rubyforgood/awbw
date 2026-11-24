@@ -16,6 +16,7 @@ RSpec.describe User do
     # Through associations require more setup, test manually if complex
     # it { should have_many(:communal_reports).through(:organizations).source(:reports) }
     it { should have_many(:bookmarks).dependent(:destroy) }
+    it { should have_many(:roles).dependent(:destroy) }
     it { should have_many(:bookmarked_workshops).through(:bookmarks).source(:bookmarkable) }
     it { should have_many(:bookmarked_resources).through(:bookmarks).source(:bookmarkable) }
     it { should have_many(:bookmarked_events).through(:bookmarks).source(:bookmarkable) }
@@ -136,6 +137,35 @@ RSpec.describe User do
 
     it "is false when deactivated" do
       expect(build(:user, confirmed_at: Time.current, inactive: true).has_access?).to be(false)
+    end
+  end
+
+  describe "#has_role?" do
+    let(:user) { create(:user) }
+    let(:organization) { create(:organization) }
+
+    it "matches a global role" do
+      create(:role, user: user, role: "member")
+
+      expect(user.has_role?(:member)).to be(true)
+    end
+
+    it "matches a resource role on that resource" do
+      create(:role, user: user, role: "manager", roleable: organization)
+
+      expect(user.has_role?(:manager, on: organization)).to be(true)
+    end
+
+    it "does not match a resource role on another resource" do
+      create(:role, user: user, role: "manager", roleable: organization)
+
+      expect(user.has_role?(:manager, on: create(:organization))).to be(false)
+    end
+
+    it "does not match a global role when a resource is given" do
+      create(:role, user: user, role: "member")
+
+      expect(user.has_role?(:member, on: organization)).to be(false)
     end
   end
 

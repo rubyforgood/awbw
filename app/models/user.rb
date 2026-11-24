@@ -34,6 +34,7 @@ class User < ApplicationRecord
   has_many :bookmarks, dependent: :destroy
   has_many :staff_aliases, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  has_many :roles, dependent: :destroy
 
   # A user account's communications are addressed to its login email.
   def communications_email
@@ -180,6 +181,23 @@ class User < ApplicationRecord
   # confirmed, not locked, not deactivated.
   def has_access?
     locked_at.nil? && !inactive? && confirmed_at.present?
+  end
+
+  def has_role?(role, on: nil)
+    role = role.to_s
+    return false if on.nil? && Role::RESOURCE_ROLES.include?(role)
+    return false if on && Role::GLOBAL_ROLES.include?(role)
+    return false if on && !on.persisted?
+
+    scope = roles.where(role: role)
+    scope = on ? scope.where(roleable: on) : scope.global
+    scope.exists?
+  end
+
+  def paid_member?
+    return @paid_member if defined?(@paid_member)
+
+    @paid_member = person&.paid_member? || false
   end
 
   def bookmark_for(record)

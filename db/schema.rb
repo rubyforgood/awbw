@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_19_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_23_120000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2030,6 +2030,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_19_120000) do
     t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
   end
 
+  create_table "roles", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "role", null: false
+    t.string "roleable_type"
+    t.bigint "roleable_id"
+    t.integer "created_by_id"
+    t.integer "updated_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_roles_on_created_by_id"
+    t.index ["roleable_type", "roleable_id"], name: "index_roles_on_roleable"
+    t.index ["updated_by_id"], name: "index_roles_on_updated_by_id"
+    t.index ["user_id", "role", "roleable_type", "roleable_id"], name: "index_roles_on_user_role_and_roleable", unique: true
+    t.index ["user_id"], name: "index_roles_on_user_id"
+  end
+
   create_table "scholarship_agreement_responses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents"
     t.integer "contribution_cents"
@@ -2953,6 +2969,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_19_120000) do
   add_foreign_key "resources", "users", column: "created_by_id"
   add_foreign_key "resources", "users", column: "updated_by_id"
   add_foreign_key "resources", "windows_types"
+  add_foreign_key "roles", "users"
+  add_foreign_key "roles", "users", column: "created_by_id"
+  add_foreign_key "roles", "users", column: "updated_by_id"
   add_foreign_key "scholarship_agreement_responses", "scholarships"
   add_foreign_key "scholarship_agreement_responses", "users", column: "created_by_id"
   add_foreign_key "scholarship_agreement_responses", "users", column: "responded_by_id"

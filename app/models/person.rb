@@ -620,6 +620,18 @@ class Person < ApplicationRecord
     (active || facilitator_affiliations.max_by(&:updated_at))&.organization
   end
 
+  def paid_member?
+    memberships
+      .where(locked_at: nil, start_date: ..Date.current, end_date: Date.current..)
+      .where.not(
+        id: MembershipInvoice
+              .not_paid_in_full
+              .where(start_date: ..Date.current)
+              .select(:membership_id)
+      )
+      .exists?
+  end
+
   def current_membership
     candidates = memberships.reject(&:locked?)
     candidates.find(&:active?) ||
