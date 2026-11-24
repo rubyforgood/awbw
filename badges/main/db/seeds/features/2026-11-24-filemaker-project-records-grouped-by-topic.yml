@@ -1,0 +1,14 @@
+name: "FileMaker project records grouped by topic"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-24
+pr_number: 3048
+action_path: "/fm_archives?table=projects"
+summary: >-
+  A FileMaker project record now shows its fields in labeled sections — project,
+  organization, settings, location, dates, funding, notes and record keeping — with a
+  reference at the bottom listing every field and linked table.
+description: >-
+  <ul><li>Blank fields are left out of the cards. The blue section at the bottom
+  still lists every field, grayed out when blank.</li><li>Related tables the portal
+  keeps its own records for are orange, and say what the portal calls them.</li></ul>

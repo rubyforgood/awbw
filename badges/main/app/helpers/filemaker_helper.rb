@@ -79,6 +79,11 @@ module FilemakerHelper
     link_to summary || record.name, fm_archive_record_path(record), class: "text-primary hover:underline"
   end
 
+  # Each filled-in date as "Entered 2021-03-30", without its time of day.
+  def fm_date_labels(dates)
+    dates.compact_blank.map { |label, value| "#{label.to_s.humanize} #{value.to_s.squish.split(" ").first}" }
+  end
+
   def fm_archive_record_path(record)
     fm_archive_path(record.fm_id, table: record.class.table_name.delete_prefix("fm_"))
   end

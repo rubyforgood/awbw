@@ -290,4 +290,10 @@ RSpec.describe FilemakerHelper, type: :helper do
       expect(html).to include(">Rolodex</a>")
     end
   end
+
+  describe "#fm_date_labels" do
+    it "labels each filled-in date without its time of day" do
+      expect(helper.fm_date_labels(entered: "2021-03-30 00:00:00", modified: "")).to eq([ "Entered 2021-03-30" ])
+    end
+  end
 end

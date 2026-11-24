@@ -4,12 +4,13 @@ module FmArchive
   FIELD_GROUPS = {}.freeze
   OTHER_FIELDS = "Other fields"
   LISTED_FIELDS = [].freeze
-  TALL_GROUPS = [].freeze
+  WIDE_GROUPS = [].freeze
   PORTAL_COUNTERPARTS = {}.freeze
   PORTAL_FIELDS = {}.freeze
   USER_LOOKUP_FIELDS = [].freeze
   CONTEXT_LINK_MAP = {}.freeze
   PREFIX_LINK_MAP = {}.freeze
+  HAS_MANY = {}.freeze
 
   included do
     before_validation :set_defaults
@@ -32,7 +33,8 @@ module FmArchive
 
   # The filled-in data fields as cards of subcards, { card => { subcard => fields } }, in FIELD_GROUPS order.
   # A card listing its fields directly holds one unlabeled subcard; fields no group names trail under
-  # "Other fields". Ungrouped tables come back whole, as one unlabeled card.
+  # "Other fields". Ungrouped tables come back whole, as one unlabeled card. A wide card keeps its
+  # empty subcards, so each of the others stays on its own side.
   def grouped_data
     groups = self.class::FIELD_GROUPS
     return { nil => { nil => data } } if groups.empty?
@@ -40,8 +42,9 @@ module FmArchive
     filled = data.compact_blank.except(*self.class::LISTED_FIELDS)
     groups.merge(OTHER_FIELDS => ungrouped_keys).to_h do |label, keys|
       subgroups = keys.is_a?(Hash) ? keys : { nil => keys }
-      [ label, subgroups.transform_values { |sub_keys| filled.slice(*sub_keys) }
-                        .select { |sub_label, fields| fields.any? || records_listed_under(sub_label).any? } ]
+      subcards = subgroups.transform_values { |sub_keys| filled.slice(*sub_keys) }
+      shown = subcards.select { |sub_label, fields| fields.any? || records_listed_under(sub_label).any? }
+      [ label, shown.any? && self.class::WIDE_GROUPS.include?(label) ? subcards : shown ]
     end.compact_blank
   end
 
