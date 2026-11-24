@@ -59,6 +59,17 @@ class FmPersonnel < ApplicationRecord
     "Record keeping" => %w[PrsnlRecID EnteredBy DateEntered ModifiedBy DateTimeModified]
   }.freeze
 
+  PORTAL_COUNTERPARTS = {
+    "fm_personnels" => "Affiliations",
+    "fm_people_to_organizations" => "Affiliations"
+  }.freeze
+
+  HAS_MANY = {
+    "fm_personnels" => { via: "PersonID", shared: true, label: "Person’s other personnel records" },
+    "fm_people_to_organizations" => { via: "PersonID", shared: true, label: "Person’s other org affiliations" },
+    "fm_form_submissions" => { via: "PersonnelID", label: "Form submissions" }
+  }.freeze
+
   # A personnel row names a project, so its organization is the one that project belongs to.
   def self.for_person_at(person_id, organization_id)
     return [] if person_id.blank? || organization_id.blank?
