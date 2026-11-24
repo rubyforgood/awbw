@@ -66,7 +66,7 @@ class CommentDecorator < ApplicationDecorator
 
   def person_behind_commentable
     case commentable
-    when User, Affiliation, TopicSubscription, FormSubmission then commentable.person
+    when User, Affiliation, TopicSubscription, FormSubmission, Payment then commentable.person
     when StaffTagging then commentable.staff_taggable if commentable.staff_taggable.is_a?(Person)
     when Grant then commentable.funder if commentable.funder.is_a?(Person)
     else commentable.author_person if commentable.respond_to?(:author_person)

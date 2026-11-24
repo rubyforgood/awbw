@@ -123,6 +123,12 @@ RSpec.describe CommentDecorator do
       expect(create(:comment, commentable: story).decorate.about_person).to eq(author)
     end
 
+    it "is the person named on a payment" do
+      payer = create(:person)
+
+      expect(create(:comment, commentable: create(:payment, person: payer)).decorate.about_person).to eq(payer)
+    end
+
     it "is nil for a record that belongs to no one person" do
       expect(create(:comment, commentable: create(:organization)).decorate.about_person).to be_nil
     end
