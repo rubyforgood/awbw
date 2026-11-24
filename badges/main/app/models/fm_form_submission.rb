@@ -15,8 +15,7 @@
 #   PaymentID             FK → FmPayment
 #   ParticRecID           FK → FmParticipant (uses P prefix format, e.g. P52646,
 #                         differs from canonical bare-numeric ParticipantID)
-#   PersonnelID           FK → FmPersonnel (uses PS prefix, e.g. PS10005,
-#                         differs from Personnel's own bare-numeric PrsnlRecID)
+#   PersonnelID           FK → FmPersonnel, e.g. PS10005
 #   FormTitle
 #   FormType
 #   EntryStatusWP
@@ -52,7 +51,8 @@ class FmFormSubmission < ApplicationRecord
     "RolodexID" => "fm_rolodexes",
     "ProjectID" => "fm_projects",
     "PaymentID" => "fm_payments",
-    "ParticRecID" => "fm_participants"
+    "ParticRecID" => "fm_participants",
+    "PersonnelID" => "fm_personnels"
   }.freeze
 
   def name
