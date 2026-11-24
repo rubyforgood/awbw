@@ -27,7 +27,7 @@ module PersonHelper
     unconfirmed_email = person.user&.unconfirmed_email if allowed_to?(:show_email_change?, person)
     show_email_change = unconfirmed_email.present?
 
-    recap_link = person_recap_link(person, extra: "absolute top-1 right-1 z-10")
+    recap_link = person_recap_link(person, link_class: "absolute top-1 right-1 z-10")
 
     card = link_to person_path(person, **path_params),
                   data: { turbo_prefetch: false }.merge(data),
@@ -83,14 +83,14 @@ module PersonHelper
                         overflow-hidden")
   end
 
-  def person_recap_link(person, extra: nil, data: {})
+  def person_recap_link(person, link_class: nil, data: {})
     return unless allowed_to?(:recap?, person)
 
     link_to person_recap_path(person),
             data: { turbo_stream: true }.merge(data),
             title: "Recap",
             aria: { label: "Recap for #{person_name(person)}" },
-            class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-700 transition-colors duration-200 hover:bg-blue-200 hover:text-blue-800 #{extra}".strip do
+            class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-700 transition-colors duration-200 hover:bg-blue-200 hover:text-blue-800 #{link_class}".strip do
       tag.i(class: "fa-solid fa-window-restore text-sm")
     end
   end
