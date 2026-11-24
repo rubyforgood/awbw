@@ -1066,6 +1066,13 @@ RSpec.describe "/story_share", type: :request do
       get new_story_share_path
       expect(response).to have_http_status(:ok)
     end
+
+    it "leaves the funder-only option off, even for admins" do
+      sign_in create(:user, :admin)
+      get new_story_share_path
+      expect(response.body).to include("story_idea[permission_given]")
+      expect(response.body).not_to include("story_idea[funder_only]")
+    end
   end
 
   describe "submitting a story from the portal" do
