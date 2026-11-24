@@ -64,10 +64,14 @@ module PersonHelper
         class: "flex flex-col leading-tight text-left min-w-0"
       )
 
+      stack_warning = snapshot_link && !compact
+      warning_position = stack_warning ? "absolute right-1 bottom-1 w-7 text-center text-sm" : "flex-shrink-0 ml-auto"
+
       warning_tag = if show_email_change
         content_tag(:span,
                     tag.i(class: "fa-solid fa-triangle-exclamation"),
-                    class: "flex-shrink-0 ml-auto text-yellow-500",
+                    class: "text-yellow-500 #{warning_position}",
+                    data: { testid: "pending-email-warning" },
                     title: "Email change to #{unconfirmed_email} awaiting confirmation. " \
                            "Only the person and admins can see this; it is hidden from other profile visitors.")
       else
