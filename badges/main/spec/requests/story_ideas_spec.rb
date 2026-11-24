@@ -169,14 +169,6 @@ RSpec.describe "/story_ideas", type: :request do
       end
     end
 
-    describe "PATCH /update funder-only" do
-      it "marks the idea funder-only" do
-        story_idea = create(:story_idea)
-        patch story_idea_url(story_idea), params: { story_idea: { funder_only: "1" } }
-        expect(story_idea.reload).to be_funder_only
-      end
-    end
-
     describe "comments and communications on the edit page" do
       let(:story_idea) { create(:story_idea, created_by: regular_user) }
 
@@ -328,7 +320,12 @@ RSpec.describe "/story_ideas", type: :request do
         expect(response).to have_http_status(:unprocessable_content)
       end
 
-      it "defaults funder_only to false" do
+      it "persists funder_only when the submitter checks the box" do
+        post story_ideas_url, params: { story_idea: valid_attributes.merge(funder_only: "1") }
+        expect(StoryIdea.last).to be_funder_only
+      end
+
+      it "defaults funder_only to false when the box is left unchecked" do
         post story_ideas_url, params: { story_idea: valid_attributes }
         expect(StoryIdea.last).not_to be_funder_only
       end

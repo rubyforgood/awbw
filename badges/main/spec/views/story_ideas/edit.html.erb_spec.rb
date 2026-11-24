@@ -46,9 +46,5 @@ RSpec.describe "story_ideas/edit", type: :view do
     it "renders promote to story button" do
       expect(rendered).to have_link("Promote to Story")
     end
-
-    it "offers the funder-only option" do
-      assert_select ".admin-only input[type=checkbox][name=?]", "story_idea[funder_only]"
-    end
   end
 end
