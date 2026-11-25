@@ -8,6 +8,11 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       expect(reg.attendance_status_icon).to eq("fa-circle-check")
     end
 
+    it "shortens only incomplete attendance in the compact label" do
+      expect(build(:event_registration, status: "incomplete_attendance").decorate.compact_attendance_status_label).to eq("Incomplete")
+      expect(build(:event_registration, status: "no_show").decorate.compact_attendance_status_label).to eq("No show")
+    end
+
     it "falls back to neutral styling for an unmapped status" do
       reg = create(:event_registration, status: "registered").decorate
       allow(reg).to receive(:status).and_return("mystery")
