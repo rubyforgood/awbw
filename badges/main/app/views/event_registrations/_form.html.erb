@@ -346,7 +346,7 @@
 
         <% if show_scholarship %>
           <%= locked_fieldset(locked) do %>
-            <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
+            <%= render "scholarship", event_registration: f.object %>
           <% end %>
         <% end %>
 

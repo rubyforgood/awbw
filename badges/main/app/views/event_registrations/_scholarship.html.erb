@@ -1,16 +1,17 @@
 <%# ---- Scholarship — "Requested" is a plain flag saved with the form; it does
     not create or destroy an award. Awarding is a deliberate action via
     "Add scholarship". ---- %>
+<% scholarships = event_registration.scholarships.to_a %>
 <section id="scholarship-card" class="flex min-h-[12rem] scroll-mt-20 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:scholarships, scholarship.present? || event_registration.scholarship_requested) %>">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:scholarships, scholarships.any? || event_registration.scholarship_requested) %>">
       <i class="fa-solid fa-graduation-cap"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700">Scholarship</h2>
   </div>
 
   <div class="flex flex-1 flex-col gap-3 p-4">
-    <% unless scholarship %>
+    <% unless scholarships.any? %>
       <label class="flex items-center gap-2.5 cursor-pointer">
         <input type="hidden" name="event_registration[scholarship_requested]" value="0" autocomplete="off">
         <input type="checkbox"
@@ -23,7 +24,7 @@
       </label>
     <% end %>
 
-    <% if scholarship %>
+    <% scholarships.each do |scholarship| %>
       <div class="flex flex-1 flex-col gap-2">
         <div class="flex items-center gap-2">
           <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(scholarship.amount_cents) %></span>
@@ -65,17 +66,17 @@
           <% end %>
         </div>
       </div>
-    <% else %>
-      <div class="mt-auto border-t border-gray-100 pt-3">
-        <%= link_to new_scholarship_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
-                    class: "inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700",
-                    target: "_blank", rel: "noopener" do %>
-          <i class="fa-solid fa-plus text-2xs"></i>
-          Add scholarship
-          <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-        <% end %>
-      </div>
     <% end %>
+
+    <div class="<%= "mt-auto " if scholarships.empty? %>border-t border-gray-100 pt-3">
+      <%= link_to new_scholarship_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
+                  class: "inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700",
+                  target: "_blank", rel: "noopener" do %>
+        <i class="fa-solid fa-plus text-2xs"></i>
+        <%= scholarships.any? ? "Add another scholarship" : "Add scholarship" %>
+        <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
+      <% end %>
+    </div>
 
     <% if event_registration.scholarship_requested? &&
           event_registration.slug.present? &&
