@@ -31,7 +31,7 @@
             <span>Load email addresses for this filter</span>
             <% if @memberships.total_entries > MembershipDirectory::LARGE_SET_THRESHOLD %>
               <i class="fa-solid fa-triangle-exclamation text-red-600"></i>
-              <span class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-64 -translate-x-1/2 rounded-md bg-red-600 px-3 py-2 text-xs font-normal text-white shadow-lg group-hover:block">
+              <span class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-64 -translate-x-1/2 p-3 group-hover:block <%= tooltip_class %>">
                 This filter's email list is really long — loading it may take a while.
               </span>
             <% end %>
