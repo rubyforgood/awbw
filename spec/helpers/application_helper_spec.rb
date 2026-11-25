@@ -132,7 +132,10 @@ RSpec.describe ApplicationHelper, type: :helper do
     let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
     let(:workshop) { create(:workshop, author_credit_preference: "full_name") }
 
-    before { allow(workshop).to receive(:author).and_return(person) }
+    before do
+      allow(workshop).to receive(:author).and_return(person)
+      allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(false)
+    end
 
     it "links to the person edit page when the viewer is an admin" do
       allow(helper).to receive(:allowed_to?).with(:manage?, person).and_return(true)

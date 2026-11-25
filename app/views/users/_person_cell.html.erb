@@ -1,6 +1,6 @@
 <% width_class = local_assigns.fetch(:width_class, "w-full") %>
 <% if user.person %>
-  <% cache [user.person, "edit_button", width_class] do %>
+  <% cache [user.person, "edit_button", width_class, allowed_to?(:snapshot?, user.person)] do %>
     <%= person_edit_button(user.person, width_class: width_class, data: { turbo_frame: "_top" }) %>
   <% end %>
 <% else %>

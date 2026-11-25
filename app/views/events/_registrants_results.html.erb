@@ -153,11 +153,12 @@
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 
                   <div class="flex items-center gap-1">
-                    <% reg_edit_classes = "group flex items-center gap-2 w-full px-2 py-1 border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100, hover: true)} rounded-lg transition-colors duration-200 shadow-sm leading-tight overflow-hidden" %>
+                    <% snapshot_link = person_snapshot_link(person, compact: true, link_class: "absolute top-0.5 right-0.5 z-10") %>
+                    <% reg_edit_classes = "group flex items-center gap-2 w-full px-2 py-1 #{snapshot_link ? "pr-7" : ""} border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100, hover: true)} rounded-lg transition-colors duration-200 shadow-sm leading-tight overflow-hidden" %>
                     <% display_email = person.preferred_email if show_email %>
                     <%# Mirror person_profile_button: warn admins/the person of a pending email change. %>
                     <% unconfirmed_email = person.user&.unconfirmed_email if allowed_to?(:show_email_change?, person) %>
-                    <div class="w-60 min-w-0">
+                    <div class="relative w-60 min-w-0">
                       <%= link_to edit_event_registration_path(registration, return_to: "registrants"),
                                   title: [ person_name(person), display_email ].compact_blank.join(" — "),
                                   class: reg_edit_classes,
@@ -170,12 +171,13 @@
                           <% end %>
                         </div>
                         <% if unconfirmed_email.present? %>
-                          <span class="flex-shrink-0 ml-auto text-yellow-500"
+                          <span class="<%= snapshot_link ? "absolute right-1 bottom-0.5" : "flex-shrink-0 ml-auto" %> text-yellow-500"
                                 title="Email change to <%= unconfirmed_email %> awaiting confirmation. Only the person and admins can see this; it is hidden from other profile visitors.">
                             <i class="fa-solid fa-triangle-exclamation"></i>
                           </span>
                         <% end %>
                       <% end %>
+                      <%= snapshot_link %>
                     </div>
 
                     <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>

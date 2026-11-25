@@ -122,6 +122,10 @@ RSpec.describe PersonHelper, type: :helper do
   describe "#person_edit_button" do
     let(:person) { create(:person, first_name: "Aisha", last_name: "Sharma") }
 
+    before do
+      allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(false)
+    end
+
     it "links to the person's edit page, not the profile" do
       html = helper.person_edit_button(person)
 
@@ -155,6 +159,45 @@ RSpec.describe PersonHelper, type: :helper do
     it "forwards a caller's data-turbo-frame onto the link so call sites can break out of a frame" do
       link = Nokogiri::HTML(helper.person_edit_button(person, data: { turbo_frame: "_top" })).at_css("a")
       expect(link["data-turbo-frame"]).to eq("_top")
+    end
+
+    context "when the viewer may open a snapshot" do
+      before do
+        allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(true)
+        allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(true)
+      end
+
+      it "renders the snapshot trigger as a sibling of the edit link" do
+        html = Nokogiri::HTML(helper.person_edit_button(person))
+
+        edit_link = html.at_css("a[href='#{edit_person_path(person)}']")
+        expect(edit_link).to be_present
+        expect(edit_link.at_css("a")).to be_nil
+
+        snapshot_link = html.at_css("a[href='#{person_snapshot_path(person)}']")
+        expect(snapshot_link).to be_present
+        expect(snapshot_link["data-turbo-stream"]).to eq("true")
+      end
+
+      it "keeps the name clear of the snapshot trigger" do
+        html = Nokogiri::HTML(helper.person_edit_button(person))
+
+        expect(html.at_css("a[href='#{edit_person_path(person)}']")[:class].split).to include("pr-8")
+      end
+
+      it "shrinks the trigger to fit a compact card" do
+        html = Nokogiri::HTML(helper.person_edit_button(person, compact: true))
+
+        snapshot_link = html.at_css("a[href='#{person_snapshot_path(person)}']")
+        expect(snapshot_link[:class].split).to include("h-5", "w-5")
+        expect(html.at_css("a[href='#{edit_person_path(person)}']")[:class].split).to include("pr-7")
+      end
+    end
+
+    context "when the viewer may not open a snapshot" do
+      it "renders no snapshot trigger" do
+        expect(helper.person_edit_button(person)).not_to include(person_snapshot_path(person))
+      end
     end
   end
 
@@ -209,6 +252,7 @@ RSpec.describe PersonHelper, type: :helper do
 
       expect(link["href"]).to eq(person_snapshot_path(person))
       expect(link["data-turbo-stream"]).to eq("true")
+      expect(link["data-turbo"]).to eq("true")
       expect(link["aria-label"]).to eq("Snapshot for Jane Doe")
       expect(link.at_css("i")["class"]).to include("fa-window-restore")
     end
@@ -217,6 +261,14 @@ RSpec.describe PersonHelper, type: :helper do
       allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(false)
 
       expect(helper.person_snapshot_link(person)).to be_nil
+    end
+
+    it "shrinks to fit a single-line card when compact" do
+      allow(helper).to receive(:allowed_to?).with(:snapshot?, person).and_return(true)
+      link = Nokogiri::HTML(helper.person_snapshot_link(person, compact: true)).at_css("a")
+
+      expect(link[:class].split).to include("h-5", "w-5")
+      expect(link.at_css("i")["class"]).to include("text-2xs")
     end
   end
 
