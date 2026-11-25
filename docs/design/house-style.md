@@ -139,3 +139,22 @@ table's small-screen card list uses the strip.
 - Options are a `{ label => value }` constant beside the sort logic (e.g.
   `WorkshopSearchService::SORT_OPTIONS`); labels are sentence case.
 - Place it at the right end of the count row (`ml-auto`) on index pages.
+
+## Hover tooltips
+
+Hover bubbles share one look from the `tooltip_class` helper
+(`ApplicationHelper`): white with a gray ring. The helper returns only the look;
+each caller adds its own position, width, padding, and hover toggle.
+
+```erb
+<span class="group relative inline-flex cursor-help">
+  <i class="fa-solid fa-circle-info text-[0.65rem] text-gray-400 group-hover:text-gray-600" aria-hidden="true"></i>
+  <span role="tooltip" class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 p-3 whitespace-normal group-hover:block <%= tooltip_class %>">…</span>
+</span>
+```
+
+- **Admin blue is the exception** — `tooltip_class(admin_only: true)` only when the
+  page is visible to non-admins and the bubble is for admins alone. On an admin-only
+  page, or inside a blue admin section, the background already says so: stay white.
+- Signal a warning with the trigger icon, not the bubble color.
+- Inside a card with a stretched link, give the trigger `z-10` so its hover works.
