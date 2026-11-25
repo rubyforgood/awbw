@@ -106,7 +106,7 @@ module PersonHelper
   # its own line below, mirroring person_profile_button. Admin-facing, so it shows
   # the full name — the person's display-name preference (first-name-only, etc.)
   # governs public credits, not what an admin sees here.
-  def person_edit_button(person, layout: :prefix, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false, tint: nil, path_params: {}, width_class: "w-full", compact: false)
+  def person_edit_button(person, layout: :prefix, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false, tint: nil, path_params: {}, width_class: "w-full", compact: false, show_title: true)
     padding = compact ? "px-2 py-1" : "px-4 py-2"
     name_text_size = compact ? "text-xs" : "text-sm"
 
@@ -119,7 +119,7 @@ module PersonHelper
 
     link_to edit_person_path(person, **path_params),
             data: { turbo_prefetch: false }.merge(data),
-            title: hover_title,
+            title: (hover_title if show_title),
             class: "group relative flex items-center gap-2
                     #{width_class} #{padding}
                     border #{palette[:border]} #{palette[:bg]} #{palette[:hover_bg]} rounded-lg
@@ -172,6 +172,20 @@ module PersonHelper
     link_to name, user_path(user),
             data: { turbo_prefetch: false }.merge(data),
             class: "font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
+  end
+
+  # Memoized per person so a feed naming the same person on every row renders
+  # (and queries) their card once.
+  def facilitator_hover_card(person, header: false)
+    @facilitator_hover_cards ||= {}
+    @facilitator_hover_cards[[ person.id, header ]] ||=
+      render("people/facilitator_hover_card", person: hover_card_person(person.id) || person, header: header)
+  end
+
+  # The copy of a person the controller preloaded for their hover card
+  # (@hover_card_people, from HoverCardPeople), when there is one.
+  def hover_card_person(id)
+    @hover_card_people&.[](id) if id
   end
 
   # A piece the person hid (a `profile_show_*` flag turned off) stays visible to
