@@ -87,15 +87,20 @@ module PersonHelper
                         overflow-hidden")
   end
 
-  def person_snapshot_link(person, link_class: nil, data: {})
+  # TODO: drop `turbo: true` once the event registration edit page is refactored
+  # away from one full-page form into sections with their own live updates.
+  def person_snapshot_link(person, link_class: nil, data: {}, compact: false)
     return unless allowed_to?(:snapshot?, person)
 
+    size = compact ? "h-5 w-5" : "h-7 w-7"
+    icon_size = compact ? "text-2xs" : "text-sm"
+
     link_to person_snapshot_path(person),
-            data: { turbo_stream: true }.merge(data),
+            data: { turbo: true, turbo_stream: true }.merge(data),
             title: "Snapshot",
             aria: { label: "Snapshot for #{person_name(person)}" },
-            class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-700 transition-colors duration-200 hover:bg-blue-200 hover:text-blue-800 #{link_class}".strip do
-      tag.i(class: "fa-solid fa-window-restore text-sm")
+            class: "inline-flex #{size} items-center justify-center rounded-full bg-blue-100 text-blue-700 transition-colors duration-200 hover:bg-blue-200 hover:text-blue-800 #{link_class}".strip do
+      tag.i(class: "fa-solid fa-window-restore #{icon_size}")
     end
   end
 
@@ -117,15 +122,19 @@ module PersonHelper
     full_name = truncate(full_name, length: truncate_at) if truncate_at
     hover_title = [ "Edit", full_name, subtitle ].compact_blank.join(" — ")
 
-    link_to edit_person_path(person, **path_params),
-            data: { turbo_prefetch: false }.merge(data),
-            title: hover_title,
-            class: "group relative flex items-center gap-2
-                    #{width_class} #{padding}
-                    border #{palette[:border]} #{palette[:bg]} #{palette[:hover_bg]} rounded-lg
-                    transition-colors duration-200
-                    font-medium #{shadow} leading-none
-                    overflow-hidden" do
+    snapshot_link = person_snapshot_link(
+      person,
+      compact: compact,
+      link_class: compact ? "absolute top-0.5 right-0.5 z-10" : "absolute top-1 right-1 z-10"
+    )
+
+    card = link_to edit_person_path(person, **path_params),
+                  data: { turbo_prefetch: false }.merge(data),
+                  title: hover_title,
+                  class: "group flex items-center gap-2
+                          #{padding} #{snapshot_link ? (compact ? "pr-7" : "pr-8") : ""} #{palette[:hover_bg]}
+                          transition-colors duration-200
+                          font-medium leading-none" do
       eyebrow = content_tag(:span, "Edit", class: "shrink-0 text-2xs text-gray-400 uppercase")
       name = content_tag(:span, full_name, class: "truncate font-semibold #{name_text_size} #{palette[:text]}")
       subtitle_tag = person_button_subtitle(subtitle)
@@ -139,6 +148,11 @@ module PersonHelper
         content_tag(:div, safe_join([ eyebrow, name_block ]), class: "flex items-baseline gap-1.5 text-left min-w-0")
       end
     end
+
+    content_tag(:div, safe_join([ card, snapshot_link ].compact),
+                class: "relative #{width_class}
+                        border #{palette[:border]} #{palette[:bg]} rounded-lg #{shadow}
+                        overflow-hidden")
   end
 
   # A compact card button for a user account — the actor behind created_by/

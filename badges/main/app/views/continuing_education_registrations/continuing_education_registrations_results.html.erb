@@ -37,19 +37,23 @@
               <tr class="transition-colors duration-150 hover:bg-gray-50">
                 <td class="py-3 pr-2 pl-4">
                   <% registrant = registration.registrant %>
+                  <% snapshot_link = person_snapshot_link(registrant, compact: true, link_class: "absolute top-0.5 right-0.5 z-10") %>
                   <%# Same name box as the registrants list, in the CE color. %>
-                  <%= link_to continuing_education_registration_path(ce),
-                        title: [ registrant.full_name, registrant.preferred_email ].compact_blank.join(" — "),
-                        class: "flex w-56 items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 leading-tight shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100, hover: true)}",
-                        data: { turbo_frame: "_top" } do %>
-                    <i class="fa-solid fa-certificate shrink-0 <%= DomainTheme.text_class_for(:continuing_education_registrations) %>"></i>
-                    <span class="flex min-w-0 flex-col justify-center">
-                      <span class="truncate text-xs font-semibold <%= DomainTheme.text_class_for(:continuing_education_registrations) %>"><%= registrant.full_name %></span>
-                      <% if registrant.preferred_email.present? %>
-                        <!--email_off--><span class="truncate text-xs font-normal text-gray-500"><%= registrant.preferred_email %></span><!--email_on-->
-                      <% end %>
-                    </span>
-                  <% end %>
+                  <div class="relative w-56">
+                    <%= link_to continuing_education_registration_path(ce),
+                          title: [ registrant.full_name, registrant.preferred_email ].compact_blank.join(" — "),
+                          class: "flex w-full items-center gap-2 overflow-hidden rounded-lg border px-2 py-1 #{snapshot_link ? "pr-7" : ""} leading-tight shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:continuing_education_registrations)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:continuing_education_registrations, intensity: 100, hover: true)}",
+                          data: { turbo_frame: "_top" } do %>
+                      <i class="fa-solid fa-certificate shrink-0 <%= DomainTheme.text_class_for(:continuing_education_registrations) %>"></i>
+                      <span class="flex min-w-0 flex-col justify-center">
+                        <span class="truncate text-xs font-semibold <%= DomainTheme.text_class_for(:continuing_education_registrations) %>"><%= registrant.full_name %></span>
+                        <% if registrant.preferred_email.present? %>
+                          <!--email_off--><span class="truncate text-xs font-normal text-gray-500"><%= registrant.preferred_email %></span><!--email_on-->
+                        <% end %>
+                      </span>
+                    <% end %>
+                    <%= snapshot_link %>
+                  </div>
                 </td>
                 <td class="px-2 py-3 text-sm whitespace-nowrap text-gray-700">
                   <% if registration.event.start_date.present? %>

@@ -66,12 +66,17 @@
                     <tr id="<%= dom_id(event_registration) %>" class="transition-colors duration-150 hover:bg-gray-50">
                       <td class="px-3 py-1 align-middle text-sm text-gray-800">
                         <div class="flex items-center gap-2">
-                          <%= link_to edit_event_registration_path(event_registration),
-                                      title: "Edit #{person_name(event_registration.registrant)}'s registration",
-                                      class: "group inline-flex w-fit items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-medium leading-none shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100, hover: true)}" do %>
-                            <i class="fa-solid fa-clipboard-list text-2xs shrink-0 <%= DomainTheme.text_class_for(:event_registrations) %>"></i>
-                            <span class="truncate font-semibold <%= DomainTheme.text_class_for(:event_registrations) %>"><%= person_name(event_registration.registrant) %></span>
-                          <% end %>
+                          <% registrant = event_registration.registrant %>
+                          <% snapshot_link = person_snapshot_link(registrant, compact: true, link_class: "absolute top-0.5 right-0.5 z-10") %>
+                          <div class="relative shrink-0">
+                            <%= link_to edit_event_registration_path(event_registration),
+                                        title: "Edit #{person_name(registrant)}'s registration",
+                                        class: "group inline-flex w-fit items-center gap-1.5 rounded-lg border px-2 py-1 #{snapshot_link ? "pr-7" : ""} text-xs font-medium leading-none shadow-sm transition-colors duration-200 #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100, hover: true)}" do %>
+                              <i class="fa-solid fa-clipboard-list text-2xs shrink-0 <%= DomainTheme.text_class_for(:event_registrations) %>"></i>
+                              <span class="truncate font-semibold <%= DomainTheme.text_class_for(:event_registrations) %>"><%= person_name(registrant) %></span>
+                            <% end %>
+                            <%= snapshot_link %>
+                          </div>
                           <% if (form_placement = form_placements[event_registration.id]) %>
                             <%= render "submissions_icon",
                                        sittings: form_placement.sittings,
