@@ -42,6 +42,12 @@ class PersonSnapshot
     person.affiliated_since_date
   end
 
+  def affiliations_heading
+    return "Affiliations" if affiliated_since.blank?
+
+    "Affiliated since #{affiliated_since.strftime("%b %Y")}"
+  end
+
   def empty?
     affiliations.empty? && trainings.empty? && membership.nil?
   end

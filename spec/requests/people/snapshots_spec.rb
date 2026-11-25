@@ -25,9 +25,20 @@ RSpec.describe "Person snapshots", type: :request do
       expect(response.body).to include("Harbor House")
       expect(response.body).to include("Facilitator Training")
       expect(response.body).to include(membership.decorate.period_label)
-      expect(response.body).to include(">Affiliations</h2>")
+      expect(response.body).to include(">Affiliated since #{1.year.ago.strftime("%b %Y")}</h2>")
+      expect(response.body).not_to include(">Affiliations</h2>")
       expect(response.body).to include(">Facilitator trainings</h2>")
       expect(response.body).to include(">Membership</h2>")
+    end
+
+    it "shortens incomplete attendance" do
+      event = create(:event, facilitator_training: true)
+      create(:event_registration, registrant: person, event:, status: "incomplete_attendance")
+
+      get person_snapshot_path(person)
+
+      expect(response.body).to include("<span>Incomplete</span>")
+      expect(response.body).not_to include("Incomplete attendance")
     end
 
     it "shows the empty state when there is nothing to snapshot" do
@@ -39,6 +50,17 @@ RSpec.describe "Person snapshots", type: :request do
       expect(response.body).not_to include(">Affiliations</h2>")
       expect(response.body).not_to include(">Facilitator trainings</h2>")
       expect(response.body).not_to include(">Membership</h2>")
+    end
+
+    it "shows the affiliated since heading when every affiliation has ended" do
+      former = create(:person)
+      create(:affiliation, person: former, organization: create(:organization),
+             start_date: Date.new(2020, 3, 1), end_date: Date.new(2021, 1, 1))
+
+      get person_snapshot_path(former)
+
+      expect(response.body).to include(">Affiliated since Mar 2020</h2>")
+      expect(response.body).to include("No snapshot content yet.")
     end
 
     it "answers a turbo stream request by filling the snapshot mount with the dialog" do

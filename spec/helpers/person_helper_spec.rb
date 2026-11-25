@@ -100,6 +100,22 @@ RSpec.describe PersonHelper, type: :helper do
         expect(snapshot_link).to be_present
         expect(profile_link.at_css("a")).to be_nil
       end
+
+      context "when an email change is pending" do
+        let(:unconfirmed) { "new@example.com" }
+
+        it "places the warning below the snapshot trigger" do
+          html = Nokogiri::HTML(helper.person_profile_button(person))
+
+          expect(html.at_css("[data-testid='pending-email-warning']")[:class].split).to include("absolute", "bottom-1")
+        end
+
+        it "keeps the warning inline on a compact card" do
+          html = Nokogiri::HTML(helper.person_profile_button(person, compact: true))
+
+          expect(html.at_css("[data-testid='pending-email-warning']")[:class].split).to include("ml-auto")
+        end
+      end
     end
   end
 

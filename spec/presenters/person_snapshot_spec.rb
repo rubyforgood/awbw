@@ -64,6 +64,18 @@ RSpec.describe PersonSnapshot do
     end
   end
 
+  describe "#affiliations_heading" do
+    it "names the month the person was first affiliated" do
+      create(:affiliation, person:, organization: create(:organization), start_date: Date.new(2025, 1, 1))
+
+      expect(described_class.new(person).affiliations_heading).to eq("Affiliated since Jan 2025")
+    end
+
+    it "is plain without a start date" do
+      expect(described_class.new(person).affiliations_heading).to eq("Affiliations")
+    end
+  end
+
   describe "#empty?" do
     it "is true when there are no affiliations, trainings, or membership" do
       expect(described_class.new(person).empty?).to be(true)

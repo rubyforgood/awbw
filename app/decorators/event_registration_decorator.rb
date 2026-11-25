@@ -140,6 +140,10 @@ class EventRegistrationDecorator < ApplicationDecorator
     ATTENDANCE_STATUS_ICONS.fetch(status, "fa-question")
   end
 
+  def compact_attendance_status_label
+    status == "incomplete_attendance" ? "Incomplete" : attendance_status_label
+  end
+
   # Pill bundle for the profile event card's status marker, reusing the shared
   # status SSOT so label, icon, and colors stay in one place.
   def attendance_status_badge
