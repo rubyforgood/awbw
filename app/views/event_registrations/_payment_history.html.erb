@@ -6,7 +6,7 @@
 <% due_cents = cost_cents - paid_cents %>
 <%# Free event with nothing allocated — nothing to manage, so hide the section. %>
 <% return if cost_cents <= 0 && event_registration.allocations.empty? %>
-<section id="allocations-card" class="relative scroll-mt-20 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 hover:shadow-md">
+<section id="allocations-card" class="relative scroll-mt-20 rounded-xl border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 hover:shadow-md">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:payments, event_registration.allocations.any?) %>">
       <i class="fa-solid fa-dollar-sign"></i>
@@ -29,7 +29,14 @@
         </div>
         <div class="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
           <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount allocated</dt>
-          <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(paid_cents) %></dd>
+          <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold text-gray-900 tabular-nums">
+            <%= dollars_from_cents(paid_cents) %>
+            <%# relative z-10 lifts the icon above the card's stretched link so its hover works. %>
+            <span class="group relative z-10 inline-flex cursor-help">
+              <i class="fa-solid fa-circle-info text-[0.65rem] text-gray-400 group-hover:text-gray-600" aria-hidden="true"></i>
+              <span role="tooltip" class="absolute bottom-full left-0 z-50 mb-1 hidden w-48 p-3 whitespace-normal group-hover:block <%= tooltip_class %>">Amount allocated is the total for all payments + scholarships + discounts</span>
+            </span>
+          </dd>
         </div>
         <% over_allocated = due_cents < 0 %>
         <% amount_due = due_cents > 0 %>

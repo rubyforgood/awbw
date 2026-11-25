@@ -1,0 +1,8 @@
+name: "Amount allocated explains what it includes"
+area: payments
+display_status: admin_facing
+released_on: 2026-11-22
+pr_number: 3030
+summary: >-
+  On a registration's payments card, hover the info icon beside Amount allocated
+  to see that it totals all payments, scholarships, and discounts.
