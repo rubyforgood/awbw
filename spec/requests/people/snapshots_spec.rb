@@ -31,6 +31,16 @@ RSpec.describe "Person snapshots", type: :request do
       expect(response.body).to include(">Membership</h2>")
     end
 
+    it "shortens incomplete attendance" do
+      event = create(:event, facilitator_training: true)
+      create(:event_registration, registrant: person, event:, status: "incomplete_attendance")
+
+      get person_snapshot_path(person)
+
+      expect(response.body).to include("<span>Incomplete</span>")
+      expect(response.body).not_to include("Incomplete attendance")
+    end
+
     it "shows the empty state when there is nothing to snapshot" do
       empty_person = create(:person, first_name: "Empty", last_name: "Snapshot")
 
