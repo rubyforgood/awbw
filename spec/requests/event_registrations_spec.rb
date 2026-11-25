@@ -23,6 +23,14 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response).to have_http_status(:success)
       end
 
+      it "opens the registrant's snapshot from the registrant card" do
+        get event_registrations_path
+
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{person_snapshot_path(regular_user.person)}']")
+        expect(link).to be_present
+        expect(link["data-turbo-stream"]).to eq("true")
+      end
+
       it "links a registrant's submissions from one icon, counting each time they submitted" do
         form = create(:form)
         scholarship_form = create(:form)
@@ -586,6 +594,17 @@ RSpec.describe "EventRegistrations", type: :request do
 
         expect(link.text).to eq(existing_registration.registrant.full_name)
         expect(event_line.text).to include(existing_registration.event.title)
+      end
+
+      it "keeps the registrant's snapshot trigger turbo-enabled inside the non-Turbo form" do
+        get edit_event_registration_path(existing_registration)
+
+        form = Nokogiri::HTML(response.body).at_css(%(form[data-turbo="false"]))
+        link = form.at_css("a[href='#{person_snapshot_path(existing_registration.registrant)}']")
+
+        expect(link).to be_present
+        expect(link["data-turbo"]).to eq("true")
+        expect(link["data-turbo-stream"]).to eq("true")
       end
 
       it "renders the expected payment method as an editable select with the registrant's answer selected" do
