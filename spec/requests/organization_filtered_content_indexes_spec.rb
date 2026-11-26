@@ -8,7 +8,7 @@ RSpec.describe "Contributed-content indexes filtered by organization", type: :re
   let(:member) { create(:person) }
 
   before do
-    create(:affiliation, organization: organization, person: member)
+    create(:affiliation, :facilitator, organization: organization, person: member)
     sign_in admin
   end
 

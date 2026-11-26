@@ -41,8 +41,7 @@ module AffiliationServices
     # Everything at the org that isn't the standing Facilitator affiliation — the
     # person's job affiliation(s), ended only when they say they're also leaving.
     def job_affiliations
-      @person.affiliations.active_or_pending.where(organization: @organization)
-        .where("affiliations.title IS NULL OR affiliations.title <> BINARY ?", Affiliation::FACILITATOR_TITLE)
+      @person.affiliations.active_or_pending.where(organization: @organization, type: Affiliation::TYPE_JOB)
     end
 
     def end_affiliations(affiliations)

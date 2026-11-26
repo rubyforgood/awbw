@@ -1,9 +1,6 @@
-// Single JS source of the facilitator rule, mirroring Affiliation#facilitator? /
-// .facilitators: the title must be exactly "Facilitator" (trimmed, case-sensitive).
-// The affiliation editors drive their live preview off the typed title through this.
-export const facilitatorTitle = "Facilitator"
+export const facilitatorType = "facilitator"
 
-export const isFacilitatorTitle = (title) => (title ?? "").trim() === facilitatorTitle
+export const isFacilitatorType = (type) => type === facilitatorType
 
 // Mirrors Affiliation#zero_length? / .zero_length: a row that starts and ends on the
 // same day is a no-show's deactivated stub, not facilitation (ADR-0001 D8a). The org

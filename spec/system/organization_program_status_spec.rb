@@ -11,7 +11,7 @@ RSpec.describe "Organization program status live update", type: :system do
   before do
     driven_by(:selenium_chrome_headless)
     create(:affiliation, person: person, organization: organization,
-           title: "Facilitator", start_date: "2020-03-01", end_date: nil)
+           type: "facilitator", start_date: "2020-03-01", end_date: nil)
     sign_in admin
   end
 
@@ -39,17 +39,5 @@ RSpec.describe "Organization program status live update", type: :system do
     set_date_input(end_input, "2020-06-01")
 
     expect(status_chip).to have_text("Formerly active", wait: 5)
-  end
-
-  it "drops to Never active when the only facilitator row is retitled to a non-facilitator" do
-    visit_and_wait edit_organization_path(organization)
-    expect(status_chip).to have_text("Active")
-
-    # Persisted rows can't be removed inline (that's the gear's affiliation editor),
-    # so retitle the sole facilitator: the live chip counts zero facilitators.
-    title_input = find("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields input[name*='title']")
-    title_input.set("Volunteer")
-
-    expect(status_chip).to have_text("Never active", wait: 5)
   end
 end

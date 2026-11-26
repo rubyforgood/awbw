@@ -8,7 +8,7 @@ RSpec.describe "Organization workshops and ideas", type: :system do
 
   before do
     driven_by(:selenium_chrome_headless)
-    create(:affiliation, organization: organization, person: affiliated_person)
+    create(:affiliation, :facilitator, organization: organization, person: affiliated_person)
   end
 
   scenario "Organization profile displays directly associated workshops and ideas" do

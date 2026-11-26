@@ -24,7 +24,7 @@ RSpec.describe "organizations/show", type: :view do
 
     before do
       create(:affiliation, person: person, organization: organization, title: "Director")
-      create(:affiliation, person: person, organization: organization, title: "Facilitator")
+      create(:affiliation, person: person, organization: organization, type: "facilitator")
       assign(:organization, organization.reload)
       render
     end
@@ -51,10 +51,10 @@ RSpec.describe "organizations/show", type: :view do
     let(:hidden) { create(:person, first_name: "Hal", last_name: "Hidden", profile_is_searchable: false) }
 
     before do
-      create(:affiliation, person: facilitator, organization: organization)
+      create(:affiliation, :facilitator, person: facilitator, organization: organization)
       create(:affiliation, person: director, organization: organization, title: "Director")
-      create(:affiliation, person: lapsed, organization: organization, end_date: 1.month.ago)
-      create(:affiliation, person: hidden, organization: organization)
+      create(:affiliation, :facilitator, person: lapsed, organization: organization, end_date: 1.month.ago)
+      create(:affiliation, :facilitator, person: hidden, organization: organization)
       assign(:organization, organization.reload)
       render
     end

@@ -124,7 +124,7 @@ RSpec.describe AttendeesBreakdowns do
       registrant = create(:person)
       reg = create(:event_registration, event: training, registrant: registrant, status: "attended")
       org = create(:organization)
-      create(:affiliation, organization: org, person: registrant, title: "Facilitator", start_date: 1.year.ago)
+      create(:affiliation, organization: org, person: registrant, type: "facilitator", start_date: 1.year.ago)
       reg.event_registration_organizations.create!(organization: org)
       registrant
     end

@@ -49,7 +49,7 @@ RSpec.describe "Profile change requests", type: :request do
 
     it "submits a structured affiliation date change targeting a specific affiliation" do
       org = create(:organization, name: "Sunrise Center")
-      affiliation = create(:affiliation, person: person, organization: org, title: "Facilitator")
+      affiliation = create(:affiliation, person: person, organization: org, type: "facilitator")
 
       expect {
         post profile_change_requests_path(person_id: person), params: {
@@ -68,7 +68,7 @@ RSpec.describe "Profile change requests", type: :request do
     end
 
     it "offers to close the program for a Facilitator affiliation and asks why" do
-      facilitator = create(:affiliation, person: person, organization: create(:organization, name: "Sunrise Center"))
+      facilitator = create(:affiliation, :facilitator, person: person, organization: create(:organization, name: "Sunrise Center"))
 
       get new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: facilitator.id)
       expect(response.body).to include("Close my AWBW program here")
@@ -302,7 +302,7 @@ RSpec.describe "Profile change requests", type: :request do
     end
 
     it "approves an affiliation title change by updating the affiliation" do
-      affiliation = create(:affiliation, person: person, title: "Facilitator")
+      affiliation = create(:affiliation, person: person, type: "job")
       request = create(:profile_change_request, person: person, field: "affiliation",
                        requested_value: "Title or role", affiliation: affiliation,
                        proposed_title: "Lead Facilitator", details: nil)
@@ -373,7 +373,7 @@ RSpec.describe "Profile change requests", type: :request do
 
     it "sets the work address on the person's other active roles at that organization too" do
       organization = create(:organization)
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
+      facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator", start_date: 1.year.ago)
       job = create(:affiliation, person: person, organization: organization, title: "Program Manager", start_date: 2.years.ago)
       ended = create(:affiliation, person: person, organization: organization, title: "Intern", start_date: 5.years.ago, end_date: 4.years.ago)
       elsewhere = create(:affiliation, person: person, title: "Volunteer", start_date: 1.year.ago)
@@ -393,7 +393,7 @@ RSpec.describe "Profile change requests", type: :request do
     it "sets the work address on an ended role that was asked about, plus the active roles at that organization" do
       organization = create(:organization)
       ended = create(:affiliation, person: person, organization: organization, title: "Intern", start_date: 5.years.ago, end_date: 4.years.ago)
-      active = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
+      active = create(:affiliation, person: person, organization: organization, type: "facilitator", start_date: 1.year.ago)
       request = create(:profile_change_request, person: person, affiliation: ended, details: nil,
                        requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
                        proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
@@ -407,7 +407,7 @@ RSpec.describe "Profile change requests", type: :request do
 
     it "logs the new address and each role it sets to Ahoy, stamped with the change request" do
       organization = create(:organization)
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
+      facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator", start_date: 1.year.ago)
       job = create(:affiliation, person: person, organization: organization, title: "Program Manager", start_date: 2.years.ago)
       request = create(:profile_change_request, person: person, affiliation: facilitator, details: nil,
                        requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
@@ -428,21 +428,21 @@ RSpec.describe "Profile change requests", type: :request do
       org = create(:organization, name: "New Org")
       request = create(:profile_change_request, person: person, field: "affiliation",
                        requested_value: "Add a new affiliation", organization: org,
-                       proposed_title: "Facilitator", proposed_start_date: "2026-01-01", details: nil)
+                       proposed_title: "Counselor", proposed_start_date: "2026-01-01", details: nil)
 
       expect {
         post approve_profile_change_request_path(request)
       }.to change { person.affiliations.count }.by(1)
 
       expect(request.reload).to be_resolved
-      expect(person.affiliations.exists?(organization: org, title: "Facilitator")).to be(true)
+      expect(person.affiliations.exists?(organization: org, type: "job", title: "Counselor")).to be(true)
     end
 
     it "stamps the records an approval writes onto Ahoy with the change request" do
       org = create(:organization)
       request = create(:profile_change_request, person: person, field: "affiliation",
                        requested_value: "Add a new affiliation", organization: org,
-                       proposed_title: "Facilitator", proposed_start_date: "2026-01-01", details: nil)
+                       proposed_title: "Counselor", proposed_start_date: "2026-01-01", details: nil)
       Analytics::LifecycleBuffer.store.clear
       tracked = []
       allow_any_instance_of(Ahoy::Tracker).to receive(:track) { |_tracker, name, properties| tracked << [ name, properties ] }
@@ -539,7 +539,7 @@ RSpec.describe "Profile change requests", type: :request do
       let(:old_org) { create(:organization, name: "Old Shelter") }
       let(:new_org) { create(:organization, name: "New Clinic") }
       let!(:old_job) { create(:affiliation, person: person, organization: old_org, title: "Counselor", start_date: 2.years.ago, end_date: nil) }
-      let!(:old_facilitator) { create(:affiliation, person: person, organization: old_org, start_date: 2.years.ago, end_date: nil) }
+      let!(:old_facilitator) { create(:affiliation, :facilitator, person: person, organization: old_org, start_date: 2.years.ago, end_date: nil) }
       let!(:other_job) { create(:affiliation, person: person, organization: create(:organization, name: "Weekend Center"), title: "Volunteer", start_date: 1.year.ago, end_date: nil) }
       let(:request) do
         create(:profile_change_request, person: person, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD, details: nil,
@@ -561,7 +561,7 @@ RSpec.describe "Profile change requests", type: :request do
         expect(old_job.reload.end_date).to eq(Date.new(2026, 8, 31))
         expect(old_facilitator.reload.end_date).to eq(Date.new(2026, 8, 31))
         expect(other_job.reload.end_date).to be_nil
-        expect(person.affiliations.where(organization: new_org).pluck(:title, :start_date))
+        expect(person.affiliations.where(organization: new_org).map { |a| [ a.display_title, a.start_date ] })
           .to contain_exactly([ "Therapist", Date.new(2026, 9, 1) ], [ "Facilitator", Date.new(2026, 9, 1) ])
         expect(request.reload).to be_resolved
       end
@@ -569,7 +569,7 @@ RSpec.describe "Profile change requests", type: :request do
       it "adds only the job when the admin unchecks the facilitator box" do
         post approve_profile_change_request_path(request), params: { confer_facilitator: "0" }
 
-        expect(person.affiliations.where(organization: new_org).pluck(:title)).to eq([ "Therapist" ])
+        expect(person.affiliations.where(organization: new_org).map(&:display_title)).to eq([ "Therapist" ])
       end
 
       it "leaves other organizations alone when the person didn't leave a job" do
@@ -584,7 +584,7 @@ RSpec.describe "Profile change requests", type: :request do
 
     describe "closing a program" do
       let(:org) { create(:organization, name: "Hillside Shelter") }
-      let!(:facilitator) { create(:affiliation, person: person, organization: org, start_date: 2.years.ago, end_date: nil) }
+      let!(:facilitator) { create(:affiliation, :facilitator, person: person, organization: org, start_date: 2.years.ago, end_date: nil) }
       let!(:job) { create(:affiliation, person: person, organization: org, title: "Counselor", start_date: 2.years.ago, end_date: nil) }
 
       def close_request(**attrs)

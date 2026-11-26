@@ -8,7 +8,7 @@ RSpec.describe "Affiliations index", type: :request do
   let(:ana) { create(:person, first_name: "Ana", last_name: "Aardvark") }
   let(:zed) { create(:person, first_name: "Zed", last_name: "Zebra") }
   let!(:facilitator_row) do
-    create(:affiliation, person: ana, organization: alpha_org, title: "Facilitator",
+    create(:affiliation, person: ana, organization: alpha_org, type: "facilitator",
                          start_date: Date.new(2015, 3, 1), filemaker_code: "PS100")
   end
   let!(:job_row) do
@@ -73,7 +73,7 @@ RSpec.describe "Affiliations index", type: :request do
     end
 
     it "filters by status, including zero-length" do
-      zero = create(:affiliation, person: zed, organization: alpha_org, title: "Facilitator",
+      zero = create(:affiliation, person: zed, organization: alpha_org, type: "facilitator",
                                   start_date: Date.new(2024, 5, 1), end_date: Date.new(2024, 5, 1))
       expect(ids_in(results(status: "Active"))).to eq([ facilitator_row.id ])
       expect(ids_in(results(status: "Inactive"))).to contain_exactly(job_row.id, zero.id)
@@ -160,7 +160,7 @@ RSpec.describe "Affiliations index", type: :request do
       end
 
       it "sorts rows by what the import did: created, linked, or untouched" do
-        linked = create(:affiliation, person: zed, organization: alpha_org, title: "Facilitator", start_date: Date.new(2010, 1, 1))
+        linked = create(:affiliation, person: zed, organization: alpha_org, type: "facilitator", start_date: Date.new(2010, 1, 1))
         import_comment(facilitator_row)
         import_create_event(facilitator_row)
         import_comment(linked)

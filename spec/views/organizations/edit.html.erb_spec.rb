@@ -71,7 +71,7 @@ RSpec.describe "organizations/edit", type: :view do
 
     it "shows a warning icon (not the select) when the stored status does not match the affiliation status" do
       org = org_with_status("Pending")
-      create(:affiliation, organization: org, person: create(:person), inactive: false, end_date: nil)
+      create(:affiliation, :facilitator, organization: org, person: create(:person), inactive: false, end_date: nil)
       assign(:organization, org.reload)
       render
       assert_select "select[name=?]", "organization[organization_status_id]", false
@@ -81,7 +81,7 @@ RSpec.describe "organizations/edit", type: :view do
 
     it "shows no warning icon when the stored status matches the affiliation status" do
       org = org_with_status("Active")
-      create(:affiliation, organization: org, person: create(:person), inactive: false, end_date: nil)
+      create(:affiliation, :facilitator, organization: org, person: create(:person), inactive: false, end_date: nil)
       assign(:organization, org.reload)
       render
       expect(rendered).not_to include("Legacy organization status does not match affiliation status")
@@ -105,7 +105,7 @@ RSpec.describe "organizations/edit", type: :view do
 
     it "shows no warning icon for stored 'Reinstate' with an active facilitator (both active)" do
       org = org_with_status("Reinstate")
-      create(:affiliation, organization: org, person: create(:person), inactive: false, end_date: nil)
+      create(:affiliation, :facilitator, organization: org, person: create(:person), inactive: false, end_date: nil)
       assign(:organization, org.reload)
       render
       expect(rendered).not_to include("Legacy organization status does not match affiliation status")
@@ -113,7 +113,7 @@ RSpec.describe "organizations/edit", type: :view do
 
     it "shows no warning icon for stored 'Suspended' with only lapsed facilitators (both formerly active)" do
       org = org_with_status("Suspended")
-      create(:affiliation, organization: org, person: create(:person),
+      create(:affiliation, :facilitator, organization: org, person: create(:person),
                            start_date: 3.years.ago.to_date, end_date: 1.year.ago.to_date)
       assign(:organization, org.reload)
       render
@@ -141,9 +141,9 @@ RSpec.describe "organizations/edit", type: :view do
 
     it "shows the earliest facilitator start (month precision), not the latest, wired for live updates" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
                            start_date: Date.new(2025, 8, 1), end_date: nil)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
                            start_date: Date.new(2026, 9, 1), end_date: nil)
       assign(:organization, org.reload)
       render
@@ -157,9 +157,9 @@ RSpec.describe "organizations/edit", type: :view do
     # which silently swallowed the gap. Both now render the one decorator value.
     it "renders a lapse and a return as separate periods, matching the profile" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
                            start_date: Date.new(2015, 8, 1), end_date: Date.new(2018, 6, 1))
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
                            start_date: Date.new(2024, 2, 1), end_date: nil)
       assign(:organization, org.reload)
       render
@@ -174,7 +174,7 @@ RSpec.describe "organizations/edit", type: :view do
     it "renders a 'status · date · event' chip for each event the org is represented at" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
       person = create(:person)
-      create(:affiliation, organization: org, person: person, title: "Facilitator",
+      create(:affiliation, organization: org, person: person, type: "facilitator",
                            start_date: Date.new(2020, 1, 1), end_date: nil)
       event = create(:event, title: "August Training", abbreviation: "PES205", start_date: Date.new(2026, 8, 1))
 
@@ -194,7 +194,7 @@ RSpec.describe "organizations/edit", type: :view do
 
     it "labels a same-day facilitation dated to the event as New, not Ongoing (ADR-0001 D8)" do
       org = create(:organization)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
                            start_date: Date.new(2026, 8, 1), end_date: Date.new(2026, 8, 1))
       event = create(:event, title: "August Training", abbreviation: "PES205", start_date: Date.new(2026, 8, 1))
 
@@ -209,7 +209,7 @@ RSpec.describe "organizations/edit", type: :view do
 
     it "labels a lapsed program as Reinstated" do
       org = create(:organization)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
                            start_date: Date.new(2015, 1, 1), end_date: Date.new(2018, 1, 1))
       event = create(:event, title: "August Training", abbreviation: "PES205", start_date: Date.new(2026, 8, 1))
 
@@ -223,9 +223,9 @@ RSpec.describe "organizations/edit", type: :view do
 
     it "labels an org Ongoing when a prior active facilitator coexists with one minted at the event" do
       org = create(:organization)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
                            start_date: Date.new(2019, 5, 1), end_date: nil)              # prior, still active
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
                            start_date: Date.new(2026, 8, 1), end_date: nil)              # minted at this training
       event = create(:event, title: "August Training", abbreviation: "PES205", start_date: Date.new(2026, 8, 1))
 
@@ -240,7 +240,7 @@ RSpec.describe "organizations/edit", type: :view do
 
     it "orders the event chips newest event first" do
       org = create(:organization)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
                            start_date: Date.new(2019, 5, 1), end_date: nil)
       older = create(:event, title: "Older Training", abbreviation: "OLD101", start_date: Date.new(2026, 3, 1))
       newer = create(:event, title: "Newer Training", abbreviation: "NEW202", start_date: Date.new(2026, 9, 1))

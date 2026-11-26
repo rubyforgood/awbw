@@ -4,22 +4,21 @@ module AffiliationServices
   #
   #   1. a "job affiliation" with the title the person typed on their form, when
   #      one was provided, and
-  #   2. a standing "facilitator affiliation" titled "Facilitator" — but ONLY for
-  #      facilitator-training events (`facilitator_training: true`). A non-training
-  #      registration still gets its job affiliation; we don't mint a facilitator
-  #      affiliation off it, because being a facilitator is conferred by a training,
-  #      not by any org-linked event. (Manual/historical facilitator affiliations
-  #      are created directly, not through this service, so they're unaffected.)
+  #   2. a standing "facilitator affiliation" (type facilitator, blank title) — but
+  #      ONLY for facilitator-training events (`facilitator_training: true`). A
+  #      non-training registration still gets its job affiliation; we don't mint a
+  #      facilitator affiliation off it, because being a facilitator is conferred by
+  #      a training, not by any org-linked event. (Manual/historical facilitator
+  #      affiliations are created directly, not through this service, so they're
+  #      unaffected.)
   #
   # The facilitator affiliation is skipped only when the person already has an
-  # active-or-pending affiliation titled exactly "Facilitator" with the
-  # organization (a current one, or one dated to a future training that hasn't
-  # started yet). An ended facilitator affiliation does NOT block a new one — a
-  # returning facilitator gets a second affiliation with the new start date.
-  # Because the job affiliation is created first, a job title of exactly
-  # "Facilitator" satisfies that check, so we don't add a redundant duplicate. A
-  # facilitator-ish job title that isn't exactly "Facilitator" (e.g. "Lead
-  # Facilitator") still gets its own standing "Facilitator" affiliation alongside it.
+  # active-or-pending facilitator affiliation with the organization (a current one,
+  # or one dated to a future training that hasn't started yet). An ended facilitator
+  # affiliation does NOT block a new one — a returning facilitator gets a second
+  # affiliation with the new start date. A submitted job title of exactly
+  # "Facilitator" is treated as no job title, so it can't create a job row carrying
+  # the facilitator label.
   #
   # Start dates: the facilitator affiliation begins on the training date itself
   # (that's when they become a facilitator); from an on-demand registration it waits on
@@ -66,17 +65,17 @@ module AffiliationServices
 
     def create_job_affiliation
       return unless @job_title
-      return if on_demand? && @job_title == Affiliation::FACILITATOR_TITLE
+      return if @job_title == Affiliation::FACILITATOR_LABEL
 
       return if active_or_pending_affiliations_with_title(@job_title).exists?
 
-      create_affiliation(@job_title, start_date: nil)
+      create_affiliation(Affiliation::TYPE_JOB, @job_title, start_date: nil)
     end
 
     def create_facilitator_affiliation
       return if active_or_pending_facilitator_affiliations.exists?
 
-      affiliation = create_affiliation(Affiliation::FACILITATOR_TITLE, start_date: facilitator_start_date)
+      affiliation = create_affiliation(Affiliation::TYPE_FACILITATOR, nil, start_date: facilitator_start_date)
       FollowAttendance.note_start(affiliation) if on_demand? && @event_registration.attended?
     end
 
@@ -98,14 +97,15 @@ module AffiliationServices
 
     def repointed_change(affiliation, previous)
       OrganizationServices::AutofillChange.new(
-        field: "affiliation_#{affiliation.id}_address", label: "#{affiliation.title} affiliation address",
+        field: "affiliation_#{affiliation.id}_address", label: "#{affiliation.display_title} affiliation address",
         value: @organization_address.name.squish, previous_value: previous&.name&.squish
       )
     end
 
-    def create_affiliation(title, start_date:)
+    def create_affiliation(type, title, start_date:)
       @person.affiliations.create!(
         organization: @organization,
+        type: type,
         title: title,
         start_date: start_date,
         organization_address: @organization_address,

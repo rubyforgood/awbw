@@ -2208,7 +2208,7 @@ RSpec.describe EventRegistration, type: :model do
       create(:event_registration_organization, event_registration: registration, organization: linked_org)
       # An unrelated facilitator affiliation to a different org must be ignored.
       create(:affiliation, organization: other_org, person: registration.registrant,
-             title: "Facilitator", start_date: training_date)
+             type: "facilitator", start_date: training_date)
 
       expect(registration.reload.program_statuses.map(&:status)).to eq([ :new ])
     end
@@ -2218,17 +2218,17 @@ RSpec.describe EventRegistration, type: :model do
     it "is new when the registrant's own affiliation is the org's first, dated to the training" do
       create(:event_registration_organization, event_registration: registration, organization: linked_org)
       create(:affiliation, organization: linked_org, person: registration.registrant,
-             title: "Facilitator", start_date: training_date)
+             type: "facilitator", start_date: training_date)
 
       expect(registration.reload.program_statuses.map(&:status)).to eq([ :new ])
     end
 
     it "is ongoing when the linked org already had an active facilitator" do
       create(:event_registration_organization, event_registration: registration, organization: linked_org)
-      create(:affiliation, organization: linked_org, title: "Facilitator",
+      create(:affiliation, organization: linked_org, type: "facilitator",
              start_date: 2.years.ago, end_date: nil)
       create(:affiliation, organization: linked_org, person: registration.registrant,
-             title: "Facilitator", start_date: training_date)
+             type: "facilitator", start_date: training_date)
 
       expect(registration.reload.program_statuses.map(&:status)).to eq([ :ongoing ])
     end
@@ -2238,10 +2238,10 @@ RSpec.describe EventRegistration, type: :model do
       reg = create(:event_registration, event: event)
       create(:event_registration_organization, event_registration: reg, organization: linked_org)
       # Earlier that same month, before the training date — still counts as ongoing.
-      create(:affiliation, organization: linked_org, title: "Facilitator",
+      create(:affiliation, organization: linked_org, type: "facilitator",
              start_date: Date.new(2026, 6, 5), end_date: nil)
       create(:affiliation, organization: linked_org, person: reg.registrant,
-             title: "Facilitator", start_date: Date.new(2026, 6, 20))
+             type: "facilitator", start_date: Date.new(2026, 6, 20))
 
       expect(reg.reload.program_statuses.map(&:status)).to eq([ :ongoing ])
     end

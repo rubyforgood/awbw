@@ -14,7 +14,7 @@ RSpec.describe EventProgramStatusReport do
 
   def facilitator_since(organization, start_date, end_date = nil)
     create(:affiliation, organization: organization, person: create(:person),
-                         title: "Facilitator", start_date: start_date, end_date: end_date)
+                         type: "facilitator", start_date: start_date, end_date: end_date)
   end
 
   let(:spring) { training("Spring Training", Date.new(2026, 3, 1)) }

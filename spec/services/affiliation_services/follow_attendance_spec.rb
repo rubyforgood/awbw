@@ -83,8 +83,8 @@ RSpec.describe AffiliationServices::FollowAttendance do
   it "leaves ended, hand-entered, and already-started affiliations alone" do
     ended = mint
     ended.update!(end_date: year_end)
-    by_hand = create(:affiliation, person: registration.registrant, title: "Facilitator", start_date: year_end)
-    started = create(:affiliation, person: registration.registrant, title: "Facilitator",
+    by_hand = create(:affiliation, person: registration.registrant, type: "facilitator", start_date: year_end)
+    started = create(:affiliation, person: registration.registrant, type: "facilitator",
                                    start_date: event.starts_on, event_registration: registration)
     rows = [ ended, by_hand, started ]
 
@@ -110,7 +110,8 @@ RSpec.describe AffiliationServices::FollowAttendance do
       person: registration.registrant, organization: organization, job_title: "Facilitator", event_registration: registration
     )
 
-    expect(registration.registrant.affiliations.pluck(:title, :start_date)).to eq([ [ "Facilitator", year_end ] ])
+    expect(registration.registrant.affiliations.map { |affiliation| [ affiliation.display_title, affiliation.start_date ] })
+      .to eq([ [ "Facilitator", year_end ] ])
   end
 
   it "doesn't re-date a live training's affiliation" do

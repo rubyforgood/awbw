@@ -94,8 +94,8 @@ RSpec.describe EventRegistrationServices::BulkPayment do
     it "saves the payer's email, name, phone, and organization from their profile" do
       person.contact_methods.create!(kind: :phone, value: "555-987-6543", primary: true)
       # Facilitator org wins even though a non-facilitator affiliation is more recent.
-      person.affiliations.create!(organization: create(:organization, name: "Acme Co"), title: "Facilitator")
-      person.affiliations.create!(organization: create(:organization, name: "Other Org"), title: "Member")
+      person.affiliations.create!(organization: create(:organization, name: "Acme Co"), type: "facilitator")
+      person.affiliations.create!(organization: create(:organization, name: "Other Org"), type: "job", title: "Member")
 
       result = described_class.call(
         event: event,
@@ -118,9 +118,9 @@ RSpec.describe EventRegistrationServices::BulkPayment do
 
     it "falls back to the most recent active org when the payer has no facilitator affiliation" do
       person.affiliations.create!(organization: create(:organization, name: "Older Org"),
-                                  title: "Member", updated_at: 2.days.ago)
+                                  type: "job", title: "Member", updated_at: 2.days.ago)
       person.affiliations.create!(organization: create(:organization, name: "Newer Org"),
-                                  title: "Member", updated_at: 1.day.ago)
+                                  type: "job", title: "Member", updated_at: 1.day.ago)
 
       result = described_class.call(
         event: event,

@@ -10,7 +10,7 @@ RSpec.describe ProfileChangeRequestsHelper, type: :helper do
     end
 
     it "returns to the record whose inline change log linked in" do
-      affiliation = create(:affiliation, person: person, title: "Facilitator")
+      affiliation = create(:affiliation, person: person, type: "facilitator")
       returning_from("record", affiliation)
 
       expect(helper.change_requests_return_link(person))

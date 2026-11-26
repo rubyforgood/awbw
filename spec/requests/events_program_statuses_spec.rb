@@ -17,7 +17,7 @@ RSpec.describe "Events program-status report", type: :request do
 
   before do
     create(:affiliation, organization: established, person: create(:person),
-                         title: "Facilitator", start_date: Date.new(2019, 5, 1))
+                         type: "facilitator", start_date: Date.new(2019, 5, 1))
     represent(established, training)
     sign_in admin
   end

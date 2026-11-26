@@ -598,7 +598,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
           post select_organization_form_submission_path(submission, organization_id: organization.id)
 
-          titles = person.affiliations.where(organization: organization).pluck(:title, :start_date)
+          titles = person.affiliations.where(organization: organization).map { |a| [ a.display_title, a.start_date ] }
           expect(titles).to contain_exactly([ "Counselor", nil ], [ "Facilitator", submission.created_at.to_date ])
           expect(response).to redirect_to(link_organization_form_submission_path(submission))
         end
@@ -626,7 +626,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
           post select_organization_form_submission_path(plain, organization_id: organization.id)
 
-          expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "Volunteer" ])
+          expect(person.affiliations.where(organization: organization).map(&:display_title)).to eq([ "Volunteer" ])
         end
 
         it "records the explicit link so a resolved name mismatch still reads as linked" do
@@ -649,7 +649,7 @@ RSpec.describe "FormSubmissions", type: :request do
           add_answer("organization_state", "TX")
           organization = create(:organization, name: "Harbor Family Shelter")
           dallas = create(:address, addressable: organization, street_address: "9 Elm St", city: "Dallas", state: "TX", zip_code: "75201", primary: true)
-          facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: dallas)
+          facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator", organization_address: dallas)
 
           post select_organization_form_submission_path(submission, organization_id: organization.id)
 
@@ -666,7 +666,7 @@ RSpec.describe "FormSubmissions", type: :request do
           organization = create(:organization, name: "Harbor Family Shelter", website_url: "old.example.org")
           dallas = create(:address, addressable: organization, street_address: "9 Elm St", city: "Dallas", state: "TX",
                                     zip_code: "75201", primary: true)
-          create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: dallas)
+          create(:affiliation, person: person, organization: organization, type: "facilitator", organization_address: dallas)
           # The request spec client reads as a bot, which Ahoy skips by default.
           allow(Ahoy).to receive(:track_bots).and_return(true)
 
@@ -720,7 +720,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
           post select_organization_form_submission_path(submission, organization_id: organization.id)
 
-          expect(person.affiliations.where(organization: organization).pluck(:title, :start_date))
+          expect(person.affiliations.where(organization: organization).map { |a| [ a.display_title, a.start_date ] })
             .to contain_exactly([ "SELS", nil ], [ "Facilitator", Date.new(2026, 9, 12) ])
         end
 
@@ -740,7 +740,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
           post select_organization_form_submission_path(submission, organization_id: organization.id)
 
-          expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "SELS" ])
+          expect(person.affiliations.where(organization: organization).map(&:display_title)).to eq([ "SELS" ])
         end
 
         it "names the registration and both affiliations on the editor" do
@@ -781,7 +781,7 @@ RSpec.describe "FormSubmissions", type: :request do
 
           post select_organization_form_submission_path(submission, organization_id: organization.id)
 
-          expect(person.affiliations.where(organization: organization).pluck(:title, :event_registration_id))
+          expect(person.affiliations.where(organization: organization).map { |a| [ a.display_title, a.event_registration_id ] })
             .to contain_exactly([ "Counselor", registration.id ], [ "Facilitator", registration.id ])
         end
 
@@ -831,7 +831,7 @@ RSpec.describe "FormSubmissions", type: :request do
           }.to change(Organization, :count).by(1)
 
           organization = Organization.find_by(name: "Lakeside Community College")
-          expect(person.affiliations.where(organization: organization).pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+          expect(person.affiliations.where(organization: organization).map(&:display_title)).to contain_exactly("Counselor", "Facilitator")
         end
 
         it "reuses an existing organization with the submitted name instead of duplicating it" do

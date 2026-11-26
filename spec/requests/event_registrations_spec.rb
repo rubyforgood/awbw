@@ -1506,7 +1506,7 @@ RSpec.describe "EventRegistrations", type: :request do
           let(:training) { create(:event, published: true, facilitator_training: true) }
 
           def facilitator_row_for(registration)
-            create(:affiliation, person: registration.registrant, organization: org, title: "Facilitator",
+            create(:affiliation, person: registration.registrant, organization: org, type: "facilitator",
                                  start_date: registration.event.starts_on, event_registration: registration)
           end
 
@@ -1568,7 +1568,7 @@ RSpec.describe "EventRegistrations", type: :request do
           org = create(:organization)
           source.event_registration_organizations.create!(organization: org)
           training = create(:event, published: true, facilitator_training: true)
-          row = create(:affiliation, person: source.registrant, organization: org, title: "Facilitator",
+          row = create(:affiliation, person: source.registrant, organization: org, type: "facilitator",
                                      start_date: source.event.starts_on, event_registration: source)
           post process_transfer_event_registration_path(source), params: { destination_event_id: training.id }
 
@@ -1961,7 +1961,7 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "shows 'Facilitator' for an active facilitator affiliation" do
-          create(:affiliation, person: regular_user.person, organization: organization, title: "Facilitator")
+          create(:affiliation, person: regular_user.person, organization: organization, type: "facilitator")
 
           get link_organization_event_registration_path(existing_registration)
 
@@ -1971,7 +1971,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
         it "shows a facilitator affiliation as inactive once it has ended" do
           create(:affiliation, person: regular_user.person, organization: organization,
-                               title: "Facilitator", end_date: 1.month.ago.to_date)
+                               type: "facilitator", end_date: 1.month.ago.to_date)
 
           get link_organization_event_registration_path(existing_registration)
 
@@ -1989,7 +1989,7 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "does not show a title-comparison badge when a facilitator affiliation matches the submitted 'Facilitator' position" do
-          create(:affiliation, person: regular_user.person, organization: organization, title: "Facilitator")
+          create(:affiliation, person: regular_user.person, organization: organization, type: "facilitator")
           submit_form(org_name: organization.name, position: "Facilitator")
 
           get link_organization_event_registration_path(existing_registration)
@@ -2212,7 +2212,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post select_organization_event_registration_path(existing_registration),
             params: { organization_id: organization.id }
 
-          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+          expect(regular_user.person.affiliations.where(organization: organization).map(&:display_title))
             .to contain_exactly("Counselor", "Facilitator")
         end
 
@@ -2220,7 +2220,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post select_organization_event_registration_path(existing_registration),
             params: { organization_id: organization.id }
 
-          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+          expect(regular_user.person.affiliations.where(organization: organization).map(&:display_title))
             .to contain_exactly("Facilitator")
         end
 
@@ -2308,7 +2308,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post select_organization_event_registration_path(existing_registration),
             params: { organization_id: organization.id }
 
-          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+          expect(regular_user.person.affiliations.where(organization: organization).map(&:display_title))
             .to contain_exactly("Counselor")
         end
 
@@ -2415,7 +2415,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           post select_organization_event_registration_path(existing_registration), params: { organization_id: other.id }
 
-          expect(regular_user.person.affiliations.where(organization: other).pluck(:title)).to contain_exactly("Facilitator")
+          expect(regular_user.person.affiliations.where(organization: other).map(&:display_title)).to contain_exactly("Facilitator")
         end
 
         it "replaces the saved type/website and warns the admin to reapply newer edits" do
@@ -2588,7 +2588,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post create_organization_event_registration_path(existing_registration)
 
           organization = Organization.find_by(name: "Brand New Org")
-          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+          expect(regular_user.person.affiliations.where(organization: organization).map(&:display_title))
             .to contain_exactly("Counselor", "Facilitator")
         end
 

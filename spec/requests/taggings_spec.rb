@@ -148,7 +148,7 @@ RSpec.describe "Taggings index", type: :request do
       2.times do
         person = create(:person)
         create(:sectorable_item, sector: sector_2, sectorable: person, is_primary: true)
-        create(:affiliation, organization: organization, person: person)
+        create(:affiliation, :facilitator, organization: organization, person: person)
       end
       sign_in create(:user, :admin)
     end

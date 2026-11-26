@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_23_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_214500) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -130,12 +130,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_23_120000) do
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "updated_by_id"
+    t.string "type", null: false
     t.index ["created_by_id"], name: "index_affiliations_on_created_by_id"
     t.index ["event_registration_id"], name: "index_affiliations_on_event_registration_id"
     t.index ["organization_address_id"], name: "index_affiliations_on_organization_address_id"
     t.index ["organization_id"], name: "index_affiliations_on_organization_id"
     t.index ["person_id"], name: "index_affiliations_on_person_id"
     t.index ["title"], name: "index_affiliations_on_title"
+    t.index ["type"], name: "index_affiliations_on_type"
     t.index ["updated_by_id"], name: "index_affiliations_on_updated_by_id"
   end
 

@@ -18,13 +18,13 @@ module Analytics
         return resource.file.filename.to_s
       end
 
-      resource.decorate.title
+      resource.try(:display_title).presence || resource.decorate.title
     rescue
       fallback_title(resource)
     end
 
     def self.fallback_title(resource)
-      resource.try(:title).presence || resource.try(:name).presence || resource.id
+      resource.try(:display_title).presence || resource.try(:title).presence || resource.try(:name).presence || resource.id
     rescue StandardError
       resource.id
     end

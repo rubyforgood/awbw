@@ -18,7 +18,7 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
       described_class.call(person: person, organization: organization, entry: entry,
                            scenario: "facilitator_training", training_date: Date.new(2026, 8, 14))
 
-      titles = person.affiliations.where(organization: organization).pluck(:title, :start_date)
+      titles = person.affiliations.where(organization: organization).map { |a| [ a.display_title, a.start_date ] }
       expect(titles).to contain_exactly([ "Counselor", nil ], [ "Facilitator", Date.new(2026, 8, 14) ])
     end
 
@@ -28,7 +28,7 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
       described_class.call(person: person, organization: organization, entry: entry,
                            scenario: nil)
 
-      expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "Counselor" ])
+      expect(person.affiliations.where(organization: organization).map(&:display_title)).to eq([ "Counselor" ])
     end
 
     it "records the submission answer behind an org-type 'Other'" do
@@ -82,11 +82,11 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
       described_class.call(person: person, organization: organization, entry: nil,
                            scenario: "on_demand", training_date: Date.new(2026, 8, 14))
 
-      expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "Facilitator" ])
+      expect(person.affiliations.where(organization: organization).map(&:display_title)).to eq([ "Facilitator" ])
     end
 
     it "on a reinstatement, creates a fresh Facilitator affiliation dated to the submission when the old one ended" do
-      ended = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      ended = create(:affiliation, person: person, organization: organization, type: "facilitator",
                      start_date: Date.new(2022, 3, 1), end_date: Date.new(2024, 6, 30))
 
       described_class.call(person: person, organization: organization, entry: entry,
@@ -100,7 +100,7 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
     end
 
     it "on a reinstatement, leaves an already-active Facilitator affiliation alone and adds nothing" do
-      active = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      active = create(:affiliation, person: person, organization: organization, type: "facilitator",
                       start_date: Date.new(2022, 3, 1))
 
       described_class.call(person: person, organization: organization, entry: entry,

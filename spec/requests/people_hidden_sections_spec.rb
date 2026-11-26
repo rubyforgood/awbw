@@ -8,7 +8,7 @@ RSpec.describe "Person profile sections the owner hid", type: :request do
 
   before do
     person.update!(profile_is_searchable: true)
-    create(:affiliation, person: person)
+    create(:affiliation, :facilitator, person: person)
   end
 
   def get_section(section)

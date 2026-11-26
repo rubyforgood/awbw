@@ -12,7 +12,7 @@ RSpec.describe AffiliationServices::CloseProgram do
   end
 
   it "end-dates the facilitator affiliation to the effective date and comments why" do
-    facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+    facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator")
 
     ended = call_with(leaving_job: false)
 
@@ -25,7 +25,7 @@ RSpec.describe AffiliationServices::CloseProgram do
   end
 
   it "writes its comment as System, not the admin who closed the program" do
-    facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+    facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator")
 
     Current.set(user: create(:user, :admin)) { call_with(leaving_job: false) }
 
@@ -34,7 +34,7 @@ RSpec.describe AffiliationServices::CloseProgram do
   end
 
   it "leaves the job affiliation alone when they aren't leaving the job" do
-    facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+    facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator")
     job = create(:affiliation, person: person, organization: organization, title: "Program Director")
 
     ended = call_with(leaving_job: false)
@@ -44,7 +44,7 @@ RSpec.describe AffiliationServices::CloseProgram do
   end
 
   it "also end-dates the job affiliation when they are leaving the job" do
-    facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+    facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator")
     job = create(:affiliation, person: person, organization: organization, title: "Program Director")
 
     ended = call_with(leaving_job: true)
@@ -55,7 +55,7 @@ RSpec.describe AffiliationServices::CloseProgram do
   end
 
   it "only touches affiliations at the named organization" do
-    elsewhere = create(:affiliation, person: person, organization: other_org, title: "Facilitator")
+    elsewhere = create(:affiliation, person: person, organization: other_org, type: "facilitator")
 
     call_with(leaving_job: true)
 
@@ -63,7 +63,7 @@ RSpec.describe AffiliationServices::CloseProgram do
   end
 
   it "leaves an already-ended row untouched" do
-    long_gone = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+    long_gone = create(:affiliation, person: person, organization: organization, type: "facilitator",
                        end_date: Date.new(2024, 1, 31))
 
     ended = call_with(leaving_job: false)
@@ -73,7 +73,7 @@ RSpec.describe AffiliationServices::CloseProgram do
   end
 
   it "records a date-only comment when no reason was given" do
-    facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+    facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator")
 
     call_with(leaving_job: false, reason: nil)
 

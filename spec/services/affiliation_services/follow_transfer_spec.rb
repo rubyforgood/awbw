@@ -16,7 +16,7 @@ RSpec.describe AffiliationServices::FollowTransfer do
   end
 
   def facilitator_row(registration: nil, start_date: source_event.starts_on, end_date: nil)
-    create(:affiliation, person: person, organization: organization, title: "Facilitator",
+    create(:affiliation, person: person, organization: organization, type: "facilitator",
                          start_date: start_date, end_date: end_date, event_registration: registration)
   end
 
@@ -93,7 +93,7 @@ RSpec.describe AffiliationServices::FollowTransfer do
     end
 
     it "keeps a row the destination created for itself" do
-      own = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      own = create(:affiliation, person: person, organization: organization, type: "facilitator",
                                  start_date: destination_event.starts_on, event_registration: destination)
 
       described_class.call(to: source, moved_only_from: [ destination ], undo: true)

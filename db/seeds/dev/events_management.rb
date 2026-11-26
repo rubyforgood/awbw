@@ -1027,7 +1027,8 @@ if backfill_orgs.any?
       person = registration.registrant
       next if person.affiliations.active.any?
       person.affiliations.create!(organization: backfill_orgs[i % backfill_orgs.length],
-                                  title: "Facilitator", start_date: (event.start_date || Time.current).to_date - 2.years)
+                                  type: Affiliation::TYPE_FACILITATOR,
+                                  start_date: (event.start_date || Time.current).to_date - 2.years)
     end
   end
 end
@@ -1721,7 +1722,9 @@ if facilitator_training && registration_form
     end
   end
   add_affiliation = ->(person, organization, title:, start_date: Date.current - 1.year, end_date: nil) do
-    Affiliation.find_or_create_by!(person: person, organization: organization, title: title) do |aff|
+    type = title == "Facilitator" ? Affiliation::TYPE_FACILITATOR : Affiliation::TYPE_JOB
+    Affiliation.find_or_create_by!(person: person, organization: organization, type: type,
+                                   title: type == Affiliation::TYPE_JOB ? title : nil) do |aff|
       aff.start_date = start_date
       aff.end_date = end_date
     end

@@ -3,6 +3,9 @@ import { application } from "./application"
 import AddressSelectController from "./address_select_controller"
 application.register("address-select", AddressSelectController)
 
+import AffiliationAddTypeController from "./affiliation_add_type_controller"
+application.register("affiliation-add-type", AffiliationAddTypeController)
+
 import AffiliationDatesController from "./affiliation_dates_controller"
 application.register("affiliation-dates", AffiliationDatesController)
 

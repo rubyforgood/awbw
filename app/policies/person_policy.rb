@@ -211,6 +211,7 @@ class PersonPolicy < ApplicationPolicy
       affiliations_attributes: [
         :id,
         :organization_id,
+        :type,
         :title,
         :inactive,
         :inactive_supplied,

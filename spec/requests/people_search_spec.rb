@@ -59,8 +59,8 @@ RSpec.describe "People search", type: :request do
     end
 
     it "filters by facilitator status" do
-      create(:affiliation, person: person_alice, title: "Facilitator", end_date: nil)
-      create(:affiliation, person: person_bob, title: "Facilitator", end_date: 1.year.ago)
+      create(:affiliation, person: person_alice, type: "facilitator", end_date: nil)
+      create(:affiliation, person: person_bob, type: "facilitator", end_date: 1.year.ago)
 
       get people_path, params: { facilitator_status: "active" }, headers: turbo_headers
       expect(response).to have_http_status(:ok)
@@ -150,7 +150,7 @@ RSpec.describe "People search", type: :request do
 
     def published_person(first_name)
       person = create(:person, first_name: first_name, last_name: "Facil", profile_is_searchable: true)
-      create(:affiliation, person: person, title: "Facilitator", start_date: 1.year.ago, inactive: false)
+      create(:affiliation, person: person, type: "facilitator", start_date: 1.year.ago, inactive: false)
       person
     end
 
@@ -296,7 +296,7 @@ RSpec.describe "People search", type: :request do
     describe "organization filters" do
       let(:org) { create(:organization, name: "Quietorg") }
 
-      before { create(:affiliation, person: marked, organization: org, title: "Facilitator", start_date: 1.year.ago, inactive: false) }
+      before { create(:affiliation, person: marked, organization: org, type: "facilitator", start_date: 1.year.ago, inactive: false) }
 
       it "matches a shared affiliation by organization name" do
         get people_path, params: { organization_name: "Quietorg" }, headers: turbo_headers
@@ -429,7 +429,7 @@ RSpec.describe "People search", type: :request do
 
     def published_person(first_name)
       person = create(:person, first_name: first_name, last_name: "Facil", profile_is_searchable: true)
-      create(:affiliation, person: person, title: "Facilitator", start_date: 1.year.ago, inactive: false)
+      create(:affiliation, person: person, type: "facilitator", start_date: 1.year.ago, inactive: false)
       person
     end
 
@@ -575,7 +575,7 @@ RSpec.describe "People search", type: :request do
       sign_in create(:user)
       [ worker, homebody ].each do |person|
         person.update!(profile_is_searchable: true)
-        create(:affiliation, person: person, title: "Facilitator", start_date: 1.year.ago, inactive: false)
+        create(:affiliation, person: person, type: "facilitator", start_date: 1.year.ago, inactive: false)
       end
 
       expect(search_work_location("city: reno").body).to include("Renoworker", "Boisehome")

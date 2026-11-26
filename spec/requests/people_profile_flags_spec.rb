@@ -13,7 +13,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
       linked_in_url: "https://linkedin.com/in/test"
     )
     owner_user.update!(phone: "555-123-4567")
-    create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2020, 1, 1))
+    create(:affiliation, person: person, type: "facilitator", start_date: Date.new(2020, 1, 1))
   end
 
   def hidden_card

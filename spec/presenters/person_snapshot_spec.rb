@@ -7,10 +7,10 @@ RSpec.describe PersonSnapshot do
     it "keeps active and upcoming affiliations, newest first, capped at 8" do
       9.times do |i|
         create(:affiliation, person:, organization: create(:organization),
-               title: "Facilitator", inactive: false, start_date: (i + 1).months.ago)
+               type: "facilitator", inactive: false, start_date: (i + 1).months.ago)
       end
       create(:affiliation, person:, organization: create(:organization),
-             title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+             type: "facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
 
       snapshot = described_class.new(person)
       dates = snapshot.affiliations.map(&:start_date)

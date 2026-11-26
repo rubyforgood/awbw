@@ -7,10 +7,10 @@ RSpec.describe "the Active/Inactive split on the affiliation editor", type: :req
   let(:person) { create(:person) }
   let!(:current) do
     create(:affiliation, person: person, organization: create(:organization),
-                         title: "Facilitator", start_date: 2.years.ago.to_date)
+                         type: "facilitator", start_date: 2.years.ago.to_date)
   end
   let!(:ended) do
-    create(:affiliation, person: person, organization: create(:organization), title: "Facilitator",
+    create(:affiliation, person: person, organization: create(:organization), type: "facilitator",
                          start_date: 3.years.ago.to_date, end_date: 1.year.ago.to_date)
   end
 

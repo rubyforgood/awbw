@@ -73,7 +73,7 @@ RSpec.describe FormSubmissionChanges do
     it "shows an affiliation's address move as the addresses, under the affiliation's title and org" do
       old_address = create(:address, addressable: org, street_address: "9 Elm St", city: "Dallas", state: "TX", zip_code: "75201")
       new_address = create(:address, addressable: org, street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701")
-      affiliation = create(:affiliation, organization: org, title: "Facilitator", organization_address: new_address)
+      affiliation = create(:affiliation, organization: org, type: "facilitator", organization_address: new_address)
       stamp("update.affiliation", resource_type: "Affiliation", resource_id: affiliation.id,
             properties: { "changes" => { "organization_address_id" => { "before" => old_address.id, "after" => new_address.id } } })
 

@@ -30,7 +30,7 @@ puts "Creating Persons and Affiliations for seed users…"
   Affiliation.create!(
     person: person,
     organization: org,
-    title: Affiliation::FACILITATOR_TITLE,
+    type: Affiliation::TYPE_FACILITATOR,
     primary_contact: true,
     start_date: 1.year.ago.to_date
   )
@@ -182,7 +182,8 @@ Person.where(
     Affiliation.create!(
       person: person,
       organization: org,
-      title: title,
+      type: title == "Facilitator" ? Affiliation::TYPE_FACILITATOR : Affiliation::TYPE_JOB,
+      title: title == "Facilitator" ? nil : title,
       start_date: rand(1..5).years.ago.to_date,
       inactive: [ false, false, false, true ].sample
     )
@@ -202,8 +203,8 @@ unless Person.exists?(first_name: "Grace", last_name: "Legacy")
     created_by: admin_user,
     updated_by: admin_user
   )
-  Affiliation.create!(person: demo, organization: orgs.first, title: "Board Member", start_date: Date.new(2015, 3, 1))
-  Affiliation.create!(person: demo, organization: orgs.second || orgs.first, title: "Facilitator", start_date: Date.new(2018, 6, 1))
+  Affiliation.create!(person: demo, organization: orgs.first, type: Affiliation::TYPE_JOB, title: "Board Member", start_date: Date.new(2015, 3, 1))
+  Affiliation.create!(person: demo, organization: orgs.second || orgs.first, type: Affiliation::TYPE_FACILITATOR, start_date: Date.new(2018, 6, 1))
 end
 
 puts "Assigning addresses and sectors to people…"

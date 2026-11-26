@@ -672,7 +672,7 @@ RSpec.describe EventDashboard do
         opt_in(embedded_applicant, text: "Excited to begin.")
         upcoming_org = create(:organization, name: "Starting Soon Org")
         create(:affiliation, person: embedded_applicant, organization: upcoming_org,
-                             title: "Facilitator", start_date: 1.month.from_now.to_date, end_date: nil)
+                             type: "facilitator", start_date: 1.month.from_now.to_date, end_date: nil)
 
         shoutout = dashboard.shoutouts.find { |s| s.recipient == embedded_applicant }
         expect(shoutout.organization).to eq(upcoming_org)
@@ -1049,23 +1049,23 @@ RSpec.describe EventDashboard do
 
       # New program: the registrant's affiliation is the org's first facilitator.
       create(:affiliation, organization: new_org, person: new_facilitator,
-             title: "Facilitator", start_date: training_date)
+             type: "facilitator", start_date: training_date)
 
       # Ongoing program: a facilitator was already active before this registrant.
       create(:affiliation, organization: ongoing_org,
-             title: "Facilitator", start_date: Date.new(2023, 1, 1), end_date: nil)
+             type: "facilitator", start_date: Date.new(2023, 1, 1), end_date: nil)
       create(:affiliation, organization: ongoing_org, person: ongoing_facilitator,
-             title: "Facilitator", start_date: training_date)
+             type: "facilitator", start_date: training_date)
 
       # Reinstated program: a prior facilitator ended before this registrant's.
       create(:affiliation, organization: reinstated_org,
-             title: "Facilitator", start_date: Date.new(2020, 1, 1), end_date: Date.new(2021, 1, 1))
+             type: "facilitator", start_date: Date.new(2020, 1, 1), end_date: Date.new(2021, 1, 1))
       create(:affiliation, organization: reinstated_org, person: reinstated_facilitator,
-             title: "Facilitator", start_date: training_date)
+             type: "facilitator", start_date: training_date)
 
       # Cancelled registrant's program must be ignored.
       create(:affiliation, organization: new_org, person: cancelled_facilitator,
-             title: "Facilitator", start_date: training_date + 1.day)
+             type: "facilitator", start_date: training_date + 1.day)
 
       create(:event_registration, event: event, registrant: new_facilitator, status: "registered")
       create(:event_registration, event: event, registrant: ongoing_facilitator, status: "registered")
@@ -1111,7 +1111,7 @@ RSpec.describe EventDashboard do
       facilitator = create(:person)
       # start == end == the event date: the minted affiliation, not a prior program,
       # so this must NOT read Ongoing.
-      create(:affiliation, organization: org, person: facilitator, title: "Facilitator",
+      create(:affiliation, organization: org, person: facilitator, type: "facilitator",
              start_date: event.starts_on, end_date: event.starts_on)
       create(:event_registration, event: event, registrant: facilitator, status: "registered")
 
@@ -1127,10 +1127,10 @@ RSpec.describe EventDashboard do
       org = create(:organization, name: "Mixed Program")
       registrant = create(:person)
       # A facilitator already active before this training…
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
              start_date: Date.new(2023, 1, 1), end_date: nil)
       # …plus the registrant's own affiliation minted at the training itself.
-      create(:affiliation, organization: org, person: registrant, title: "Facilitator",
+      create(:affiliation, organization: org, person: registrant, type: "facilitator",
              start_date: event.starts_on)
       create(:event_registration, event: event, registrant: registrant, status: "registered")
 
@@ -1178,7 +1178,7 @@ RSpec.describe EventDashboard do
       let(:org) { create(:organization, name: "Established Agency") }
 
       before do
-        create(:affiliation, organization: org, title: "Facilitator", start_date: 2.years.ago, end_date: nil)
+        create(:affiliation, organization: org, type: "facilitator", start_date: 2.years.ago, end_date: nil)
       end
 
       it "classifies the org as ongoing, not new" do
@@ -1190,7 +1190,7 @@ RSpec.describe EventDashboard do
       let(:org) { create(:organization, name: "Lapsed Agency") }
 
       before do
-        create(:affiliation, organization: org, title: "Facilitator", start_date: 5.years.ago, end_date: 4.years.ago)
+        create(:affiliation, organization: org, type: "facilitator", start_date: 5.years.ago, end_date: 4.years.ago)
       end
 
       it "classifies the org as reinstated" do
@@ -1211,7 +1211,7 @@ RSpec.describe EventDashboard do
     let(:person) { create(:person) }
 
     before do
-      create(:affiliation, organization: org, person: person, title: "Facilitator",
+      create(:affiliation, organization: org, person: person, type: "facilitator",
              start_date: 1.year.ago, end_date: 2.days.ago)
       create(:event_registration, event: event, registrant: person, status: "registered")
     end
@@ -1425,7 +1425,7 @@ RSpec.describe EventDashboard do
         person = create(:person)
         registration = create(:event_registration, event: event, registrant: person, status: "registered")
         org = create(:organization)
-        create(:affiliation, organization: org, person: person, title: "Facilitator", start_date: 1.year.ago)
+        create(:affiliation, organization: org, person: person, type: "facilitator", start_date: 1.year.ago)
         registration.event_registration_organizations.create!(organization: org)
       end
       dashboard = EventDashboard.new(event)

@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
-import { isFacilitatorTitle } from "../lib/affiliation";
+import { isFacilitatorType } from "../lib/affiliation";
 
 // Live styling for the affiliation editor row as you edit, before saving. Four
 // states by colour: role is the hue (facilitator = purple, else blue) and status
@@ -7,7 +7,7 @@ import { isFacilitatorTitle } from "../lib/affiliation";
 // strike their fields (.aff-ended). A row shows at most one status badge:
 // "Inactive" when ended/flagged, "Upcoming" when its start date is still future.
 export default class extends Controller {
-  static targets = ["endDate", "title", "row", "accentBar", "valueField", "startDate", "upcomingBadge", "inactiveBadge", "inactiveField", "suppliedField", "inactiveCheckbox"]
+  static targets = ["endDate", "title", "titleField", "facilitatorLabel", "row", "accentBar", "valueField", "startDate", "upcomingBadge", "inactiveBadge", "inactiveField", "suppliedField", "inactiveCheckbox", "type"]
   static values = { expired: Boolean, today: String }
 
   connect() {
@@ -49,6 +49,7 @@ export default class extends Controller {
   }
 
   updateBorder() {
+    this.toggleTypeFields();
     if (!this.hasTitleTarget) return;
     if (this.hasAccentBarTarget) {
       const fac = this.isFacilitator();
@@ -63,6 +64,7 @@ export default class extends Controller {
   }
 
   apply() {
+    this.toggleTypeFields();
     this.updateRowBackground();
     this.styleTitle();
     this.paintFields();
@@ -100,20 +102,25 @@ export default class extends Controller {
   }
 
   styleTitle() {
-    if (!this.hasTitleTarget) return;
-    const t = this.titleTarget;
+    const targets = []
+    if (this.hasTitleTarget) targets.push(this.titleTarget)
+    if (this.hasFacilitatorLabelTarget) targets.push(this.facilitatorLabelTarget)
+    if (!targets.length) return
+
     const fac = this.isFacilitator();
     const past = this.isPast();
-    t.classList.remove(
-      "bg-purple-100!", "bg-purple-50!", "bg-blue-100!", "bg-blue-50!",
-      "text-purple-700!", "text-purple-500!", "text-blue-700!", "text-blue-500!",
-      "font-semibold",
-      "border-purple-300!", "border-purple-200!", "border-blue-300!", "border-blue-200!"
-    );
-    if (fac && !past) t.classList.add("bg-purple-100!", "text-purple-700!", "font-semibold", "border-purple-300!");
-    else if (fac && past) t.classList.add("bg-purple-50!", "text-purple-500!", "border-purple-200!");
-    else if (!fac && !past) t.classList.add("bg-blue-100!", "text-blue-700!", "font-semibold", "border-blue-300!");
-    else t.classList.add("bg-blue-50!", "text-blue-500!", "border-blue-200!");
+    targets.forEach((target) => {
+      target.classList.remove(
+        "bg-purple-100!", "bg-purple-50!", "bg-blue-100!", "bg-blue-50!",
+        "text-purple-700!", "text-purple-500!", "text-blue-700!", "text-blue-500!",
+        "font-semibold",
+        "border-purple-300!", "border-purple-200!", "border-blue-300!", "border-blue-200!"
+      );
+      if (fac && !past) target.classList.add("bg-purple-100!", "text-purple-700!", "font-semibold", "border-purple-300!");
+      else if (fac && past) target.classList.add("bg-purple-50!", "text-purple-500!", "border-purple-200!");
+      else if (!fac && !past) target.classList.add("bg-blue-100!", "text-blue-700!", "font-semibold", "border-blue-300!");
+      else target.classList.add("bg-blue-50!", "text-blue-500!", "border-blue-200!");
+    })
   }
 
   // Empty fields are transparent (row tint shows through); filled fields take the
@@ -159,7 +166,15 @@ export default class extends Controller {
     return this.expiredValue;
   }
 
+  toggleTypeFields() {
+    const facilitator = this.isFacilitator();
+    if (this.hasTitleFieldTarget) this.titleFieldTarget.classList.toggle("hidden", facilitator);
+    if (this.hasFacilitatorLabelTarget) this.facilitatorLabelTarget.classList.toggle("hidden", !facilitator);
+  }
+
   isFacilitator() {
-    return this.hasTitleTarget && isFacilitatorTitle(this.titleTarget.value);
+    const control = this.typeTargets.find(target =>
+      target.tagName === "SELECT" || target.type === "hidden" || target.checked)
+    return isFacilitatorType(control?.value)
   }
 }

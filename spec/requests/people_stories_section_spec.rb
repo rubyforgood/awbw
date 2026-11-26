@@ -101,7 +101,7 @@ RSpec.describe "Person profile stories section", type: :request do
 
     def make_viewable(profile_person)
       profile_person.update!(profile_is_searchable: true)
-      create(:affiliation, person: profile_person)
+      create(:affiliation, :facilitator, person: profile_person)
     end
 
     def get_stories_section_for(profile_person)
@@ -177,7 +177,7 @@ RSpec.describe "Person profile stories section", type: :request do
 
     it "lists only the published stories the viewer may open, for every role the person plays" do
       person.update!(profile_is_searchable: true)
-      create(:affiliation, person:)
+      create(:affiliation, :facilitator, person:)
       create(:story, :published, title: "Published Authored", author: person)
       create(:story, :published, title: "Published Coauthored", author: create(:person), co_author: person)
       create(:story, :published, title: "Published Spotlight", spotlighted_facilitator: person)

@@ -332,7 +332,7 @@ module Ahoy
         name = record.full_name.presence || h.commentable_label(record)
         { text: "#{name} (user)", path: edit_path_for(record) }
       when Affiliation
-        { text: [ record.title.presence, record.organization&.name, affiliation_dates(record) ].compact.join(" · "),
+        { text: [ record.display_title.presence, record.organization&.name, affiliation_dates(record) ].compact.join(" · "),
           path: edit_path_for(record) }
       when EventRegistration
         span = [ record.event&.title, record.event&.start_date&.strftime("%b'%y") ].compact.join(" · ")

@@ -266,7 +266,7 @@ ensure_recipient_affiliation = ->(person, event, set, org) do
   return if person.affiliations.any? { |a| !a.facilitator? && !a.inactive? }
 
   start_date = (event.start_date || Time.current).to_date - 1.year
-  person.affiliations.create!(organization: org, title: set["title"], start_date: start_date)
+  person.affiliations.create!(organization: org, type: Affiliation::TYPE_JOB, title: set["title"], start_date: start_date)
 end
 
 # Rotating real-ish City/State pairs so program orgs have a location to show on
@@ -297,7 +297,7 @@ ensure_facilitator_affiliation = ->(person, event, org) do
   return if person.affiliations.any?(&:facilitator?)
 
   start_date = (event.start_date || Time.current).to_date - 1.year
-  person.affiliations.create!(organization: org, title: "Facilitator", start_date: start_date)
+  person.affiliations.create!(organization: org, type: Affiliation::TYPE_FACILITATOR, start_date: start_date)
 end
 
 # Ensure the recipient has a registration submission (no recipient should have
@@ -554,7 +554,7 @@ if anchor_grant && recipient_orgs.any?
       org = demo_orgs[i] || recipient_orgs[i % recipient_orgs.length]
       ensure_org_address.(org)
       lapsed = i.odd? # the second recipient's affiliation has ended → "Reinstate"
-      attrs = { organization: org, title: "Facilitator", start_date: Date.current - 2.years }
+      attrs = { organization: org, type: Affiliation::TYPE_FACILITATOR, start_date: Date.current - 2.years }
       attrs[:end_date] = Date.current - 2.months if lapsed
       person.affiliations.create!(**attrs)
       Scholarship.create!(recipient: person, grant: sibling, amount_cents: amount, tasks_completed: i.even?)

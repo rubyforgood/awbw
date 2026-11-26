@@ -25,7 +25,7 @@
       <% title_attr = a.facilitator? ? "Facilitator role — determines whether the org is active with AWBW" : nil %>
       <%= render "shared/badge", label: label, classes: color, title: title_attr %>
     <% end %>
-    <% if is_submitted_org && position.present? && affiliations.none? { |a| a.title.to_s.casecmp?(position) } %>
+    <% if is_submitted_org && position.present? && affiliations.none? { |a| a.display_title.to_s.casecmp?(position) } %>
       <%= render "shared/badge", label: "Title differs from form (form: #{position})", classes: "bg-amber-50 text-amber-700 border-amber-200", title: "Form: #{position}" %>
     <% end %>
   </div>

@@ -119,7 +119,7 @@ RSpec.describe EventRegistrationImporter do
     it "mints a facilitator affiliation for a matched org on a training event" do
       import(dry_run: false)
       person = Person.find_by(email: "jordan.rivera@example.org")
-      affiliation = person.affiliations.find_by(title: Affiliation::FACILITATOR_TITLE)
+      affiliation = person.affiliations.find_by(type: Affiliation::TYPE_FACILITATOR)
       expect(affiliation.organization.name).to eq("Sample Org")
     end
 
@@ -184,7 +184,7 @@ RSpec.describe EventRegistrationImporter do
         import(dry_run: false)
         person = Person.find_by(email: "jordan.rivera@example.org")
         expect(registration_for("jordan.rivera@example.org").organizations.pluck(:name)).to eq([ "Sample Org" ])
-        expect(person.affiliations.where(title: Affiliation::FACILITATOR_TITLE)).to be_empty
+        expect(person.affiliations.where(type: Affiliation::TYPE_FACILITATOR)).to be_empty
       end
     end
   end
@@ -523,7 +523,7 @@ RSpec.describe EventRegistrationImporter do
 
         expect(organization.reload.website_url).to eq("https://other.example.org")
         expect(organization.addresses.pluck(:city)).to eq([ "Springfield" ])
-        expect(person.affiliations.pluck(:title)).to include("Counselor")
+        expect(person.affiliations.map(&:display_title)).to include("Counselor")
       end
     end
 

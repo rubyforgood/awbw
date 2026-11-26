@@ -43,7 +43,7 @@ RSpec.describe "fm:import_personnel" do
     it "imports the rows it can and lists the ones it skipped, by reason" do
       output = run_task
 
-      expect(person.affiliations.sole).to have_attributes(organization:, title: "Facilitator", filemaker_code: "PS0001")
+      expect(person.affiliations.sole).to have_attributes(organization:, type: "facilitator", filemaker_code: "PS0001")
       expect(output).to include("Created", "no org carries the project code", "PS0002")
     end
 

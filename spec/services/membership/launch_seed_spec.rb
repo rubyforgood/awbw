@@ -10,7 +10,7 @@ RSpec.describe Membership::LaunchSeed do
   end
 
   def facilitator(person:, organization:, **attrs)
-    create(:affiliation, person:, organization:, title: "Facilitator", **attrs)
+    create(:affiliation, person:, organization:, type: "facilitator", **attrs)
   end
 
   describe "zero-cost pass" do

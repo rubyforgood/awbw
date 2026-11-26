@@ -7,7 +7,7 @@ RSpec.describe AffiliationDeduper do
   let(:organization) { create(:organization) }
 
   def affiliation(**attrs)
-    create(:affiliation, person: person, organization: organization, title: "Facilitator", **attrs)
+    create(:affiliation, person: person, organization: organization, type: "facilitator", **attrs)
   end
 
   # A merge moves rows with update_all, so identical copies land without

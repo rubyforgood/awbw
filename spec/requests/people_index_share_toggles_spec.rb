@@ -9,7 +9,7 @@ RSpec.describe "People index share toggles", type: :request do
   let(:age_type) { create(:category_type, :published, name: "AgeRange") }
 
   before do
-    create(:affiliation, person: person, organization: organization, start_date: Date.new(2019, 3, 1))
+    create(:affiliation, :facilitator, person: person, organization: organization, start_date: Date.new(2019, 3, 1))
     person.sectorable_items.create!(sector: create(:sector, :published, name: "Zoo sector"), is_primary: true)
     person.categorizable_items.create!(category: create(:category, :published, category_type: age_type, name: "Teens (13-17)"), is_primary: true)
   end

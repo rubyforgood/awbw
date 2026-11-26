@@ -23,7 +23,10 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
   # Leaving a Facilitator role closes the program there, so it reads that way.
   def self.affiliation_change_choices(affiliation)
     choices = AFFILIATION_CHANGE_CHOICES.except(ProfileChangeRequest::AFFILIATION_CHANGE_ADD)
-    affiliation&.facilitator? ? choices.merge(ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE => CLOSE_PROGRAM_CHOICE) : choices
+    return choices unless affiliation&.facilitator?
+
+    choices.except(ProfileChangeRequest::AFFILIATION_CHANGE_TITLE)
+           .merge(ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE => CLOSE_PROGRAM_CHOICE)
   end
 
   def heading

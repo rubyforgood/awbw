@@ -157,7 +157,7 @@
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             <% grouped.each do |person, person_affiliations| %>
               <div class="relative" data-paginated-fields-target="item">
-                <% titles = person_affiliations.filter_map { |a| a.title.presence }.uniq %>
+                <% titles = person_affiliations.filter_map { |a| a.display_title.presence }.uniq %>
                 <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
                 <%= person_profile_button(person, subtitle: titles.any? ? titles.join(", ") : nil) %>
                 <% if allowed_to?(:hidden_profile_marker?, person) %>

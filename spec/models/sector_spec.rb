@@ -62,7 +62,7 @@ RSpec.describe Sector, type: :model do
     def tag_person(sector, **affiliation_attrs)
       person = create(:person)
       create(:sectorable_item, sector: sector, sectorable: person, is_primary: true)
-      create(:affiliation, organization: organization, person: person, **affiliation_attrs)
+      create(:affiliation, organization: organization, person: person, type: "facilitator", **affiliation_attrs)
     end
 
     it "includes a sector an organization's active facilitator holds as primary" do
@@ -76,7 +76,7 @@ RSpec.describe Sector, type: :model do
       staff_only = create(:sector, :published)
       former = create(:sector, :published)
       org_own = create(:sector, :published)
-      tag_person(staff_only, title: "Director")
+      tag_person(staff_only, type: "job", title: "Director")
       tag_person(former, end_date: 1.year.ago)
       create(:sectorable_item, sector: org_own, sectorable: organization)
 

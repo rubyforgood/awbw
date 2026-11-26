@@ -78,14 +78,14 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "creates a job affiliation and a facilitator affiliation from the typed position" do
       person = register_with(position: "Counselor")
 
-      expect(person.affiliations.where(organization: organization).pluck(:title))
+      expect(person.affiliations.where(organization: organization).map(&:display_title))
         .to contain_exactly("Counselor", "Facilitator")
     end
 
     it "creates only a facilitator affiliation when no position was typed" do
       person = register_with(position: nil)
 
-      expect(person.affiliations.where(organization: organization).pluck(:title))
+      expect(person.affiliations.where(organization: organization).map(&:display_title))
         .to contain_exactly("Facilitator")
     end
 
@@ -95,7 +95,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "dates the facilitator affiliation to the event's start date" do
       person = register_with(position: nil)
 
-      facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
+      facilitator = person.affiliations.find_by(organization: organization, type: "facilitator")
       expect(facilitator.start_date).to eq(event.starts_on)
       expect(organization.reload.facilitator_status_on(event.starts_on)).to eq(:new)
     end
@@ -107,7 +107,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       event.update!(start_date: Time.utc(2026, 11, 14, 3, 0), end_date: Time.utc(2026, 11, 14, 6, 0))
       person = register_with(position: nil)
 
-      facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
+      facilitator = person.affiliations.find_by(organization: organization, type: "facilitator")
       expect(facilitator.start_date).to eq(Date.new(2026, 11, 13))
       expect(organization.reload.facilitator_program_status(as_of: event.starts_on).status).to eq(:new)
     end
@@ -129,7 +129,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(address).to be_present
       expect(address.country).to eq("USA")
       linked = person.affiliations.where(organization: organization)
-      expect(linked.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+      expect(linked.map(&:display_title)).to contain_exactly("Counselor", "Facilitator")
       expect(linked.map(&:organization_address)).to all(eq(address))
     end
 
@@ -144,7 +144,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       person = register_with(position: "Counselor")
 
-      expect(person.affiliations.where(organization: organization).pluck(:title))
+      expect(person.affiliations.where(organization: organization).map(&:display_title))
         .to contain_exactly("Counselor")
     end
 

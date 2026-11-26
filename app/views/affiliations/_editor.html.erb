@@ -26,7 +26,9 @@
 <% active_rows, inactive_rows = rows.partition { |affiliation, _index| affiliation.active? } %>
 <% tab_base = "cursor-pointer select-none rounded-md px-3 py-1 text-gray-500 transition-colors hover:text-gray-700" %>
 
-<div class="group/afftabs p-3" data-affiliation-dates-target="affiliationsContainer">
+<div class="group/afftabs p-3" data-affiliation-dates-target="affiliationsContainer"
+     data-controller="affiliation-add-type"
+     data-action="cocoon:after-insert->affiliation-add-type#stamp">
   <% if rows.any? %>
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
       <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium">
@@ -85,7 +87,14 @@
 
   <%# Adding is an Active-tab action — a new row is active by definition, so it
       would land on the other tab and look like nothing happened. %>
-  <div class="mt-2 group-has-[#aff-tab-inactive:checked]/afftabs:hidden">
+  <div class="mt-2 flex flex-wrap items-center gap-2 group-has-[#aff-tab-inactive:checked]/afftabs:hidden">
+    <label for="<%= scope %>_new_affiliation_type" class="text-sm text-gray-600">New role</label>
+    <select id="<%= scope %>_new_affiliation_type"
+            data-affiliation-add-type-target="select"
+            class="rounded-md border-gray-300 text-sm">
+      <option value="<%= Affiliation::TYPE_JOB %>">Job</option>
+      <option value="<%= Affiliation::TYPE_FACILITATOR %>">Facilitator</option>
+    </select>
     <%= link_to_add_association "➕ Add Affiliation", f, :affiliations,
           data: { association_insertion_node: "##{scope}_affiliation_rows_active",
                   association_insertion_method: "append" },

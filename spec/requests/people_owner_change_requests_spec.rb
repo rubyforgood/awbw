@@ -9,7 +9,7 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
   let(:person) { owner_user.person }
   let(:organization) { create(:organization, name: "Sunrise Center") }
   let!(:affiliation) do
-    create(:affiliation, person: person, organization: organization, title: "Facilitator")
+    create(:affiliation, person: person, organization: organization, type: "facilitator")
   end
 
   before do
@@ -114,7 +114,8 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
       expect(person.reload.bio).to eq("Updated by the owner")
       expect(person.email).not_to eq("hacked@example.com")
       expect(owner_user.reload.email).to eq("owner@example.com")
-      expect(affiliation.reload.title).to eq("Facilitator")
+      expect(affiliation.reload.type).to eq("facilitator")
+      expect(affiliation.title).to be_nil
     end
 
     it "can't change their work address through the edit form" do
