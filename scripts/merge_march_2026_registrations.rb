@@ -3,7 +3,7 @@
 # merge_march_2026_event_settings.rb; neither depends on the other.
 #
 # 10 people are registered on both. Their #2 copies hold nothing #19's lack, so
-# they're deleted.
+# they stay on #2 and go when it's deleted.
 #
 # Dry run by default: does everything, prints it, rolls back.
 #
@@ -25,14 +25,9 @@ Current.user = import_user
 Current.source = "merge_march_2026_registrations"
 
 ActiveRecord::Base.transaction(requires_new: true) do
-  deleted = source.event_registrations.where(id: duplicate_ids).destroy_all
-  raise "only #{deleted.size} of #{duplicate_ids.size} duplicates are on ##{source.id}" if deleted.size != duplicate_ids.size
-  puts "Deleted #{deleted.size} duplicate registrations on ##{source.id}"
-
-  moving = source.event_registrations.reload.to_a
+  moving = source.event_registrations.where.not(id: duplicate_ids).to_a
   moving.each { |registration| registration.update!(event: target) }
   puts "Moved #{moving.size} registrations to ##{target.id}"
-  moving.group_by(&:status).each { |status, group| puts "  #{status}: #{group.size}" }
 
   owing = target.event_registrations.reload.active.reject(&:paid_in_full?)
   puts "Now owing on ##{target.id}: #{owing.size} people, #{MoneyFormatter.dollars_from_cents(owing.sum(&:remaining_cost))}"
@@ -41,4 +36,4 @@ ActiveRecord::Base.transaction(requires_new: true) do
   raise ActiveRecord::Rollback if dry_run
 end
 
-puts dry_run ? "DRY RUN — rolled back, nothing written. Set DRY_RUN=false to apply." : "Done. Check ##{target.id}'s registrants, then delete ##{source.id}."
+puts dry_run ? "DRY RUN — rolled back, nothing written. Set DRY_RUN=false to apply." : "Done. Check ##{target.id}'s registrants."
