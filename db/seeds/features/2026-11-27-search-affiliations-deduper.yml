@@ -1,0 +1,12 @@
+name: "Search the affiliations deduper by name, ID, or FileMaker code"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-27
+pr_number: 3060
+action_path: "/affiliations/dedupe_index"
+summary: >-
+  A search box on Dedupe affiliations narrows the list to the people you're looking for — by person or
+  org name, an affiliation's portal ID or FileMaker code, or a person's or org's FileMaker code.
+pro_tips:
+  - "Each person shows with all of their duplicate copies, even if only one copy matched."
+  - "The search stays put after you merge, so you can keep working through it."

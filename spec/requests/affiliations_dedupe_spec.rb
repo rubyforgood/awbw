@@ -36,6 +36,46 @@ RSpec.describe "Affiliation dedupe", type: :request do
       expect(response.body.scan(">Merge<").size).to eq(3)
     end
 
+    describe "search" do
+      def listed_names(query)
+        get dedupe_index_affiliations_path, params: { query: query }
+        [ person, other_person ].select { |someone| response.body.include?(someone.full_name) }
+      end
+
+      it "finds a person by name or FileMaker code" do
+        person.update!(last_name: "Zephyrine")
+        other_person.update!(filemaker_code: "P900")
+
+        expect(listed_names("Zephyrine")).to eq([ person ])
+        expect(listed_names("P900")).to eq([ other_person ])
+      end
+
+      it "finds an organization's people by its FileMaker code" do
+        organization.update!(filemaker_code: "O700")
+
+        expect(listed_names("O700")).to eq([ person, other_person ])
+      end
+
+      it "finds a person by any one affiliation's portal id or FileMaker code" do
+        keep.update_column(:filemaker_code, "A55")
+
+        expect(listed_names(other_keep.id.to_s)).to eq([ other_person ])
+        expect(listed_names("A55")).to eq([ person ])
+      end
+
+      it "says when nothing matches" do
+        get dedupe_index_affiliations_path, params: { query: "nobody-here" }
+
+        expect(response.body).to include("No duplicate affiliations match that search.")
+      end
+    end
+
+    it "keeps the search after a merge" do
+      post dedupe_perform_affiliations_path, params: { person_sgid: sgid(person), query: "Duplicate" }
+
+      expect(response).to redirect_to(dedupe_index_affiliations_path(query: "Duplicate"))
+    end
+
     it "merges one person's duplicates" do
       post dedupe_perform_affiliations_path, params: { person_sgid: sgid(person) }
 
