@@ -8,4 +8,5 @@ summary: >-
   The "Name or email" box on the people list and the "Name" box on the organizations list also
   find a record by its portal ID or FileMaker code.
 pro_tips:
+  - "The people list's \"Organization\" box also takes an organization's portal ID or FileMaker code."
   - "A FileMaker code must be typed in full: P12 won't find P123."

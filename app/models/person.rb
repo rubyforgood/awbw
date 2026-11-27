@@ -317,8 +317,9 @@ class Person < ApplicationRecord
   }
   scope :organization_name, ->(organization_name) {
     return all if organization_name.blank?
-    left_joins(affiliations: :organization)
-      .where("organizations.name LIKE ?", "%#{sanitize_sql_like(organization_name)}%")
+    joined = left_joins(affiliations: :organization)
+    joined.where("organizations.name LIKE ?", "%#{sanitize_sql_like(organization_name)}%")
+      .or(joined.where(organizations: { id: Organization.matching_identifier(organization_name).select(:id) }))
       .distinct }
   scope :organization_id, ->(organization_id) {
     joins(:affiliations)
