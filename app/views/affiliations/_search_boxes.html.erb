@@ -6,7 +6,7 @@
 <% end %>
 <% primary = capture do %>
   <%= render "shared/filter_text", param: :query, label: "Person or org name", submit: true,
-          tooltip: "Also matches a person's or org's FM code",
+          tooltip: "Also matches the affiliation's portal ID, or a person's or org's FM code",
           wrapper_class: "w-full md:w-40" %>
   <%= render "shared/filter_text", param: :comment_text, label: "Comments contain", submit: true,
           tooltip: "Searches comment text and topics, e.g. \"FileMaker import\" or \"stand-in\"",
