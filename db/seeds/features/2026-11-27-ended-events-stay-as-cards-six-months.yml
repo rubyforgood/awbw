@@ -2,6 +2,7 @@ name: "Ended events stay as cards for six months"
 area: events
 display_status: admin_facing
 released_on: 2026-11-27
+pr_number: 3064
 summary: >-
   On the events index, admins see an ended event as a card for six months after
   it ends. After that it moves to the "Drafts and past events" list.
