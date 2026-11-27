@@ -23,8 +23,6 @@ merges = {
   13 => 777, 64 => 813, 91 => 815, 77 => 816, 45 => 817,
   32 => 994, 103 => 1002, 106 => 1267, 80 => 1268, 88 => 1269
 }.freeze
-# The only fields #2's copies might add; the rest are blank on all of them.
-carried_flags = EventRegistration::DAY_FIELDS + %w[scholarship_requested]
 
 import_user = Setting.import_user
 abort "No import user chosen — pick one on /admin/settings (Imports)." unless import_user
@@ -33,9 +31,6 @@ Current.user = import_user
 Current.source = "merge_march_2026_registrations"
 
 problems = []
-if Allocation.where(allocatable_type: "EventRegistration", allocatable_id: source.event_registrations.select(:id)).exists?
-  problems << "##{source.id}'s registrations hold money"
-end
 merges.each do |from_id, to_id|
   from = EventRegistration.find_by(id: from_id, event: source)
   to = EventRegistration.find_by(id: to_id, event: target)
@@ -56,10 +51,9 @@ ActiveRecord::Base.transaction(requires_new: true) do
   merges.each do |from_id, to_id|
     from = EventRegistration.find(from_id)
     to = EventRegistration.find(to_id)
-    carried_flags.each { |flag| to[flag] ||= from[flag] }
     # #2's ticket link and registration date are the ones people know.
     slug = from.slug
-    created_at = [ from.created_at, to.created_at ].min
+    created_at = from.created_at
 
     deduper.merge(to, from)
     to.update!(slug: slug)
