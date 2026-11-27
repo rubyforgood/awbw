@@ -607,6 +607,16 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(link["data-turbo-stream"]).to eq("true")
       end
 
+      it "explains the amount allocated total in a tooltip" do
+        existing_registration.event.update!(cost_cents: 10_000)
+
+        get edit_event_registration_path(existing_registration)
+
+        card = Nokogiri::HTML5(response.body).at_css("#allocations-card")
+        expect(card.at_css("[role=tooltip]").text)
+          .to eq("Amount allocated is the total for all payments + scholarships + discounts")
+      end
+
       it "renders the expected payment method as an editable select with the registrant's answer selected" do
         existing_registration.update!(expected_payment_method: "Check")
 

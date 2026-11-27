@@ -5,6 +5,13 @@ module ApplicationHelper
     "text-gray-500 hover:text-gray-700"
   end
 
+  # Shared hover-bubble look; callers add position, width, padding, and the hover toggle.
+  # admin_only: is for an admin-only bubble on a page non-admins see, outside a blue admin section.
+  def tooltip_class(admin_only: false)
+    color = admin_only ? "admin-only bg-blue-100 ring-blue-200" : "bg-white ring-gray-200"
+    "rounded-lg text-xs font-normal text-gray-700 shadow-lg ring-1 #{color}"
+  end
+
   # Hidden inputs carrying a params hash through a GET form, preserving array
   # values as `key[]` so multi-value filters survive the round-trip (a plain
   # hidden_field_tag would stringify the whole array into one broken value).
