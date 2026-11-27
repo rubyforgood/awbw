@@ -38,9 +38,12 @@ module EventRegistrationServices
       self
     end
 
-    # A people merge has no keeper form to pick these on, so keep whichever copy has them.
+    # Attendance days and dates either copy has, so the merge keeps them; also prefills the deduper's keeper form.
     def carry_details
       (EventRegistration::DAY_FIELDS + CARRIED_TIMESTAMPS).each { |field| @keep[field] ||= @delete[field] }
+      return unless @keep.changed.intersect?(EventRegistration::DAY_FIELDS) && @keep.status.in?(EventRegistration::ACTIVE_STATUSES)
+
+      @keep.status = @keep.attendance_status_for_days
     end
 
     # Run after ModelDeduper, inside the merge transaction.

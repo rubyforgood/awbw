@@ -189,8 +189,8 @@
         union_column = union_columns.include?(col.name)
         merged_in = union_column && delete_val.to_s.split(",").map(&:strip).reject(&:blank?).difference(keep_val.to_s.split(",").map(&:strip)).any?
         fill_column = fill_blank_columns.include?(col.name)
-        # A fill column treats "no" as blank: only a "yes" can fill the keeper or be dropped.
-        is_different = !union_column && (fill_column ? delete_val.present? : delete_val.to_s.strip.present?) && delete_val != keep_val
+        # A "no" never counts as a value to fill or drop: only a "yes" the keeper lacks.
+        is_different = !union_column && (col.type == :boolean ? delete_val && !keep_val : (fill_column ? delete_val.present? : delete_val.to_s.strip.present?) && delete_val != keep_val)
         fills_keeper = is_different && fill_column && keep_val.blank?
         deprecated = deprecated_columns.include?(col.name)
       %>
@@ -207,6 +207,11 @@
         <div class="flex flex-wrap items-center gap-2 border border-transparent py-1">
           <% if delete_url %>
             <%= link_to display_val, delete_url, target: "_blank", rel: "noopener", class: "text-gray-900 underline" %>
+          <% elsif col.type == :boolean && !col_assoc %>
+            <label class="inline-flex items-center gap-2">
+              <%= tag.input type: "checkbox", checked: delete_val, disabled: true, class: "rounded border-gray-300 text-gray-500" %>
+              <span class="text-gray-600">Yes</span>
+            </label>
           <% else %>
             <span class="<%= deprecated ? "text-gray-400 italic" : "text-gray-900" %> <%= "font-semibold" if col.name == "name" %>"><%= display_val %></span>
           <% end %>

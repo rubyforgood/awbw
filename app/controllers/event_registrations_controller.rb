@@ -573,6 +573,7 @@ class EventRegistrationsController < ApplicationController
 
         { fields: { "slug" => { delete: { text: "stops working unless picked", loss: true }, keep: "the link not picked stops working" } } }
       },
+      prefill_keeper: ->(keep, delete) { EventRegistrationServices::RegistrationMerge.new(keep, delete).carry_details },
       hidden_columns: ->(keep, delete) {
         EventRegistration::DAY_FIELDS.drop([ keep.event, delete.event ].compact.map(&:day_count).max || 1)
       },

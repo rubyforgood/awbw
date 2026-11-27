@@ -60,6 +60,18 @@ RSpec.describe "Event registration dedupe — reconciling the merge", type: :req
     expect(keep_reg.reload.status).to eq("attended")
   end
 
+  it "pre-ticks the keeper with the days the deleted registration attended" do
+    keep_reg.update!(completed_day_1: true, status: "incomplete_attendance")
+    delete_reg.update!(completed_day_2: true, status: "incomplete_attendance")
+
+    preview!
+
+    page = Nokogiri::HTML(response.body)
+    expect(page.at_css("input[type=checkbox][name*='completed_day_2']")["checked"]).to be_present
+    expect(page.at_css("input[name*='[status]']")["value"]).to eq("attended")
+    expect(keep_reg.reload.completed_day_2).to be false
+  end
+
   it "shows the attendance and certificate columns on the preview" do
     delete_reg.update!(certificate_sent_at: 1.hour.ago)
 
