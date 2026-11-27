@@ -96,9 +96,6 @@ module Dedupable
     @merge_outcomes = config[:merge_outcomes]&.call(@record_to_keep, @record_to_delete) || {}
     @merge_blocks = Array(config[:merge_blocks]&.call(@record_to_keep, @record_to_delete))
     @dedupe = build_dedupe_vars(config)
-    @choice_options = config[:choice_options]&.call(@record_to_keep, @record_to_delete) || {}
-    hidden = Array(config[:hidden_columns]&.call(@record_to_keep, @record_to_delete))
-    @dedupe[:editable_columns] -= hidden if hidden.any? && @dedupe[:editable_columns]
 
     render "dedupes/preview"
   end
@@ -244,14 +241,6 @@ module Dedupable
   #                       only these are accepted on save (optional, defaults to every column)
   #   fill_blank_columns: Array of editable column names the merge fills from the deleted record when
   #                       the keeper's is blank (e.g. member_since) (optional)
-  #   hidden_columns:     Lambda(keep, delete) returning editable_columns this pair's preview leaves out,
-  #                       e.g. attendance days past the event's length (optional)
-  #   column_labels:      Hash of { column_name => label } for read-only rows (optional)
-  #   field_links:        Hash of { column_name => Lambda(record) returning a URL } linking a shown
-  #                       value, e.g. a registration's ticket (optional)
-  #   choice_options:     Lambda(keep, delete) returning { column_name => [ [ label, value ], … ] } — the
-  #                       keeper picks from a list, applied only when the merge runs (no autosave), for a
-  #                       unique value the duplicate holds until it's deleted, e.g. a ticket slug (optional)
   #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
   #                       e.g. a login's email and sign-in history (optional)
   #   audit_columns:      Columns listed read-only at the bottom of Links & history and never filled onto
@@ -273,8 +262,7 @@ module Dedupable
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
   #   merge_outcomes:     Lambda(keep, delete) returning { fields: { column_name => { keep:, delete: } },
   #                       records: { record => text } } — what the merge changes beyond keeping the keeper's
-  #                       values, flagged beside that field or moving record; a text may be
-  #                       { text:, loss: true } to flag a value the merge loses (optional)
+  #                       values, flagged beside that field or moving record (optional)
   #   merge_blocks:       Lambda(keep, delete) returning an array of reasons this particular merge is
   #                       unsafe (e.g. both people already have memberships). Any reason disables
   #                       the preview's merge button and refuses the POST (optional)
@@ -327,8 +315,6 @@ module Dedupable
       search_hint: config[:search_hint] || dedupe_search_hint(mc),
       editable_columns: config[:editable_columns],
       read_only_columns: Array(config[:read_only_columns]).map(&:to_s),
-      column_labels: config[:column_labels] || {},
-      field_links: config[:field_links] || {},
       audit_columns: dedupe_audit_columns(config),
       linked_associations: dedupe_linked_associations(config),
       record_label: config[:record_label] || :name.to_proc,

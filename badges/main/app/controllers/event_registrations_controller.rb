@@ -556,47 +556,31 @@ class EventRegistrationsController < ApplicationController
       back_label: dedupe_event ? "Registrants" : nil,
       subtitle: dedupe_event ? "Showing possible duplicate registrations for #{dedupe_event.title}." : nil,
       editable_columns: %w[
-        status status_before_transfer expected_payment_method fee_note shoutout intends_to_pay
+        status expected_payment_method fee_note shoutout intends_to_pay
         someone_else_will_pay invoice_requested scholarship_requested w9_requested
-        payment_unresolved completed_day_1 completed_day_2 completed_day_3 completed_day_4
-        completed_day_5 certificate_sent_at post_survey_completed_at filemaker_code slug
+        payment_unresolved
       ],
-      union_columns: %w[filemaker_code],
-      column_labels: { "slug" => "Ticket link" },
-      field_links: { "slug" => ->(registration) { registration_ticket_path(registration.slug) } },
-      choice_options: ->(keep, delete) {
-        links = [ keep, delete ].select { |registration| registration.slug.present? }
-        { "slug" => links.map { |registration| [ "#{registration.slug} (#{registration.registrant&.full_name})", registration.slug ] } }
-      },
-      merge_outcomes: ->(keep, delete) {
-        fields = {}
-        if delete.slug.present?
-          fields["slug"] = { delete: { text: "stops working unless picked", loss: true }, keep: "the link not picked stops working" }
-        end
-        if (status = EventRegistrationServices::RegistrationMerge.new(keep, delete).status_after_merge)
-          fields["status"] = { keep: "becomes #{status.humanize(capitalize: false)} from the days filled in" }
-          fields["status"][:delete] = "kept: the days carry it" if status == delete.status
-        end
-        { fields: fields }
-      },
-      fill_blank_columns: EventRegistrationServices::RegistrationMerge::FILLED_COLUMNS,
-      hidden_columns: ->(keep, delete) {
-        EventRegistration::DAY_FIELDS.drop([ keep.event, delete.event ].compact.map(&:day_count).max || 1)
-      },
       # The (registrant_id, event_id) index means two registrations only ever
       # collide when their registrants are different Person records. Merging keeps
       # them separate — say so, so the admin also merges the people if they match.
       merge_notes: ->(keep, delete) {
-        registrant_note = if keep.registrant_id != delete.registrant_id
-          "These registrations have different registrants (#{keep.registrant&.full_name} vs #{delete.registrant&.full_name}). Merging combines the registrations only — the two people stay separate. Merge them in the people deduper too if they're the same person."
+        next [] if keep.registrant_id == delete.registrant_id
+
+        [ "These registrations have different registrants (#{keep.registrant&.full_name} vs #{delete.registrant&.full_name}). Merging combines the registrations only — the two people stay separate. Merge them in the people deduper too if they're the same person." ]
+      },
+      # A scholarship (and CE registration) moves onto the kept registration with the
+      # merge, but a scholarship still credits the deleted registrant. Re-credit any
+      # scholarship now on the keeper to the keeper's registrant so its recipient
+      # matches its allocation. A moved CE registration still points at the deleted
+      # registrant's license (so it lands invalid and duplicates the keeper's own CE);
+      # ReconcileMergedContinuingEducation repoints it to the kept registrant's license
+      # and merges the duplicates into one, keeping payments.
+      after_merge: ->(keep) {
+        keep.scholarships.where.not(recipient_id: keep.registrant_id).find_each do |scholarship|
+          scholarship.update!(recipient: keep.registrant)
         end
-        [ registrant_note, *EventRegistrationServices::RegistrationMerge.new(keep, delete).notes(ticket_pickable: true) ].compact
+        EventRegistrationServices::ReconcileMergedContinuingEducation.new(keep).call
       },
-      merge_blocks: ->(keep, delete) { EventRegistrationServices::RegistrationMerge.new(keep, delete).blocks },
-      merge_keeper: ->(keep, delete) {
-        @registration_merge = EventRegistrationServices::RegistrationMerge.new(keep, delete).tap(&:prepare)
-      },
-      after_merge: ->(_keep) { @registration_merge.reconcile! },
       record_extras: ->(registration) {
         [ registration.registrant&.preferred_email.presence, registration.status&.humanize ].compact.join(" · ").presence
       }

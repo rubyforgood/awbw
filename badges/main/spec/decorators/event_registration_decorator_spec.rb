@@ -1,20 +1,6 @@
 require "rails_helper"
 
 RSpec.describe EventRegistrationDecorator, type: :decorator do
-  describe "#ticket_merge_note" do
-    let(:registration) { create(:event_registration) }
-
-    it "says no portal email carried the link when none did" do
-      expect(registration.decorate.ticket_merge_note(0)).to include("No portal email included it")
-    end
-
-    it "links to the emails that carried the link" do
-      note = registration.decorate.ticket_merge_note(2)
-
-      expect(note).to include("2 emails", "query=#{CGI.escape(registration.slug)}")
-    end
-  end
-
   describe "attendance-status presentation" do
     it "maps a known status to its pill classes and icon" do
       reg = create(:event_registration, status: "attended").decorate
