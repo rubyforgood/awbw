@@ -53,7 +53,71 @@ class UserDecorator < ApplicationDecorator
     "Invited #{welcome_instructions_sent_at.strftime("%b %-d, %Y")}" if welcome_instructions_sent_at
   end
 
+  Milestone = Data.define(:label, :date, :detail, :state)
+
+  ACCOUNT_MILESTONES = [
+    [ "Created", "Created", :created_at ],
+    [ "Invited", "Invited", :welcome_instructions_sent_at ],
+    [ "Confirmed", "Confirmed", :confirmed_at ],
+    [ "Last login", "Logged in", :latest_sign_in_at ]
+  ].freeze
+
+  MILESTONE_TEXT_CLASSES = {
+    reached: "text-gray-700",
+    next: "text-amber-700",
+    pending: "text-gray-400",
+    locked: "text-red-700",
+    inactive: "text-gray-500"
+  }.freeze
+
+  # A later step implies the earlier ones, so legacy logins missing an invite date still read as complete.
+  def account_milestones
+    dates = ACCOUNT_MILESTONES.map { |_, _, attribute| public_send(attribute) }
+    reached = dates.each_index.map { |index| dates.drop(index).any?(&:present?) }
+    next_index = reached.index(false) unless account_stop
+
+    ACCOUNT_MILESTONES.each_with_index.map do |(reached_label, pending_label, _), index|
+      state = if reached[index] then :reached elsif index == next_index then :next else :pending end
+      Milestone.new(label: reached[index] ? reached_label : pending_label, date: short_date(dates[index]), detail: nil, state:)
+    end
+  end
+
+  def account_stop
+    return Milestone.new(label: "Inactive", date: nil, detail: "By staff", state: :inactive) if inactive?
+    return unless locked_at
+
+    Milestone.new(label: "Locked", date: short_date(locked_at), detail: lock_reason, state: :locked)
+  end
+
+  def milestone_text_classes(milestone)
+    MILESTONE_TEXT_CLASSES.fetch(milestone.state)
+  end
+
+  def latest_sign_in_at
+    current_sign_in_at || last_sign_in_at
+  end
+
+  def password_reset_pending?
+    reset_password_token.present? && reset_password_sent_at&.after?(Devise.reset_password_within.ago)
+  end
+
+  def password_reset_label
+    "Password reset sent #{short_date(reset_password_sent_at)}"
+  end
+
   def display_primary_address
     primary_address == 1 ? "work" : "home"
+  end
+
+  private
+
+  def lock_reason
+    return "By staff" if failed_attempts < Devise.maximum_attempts
+
+    "#{failed_attempts} failed logins"
+  end
+
+  def short_date(time)
+    time&.strftime("%b %-d, %Y")
   end
 end

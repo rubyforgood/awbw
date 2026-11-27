@@ -1,0 +1,66 @@
+<% account = snapshot.user_account %>
+<section class="col-span-full mt-5">
+  <h2 class="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+    User account
+    <% if account&.super_user? %>
+      <%= render "shared/badge", label: "Admin", icon: "fa-solid fa-user-shield",
+                 classes: "bg-blue-50 text-blue-700 border-blue-200", extra: "normal-case tracking-normal" %>
+    <% end %>
+    <% if snapshot.account_count > 1 %>
+      <%= render "shared/badge", label: "#{snapshot.account_count} accounts", icon: "fa-solid fa-users",
+                 classes: "bg-amber-50 text-amber-700 border-amber-200", extra: "normal-case tracking-normal",
+                 title: "Showing the account that can log in" %>
+    <% end %>
+  </h2>
+
+  <% if account %>
+    <% steps = [ *account.account_milestones, account.account_stop ].compact %>
+    <ol class="grid <%= steps.size == 5 ? "grid-cols-5" : "grid-cols-4" %> gap-x-1 text-xs">
+      <% steps.each_with_index do |step, index| %>
+        <li class="relative min-w-0 <%= account.milestone_text_classes(step) %>">
+          <% if (following = steps[index + 1]) %>
+            <span class="absolute top-2 right-0 left-0 h-0.5 <%= following.state == :reached ? "bg-green-100" : "bg-gray-200" %>"></span>
+          <% end %>
+          <span class="relative inline-flex size-4 items-center justify-center rounded-full bg-white">
+            <% case step.state %>
+            <% when :reached %>
+              <i class="fa-solid fa-circle-check text-base text-green-300"></i>
+            <% when :locked %>
+              <i class="fa-solid fa-lock text-sm"></i>
+            <% when :inactive %>
+              <i class="fa-solid fa-ban text-sm"></i>
+            <% else %>
+              <span class="size-4 rounded-full border-2 <%= step.state == :next ? "border-amber-500" : "border-gray-300" %>"></span>
+            <% end %>
+          </span>
+          <span class="mt-1 block font-medium"><%= step.label %></span>
+          <% if step.date || step.detail.nil? %>
+            <span class="block"><%= step.date || "–" %></span>
+          <% end %>
+          <% if step.detail %>
+            <span class="block"><%= step.detail %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ol>
+
+    <div class="mt-3 space-y-1 text-xs empty:hidden"><% if account.unconfirmed_email.present? %>
+      <p class="flex items-center gap-1.5 text-amber-700">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        Email change pending: <%= account.unconfirmed_email %>
+      </p>
+    <% end %>
+    <% if account.password_reset_pending? %>
+      <p class="flex items-center gap-1.5 text-blue-700">
+        <i class="fa-solid fa-key"></i>
+        <%= account.password_reset_label %>
+      </p>
+    <% end %></div>
+  <% else %>
+    <p class="flex items-center gap-2 text-sm text-gray-500">
+      <%= render "shared/badge", label: "No account", icon: "fa-solid fa-user-slash",
+                 classes: "bg-gray-50 text-gray-600 border-gray-200" %>
+      Can't log in until an account is created
+    </p>
+  <% end %>
+</section>

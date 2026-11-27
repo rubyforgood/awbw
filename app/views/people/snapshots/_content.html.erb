@@ -83,6 +83,8 @@
           </ul>
         </section>
       <% end %>
+
+      <%= render "people/snapshots/user_account", snapshot: snapshot %>
     <% end %>
   </div>
 
@@ -91,8 +93,8 @@
     <%= link_to "Profile", person_path(person), class: footer_link_class %>
     <%= link_to "Edit", edit_person_path(person), class: footer_link_class %>
 
-    <% if person.user.present? %>
-      <%= link_to "User", user_path(person.user), class: footer_link_class %>
+    <% if snapshot.user_account %>
+      <%= link_to "User", user_path(snapshot.user_account), class: footer_link_class %>
     <% end %>
 
     <%= link_to "Activity", person_activity_path(person), class: footer_link_class %>

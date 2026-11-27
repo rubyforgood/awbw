@@ -43,8 +43,42 @@ RSpec.describe "Person snapshots", type: :request do
       expect(response.body).not_to include("Incomplete attendance")
     end
 
+    it "shows the user account milestones with admin and account-count badges" do
+      user = create(:user, :admin, person: person, updated_at: 1.hour.from_now, locked_at: Time.zone.local(2026, 11, 12, 12),
+                    failed_attempts: Devise.maximum_attempts, unconfirmed_email: "new.address@example.com")
+      person.user.update_columns(inactive: true, updated_at: 1.day.ago)
+
+      get person_snapshot_path(person)
+
+      expect(response.body).to include("User account")
+      expect(response.body).to include("fa-user-shield")
+      expect(response.body).to include("2 accounts")
+      expect(response.body).to include("Locked")
+      expect(response.body).to include("#{Devise.maximum_attempts} failed logins")
+      expect(response.body).to include("Email change pending: new.address@example.com")
+      expect(response.body).to include(user_path(user))
+    end
+
+    it "says when the person has no user account" do
+      person.user.destroy!
+
+      get person_snapshot_path(person)
+
+      expect(response.body).to include("No account")
+      expect(response.body).to include("Can't log in until an account is created")
+    end
+
+    it "shows the user account even when nothing else is on the snapshot" do
+      lone = create(:person)
+
+      get person_snapshot_path(lone)
+
+      expect(response.body).to include("User account")
+      expect(response.body).not_to include("No snapshot content yet.")
+    end
+
     it "shows the empty state when there is nothing to snapshot" do
-      empty_person = create(:person, first_name: "Empty", last_name: "Snapshot")
+      empty_person = create(:person, :without_user, first_name: "Empty", last_name: "Snapshot")
 
       get person_snapshot_path(empty_person)
 
@@ -55,7 +89,7 @@ RSpec.describe "Person snapshots", type: :request do
     end
 
     it "shows the affiliated since heading when every affiliation has ended" do
-      former = create(:person)
+      former = create(:person, :without_user)
       create(:affiliation, person: former, organization: create(:organization),
              start_date: Date.new(2020, 3, 1), end_date: Date.new(2021, 1, 1))
 

@@ -52,6 +52,16 @@ class PersonSnapshot
     end
   end
 
+  def user_account
+    return @user_account if defined?(@user_account)
+
+    @user_account = person.suggested_user_account&.decorate
+  end
+
+  def account_count
+    person.user_accounts.size
+  end
+
   def affiliated_since
     person.affiliated_since_date
   end
@@ -63,6 +73,6 @@ class PersonSnapshot
   end
 
   def empty?
-    affiliations.empty? && trainings.empty? && membership.nil?
+    affiliations.empty? && trainings.empty? && membership.nil? && user_account.nil?
   end
 end
