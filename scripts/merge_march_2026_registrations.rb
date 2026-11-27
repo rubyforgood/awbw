@@ -1,9 +1,7 @@
-# One-off, one of two: move the March 2026 registrations from #2 onto the TAC261
-# event that holds the money (#19). Runs before or after
-# merge_march_2026_event_settings.rb; neither depends on the other.
-#
-# 10 people are registered on both. Their #2 copies hold nothing #19's lack, so
-# they stay on #2 and go when it's deleted.
+# One-off, one of three: move the March 2026 registrations from #2 onto the TAC261
+# event that holds the money (#19). Runs in any order with
+# merge_march_2026_event_settings.rb and delete_march_2026_duplicate_registrations.rb,
+# which deletes #2's copies of the 10 people registered on both.
 #
 # Dry run by default: does everything, prints it, rolls back.
 #

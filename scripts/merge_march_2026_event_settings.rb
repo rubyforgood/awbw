@@ -1,6 +1,6 @@
-# One-off, one of two: give the TAC261 event (#19) the page and ticket settings
-# the March 2026 registrants saw on #2, then unpublish #2. Runs before or after
-# merge_march_2026_registrations.rb; neither depends on the other.
+# One-off, one of three: give the TAC261 event (#19) the page and ticket settings
+# the March 2026 registrants saw on #2, then unpublish #2. Runs in any order with
+# merge_march_2026_registrations.rb and delete_march_2026_duplicate_registrations.rb.
 #
 # #19 keeps its name, price and CE settings. #2's description, images, tags,
 # forms and ticket callouts move over where #19 lacks them.
@@ -10,7 +10,7 @@
 #   bin/rails runner scripts/merge_march_2026_event_settings.rb
 #   DRY_RUN=false bin/rails runner scripts/merge_march_2026_event_settings.rb
 #
-# Once both have run, an admin deletes #2. Re-running after it applies stops
+# Once all three have run, an admin deletes #2. Re-running after it applies stops
 # with nothing written.
 
 dry_run = ENV["DRY_RUN"] != "false"
