@@ -2,6 +2,7 @@ name: "Dedupe affiliations"
 area: reporting
 display_status: admin_facing
 released_on: 2026-11-27
+pr_number: 3062
 action_path: "/affiliations/dedupe_index"
 summary: >-
   A new Dedupe affiliations page lists every person with the same affiliation
