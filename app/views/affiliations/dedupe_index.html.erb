@@ -14,6 +14,16 @@
       </div>
     </div>
 
+    <%= form_with url: dedupe_index_affiliations_path, method: :get, autocomplete: "off",
+                  class: "flex items-end gap-3" do %>
+      <%= render "shared/filter_text", param: :query, label: "Person or org name", submit: true,
+              tooltip: "Also matches an affiliation's portal ID or FM code, or a person's or org's FM code",
+              wrapper_class: "w-full md:w-80" %>
+      <% if params[:query].present? %>
+        <%= link_to "Clear", dedupe_index_affiliations_path, class: "pb-2 text-sm #{eyebrow_link_class}" %>
+      <% end %>
+    <% end %>
+
     <% if @groups.any? %>
       <div class="space-y-4">
         <% @groups.each do |group| %>
@@ -25,7 +35,8 @@
               </h3>
               <%= button_to "Merge #{pluralize(group.merged_count, "duplicate")}",
                             dedupe_perform_affiliations_path,
-                            params: { person_sgid: group.person.to_sgid(for: AffiliationsController::DEDUPE_PURPOSE).to_s },
+                            params: { person_sgid: group.person.to_sgid(for: AffiliationsController::DEDUPE_PURPOSE).to_s,
+                                      query: params[:query].presence }.compact,
                             class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap"),
                             form_class: "shrink-0" %>
             </div>
@@ -62,7 +73,9 @@
     <% else %>
       <div class="border-primary/10 rounded-2xl border bg-white py-10 text-center">
         <i class="fa-solid fa-circle-check mb-2 text-3xl text-emerald-500"></i>
-        <p class="text-gray-600">No duplicate affiliations detected.</p>
+        <p class="text-gray-600">
+          <%= params[:query].present? ? "No duplicate affiliations match that search." : "No duplicate affiliations detected." %>
+        </p>
       </div>
     <% end %>
   </div>

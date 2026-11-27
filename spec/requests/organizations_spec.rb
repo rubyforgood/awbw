@@ -52,6 +52,18 @@ RSpec.describe "/organizations", type: :request do
       expect(response.body).to include("13-17")
     end
 
+    it "finds an organization by portal id or FileMaker code in the name box" do
+      coded = create(:organization, name: "Coded Harbor", filemaker_code: "O4242")
+      create(:organization, name: "Other Harbor")
+
+      get organizations_url, params: { query: "O4242" }, headers: { "Turbo-Frame" => "organizations_results" }
+      expect(response.body).to include("Coded Harbor")
+      expect(response.body).not_to include("Other Harbor")
+
+      get organizations_url, params: { query: coded.id.to_s }, headers: { "Turbo-Frame" => "organizations_results" }
+      expect(response.body).to include("Coded Harbor")
+    end
+
     it "captions each card with its type for admins only" do
       organization = Organization.create!(valid_attributes.merge(organization_type: "For-profit", school: true))
       create(:affiliation, organization: organization, person: create(:person))

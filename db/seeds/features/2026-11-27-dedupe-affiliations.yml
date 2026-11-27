@@ -15,3 +15,5 @@ description: >-
 pro_tips:
   - "Reach it from the Dedupers section on admin home."
   - "Merge one person at a time with their Merge button."
+  - "Search by person or org name, an affiliation's portal ID or FileMaker code, or a person's or org's FileMaker code."
+  - "A match shows that person with all of their duplicate copies, and the search stays put after you merge."

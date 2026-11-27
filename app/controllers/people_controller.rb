@@ -32,7 +32,7 @@ class PeopleController < ApplicationController
       contact_info = filters.delete(:contact_info)
       work_location = filters.delete(:work_location)
       filtered = base_scope.search_by_params(filters)
-      filtered = filtered.search_name_email(name_email)
+      filtered = filtered.matching_text_or_identifier(:search_name_email, name_email) if name_email.present?
       filtered = filtered.search_contact(contact_info)
       filtered = filtered.distinct if contact_info.present?
       filtered = located_by_work_location(filtered, work_location) if work_location.present?
@@ -55,7 +55,7 @@ class PeopleController < ApplicationController
     contact_info = filters.delete(:contact_info)
     work_location = filters.delete(:work_location)
     people = Person.includes(:user).search_by_params(filters)
-    people = people.search_name_email(name_email)
+    people = people.matching_text_or_identifier(:search_name_email, name_email) if name_email.present?
     people = people.search_contact(contact_info)
     people = people.distinct if contact_info.present?
     people = located_by_work_location(people, work_location) if work_location.present?

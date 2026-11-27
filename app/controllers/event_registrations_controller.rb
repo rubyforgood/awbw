@@ -550,6 +550,7 @@ class EventRegistrationsController < ApplicationController
     {
       model_class: EventRegistration,
       domain: :event_registrations,
+      search_hint: "Search by name, email, event, FileMaker code, or portal ID",
       candidate_finder: -> { EventRegistrationServices::DuplicateFinder.new(finder_scope).groups },
       back_path: dedupe_event ? registrants_event_path(dedupe_event) : nil,
       back_label: dedupe_event ? "Registrants" : nil,
