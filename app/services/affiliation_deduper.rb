@@ -3,24 +3,16 @@
 # references onto the survivor via ModelDeduper#merge. A record merge moves the
 # deleted record's affiliations across with update_all, so copies land that
 # Affiliation#skip_if_duplicate would have refused. Runs in the people and
-# organizations dedupers' after_merge.
+# organizations dedupers' after_merge, and on the standalone Dedupe affiliations page.
 class AffiliationDeduper
-  def initialize(owner)
-    @owner = owner
+  # The sets of identical affiliations, each ordered survivor-first. Sets of one are left out.
+  def self.duplicate_sets(affiliations)
+    affiliations.group_by { |affiliation| identity(affiliation) }.values
+      .reject(&:one?)
+      .map { |set| set.sort_by { |affiliation| keeper_order(affiliation) } }
   end
 
-  def call
-    @owner.affiliations.reload.group_by { |affiliation| identity(affiliation) }.each_value do |set|
-      next if set.one?
-
-      survivor, *losers = set.sort_by { |affiliation| keeper_order(affiliation) }
-      merge(losers, into: survivor)
-    end
-  end
-
-  private
-
-  def identity(affiliation)
+  def self.identity(affiliation)
     [
       affiliation.person_id, affiliation.organization_id, affiliation.title.to_s.strip,
       affiliation.start_date, affiliation.end_date, affiliation.inactive
@@ -28,9 +20,21 @@ class AffiliationDeduper
   end
 
   # The copy a registration created first (registration reconciliation tracks it), then the oldest.
-  def keeper_order(affiliation)
+  def self.keeper_order(affiliation)
     [ affiliation.event_registration_id ? 0 : 1, affiliation.id ]
   end
+
+  def initialize(owner)
+    @owner = owner
+  end
+
+  def call
+    self.class.duplicate_sets(@owner.affiliations.reload.to_a).each do |survivor, *losers|
+      merge(losers, into: survivor)
+    end
+  end
+
+  private
 
   # Merges before saving the survivor: skip_if_duplicate aborts its save while an identical copy exists.
   def merge(losers, into:)
