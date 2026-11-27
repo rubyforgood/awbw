@@ -74,7 +74,8 @@ affiliations) moves behind it rather than being duplicated in a FileMaker task.
 
 - One per person per event. It carries FileMaker's registration id (`filemaker_code`) and
   FileMaker's entry date as `created_at`.
-- **Completed** means attended in the portal, or FileMaker's status says "Attended". A row that
+- **Completed** means attended in the portal, or FileMaker's status says "Attended". Attendance
+  notes such as "Day 2 only" are ignored; the status decides (2026-11-27). A row that
   says "did not attend" is not completed.
 - **Trained at a later session:** when FileMaker moved them to a later training, record a
   transfer. The first registration is transferred out, and the later one is attended. This also
@@ -152,8 +153,3 @@ added to any already there, never replacing them (decided 2026-11-27).
   events and people, and taking stray FileMaker codes off organizations.
 - **Placeholder dates are fixed only for the trainings an import touches.** Older ones stay
   until their training is imported.
-
-## Open questions
-
-- How the FileMaker task records attendance it can't read, such as notes like "Day 2 only" or
-  "making up Day 1 & 2".
