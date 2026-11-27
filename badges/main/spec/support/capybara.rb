@@ -17,6 +17,22 @@ module DetachedNodeIsStaleElement
 end
 Selenium::WebDriver::Remote::Response.prepend(DetachedNodeIsStaleElement)
 
+# Capybara 3.40 resets Chrome between tests with Storage.clearDataForOrigin(origin: "*"),
+# which Chrome 158+ rejects ("* is not a valid URL"), failing every system spec. Clear
+# cookies browser-wide and the app server origin's storage instead.
+module ChromeResetWithoutWildcardOrigin
+  private
+
+  def execute_cdp(cmd, params = {})
+    return super unless cmd == "Storage.clearDataForOrigin" && params[:origin] == "*"
+
+    super("Network.clearBrowserCookies")
+    app_origin = Capybara.current_session.server&.base_url
+    super(cmd, params.merge(origin: app_origin)) if app_origin
+  end
+end
+Capybara::Selenium::Driver::ChromeDriver.prepend(ChromeResetWithoutWildcardOrigin)
+
 RSpec.configure do |config|
   config.before(:each, type: :system) do
     driven_by :selenium_chrome_headless
