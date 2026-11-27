@@ -37,7 +37,7 @@ The March 2026 training (FileMaker TAC261, E3977) showed what goes wrong without
 - One FileMaker organization code sat on two portal organizations, so linking by code was
   ambiguous.
 
-It was repaired with one-off console scripts (`.context/march/` in the workspace, and PR #3050).
+It was repaired with one-off scripts, run once and then removed (see PR #3050's history).
 This ADR turns what those scripts had to decide into the rule for every future import.
 
 ## Decisions
@@ -60,8 +60,9 @@ affiliations) moves behind it rather than being duplicated in a FileMaker task.
 - Its price and CE settings are set before money is recorded. If two portal events represent
   one training, fold them into one first; don't import into either.
 - **Folding two events into one:** keep the event that holds the money. Move everyone else's
-  registrations onto it. A person registered on both keeps the registration on the kept event
-  and gets the earlier sign-up date. The other copy is deleted only if it holds no money,
+  registrations onto it; a moved registration keeps its id, so its ticket link and history
+  stay. A person registered on both keeps the registration on the kept event and gets the
+  earlier sign-up date, which their ticket shows as "Registered on". The other copy is deleted only if it holds no money,
   attendance, or records worth keeping; otherwise the two are merged.
 - **Staff and test registrations** are removed at staff's request before anything is
   imported, so they never pick up affiliations.
