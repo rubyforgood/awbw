@@ -14,8 +14,8 @@
   associations, so both call one shared hydration step instead of each doing its own.
 - **A registration is done when it has:** a linked organization; a job affiliation (JA) when
   FileMaker knows their title; a facilitator affiliation (FA) when they completed the training;
-  both affiliations tied to the registration, dated to the training, and carrying FileMaker
-  personnel codes.
+  both dated to the training and carrying FileMaker personnel codes. The FA is tied to the
+  registration; a JA is tied only when this training created it.
 - **One portal event per FileMaker event,** with its price set before any money is recorded. A
   draft copy made to hold money is never the answer.
 - **Fees stay with the event they were paid for,** even when FileMaker later re-filed them under
@@ -117,11 +117,13 @@ person-to-organization link):
 - **Held with that title:** keep it.
 - **Untitled one held:** give it the title. Don't add a second.
 - **A different title held:** leave it and list it.
-- **None held:** add one.
+- **None held:** add one, tied to the registration.
 
-Its start is the training date of the training they completed, which is the first time we knew
-about the job. A blank start, or the 1st of that training's month (a placeholder), becomes the
-training date; any other start is left alone.
+A JA the person already held stays untied: the training didn't create it (decided 2026-11-27).
+
+Its start is the training date, which is the first time we knew about the job. A blank start, or
+the 1st of that training's month (a placeholder), becomes the training date; any other start is
+left alone.
 
 ### D7 — The facilitator affiliation
 
