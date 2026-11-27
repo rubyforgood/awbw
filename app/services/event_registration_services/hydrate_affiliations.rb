@@ -149,14 +149,11 @@ module EventRegistrationServices
         if person_codes.empty? || org_codes.empty?
           []
         else
-          projects = org_codes + FmProject.where("#{json("OrgID")} IN (?)", org_codes).pluck(:fm_id)
-          FmPersonnel.where("#{json("PersonID")} IN (?)", person_codes).where("#{json("ProjectID")} IN (?)", projects).pluck(:fm_id)
+          projects = org_codes + FmProject.find_by_data("OrgID", org_codes).pluck(:fm_id)
+          FmPersonnel.find_by_data("PersonID", person_codes)
+            .select { |row| projects.include?(row.data["ProjectID"].to_s.strip) }.map(&:fm_id)
         end
       end
-    end
-
-    def json(field)
-      "TRIM(JSON_UNQUOTE(JSON_EXTRACT(data, '$.#{field}')))"
     end
 
     def note(message)
