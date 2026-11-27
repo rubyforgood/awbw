@@ -89,14 +89,24 @@ affiliations) moves behind it rather than being duplicated in a FileMaker task.
 
 ### D5 — The linked organization
 
-Every registration gets one, active or not. In order:
+Every registration gets one, active or not. The first rule that names exactly one organization
+wins:
 
-1. Transferred out: the organizations on their later registration.
-2. The organization on their FileMaker training row.
-3. The organization on their FileMaker contact record.
+1. **Transferred out:** the organizations on their later registration.
+2. **Their FileMaker training row's** organization.
+3. **The candidate matching the organization name they typed** on the portal registration form.
+4. **The one organization every current source agrees on.** Sources are: their FileMaker
+   contact record, person-to-organization links, personnel projects, FileMaker forms and
+   payments, their current portal affiliations, and a portal organization at their work email's
+   domain (never a free mail domain).
 
-A FileMaker code found on more than one portal organization is skipped and listed. The fix is
-taking the stray code off the wrong organization, not choosing between them.
+Otherwise the registration is listed for staff with every candidate and where it came from. A
+FileMaker organization with no portal match is listed by name and code.
+
+- Linking goes through the same service as the registration's link-organization page, so the
+  affiliations follow D6–D8.
+- A FileMaker code found on more than one portal organization isn't a choice to make. The fix is
+  taking the stray code off the wrong organization.
 
 ### D6 — The job affiliation
 
