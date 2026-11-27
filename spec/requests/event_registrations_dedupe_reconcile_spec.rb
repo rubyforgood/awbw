@@ -68,6 +68,12 @@ RSpec.describe "Event registration dedupe — reconciling the merge", type: :req
     expect(response.body).to include("Completed day 1", "Certificate sent at", "Post survey completed at")
   end
 
+  it "warns on the preview that the deleted registration's ticket link stops working" do
+    preview!
+
+    expect(response.body).to include("ticket link stops working")
+  end
+
   it "carries the deleted org link's submission pin onto the keeper's link to the same org" do
     organization = create(:organization)
     submission = create(:form_submission, person: delete_person)

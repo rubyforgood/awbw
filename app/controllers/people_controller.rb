@@ -408,7 +408,8 @@ class PeopleController < ApplicationController
       # (users.person_id has no unique constraint); both logins still sign in to the
       # one record. Surface it so the admin isn't surprised — it doesn't block.
       merge_notes: ->(keep, delete) {
-        [ dropped_email_note(keep, delete), login_merge_note(keep, delete) ].compact
+        [ dropped_email_note(keep, delete), login_merge_note(keep, delete) ].compact +
+          registration_merges(keep, delete).flat_map(&:notes)
       },
       merge_blocks: ->(keep, delete) {
         membership_merge_blocks(keep, delete) + external_payer_merge_blocks(keep, delete) +

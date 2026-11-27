@@ -14,6 +14,12 @@ module EventRegistrationServices
       [ open_checkout_block, attendance_overlap_block ].compact
     end
 
+    def notes
+      return [] if @delete.slug.blank?
+
+      [ "#{@delete.registrant&.full_name}'s ticket link stops working after the merge. If it was emailed, send them the kept registration's ticket." ]
+    end
+
     # Run before ModelDeduper, while the deleted registration still holds its own rows.
     def prepare
       @delete_id = @delete.id

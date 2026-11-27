@@ -566,9 +566,10 @@ class EventRegistrationsController < ApplicationController
       # collide when their registrants are different Person records. Merging keeps
       # them separate — say so, so the admin also merges the people if they match.
       merge_notes: ->(keep, delete) {
-        next [] if keep.registrant_id == delete.registrant_id
-
-        [ "These registrations have different registrants (#{keep.registrant&.full_name} vs #{delete.registrant&.full_name}). Merging combines the registrations only — the two people stay separate. Merge them in the people deduper too if they're the same person." ]
+        registrant_note = if keep.registrant_id != delete.registrant_id
+          "These registrations have different registrants (#{keep.registrant&.full_name} vs #{delete.registrant&.full_name}). Merging combines the registrations only — the two people stay separate. Merge them in the people deduper too if they're the same person."
+        end
+        [ registrant_note, *EventRegistrationServices::RegistrationMerge.new(keep, delete).notes ].compact
       },
       merge_blocks: ->(keep, delete) { EventRegistrationServices::RegistrationMerge.new(keep, delete).blocks },
       merge_keeper: ->(keep, delete) {
