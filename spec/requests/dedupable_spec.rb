@@ -865,10 +865,13 @@ RSpec.describe "Dedupable concern", type: :request do
           expect(keep.reload.email_2).to eq("keeper.two@example.com")
         end
 
-        it "shows the duplicate's primary email moving into email 2 on the preview" do
+        it "shows the duplicate's primary email and its type moving into email 2 on the preview" do
+          delete_rec.update!(email_type: "work")
+
           get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
 
           expect(response.body).to include("On merge: saved to Email 2", "On merge: becomes dropped@example.com")
+          expect(response.body).to include("On merge: saved to Email 2 type", "On merge: becomes work")
           expect(response.body).not_to include("will be dropped. To keep")
         end
 

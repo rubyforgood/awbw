@@ -533,7 +533,12 @@ class PeopleController < ApplicationController
   # What the merge changes on the kept person's emails, flagged beside each email and login.
   def email_merge_outcomes(keep, delete)
     if (saved_email = email_2_fallback(keep, delete))
-      return { fields: { "email" => { delete: "saved to Email 2" }, "email_2" => { keep: "becomes #{saved_email}" } } }
+      fields = { "email" => { delete: "saved to Email 2" }, "email_2" => { keep: "becomes #{saved_email}" } }
+      if delete.email_type.present?
+        fields["email_type"] = { delete: "saved to Email 2 type" }
+        fields["email_2_type"] = { keep: "becomes #{delete.email_type}" }
+      end
+      return { fields: fields }
     end
 
     login = primary_login(keep, delete)
