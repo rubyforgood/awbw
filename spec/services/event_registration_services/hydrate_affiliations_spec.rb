@@ -95,14 +95,15 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
                                                  filemaker_code: "PS1")
     end
 
-    it "lists an ended one and leaves it ended" do
-      create(:affiliation, person: person, organization: organization, start_date: Date.new(2020, 1, 1),
-                           end_date: Date.new(2021, 1, 1))
+    it "keeps an ended one as history and adds a new one for this training" do
+      ended = create(:affiliation, person: person, organization: organization, start_date: Date.new(2020, 1, 1),
+                                   end_date: Date.new(2021, 1, 1))
 
-      result = hydrate
+      hydrate
 
-      expect(held("Facilitator").count).to eq(1)
-      expect(result.for_a_look.sole).to include("ended")
+      expect(ended.reload.end_date).to eq(Date.new(2021, 1, 1))
+      expect(held("Facilitator").where.not(id: ended.id).sole).to have_attributes(start_date: training_date,
+                                                                                event_registration: registration)
     end
 
     it "lists an active one held by someone who didn't complete" do

@@ -8,9 +8,9 @@ module EventRegistrationServices
   #   listed when a different title is held, else added. A blank or placeholder start becomes
   #   the training date. Only one this training adds is tied to the registration.
   # - Facilitator affiliation (D7): only for someone who completed a facilitator training. One
-  #   active one is tied to this registration and dated to the training; none is added; more
-  #   than one, one tied to another registration, an ended one, or one held without completing
-  #   is listed.
+  #   active one is tied to this registration and dated to the training; with none active, one
+  #   is added beside any ended ones, which stay as program history. More than one active, one
+  #   tied to another registration, or one held without completing is listed.
   # - FileMaker codes (D8): both carry the person's Personnel codes at the organization, added
   #   to any already there.
   class HydrateAffiliations
@@ -85,11 +85,6 @@ module EventRegistrationServices
     end
 
     def add_facilitator
-      if @person.affiliations.facilitators.where(organization: @organization).exists?
-        look("only an ended facilitator affiliation at #{@organization.name}; left ended")
-        return
-      end
-
       affiliation = new_affiliation(Affiliation::FACILITATOR_TITLE, start_date: training_date)
       note("added facilitator affiliation from #{training_date}")
       tie(affiliation)

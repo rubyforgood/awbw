@@ -128,15 +128,20 @@ left alone.
 ### D7 — The facilitator affiliation
 
 Only for someone who completed a training (ADR-0003 D1: only an attended training confers
-facilitation).
+facilitation). It is created when the registration is marked Attended, not when they register
+(decided 2026-11-27).
 
 - Tied to the registration of the training they completed: the later one for a transfer.
-- Starts on that training date.
+- Starts on that training's start date. An on-demand training has no fixed start, so it starts
+  on the day they completed it.
 - **One active one, not tied:** tie it and date it; don't add a second. Keep its FileMaker
   code.
 - **More than one active:** list it; staff choose which stays.
-- **Only an ended one:** leave it ended. An import never clears an end date (ADR-0003 D6a).
+- **Only ended ones:** keep them ended and add a new one for this training. An import never
+  clears an end date (ADR-0003 D6a).
 - **Didn't complete, but holds an active one:** list it; don't change it.
+- **An ended FA is never deleted,** by an import, a merge, or a cleanup. It is the record of when
+  someone facilitated, which program history depends on (decided 2026-11-27).
 
 ### D8 — FileMaker codes on affiliations
 
@@ -168,6 +173,9 @@ added to any already there, never replacing them (decided 2026-11-27).
 
 - **The CSV importer changes.** Its association code moves into the shared step, and gains D6's
   title-the-untitled rule, D7's tie-and-date rule, and D8's codes.
+- **Registering for a scheduled training stops creating an FA.** Today a live training's FA is
+  minted at registration, dated to the training. Under D7 it waits until the registration is
+  marked Attended, the way on-demand trainings already do.
 - **A training's attendance import waits on cleanup it can't do itself:** merging duplicate
   events and people, and taking stray FileMaker codes off organizations.
 - **Placeholder dates are fixed only for the trainings an import touches.** Older ones stay
