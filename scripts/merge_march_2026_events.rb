@@ -225,6 +225,7 @@ ActiveRecord::Base.transaction(requires_new: true) do
     to.scholarships.where.not(recipient_id: to.registrant_id).find_each { |scholarship| scholarship.update!(recipient: to.registrant) }
     EventRegistrationServices::ReconcileMergedContinuingEducation.new(to).call
     to.slug = slug
+    to.skip_cancellation_emails = true
     to.save!
     to.update_columns(created_at: created, created_by_id: created_by_id)
 
