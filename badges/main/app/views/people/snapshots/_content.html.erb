@@ -15,14 +15,19 @@
         <h2 class="col-span-full mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase"><%= snapshot.affiliations_heading %></h2>
         <% if snapshot.affiliations.any? %>
           <ul class="col-span-full grid grid-cols-subgrid gap-y-3">
-            <% snapshot.affiliations.each do |affiliation| %>
-              <% affiliation = affiliation.decorate %>
+            <% snapshot.affiliation_rows.each do |row| %>
+              <% affiliation = row.affiliation.decorate %>
               <li class="col-span-full grid grid-cols-subgrid items-start">
-                <span><%= affiliation.status_badge %></span>
+                <%# The pill means "facilitator here" — JA-only rows leave the slot blank. %>
+                <span><%= affiliation.status_badge if affiliation.facilitator? %></span>
                 <div class="min-w-0">
                   <%= link_to affiliation.organization.name, organization_path(affiliation.organization),
                               class: "block font-medium hover:underline" %>
                   <p class="text-xs text-gray-500"><%= affiliation.display_title %> · <%= affiliation.period_label %></p>
+                  <% row.job_affiliations.each do |job| %>
+                    <% job = job.decorate %>
+                    <p class="text-xs text-gray-500"><%= job.display_title %> · <%= job.period_label %></p>
+                  <% end %>
                 </div>
               </li>
             <% end %>
@@ -50,7 +55,7 @@
                 <div class="min-w-0">
                   <%= link_to truncate(registration.event.title, length: 50), event_path(registration.event),
                               class: "block font-medium hover:underline" %>
-                  <p class="text-xs text-gray-500"><%= registration.event.decorate.short_date_range %></p>
+                  <p class="text-xs text-gray-500"><%= [ registration.event.decorate.short_date_range, *registration.organizations.map(&:name) ].compact_blank.join(" · ") %></p>
                 </div>
               </li>
             <% end %>

@@ -20,6 +20,22 @@ RSpec.describe PersonSnapshot do
     end
   end
 
+  describe "#affiliation_rows" do
+    it "lists FA rows first with their org's JAs folded under, then JA-only orgs" do
+      shared = create(:organization)
+      solo = create(:organization)
+      director = create(:affiliation, person:, organization: solo, title: "Director", start_date: 1.week.ago)
+      fa = create(:affiliation, person:, organization: shared, title: "Facilitator", start_date: 2.months.ago)
+      founder = create(:affiliation, person:, organization: shared, title: "Founder", start_date: 1.month.ago)
+
+      rows = described_class.new(person).affiliation_rows
+
+      expect(rows.map(&:affiliation)).to eq([ fa, director ])
+      expect(rows.first.job_affiliations).to eq([ founder ])
+      expect(rows.last.job_affiliations).to be_empty
+    end
+  end
+
   describe "#trainings" do
     it "includes every attendance status for facilitator trainings, newest first, capped at 8" do
       9.times do |i|
