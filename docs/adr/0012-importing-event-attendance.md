@@ -58,7 +58,13 @@ affiliations) moves behind it rather than being duplicated in a FileMaker task.
 
 - One portal event per FileMaker training; its abbreviation is the FileMaker code (TAC261).
 - Its price and CE settings are set before money is recorded. If two portal events represent
-  one training, merge them first; don't import into either.
+  one training, fold them into one first; don't import into either.
+- **Folding two events into one:** keep the event that holds the money. Move everyone else's
+  registrations onto it. A person registered on both keeps the registration on the kept event
+  and gets the earlier sign-up date. The other copy is deleted only if it holds no money,
+  attendance, or records worth keeping; otherwise the two are merged.
+- **Staff and test registrations** are removed at staff's request before anything is
+  imported, so they never pick up affiliations.
 
 ### D3 — The person
 
