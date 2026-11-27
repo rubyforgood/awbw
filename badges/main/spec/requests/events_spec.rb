@@ -2376,6 +2376,18 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Transfer incomplete — no destination event recorded yet")
       end
 
+      it "names the destination event on the transferred-out badge hover" do
+        source = create(:event_registration, event: event, status: "transferred_out")
+        destination_event = create(:event, title: "Destination Workshop", abbreviation: "DW101")
+        create(:event_registration, event: destination_event, registrant: source.registrant, transferred_from_registration: source)
+
+        get registrants_event_path(event, params: { attendance_status: "transferred_out" })
+
+        badge = Capybara.string(response.body).find("##{ActionView::RecordIdentifier.dom_id(source, :attendance_status)}")
+        expect(badge).to have_css("select[title='Transferred to DW101 · #{destination_event.decorate.title_with_month_year}']")
+        expect(badge).to have_link("Manage transfer")
+      end
+
       it "shows the active registrant count in the page heading" do
         get registrants_event_path(event)
 

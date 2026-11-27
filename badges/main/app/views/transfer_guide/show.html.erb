@@ -88,8 +88,8 @@
     [ "Roster & reporting", [
       { title: "Roster status badge",
         desc: "How the person appears on the event roster.",
-        out_text: "A purple “Transferred out” badge, with an amber ⚠ Manage chip until a destination is recorded.",
-        out_mock: %(<div class="flex flex-wrap gap-1.5">#{pill.("border-purple-200 bg-purple-50 text-purple-700", "fa-right-from-bracket", "Transferred out")} #{pill.("border-amber-300 bg-amber-50 text-amber-700", "fa-triangle-exclamation", "Manage")}</div>),
+        out_text: "A purple “Transferred out” badge, with a Manage transfer chip: amber ⚠ until a destination is recorded, blue after.",
+        out_mock: %(<div class="flex flex-wrap gap-1.5">#{pill.("border-purple-200 bg-purple-50 text-purple-700", "fa-right-from-bracket", "Transferred out")} #{pill.("border-amber-300 bg-amber-50 text-amber-700", "fa-triangle-exclamation", "Manage transfer")}</div>),
         in_text: "Their real attendance status, plus a teal “In” pill marking the transfer.",
         in_mock: %(<div class="flex flex-wrap gap-1.5">#{pill.("border-blue-200 bg-blue-50 text-blue-700", "fa-clipboard-list", "Registered")} #{pill.("border-teal-200 bg-teal-50 text-teal-700", "fa-right-to-bracket", "In")}</div>) },
       { title: "Reporting totals",
