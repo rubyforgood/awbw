@@ -341,8 +341,8 @@ RSpec.describe Event, type: :model do
       expect(event.shown_as_card?).to be true
     end
 
-    it "is true for a published event that ended within the last month" do
-      event = build(:event, :published, end_date: 1.week.ago)
+    it "is true for a published event that ended within the last six months" do
+      event = build(:event, :published, end_date: 5.months.ago)
       expect(event.shown_as_card?).to be true
     end
 
@@ -351,8 +351,8 @@ RSpec.describe Event, type: :model do
       expect(event.shown_as_card?).to be false
     end
 
-    it "is false for a published event that ended more than a month ago" do
-      event = build(:event, :published, end_date: (1.month + 1.day).ago)
+    it "is false for a published event that ended more than six months ago" do
+      event = build(:event, :published, end_date: (6.months + 1.day).ago)
       expect(event.shown_as_card?).to be false
     end
   end

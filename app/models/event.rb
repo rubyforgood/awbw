@@ -10,7 +10,7 @@ class Event < ApplicationRecord
   # How long a finished event keeps a full card on the events index before it
   # collapses into the compact archive list (admins only — they're the only ones
   # who see past and unpublished events there).
-  CARD_ARCHIVE_AGE = 1.month
+  CARD_ARCHIVE_AGE = 6.months
 
   # Display templates for the public show page. "none" is the plain current
   # layout (white page, content as-authored); the rest wrap the same
@@ -278,7 +278,7 @@ class Event < ApplicationRecord
   end
 
   # Whether the event shows as a full card on the events index. Unpublished
-  # events and events that ended more than a month ago collapse into the compact
+  # events and events that ended more than six months ago collapse into the compact
   # archive list instead of taking up a card.
   def shown_as_card?
     published? && end_date >= CARD_ARCHIVE_AGE.ago

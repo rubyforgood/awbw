@@ -62,7 +62,7 @@ RSpec.describe "Events", type: :request do
       let!(:draft_event) { create(:event, :unpublished, title: "Draft workshop") }
       let!(:old_event) do
         create(:event, :published, title: "Old workshop",
-          start_date: 3.months.ago, end_date: 3.months.ago + 1.day)
+          start_date: 8.months.ago, end_date: 8.months.ago + 1.day)
       end
 
       before do
