@@ -92,13 +92,16 @@ RSpec.describe PersonSnapshot do
     end
   end
 
-  describe "#empty?" do
-    it "is true when there are no affiliations, trainings, membership, or user account" do
-      expect(described_class.new(create(:person, :without_user)).empty?).to be(true)
+  describe "#user_accounts" do
+    it "lists every account, the ones that can log in first" do
+      locked = person.user.tap { |user| user.update_columns(locked_at: Time.current, updated_at: 1.hour.from_now) }
+      usable = create(:user, person:, updated_at: 1.day.ago)
+
+      expect(described_class.new(person).user_accounts).to eq([ usable, locked ])
     end
 
-    it "is false when the person only has a user account" do
-      expect(described_class.new(person).empty?).to be(false)
+    it "is empty without an account" do
+      expect(described_class.new(create(:person, :without_user)).user_accounts).to be_empty
     end
   end
 end

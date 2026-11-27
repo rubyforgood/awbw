@@ -59,7 +59,7 @@ class UserDecorator < ApplicationDecorator
     [ "Created", "Created", :created_at ],
     [ "Invited", "Invited", :welcome_instructions_sent_at ],
     [ "Confirmed", "Confirmed", :confirmed_at ],
-    [ "Last login", "Logged in", :latest_sign_in_at ]
+    [ "Current login", "Logged in", :latest_sign_in_at ]
   ].freeze
 
   MILESTONE_TEXT_CLASSES = {
@@ -87,6 +87,11 @@ class UserDecorator < ApplicationDecorator
     return unless locked_at
 
     Milestone.new(label: "Locked", date: short_date(locked_at), detail: lock_reason, state: :locked)
+  end
+
+  def admin_badge(extra: nil)
+    h.render "shared/badge", label: "Admin", icon: "fa-solid fa-user-shield",
+             classes: "bg-blue-50 text-blue-700 border-blue-200", extra:
   end
 
   def milestone_text_classes(milestone)

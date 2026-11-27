@@ -52,14 +52,9 @@ class PersonSnapshot
     end
   end
 
-  def user_account
-    return @user_account if defined?(@user_account)
-
-    @user_account = person.suggested_user_account&.decorate
-  end
-
-  def account_count
-    person.user_accounts.size
+  # Logins that can sign in lead, matching PersonDecorator#suggested_user_account.
+  def user_accounts
+    @user_accounts ||= person.user_accounts.sort_by.with_index { |user, index| [ user.has_access? ? 0 : 1, index ] }.map(&:decorate)
   end
 
   def affiliated_since
@@ -70,9 +65,5 @@ class PersonSnapshot
     return "Affiliations" if affiliated_since.blank?
 
     "Affiliated since #{affiliated_since.strftime("%b %Y")}"
-  end
-
-  def empty?
-    affiliations.empty? && trainings.empty? && membership.nil? && user_account.nil?
   end
 end

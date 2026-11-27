@@ -5,8 +5,9 @@ released_on: 2026-11-27
 action_path: "/people"
 summary: >-
   The person snapshot now shows how far their login got — created, invited, confirmed,
-  last login — and ends on Locked or Inactive when they can't log in.
+  current login — and ends on Locked or Inactive when they can't log in.
 pro_tips:
   - "A locked account shows how many failed logins locked it, or \"By staff\"."
-  - "Admin and \"2 accounts\" badges appear beside the heading when they apply."
+  - "A person with several accounts shows each one, with an \"N accounts\" badge on the heading."
+  - "A person with no account shows a \"No account\" row."
   - "A pending email change or an open password reset shows under the milestones."

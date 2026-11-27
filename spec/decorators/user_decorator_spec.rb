@@ -56,7 +56,7 @@ RSpec.describe UserDecorator do
       milestones = user.decorate.account_milestones
 
       expect(milestones.map(&:state)).to all(eq(:reached))
-      expect(milestones.last.label).to eq("Last login")
+      expect(milestones.last.label).to eq("Current login")
       expect(milestones.last.date).to eq("Nov 20, 2026")
     end
 
