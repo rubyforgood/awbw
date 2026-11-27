@@ -556,10 +556,10 @@ class EventRegistrationsController < ApplicationController
       back_label: dedupe_event ? "Registrants" : nil,
       subtitle: dedupe_event ? "Showing possible duplicate registrations for #{dedupe_event.title}." : nil,
       editable_columns: %w[
-        slug status status_before_transfer expected_payment_method fee_note shoutout intends_to_pay
+        status status_before_transfer expected_payment_method fee_note shoutout intends_to_pay
         someone_else_will_pay invoice_requested scholarship_requested w9_requested
         payment_unresolved completed_day_1 completed_day_2 completed_day_3 completed_day_4
-        completed_day_5 certificate_sent_at post_survey_completed_at filemaker_code
+        completed_day_5 certificate_sent_at post_survey_completed_at filemaker_code slug
       ],
       union_columns: %w[filemaker_code],
       column_labels: { "slug" => "Ticket link" },
@@ -571,7 +571,7 @@ class EventRegistrationsController < ApplicationController
       merge_outcomes: ->(_keep, delete) {
         next {} if delete.slug.blank?
 
-        { fields: { "slug" => { delete: "stops working unless picked", keep: "the link not picked stops working" } } }
+        { fields: { "slug" => { delete: { text: "stops working unless picked", loss: true }, keep: "the link not picked stops working" } } }
       },
       hidden_columns: ->(keep, delete) {
         EventRegistration::DAY_FIELDS.drop([ keep.event, delete.event ].compact.map(&:day_count).max || 1)

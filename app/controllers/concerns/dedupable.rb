@@ -273,7 +273,8 @@ module Dedupable
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
   #   merge_outcomes:     Lambda(keep, delete) returning { fields: { column_name => { keep:, delete: } },
   #                       records: { record => text } } — what the merge changes beyond keeping the keeper's
-  #                       values, flagged beside that field or moving record (optional)
+  #                       values, flagged beside that field or moving record; a text may be
+  #                       { text:, loss: true } to flag a value the merge loses (optional)
   #   merge_blocks:       Lambda(keep, delete) returning an array of reasons this particular merge is
   #                       unsafe (e.g. both people already have memberships). Any reason disables
   #                       the preview's merge button and refuses the POST (optional)
