@@ -13,6 +13,11 @@ class ApplicationRecord < ActiveRecord::Base
     matches.reduce(:or) || none
   end
 
+  # A search box's text search, widened to the record its text names by identifier.
+  def self.matching_text_or_identifier(text_scope, query)
+    where(id: public_send(text_scope, query).select(:id)).or(where(id: matching_identifier(query).select(:id)))
+  end
+
   def bookmarks_count
     if self.respond_to?(:bookmarks)
       self.bookmarks.length

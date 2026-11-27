@@ -39,6 +39,17 @@ RSpec.describe "People search", type: :request do
       expect(response.body).not_to include("Bob")
     end
 
+    it "finds a person by portal id or FileMaker code in the name box" do
+      person_bob.update!(filemaker_code: "P4242")
+
+      get people_path, params: { name_email: "P4242" }, headers: turbo_headers
+      expect(response.body).to include("Builder")
+      expect(response.body).not_to include("Wonderland")
+
+      get people_path, params: { name_email: person_bob.id.to_s }, headers: turbo_headers
+      expect(response.body).to include("Builder")
+    end
+
     it "filters by organization name" do
       org = create(:organization, name: "Unique Org")
       create(:affiliation, person: person_alice, organization: org)
