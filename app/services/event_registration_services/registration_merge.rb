@@ -3,7 +3,8 @@ module EventRegistrationServices
   # people merge collapses two registrations for one event. ModelDeduper moves the rows;
   # this checks the merge is safe first and repairs what the move leaves pointing wrong.
   class RegistrationMerge
-    CARRIED_TIMESTAMPS = %w[certificate_sent_at post_survey_completed_at].freeze
+    # Filled from the deleted copy when the keeper's is blank (or unticked): attendance is additive.
+    FILLED_COLUMNS = (EventRegistration::DAY_FIELDS + %w[certificate_sent_at post_survey_completed_at]).freeze
 
     def initialize(keep, delete)
       @keep = keep
@@ -38,12 +39,20 @@ module EventRegistrationServices
       self
     end
 
-    # Attendance days and dates either copy has, so the merge keeps them; also prefills the deduper's keeper form.
+    # A people merge has no keeper form, so it fills the same columns the registrations deduper does.
     def carry_details
-      (EventRegistration::DAY_FIELDS + CARRIED_TIMESTAMPS).each { |field| @keep[field] ||= @delete[field] }
-      return unless @keep.changed.intersect?(EventRegistration::DAY_FIELDS) && @keep.status.in?(EventRegistration::ACTIVE_STATUSES)
+      fill_blanks(@keep, FILLED_COLUMNS)
+    end
 
-      @keep.status = @keep.attendance_status_for_days
+    # The status the keeper ends with once the deleted copy's days fill in, when that changes it.
+    def status_after_merge
+      return unless @keep.status.in?(EventRegistration::ACTIVE_STATUSES)
+
+      merged = fill_blanks(@keep.dup, EventRegistration::DAY_FIELDS)
+      return if merged.attributes.slice(*EventRegistration::DAY_FIELDS) == @keep.attributes.slice(*EventRegistration::DAY_FIELDS)
+
+      derived = merged.attendance_status_for_days
+      derived unless derived == @keep.status
     end
 
     # Run after ModelDeduper, inside the merge transaction.
@@ -59,6 +68,11 @@ module EventRegistrationServices
     end
 
     private
+
+    def fill_blanks(record, columns)
+      columns.each { |column| record[column] = @delete[column] if record[column].blank? && @delete[column].present? }
+      record
+    end
 
     # A Stripe charge names its registration in metadata; a late one for a deleted
     # registration finds nothing and records no payment.

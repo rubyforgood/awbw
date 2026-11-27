@@ -568,12 +568,18 @@ class EventRegistrationsController < ApplicationController
         links = [ keep, delete ].select { |registration| registration.slug.present? }
         { "slug" => links.map { |registration| [ "#{registration.slug} (#{registration.registrant&.full_name})", registration.slug ] } }
       },
-      merge_outcomes: ->(_keep, delete) {
-        next {} if delete.slug.blank?
-
-        { fields: { "slug" => { delete: { text: "stops working unless picked", loss: true }, keep: "the link not picked stops working" } } }
+      merge_outcomes: ->(keep, delete) {
+        fields = {}
+        if delete.slug.present?
+          fields["slug"] = { delete: { text: "stops working unless picked", loss: true }, keep: "the link not picked stops working" }
+        end
+        if (status = EventRegistrationServices::RegistrationMerge.new(keep, delete).status_after_merge)
+          fields["status"] = { keep: "becomes #{status.humanize(capitalize: false)} from the days filled in" }
+          fields["status"][:delete] = "kept: the days carry it" if status == delete.status
+        end
+        { fields: fields }
       },
-      prefill_keeper: ->(keep, delete) { EventRegistrationServices::RegistrationMerge.new(keep, delete).carry_details },
+      fill_blank_columns: EventRegistrationServices::RegistrationMerge::FILLED_COLUMNS,
       hidden_columns: ->(keep, delete) {
         EventRegistration::DAY_FIELDS.drop([ keep.event, delete.event ].compact.map(&:day_count).max || 1)
       },

@@ -85,7 +85,6 @@ module Dedupable
       return redirect_to url_for(action: :dedupe_index),
         alert: "#{mc.model_name.human} not found (ID: #{missing.join(', ')})."
     end
-    config[:prefill_keeper]&.call(@record_to_keep, @record_to_delete)
     deduper = ModelDeduper.new(model_class: mc, movable_attachments: config[:movable_attachments],
                                reference_columns: config[:reference_columns])
     @reassignment_delete = deduper.reassignment_preview(@record_to_delete)
@@ -245,8 +244,6 @@ module Dedupable
   #                       only these are accepted on save (optional, defaults to every column)
   #   fill_blank_columns: Array of editable column names the merge fills from the deleted record when
   #                       the keeper's is blank (e.g. member_since) (optional)
-  #   prefill_keeper:     Lambda(keep, delete) setting the keeper's preview fields (unsaved) to what the merge
-  #                       should carry by default, e.g. attendance days either copy has (optional)
   #   hidden_columns:     Lambda(keep, delete) returning editable_columns this pair's preview leaves out,
   #                       e.g. attendance days past the event's length (optional)
   #   column_labels:      Hash of { column_name => label } for read-only rows (optional)
