@@ -1475,7 +1475,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
         get dedupe_index_users_path
 
-        expect(response.body).to include('data-remote-select-model-value="user_any_status"')
+        expect(response.body).to include('data-remote-select-model-value="user_any_status_dedupe"')
         expect(response.body).to include("Unconfirmed")
       end
 

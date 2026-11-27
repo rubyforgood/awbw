@@ -238,7 +238,10 @@ module Dedupable
   #   record_label:       Lambda(record) naming a record across the deduper when #name doesn't tell two
   #                       apart, e.g. two logins of one person (optional, defaults to #name)
   #   search_model:       Search model the index pickers query (optional, defaults to the model's own
-  #                       remote search), e.g. "user_any_status" to reach logins that can't sign in
+  #                       remote search), e.g. "user_any_status" to reach logins that can't sign in.
+  #                       The pickers also match a portal id or FileMaker code (SearchController#dedupe_results)
+  #   search_hint:        Placeholder naming what the pickers match (optional, defaults to name, plus
+  #                       email / FileMaker code when the model has them, plus portal ID)
   #   reference_columns:  Array of column names that reference this model in any table but carry no DB
   #                       foreign key, so the merge moves them too (e.g. created_by_id stamps) (optional)
   #   movable_attachments: Array of has_one_attached names to move to the keeper when it has none
@@ -278,6 +281,13 @@ module Dedupable
     Dedupable.name_groups(config[:model_class])
   end
 
+  def dedupe_search_hint(model_class)
+    terms = [ "name" ]
+    terms << "email" if model_class.column_names.include?("email")
+    terms << "FileMaker code" if model_class.respond_to?(:with_filemaker_code)
+    "Search by #{(terms << "portal ID").to_sentence(two_words_connector: " or ", last_word_connector: ", or ")}"
+  end
+
   def build_dedupe_vars(config)
     mc = config[:model_class]
     mn = mc.model_name.singular
@@ -291,7 +301,8 @@ module Dedupable
       delete_id_param: "#{mn}_to_delete_id",
       keep_id_param: "#{mn}_to_keep_id",
       keep_param_key: "#{mn}_to_keep".to_sym,
-      search_model: config[:search_model] || mn,
+      search_model: "#{config[:search_model] || mn}#{SearchController::DEDUPE_SUFFIX}",
+      search_hint: config[:search_hint] || dedupe_search_hint(mc),
       editable_columns: config[:editable_columns],
       read_only_columns: Array(config[:read_only_columns]).map(&:to_s),
       audit_columns: dedupe_audit_columns(config),

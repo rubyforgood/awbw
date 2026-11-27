@@ -7,10 +7,13 @@ class SearchController < ApplicationController
   # Every login, whatever its access, labelled with why it can't sign in — for the users deduper
   # and the import user setting.
   USER_ANY_STATUS_MODEL = "user_any_status".freeze
+  # Suffix on a search model for the dedupe pickers, which also match a portal id or FileMaker code.
+  DEDUPE_SUFFIX = "_dedupe".freeze
 
   def index
     return render json: compound_results if params[:model] == COMPOUND_MODEL
     return render json: user_any_status_results if params[:model] == USER_ANY_STATUS_MODEL
+    return dedupe_results(params[:model].delete_suffix(DEDUPE_SUFFIX)) if params[:model].to_s.end_with?(DEDUPE_SUFFIX)
 
     model_class = allowed_model(params[:model])
     unless model_class
@@ -67,6 +70,29 @@ class SearchController < ApplicationController
     records = authorized_scope(User.activity_search(query))
     records = records.where.not(id: params[:exclude].split(",").map(&:to_i)) if params[:exclude].present?
     records.includes(:person).limit(25).map { |user| user.decorate.search_label_with_status }
+  end
+
+  # Identifier hits (exact portal id, whole FileMaker code) lead, then the picker's
+  # usual text matches. Labels carry the portal id (unless they already do) so
+  # same-named records tell apart.
+  def dedupe_results(search_model)
+    any_status_user = search_model == USER_ANY_STATUS_MODEL
+    model_class = any_status_user ? User : allowed_model(search_model)
+    unless model_class
+      skip_verify_authorized!
+      return head :forbidden
+    end
+    authorize! model_class, to: :dedupe?
+
+    query = params[:q].to_s.strip
+    return render json: [] if query.blank?
+
+    text_matches = any_status_user ? User.activity_search(query).includes(:person) : model_class.remote_search(query)
+    records = (model_class.matching_identifier(query).limit(25).to_a + text_matches.limit(25).to_a).uniq.first(25)
+    render json: records.map { |record|
+      row = any_status_user ? record.decorate.search_label_with_status : record.remote_search_label
+      row[:label].include?("##{record.id}") ? row : row.merge(label: "#{row[:label]} · ##{record.id}")
+    }
   end
 
   def allowed_model(model_param)
