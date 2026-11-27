@@ -15,9 +15,10 @@ RSpec.describe "Dedupe picker search", type: :request do
       let!(:coded) { create(:person, first_name: "Coded", last_name: "Person", filemaker_code: "P100, P123") }
       let!(:named) { create(:person, first_name: "P123", last_name: "Lookalike") }
 
-      it "finds a person by any of their FileMaker codes, ahead of name matches" do
-        expect(ids_for(:person, "P123")).to eq([ coded.id, named.id ])
+      it "finds a person by any of their FileMaker codes, after name matches" do
+        expect(ids_for(:person, "P123")).to eq([ named.id, coded.id ])
       end
+
 
       it "matches a whole FileMaker code only" do
         expect(ids_for(:person, "P12")).not_to include(coded.id)
@@ -26,8 +27,7 @@ RSpec.describe "Dedupe picker search", type: :request do
       it "finds a person by portal id, labelled with it" do
         ids_for(:person, coded.id.to_s)
 
-        row = response.parsed_body.first
-        expect(row["id"]).to eq(coded.id)
+        row = response.parsed_body.find { |result| result["id"] == coded.id }
         expect(row["label"]).to end_with("· ##{coded.id}")
       end
 

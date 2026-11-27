@@ -72,9 +72,8 @@ class SearchController < ApplicationController
     records.includes(:person).limit(25).map { |user| user.decorate.search_label_with_status }
   end
 
-  # Identifier hits (exact portal id, whole FileMaker code) lead, then the picker's
-  # usual text matches. Labels carry the portal id (unless they already do) so
-  # same-named records tell apart.
+  # The picker's usual text matches, then any record the query names by exact portal id or
+  # whole FileMaker code. Labels end with the portal id so same-named records tell apart.
   def dedupe_results(search_model)
     any_status_user = search_model == USER_ANY_STATUS_MODEL
     model_class = any_status_user ? User : allowed_model(search_model)
@@ -88,7 +87,8 @@ class SearchController < ApplicationController
     return render json: [] if query.blank?
 
     text_matches = any_status_user ? User.activity_search(query).includes(:person) : model_class.remote_search(query)
-    records = (model_class.matching_identifier(query).limit(25).to_a + text_matches.limit(25).to_a).uniq.first(25)
+    identifier_matches = model_class.matching_identifier(query).limit(25).to_a
+    records = (text_matches.limit(25 - identifier_matches.size).to_a + identifier_matches).uniq
     render json: records.map { |record|
       row = any_status_user ? record.decorate.search_label_with_status : record.remote_search_label
       row[:label].include?("##{record.id}") ? row : row.merge(label: "#{row[:label]} · ##{record.id}")

@@ -10,4 +10,4 @@ summary: >-
 pro_tips:
   - "Each result ends with its portal ID, so two records with the same name are easy to tell apart."
   - "A FileMaker code must be typed in full: P12 won't find P123."
-  - "ID and code matches list first, then name and email matches."
+  - "Name and email matches list first, then ID and code matches."
