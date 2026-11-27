@@ -1,3 +1,5 @@
-<span class="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs font-semibold text-blue-800">
-  <i class="fa-solid fa-arrow-right-arrow-left"></i> On merge: <%= text %>
+<%# What the merge does to a value. Locals: text (a string, or { text:, loss: true } for a value the merge loses). %>
+<% outcome = text.is_a?(Hash) ? text : { text: text } %>
+<span class="inline-flex items-center gap-1 rounded <%= outcome[:loss] ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800" %> px-1.5 py-0.5 text-xs font-semibold">
+  <i class="fa-solid fa-arrow-right-arrow-left"></i> On merge: <%= outcome[:text] %>
 </span>

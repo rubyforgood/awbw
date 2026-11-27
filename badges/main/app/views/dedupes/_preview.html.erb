@@ -9,6 +9,10 @@
     keep_param_key:      Param key for keep fields (e.g. :organization_to_keep)
     editable_columns:    Optional allowlist of column names to show/edit; nil shows all
     read_only_columns:   Column names shown side by side for comparison but not editable
+    column_labels:       Optional { column_name => label } for read-only rows
+    field_links:         Optional { column_name => lambda(record) → url } linking a shown value
+    choice_options:      Optional { column_name => [ [ label, value ], … ] } picking the keeper's value from a list;
+                         applied when the merge runs, not autosaved
     audit_columns:       Like read_only_columns, listed at the bottom of Links & history
     linked_associations: belongs_to reflections listed under Linked records (Links & history with audit_columns)
     record_label:        Callable naming a record in the headers (defaults to #name)
@@ -118,7 +122,9 @@
 
   <!-- Read-only comparison rows -->
   <%= render "dedupes/read_only_rows", columns: read_only_columns, record_to_delete: record_to_delete,
-                                       record_to_keep: record_to_keep, border: border, display: read_only_display %>
+                                       record_to_keep: record_to_keep, border: border, display: read_only_display,
+                                       column_labels: local_assigns[:column_labels], field_links: local_assigns[:field_links],
+                                       field_outcomes: field_outcomes %>
 
   <!-- Photos: attached images on each record, side by side, with what happens on merge -->
   <% if preview_images && (delete_images.any? || keep_images.any?) %>
@@ -167,7 +173,9 @@
         delete_val = record_to_delete.public_send(col.name)
         keep_val = record_to_keep.public_send(col.name)
         col_assoc = bt_associations[col.name]
-        label = col.name.humanize
+        label = (local_assigns[:column_labels] || {})[col.name] || col.name.humanize
+        delete_url = delete_val.present? && (local_assigns[:field_links] || {})[col.name]&.call(record_to_delete)
+        choices = (local_assigns[:choice_options] || {})[col.name]
         display_val =
           if col_assoc
             record_to_delete.public_send(col_assoc.name)&.try(:name) || "(none)"
@@ -181,8 +189,8 @@
         union_column = union_columns.include?(col.name)
         merged_in = union_column && delete_val.to_s.split(",").map(&:strip).reject(&:blank?).difference(keep_val.to_s.split(",").map(&:strip)).any?
         fill_column = fill_blank_columns.include?(col.name)
-        # A fill column treats "no" as blank: only a "yes" can fill the keeper or be dropped.
-        is_different = !union_column && (fill_column ? delete_val.present? : delete_val.to_s.strip.present?) && delete_val != keep_val
+        # A "no" never counts as a value to fill or drop: only a "yes" the keeper lacks.
+        is_different = !union_column && (col.type == :boolean ? delete_val && !keep_val : (fill_column ? delete_val.present? : delete_val.to_s.strip.present?) && delete_val != keep_val)
         fills_keeper = is_different && fill_column && keep_val.blank?
         deprecated = deprecated_columns.include?(col.name)
       %>
@@ -197,7 +205,16 @@
         </div>
         <%# Transparent border + py-1 match the input box on the right so the value lines up with it %>
         <div class="flex flex-wrap items-center gap-2 border border-transparent py-1">
-          <span class="<%= deprecated ? "text-gray-400 italic" : "text-gray-900" %> <%= "font-semibold" if col.name == "name" %>"><%= display_val %></span>
+          <% if delete_url %>
+            <%= link_to display_val, delete_url, target: "_blank", rel: "noopener", class: "text-gray-900 underline" %>
+          <% elsif col.type == :boolean && !col_assoc %>
+            <label class="inline-flex items-center gap-2">
+              <%= tag.input type: "checkbox", checked: delete_val, disabled: true, class: "rounded border-gray-300 text-gray-500" %>
+              <span class="text-gray-600">Yes</span>
+            </label>
+          <% else %>
+            <span class="<%= deprecated ? "text-gray-400 italic" : "text-gray-900" %> <%= "font-semibold" if col.name == "name" %>"><%= display_val %></span>
+          <% end %>
           <% if field_outcomes.dig(col.name, :delete) %>
             <%= render "dedupes/merge_outcome", text: field_outcomes.dig(col.name, :delete) %>
           <% elsif merged_in %>
@@ -221,7 +238,11 @@
             <span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500">Deprecated</span>
           <% end %>
         </label>
-        <% if col.type == :boolean %>
+        <% if choices %>
+          <%= keep_f.select col.name.to_sym, choices, {},
+                            class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200",
+                            data: { autosave_skip: true } %>
+        <% elsif col.type == :boolean %>
           <label class="inline-flex items-center gap-2">
             <%= keep_f.check_box col.name.to_sym, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-200" %>
             <span class="text-gray-600">Yes</span>
