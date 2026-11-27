@@ -18,7 +18,7 @@ export default class extends Controller {
 
   save(event) {
     const field = event.target
-    if (!field.name) return
+    if (!field.name || field.dataset.autosaveSkip) return
 
     // Fix Rails fields_for bracket wrapping: [sector_to_keep][published] -> sector_to_keep[published]
     const name = field.name.replace(/^\[([^\]]+)\]/, "$1")
