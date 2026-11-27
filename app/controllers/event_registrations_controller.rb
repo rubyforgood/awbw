@@ -556,19 +556,22 @@ class EventRegistrationsController < ApplicationController
       back_label: dedupe_event ? "Registrants" : nil,
       subtitle: dedupe_event ? "Showing possible duplicate registrations for #{dedupe_event.title}." : nil,
       editable_columns: %w[
-        status status_before_transfer expected_payment_method fee_note shoutout intends_to_pay
+        slug status status_before_transfer expected_payment_method fee_note shoutout intends_to_pay
         someone_else_will_pay invoice_requested scholarship_requested w9_requested
         payment_unresolved completed_day_1 completed_day_2 completed_day_3 completed_day_4
         completed_day_5 certificate_sent_at post_survey_completed_at filemaker_code
       ],
       union_columns: %w[filemaker_code],
-      read_only_columns: %w[slug],
       column_labels: { "slug" => "Ticket link" },
       field_links: { "slug" => ->(registration) { registration_ticket_path(registration.slug) } },
+      choice_options: ->(keep, delete) {
+        links = [ keep, delete ].select { |registration| registration.slug.present? }
+        { "slug" => links.map { |registration| [ "#{registration.slug} (#{registration.registrant&.full_name})", registration.slug ] } }
+      },
       merge_outcomes: ->(_keep, delete) {
         next {} if delete.slug.blank?
 
-        { fields: { "slug" => { delete: "this link stops working", keep: "stays the ticket" } } }
+        { fields: { "slug" => { delete: "stops working unless picked", keep: "the link not picked stops working" } } }
       },
       hidden_columns: ->(keep, delete) {
         EventRegistration::DAY_FIELDS.drop([ keep.event, delete.event ].compact.map(&:day_count).max || 1)
@@ -580,7 +583,7 @@ class EventRegistrationsController < ApplicationController
         registrant_note = if keep.registrant_id != delete.registrant_id
           "These registrations have different registrants (#{keep.registrant&.full_name} vs #{delete.registrant&.full_name}). Merging combines the registrations only — the two people stay separate. Merge them in the people deduper too if they're the same person."
         end
-        [ registrant_note, *EventRegistrationServices::RegistrationMerge.new(keep, delete).notes ].compact
+        [ registrant_note, *EventRegistrationServices::RegistrationMerge.new(keep, delete).notes(ticket_pickable: true) ].compact
       },
       merge_blocks: ->(keep, delete) { EventRegistrationServices::RegistrationMerge.new(keep, delete).blocks },
       merge_keeper: ->(keep, delete) {

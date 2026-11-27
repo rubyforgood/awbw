@@ -14,16 +14,20 @@ module EventRegistrationServices
       [ open_checkout_block, attendance_overlap_block ].compact
     end
 
-    def notes
+    # ticket_pickable: the registrations deduper lets the admin keep either ticket link; a people merge keeps the keeper's.
+    def notes(ticket_pickable: false)
       return [] if @delete.slug.blank?
+      return [ @delete.decorate.ticket_merge_note(ticket_emails(@delete).count) ] unless ticket_pickable
 
-      [ @delete.decorate.ticket_merge_note(ticket_emails.count) ]
+      [ EventRegistrationDecorator.ticket_choice_note([ @keep, @delete ].index_with { |registration| ticket_emails(registration).count }) ]
     end
 
     # Delivered emails to the registrant, or about this registration, that carried its ticket link.
-    def ticket_emails
+    def ticket_emails(registration)
+      return Notification.none if registration.slug.blank?
+
       sent = Notification.delivered
-      sent.where(person_id: @delete.registrant_id).or(sent.where(noticeable: @delete)).matching(@delete.slug)
+      sent.where(person_id: registration.registrant_id).or(sent.where(noticeable: registration)).matching(registration.slug)
     end
 
     # Run before ModelDeduper, while the deleted registration still holds its own rows.

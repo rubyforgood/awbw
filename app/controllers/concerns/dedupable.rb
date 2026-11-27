@@ -96,6 +96,7 @@ module Dedupable
     @merge_outcomes = config[:merge_outcomes]&.call(@record_to_keep, @record_to_delete) || {}
     @merge_blocks = Array(config[:merge_blocks]&.call(@record_to_keep, @record_to_delete))
     @dedupe = build_dedupe_vars(config)
+    @choice_options = config[:choice_options]&.call(@record_to_keep, @record_to_delete) || {}
     hidden = Array(config[:hidden_columns]&.call(@record_to_keep, @record_to_delete))
     @dedupe[:editable_columns] -= hidden if hidden.any? && @dedupe[:editable_columns]
 
@@ -246,8 +247,11 @@ module Dedupable
   #   hidden_columns:     Lambda(keep, delete) returning editable_columns this pair's preview leaves out,
   #                       e.g. attendance days past the event's length (optional)
   #   column_labels:      Hash of { column_name => label } for read-only rows (optional)
-  #   field_links:        Hash of { column_name => Lambda(record) returning a URL } linking a read-only
+  #   field_links:        Hash of { column_name => Lambda(record) returning a URL } linking a shown
   #                       value, e.g. a registration's ticket (optional)
+  #   choice_options:     Lambda(keep, delete) returning { column_name => [ [ label, value ], … ] } — the
+  #                       keeper picks from a list, applied only when the merge runs (no autosave), for a
+  #                       unique value the duplicate holds until it's deleted, e.g. a ticket slug (optional)
   #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
   #                       e.g. a login's email and sign-in history (optional)
   #   audit_columns:      Columns listed read-only at the bottom of Links & history and never filled onto

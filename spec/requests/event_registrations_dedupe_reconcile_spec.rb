@@ -78,7 +78,7 @@ RSpec.describe "Event registration dedupe — reconciling the merge", type: :req
   it "warns on the preview that the deleted registration's ticket link stops working" do
     preview!
 
-    expect(response.body).to include("ticket link stops working", "No portal email included it")
+    expect(response.body).to include("Only one ticket link survives the merge", "Neither went out in a portal email")
   end
 
   it "points at the delivered emails that carried the deleted ticket link" do
@@ -95,7 +95,16 @@ RSpec.describe "Event registration dedupe — reconciling the merge", type: :req
     preview!
 
     expect(response.body).to include("Ticket link", registration_ticket_path(delete_reg.slug),
-      registration_ticket_path(keep_reg.slug), "this link stops working", "stays the ticket")
+      "stops working unless picked", "the link not picked stops working")
+    expect(response.body).to include(%(<option value="#{delete_reg.slug}"))
+  end
+
+  it "gives the keeper the deleted registration's ticket link when it's picked" do
+    emailed_slug = delete_reg.slug
+
+    merge!(slug: emailed_slug)
+
+    expect(keep_reg.reload.slug).to eq(emailed_slug)
   end
 
   it "carries the deleted org link's submission pin onto the keeper's link to the same org" do
