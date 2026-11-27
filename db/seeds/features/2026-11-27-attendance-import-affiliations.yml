@@ -1,0 +1,13 @@
+name: "Attendance imports fix affiliations instead of adding duplicates"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-27
+pr_number: 3050
+summary: >-
+  Importing attendance from a spreadsheet now titles an untitled job affiliation
+  instead of adding a second, dates it to the training, and adds a facilitator
+  affiliation only for people who attended. Anything it can't decide is listed
+  on the import's row.
+pro_tips:
+  - "An existing facilitator affiliation is tied to the registration and dated to the training rather than duplicated."
+  - "Both affiliations pick up the person's FileMaker personnel codes at that organization."
