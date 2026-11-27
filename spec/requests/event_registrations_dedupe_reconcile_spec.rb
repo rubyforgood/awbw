@@ -68,6 +68,13 @@ RSpec.describe "Event registration dedupe — reconciling the merge", type: :req
     expect(response.body).to include("Completed day 1", "Certificate sent at", "Post survey completed at")
   end
 
+  it "shows only as many attendance days as the longer event has" do
+    preview!
+
+    expect(response.body).to include("Completed day 2")
+    expect(response.body).not_to include("Completed day 3")
+  end
+
   it "warns on the preview that the deleted registration's ticket link stops working" do
     preview!
 

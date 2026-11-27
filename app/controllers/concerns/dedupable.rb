@@ -96,6 +96,8 @@ module Dedupable
     @merge_outcomes = config[:merge_outcomes]&.call(@record_to_keep, @record_to_delete) || {}
     @merge_blocks = Array(config[:merge_blocks]&.call(@record_to_keep, @record_to_delete))
     @dedupe = build_dedupe_vars(config)
+    hidden = Array(config[:hidden_columns]&.call(@record_to_keep, @record_to_delete))
+    @dedupe[:editable_columns] -= hidden if hidden.any? && @dedupe[:editable_columns]
 
     render "dedupes/preview"
   end
@@ -241,6 +243,8 @@ module Dedupable
   #                       only these are accepted on save (optional, defaults to every column)
   #   fill_blank_columns: Array of editable column names the merge fills from the deleted record when
   #                       the keeper's is blank (e.g. member_since) (optional)
+  #   hidden_columns:     Lambda(keep, delete) returning editable_columns this pair's preview leaves out,
+  #                       e.g. attendance days past the event's length (optional)
   #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
   #                       e.g. a login's email and sign-in history (optional)
   #   audit_columns:      Columns listed read-only at the bottom of Links & history and never filled onto

@@ -562,6 +562,9 @@ class EventRegistrationsController < ApplicationController
         completed_day_5 certificate_sent_at post_survey_completed_at filemaker_code
       ],
       union_columns: %w[filemaker_code],
+      hidden_columns: ->(keep, delete) {
+        EventRegistration::DAY_FIELDS.drop([ keep.event, delete.event ].compact.map(&:day_count).max || 1)
+      },
       # The (registrant_id, event_id) index means two registrations only ever
       # collide when their registrants are different Person records. Merging keeps
       # them separate — say so, so the admin also merges the people if they match.
