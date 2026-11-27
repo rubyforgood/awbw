@@ -240,7 +240,7 @@ module Dedupable
   #   search_model:       Search model the index pickers query (optional, defaults to the model's own
   #                       remote search), e.g. "user_any_status" to reach logins that can't sign in.
   #                       The pickers also match a portal id or FileMaker code (SearchController#dedupe_results)
-  #   search_hint:        Placeholder naming what the pickers match (optional, defaults to name, plus
+  #   search_hint:        Placeholder naming what the pickers match (optional, defaults to name or title, plus
   #                       email / FileMaker code when the search covers them, plus portal ID)
   #   reference_columns:  Array of column names that reference this model in any table but carry no DB
   #                       foreign key, so the merge moves them too (e.g. created_by_id stamps) (optional)
@@ -282,7 +282,7 @@ module Dedupable
   end
 
   def dedupe_search_hint(model_class)
-    terms = [ "name" ]
+    terms = [ model_class.remote_search_columns.include?("title") ? "title" : "name" ]
     terms << "email" if model_class.remote_search_columns.any? { |column| column.include?("email") }
     terms << "FileMaker code" if model_class.respond_to?(:with_filemaker_code)
     "Search by #{(terms << "portal ID").to_sentence(two_words_connector: " or ", last_word_connector: ", or ")}"

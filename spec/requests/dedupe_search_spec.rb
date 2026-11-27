@@ -64,6 +64,9 @@ RSpec.describe "Dedupe picker search", type: :request do
 
       get dedupe_index_categories_path
       expect(response.body).to include("Search by name or portal ID")
+
+      get dedupe_index_workshops_path
+      expect(response.body).to include("Search by title, FileMaker code, or portal ID")
     end
 
     it "rejects an unknown model" do
