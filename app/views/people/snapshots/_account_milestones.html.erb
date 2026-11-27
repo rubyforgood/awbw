@@ -3,9 +3,9 @@
   <% steps.each_with_index do |step, index| %>
     <li class="relative min-w-0 <%= account.milestone_text_classes(step) %>">
       <% if (following = steps[index + 1]) %>
-        <span class="absolute top-2 right-0 left-0 h-0.5 <%= following.state == :reached ? "bg-green-100" : "bg-gray-200" %>"></span>
+        <span class="absolute top-2 right-1 left-5 h-0.5 <%= following.state == :reached ? "bg-green-100" : "bg-gray-200" %>"></span>
       <% end %>
-      <span class="relative inline-flex size-4 items-center justify-center rounded-full bg-white">
+      <span class="relative inline-flex size-4 items-center justify-center">
         <% case step.state %>
         <% when :reached %>
           <i class="fa-solid fa-circle-check text-base text-green-300"></i>
@@ -28,19 +28,9 @@
   <% end %>
 </ol>
 
-<% if account.unconfirmed_email.present? || account.password_reset_pending? %>
-  <div class="mt-3 space-y-1 text-xs">
-    <% if account.unconfirmed_email.present? %>
-      <p class="flex items-center gap-1.5 text-amber-700">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        Email change pending: <%= account.unconfirmed_email %>
-      </p>
-    <% end %>
-    <% if account.password_reset_pending? %>
-      <p class="flex items-center gap-1.5 text-blue-700">
-        <i class="fa-solid fa-key"></i>
-        <%= account.password_reset_label %>
-      </p>
-    <% end %>
-  </div>
+<% if account.password_reset_pending? %>
+  <p class="mt-3 flex items-center gap-1.5 text-xs text-blue-700">
+    <i class="fa-solid fa-key"></i>
+    <%= account.password_reset_label %>
+  </p>
 <% end %>

@@ -61,6 +61,7 @@ RSpec.describe "Person snapshots", type: :request do
       expect(response.body).to include(user_path(original), original.email, user.email)
       expect(response.body).to include("By staff")
       expect(response.body).not_to include(">User</a>")
+      expect(response.body.scan('title="Open user account"').size).to eq(2)
     end
 
     it "says when the person has no user account" do

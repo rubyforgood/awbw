@@ -1,33 +1,41 @@
 <% accounts = snapshot.user_accounts %>
+<% account_link_class = "-mx-2 block rounded-lg px-2 py-1 transition-colors hover:bg-gray-50" %>
+<% heading_class = "mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase" %>
 <section class="col-span-full mt-5">
-  <h2 class="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-    User account
-    <% if accounts.one? && accounts.first.super_user? %>
-      <%= accounts.first.admin_badge(extra: "normal-case tracking-normal") %>
+  <% if accounts.one? %>
+    <% account = accounts.first %>
+    <%= link_to user_path(account), title: "Open user account", class: account_link_class, data: { turbo_frame: "_top" } do %>
+      <h2 class="<%= heading_class %>">
+        User account
+        <% if account.super_user? %>
+          <%= account.admin_badge(extra: "normal-case tracking-normal") %>
+        <% end %>
+        <%= account.email_change_note(extra: "font-normal normal-case tracking-normal") %>
+      </h2>
+      <%= render "people/snapshots/account_milestones", account: account %>
     <% end %>
-    <% if accounts.many? %>
+  <% elsif accounts.many? %>
+    <h2 class="<%= heading_class %>">
+      User account
       <%= render "shared/badge", label: "#{accounts.size} accounts", icon: "fa-solid fa-users",
                  classes: "bg-amber-50 text-amber-700 border-amber-200", extra: "normal-case tracking-normal" %>
-    <% end %>
-  </h2>
-
-  <% if accounts.one? %>
-    <%= render "people/snapshots/account_milestones", account: accounts.first %>
-  <% elsif accounts.many? %>
-    <div class="space-y-4">
+    </h2>
+    <div class="space-y-3">
       <% accounts.each do |account| %>
-        <div>
+        <%= link_to user_path(account), title: "Open user account", class: account_link_class, data: { turbo_frame: "_top" } do %>
           <p class="mb-2 flex flex-wrap items-center gap-2 text-sm">
-            <%= link_to account.email, user_path(account), class: "font-medium hover:underline" %>
+            <span class="font-medium text-gray-800"><%= account.email %></span>
             <% if account.super_user? %>
               <%= account.admin_badge %>
             <% end %>
+            <%= account.email_change_note %>
           </p>
           <%= render "people/snapshots/account_milestones", account: account %>
-        </div>
+        <% end %>
       <% end %>
     </div>
   <% else %>
+    <h2 class="<%= heading_class %>">User account</h2>
     <p class="flex items-center gap-2 text-sm text-gray-500">
       <%= render "shared/badge", label: "No account", icon: "fa-solid fa-user-slash",
                  classes: "bg-gray-50 text-gray-600 border-gray-200" %>

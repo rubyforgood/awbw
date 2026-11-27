@@ -94,6 +94,14 @@ class UserDecorator < ApplicationDecorator
              classes: "bg-blue-50 text-blue-700 border-blue-200", extra:
   end
 
+  def email_change_note(extra: nil)
+    return if unconfirmed_email.blank?
+
+    h.tag.span(class: "inline-flex items-center gap-1.5 text-xs text-amber-700 #{extra}".strip) do
+      h.safe_join([ h.tag.i(class: "fa-solid fa-triangle-exclamation"), "Email change pending: #{unconfirmed_email}" ])
+    end
+  end
+
   def milestone_text_classes(milestone)
     MILESTONE_TEXT_CLASSES.fetch(milestone.state)
   end
