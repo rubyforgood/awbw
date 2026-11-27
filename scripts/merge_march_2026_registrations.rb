@@ -29,9 +29,6 @@ ActiveRecord::Base.transaction(requires_new: true) do
   moving.each { |registration| registration.update!(event: target) }
   puts "Moved #{moving.size} registrations to ##{target.id}"
 
-  owing = target.event_registrations.reload.active.reject(&:paid_in_full?)
-  puts "Now owing on ##{target.id}: #{owing.size} people, #{MoneyFormatter.dollars_from_cents(owing.sum(&:remaining_cost))}"
-
   Analytics::LifecycleBuffer.flush_to(Ahoy::Tracker.new)
   raise ActiveRecord::Rollback if dry_run
 end
