@@ -1,0 +1,13 @@
+name: "Find records to merge by portal ID or FileMaker code"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-27
+pr_number: 3060
+action_path: "/people/dedupe_index"
+summary: >-
+  The "to delete" and "to keep" search boxes on every deduper now find a record by its portal ID,
+  and by FileMaker code for people, organizations, workshops, and registrations.
+pro_tips:
+  - "Each result ends with its portal ID, so two records with the same name are easy to tell apart."
+  - "A FileMaker code must be typed in full: P12 won't find P123."
+  - "Name and email matches list first, then ID and code matches."

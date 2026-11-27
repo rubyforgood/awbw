@@ -1349,7 +1349,7 @@ class EventRegistration < ApplicationRecord
          OR people.email_2 LIKE :p
          OR events.title LIKE :p",
         p: pattern
-      )
+      ).includes(:registrant, :event)
     }
 
   def remote_search_label

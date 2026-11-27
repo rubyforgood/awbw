@@ -36,6 +36,19 @@ RSpec.describe FilemakerCoded do
     end
   end
 
+  describe ".code_shaped?" do
+    it "accepts what a FileMaker code looks like" do
+      expect(described_class.code_shaped?("36354")).to be(true)
+      expect(described_class.code_shaped?(" ORG00001 ")).to be(true)
+    end
+
+    it "rejects names, emails, and multi-word text" do
+      expect(described_class.code_shaped?("Harbor House")).to be(false)
+      expect(described_class.code_shaped?("pat2@example.com")).to be(false)
+      expect(described_class.code_shaped?("Unit 4")).to be(false)
+    end
+  end
+
   describe "#filemaker_codes" do
     it "splits on commas only, dropping every kind of whitespace" do
       person = build(:person)
