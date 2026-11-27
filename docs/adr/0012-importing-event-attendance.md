@@ -122,7 +122,9 @@ facilitation).
 
 Both the FA and the JA carry the person's FileMaker personnel code(s) at that organization:
 Personnel rows whose project is the organization's, whether the project code or the project's
-organization code is on it. They're added to any codes already there, never replacing them.
+organization code is on it. A JA whose title came from a person-to-organization link
+(`fm_people_to_organizations`) also carries that link's code. Codes are comma-separated and
+added to any already there, never replacing them (decided 2026-11-27).
 
 ### D9 — Money
 
@@ -153,7 +155,5 @@ organization code is on it. They're added to any codes already there, never repl
 
 ## Open questions
 
-- Whether a JA should also carry its person-to-organization link's code (`fm_people_to_organizations`)
-  when that's where the title came from. Today it carries the personnel code only (D8).
 - How the FileMaker task records attendance it can't read, such as notes like "Day 2 only" or
   "making up Day 1 & 2".
