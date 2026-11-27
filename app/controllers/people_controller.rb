@@ -408,9 +408,13 @@ class PeopleController < ApplicationController
       # (users.person_id has no unique constraint); both logins still sign in to the
       # one record. Surface it so the admin isn't surprised — it doesn't block.
       merge_notes: ->(keep, delete) {
-        [ dropped_email_note(keep, delete), login_merge_note(keep, delete) ].compact
+        [ dropped_email_note(keep, delete), login_merge_note(keep, delete) ].compact +
+          registration_merges(keep, delete).flat_map(&:notes)
       },
-      merge_blocks: ->(keep, delete) { membership_merge_blocks(keep, delete) + external_payer_merge_blocks(keep, delete) },
+      merge_blocks: ->(keep, delete) {
+        membership_merge_blocks(keep, delete) + external_payer_merge_blocks(keep, delete) +
+          registration_merges(keep, delete).flat_map(&:blocks)
+      },
       # Before the merge moves the deleted person's taggings onto the keeper (where
       # they become indistinguishable), capture which primary sector + age range to
       # keep: the survivor's own, or — when it has none — the deleted person's.
@@ -430,6 +434,7 @@ class PeopleController < ApplicationController
         @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
         @keeper_primary_contact_signatures = ContactMethodDeduper.primary_signatures(keep, delete)
         @primary_login_id = primary_login(keep, delete)&.id
+        @registration_merges = registration_merges(keep, delete).each { |merge| merge.tap(&:prepare).carry_details }
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * redundant professional licenses within a kind (merge blank-number
@@ -459,10 +464,20 @@ class PeopleController < ApplicationController
         ContactMethodDeduper.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
         AffiliationDeduper.new(keep).call
+        @registration_merges.each(&:reconcile!)
         sync_primary_login_email(keep)
       },
       record_partial: "people/dedupe_record"
     }
+  end
+
+  # Both people registered for one event: the people merge collapses those registrations.
+  def registration_merges(keep, delete)
+    kept = keep.event_registrations.index_by(&:event_id)
+    delete.event_registrations.filter_map do |registration|
+      survivor = kept[registration.event_id]
+      EventRegistrationServices::RegistrationMerge.new(survivor, registration) if survivor
+    end
   end
 
   def membership_merge_blocks(keep, delete)
