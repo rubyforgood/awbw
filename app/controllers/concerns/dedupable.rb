@@ -245,6 +245,9 @@ module Dedupable
   #                       the keeper's is blank (e.g. member_since) (optional)
   #   hidden_columns:     Lambda(keep, delete) returning editable_columns this pair's preview leaves out,
   #                       e.g. attendance days past the event's length (optional)
+  #   column_labels:      Hash of { column_name => label } for read-only rows (optional)
+  #   field_links:        Hash of { column_name => Lambda(record) returning a URL } linking a read-only
+  #                       value, e.g. a registration's ticket (optional)
   #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
   #                       e.g. a login's email and sign-in history (optional)
   #   audit_columns:      Columns listed read-only at the bottom of Links & history and never filled onto
@@ -319,6 +322,8 @@ module Dedupable
       search_hint: config[:search_hint] || dedupe_search_hint(mc),
       editable_columns: config[:editable_columns],
       read_only_columns: Array(config[:read_only_columns]).map(&:to_s),
+      column_labels: config[:column_labels] || {},
+      field_links: config[:field_links] || {},
       audit_columns: dedupe_audit_columns(config),
       linked_associations: dedupe_linked_associations(config),
       record_label: config[:record_label] || :name.to_proc,

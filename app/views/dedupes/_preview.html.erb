@@ -9,6 +9,8 @@
     keep_param_key:      Param key for keep fields (e.g. :organization_to_keep)
     editable_columns:    Optional allowlist of column names to show/edit; nil shows all
     read_only_columns:   Column names shown side by side for comparison but not editable
+    column_labels:       Optional { column_name => label } for read-only rows
+    field_links:         Optional { column_name => lambda(record) → url } linking a read-only value
     audit_columns:       Like read_only_columns, listed at the bottom of Links & history
     linked_associations: belongs_to reflections listed under Linked records (Links & history with audit_columns)
     record_label:        Callable naming a record in the headers (defaults to #name)
@@ -118,7 +120,9 @@
 
   <!-- Read-only comparison rows -->
   <%= render "dedupes/read_only_rows", columns: read_only_columns, record_to_delete: record_to_delete,
-                                       record_to_keep: record_to_keep, border: border, display: read_only_display %>
+                                       record_to_keep: record_to_keep, border: border, display: read_only_display,
+                                       column_labels: local_assigns[:column_labels], field_links: local_assigns[:field_links],
+                                       field_outcomes: field_outcomes %>
 
   <!-- Photos: attached images on each record, side by side, with what happens on merge -->
   <% if preview_images && (delete_images.any? || keep_images.any?) %>

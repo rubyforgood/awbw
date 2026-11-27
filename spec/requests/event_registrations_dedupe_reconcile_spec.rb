@@ -78,7 +78,24 @@ RSpec.describe "Event registration dedupe — reconciling the merge", type: :req
   it "warns on the preview that the deleted registration's ticket link stops working" do
     preview!
 
-    expect(response.body).to include("ticket link stops working")
+    expect(response.body).to include("ticket link stops working", "No portal email included it")
+  end
+
+  it "points at the delivered emails that carried the deleted ticket link" do
+    create(:notification, noticeable: delete_reg, person_id: delete_person.id, delivered_at: 1.day.ago,
+      email_body_text: "View your ticket: https://example.com/registration/#{delete_reg.slug}")
+    create(:notification, noticeable: delete_reg, delivered_at: 1.day.ago, email_body_text: "No link here")
+
+    preview!
+
+    expect(response.body).to include("1 email", notifications_path(query: delete_reg.slug))
+  end
+
+  it "shows both ticket links with what happens to each on merge" do
+    preview!
+
+    expect(response.body).to include("Ticket link", registration_ticket_path(delete_reg.slug),
+      registration_ticket_path(keep_reg.slug), "this link stops working", "stays the ticket")
   end
 
   it "carries the deleted org link's submission pin onto the keeper's link to the same org" do

@@ -1,4 +1,17 @@
 class EventRegistrationDecorator < ApplicationDecorator
+  # The merge preview's warning that this registration's ticket link dies with it.
+  def ticket_merge_note(emails_sent)
+    lead = "#{object.registrant&.full_name}'s ticket link stops working after the merge."
+    return "#{lead} No portal email included it." if emails_sent.zero?
+
+    h.safe_join([
+      "#{lead} It went out in ",
+      h.link_to(h.pluralize(emails_sent, "email"), h.notifications_path(query: object.slug),
+        target: "_blank", rel: "noopener", class: "font-semibold underline"),
+      " — check #{emails_sent == 1 ? "it" : "them"}, then send the kept registration's ticket."
+    ])
+  end
+
   # What linking an organization from this registration's editor does, mirroring
   # EventRegistrationsController#link_and_report. `position` is the title the
   # registrant submitted (the editor's primary submitted entry).

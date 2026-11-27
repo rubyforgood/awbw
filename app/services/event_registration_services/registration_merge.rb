@@ -17,7 +17,13 @@ module EventRegistrationServices
     def notes
       return [] if @delete.slug.blank?
 
-      [ "#{@delete.registrant&.full_name}'s ticket link stops working after the merge. If it was emailed, send them the kept registration's ticket." ]
+      [ @delete.decorate.ticket_merge_note(ticket_emails.count) ]
+    end
+
+    # Delivered emails to the registrant, or about this registration, that carried its ticket link.
+    def ticket_emails
+      sent = Notification.delivered
+      sent.where(person_id: @delete.registrant_id).or(sent.where(noticeable: @delete)).matching(@delete.slug)
     end
 
     # Run before ModelDeduper, while the deleted registration still holds its own rows.

@@ -562,6 +562,14 @@ class EventRegistrationsController < ApplicationController
         completed_day_5 certificate_sent_at post_survey_completed_at filemaker_code
       ],
       union_columns: %w[filemaker_code],
+      read_only_columns: %w[slug],
+      column_labels: { "slug" => "Ticket link" },
+      field_links: { "slug" => ->(registration) { registration_ticket_path(registration.slug) } },
+      merge_outcomes: ->(_keep, delete) {
+        next {} if delete.slug.blank?
+
+        { fields: { "slug" => { delete: "this link stops working", keep: "stays the ticket" } } }
+      },
       hidden_columns: ->(keep, delete) {
         EventRegistration::DAY_FIELDS.drop([ keep.event, delete.event ].compact.map(&:day_count).max || 1)
       },
