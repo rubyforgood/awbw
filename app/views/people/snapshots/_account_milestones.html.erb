@@ -3,12 +3,12 @@
   <% steps.each_with_index do |step, index| %>
     <li class="relative min-w-0 <%= account.milestone_text_classes(step) %>">
       <% if (following = steps[index + 1]) %>
-        <span class="absolute top-2 right-1 left-5 h-0.5 <%= following.state == :reached ? "bg-green-100" : "bg-gray-200" %>"></span>
+        <span class="absolute top-2 right-1 left-5 h-0.5 <%= following.state == :reached ? "bg-green-700/25" : "bg-gray-200" %>"></span>
       <% end %>
       <span class="relative inline-flex size-4 items-center justify-center">
         <% case step.state %>
         <% when :reached %>
-          <i class="fa-solid fa-circle-check text-base text-green-300"></i>
+          <i class="fa-solid fa-circle-check text-base text-green-700/60"></i>
         <% when :locked %>
           <i class="fa-solid fa-lock text-sm"></i>
         <% when :inactive %>
