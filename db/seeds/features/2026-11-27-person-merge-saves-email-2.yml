@@ -1,0 +1,11 @@
+name: "Merging people saves the deleted person's email as Email 2"
+area: people
+display_status: admin_facing
+released_on: 2026-11-27
+action_path: "/people/dedupe_index"
+pr_number: 3065
+summary: >-
+  When the kept person has no Email 2, the deleted person's primary email is saved there so it
+  isn't lost. The merge preview shows it as "saved to Email 2."
+pro_tips:
+  - "When a login's email becomes the kept person's primary, the old primary goes to Email 2 instead."
