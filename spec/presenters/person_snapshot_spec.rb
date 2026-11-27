@@ -93,8 +93,12 @@ RSpec.describe PersonSnapshot do
   end
 
   describe "#empty?" do
-    it "is true when there are no affiliations, trainings, or membership" do
-      expect(described_class.new(person).empty?).to be(true)
+    it "is true when there are no affiliations, trainings, membership, or user account" do
+      expect(described_class.new(create(:person, :without_user)).empty?).to be(true)
+    end
+
+    it "is false when the person only has a user account" do
+      expect(described_class.new(person).empty?).to be(false)
     end
   end
 end

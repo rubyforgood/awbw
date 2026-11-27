@@ -100,7 +100,7 @@ RSpec.describe "Person snapshots", type: :request do
     end
 
     it "leaves the status pill blank for a JA-only org" do
-      staffer = create(:person)
+      staffer = create(:person, :without_user)
       create(:affiliation, person: staffer, organization: create(:organization, name: "Riverbend Shelter"),
              title: "Program Director", start_date: 1.year.ago, inactive: false)
 
