@@ -49,9 +49,11 @@ event, the same service creates or fixes the registration and its associations. 
 D2–D8. The CSV importer's current association code (`CaptureFromSubmission` for orgs and
 affiliations) moves behind it rather than being duplicated in a FileMaker task.
 
-- **FileMaker:** `fm:import_attendance EVENT=<portal event id> FM_EVENT=<E-id>`, shaped like
-  `fm:import_personnel` (dry run by default, rerunnable, report saved). Reads the training's
-  `fm_participants` rows plus its scholarship and CE lists (TAC261 had E3977, E3979, E3980).
+- **FileMaker keeps three events per training:** its registrations, its scholarship list, and
+  its CE list, each with its own `fm_participants` rows. One portal event takes all three.
+- **FileMaker:** `fm:import_attendance EVENT=<portal event id> FM_EVENT=<registration E-id>
+  FM_SCHOLARSHIP=<E-id> FM_CE=<E-id>`, shaped like `fm:import_personnel` (dry run by default,
+  rerunnable, report saved). The ids for each training are in the table below.
 - **CSV:** `EventRegistrationImporter`, unchanged as an upload, calling the shared step.
 
 ### D2 — The event
@@ -168,6 +170,18 @@ added to any already there, never replacing them (decided 2026-11-27).
   "for a look" list of everything skipped and why.
 - Runs under its own `Current.source`, so the audit log names it. It sends no emails.
 - Rerunnable: a second run changes nothing.
+
+## Trainings and their ids
+
+Which portal event each FileMaker training maps to. Internal ids only, no personal data. Add a
+row before importing a training.
+
+| Training | Code | Portal event | FileMaker registrations | Scholarships | CE |
+|---|---|---|---|---|---|
+| March 2026 | TAC261 | 19 | E3977 | E3979 | E3980 |
+| July 2026 | TAC262 | 3 | to find | to find | to find |
+| November 2026 | TAC263 | to find | to find | to find | to find |
+| On-demand | — | to find | to find | to find | to find |
 
 ## Consequences
 
