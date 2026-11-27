@@ -18,11 +18,25 @@ class PersonSnapshot
       .to_a
   end
 
+  # FA rows first, each with its org's JAs folded underneath as notes; then a row per JA at JA-only orgs.
+  Row = Struct.new(:affiliation, :job_affiliations)
+
+  def affiliation_rows
+    @affiliation_rows ||= begin
+      facilitators, jobs = affiliations.partition(&:facilitator?)
+      facilitator_orgs = facilitators.map(&:organization_id).to_set
+      folded, job_only = jobs.partition { |job| facilitator_orgs.include?(job.organization_id) }
+
+      facilitators.map { |fa| Row.new(fa, folded.select { |job| job.organization_id == fa.organization_id }) } +
+        job_only.map { |job| Row.new(job, []) }
+    end
+  end
+
   def trainings
     @trainings ||= person.event_registrations
       .joins(:event)
       .where(events: { facilitator_training: true })
-      .includes(:event)
+      .includes(:event, :organizations)
       .order("events.start_date DESC")
       .limit(TRAINING_LIMIT)
       .to_a
