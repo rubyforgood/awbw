@@ -674,6 +674,53 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(left_row_for("Pronouns").text).not_to include("Will be dropped")
       end
+
+      it "flags a member since that fills the keeper's blank one" do
+        delete_rec.update!(member_since: Date.new(2026, 1, 1))
+        keep.update!(member_since: nil)
+
+        get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+        expect(left_row_for("Member since").text).to include("Fills the keeper")
+        expect(left_row_for("Member since").text).not_to include("Will be dropped")
+      end
+
+      it "shows the profile fields the merge fills, including yes flags" do
+        delete_rec.update!(bio: "Longtime facilitator", blog_contributor: true)
+        keep.update!(bio: nil, blog_contributor: false)
+
+        get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+        expect(left_row_for("Bio").text).to include("Fills the keeper")
+        expect(left_row_for("Blog contributor").text).to include("Fills the keeper")
+      end
+
+      it "doesn't flag a no flag as dropped when the keeper's is yes" do
+        delete_rec.update!(anonymous_contributions: false)
+        keep.update!(anonymous_contributions: true)
+
+        get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+        expect(left_row_for("Anonymous contributions").text).not_to include("Will be dropped", "Fills the keeper")
+      end
+
+      it "shows the duplicate's notes being added to the keeper's" do
+        delete_rec.update!(notes: "Prefers phone")
+        keep.update!(notes: "Met at conference")
+
+        get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+        expect(left_row_for("Notes").text).to include("On merge: added to the keeper's notes")
+      end
+
+      it "flags a member since as dropped when the keeper has its own" do
+        delete_rec.update!(member_since: Date.new(2026, 1, 1))
+        keep.update!(member_since: Date.new(2020, 5, 1))
+
+        get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+        expect(left_row_for("Member since").text).to include("Will be dropped")
+      end
     end
 
     describe "POST dedupe_perform" do
@@ -732,17 +779,110 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(keep.reload.filemaker_code).to eq("00006, 00012")
       end
 
+      it "fills the keeper's blank member since from the duplicate" do
+        keep.update!(member_since: nil)
+        delete_rec.update!(member_since: Date.new(2026, 1, 1))
+
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id,
+          person_to_keep: { member_since: "" }
+        }
+
+        expect(keep.reload.member_since).to eq(Date.new(2026, 1, 1))
+      end
+
+      it "fills the keeper's blank profile fields and yes flags from the duplicate" do
+        keep.update!(bio: nil, linked_in_url: nil, anonymous_contributions: false, pronouns: "she/her")
+        delete_rec.update!(bio: "Longtime facilitator", linked_in_url: "https://linkedin.example/dupe",
+                           anonymous_contributions: true, pronouns: "they/them")
+
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id,
+          person_to_keep: { bio: "", anonymous_contributions: "0" }
+        }
+
+        keep.reload
+        expect(keep.bio).to eq("Longtime facilitator")
+        expect(keep.linked_in_url).to eq("https://linkedin.example/dupe")
+        expect(keep.anonymous_contributions).to be true
+        expect(keep.pronouns).to eq("she/her")
+      end
+
+      it "adds the duplicate's notes below the keeper's" do
+        keep.update!(notes: "Met at conference")
+        delete_rec.update!(notes: "Prefers phone")
+
+        post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+        expect(keep.reload.notes).to eq("Met at conference\n\nPrefers phone")
+      end
+
+      it "doesn't repeat notes the keeper already holds" do
+        keep.update!(notes: "Met at conference. Prefers phone")
+        delete_rec.update!(notes: "Prefers phone")
+
+        post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+        expect(keep.reload.notes).to eq("Met at conference. Prefers phone")
+      end
+
+      it "keeps the keeper's own member since over the duplicate's" do
+        keep.update!(member_since: Date.new(2020, 5, 1))
+        delete_rec.update!(member_since: Date.new(2026, 1, 1))
+
+        post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+        expect(keep.reload.member_since).to eq(Date.new(2020, 5, 1))
+      end
+
       describe "emails" do
         before do
           keep.update!(email: "keeper@example.com", email_2: nil)
           delete_rec.update!(email: "dropped@example.com")
         end
 
-        it "leaves email 2 for the admin to fill in" do
-          post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+        it "saves the duplicate's primary email in the keeper's empty email 2" do
+          delete_rec.update!(email_type: "work")
+
+          post dedupe_perform_people_path, params: {
+            person_to_delete_id: delete_rec.id,
+            person_to_keep_id: keep.id,
+            person_to_keep: { email: "keeper@example.com", email_2: "" }
+          }
 
           expect(keep.reload.email).to eq("keeper@example.com")
-          expect(keep.email_2).to be_nil
+          expect(keep.email_2).to eq("dropped@example.com")
+          expect(keep.email_2_type).to eq("work")
+        end
+
+        it "leaves the keeper's own email 2 in place" do
+          keep.update!(email_2: "keeper.two@example.com")
+
+          post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+          expect(keep.reload.email_2).to eq("keeper.two@example.com")
+        end
+
+        it "shows the duplicate's primary email and its type moving into email 2 on the preview" do
+          delete_rec.update!(email_type: "work")
+
+          get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+          expect(response.body).to include("On merge: saved to Email 2", "On merge: becomes dropped@example.com")
+          expect(response.body).to include("On merge: saved to Email 2 type", "On merge: becomes work")
+          expect(response.body).not_to include("will be dropped. To keep")
+        end
+
+        it "lets the login sync fill email 2 when it replaces the keeper's primary" do
+          create(:user, person: delete_rec, email: "login@example.com")
+          delete_rec.update!(email: "login@example.com")
+
+          post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+          expect(keep.reload.email).to eq("login@example.com")
+          expect(keep.email_2).to eq("keeper@example.com")
         end
 
         it "keeps an email the admin moves into email 2 in the preview" do
@@ -756,6 +896,8 @@ RSpec.describe "Dedupable concern", type: :request do
         end
 
         it "names the email that will be dropped on the preview" do
+          keep.update!(email_2: "keeper.two@example.com")
+
           get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
 
           expect(response.body).to include("dropped@example.com isn&#39;t on the kept person and will be dropped")
@@ -1029,7 +1171,9 @@ RSpec.describe "Dedupable concern", type: :request do
         )
       end
 
-      it "flags nothing when the kept person's email already matches the winning login" do
+      it "flags no login email change when the kept person's email already matches the winning login" do
+        keep.update!(email_2: "keeper.two@example.com")
+
         get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
 
         expect(response.body).not_to include("On merge:")

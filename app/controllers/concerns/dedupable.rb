@@ -45,6 +45,13 @@ module Dedupable
     end
   end
 
+  # Copies the deleted record's value into each listed column the keeper left blank.
+  def self.fill_blank_columns(keep, delete, columns)
+    columns.each do |name|
+      keep[name] = delete[name] if keep[name].blank? && delete[name].present?
+    end
+  end
+
   def dedupe_index
     config = dedupe_config
     mc = config[:model_class]
@@ -139,6 +146,7 @@ module Dedupable
     end
 
     Dedupable.fill_empty_links(record_to_keep, record_to_delete, dedupe_linked_associations(config))
+    Dedupable.fill_blank_columns(record_to_keep, record_to_delete, Array(config[:fill_blank_columns]).map(&:to_s))
 
     # Combine values that must survive the merge rather than be replaced wholesale
     # (e.g. an org's FileMaker codes), so the kept record keeps both records' links.
@@ -231,6 +239,8 @@ module Dedupable
   #   deprecated_columns: Array of column names to render muted with a "Deprecated" badge (optional)
   #   editable_columns:   Array of column names the preview shows and lets an admin edit on the keeper;
   #                       only these are accepted on save (optional, defaults to every column)
+  #   fill_blank_columns: Array of editable column names the merge fills from the deleted record when
+  #                       the keeper's is blank (e.g. member_since) (optional)
   #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
   #                       e.g. a login's email and sign-in history (optional)
   #   audit_columns:      Columns listed read-only at the bottom of Links & history and never filled onto
@@ -298,6 +308,7 @@ module Dedupable
       linked_associations: dedupe_linked_associations(config),
       record_label: config[:record_label] || :name.to_proc,
       union_columns: Array(config[:union_columns]).map(&:to_s),
+      fill_blank_columns: Array(config[:fill_blank_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       remote_select_options: config[:remote_select_options] || {},
       field_notes: config[:field_notes] || {},
