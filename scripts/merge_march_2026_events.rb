@@ -149,12 +149,14 @@ ActiveRecord::Base.transaction(requires_new: true) do
   source.update!(published: false)
   puts "  ##{source_id} unpublished"
 
+  # Editor leftovers like "<p><br></p>" count as empty; text or an embedded image counts.
+  written = ->(rich_text) { rich_text && (rich_text.to_plain_text.strip.present? || rich_text.body.attachables.any?) }
   %w[rhino_header rhino_description].each do |name|
     from = ActionText::RichText.find_by(record: source, name: name)
-    next if from.nil? || from.body.blank?
+    next unless written.call(from)
 
     existing = ActionText::RichText.find_by(record: target, name: name)
-    if existing&.body.present?
+    if written.call(existing)
       puts "  #{name}: ##{target_id} already has text, kept"
       next
     end
@@ -184,12 +186,14 @@ ActiveRecord::Base.transaction(requires_new: true) do
     end
   end
 
-  # Tickets show the callouts #2's registrants saw, unless #19's copy carries forms or resources.
+  # Per built-in, the copy linking more forms and resources wins; a tie goes to #2's,
+  # which its registrants saw.
+  links = ->(callout) { callout.registration_ticket_callout_forms.count + callout.registration_ticket_callout_resources.count }
   puts "\nTicket callouts"
   source.registration_ticket_callouts.to_a.each do |callout|
     mine = callout.builtin_key && target.registration_ticket_callouts.find_by(builtin_key: callout.builtin_key)
-    if mine && (mine.registration_ticket_callout_forms.any? || mine.registration_ticket_callout_resources.any?)
-      puts "  #{callout.title}: kept ##{target_id}'s (it has forms or resources)"
+    if mine && links.call(mine) > links.call(callout)
+      puts "  #{callout.title}: kept ##{target_id}'s (#{links.call(mine)} forms/resources vs #{links.call(callout)})"
       next
     end
 
