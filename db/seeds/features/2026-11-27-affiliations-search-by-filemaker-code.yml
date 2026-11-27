@@ -1,4 +1,4 @@
-name: "Search affiliations by a person's or org's ID or FileMaker code"
+name: "Search affiliations by a person's or org's FileMaker code"
 area: people
 display_status: admin_facing
 released_on: 2026-11-27
@@ -6,6 +6,6 @@ pr_number: 3060
 action_path: "/affiliations"
 summary: >-
   The "Person or org name" search on the affiliations list also finds a person's or organization's
-  affiliations by their portal ID or FileMaker code.
+  affiliations by their FileMaker code.
 pro_tips:
   - "The separate FM code box still searches the affiliation's own FileMaker code."

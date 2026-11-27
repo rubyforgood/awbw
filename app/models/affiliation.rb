@@ -111,12 +111,13 @@ class Affiliation < ApplicationRecord
     end
   }
 
-  # Name/email text, or a person's or organization's portal id or FileMaker code.
+  # Name/email text, or a person's or organization's FileMaker code. Portal ids are left
+  # out because a person and an organization can share one.
   scope :matching_name, ->(query) {
     where(person_id: Person.search_name_email(query).select(:id))
-      .or(where(person_id: Person.matching_identifier(query).select(:id)))
+      .or(where(person_id: Person.with_filemaker_code(query).select(:id)))
       .or(where(organization_id: Organization.search(query).select(:id)))
-      .or(where(organization_id: Organization.matching_identifier(query).select(:id)))
+      .or(where(organization_id: Organization.with_filemaker_code(query).select(:id)))
   }
 
   scope :matching_comments, ->(query) {

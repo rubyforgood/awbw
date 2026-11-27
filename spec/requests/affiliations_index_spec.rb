@@ -72,12 +72,11 @@ RSpec.describe "Affiliations index", type: :request do
       expect(ids_in(results(query: "Alpha"))).to eq([ facilitator_row.id ])
     end
 
-    it "searches by a person's or organization's portal id or FileMaker code" do
+    it "searches by a person's or organization's FileMaker code" do
       zed.update!(filemaker_code: "P900")
       alpha_org.update!(filemaker_code: "O700")
       expect(ids_in(results(query: "P900"))).to eq([ job_row.id ])
       expect(ids_in(results(query: "O700"))).to eq([ facilitator_row.id ])
-      expect(ids_in(results(query: zed.id.to_s))).to include(job_row.id)
     end
 
     it "filters by status, including zero-length" do
