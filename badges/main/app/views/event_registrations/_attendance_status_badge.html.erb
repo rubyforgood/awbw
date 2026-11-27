@@ -1,47 +1,40 @@
 <% deco = registration.decorate %>
 <% badge_return_to = local_assigns.fetch(:return_to, nil) %>
-<% if registration.transferred_out? %>
-  <% destination = registration.transferred_to_registration %>
-  <% pending = destination.nil? %>
-  <% badge_title = pending ? "Transferred out — no destination event recorded yet" : "Transferred to #{[ destination.event.abbreviation.presence, destination.event.decorate.title_with_month_year ].compact.join(" · ")}" %>
-<% end %>
-<div id="<%= dom_id(registration, :attendance_status) %>" class="inline-flex flex-col items-center gap-1 scroll-mt-24">
+<div id="<%= dom_id(registration, :attendance_status) %>" class="inline-flex items-center gap-1.5 scroll-mt-24">
+  <%# No return_to: the update answers with a turbo_stream that swaps just this badge.
+      With one: opt out of Turbo so the redirect runs and the whole page re-renders. %>
+  <%= form_with model: registration, url: event_registration_path(registration, return_to: badge_return_to),
+        method: :patch, data: { turbo_frame: "_top", turbo: (false if badge_return_to) } do |f| %>
+    <div class="relative inline-flex items-center gap-1.5 rounded-full border px-5 py-0.5 text-xs font-medium <%= deco.attendance_status_classes %>">
+      <%= f.select :status,
+            EventRegistration::ATTENDANCE_STATUSES.map { |s| [EventRegistration.new(status: s).attendance_status_label, s] },
+            {},
+            class: "absolute inset-0 w-full opacity-0 cursor-pointer",
+            onchange: "this.form.requestSubmit()",
+            "aria-label": "Change attendance status" %>
+      <%= render "event_registrations/attendance_status_label",
+            icon: deco.attendance_status_icon, label: deco.attendance_status_label, outcome: deco.pre_transfer_outcome %>
+      <i class="fas fa-chevron-down text-2xs"></i>
+    </div>
+  <% end %>
+  <%# Transferred in is a relationship, not a status, so it rides alongside the
+      registration's own attendance status rather than replacing it. %>
+  <% if registration.transferred_in? %>
+    <span class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[0.65rem] font-medium text-teal-700" title="Transferred in from another event">
+      <i class="fas fa-right-to-bracket"></i>
+      In
+    </span>
+  <% end %>
   <%# A transferred-out reg links to the manage-transfer screen — amber with a
-      warning when no destination is recorded yet, blue once one is. %>
+      warning when no destination is recorded yet, purple once one is. %>
   <% if registration.transferred_out? %>
+    <% pending = registration.transfer_destination_pending? %>
     <%= link_to transfer_event_registration_path(registration, return_to: badge_return_to),
-          class: "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.65rem] font-medium #{pending ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"}",
+          class: "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.65rem] font-medium #{pending ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"}",
           title: pending ? "Transfer incomplete — no destination event recorded yet — click to manage" : "Manage this transfer",
           data: { turbo_frame: "_top" } do %>
       <i class="fas <%= pending ? "fa-triangle-exclamation" : "fa-right-from-bracket" %> text-[0.6rem]"></i>
-      Manage transfer
+      Manage
     <% end %>
   <% end %>
-  <div class="inline-flex items-center gap-1.5">
-    <%# No return_to: the update answers with a turbo_stream that swaps just this badge.
-        With one: opt out of Turbo so the redirect runs and the whole page re-renders. %>
-    <%= form_with model: registration, url: event_registration_path(registration, return_to: badge_return_to),
-          method: :patch, data: { turbo_frame: "_top", turbo: (false if badge_return_to) } do |f| %>
-      <div class="relative inline-flex items-center gap-1.5 rounded-full border px-5 py-0.5 text-xs font-medium <%= deco.attendance_status_classes %>">
-        <%= f.select :status,
-              EventRegistration::ATTENDANCE_STATUSES.map { |s| [EventRegistration.new(status: s).attendance_status_label, s] },
-              {},
-              class: "absolute inset-0 w-full opacity-0 cursor-pointer",
-              title: badge_title,
-              onchange: "this.form.requestSubmit()",
-              "aria-label": "Change attendance status" %>
-        <%= render "event_registrations/attendance_status_label",
-              icon: deco.attendance_status_icon, label: deco.attendance_status_label, outcome: deco.pre_transfer_outcome %>
-        <i class="fas fa-chevron-down text-2xs"></i>
-      </div>
-    <% end %>
-    <%# Transferred in is a relationship, not a status, so it rides alongside the
-        registration's own attendance status rather than replacing it. %>
-    <% if registration.transferred_in? %>
-      <span class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[0.65rem] font-medium text-teal-700" title="Transferred in from another event">
-        <i class="fas fa-right-to-bracket"></i>
-        In
-      </span>
-    <% end %>
-  </div>
 </div>
