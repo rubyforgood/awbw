@@ -1,5 +1,6 @@
-# One-off, part 2 of 2: move the March 2026 registrations from #2 onto the TAC261
-# event that holds the money (#19). Run merge_march_2026_event_settings.rb first.
+# One-off, one of two: move the March 2026 registrations from #2 onto the TAC261
+# event that holds the money (#19). Runs before or after
+# merge_march_2026_event_settings.rb; neither depends on the other.
 #
 # 10 people are registered on both. Their #2 copies hold nothing #19's lack, so
 # they're deleted.

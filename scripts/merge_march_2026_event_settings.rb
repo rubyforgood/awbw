@@ -1,6 +1,6 @@
-# One-off, part 1 of 2: give the TAC261 event (#19) the page and ticket settings
-# the March 2026 registrants saw on #2, then unpublish #2. Run this first, then
-# merge_march_2026_registrations.rb.
+# One-off, one of two: give the TAC261 event (#19) the page and ticket settings
+# the March 2026 registrants saw on #2, then unpublish #2. Runs before or after
+# merge_march_2026_registrations.rb; neither depends on the other.
 #
 # #19 keeps its name, price and CE settings. #2's description, images, tags,
 # forms and ticket callouts move over where #19 lacks them.
@@ -94,6 +94,18 @@ ActiveRecord::Base.transaction(requires_new: true) do
   end
   source.update!(published: false)
   puts "  ##{source_id} unpublished"
+
+  # The 10 people registered on both signed up on #2 in February; #19's copies date from later.
+  registered_at = {
+    777 => "2026-02-27 21:51:59", 994 => "2026-02-28 00:27:44", 817 => "2026-02-28 13:53:37",
+    813 => "2026-03-01 02:40:43", 816 => "2026-03-01 17:49:03", 1268 => "2026-03-01 17:55:34",
+    1269 => "2026-03-01 19:03:39", 815 => "2026-03-01 19:12:14", 1002 => "2026-03-01 20:05:17",
+    1267 => "2026-03-01 20:13:37"
+  }.freeze
+  registered_at.each do |id, utc|
+    target.event_registrations.find(id).update_columns(created_at: Time.find_zone("UTC").parse(utc))
+  end
+  puts "  #{registered_at.size} registrations take their #2 sign-up dates"
 
   # Editor leftovers like "<p><br></p>" count as empty; text or an embedded image counts.
   written = ->(rich_text) { rich_text && (rich_text.to_plain_text.strip.present? || rich_text.body.attachables.any?) }
