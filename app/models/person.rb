@@ -317,10 +317,13 @@ class Person < ApplicationRecord
   }
   scope :organization_name, ->(organization_name) {
     return all if organization_name.blank?
-    joined = left_joins(affiliations: :organization)
-    joined.where("organizations.name LIKE ?", "%#{sanitize_sql_like(organization_name)}%")
-      .or(joined.where(organizations: { id: Organization.matching_identifier(organization_name).select(:id) }))
+    left_joins(affiliations: :organization)
+      .where("organizations.name LIKE ?", "%#{sanitize_sql_like(organization_name)}%")
       .distinct }
+  scope :organization_name_or_identifier, ->(query) {
+    where(id: Person.organization_name(query).select(:id))
+      .or(where(id: Affiliation.where(organization_id: Organization.matching_identifier(query).select(:id)).select(:person_id)))
+  }
   scope :organization_id, ->(organization_id) {
     joins(:affiliations)
       .where(affiliations: { organization_id: organization_id })
@@ -447,7 +450,7 @@ class Person < ApplicationRecord
     results = results.with_age_range_ids(params[:age_range_ids]) if params[:age_range_ids].present?
     results = results.shared_age_range_ids(params[:shared_age_range_ids]) if params[:shared_age_range_ids].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
-    results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
+    results = results.organization_name_or_identifier(params[:organization_name]) if params[:organization_name].present?
     results = results.shared_organization_name(params[:shared_organization_name]) if params[:shared_organization_name].present?
     results = results.organization_id(params[:organization_id]) if params[:organization_id].present?
     results = results.shared_organization_id(params[:shared_organization_id]) if params[:shared_organization_id].present?
