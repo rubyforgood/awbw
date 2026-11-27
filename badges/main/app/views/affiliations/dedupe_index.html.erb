@@ -1,0 +1,69 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:people) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="space-y-6">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <h1 class="text-primary mt-2 font-display text-2xl font-semibold">Dedupe affiliations</h1>
+        <p class="mt-1 text-gray-500">
+          People with the same affiliation saved more than once — same organization, title, dates,
+          and status. Merging keeps one copy — the one a registration created, then the oldest —
+          and moves the others' comments onto it, along with any primary contact flag, address,
+          registration link, or FileMaker code it's missing.
+        </p>
+      </div>
+    </div>
+
+    <% if @groups.any? %>
+      <div class="space-y-4">
+        <% @groups.each do |group| %>
+          <div id="affiliation-dedupe-person-<%= group.person.id %>" class="border-primary/10 scroll-mt-24 rounded-2xl border bg-white p-4">
+            <div class="mb-2 flex items-start justify-between gap-4">
+              <h3 class="font-semibold text-gray-900">
+                <%= link_to group.label.presence || "(no name)", person_path(group.person, anchor: "affiliations"),
+                            class: "#{DomainTheme.text_class_for(:people, intensity: 700)} hover:underline" %>
+              </h3>
+              <%= button_to "Merge #{pluralize(group.merged_count, "duplicate")}",
+                            dedupe_perform_affiliations_path,
+                            params: { person_sgid: group.person.to_sgid(for: AffiliationsController::DEDUPE_PURPOSE).to_s },
+                            class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap"),
+                            form_class: "shrink-0" %>
+            </div>
+            <div class="space-y-2">
+              <% group.duplicate_sets.each do |affiliations| %>
+                <ul class="divide-y divide-gray-100 rounded-lg border border-gray-100 px-3">
+                  <% affiliations.each_with_index do |affiliation, index| %>
+                    <li class="flex items-center justify-between gap-3 py-1.5">
+                      <span class="text-gray-800">
+                        <%= affiliation.organization&.name %>
+                        <span class="text-sm text-gray-400">
+                          · <%= link_to "ID #{affiliation.id}", edit_affiliation_path(affiliation), class: "hover:underline" %>
+                          <% if affiliation.title.present? %>· <%= affiliation.title %><% end %>
+                          <% if affiliation.start_date || affiliation.end_date %>
+                            · <%= affiliation.start_date&.to_fs(:long) || "?" %> – <%= affiliation.end_date&.to_fs(:long) || "present" %>
+                          <% end %>
+                          <% if affiliation.inactive? %>· inactive<% end %>
+                          <% if affiliation.event_registration&.event %>· from <%= affiliation.event_registration.event.title %><% end %>
+                        </span>
+                      </span>
+                      <% if index.zero? %>
+                        <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-700">Keep</span>
+                      <% else %>
+                        <span class="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-gray-600">Merge</span>
+                      <% end %>
+                    </li>
+                  <% end %>
+                </ul>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="border-primary/10 rounded-2xl border bg-white py-10 text-center">
+        <i class="fa-solid fa-circle-check mb-2 text-3xl text-emerald-500"></i>
+        <p class="text-gray-600">No duplicate affiliations detected.</p>
+      </div>
+    <% end %>
+  </div>
+</div>
