@@ -16,13 +16,13 @@
 
       <%# pt-2 (not margin) keeps the hover area continuous across the visual gap %>
       <div class="absolute top-full left-0 z-40 hidden pt-2 group-focus-within:block group-hover:block">
-        <div class="w-72 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-lg">
-          <p class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">What these mean</p>
+        <div class="w-72 p-3 text-left <%= tooltip_class %>">
+          <p class="mb-2 font-semibold tracking-wide text-gray-500 uppercase">What these mean</p>
           <dl class="space-y-2">
             <% definitions.each do |definition| %>
               <div>
-                <dt class="text-sm font-semibold text-gray-800"><%= definition[:label] %></dt>
-                <dd class="text-xs text-gray-600"><%= definition[:description] %></dd>
+                <dt class="font-semibold text-gray-800"><%= definition[:label] %></dt>
+                <dd class="text-gray-600"><%= definition[:description] %></dd>
               </div>
             <% end %>
           </dl>

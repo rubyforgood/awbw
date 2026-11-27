@@ -82,7 +82,7 @@
                   <%= allocation.created_at.strftime("%B %d, %Y") %>
                   <span class="group relative ml-1 inline-block cursor-help" tabindex="0">
                     <i class="fa-solid fa-user-pen text-xs text-gray-400 group-hover:text-gray-600" aria-hidden="true"></i>
-                    <span class="absolute right-0 bottom-full z-50 mb-1 hidden rounded-lg bg-blue-100 px-3 py-2 text-xs whitespace-pre text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover:block group-focus:block"><%= allocation_audit_title(allocation) %></span>
+                    <span class="absolute right-0 bottom-full z-50 mb-1 hidden px-3 py-2 whitespace-pre group-hover:block group-focus:block <%= tooltip_class %>"><%= allocation_audit_title(allocation) %></span>
                   </span>
                 </td>
 

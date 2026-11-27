@@ -1,4 +1,4 @@
-<span class="pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-64 rounded-md bg-gray-900 px-3 py-2 text-xs font-normal text-white shadow-lg group-hover:block">
+<span class="pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-64 p-3 group-hover:block <%= tooltip_class %>">
   <% case kind %>
   <% when :deactivate %>
     <p class="mb-1">Ends this facilitator affiliation and marks it inactive, so it no longer counts as active. The record is kept — if the person is later marked attended, the return is recorded as a new affiliation rather than by reopening this one.</p>
