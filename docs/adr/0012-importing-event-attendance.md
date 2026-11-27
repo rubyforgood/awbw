@@ -62,8 +62,8 @@ affiliations) moves behind it rather than being duplicated in a FileMaker task.
 - **Folding two events into one:** keep the event that holds the money. Move everyone else's
   registrations onto it; a moved registration keeps its id, so its ticket link and history
   stay. A person registered on both keeps the registration on the kept event and gets the
-  earlier sign-up date, which their ticket shows as "Registered on". The other copy is deleted only if it holds no money,
-  attendance, or records worth keeping; otherwise the two are merged.
+  earlier sign-up date, which their ticket shows as "Registered on". The other copy is deleted
+  only if it holds no money, attendance, or records worth keeping; otherwise the two are merged.
 - **Staff and test registrations** are removed at staff's request before anything is
   imported, so they never pick up affiliations.
 
