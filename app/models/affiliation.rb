@@ -116,10 +116,12 @@ class Affiliation < ApplicationRecord
   scope :matching_name, ->(query) {
     query = query.to_s.strip
     matches = where(person_id: Person.search_name_email(query).select(:id))
-      .or(where(person_id: Person.with_filemaker_code(query).select(:id)))
       .or(where(organization_id: Organization.search(query).select(:id)))
+    matches = matches.or(where(id: query)) if query.match?(/\A\d+\z/)
+    next matches unless FilemakerCoded.code_shaped?(query)
+
+    matches.or(where(person_id: Person.with_filemaker_code(query).select(:id)))
       .or(where(organization_id: Organization.with_filemaker_code(query).select(:id)))
-    query.match?(/\A\d+\z/) ? matches.or(where(id: query)) : matches
   }
 
   scope :matching_comments, ->(query) {
