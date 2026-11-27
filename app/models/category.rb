@@ -9,6 +9,7 @@ class Category < ApplicationRecord
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :categorizable_items, dependent: :destroy
   has_many :workshops, through: :categorizable_items, source: :categorizable, source_type: "Workshop"
+  has_rich_text :rhino_story_share_intro
 
   # Scopes
   # See NameFilterable, Publishable
@@ -33,6 +34,10 @@ class Category < ApplicationRecord
 
   def self.story_share_audience_nav
     story_share_audience_groups.values.flat_map { |scope| scope.published.story_share_featured.to_a }
+  end
+
+  def story_share_audience?
+    category_type&.name.in?(CategoriesTaggable::AUDIENCE_CATEGORY_TYPES)
   end
 
   # Validations

@@ -43,7 +43,7 @@ class SectorsController < ApplicationController
   def update
     authorize! @sector
     if @sector.update(sector_params)
-      redirect_to @sector, notice: "Sector was successfully updated.", status: :see_other
+      redirect_to after_update_path, notice: "Sector was successfully updated.", status: :see_other
     else
       set_form_variables
       render :edit, status: :unprocessable_content
@@ -69,6 +69,12 @@ class SectorsController < ApplicationController
     }
   end
 
+  def after_update_path
+    return story_shares_path(sector_names_all: @sector.name) if params[:return_to] == "story_share"
+
+    @sector
+  end
+
   def set_sector
     @sector = Sector.find(params[:id])
   end
@@ -76,7 +82,7 @@ class SectorsController < ApplicationController
   # Strong parameters
   def sector_params
     params.require(:sector).permit(
-      :name, :published, :description, :story_share_position
+      :name, :published, :description, :story_share_position, :rhino_story_share_intro
     )
   end
 end
