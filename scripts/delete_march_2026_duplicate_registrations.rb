@@ -1,5 +1,5 @@
 # One-off, one of three: delete the 10 March 2026 registrations on #2 whose people
-# are also registered on the TAC261 event (#19), plus 3 staff test registrations.
+# are also registered on the TAC261 event (#19), plus 4 staff asked to remove.
 # None hold money, attendance or linked records worth keeping. Runs in any order with
 # merge_march_2026_event_settings.rb and merge_march_2026_registrations.rb.
 #
@@ -14,7 +14,8 @@ source = Event.find(2)
 
 # The same people's #19 registrations: 777, 813, 815, 816, 817, 994, 1002, 1267, 1268, 1269.
 duplicate_ids = [ 13, 64, 91, 77, 45, 32, 103, 106, 80, 88 ].freeze
-test_ids = [ 7, 14, 15 ].freeze
+# Test and no-longer-wanted registrations staff asked to remove.
+removed_ids = [ 7, 11, 14, 15 ].freeze
 
 import_user = Setting.import_user
 abort "No import user chosen — pick one on /admin/settings (Imports)." unless import_user
@@ -23,7 +24,7 @@ Current.user = import_user
 Current.source = "delete_march_2026_duplicate_registrations"
 
 ActiveRecord::Base.transaction(requires_new: true) do
-  { "duplicate" => duplicate_ids, "test" => test_ids }.each do |label, ids|
+  { "duplicate" => duplicate_ids, "removed" => removed_ids }.each do |label, ids|
     deleted = source.event_registrations.where(id: ids).destroy_all
     puts "Deleted #{deleted.size} of #{ids.size} #{label} registrations on ##{source.id}"
   end
