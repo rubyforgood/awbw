@@ -1,7 +1,7 @@
 # One-off, one of three: delete the 10 March 2026 registrations on #2 whose people
 # are also registered on the TAC261 event (#19), plus 4 staff asked to remove.
 # None hold money, attendance or linked records worth keeping. Runs in any order with
-# merge_march_2026_event_settings.rb and merge_march_2026_registrations.rb.
+# merge_march_2026_registrations.rb and march_2026_registration_dates.rb.
 #
 # Dry run by default: does everything, prints it, rolls back.
 #
