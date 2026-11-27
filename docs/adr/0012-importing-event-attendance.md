@@ -179,9 +179,9 @@ row before importing a training.
 | Training | Code | Portal event | FileMaker registrations | Scholarships | CE |
 |---|---|---|---|---|---|
 | March 2026 | TAC261 | 19 | E3977 | E3979 | E3980 |
-| July 2026 | TAC262 | 3 | to find | to find | to find |
-| November 2026 | TAC263 | to find | to find | to find | to find |
-| On-demand | — | to find | to find | to find | to find |
+| July 2026 | TAC262 | 3 | E4026 | E4031 | E4032 |
+| November 2026 | TAC263 | 7 | E4043 | E4044 | E4045 |
+| On-demand 2026 | — | 6 | E4014 | none | none |
 
 ## Consequences
 
