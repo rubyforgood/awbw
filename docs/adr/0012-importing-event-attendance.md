@@ -125,8 +125,8 @@ A JA the person already held stays untied: the training didn't create it (decide
 
 Its start is the day they signed up for the training (the registration's sign-up date), which
 is the first time we knew about the job, live or on-demand, attended or not (decided 2026-11-28).
-A blank start, or the 1st of that training's month (a placeholder), becomes the sign-up date; any
-other start is left alone. An import never sets or clears a JA's end date; only closing it from
+A blank start becomes the sign-up date; any other start, the 1st of a month included, is left
+alone. An import never sets or clears a JA's end date; only closing it from
 the profile ends it (decided 2026-11-28).
 
 ### D7 — The facilitator affiliation

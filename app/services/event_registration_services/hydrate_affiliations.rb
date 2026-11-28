@@ -5,8 +5,8 @@ module EventRegistrationServices
   # than guessing. Rerunning it changes nothing.
   #
   # - Job affiliation (D6): kept when held with the title, titled when an untitled one is held,
-  #   listed when a different title is held, else added. A blank or placeholder start becomes
-  #   the day they signed up. Only one this training adds is tied to the registration.
+  #   listed when a different title is held, else added. A blank start becomes the day they
+  #   signed up. Only one this training adds is tied to the registration.
   # - Facilitator affiliation (D7): only for someone who completed a facilitator training. One
   #   active one is tied to this registration and dated to the training; with none active, one
   #   is added beside any ended ones, which stay as program history. More than one active, one
@@ -70,7 +70,7 @@ module EventRegistrationServices
         note("added job affiliation “#{@job_title}”")
       end
 
-      job.start_date = signed_up_on if placeholder_start?(job.start_date)
+      job.start_date ||= signed_up_on
       finish(job, job_codes)
     end
 
@@ -121,10 +121,6 @@ module EventRegistrationServices
 
     def on_demand?
       @event.on_demand_facilitator_training?
-    end
-
-    def placeholder_start?(start_date)
-      start_date.nil? || start_date == @event.starts_on.beginning_of_month
     end
 
     def finish(affiliation, codes)

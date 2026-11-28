@@ -48,17 +48,16 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
       expect(job.reload.event_registration).to be_nil
     end
 
-    it "moves a placeholder start to the day they signed up and keeps a real one" do
-      placeholder = create(:affiliation, person: person, organization: organization, title: "Counselor",
-                                         start_date: Date.new(2026, 3, 1))
-      real = create(:affiliation, person: person, organization: create(:organization), title: "Counselor",
-                                  start_date: Date.new(2019, 5, 6))
+    it "fills a blank start with the day they signed up and keeps any other, the 1st of the month included" do
+      blank = create(:affiliation, person: person, organization: organization, title: "Counselor")
+      first_of_month = create(:affiliation, person: person, organization: create(:organization), title: "Counselor",
+                                            start_date: Date.new(2026, 3, 1))
 
       hydrate(job_title: "Counselor")
-      described_class.call(registration: registration, organization: real.organization, job_title: "Counselor")
+      described_class.call(registration: registration, organization: first_of_month.organization, job_title: "Counselor")
 
-      expect(placeholder.reload.start_date).to eq(signed_up_on)
-      expect(real.reload.start_date).to eq(Date.new(2019, 5, 6))
+      expect(blank.reload.start_date).to eq(signed_up_on)
+      expect(first_of_month.reload.start_date).to eq(Date.new(2026, 3, 1))
     end
 
     it "lists a different title held there and leaves it" do
