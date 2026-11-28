@@ -3,7 +3,8 @@
     data: { controller: "collection searchable-checkbox", turbo_frame: "organizations_results" },
     autocomplete: "off",
     class: "flex flex-col gap-3 md:flex-row md:items-end" do %>
-    <%= render "shared/filter_text", param: :query, label: "Name", wrapper_class: "w-full md:flex-1" %>
+    <%= render "shared/filter_text", param: :query, label: "Name", tooltip: "Also matches a portal ID or FM code",
+          wrapper_class: "w-full md:flex-1" %>
     <%= render "shared/filter_multiselect", param: :sector_ids, label: "Sector",
           options: @sector_options || [],
           selected: Array(params[:sector_ids]).map(&:to_i), placeholder: "Any sector",

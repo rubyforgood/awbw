@@ -177,7 +177,7 @@
                         title: "Read and edit these comments (opens in a new tab)",
                         class: "group relative inline-flex items-center" do %>
               <i class="fa-solid fa-comment cursor-pointer text-sm <%= facilitator ? 'text-purple-500' : 'text-blue-500' %>"></i>
-              <span class="hidden group-hover:block absolute right-0 top-full z-50 mt-1 w-64 whitespace-normal rounded-lg bg-white p-3 text-left text-xs text-gray-700 shadow-lg ring-1 ring-gray-200">
+              <span class="hidden group-hover:block absolute right-0 top-full z-50 mt-1 w-64 whitespace-normal p-3 text-left <%= tooltip_class %>">
                 <span class="block font-semibold text-gray-900"><%= pluralize(affiliation_comments.size, "comment") %></span>
                 <span class="mt-1 block text-gray-600"><%= truncate(affiliation_comments.first.body.to_s, length: 140) %></span>
                 <span class="mt-1.5 block font-medium text-indigo-600">Open to read them all →</span>

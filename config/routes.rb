@@ -423,6 +423,8 @@ Rails.application.routes.draw do
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
   resources :affiliations, only: [ :index, :edit, :update, :destroy ] do
+    get :dedupe_index, on: :collection
+    post :dedupe_perform, on: :collection
     patch :save_inline, on: :member
     patch :save_note, on: :member
   end

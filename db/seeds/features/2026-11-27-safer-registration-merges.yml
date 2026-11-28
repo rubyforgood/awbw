@@ -1,0 +1,13 @@
+name: "Safer registration merges"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-27
+action_path: "/event_registrations/dedupe_index"
+pr_number: 3058
+summary: >-
+  The registration deduper now shows attendance days, certificate and survey
+  dates, and FileMaker codes so you can pick what to keep. It refuses a merge
+  while a Stripe checkout is unfinished or when sign-in times overlap.
+pro_tips:
+  - "Merging two people now also keeps attendance days and bulk payment links on the registrations they shared."
+  - "Fix overlapping sign-in times on the attendance report, then merge."

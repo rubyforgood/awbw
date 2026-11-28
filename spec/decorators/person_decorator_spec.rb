@@ -115,6 +115,31 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#page_title_label" do
+    let(:view_context) { Draper::ViewContext.current.send(:view_context) }
+    let(:person) { create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org") }
+
+    context "for an admin" do
+      before { allow(view_context).to receive(:allowed_to?).with(:full_name?, anything).and_return(true) }
+
+      it "is the full name and email" do
+        expect(person.decorate.page_title_label).to eq("Pat Example · pat@example.org")
+      end
+
+      it "leaves out a placeholder email" do
+        person.update!(email: PlaceholderEmail.first)
+
+        expect(person.decorate.page_title_label).to eq("Pat Example")
+      end
+    end
+
+    it "is the shown name, without an email, for everyone else" do
+      allow(view_context).to receive(:allowed_to?).with(:full_name?, anything).and_return(false)
+
+      expect(person.decorate.page_title_label).to eq(person.name)
+    end
+  end
+
   describe "#profile_email" do
     it "prefers the login email" do
       person = create(:person, email: "record@example.com")

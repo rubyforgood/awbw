@@ -1,6 +1,12 @@
 class NotificationDecorator < ApplicationDecorator
   include ::EventChippable
 
+  def page_title_label
+    subject = email_subject.presence || custom_subject.presence || "Undelivered"
+    recipient = person ? h.person_name(person) : recipient_email
+    [ subject, recipient ].compact_blank.join(" · ")
+  end
+
   # Solid Font Awesome icon per communication channel, shown before the subject
   # in the communications box. "autoemail" (system email) reuses the envelope;
   # "text" uses a mobile handset to stay distinct from the "phone" call icon.

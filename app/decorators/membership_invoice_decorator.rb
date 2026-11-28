@@ -1,4 +1,9 @@
 class MembershipInvoiceDecorator < ApplicationDecorator
+  def page_title_label
+    person = membership&.person
+    [ "Membership invoice", (h.person_name(person) if person), start_date&.year ].compact_blank.join(" · ")
+  end
+
   Badge = Struct.new(:label, :icon, :classes, keyword_init: true)
 
   BADGE_CLASSES = {

@@ -32,7 +32,7 @@ class PeopleController < ApplicationController
       contact_info = filters.delete(:contact_info)
       work_location = filters.delete(:work_location)
       filtered = base_scope.search_by_params(filters)
-      filtered = filtered.search_name_email(name_email)
+      filtered = filtered.matching_text_or_identifier(:search_name_email, name_email) if name_email.present?
       filtered = filtered.search_contact(contact_info)
       filtered = filtered.distinct if contact_info.present?
       filtered = located_by_work_location(filtered, work_location) if work_location.present?
@@ -55,7 +55,7 @@ class PeopleController < ApplicationController
     contact_info = filters.delete(:contact_info)
     work_location = filters.delete(:work_location)
     people = Person.includes(:user).search_by_params(filters)
-    people = people.search_name_email(name_email)
+    people = people.matching_text_or_identifier(:search_name_email, name_email) if name_email.present?
     people = people.search_contact(contact_info)
     people = people.distinct if contact_info.present?
     people = located_by_work_location(people, work_location) if work_location.present?
@@ -388,24 +388,44 @@ class PeopleController < ApplicationController
       # otherwise it's purged with the deleted person (has_one_attached dependent: :purge).
       movable_attachments: %w[avatar],
       editable_columns: %w[
-        first_name legal_first_name last_name email email_type email_2 email_2_type
-        date_of_birth pronouns filemaker_code member_since notes
+        first_name legal_first_name last_name pronouns pronunciation
+        email email_type email_2 email_2_type
+        date_of_birth racial_ethnic_identity member_since best_time_to_call filemaker_code
+        bio shoutout_text facebook_url instagram_url linked_in_url twitter_url youtube_url
+        anonymous_contributions blog_contributor notes
       ],
       union_columns: %w[filemaker_code],
+      # Filled from the deleted person when the keeper's is blank or a "no" flag.
+      fill_blank_columns: %w[
+        legal_first_name pronouns pronunciation date_of_birth racial_ethnic_identity
+        member_since best_time_to_call bio shoutout_text
+        facebook_url instagram_url linked_in_url twitter_url youtube_url
+        anonymous_contributions blog_contributor
+      ],
       field_logins: ->(person) { logins_by_email_field(person) },
-      merge_outcomes: ->(keep, delete) { email_merge_outcomes(keep, delete) },
+      merge_outcomes: ->(keep, delete) { person_merge_outcomes(keep, delete) },
       # Merging two people who each have a login leaves the kept person with both
       # (users.person_id has no unique constraint); both logins still sign in to the
       # one record. Surface it so the admin isn't surprised — it doesn't block.
       merge_notes: ->(keep, delete) {
-        [ dropped_email_note(keep, delete), login_merge_note(keep, delete) ].compact
+        [ dropped_email_note(keep, delete), login_merge_note(keep, delete) ].compact +
+          registration_merges(keep, delete).flat_map(&:notes)
       },
-      merge_blocks: ->(keep, delete) { membership_merge_blocks(keep, delete) + external_payer_merge_blocks(keep, delete) },
+      merge_blocks: ->(keep, delete) {
+        membership_merge_blocks(keep, delete) + external_payer_merge_blocks(keep, delete) +
+          registration_merges(keep, delete).flat_map(&:blocks)
+      },
       # Before the merge moves the deleted person's taggings onto the keeper (where
       # they become indistinguishable), capture which primary sector + age range to
       # keep: the survivor's own, or — when it has none — the deleted person's.
       merge_keeper: ->(keep, delete) {
         keep.filemaker_code = Person.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
+        if (notes = combined_notes(keep, delete))
+          keep.notes = notes
+        end
+        if (saved_email = email_2_fallback(keep, delete))
+          keep.assign_attributes(email_2: saved_email, email_2_type: delete.email_type)
+        end
         @keeper_primary_sector_id = keep.sectorable_items.find_by(is_primary: true)&.sector_id ||
           delete.sectorable_items.find_by(is_primary: true)&.sector_id
         @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id ||
@@ -414,6 +434,7 @@ class PeopleController < ApplicationController
         @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
         @keeper_primary_contact_signatures = ContactMethodDeduper.primary_signatures(keep, delete)
         @primary_login_id = primary_login(keep, delete)&.id
+        @registration_merges = registration_merges(keep, delete).each { |merge| merge.tap(&:prepare).carry_details }
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * redundant professional licenses within a kind (merge blank-number
@@ -443,10 +464,20 @@ class PeopleController < ApplicationController
         ContactMethodDeduper.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
         AffiliationDeduper.new(keep).call
+        @registration_merges.each(&:reconcile!)
         sync_primary_login_email(keep)
       },
       record_partial: "people/dedupe_record"
     }
+  end
+
+  # Both people registered for one event: the people merge collapses those registrations.
+  def registration_merges(keep, delete)
+    kept = keep.event_registrations.index_by(&:event_id)
+    delete.event_registrations.filter_map do |registration|
+      survivor = kept[registration.event_id]
+      EventRegistrationServices::RegistrationMerge.new(survivor, registration) if survivor
+    end
   end
 
   def membership_merge_blocks(keep, delete)
@@ -463,9 +494,41 @@ class PeopleController < ApplicationController
     [ "The External Payer record can't be merged — unmatched payments fall back to it." ]
   end
 
+  # The keeper's notes with the deleted person's added below, or nil when there's nothing to add.
+  def combined_notes(keep, delete)
+    added = delete.notes.to_s.strip
+    return if added.blank? || keep.notes.to_s.include?(added)
+
+    [ keep.notes.to_s.strip.presence, added ].compact.join("\n\n")
+  end
+
+  def person_merge_outcomes(keep, delete)
+    outcomes = email_merge_outcomes(keep, delete)
+    return outcomes unless combined_notes(keep, delete)
+
+    outcomes.deep_merge(fields: { "notes" => { delete: "added to the keeper's notes" } })
+  end
+
+  # The deleted person's primary email, saved to the keeper's empty Email 2 so it isn't
+  # dropped. Skipped when the login sync changes the keeper's primary, since that sync
+  # rewrites Email 2 with the primary it replaces.
+  def email_2_fallback(keep, delete)
+    return if keep.email_2.present? || login_replaces_primary?(keep, delete)
+
+    address = delete.email.presence
+    return if address.nil? || PlaceholderEmail.match?(address) || address.casecmp?(keep.email.to_s)
+
+    address
+  end
+
+  def login_replaces_primary?(keep, delete)
+    login = primary_login(keep, delete)
+    login.present? && !login.email.casecmp?(keep.email.to_s)
+  end
+
   # The primary login's email becomes the keeper's primary, so it isn't dropped.
   def dropped_email_note(keep, delete)
-    held = [ keep.email, keep.email_2, primary_login(keep, delete)&.email ].compact_blank
+    held = [ keep.email, keep.email_2, primary_login(keep, delete)&.email, email_2_fallback(keep, delete) ].compact_blank
     dropped = [ delete.email, delete.email_2 ].compact_blank
       .reject { |address| PlaceholderEmail.match?(address) || held.any? { |kept| kept.casecmp?(address) } }
       .uniq(&:downcase)
@@ -482,8 +545,17 @@ class PeopleController < ApplicationController
     end
   end
 
-  # What the login email sync changes on the kept person, flagged beside each email and login.
+  # What the merge changes on the kept person's emails, flagged beside each email and login.
   def email_merge_outcomes(keep, delete)
+    if (saved_email = email_2_fallback(keep, delete))
+      fields = { "email" => { delete: "saved to Email 2" }, "email_2" => { keep: "becomes #{saved_email}" } }
+      if delete.email_type.present?
+        fields["email_type"] = { delete: "saved to Email 2 type" }
+        fields["email_2_type"] = { keep: "becomes #{delete.email_type}" }
+      end
+      return { fields: fields }
+    end
+
     login = primary_login(keep, delete)
     return {} if login.nil? || login.email.casecmp?(keep.email.to_s)
 

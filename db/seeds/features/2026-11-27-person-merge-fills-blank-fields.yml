@@ -1,0 +1,12 @@
+name: "Merging people keeps the deleted person's details the kept person is missing"
+area: people
+display_status: admin_facing
+released_on: 2026-11-27
+action_path: "/people/dedupe_index"
+pr_number: 3065
+summary: >-
+  When you merge two people, any detail the kept person is missing (member since, date of birth,
+  pronouns, bio, social links and more) is copied from the deleted person. Notes from both are combined.
+pro_tips:
+  - "Anonymous contributions and blog contributor stay on if either person had them."
+  - "Anything you type into the kept person's field wins. A field you clear is filled back in."

@@ -1,6 +1,20 @@
 require "rails_helper"
 
 RSpec.describe ApplicationHelper, type: :helper do
+  describe "#tooltip_class" do
+    it "is white by default" do
+      expect(helper.tooltip_class.split).to include("bg-white", "ring-gray-200")
+      expect(helper.tooltip_class).not_to include("blue")
+    end
+
+    it "takes the admin-only coloring when asked" do
+      classes = helper.tooltip_class(admin_only: true).split
+
+      expect(classes).to include("admin-only", "bg-blue-100", "ring-blue-200")
+      expect(classes).not_to include("bg-white")
+    end
+  end
+
   describe "#accent_strip_partial" do
     def strip_for(marker)
       helper.content_for(:page_bg_class, marker) if marker

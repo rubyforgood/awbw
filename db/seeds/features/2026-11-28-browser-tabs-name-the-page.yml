@@ -1,0 +1,10 @@
+name: "Browser tabs name the page you're on"
+area: reporting
+display_status: admin_facing
+released_on: 2026-11-28
+summary: >-
+  Each portal tab now says what page it shows, like "Jane Doe | AWBW" or
+  "Edit Jane Doe | AWBW", so a row of open tabs is easy to tell apart. Events
+  show their abbreviation (or title) and dates.
+pro_tips:
+  - "Hover a tab to see its full title when the tab is too narrow to show it all."

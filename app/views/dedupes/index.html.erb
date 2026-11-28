@@ -19,6 +19,23 @@
       <% end %>
     </div>
 
+    <% if @just_merged %>
+      <div class="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-900" role="status">
+        <i class="fa-solid fa-circle-check mt-0.5 text-emerald-600" aria-hidden="true"></i>
+        <p>
+          <span class="font-semibold"><%= @just_merged[:deleted_label] %></span> was successfully merged into
+          <% if @just_merged[:kept_path] %>
+            <%= link_to @just_merged[:kept_label], @just_merged[:kept_path], class: "font-semibold underline hover:text-emerald-700" %>
+            and deleted.
+          <% elsif @just_merged[:kept_label] %>
+            <span class="font-semibold"><%= @just_merged[:kept_label] %></span> and deleted.
+          <% else %>
+            the kept <%= @dedupe[:model_label].downcase %> and deleted.
+          <% end %>
+        </p>
+      </div>
+    <% end %>
+
     <!-- Selection form -->
     <%= form_with url: url_for(action: :dedupe_preview), method: :get, data: { turbo: false },
                   class: "rounded-xl bg-white border border-gray-200 p-6 space-y-4" do |f| %>
@@ -29,7 +46,7 @@
           </label>
           <%= f.select @dedupe[:delete_id_param].to_sym,
                       options_for_select([]),
-                      { include_blank: true, prompt: "Search for #{@dedupe[:model_label_plural].downcase} to delete" },
+                      { include_blank: true, prompt: @dedupe[:search_hint] },
                       class: "w-full px-4 py-2 rounded border border-gray-300 focus:border-blue-500 focus:ring-blue-200 text-gray-900",
                       required: true,
                       data: { controller: "remote-select", remote_select_model_value: @dedupe[:search_model] } %>
@@ -40,7 +57,7 @@
           </label>
           <%= f.select @dedupe[:keep_id_param].to_sym,
                       options_for_select([]),
-                      { include_blank: true, prompt: "Search for #{@dedupe[:model_label_plural].downcase} to keep" },
+                      { include_blank: true, prompt: @dedupe[:search_hint] },
                       class: "w-full px-4 py-2 rounded border border-gray-300 focus:border-blue-500 focus:ring-blue-200 text-gray-900",
                       required: true,
                       data: { controller: "remote-select", remote_select_model_value: @dedupe[:search_model] } %>

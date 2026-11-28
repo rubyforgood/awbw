@@ -45,6 +45,13 @@ module Dedupable
     end
   end
 
+  # Copies the deleted record's value into each listed column the keeper left blank.
+  def self.fill_blank_columns(keep, delete, columns)
+    columns.each do |name|
+      keep[name] = delete[name] if keep[name].blank? && delete[name].present?
+    end
+  end
+
   def dedupe_index
     config = dedupe_config
     mc = config[:model_class]
@@ -52,6 +59,7 @@ module Dedupable
 
     @possible_duplicate_groups = dedupe_candidate_groups(config)
     @dedupe = build_dedupe_vars(config)
+    @just_merged = dedupe_just_merged(config)
 
     render "dedupes/index"
   end
@@ -89,6 +97,9 @@ module Dedupable
     @merge_outcomes = config[:merge_outcomes]&.call(@record_to_keep, @record_to_delete) || {}
     @merge_blocks = Array(config[:merge_blocks]&.call(@record_to_keep, @record_to_delete))
     @dedupe = build_dedupe_vars(config)
+    @choice_options = config[:choice_options]&.call(@record_to_keep, @record_to_delete) || {}
+    hidden = Array(config[:hidden_columns]&.call(@record_to_keep, @record_to_delete))
+    @dedupe[:editable_columns] -= hidden if hidden.any? && @dedupe[:editable_columns]
 
     render "dedupes/preview"
   end
@@ -139,6 +150,7 @@ module Dedupable
     end
 
     Dedupable.fill_empty_links(record_to_keep, record_to_delete, dedupe_linked_associations(config))
+    Dedupable.fill_blank_columns(record_to_keep, record_to_delete, Array(config[:fill_blank_columns]).map(&:to_s))
 
     # Combine values that must survive the merge rather than be replaced wholesale
     # (e.g. an org's FileMaker codes), so the kept record keeps both records' links.
@@ -170,6 +182,9 @@ module Dedupable
       record_to_keep.save! if record_to_keep.changed?
     end
 
+    # The toast fades in seconds; this keeps the outcome on the index until the next merge.
+    flash[:dedupe_merged] = { "deleted_label" => dedupe_record_label(config, record_to_delete).to_s,
+                              "kept_id" => record_to_keep.id }
     label = mc.model_name.human.pluralize
     redirect_to dedupe_return&.dig(:path) || url_for(action: :dedupe_index),
       notice: "#{label} merged successfully. '#{dedupe_record_label(config, record_to_delete)}' was merged into '#{dedupe_record_label(config, record_to_keep)}'."
@@ -192,6 +207,19 @@ module Dedupable
     when "person_show" then { label: "Back to profile", path: person_path(person_id), params: carry }
     when "person_edit" then { label: "Back to edit person", path: edit_person_path(person_id), params: carry }
     end
+  end
+
+  # The merge that just redirected here: the deleted record's label and the surviving
+  # record (nil once it's gone), linked to its page when the model has one.
+  def dedupe_just_merged(config)
+    merged = flash[:dedupe_merged]
+    return unless merged.is_a?(Hash)
+
+    kept = config[:model_class].find_by(id: merged["kept_id"])
+    path_helper = "#{config[:model_class].model_name.singular_route_key}_path"
+    { deleted_label: merged["deleted_label"],
+      kept_label: kept && dedupe_record_label(config, kept),
+      kept_path: kept && respond_to?(path_helper, true) ? public_send(path_helper, kept) : nil }
   end
 
   def dedupe_linked_associations(config)
@@ -231,6 +259,16 @@ module Dedupable
   #   deprecated_columns: Array of column names to render muted with a "Deprecated" badge (optional)
   #   editable_columns:   Array of column names the preview shows and lets an admin edit on the keeper;
   #                       only these are accepted on save (optional, defaults to every column)
+  #   fill_blank_columns: Array of editable column names the merge fills from the deleted record when
+  #                       the keeper's is blank (e.g. member_since) (optional)
+  #   hidden_columns:     Lambda(keep, delete) returning editable_columns this pair's preview leaves out,
+  #                       e.g. attendance days past the event's length (optional)
+  #   column_labels:      Hash of { column_name => label } for read-only rows (optional)
+  #   field_links:        Hash of { column_name => Lambda(record) returning a URL } linking a shown
+  #                       value, e.g. a registration's ticket (optional)
+  #   choice_options:     Lambda(keep, delete) returning { column_name => [ [ label, value ], … ] } — the
+  #                       keeper picks from a list, applied only when the merge runs (no autosave), for a
+  #                       unique value the duplicate holds until it's deleted, e.g. a ticket slug (optional)
   #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
   #                       e.g. a login's email and sign-in history (optional)
   #   audit_columns:      Columns listed read-only at the bottom of Links & history and never filled onto
@@ -238,7 +276,10 @@ module Dedupable
   #   record_label:       Lambda(record) naming a record across the deduper when #name doesn't tell two
   #                       apart, e.g. two logins of one person (optional, defaults to #name)
   #   search_model:       Search model the index pickers query (optional, defaults to the model's own
-  #                       remote search), e.g. "user_any_status" to reach logins that can't sign in
+  #                       remote search), e.g. "user_any_status" to reach logins that can't sign in.
+  #                       The pickers also match a portal id or FileMaker code (SearchController#dedupe_results)
+  #   search_hint:        Placeholder naming what the pickers match (optional, defaults to name or title, plus
+  #                       email / FileMaker code when the search covers them, plus portal ID)
   #   reference_columns:  Array of column names that reference this model in any table but carry no DB
   #                       foreign key, so the merge moves them too (e.g. created_by_id stamps) (optional)
   #   movable_attachments: Array of has_one_attached names to move to the keeper when it has none
@@ -249,7 +290,8 @@ module Dedupable
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
   #   merge_outcomes:     Lambda(keep, delete) returning { fields: { column_name => { keep:, delete: } },
   #                       records: { record => text } } — what the merge changes beyond keeping the keeper's
-  #                       values, flagged beside that field or moving record (optional)
+  #                       values, flagged beside that field or moving record; a text may be
+  #                       { text:, loss: true } to flag a value the merge loses (optional)
   #   merge_blocks:       Lambda(keep, delete) returning an array of reasons this particular merge is
   #                       unsafe (e.g. both people already have memberships). Any reason disables
   #                       the preview's merge button and refuses the POST (optional)
@@ -278,6 +320,13 @@ module Dedupable
     Dedupable.name_groups(config[:model_class])
   end
 
+  def dedupe_search_hint(model_class)
+    terms = [ model_class.remote_search_columns.include?("title") ? "title" : "name" ]
+    terms << "email" if model_class.remote_search_columns.any? { |column| column.include?("email") }
+    terms << "FileMaker code" if model_class.respond_to?(:with_filemaker_code)
+    "Search by #{(terms << "portal ID").to_sentence(two_words_connector: " or ", last_word_connector: ", or ")}"
+  end
+
   def build_dedupe_vars(config)
     mc = config[:model_class]
     mn = mc.model_name.singular
@@ -291,13 +340,17 @@ module Dedupable
       delete_id_param: "#{mn}_to_delete_id",
       keep_id_param: "#{mn}_to_keep_id",
       keep_param_key: "#{mn}_to_keep".to_sym,
-      search_model: config[:search_model] || mn,
+      search_model: "#{config[:search_model] || mn}#{SearchController::DEDUPE_SUFFIX}",
+      search_hint: config[:search_hint] || dedupe_search_hint(mc),
       editable_columns: config[:editable_columns],
       read_only_columns: Array(config[:read_only_columns]).map(&:to_s),
+      column_labels: config[:column_labels] || {},
+      field_links: config[:field_links] || {},
       audit_columns: dedupe_audit_columns(config),
       linked_associations: dedupe_linked_associations(config),
       record_label: config[:record_label] || :name.to_proc,
       union_columns: Array(config[:union_columns]).map(&:to_s),
+      fill_blank_columns: Array(config[:fill_blank_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       remote_select_options: config[:remote_select_options] || {},
       field_notes: config[:field_notes] || {},

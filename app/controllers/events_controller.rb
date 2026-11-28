@@ -30,6 +30,7 @@ class EventsController < ApplicationController
       @events = events
       @archived_events = []
     end
+    @unreconciled_counts = EventRegistration.unreconciled_counts_by_event(@events + @archived_events)
   end
 
   def show

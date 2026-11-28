@@ -249,7 +249,7 @@ class Organization < ApplicationRecord
 
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
-    organizations = organizations.search(params[:query]) if params[:query].present?
+    organizations = organizations.matching_text_or_identifier(:search, params[:query]) if params[:query].present?
     organizations = organizations.sector_names_all(params[:sector_names_all])
     organizations = organizations.category_names_all(params[:category_names_all])
     organizations = organizations.with_sector_ids(params[:sector_ids])

@@ -1,4 +1,8 @@
 class MembershipDecorator < ApplicationDecorator
+  def page_title_label
+    [ "Membership", (h.person_name(person) if person) ].compact_blank.join(" · ")
+  end
+
   def cost_label
     return "Standard (#{h.dollars_from_cents(Membership.annual_cost_cents)})" if cost_cents.nil?
 

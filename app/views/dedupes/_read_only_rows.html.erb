@@ -1,13 +1,27 @@
 <%# Side-by-side read-only rows; the deleted record's differing values go with it.
-    Locals: columns, record_to_delete, record_to_keep, border, display (lambda(col, record)). %>
+    Locals: columns, record_to_delete, record_to_keep, border, display (lambda(col, record)),
+    optional column_labels, field_links ({ column => lambda(record) → url }), field_outcomes. %>
+<% column_labels = local_assigns[:column_labels] || {} %>
+<% field_links = local_assigns[:field_links] || {} %>
+<% field_outcomes = local_assigns[:field_outcomes] || {} %>
 <% columns.each do |col| %>
   <% delete_val = record_to_delete.public_send(col.name) %>
   <% dropped = delete_val.to_s.strip.present? && delete_val != record_to_keep.public_send(col.name) %>
-  <% [ record_to_delete, record_to_keep ].each do |record| %>
+  <% [ [ record_to_delete, :delete ], [ record_to_keep, :keep ] ].each do |record, side| %>
+    <% url = record.public_send(col.name).present? && field_links[col.name]&.call(record) %>
+    <% outcome = field_outcomes.dig(col.name, side) %>
     <div class="border-x border-b <%= border %> flex flex-wrap items-center gap-x-2 bg-white px-5 py-3 text-sm">
-      <span class="w-full text-gray-400 sm:w-auto"><%= col.name.humanize %></span>
-      <span class="text-gray-900"><%= display.call(col, record) %></span>
-      <%= render "dedupes/outcome_chip", kind: :dropped if dropped && record == record_to_delete %>
+      <span class="w-full text-gray-400 sm:w-auto"><%= column_labels[col.name] || col.name.humanize %></span>
+      <% if url %>
+        <%= link_to display.call(col, record), url, target: "_blank", rel: "noopener", class: "text-gray-900 underline" %>
+      <% else %>
+        <span class="text-gray-900"><%= display.call(col, record) %></span>
+      <% end %>
+      <% if outcome %>
+        <%= render "dedupes/merge_outcome", text: outcome %>
+      <% elsif dropped && side == :delete %>
+        <%= render "dedupes/outcome_chip", kind: :dropped %>
+      <% end %>
     </div>
   <% end %>
 <% end %>

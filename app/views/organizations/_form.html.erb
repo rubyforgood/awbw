@@ -276,7 +276,7 @@
       <% elsif allowed_to?(:manage?, Organization) && !status_matches_affiliations %>
         <div class="group relative cursor-help">
           <i class="fa-solid fa-triangle-exclamation text-lg text-amber-500"></i>
-          <div class="absolute top-full right-0 z-50 mt-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover:block">
+          <div class="absolute top-full right-0 z-50 mt-1 hidden w-64 p-3 whitespace-normal group-hover:block <%= tooltip_class %>">
             Legacy organization status does not match affiliation status
           </div>
         </div>
@@ -303,7 +303,7 @@
           <label class="mb-1 inline-flex items-center gap-1 text-md font-medium text-gray-700">
             Facilitators since <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
           </label>
-          <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/fac:block">
+          <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 p-3 whitespace-normal group-hover/fac:block <%= tooltip_class %>">
             <p>When this organization started having AWBW facilitators, from its 'Facilitator' affiliations — one period per stretch of facilitating, so a lapse and a return read as separate periods (e.g. "Aug 2015 – Jun 2018, Feb 2024"). Updates live as you edit the affiliation rows below.</p>
           </div>
         </div>
@@ -313,7 +313,7 @@
             <span class="group/aff relative inline-flex cursor-help items-center gap-1">
               <span class="text-xs text-gray-500" data-affiliation-dates-target="affiliatedNoteText"><%= org_decorated.affiliated_since_note %></span>
               <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
-              <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/aff:block">
+              <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 p-3 whitespace-normal group-hover/aff:block <%= tooltip_class %>">
                 <p>The earliest date this organization was affiliated with anyone, in any role. Shown only when it's earlier than the facilitator start — otherwise the two dates are the same.</p>
               </div>
             </span>
@@ -326,7 +326,7 @@
           <label class="mb-1 inline-flex items-center gap-1 text-md font-medium text-gray-700">
             Program status <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
           </label>
-          <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover:block">
+          <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 p-3 whitespace-normal group-hover:block <%= tooltip_class %>">
             <p>Overall status first (Active / Formerly active / Never active), then the facilitator-program status as of each event's date:<br>
               • <span class="font-medium">New</span> — no facilitator affiliations yet<br>
               • <span class="font-medium">Ongoing</span> — has an active facilitator<br>

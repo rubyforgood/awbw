@@ -1,6 +1,10 @@
 class ScholarshipDecorator < ApplicationDecorator
   delegate_all
 
+  def page_title_label
+    [ "Scholarship", (h.person_name(recipient) if recipient) ].compact_blank.join(" · ")
+  end
+
   def recipient_name
     object.recipient&.full_name.presence || "Unknown recipient"
   end

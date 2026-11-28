@@ -26,7 +26,7 @@
   <% other_first_name_hint = capture do %>
     <span class="group/other-name relative inline-flex cursor-help items-center gap-1">
       Helps us find your record <i class="fa-solid fa-circle-info text-xs text-gray-400" aria-hidden="true"></i>
-      <span class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/other-name:block"><%= FormBuilderService::OTHER_FIRST_NAME_HINT %></span>
+      <span class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 p-3 whitespace-normal group-hover/other-name:block <%= tooltip_class %>"><%= FormBuilderService::OTHER_FIRST_NAME_HINT %></span>
     </span>
   <% end %>
 
@@ -248,7 +248,7 @@
             <label class="mb-1 inline-flex items-center gap-1 text-md font-medium text-gray-700">
               Facilitator since <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
             </label>
-            <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/fac:block">
+            <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 p-3 whitespace-normal group-hover/fac:block <%= tooltip_class %>">
               <% facilitator_start = person.affiliations.facilitators.minimum(:start_date) %>
               <% if facilitator_start.nil? && person.member_since.present? %>
                 <p>Earliest start date from affiliations with 'facilitator' somewhere in the title.<br><br><span class="font-medium text-amber-700">⚠ Currently showing the legacy member_since value (<%= person.member_since.strftime('%b %Y') %>) because no Facilitator affiliation has a start date. Add a start date to a Facilitator affiliation to stop using the legacy value.</span></p>
@@ -278,7 +278,7 @@
               <span class="group/aff relative inline-flex cursor-help items-center gap-1">
                 <span class="text-xs text-gray-500" data-affiliation-dates-target="affiliatedNoteText"><%= decorated.affiliated_since_note %></span>
                 <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
-                <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/aff:block">
+                <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 p-3 whitespace-normal group-hover/aff:block <%= tooltip_class %>">
                   <p>The earliest date this person was affiliated with any organization, in any role. Shown only when it's earlier than the facilitator start — otherwise the two dates are the same.</p>
                 </div>
               </span>

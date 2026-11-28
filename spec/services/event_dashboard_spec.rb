@@ -1298,6 +1298,29 @@ RSpec.describe EventDashboard do
     end
   end
 
+  describe "#unreconciled_registration_count" do
+    def with_registrations(event)
+      create(:event_registration, event: event, status: "registered")
+      create(:event_registration, event: event, status: "attended")
+      create(:event_registration, event: event, status: "no_show")
+      event
+    end
+
+    it "counts registrations still registered once the event has ended, training or not" do
+      [ true, false ].each do |training|
+        event = with_registrations(create(:event, :ended, facilitator_training: training))
+
+        expect(described_class.new(event).unreconciled_registration_count).to eq(1)
+      end
+    end
+
+    it "is zero before the event ends" do
+      event = with_registrations(create(:event, start_date: 3.days.from_now, end_date: 5.days.from_now))
+
+      expect(described_class.new(event).unreconciled_registration_count).to eq(0)
+    end
+  end
+
   describe "attendance stats" do
     let(:event) { create(:event) }
 

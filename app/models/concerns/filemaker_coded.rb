@@ -13,6 +13,12 @@ module FilemakerCoded
     normalizes :filemaker_code, with: ->(value) { join_filemaker_codes(value) }, apply_to_nil: true
   end
 
+  # Every FileMaker code holds a digit and no spaces, so names and emails skip the
+  # code match, which scans the whole table.
+  def self.code_shaped?(query)
+    query.to_s.match?(/\d/) && !query.to_s.strip.match?(/[[:space:]@]/)
+  end
+
   def filemaker_codes
     self.class.split_filemaker_codes(filemaker_code)
   end

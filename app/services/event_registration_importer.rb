@@ -23,9 +23,11 @@ require "bigdecimal"
 #     alongside (never in place of) a real registrant's submission.
 #   * Organization — matched by name, tolerating punctuation and legal suffixes
 #     (OrganizationServices::NameMatcher), then filled in through
-#     OrganizationServices::CaptureFromSubmission: website, type, work address, and
-#     the job (+ facilitator, on a training) affiliations. Unmatched names are left
-#     for the link-organization queue, never invented here.
+#     OrganizationServices::CaptureFromSubmission: website, type, and work address.
+#     Unmatched names are left for the link-organization queue, never invented here.
+#   * Affiliations — the job (+ facilitator, on a completed training) ones, through
+#     EventRegistrationServices::HydrateAffiliations, the step every attendance
+#     import shares (ADR-0012 D1, D6–D8). What it can't decide is listed on the row.
 #   * Profile — mailing address, phone, pronouns, sectors and age groups through
 #     PersonServices::CaptureFromSubmission. The sheet's valid answers replace a
 #     matched person's (and org's) saved values; each replacement is listed on the
@@ -844,14 +846,20 @@ class EventRegistrationImporter
 
     result = OrganizationServices::CaptureFromSubmission.call(
       person: person, answers: answers, organization: organization, submission: submission,
-      facilitator_training: @event.facilitator_training, training_date: @event.starts_on,
-      event_registration: registration
+      event_registration: registration, affiliations: false
     )
-    result.autofill.select(&:update?).each do |change|
+    hydration = EventRegistrationServices::HydrateAffiliations.call(
+      registration: registration, organization: organization, job_title: answers["organization_position"],
+      organization_address: result.address
+    )
+    autofill = result.autofill + hydration.autofill
+    autofill.select(&:update?).each do |change|
       preview.warnings << "Replaced #{change.description.downcase} “#{change.previous_value}” with “#{change.value}”"
     end
+    preview.details.concat(hydration.changes.map(&:upcase_first))
+    preview.warnings.concat(hydration.for_a_look.map(&:upcase_first))
     note_declined(organization, organization_declines(organization, answers), preview)
-    registration.link_submitted_organization!(organization, submission: submission, autofill: result.autofill)
+    registration.link_submitted_organization!(organization, submission: submission, autofill: autofill)
   end
 
   # Run after the capture, so only the answers it couldn't apply remain.

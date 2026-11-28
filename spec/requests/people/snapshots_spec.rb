@@ -14,7 +14,8 @@ RSpec.describe "Person snapshots", type: :request do
     it "renders the snapshot sections" do
       event = create(:event, title: "Facilitator Training", facilitator_training: true,
                      start_date: Date.new(2025, 6, 4), end_date: Date.new(2025, 6, 6))
-      create(:event_registration, registrant: person, event: event, status: "attended")
+      registration = create(:event_registration, registrant: person, event: event, status: "attended")
+      registration.organizations << create(:organization, name: "Lakeside Center")
       membership = create(:membership, person: person, start_date: Date.current,
                            end_date: Date.current + 1.year)
 
@@ -28,6 +29,7 @@ RSpec.describe "Person snapshots", type: :request do
       expect(response.body).to include(">Affiliated since #{1.year.ago.strftime("%b %Y")}</h2>")
       expect(response.body).not_to include(">Affiliations</h2>")
       expect(response.body).to include(">Facilitator trainings</h2>")
+      expect(response.body).to match(/\d{4} · Lakeside Center</)
       expect(response.body).to include(">Membership</h2>")
     end
 
@@ -61,6 +63,17 @@ RSpec.describe "Person snapshots", type: :request do
 
       expect(response.body).to include(">Affiliated since Mar 2020</h2>")
       expect(response.body).to include("No snapshot content yet.")
+    end
+
+    it "leaves the status pill blank for a JA-only org" do
+      staffer = create(:person)
+      create(:affiliation, person: staffer, organization: create(:organization, name: "Riverbend Shelter"),
+             title: "Program Director", start_date: 1.year.ago, inactive: false)
+
+      get person_snapshot_path(staffer)
+
+      expect(response.body).to include("Riverbend Shelter", "Program Director")
+      expect(response.body).not_to include("fa-circle-check")
     end
 
     it "answers a turbo stream request by filling the snapshot mount with the dialog" do

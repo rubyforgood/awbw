@@ -1,4 +1,8 @@
 class AffiliationsController < ApplicationController
+  include AhoyTracking
+
+  DEDUPE_PURPOSE = "affiliation_dedupe".freeze
+
   SORTS = {
     "organization" => "organizations.name %{dir}, people.last_name %{dir}, people.first_name %{dir}",
     "person" => "people.last_name %{dir}, people.first_name %{dir}",
@@ -36,6 +40,25 @@ class AffiliationsController < ApplicationController
 
   def edit
     authorize! @affiliation
+  end
+
+  def dedupe_index
+    authorize! Affiliation, to: :dedupe?
+    @groups = AffiliationServices::DuplicateFinder.new(dedupe_scope).groups
+  end
+
+  def dedupe_perform
+    authorize! Affiliation, to: :dedupe?
+    person = GlobalID::Locator.locate_signed(params[:person_sgid], for: DEDUPE_PURPOSE, only: Person)
+    raise ActiveRecord::RecordNotFound, "Person not found" unless person
+
+    merged = merge_affiliations(person)
+    track_event("dedupe.affiliation", { resource_type: "Person", resource_id: person.id, affiliations_merged: merged })
+    redirect_to dedupe_index_affiliations_path(query: params[:query].presence), notice: "Merged #{helpers.pluralize(merged, "duplicate affiliation")}."
+  rescue ActionPolicy::Unauthorized
+    raise
+  rescue StandardError => e
+    redirect_to dedupe_index_affiliations_path(query: params[:query].presence), alert: "Error merging affiliations: #{e.message}"
   end
 
   def update
@@ -116,6 +139,22 @@ class AffiliationsController < ApplicationController
   end
 
   private
+
+  # Narrows to the people the search names, keeping each person's whole duplicate sets.
+  def dedupe_scope
+    query = params[:query].to_s.strip
+    return Affiliation.all if query.blank?
+
+    Affiliation.where(person_id: Affiliation.matching_text_or_identifier(:matching_name, query).select(:person_id))
+  end
+
+  def merge_affiliations(person)
+    ActiveRecord::Base.transaction do
+      before = person.affiliations.count
+      AffiliationDeduper.new(person).call
+      before - person.affiliations.count
+    end
+  end
 
   # Each affiliation's pickable registrations, newest event first: its person's own,
   # plus the one it's linked to now (which may be someone else's).
