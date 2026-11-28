@@ -12,6 +12,10 @@ class PersonDecorator < ApplicationDecorator
     "#{first_name} #{last_name}"
   end
 
+  def page_title_label
+    h.person_name(object)
+  end
+
   def detail(length: nil)
     text = affiliations.active.map { |affiliation| "#{affiliation.title}, #{affiliation.organization.name}" }.join(", ")
     length ? text&.truncate(length) : text
