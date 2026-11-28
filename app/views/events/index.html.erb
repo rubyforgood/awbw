@@ -36,7 +36,7 @@
   <% if @events.any? %>
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       <% @events.each do |event| %>
-        <%= render "card", event: event %>
+        <%= render "card", event: event, unreconciled_count: @unreconciled_counts[event.id] %>
       <% end %>
     </div>
 
@@ -48,6 +48,6 @@
   <% end %>
 
   <% if archived_events.any? %>
-    <%= render "archived_events", events: archived_events %>
+    <%= render "archived_events", events: archived_events, unreconciled_counts: @unreconciled_counts %>
   <% end %>
 <% end %>

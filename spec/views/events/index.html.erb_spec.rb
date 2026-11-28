@@ -10,6 +10,7 @@ RSpec.describe "events/index", type: :view do
   before do
     allow(view).to receive(:current_user).and_return(admin)
     allow(view).to receive(:allowed_to?).and_return(true)
+    assign(:unreconciled_counts, {})
   end
 
   describe "with events present" do

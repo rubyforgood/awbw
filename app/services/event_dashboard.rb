@@ -26,6 +26,14 @@ class EventDashboard
     @unlinked_registration_count ||= active_registrations.where.not(id: linked_registration_ids).count
   end
 
+  # Registrations still "registered" after the event ended — attendance never
+  # recorded. Before it ends, "registered" is expected, so no flag.
+  def unreconciled_registration_count
+    return 0 unless event.ended?
+
+    attendance_count_for("registered")
+  end
+
   # Registrant (Person) ids behind the inactive (cancelled / no-show)
   # registrations — for drilling into the matching manage list.
   def inactive_registrant_ids
