@@ -36,54 +36,52 @@
       </section>
     <% end %>
 
-    <% if snapshot.empty? %>
-      <p class="col-span-full mt-4 text-sm text-gray-500 italic">No snapshot content yet.</p>
-    <% else %>
-      <% if snapshot.trainings.any? %>
-        <section class="col-span-full mt-5 grid grid-cols-subgrid">
-          <h2 class="col-span-full mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Facilitator trainings</h2>
-          <ul class="col-span-full grid grid-cols-subgrid gap-y-3">
-            <% snapshot.trainings.each do |registration| %>
-              <% registration = registration.decorate %>
-              <li class="col-span-full grid grid-cols-subgrid items-start">
-                <span class="inline-flex items-center gap-1 justify-self-start rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap <%= registration.attendance_status_classes %>">
-                  <%= render "event_registrations/attendance_status_label",
-                             icon: registration.attendance_status_icon,
-                             label: registration.compact_attendance_status_label,
-                             outcome: registration.pre_transfer_outcome %>
-                </span>
-                <div class="min-w-0">
-                  <%= link_to truncate(registration.event.title, length: 50), event_path(registration.event),
-                              class: "block font-medium hover:underline" %>
-                  <p class="text-xs text-gray-500"><%= [ registration.event.decorate.short_date_range, *registration.organizations.map(&:name) ].compact_blank.join(" · ") %></p>
-                </div>
-              </li>
-            <% end %>
-          </ul>
-        </section>
-      <% end %>
-
-      <% if (membership = snapshot.membership) %>
-        <% membership = membership.decorate %>
-        <section class="col-span-full mt-5 grid grid-cols-subgrid">
-          <h2 class="col-span-full mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Membership</h2>
-          <ul class="col-span-full grid grid-cols-subgrid gap-y-3">
+    <% if snapshot.trainings.any? %>
+      <section class="col-span-full mt-5 grid grid-cols-subgrid">
+        <h2 class="col-span-full mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Facilitator trainings</h2>
+        <ul class="col-span-full grid grid-cols-subgrid gap-y-3">
+          <% snapshot.trainings.each do |registration| %>
+            <% registration = registration.decorate %>
             <li class="col-span-full grid grid-cols-subgrid items-start">
-              <% if membership.payment_badge? %>
-                <span class="inline-flex items-center justify-self-start rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap <%= membership.payment_classes %>">
-                  <%= membership.payment_label %>
-                </span>
-              <% end %>
-              <div class="col-start-2 min-w-0">
-                <%= link_to membership.status_label, membership_path(membership),
+              <span class="inline-flex items-center gap-1 justify-self-start rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap <%= registration.attendance_status_classes %>">
+                <%= render "event_registrations/attendance_status_label",
+                           icon: registration.attendance_status_icon,
+                           label: registration.compact_attendance_status_label,
+                           outcome: registration.pre_transfer_outcome %>
+              </span>
+              <div class="min-w-0">
+                <%= link_to truncate(registration.event.title, length: 50), event_path(registration.event),
                             class: "block font-medium hover:underline" %>
-                <p class="text-xs text-gray-500"><%= membership.period_label %></p>
+                <p class="text-xs text-gray-500"><%= [ registration.event.decorate.short_date_range, *registration.organizations.map(&:name) ].compact_blank.join(" · ") %></p>
               </div>
             </li>
-          </ul>
-        </section>
-      <% end %>
+          <% end %>
+        </ul>
+      </section>
     <% end %>
+
+    <% if (membership = snapshot.membership) %>
+      <% membership = membership.decorate %>
+      <section class="col-span-full mt-5 grid grid-cols-subgrid">
+        <h2 class="col-span-full mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Membership</h2>
+        <ul class="col-span-full grid grid-cols-subgrid gap-y-3">
+          <li class="col-span-full grid grid-cols-subgrid items-start">
+            <% if membership.payment_badge? %>
+              <span class="inline-flex items-center justify-self-start rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap <%= membership.payment_classes %>">
+                <%= membership.payment_label %>
+              </span>
+            <% end %>
+            <div class="col-start-2 min-w-0">
+              <%= link_to membership.status_label, membership_path(membership),
+                          class: "block font-medium hover:underline" %>
+              <p class="text-xs text-gray-500"><%= membership.period_label %></p>
+            </div>
+          </li>
+        </ul>
+      </section>
+    <% end %>
+
+    <%= render "people/snapshots/user_account", snapshot: snapshot %>
   </div>
 
   <% footer_link_class = "#{eyebrow_link_class} hover:underline" %>
@@ -91,8 +89,8 @@
     <%= link_to "Profile", person_path(person), class: footer_link_class %>
     <%= link_to "Edit", edit_person_path(person), class: footer_link_class %>
 
-    <% if person.user.present? %>
-      <%= link_to "User", user_path(person.user), class: footer_link_class %>
+    <% if snapshot.user_accounts.one? %>
+      <%= link_to "User", user_path(snapshot.user_accounts.first), class: footer_link_class %>
     <% end %>
 
     <%= link_to "Activity", person_activity_path(person), class: footer_link_class %>

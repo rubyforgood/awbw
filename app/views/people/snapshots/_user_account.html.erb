@@ -1,0 +1,45 @@
+<% accounts = snapshot.user_accounts %>
+<% account_link_class = "-mx-2 block rounded-lg px-2 py-1 transition-colors hover:bg-gray-50" %>
+<% heading_class = "mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase" %>
+<section class="col-span-full mt-5">
+  <% if accounts.one? %>
+    <% account = accounts.first %>
+    <%= link_to user_path(account), title: "Open user account", class: account_link_class, data: { turbo_frame: "_top" } do %>
+      <h2 class="<%= heading_class %>">
+        User account
+        <% if account.super_user? %>
+          <%= account.admin_badge(extra: "normal-case tracking-normal") %>
+        <% end %>
+        <%= account.email_change_note(extra: "font-normal normal-case tracking-normal") %>
+      </h2>
+      <%= render "people/snapshots/account_milestones", account: account %>
+    <% end %>
+  <% elsif accounts.many? %>
+    <h2 class="<%= heading_class %>">
+      User account
+      <%= render "shared/badge", label: "#{accounts.size} accounts", icon: "fa-solid fa-users",
+                 classes: "bg-amber-50 text-amber-700 border-amber-200", extra: "normal-case tracking-normal" %>
+    </h2>
+    <div class="space-y-3">
+      <% accounts.each do |account| %>
+        <%= link_to user_path(account), title: "Open user account", class: account_link_class, data: { turbo_frame: "_top" } do %>
+          <p class="mb-2 flex flex-wrap items-center gap-2 text-sm">
+            <span class="font-medium text-gray-800"><%= account.email %></span>
+            <% if account.super_user? %>
+              <%= account.admin_badge %>
+            <% end %>
+            <%= account.email_change_note %>
+          </p>
+          <%= render "people/snapshots/account_milestones", account: account %>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <h2 class="<%= heading_class %>">User account</h2>
+    <p class="flex items-center gap-2 text-sm text-gray-500">
+      <%= render "shared/badge", label: "No account", icon: "fa-solid fa-user-slash",
+                 classes: "bg-gray-50 text-gray-600 border-gray-200" %>
+      Can't log in until an account is created
+    </p>
+  <% end %>
+</section>

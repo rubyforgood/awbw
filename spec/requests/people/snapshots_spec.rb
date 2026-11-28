@@ -43,30 +43,59 @@ RSpec.describe "Person snapshots", type: :request do
       expect(response.body).not_to include("Incomplete attendance")
     end
 
-    it "shows the empty state when there is nothing to snapshot" do
-      empty_person = create(:person, first_name: "Empty", last_name: "Snapshot")
+    it "lists every user account with its milestones, admin badge and the account count" do
+      original = person.user
+      user = create(:user, :admin, person: person, updated_at: 1.hour.from_now, locked_at: Time.zone.local(2026, 11, 12, 12),
+                    failed_attempts: Devise.maximum_attempts, unconfirmed_email: "new.address@example.com")
+      original.update_columns(inactive: true, updated_at: 1.day.ago)
+
+      get person_snapshot_path(person)
+
+      expect(response.body).to include("User account")
+      expect(response.body).to include("fa-user-shield")
+      expect(response.body).to include("2 accounts")
+      expect(response.body).to include("Locked")
+      expect(response.body).to include("#{Devise.maximum_attempts} failed logins")
+      expect(response.body).to include("Email change pending: new.address@example.com")
+      expect(response.body).to include(user_path(user))
+      expect(response.body).to include(user_path(original), original.email, user.email)
+      expect(response.body).to include("By staff")
+      expect(response.body).not_to include(">User</a>")
+      expect(response.body.scan('title="Open user account"').size).to eq(2)
+    end
+
+    it "says when the person has no user account" do
+      person.user.destroy!
+
+      get person_snapshot_path(person)
+
+      expect(response.body).to include("No account")
+      expect(response.body).to include("Can't log in until an account is created")
+    end
+
+    it "shows only the no-account row when there is nothing else to snapshot" do
+      empty_person = create(:person, :without_user, first_name: "Empty", last_name: "Snapshot")
 
       get person_snapshot_path(empty_person)
 
-      expect(response.body).to include("No snapshot content yet.")
+      expect(response.body).to include("No account")
       expect(response.body).not_to include(">Affiliations</h2>")
       expect(response.body).not_to include(">Facilitator trainings</h2>")
       expect(response.body).not_to include(">Membership</h2>")
     end
 
     it "shows the affiliated since heading when every affiliation has ended" do
-      former = create(:person)
+      former = create(:person, :without_user)
       create(:affiliation, person: former, organization: create(:organization),
              start_date: Date.new(2020, 3, 1), end_date: Date.new(2021, 1, 1))
 
       get person_snapshot_path(former)
 
       expect(response.body).to include(">Affiliated since Mar 2020</h2>")
-      expect(response.body).to include("No snapshot content yet.")
     end
 
     it "leaves the status pill blank for a JA-only org" do
-      staffer = create(:person)
+      staffer = create(:person, :without_user)
       create(:affiliation, person: staffer, organization: create(:organization, name: "Riverbend Shelter"),
              title: "Program Director", start_date: 1.year.ago, inactive: false)
 
