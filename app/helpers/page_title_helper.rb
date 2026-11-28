@@ -10,7 +10,8 @@ module PageTitleHelper
   SEPARATOR = " · ".freeze
   MAX_LABEL_LENGTH = 60
   LABEL_METHODS = %i[ name title display_name ].freeze
-  RECORD_IVARS = { "continuing_education_registrations" => :ce_registration }.freeze
+  # A nil ivar names the page by its context; the ticket's callout is the action, not the record.
+  RECORD_IVARS = { "continuing_education_registrations" => :ce_registration, "events/callouts" => nil }.freeze
   CONTEXT_IVARS = %i[ event_registration event form ].freeze
   # A nil name leaves the controller out; the record and action already say it.
   RESOURCE_NAMES = {
@@ -33,7 +34,7 @@ module PageTitleHelper
   private
 
   def derived_page_title
-    if (record = page_title_ivar(RECORD_IVARS.fetch(controller_name) { controller_name.singularize }))
+    if (record = page_title_own_record)
       own_record_page_title(record)
     elsif (context = CONTEXT_IVARS.lazy.filter_map { |name| page_title_ivar(name) }.first)
       [ page_title_record_label(context), page_title_resource_name, page_title_action_name ].compact_blank.join(SEPARATOR)
@@ -73,6 +74,11 @@ module PageTitleHelper
     ACTION_NAMES.fetch(action_name) { action_name.humanize(capitalize: false) }
   end
 
+  def page_title_own_record
+    name = RECORD_IVARS.fetch(controller_path) { controller_name.singularize }
+    page_title_ivar(name) if name
+  end
+
   def page_title_ivar(name)
     record = controller.instance_variable_get("@#{name}")
     record = record.object if record.is_a?(Draper::Decorator)
@@ -82,12 +88,10 @@ module PageTitleHelper
   # A decorator can name its record for the tab (`page_title_label`); otherwise the
   # record's own name or title.
   def page_title_record_label(record)
-    decorated_label = record.decorate.page_title_label if record.decorator_class? && record.decorator_class.method_defined?(:page_title_label)
-    return decorated_label if decorated_label.present?
+    label = record.decorate.page_title_label if record.decorator_class? && record.decorator_class.method_defined?(:page_title_label)
+    label = LABEL_METHODS.lazy.filter_map { |method| record.try(method).presence }.first if label.blank?
+    return record.model_name.human if label.blank?
 
-    name = LABEL_METHODS.lazy.filter_map { |method| record.try(method).presence }.first
-    return record.model_name.human if name.blank?
-
-    CGI.unescapeHTML(strip_tags(name.to_s)).squish.truncate(MAX_LABEL_LENGTH)
+    CGI.unescapeHTML(strip_tags(label.to_s)).squish.truncate(MAX_LABEL_LENGTH)
   end
 end

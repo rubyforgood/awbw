@@ -51,6 +51,14 @@ RSpec.describe PageTitleHelper, type: :helper do
     expect(helper.page_title).to eq("A survivor's journey | AWBW")
   end
 
+  it "decodes HTML entities in a decorator's label" do
+    workshop = create(:workshop, title: "A survivor&#39;s journey")
+    log = create(:workshop_log, workshop: workshop, workshop_held_on: Date.new(2026, 11, 2))
+    visit("workshop_logs", "show", ivars: { workshop_log: log })
+
+    expect(helper.page_title).to eq("A survivor's journey · Nov 2, 2026 | AWBW")
+  end
+
   it "names a new record's page" do
     visit("people", "new", ivars: { person: Person.new })
 
@@ -96,6 +104,16 @@ RSpec.describe PageTitleHelper, type: :helper do
       visit("events/callouts", "ce", ivars: { event_registration: registration, event: event })
 
       expect(helper.page_title).to eq("Pat Example · TOS205 · CE | AWBW")
+    end
+
+    it "names a ticket's callout page by the registration and the callout" do
+      allow(Draper::ViewContext).to receive(:current).and_return(helper)
+      allow(helper).to receive(:allowed_to?).with(:full_name?, anything).and_return(true)
+      registration = create(:event_registration, registrant: person, event: event)
+      callout = create(:registration_ticket_callout, event: event, title: "Evaluation")
+      visit("events/callouts", "callout", ivars: { event_registration: registration, event: event, callout: callout })
+
+      expect(helper.page_title).to eq("Pat Example · TOS205 · Evaluation | AWBW")
     end
   end
 
