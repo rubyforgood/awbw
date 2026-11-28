@@ -181,7 +181,12 @@ row before importing a training.
 | March 2026 | TAC261 | 19 | E3977 | E3979 | E3980 |
 | July 2026 | TAC262 | 3 | E4026 | E4031 | E4032 |
 | November 2026 | TAC263 | 7 | E4043 | E4044 | E4045 |
-| On-demand 2026 | — | 6 | E4014 | none | none |
+| On-demand 2026 | none | 6 | E4014 | none in 2026 | none |
+
+On-demand has no training code; FileMaker files it by year ("Talent LMS On-Demand Facilitator
+Training 2026"). Some years kept a scholarship list ("2023 On-Demand Scholarship Recipients",
+E3772; 2025, E3931), so check for one before importing a year. On-demand courses such as
+Trauma-Informed Practices are FileMaker "On-Demand Course" events, not facilitator trainings.
 
 ## Consequences
 
