@@ -304,16 +304,27 @@
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
         <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.registrant_count} active", path: registrants_event_path(@event, status_filter: "active") %><% if @dashboard.inactive_registration_count.positive? %> · <%= render "stat_link", label: "#{@dashboard.inactive_registration_count} inactive", path: registrants_event_path(@event, status_filter: "inactive") %><% end %></p>
-        <% if @dashboard.unlinked_registration_count.positive? %>
-          <%# Rectangular amber callout matching the "Unallocated bulk payments"
+        <% unreconciled_count = allowed_to?(:reconcile_affiliations?, @event) ? @dashboard.unreconciled_person_count : 0 %>
+        <% if @dashboard.unlinked_registration_count.positive? || unreconciled_count.positive? %>
+          <%# Rectangular amber callouts matching the "Unallocated bulk payments"
               card in the grand-total equation: same rounded-lg border, amber-50
               fill, and darker amber-700 circle-exclamation. %>
-          <div class="mt-1.5">
-            <%= link_to registrants_event_path(@event, org_status: "unlinked"),
-                  class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors",
-                  title: "Registrants with no organization linked" do %>
-              <i class="fa-solid fa-circle-exclamation"></i>
-              <%= @dashboard.unlinked_registration_count %> unlinked
+          <% callout_class = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors" %>
+          <div class="mt-1.5 flex flex-wrap gap-1.5">
+            <% if @dashboard.unlinked_registration_count.positive? %>
+              <%= link_to registrants_event_path(@event, org_status: "unlinked"),
+                    class: callout_class, title: "Registrants with no organization linked" do %>
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <%= @dashboard.unlinked_registration_count %> unlinked
+              <% end %>
+            <% end %>
+            <% if unreconciled_count.positive? %>
+              <%# status_filter "all": no-shows and cancellations are inactive. %>
+              <%= link_to registrants_event_path(@event, status_filter: "all", registrant_ids: @dashboard.unreconciled_registrant_ids.join("-")),
+                    class: callout_class, title: "Registrants whose facilitator affiliations still need reconciling" do %>
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <%= unreconciled_count %> unreconciled
+              <% end %>
             <% end %>
           </div>
         <% end %>

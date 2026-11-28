@@ -1298,6 +1298,42 @@ RSpec.describe EventDashboard do
     end
   end
 
+  describe "#unreconciled_person_count" do
+    let(:organization) { create(:organization) }
+
+    # A no-show who linked `organization` and still holds the facilitator row
+    # their registration minted — the reconcile page offers to delete it.
+    def no_show_with_minted_affiliation(on:)
+      reg = create(:event_registration, event: on, status: "no_show")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      create(:affiliation, person: reg.registrant, organization: organization, title: "Facilitator",
+                           start_date: 1.month.ago.to_date, event_registration: reg)
+    end
+
+    it "counts people with a pending change once the training has ended" do
+      event = create(:event, :ended, facilitator_training: true)
+      affiliation = no_show_with_minted_affiliation(on: event)
+
+      dashboard = described_class.new(event)
+      expect(dashboard.unreconciled_person_count).to eq(1)
+      expect(dashboard.unreconciled_registrant_ids).to eq([ affiliation.person_id ])
+    end
+
+    it "is zero before the training ends" do
+      event = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
+      no_show_with_minted_affiliation(on: event)
+
+      expect(described_class.new(event).unreconciled_person_count).to eq(0)
+    end
+
+    it "is zero for an event that isn't a facilitator training" do
+      event = create(:event, :ended, facilitator_training: false)
+      no_show_with_minted_affiliation(on: event)
+
+      expect(described_class.new(event).unreconciled_person_count).to eq(0)
+    end
+  end
+
   describe "attendance stats" do
     let(:event) { create(:event) }
 
