@@ -191,7 +191,7 @@ setting.update!(organization: setting.organization || awbw_org,
   Affiliation.create!(
     person: user.person,
     organization: awbw_org,
-    title: Affiliation::FACILITATOR_TITLE,
+    type: Affiliation::TYPE_FACILITATOR,
     primary_contact: true,
     start_date: 1.year.ago.to_date
   )

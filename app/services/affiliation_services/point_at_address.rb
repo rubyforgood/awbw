@@ -27,7 +27,7 @@ module AffiliationServices
         previous = affiliation.organization_address
         affiliation.update!(organization_address: @address)
         OrganizationServices::AutofillChange.new(
-          field: "affiliation_#{affiliation.id}_address", label: "#{affiliation.title} affiliation address",
+          field: "affiliation_#{affiliation.id}_address", label: "#{affiliation.display_title} affiliation address",
           value: @address.name.squish, previous_value: previous&.name&.squish
         )
       end

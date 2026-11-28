@@ -11,7 +11,8 @@
   <%# Status badges (kept live by inactive-toggle as the dates are edited), at most
       one: "Inactive" for an ended/flagged row, "Upcoming" for a not-yet-started
       one, and nothing at all for a currently-active row. %>
-  <% facilitator = f.object.facilitator? %>
+  <% affiliation_type = f.object.persisted? ? f.object.type : (f.object.type.presence || Affiliation::TYPE_JOB) %>
+  <% facilitator = affiliation_type == Affiliation::TYPE_FACILITATOR %>
   <%# Four states by colour: role is the hue (facilitator = purple, else blue) and
       status is the saturation (active = full, inactive = super-light). Kept in sync
       live by inactive-toggle. %>
@@ -53,6 +54,11 @@
          data-inactive-toggle-target="row">
       <%# Carries the inactive flag the row's end date implies. `inactive_supplied`
           tells the model this value is deliberate, so it isn't re-derived away. %>
+      <%= f.hidden_field :type, value: affiliation_type,
+                          data: {
+                            inactive_toggle_target: "type",
+                            action: "change->inactive-toggle#updateBorder change->affiliation-dates#recalculate"
+                          } %>
       <%= f.hidden_field :inactive, data: { inactive_toggle_target: "inactiveField" } %>
       <%= f.hidden_field :inactive_supplied, value: "0", data: { inactive_toggle_target: "suppliedField" } %>
       <div class="w-full sm:w-[280px] xl:w-auto min-w-0">
@@ -84,19 +90,25 @@
       </div>
 
       <div class="w-full sm:w-[150px] xl:w-auto min-w-0">
-        <%= f.input :title,
-                    as: :string,
-                    wrapper_html: { class: "mb-0!" },
-                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1 xl:hidden" },
-                    placeholder: "Title",
-                    input_html: {
-                      style: "height: 42px;",
-                      class: "text-sm #{title_class}",
-                      data: {
-                        inactive_toggle_target: "title",
-                        action: "affiliation-dates#recalculate inactive-toggle#updateBorder"
-                      }
-                    } %>
+        <div class="<%= "hidden" if facilitator %>" data-inactive-toggle-target="titleField">
+          <%= f.input :title,
+                      as: :string,
+                      wrapper_html: { class: "mb-0!" },
+                      label_html: { class: "block text-sm font-medium text-gray-700 mb-1 xl:hidden" },
+                      placeholder: "Job title",
+                      input_html: {
+                        style: "height: 42px;",
+                        class: "text-sm #{title_class}",
+                        data: {
+                          inactive_toggle_target: "title",
+                          action: "affiliation-dates#recalculate inactive-toggle#updateBorder"
+                        }
+                      } %>
+        </div>
+        <span data-inactive-toggle-target="facilitatorLabel"
+              class="<%= "hidden" unless facilitator %> h-[42px] items-center rounded-md border px-3 text-sm [&:not(.hidden)]:flex <%= title_class %>">
+          <%= Affiliation::FACILITATOR_LABEL %>
+        </span>
       </div>
 
       <div class="w-full sm:w-[150px] xl:w-auto min-w-0">

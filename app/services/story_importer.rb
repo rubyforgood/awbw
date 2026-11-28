@@ -598,19 +598,21 @@ class StoryImporter
   # role title (Leader, Liaison, …) already is one.
   def create_facilitator_affiliation(author, organization)
     return unless from_non_awbw?(author) && author.persisted? && organization
-    held = Affiliation.where(person: author, organization: organization).pluck(:title)
-    return if held.any? { |title| title == Affiliation::FACILITATOR_TITLE || DataHealth::LegacyRoleAffiliations.legacy_title?(title) }
+    held = Affiliation.where(person: author, organization: organization)
+    return if held.facilitators.exists? || held.any? { |affiliation| DataHealth::LegacyRoleAffiliations.legacy_title?(affiliation.title) }
 
-    Affiliation.create!(person: author, organization: organization, title: Affiliation::FACILITATOR_TITLE)
+    Affiliation.create!(person: author, organization: organization, type: Affiliation::TYPE_FACILITATOR)
   end
 
   # The author's job at their organization, when the row names a job title.
   def create_job_affiliation(author, organization, row, cols)
     title = clean(row[cols[:job_title]]).squish.presence
     return unless title && from_non_awbw?(author) && author.persisted? && organization
-    return if Affiliation.where(person: author, organization: organization).where("LOWER(title) = ?", title.downcase).exists?
+    return if title == Affiliation::FACILITATOR_LABEL
+    return if Affiliation.where(person: author, organization: organization, type: Affiliation::TYPE_JOB)
+                       .where("LOWER(title) = ?", title.downcase).exists?
 
-    Affiliation.create!(person: author, organization: organization, title: title)
+    Affiliation.create!(person: author, organization: organization, type: Affiliation::TYPE_JOB, title: title)
   end
 
   # Reflect the story's credit on the author's profile. An anonymous credit flags

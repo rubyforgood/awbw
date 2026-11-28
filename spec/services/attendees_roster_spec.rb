@@ -111,7 +111,7 @@ RSpec.describe AttendeesRoster do
       org = create(:organization)
       person = create(:person)
       create(:affiliation, person: create(:person), organization: org,
-                           title: "Facilitator", start_date: Date.new(2020, 1, 1), end_date: nil)
+                           type: "facilitator", start_date: Date.new(2020, 1, 1), end_date: nil)
 
       early = create(:event, facilitator_training: true, start_date: Date.new(2018, 6, 1))
       late = create(:event, facilitator_training: true, start_date: Date.new(2024, 6, 1))

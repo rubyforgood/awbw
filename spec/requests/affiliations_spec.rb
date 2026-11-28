@@ -6,7 +6,7 @@ RSpec.describe "/affiliations", type: :request do
   let(:organization) { create(:organization) }
   let(:person) { create(:person) }
   let!(:affiliation) do
-    create(:affiliation, organization: organization, person: person, title: "Facilitator")
+    create(:affiliation, organization: organization, person: person, type: "facilitator")
   end
 
   describe "GET /affiliations/:id/edit" do
@@ -86,11 +86,19 @@ RSpec.describe "/affiliations", type: :request do
       before { sign_in admin }
 
       it "updates attributes and returns to the origin org edit page, scrolled to the row" do
+        affiliation.update!(type: "job")
         patch affiliation_path(affiliation, return_to: "organization", origin_id: organization.id),
               params: { affiliation: { title: "Lead facilitator" } }
 
         expect(affiliation.reload.title).to eq("Lead facilitator")
         expect(response).to redirect_to(edit_organization_path(organization, anchor: "affiliation_#{affiliation.id}"))
+      end
+
+      it "changes a facilitator row to a job" do
+        patch affiliation_path(affiliation), params: { affiliation: { type: "job" } }
+
+        expect(affiliation.reload.type).to eq("job")
+        expect(affiliation).not_to be_facilitator
       end
 
       it "reassigns the person and returns to the origin person edit page" do
@@ -176,7 +184,7 @@ RSpec.describe "/affiliations", type: :request do
       it "does not update and redirects to root" do
         patch affiliation_path(affiliation), params: { affiliation: { title: "Changed" } }
 
-        expect(affiliation.reload.title).to eq("Facilitator")
+        expect(affiliation.reload.title).to be_nil
         expect(response).to redirect_to(root_path)
       end
     end

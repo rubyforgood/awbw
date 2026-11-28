@@ -29,7 +29,7 @@ RSpec.describe AffiliationServices::ImportPersonnel do
 
       expect(import.results[:created].size).to eq(1)
       expect(person.affiliations.sole).to have_attributes(
-        organization: program, title: "Facilitator", filemaker_code: "PS0001", primary_contact: true,
+        organization: program, type: "facilitator", filemaker_code: "PS0001", primary_contact: true,
         start_date: Date.new(2015, 3, 1), end_date: nil, inactive: false, event_registration_id: nil
       )
     end
@@ -103,7 +103,7 @@ RSpec.describe AffiliationServices::ImportPersonnel do
     end
 
     it "logs nothing for an affiliation it links" do
-      create(:affiliation, person:, organization: program, title: "Facilitator", start_date: nil, end_date: nil)
+      create(:affiliation, person:, organization: program, type: "facilitator", start_date: nil, end_date: nil)
       personnel("PS0001")
 
       expect { import }.not_to change(Ahoy::Event, :count)
@@ -205,7 +205,7 @@ RSpec.describe AffiliationServices::ImportPersonnel do
 
   describe "a Facilitator affiliation the portal already holds" do
     it "links an undated, open one to an Active row, filling its start date" do
-      existing = create(:affiliation, person:, organization: program, title: "Facilitator", start_date: nil, end_date: nil, primary_contact: false)
+      existing = create(:affiliation, person:, organization: program, type: "facilitator", start_date: nil, end_date: nil, primary_contact: false)
       personnel("PS0001")
 
       expect(import.results[:linked].size).to eq(1)
@@ -213,7 +213,7 @@ RSpec.describe AffiliationServices::ImportPersonnel do
     end
 
     it "gives the Active row the link when the person has several rows there" do
-      existing = create(:affiliation, person:, organization: program, title: "Facilitator", start_date: nil, end_date: nil)
+      existing = create(:affiliation, person:, organization: program, type: "facilitator", start_date: nil, end_date: nil)
       personnel("PS0001", Status: "Inactive", DateEntered: "2010-01-04 00:00:00")
       personnel("PS0002", DateEntered: "2018-09-10 00:00:00")
 
@@ -224,7 +224,7 @@ RSpec.describe AffiliationServices::ImportPersonnel do
     end
 
     it "leaves an open one alone when FileMaker says the person is Inactive, for staff to review" do
-      existing = create(:affiliation, person:, organization: program, title: "Facilitator", start_date: nil, end_date: nil)
+      existing = create(:affiliation, person:, organization: program, type: "facilitator", start_date: nil, end_date: nil)
       personnel("PS0001", Status: "Inactive")
 
       result = import
@@ -234,7 +234,7 @@ RSpec.describe AffiliationServices::ImportPersonnel do
     end
 
     it "links an Active row to a current one starting within 90 days, keeping its training dates" do
-      training_row = create(:affiliation, person:, organization: program, title: "Facilitator",
+      training_row = create(:affiliation, person:, organization: program, type: "facilitator",
                                           start_date: Date.new(2015, 3, 20), end_date: nil, primary_contact: false)
       personnel("PS0001")
 
@@ -244,7 +244,7 @@ RSpec.describe AffiliationServices::ImportPersonnel do
     end
 
     it "leaves an open one with other dates alone when FileMaker says Active" do
-      create(:affiliation, person:, organization: program, title: "Facilitator", start_date: Date.new(2024, 1, 10), end_date: nil)
+      create(:affiliation, person:, organization: program, type: "facilitator", start_date: Date.new(2024, 1, 10), end_date: nil)
       personnel("PS0001")
 
       result = import

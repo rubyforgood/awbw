@@ -7,7 +7,7 @@ RSpec.describe "Organization profile published content", type: :request do
   let(:facilitator) { create(:person) }
 
   # An active affiliation publishes the profile so non-admins can view it.
-  before { create(:affiliation, organization: organization, person: facilitator) }
+  before { create(:affiliation, :facilitator, organization: organization, person: facilitator) }
 
   def hidden_card
     Capybara.string(response.body).find("#hidden_from_profile")
@@ -170,7 +170,7 @@ RSpec.describe "Organization profile published content", type: :request do
 
     it "hides anonymously credited workshops from non-admins but not admins" do
       anonymous = create(:person, :anonymous_contributions)
-      create(:affiliation, organization: organization, person: anonymous)
+      create(:affiliation, :facilitator, organization: organization, person: anonymous)
       create(:workshop, published: true, author: anonymous, title: "Profile Anonymous Workshop")
       create(:workshop, published: true, author: facilitator, author_credit_preference: "anonymous", title: "Item Anonymous Workshop")
 

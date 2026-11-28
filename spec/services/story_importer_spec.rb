@@ -204,8 +204,8 @@ RSpec.describe StoryImporter do
 
       described_class.new(csv_path: path, import_user: import_user).call
 
-      expect(Person.find_by(first_name: "Jamie").affiliations.pluck(:title)).to contain_exactly("Case manager")
-      expect(Person.find_by(first_name: "Sam").affiliations.pluck(:title)).to contain_exactly("Facilitator", "Therapist")
+      expect(Person.find_by(first_name: "Jamie").affiliations.map(&:display_title)).to contain_exactly("Case manager")
+      expect(Person.find_by(first_name: "Sam").affiliations.map(&:display_title)).to contain_exactly("Facilitator", "Therapist")
     end
 
     it "imports a sheet that uses the review labels instead of snake_case headers" do
@@ -758,14 +758,14 @@ RSpec.describe StoryImporter do
 
       author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
       org = Organization.find_by("LOWER(name) = ?", "example family services")
-      expect(Affiliation.where(person: author, organization: org, title: "Facilitator")).to exist
+      expect(Affiliation.where(person: author, organization: org, type: "facilitator")).to exist
     end
 
     it "adds a job affiliation alongside the facilitator one when the row names a job title" do
       import([ base_row("facilitator_job_title" => "Program director") ])
 
       author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
-      expect(author.affiliations.pluck(:title)).to contain_exactly("Facilitator", "Program director")
+      expect(author.affiliations.map(&:display_title)).to contain_exactly("Facilitator", "Program director")
     end
 
     it "gives the co-author their own job affiliation" do
@@ -773,7 +773,7 @@ RSpec.describe StoryImporter do
                         "co_facilitator_job_title" => "Therapist") ])
 
       co_author = Person.find_by(first_name: "Sam", last_name: "Lee")
-      expect(co_author.affiliations.pluck(:title)).to contain_exactly("Facilitator", "Therapist")
+      expect(co_author.affiliations.map(&:display_title)).to contain_exactly("Facilitator", "Therapist")
     end
 
     it "does not duplicate a job affiliation the author already holds" do
@@ -783,21 +783,21 @@ RSpec.describe StoryImporter do
 
       import([ base_row("facilitator_job_title" => "program director") ])
 
-      expect(author.affiliations.where(organization: org).pluck(:title)).to contain_exactly("Program Director", "Facilitator")
+      expect(author.affiliations.where(organization: org).map(&:display_title)).to contain_exactly("Program Director", "Facilitator")
     end
 
     it "skips the facilitator affiliation when the row says no, keeping the job one" do
       import([ base_row("facilitator_affiliation" => "no", "facilitator_job_title" => "Case manager") ])
 
       author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
-      expect(author.affiliations.pluck(:title)).to contain_exactly("Case manager")
+      expect(author.affiliations.map(&:display_title)).to contain_exactly("Case manager")
     end
 
     it "decides the co-author's facilitator affiliation from their own column" do
       import([ base_row("co_facilitator_name" => "Sam", "co_facilitator_last_name" => "Lee",
                         "co_facilitator_affiliation" => "false") ])
 
-      expect(Person.find_by(first_name: "Jamie").affiliations.pluck(:title)).to contain_exactly("Facilitator")
+      expect(Person.find_by(first_name: "Jamie").affiliations.map(&:display_title)).to contain_exactly("Facilitator")
       expect(Person.find_by(first_name: "Sam").affiliations).to be_empty
     end
 
@@ -808,7 +808,7 @@ RSpec.describe StoryImporter do
 
       import([ base_row ])
 
-      expect(author.affiliations.where(organization: org).pluck(:title)).to contain_exactly(nil, "Facilitator")
+      expect(author.affiliations.where(organization: org).map(&:display_title)).to contain_exactly(nil, "Facilitator")
     end
 
     it "does not duplicate a facilitator affiliation the author already holds, including an old-app role title" do

@@ -43,7 +43,7 @@ RSpec.describe "/organizations", type: :request do
       age_type = create(:category_type, name: "AgeRange", published: true)
       teen = create(:category, :published, category_type: age_type, name: "13-17")
       person = create(:person)
-      create(:affiliation, organization: organization, person: person)
+      create(:affiliation, :facilitator, organization: organization, person: person)
       person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
 
       get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
@@ -103,7 +103,7 @@ RSpec.describe "/organizations", type: :request do
       age_type = create(:category_type, name: "AgeRange", published: true)
       teen = create(:category, :published, category_type: age_type, name: "13-17")
       person = create(:person)
-      create(:affiliation, organization: organization, person: person)
+      create(:affiliation, :facilitator, organization: organization, person: person)
       person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
 
       get organization_url(organization)
@@ -205,7 +205,7 @@ RSpec.describe "/organizations", type: :request do
     it "shows workshops and ideas authored by affiliated people on the profile" do
       organization = Organization.create!(valid_attributes)
       affiliated_person = create(:person)
-      create(:affiliation, organization: organization, person: affiliated_person)
+      create(:affiliation, :facilitator, organization: organization, person: affiliated_person)
       windows_type = create(:windows_type, :adult)
       workshop = create(:workshop, author: affiliated_person, title: "Affiliated Weaving Workshop", windows_type: windows_type)
       idea = create(:workshop_idea, author: affiliated_person, title: "Affiliated Weaving Idea", windows_type: windows_type, created_by: admin)
@@ -219,7 +219,7 @@ RSpec.describe "/organizations", type: :request do
     it "does not duplicate workshops or ideas that are both directly and indirectly associated" do
       organization = Organization.create!(valid_attributes)
       affiliated_person = create(:person)
-      create(:affiliation, organization: organization, person: affiliated_person)
+      create(:affiliation, :facilitator, organization: organization, person: affiliated_person)
       windows_type = create(:windows_type, :adult)
       workshop = create(:workshop, organization: organization, author: affiliated_person, title: "Dual Mosaic Workshop", windows_type: windows_type)
       idea = create(:workshop_idea, organization: organization, author: affiliated_person, title: "Dual Mosaic Idea", windows_type: windows_type, created_by: admin)
@@ -258,18 +258,18 @@ RSpec.describe "/organizations", type: :request do
       %w[Alpha Bravo Charlie Delta].each do |name|
         person = create(:person)
         create(:sectorable_item, sector: create(:sector, name: name), sectorable: person, is_primary: true)
-        create(:affiliation, organization: org, person: person)
+        create(:affiliation, :facilitator, organization: org, person: person)
       end
       former = create(:person)
       create(:sectorable_item, sector: create(:sector, name: "Former Sector"), sectorable: former, is_primary: true)
-      create(:affiliation, organization: org, person: former, end_date: 1.year.ago)
+      create(:affiliation, :facilitator, organization: org, person: former, end_date: 1.year.ago)
       org
     end
 
     it "shows the three most-held facilitator primaries, starred, then links to the full list" do
       second_delta = create(:person)
       create(:sectorable_item, sector: Sector.find_by!(name: "Delta"), sectorable: second_delta, is_primary: true)
-      create(:affiliation, organization: organization_with_sectors, person: second_delta)
+      create(:affiliation, :facilitator, organization: organization_with_sectors, person: second_delta)
 
       get organization_url(organization_with_sectors)
 
@@ -302,7 +302,7 @@ RSpec.describe "/organizations", type: :request do
       person = organization_with_sectors.affiliations.first.person
       %w[Echo Foxtrot].each { |name| create(:sectorable_item, sector: create(:sector, name: name), sectorable: person, is_primary: false) }
       second = create(:person)
-      create(:affiliation, organization: organization_with_sectors, person: second)
+      create(:affiliation, :facilitator, organization: organization_with_sectors, person: second)
       create(:sectorable_item, sector: Sector.find_by!(name: "Echo"), sectorable: second, is_primary: false)
 
       sector_order = -> { Capybara.string(response.body).all("section", text: "Sectors").first.all("li a").map(&:text) }
@@ -325,7 +325,7 @@ RSpec.describe "/organizations", type: :request do
       person = organization_with_sectors.affiliations.first.person
       %w[Echo Foxtrot].each { |name| create(:sectorable_item, sector: create(:sector, name: name), sectorable: person, is_primary: false) }
       second = create(:person)
-      create(:affiliation, organization: organization_with_sectors, person: second)
+      create(:affiliation, :facilitator, organization: organization_with_sectors, person: second)
       create(:sectorable_item, sector: Sector.find_by!(name: "Echo"), sectorable: second, is_primary: false)
       sector_order = -> { Capybara.string(response.body).all("section", text: "Sectors").first.all("li a").map(&:text) }
 
@@ -545,7 +545,7 @@ RSpec.describe "/organizations", type: :request do
       create(:affiliation, organization: organization, person: create(:person),
                            title: "Volunteer", start_date: Date.new(2010, 1, 1))
       create(:affiliation, organization: organization, person: create(:person),
-                           title: "Facilitator", start_date: Date.new(2015, 3, 1))
+                           type: "facilitator", start_date: Date.new(2015, 3, 1))
 
       get edit_organization_url(organization)
 
@@ -555,7 +555,7 @@ RSpec.describe "/organizations", type: :request do
     it "renders per-event program-status chips only for facilitator-training events" do
       organization = Organization.create!(valid_attributes)
       create(:affiliation, organization: organization, person: create(:person),
-                           title: "Facilitator", start_date: Date.new(2020, 1, 1))
+                           type: "facilitator", start_date: Date.new(2020, 1, 1))
       training = create(:event, title: "Qwultz Training", facilitator_training: true,
                                 start_date: Date.new(2026, 8, 1))
       non_training = create(:event, title: "Zibberpicnic Social", facilitator_training: false,
@@ -589,7 +589,7 @@ RSpec.describe "/organizations", type: :request do
     it "keeps a training's program-status chip when the org has any active registration there" do
       organization = Organization.create!(valid_attributes)
       create(:affiliation, organization: organization, person: create(:person),
-                           title: "Facilitator", start_date: Date.new(2020, 1, 1))
+                           type: "facilitator", start_date: Date.new(2020, 1, 1))
       training = create(:event, title: "Half Skipped", abbreviation: "HLF101",
                                 facilitator_training: true, start_date: Date.new(2026, 8, 1))
       [ "registered", "no_show" ].each do |status|
@@ -705,7 +705,7 @@ RSpec.describe "/organizations", type: :request do
         organization = Organization.create!(valid_attributes)
         address = create(:address, addressable: organization)
         person = create(:person)
-        affiliation = create(:affiliation, organization: organization, person: person)
+        affiliation = create(:affiliation, :facilitator, organization: organization, person: person)
 
         patch organization_url(organization), params: {
           organization: {

@@ -147,15 +147,15 @@ RSpec.describe EventScholarshipReport do
     it "adds the org's active addresses for an affiliation with no address picked" do
       site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
       create(:address, addressable: org_a, city: "Closed", state: "IL", inactive: true)
-      create(:affiliation, person: person1, organization: org_a, organization_address: site)
-      create(:affiliation, person: person2, organization: org_a, organization_address: nil)
+      create(:affiliation, :facilitator, person: person1, organization: org_a, organization_address: site)
+      create(:affiliation, :facilitator, person: person2, organization: org_a, organization_address: nil)
 
       expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
     end
 
     it "keeps a picked address even after it's made inactive" do
       site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
-      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      create(:affiliation, :facilitator, person: person1, organization: org_a, organization_address: site)
       site.update!(inactive: true)
 
       expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
@@ -163,10 +163,10 @@ RSpec.describe EventScholarshipReport do
 
     it "prefers the org addresses on the recipients' affiliations" do
       site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
-      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      create(:affiliation, :facilitator, person: person1, organization: org_a, organization_address: site)
       # Another person's affiliation doesn't count — only the credited recipients'.
       elsewhere = create(:address, addressable: org_a, city: "Joliet", state: "IL")
-      create(:affiliation, person: create(:person), organization: org_a, organization_address: elsewhere)
+      create(:affiliation, :facilitator, person: create(:person), organization: org_a, organization_address: elsewhere)
 
       expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
     end
@@ -176,28 +176,28 @@ RSpec.describe EventScholarshipReport do
       let(:site) { create(:address, addressable: org_a, city: "Peoria", state: "IL") }
 
       it "counts a facilitator affiliation in effect during the training, even one since ended" do
-        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+        create(:affiliation, :facilitator, person: person1, organization: org_a, organization_address: site,
           start_date: Date.new(2024, 1, 1), end_date: Date.new(2025, 6, 1), inactive: true)
 
         expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
       end
 
       it "skips one that ended before the report's timeframe, falling back to the org's addresses" do
-        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+        create(:affiliation, :facilitator, person: person1, organization: org_a, organization_address: site,
           start_date: Date.new(2020, 1, 1), end_date: Date.new(2021, 1, 1), inactive: true)
 
         expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
       end
 
       it "skips one that starts after the report's timeframe" do
-        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+        create(:affiliation, :facilitator, person: person1, organization: org_a, organization_address: site,
           start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 12, 31))
 
         expect(report.organization_rows.first.locations).to eq([ "Peoria, IL", "Springfield, IL" ])
       end
 
       it "uses the selected year as the timeframe" do
-        create(:affiliation, person: person1, organization: org_a, organization_address: site,
+        create(:affiliation, :facilitator, person: person1, organization: org_a, organization_address: site,
           start_date: Date.new(2025, 11, 1), end_date: Date.new(2025, 12, 31))
 
         all_time = described_class.new([ event.decorate ])
@@ -209,9 +209,9 @@ RSpec.describe EventScholarshipReport do
 
     it "ignores the recipients' job (non-facilitator) affiliations" do
       site = create(:address, addressable: org_a, city: "Peoria", state: "IL")
-      create(:affiliation, person: person1, organization: org_a, organization_address: site)
+      create(:affiliation, :facilitator, person: person1, organization: org_a, organization_address: site)
       office = create(:address, addressable: org_a, city: "Chicago", state: "IL")
-      create(:affiliation, person: person2, organization: org_a, organization_address: office, title: "Program Director")
+      create(:affiliation, person: person2, organization: org_a, organization_address: office, type: "job", title: "Program Director")
 
       expect(report.organization_rows.first.locations).to eq([ "Peoria, IL" ])
     end

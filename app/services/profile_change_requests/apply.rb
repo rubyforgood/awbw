@@ -42,9 +42,15 @@ module ProfileChangeRequests
     def apply_affiliation_title
       affiliation = @request.affiliation
       return Result.new(applied: false, message: "The affiliation no longer exists.") unless affiliation
+      if affiliation.facilitator?
+        return Result.new(applied: false, message: "Facilitator affiliations don't have a job title. Resolve this by hand.")
+      end
 
-      affiliation.update(title: @request.proposed_title)
-      Result.new(applied: true, message: "Title updated to #{@request.proposed_title}.")
+      if affiliation.update(title: @request.proposed_title)
+        Result.new(applied: true, message: "Title updated to #{@request.proposed_title}.")
+      else
+        Result.new(applied: false, message: affiliation.errors.full_messages.to_sentence)
+      end
     end
 
     def apply_affiliation_dates
@@ -141,6 +147,7 @@ module ProfileChangeRequests
         ended = end_other_organizations
         affiliation = @request.person.affiliations.create(
           organization_id: @request.organization_id,
+          type: Affiliation::TYPE_JOB,
           title: @request.proposed_title,
           start_date: @request.proposed_start_date,
           end_date: @request.proposed_end_date
@@ -172,7 +179,7 @@ module ProfileChangeRequests
       affiliations = @request.person.affiliations
       return if affiliations.facilitators.active_or_pending.exists?(organization_id: @request.organization_id)
 
-      affiliations.create!(organization_id: @request.organization_id, title: Affiliation::FACILITATOR_TITLE, start_date: new_affiliation_start)
+      affiliations.create!(organization_id: @request.organization_id, type: Affiliation::TYPE_FACILITATOR, start_date: new_affiliation_start)
       "Added a Facilitator affiliation."
     end
 

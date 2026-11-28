@@ -133,10 +133,10 @@ RSpec.describe Category do
     let(:organization) { create(:organization) }
     let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
 
-    def tag_person(category, title: Affiliation::FACILITATOR_TITLE)
+    def tag_person(category, type: "facilitator")
       person = create(:person)
       create(:categorizable_item, category: category, categorizable: person, is_primary: true)
-      create(:affiliation, organization: organization, person: person, title: title)
+      create(:affiliation, organization: organization, person: person, type: type)
     end
 
     it "includes an age group an organization's active facilitator holds as primary" do
@@ -148,7 +148,7 @@ RSpec.describe Category do
 
     it "excludes an age group held only by non-facilitators" do
       adults = create(:category, :published, category_type: age_type, name: "Adults")
-      tag_person(adults, title: "Director")
+      tag_person(adults, type: "job")
 
       expect(Category.has_published_taggings).not_to include(adults)
     end
@@ -159,11 +159,11 @@ RSpec.describe Category do
       adults = create(:category, :published, category_type: age_type, name: "Adults")
       create(:categorizable_item, category: clinical, categorizable: organization)
       create(:categorizable_item, category: adults, categorizable: organization)
-      create(:affiliation, organization: organization, title: "Director")
+      create(:affiliation, organization: organization, type: "job", title: "Director")
 
       expect(Category.has_published_taggings).not_to include(clinical, adults)
 
-      create(:affiliation, organization: organization)
+      create(:affiliation, :facilitator, organization: organization)
 
       expect(Category.has_published_taggings).to include(clinical)
       expect(Category.has_published_taggings).not_to include(adults)

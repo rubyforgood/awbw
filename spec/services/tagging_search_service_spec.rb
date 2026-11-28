@@ -176,7 +176,7 @@ RSpec.describe TaggingSearchService do
       before do
         person = create(:person)
         create(:sectorable_item, sector: sector, sectorable: person, is_primary: true)
-        create(:affiliation, organization: organization, person: person)
+        create(:affiliation, :facilitator, organization: organization, person: person)
       end
 
       it "returns organizations whose active facilitators hold the sector, with their totals" do
@@ -185,7 +185,7 @@ RSpec.describe TaggingSearchService do
         former_only = create(:organization, name: "Former Org")
         former = create(:person)
         create(:sectorable_item, sector: sector, sectorable: former, is_primary: true)
-        create(:affiliation, organization: former_only, person: former, end_date: 1.year.ago)
+        create(:affiliation, :facilitator, organization: former_only, person: former, end_date: 1.year.ago)
 
         results = described_class.new(user: admin).call(
           sector_names_all: "Youth", category_names_all: nil, pages: {}, number_of_items_per_page: 9

@@ -151,7 +151,7 @@ RSpec.describe "Bookmarks", type: :request do
       before { workshop.update_columns(created_by_id: creator.id) }
 
       it "links the creator's profile when the viewer can open it" do
-        create(:affiliation, person: creator.person)
+        create(:affiliation, :facilitator, person: creator.person)
 
         get personal_bookmarks_path, headers: { "Turbo-Frame" => "personal_bookmarks_results" }
 

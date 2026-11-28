@@ -108,7 +108,7 @@ else
            "Congratulations on completing your facilitator training.", year.(7) + 3.days)
 
     first_facilitator = Affiliation.create!(
-      person: person, organization: second_org, title: "Facilitator", start_date: year.(7) + 2.days
+      person: person, organization: second_org, type: Affiliation::TYPE_FACILITATOR, start_date: year.(7) + 2.days
     )
     track.("create", first_facilitator, year.(7) + 2.days)
     note.(first_facilitator, "Minted from the Foundations training roster.", year.(7) + 2.days)
@@ -158,7 +158,7 @@ else
     end
 
     # ── 5 years ago: takes on a job title alongside the facilitator row ──────
-    job = Affiliation.create!(person: person, organization: second_org, title: "Program Coordinator")
+    job = Affiliation.create!(person: person, organization: second_org, type: Affiliation::TYPE_JOB, title: "Program Coordinator")
     track.("create", job, year.(5))
     note.(job, "Took on the Program Coordinator role alongside facilitating.", year.(5))
     note.(person, "Promoted internally — worth checking which affiliation should be primary.",

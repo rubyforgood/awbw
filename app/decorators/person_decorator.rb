@@ -20,7 +20,7 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def detail(length: nil)
-    text = affiliations.active.map { |affiliation| "#{affiliation.title}, #{affiliation.organization.name}" }.join(", ")
+    text = affiliations.active.map { |affiliation| "#{affiliation.display_title}, #{affiliation.organization.name}" }.join(", ")
     length ? text&.truncate(length) : text
   end
 

@@ -9,8 +9,8 @@ RSpec.describe "Affiliation Active/Inactive tabs", type: :system do
   before do
     driven_by(:selenium_chrome_headless)
     create(:affiliation, person: person, organization: current_org,
-                         title: "Facilitator", start_date: 2.years.ago.to_date)
-    create(:affiliation, person: person, organization: ended_org, title: "Facilitator",
+                         type: "facilitator", start_date: 2.years.ago.to_date)
+    create(:affiliation, person: person, organization: ended_org, type: "facilitator",
                          start_date: 4.years.ago.to_date, end_date: 1.year.ago.to_date)
     sign_in admin
     visit edit_person_path(person)

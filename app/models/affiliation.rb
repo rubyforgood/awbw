@@ -1,12 +1,15 @@
 class Affiliation < ApplicationRecord
+  self.inheritance_column = nil
+
   include Communicable
   include FilemakerCoded
   filemaker_archived_in FmProject, FmPersonnel, FmPeopleToOrganization
 
-  # Standing title given to the "facilitator affiliation" we create on registration
-  # and org linking. Matches the `facilitators` scope / `facilitator?` predicate
-  # (both treat exactly "Facilitator" as canonical).
-  FACILITATOR_TITLE = "Facilitator".freeze
+  TYPE_JOB = "job".freeze
+  TYPE_FACILITATOR = "facilitator".freeze
+  TYPES = [ TYPE_JOB, TYPE_FACILITATOR ].freeze
+
+  FACILITATOR_LABEL = "Facilitator".freeze
 
   # Status taxonomy shown as a chip on each person's row, in display order.
   STATUSES = %w[ Active Upcoming Inactive ].freeze
@@ -55,8 +58,10 @@ class Affiliation < ApplicationRecord
 
   # Validations
   validates_presence_of :organization_id
+  validates :type, presence: true, inclusion: { in: TYPES }
   validates :title, length: { maximum: 255 }
   validate :organization_address_belongs_to_organization
+  validate :job_title_is_not_facilitator_label
 
   # Not flagged inactive and not past its end date. Includes affiliations whose
   # start_date is still in the future (e.g. a Facilitator affiliation dated to an
@@ -84,10 +89,8 @@ class Affiliation < ApplicationRecord
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", date)
   }
 
-  # Exactly "Facilitator" (case-sensitive; BINARY on the literal keeps the plain
-  # title index usable). Titles are normalized on write, so no TRIM is needed.
-  scope :facilitators, -> { where("affiliations.title = BINARY ?", FACILITATOR_TITLE) }
-  scope :jobs, -> { where("affiliations.title IS NULL OR affiliations.title <> BINARY ?", FACILITATOR_TITLE) }
+  scope :facilitators, -> { where(type: TYPE_FACILITATOR) }
+  scope :jobs, -> { where(type: TYPE_JOB) }
 
   # Admin affiliations index filter options (label => param value).
   INDEX_KINDS = { "Facilitator (FA)" => "facilitator", "Job (JA)" => "job", "Job, untitled" => "untitled" }.freeze
@@ -106,7 +109,7 @@ class Affiliation < ApplicationRecord
     case kind
     when "facilitator" then facilitators
     when "job" then jobs
-    when "untitled" then where(title: nil)
+    when "untitled" then jobs.where(title: nil)
     else all
     end
   }
@@ -280,10 +283,16 @@ class Affiliation < ApplicationRecord
   after_destroy :sync_organization_affiliation_dates
 
   # Methods
-  # In-memory twin of the .facilitators scope: exactly "Facilitator", case-sensitive.
-  # An executable agreement spec locks the two together.
   def facilitator?
-    title.to_s.strip == FACILITATOR_TITLE
+    type == TYPE_FACILITATOR
+  end
+
+  def job?
+    type == TYPE_JOB
+  end
+
+  def display_title
+    facilitator? ? FACILITATOR_LABEL : title
   end
 
   # Starts and ends on the same day — the shape a training leaves when nobody
@@ -340,10 +349,16 @@ class Affiliation < ApplicationRecord
     errors.add(:organization_address_id, "must be an address of this organization") unless valid
   end
 
-  # Store titles trimmed (blank → nil) so the .facilitators scope matches the bare
-  # column and uses the title index without a TRIM wrapper.
   def normalize_title
     self.title = title&.strip.presence
+    self.title = nil if facilitator?
+  end
+
+  def job_title_is_not_facilitator_label
+    return unless job?
+    return unless title == FACILITATOR_LABEL
+
+    errors.add(:title, "can't be #{FACILITATOR_LABEL} — use the Facilitator role type")
   end
 
   def skip_if_duplicate
@@ -353,7 +368,8 @@ class Affiliation < ApplicationRecord
       start_date: start_date,
       end_date: end_date,
       inactive: inactive,
-      title: title&.strip
+      title: title&.strip,
+      type: type
     )
     scope = scope.where.not(id: id) if persisted?
 

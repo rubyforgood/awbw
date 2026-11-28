@@ -17,7 +17,7 @@ RSpec.describe "Organizations index preloading", type: :request do
     count.times do |i|
       org = create(:organization, name: "Preload Org #{Organization.count}#{i}")
       person = create(:person)
-      create(:affiliation, organization: org, person: person, title: "Facilitator")
+      create(:affiliation, organization: org, person: person, type: "facilitator")
       person.sectorable_items.create!(sector: sector, is_primary: true)
       person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
     end

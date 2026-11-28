@@ -131,7 +131,7 @@ RSpec.describe ProfileChangeRequest, type: :model do
     end
 
     describe "removing a Facilitator affiliation" do
-      let(:facilitator) { create(:affiliation) }
+      let(:facilitator) { create(:affiliation, :facilitator) }
       let(:remove) { { person: facilitator.person, affiliation: facilitator, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE } }
 
       it "closes the program and needs a reason" do

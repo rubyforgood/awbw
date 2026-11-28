@@ -10,9 +10,9 @@ require "rails_helper"
 RSpec.describe "facilitator affiliation math" do
   let(:organization) { create(:organization) }
 
-  def facilitator(start_date:, end_date: nil, title: "Facilitator")
+  def facilitator(start_date:, end_date: nil, type: "facilitator")
     create(:affiliation, organization: organization, person: create(:person),
-                         title: title, start_date: start_date, end_date: end_date)
+                         type: type, start_date: start_date, end_date: end_date)
   end
 
   def status_on(date)
@@ -58,9 +58,9 @@ RSpec.describe "facilitator affiliation math" do
     end
 
     it "counts only facilitators — a roomful of other titles is still :new" do
-      facilitator(start_date: Date.new(2010, 1, 1), title: "Volunteer")
-      facilitator(start_date: Date.new(2011, 1, 1), title: "Counselor")
-      facilitator(start_date: Date.new(2012, 1, 1), title: "Lead Facilitator")
+      create(:affiliation, organization: organization, person: create(:person), type: "job", title: "Volunteer", start_date: Date.new(2010, 1, 1))
+      create(:affiliation, organization: organization, person: create(:person), type: "job", title: "Counselor", start_date: Date.new(2011, 1, 1))
+      create(:affiliation, organization: organization, person: create(:person), type: "job", title: "Lead Facilitator", start_date: Date.new(2012, 1, 1))
 
       expect(status_on(anchor)).to eq(:new)
     end
@@ -104,7 +104,7 @@ RSpec.describe "facilitator affiliation math" do
 
   describe "now (Active / Formerly active / Never active)" do
     it "is :never_active with no facilitator affiliation, whatever else the org has" do
-      facilitator(start_date: 5.years.ago.to_date, title: "Volunteer")
+      create(:affiliation, organization: organization, person: create(:person), type: "job", title: "Volunteer", start_date: 5.years.ago.to_date)
 
       expect(bucket).to eq(:never_active)
     end
@@ -168,7 +168,7 @@ RSpec.describe "facilitator affiliation math" do
       event = create(:event, :ended, facilitator_training: true)
       anchor = event.start_date.to_date
       older = create(:affiliation, organization: organization, person: person,
-                                   title: "Facilitator", start_date: 3.years.ago.to_date)
+                                   type: "facilitator", start_date: 3.years.ago.to_date)
       registration = create(:event_registration, event: event, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: registration, organization: organization)
 
@@ -191,7 +191,7 @@ RSpec.describe "facilitator affiliation math" do
       anchor = event.start_date.to_date
       registration = create(:event_registration, event: event, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: registration, organization: organization)
-      minted = create(:affiliation, organization: organization, person: person, title: "Facilitator",
+      minted = create(:affiliation, organization: organization, person: person, type: "facilitator",
                                     start_date: anchor, event_registration: registration)
 
       expect(status_on(anchor)).to eq(:new)
@@ -216,7 +216,7 @@ RSpec.describe "facilitator affiliation math" do
       anchor = event.start_date.to_date
       registration = create(:event_registration, event: event, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: registration, organization: organization)
-      minted = create(:affiliation, organization: organization, person: person, title: "Facilitator",
+      minted = create(:affiliation, organization: organization, person: person, type: "facilitator",
                                     start_date: anchor, event_registration: registration)
 
       AffiliationServices::ReconcilePerson.new(

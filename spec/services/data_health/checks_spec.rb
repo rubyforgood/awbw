@@ -44,10 +44,10 @@ RSpec.describe DataHealth::FacilitatorAffiliationsFromNonTrainings do
   let(:organization) { create(:organization) }
   let(:person) { create(:person) }
 
-  def affiliation_from(facilitator_training:, title: "Facilitator")
+  def affiliation_from(facilitator_training:, type: "facilitator", title: nil)
     event = create(:event, :ended, facilitator_training: facilitator_training)
     registration = create(:event_registration, event: event, registrant: person, status: "attended")
-    create(:affiliation, person: person, organization: organization, title: title,
+    create(:affiliation, person: person, organization: organization, type: type, title: title,
                          start_date: 1.year.ago.to_date, event_registration: registration)
   end
 
@@ -64,14 +64,14 @@ RSpec.describe DataHealth::FacilitatorAffiliationsFromNonTrainings do
   end
 
   it "ignores job affiliations — only the facilitator title confers status" do
-    affiliation_from(facilitator_training: false, title: "Counselor")
+    affiliation_from(facilitator_training: false, type: "job", title: "Counselor")
 
     expect(described_class.new).not_to be_any
   end
 
   it "ignores hand-entered rows, which have no minting registration" do
     create(:affiliation, person: person, organization: organization,
-                         title: "Facilitator", start_date: 1.year.ago.to_date)
+                         type: "facilitator", start_date: 1.year.ago.to_date)
 
     expect(described_class.new).not_to be_any
   end
@@ -97,7 +97,7 @@ RSpec.describe DataHealth::MisalignedAffiliationProvenance do
 
   it "finds a row whose minting registration is linked to a different organization" do
     create(:event_registration_organization, event_registration: registration, organization: other_organization)
-    offender = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+    offender = create(:affiliation, person: person, organization: organization, type: "facilitator",
                                     start_date: 1.year.ago.to_date, event_registration: registration)
 
     expect(described_class.new.scope).to include(offender)
@@ -105,7 +105,7 @@ RSpec.describe DataHealth::MisalignedAffiliationProvenance do
 
   it "leaves a row whose registration is linked to its own organization" do
     create(:event_registration_organization, event_registration: registration, organization: organization)
-    create(:affiliation, person: person, organization: organization, title: "Facilitator",
+    create(:affiliation, person: person, organization: organization, type: "facilitator",
                          start_date: 1.year.ago.to_date, event_registration: registration)
 
     expect(described_class.new).not_to be_any
@@ -113,7 +113,7 @@ RSpec.describe DataHealth::MisalignedAffiliationProvenance do
 
   it "ignores hand-entered rows — a missing link is not a stale one" do
     create(:affiliation, person: person, organization: organization,
-                         title: "Facilitator", start_date: 1.year.ago.to_date)
+                         type: "facilitator", start_date: 1.year.ago.to_date)
 
     expect(described_class.new).not_to be_any
   end
@@ -131,7 +131,7 @@ RSpec.describe DataHealth::LegacyRoleAffiliations do
 
   it "lists affiliations titled with any old-app role, and reports only" do
     titled = %w[Leader liaison Assistant default].map { |title| affiliation(title, start_date: Date.new(2019, 1, title.length)) }
-    affiliation("Facilitator", start_date: Date.new(2019, 1, 1))
+    affiliation(nil, type: "facilitator", start_date: Date.new(2019, 1, 1))
     affiliation("Program Director")
 
     expect(described_class.new.scope).to match_array(titled)
@@ -141,8 +141,8 @@ RSpec.describe DataHealth::LegacyRoleAffiliations do
   it "labels each Facilitator row by how its stretch meets the Leader row's" do
     check = described_class.new
     leader = affiliation("Leader", start_date: Date.new(2019, 4, 1), end_date: Date.new(2025, 7, 1))
-    same = affiliation("Facilitator", start_date: Date.new(2019, 4, 1), end_date: Date.new(2025, 7, 1))
-    earlier = affiliation("Facilitator", start_date: Date.new(2010, 1, 1), end_date: Date.new(2012, 1, 1))
+    same = affiliation(nil, type: "facilitator", start_date: Date.new(2019, 4, 1), end_date: Date.new(2025, 7, 1))
+    earlier = affiliation(nil, type: "facilitator", start_date: Date.new(2010, 1, 1), end_date: Date.new(2012, 1, 1))
 
     expect(check.stretch_label(same, leader, same)).to eq("same dates")
     expect(check.stretch_label(earlier, leader, same)).to eq("a different stretch")
@@ -150,15 +150,15 @@ RSpec.describe DataHealth::LegacyRoleAffiliations do
 
   describe "#twin_for" do
     it "finds the Facilitator row with the same dates first" do
-      affiliation("Facilitator", start_date: Date.new(2015, 1, 1))
-      same = affiliation("Facilitator", start_date: Date.new(2019, 1, 1))
+      affiliation(nil, type: "facilitator", start_date: Date.new(2015, 1, 1))
+      same = affiliation(nil, type: "facilitator", start_date: Date.new(2019, 1, 1))
       leader = affiliation("Leader", start_date: Date.new(2019, 1, 1))
 
       expect(described_class.new.twin_for(leader)).to eq(same)
     end
 
     it "falls back to one overlapping with different dates, and is nil when none covers the stretch" do
-      overlapping = affiliation("Facilitator", start_date: Date.new(2018, 1, 1), end_date: Date.new(2022, 12, 31))
+      overlapping = affiliation(nil, type: "facilitator", start_date: Date.new(2018, 1, 1), end_date: Date.new(2022, 12, 31))
       leader = affiliation("Leader", start_date: Date.new(2019, 4, 1), end_date: Date.new(2025, 7, 1))
       later = affiliation("Leader", start_date: Date.new(2024, 1, 1), end_date: Date.new(2025, 1, 1))
 
@@ -180,7 +180,7 @@ RSpec.describe DataHealth::LegacyOrganizationStatusDrift do
 
   it "leaves an organization whose stored status agrees with its affiliations" do
     organization = create(:organization, organization_status: active_status)
-    create(:affiliation, organization: organization, title: "Facilitator",
+    create(:affiliation, organization: organization, type: "facilitator",
                          start_date: 1.year.ago.to_date)
 
     expect(described_class.new.scope).not_to include(organization.reload)

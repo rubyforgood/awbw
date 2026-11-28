@@ -13,7 +13,7 @@ FactoryBot.define do
 
     trait :with_organization do
       after(:create) do |person|
-        person.organizations << create(:organization)
+        create(:affiliation, person: person, organization: create(:organization))
       end
     end
 

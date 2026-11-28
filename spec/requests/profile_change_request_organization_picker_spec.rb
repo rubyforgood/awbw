@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Choosing which organization to change", type: :request do
   let(:owner_user) { create(:user, :with_person) }
   let(:person) { owner_user.person }
-  let!(:sunrise) { create(:affiliation, person: person, organization: create(:organization, name: "Sunrise Center"), title: "Facilitator") }
+  let!(:sunrise) { create(:affiliation, person: person, organization: create(:organization, name: "Sunrise Center"), type: "facilitator") }
 
   before { sign_in owner_user }
 

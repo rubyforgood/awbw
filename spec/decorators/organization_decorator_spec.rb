@@ -38,10 +38,10 @@ RSpec.describe OrganizationDecorator do
     let(:earlier) { create(:person, first_name: "Abe") }
 
     it "groups each active facilitator's active titles, sorted by name, leaving out everyone else" do
-      facilitation = create(:affiliation, organization: organization, person: facilitator)
+      facilitation = create(:affiliation, :facilitator, organization: organization, person: facilitator)
       director = create(:affiliation, organization: organization, person: facilitator, title: "Director")
       create(:affiliation, organization: organization, person: facilitator, title: "Counselor", end_date: 1.month.ago)
-      create(:affiliation, organization: organization, person: earlier)
+      create(:affiliation, :facilitator, organization: organization, person: earlier)
       create(:affiliation, organization: organization, title: "Board Member")
       create(:affiliation, organization: organization, end_date: 1.month.ago)
 
@@ -83,14 +83,14 @@ RSpec.describe OrganizationDecorator do
     end
 
     it "shows merged facilitator-affiliation periods, ignoring non-facilitator ones" do
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 1, 1), end_date: Date.new(2018, 6, 1))
+      create(:affiliation, organization: organization, person: create(:person), type: "facilitator", start_date: Date.new(2015, 1, 1), end_date: Date.new(2018, 6, 1))
       create(:affiliation, organization: organization, person: create(:person), title: "Volunteer", start_date: Date.new(2005, 1, 1), end_date: nil)
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2024, 2, 1), end_date: nil)
+      create(:affiliation, organization: organization, person: create(:person), type: "facilitator", start_date: Date.new(2024, 2, 1), end_date: nil)
       expect(organization.reload.decorate.program_since_display).to eq("Jan 2015 – Jun 2018, Feb 2024")
     end
 
     it "ignores a zero-length row, which records no facilitation (ADR-0001 D8a)" do
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: organization, person: create(:person), type: "facilitator",
                            start_date: Date.new(2026, 8, 1), end_date: Date.new(2026, 8, 1), inactive: true)
       expect(organization.reload.decorate.program_since_display).to eq("")
     end
@@ -101,19 +101,19 @@ RSpec.describe OrganizationDecorator do
 
     it "surfaces the affiliation start when it differs from the facilitator start" do
       create(:affiliation, organization: organization, person: create(:person), title: "Volunteer", start_date: Date.new(2010, 3, 1))
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 8, 1))
+      create(:affiliation, organization: organization, person: create(:person), type: "facilitator", start_date: Date.new(2015, 8, 1))
 
       expect(organization.reload.decorate.affiliated_since_note).to eq("Affiliated since Mar 2010")
     end
 
     it "is nil when the affiliation and facilitator starts share a month and year" do
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 8, 1))
+      create(:affiliation, organization: organization, person: create(:person), type: "facilitator", start_date: Date.new(2015, 8, 1))
 
       expect(organization.reload.decorate.affiliated_since_note).to be_nil
     end
 
     it "is nil when there is no affiliation start date" do
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: nil)
+      create(:affiliation, organization: organization, person: create(:person), type: "facilitator", start_date: nil)
 
       expect(organization.reload.decorate.affiliated_since_note).to be_nil
     end
@@ -139,13 +139,13 @@ RSpec.describe OrganizationDecorator do
   describe "#organization_status_bucket (facilitator affiliations only)" do
     it "is :active for an active facilitator affiliation even when stored status is Suspended" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Suspended"))
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 1.year.ago, end_date: nil)
       expect(org.reload.decorate.organization_status_bucket).to eq(:active)
     end
 
     it "is :formerly_active for only-lapsed facilitator affiliations even when stored status is Active" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
       expect(org.reload.decorate.organization_status_bucket).to eq(:formerly_active)
     end
 
@@ -157,7 +157,7 @@ RSpec.describe OrganizationDecorator do
 
     it "is :upcoming when its only facilitator affiliation has not started yet (future start)" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 1.month.from_now, end_date: nil)
       expect(org.reload.decorate.organization_status_bucket).to eq(:upcoming)
       expect(org.reload.decorate.organization_status_label(admin: true)).to eq("Upcoming")
     end
@@ -165,16 +165,16 @@ RSpec.describe OrganizationDecorator do
     it "prefers :active over :upcoming when a facilitator is active and another is upcoming" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
       person = create(:person)
-      create(:affiliation, organization: org, person: person, title: "Facilitator", start_date: 1.year.ago, end_date: nil)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      create(:affiliation, organization: org, person: person, type: "facilitator", start_date: 1.year.ago, end_date: nil)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 1.month.from_now, end_date: nil)
       expect(org.reload.decorate.organization_status_bucket).to eq(:active)
     end
 
     it "prefers :upcoming over :formerly_active when a lapsed facilitator has a new upcoming term" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
       person = create(:person)
-      create(:affiliation, organization: org, person: person, title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      create(:affiliation, organization: org, person: person, type: "facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 1.month.from_now, end_date: nil)
       expect(org.reload.decorate.organization_status_bucket).to eq(:upcoming)
     end
 
@@ -182,7 +182,7 @@ RSpec.describe OrganizationDecorator do
       # Same rule as the anchored verdict: start == end is no facilitation, so the
       # org never became active (ADR-0001 D8a).
       org = create(:organization)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator",
                            start_date: Date.new(2026, 8, 1), end_date: Date.new(2026, 8, 1), inactive: true)
 
       expect(org.reload.decorate.organization_status_bucket).to eq(:never_active)
@@ -194,7 +194,7 @@ RSpec.describe OrganizationDecorator do
   describe "who sees the Upcoming chip" do
     let(:org) do
       organization = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Pending"))
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: organization, person: create(:person), type: "facilitator",
                            start_date: 1.month.from_now, end_date: nil)
       organization.reload.decorate
     end
@@ -211,7 +211,7 @@ RSpec.describe OrganizationDecorator do
 
     it "leaves the other buckets alone for both audiences" do
       active = create(:organization)
-      create(:affiliation, organization: active, person: create(:person), title: "Facilitator", start_date: 1.year.ago)
+      create(:affiliation, organization: active, person: create(:person), type: "facilitator", start_date: 1.year.ago)
 
       expect(active.reload.decorate.organization_status_label).to eq("Active")
       expect(active.decorate.organization_status_label(admin: true)).to eq("Active")
@@ -231,7 +231,7 @@ RSpec.describe OrganizationDecorator do
   describe "#legacy_status_mismatch?" do
     it "is true when the stored status outranks the affiliations" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
       expect(org.reload.decorate).to be_legacy_status_mismatch
     end
 
@@ -242,7 +242,7 @@ RSpec.describe OrganizationDecorator do
 
     it "is false when the stored status buckets the same way as the affiliations" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Reinstate"))
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 1.year.ago, end_date: nil)
       expect(org.reload.decorate).not_to be_legacy_status_mismatch
     end
 
@@ -256,7 +256,7 @@ RSpec.describe OrganizationDecorator do
     it "is false for a stored 'Pending' org whose only facilitator is upcoming" do
       OrganizationStatus.find_or_create_by!(name: "Inactive")
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Pending"))
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 1.month.from_now, end_date: nil)
       expect(org.reload.organization_status.name).to eq("Pending")
       expect(org.decorate).not_to be_legacy_status_mismatch
     end
@@ -264,7 +264,7 @@ RSpec.describe OrganizationDecorator do
     it "is true for a stored 'Active' org whose only facilitator is upcoming" do
       OrganizationStatus.find_or_create_by!(name: "Inactive")
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 1.month.from_now, end_date: nil)
       expect(org.reload.decorate).to be_legacy_status_mismatch
     end
   end
@@ -272,7 +272,7 @@ RSpec.describe OrganizationDecorator do
   describe "#organization_status_chip" do
     it "renders a pill with the bucketed label and its status color" do
       org = create(:organization)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
       chip = org.reload.decorate.organization_status_chip
       expect(Capybara.string(chip)).to have_css("span", text: "Formerly active")
       expect(chip).to include("orange")
@@ -282,7 +282,7 @@ RSpec.describe OrganizationDecorator do
   describe "#program_since_chip" do
     it "shows the years in the org's status colour (Active → green)" do
       org = create(:organization)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 1.year.ago, end_date: nil)
       chip = org.reload.decorate.program_since_chip("2021")
       expect(Capybara.string(chip)).to have_css("span", text: "2021")
       expect(chip).to include("green")
@@ -290,7 +290,7 @@ RSpec.describe OrganizationDecorator do
 
     it "falls back to the status label (orange) when there are no facilitator years" do
       org = create(:organization)
-      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      create(:affiliation, organization: org, person: create(:person), type: "facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
       chip = org.reload.decorate.program_since_chip("")
       expect(Capybara.string(chip)).to have_css("span", text: "Formerly active")
       expect(chip).to include("orange")
@@ -327,7 +327,7 @@ RSpec.describe OrganizationDecorator do
     end
 
     it "defaults to the organization's own year-anchored program status" do
-      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator",
+      create(:affiliation, organization: organization, person: create(:person), type: "facilitator",
                            start_date: 3.years.ago.to_date)
 
       badge = Capybara.string(organization.reload.decorate.program_status_badge)
@@ -362,17 +362,17 @@ RSpec.describe OrganizationDecorator do
     end
 
     it "ignores facilitator affiliations that start on or after the date" do
-      create(:affiliation, organization: organization, person: person, title: "Facilitator", start_date: reference)
+      create(:affiliation, organization: organization, person: person, type: "facilitator", start_date: reference)
       expect(organization.reload.decorate.facilitator_status_as_of(reference).status).to eq(:new)
     end
 
     it "is :ongoing when an earlier facilitator affiliation is still active on the date" do
-      create(:affiliation, organization: organization, person: person, title: "Facilitator", start_date: reference - 1.year, end_date: nil)
+      create(:affiliation, organization: organization, person: person, type: "facilitator", start_date: reference - 1.year, end_date: nil)
       expect(organization.reload.decorate.facilitator_status_as_of(reference).status).to eq(:ongoing)
     end
 
     it "is :reinstated when earlier facilitator affiliations all ended before the date" do
-      create(:affiliation, organization: organization, person: person, title: "Facilitator", start_date: reference - 2.years, end_date: reference - 1.year)
+      create(:affiliation, organization: organization, person: person, type: "facilitator", start_date: reference - 2.years, end_date: reference - 1.year)
       expect(organization.reload.decorate.facilitator_status_as_of(reference).status).to eq(:reinstated)
     end
 

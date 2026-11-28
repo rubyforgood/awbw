@@ -136,7 +136,7 @@ RSpec.describe Ahoy::EventDecorator do
 
     it "labels an affiliation as its title and organization" do
       org = create(:organization, name: "Harbor Shelter")
-      affiliation = create(:affiliation, title: "Facilitator", organization: org)
+      affiliation = create(:affiliation, type: "facilitator", organization: org)
       event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation",
                                   resource_id: affiliation.id, properties: { "resource_title" => "Facilitator" }).decorate
 
@@ -146,9 +146,9 @@ RSpec.describe Ahoy::EventDecorator do
 
     it "appends an affiliation's date span, or 'present' while active" do
       org = create(:organization, name: "Harbor Shelter")
-      ended = create(:affiliation, title: "Facilitator", organization: org,
+      ended = create(:affiliation, type: "facilitator", organization: org,
                                    start_date: Date.new(2025, 8, 1), end_date: Date.new(2026, 2, 1))
-      active = create(:affiliation, title: "Facilitator", organization: org,
+      active = create(:affiliation, type: "facilitator", organization: org,
                                     start_date: Date.new(2025, 8, 1), end_date: nil)
 
       ended_event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation",

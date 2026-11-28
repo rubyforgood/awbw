@@ -137,7 +137,7 @@ agreement_forms.each do |spec|
     organization = Organization.find_or_create_by!(name: prior[:organization]) do |org|
       org.organization_status = active_status
     end
-    person.affiliations.find_or_create_by!(organization: organization, title: Affiliation::FACILITATOR_TITLE) do |affiliation|
+    person.affiliations.find_or_create_by!(organization: organization, type: Affiliation::TYPE_FACILITATOR) do |affiliation|
       affiliation.start_date = Date.new(2022, 3, 1)
       affiliation.end_date = prior[:ended_on]
     end

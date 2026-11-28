@@ -9,7 +9,7 @@ RSpec.describe "Admin::DataHealth", type: :request do
   def offending_affiliation
     event = create(:event, :ended, facilitator_training: false, title: "Community Potluck")
     registration = create(:event_registration, event: event, registrant: person, status: "attended")
-    create(:affiliation, person: person, organization: organization, title: "Facilitator",
+    create(:affiliation, person: person, organization: organization, type: "facilitator",
                          start_date: 1.year.ago.to_date, event_registration: registration)
   end
 
@@ -130,7 +130,7 @@ RSpec.describe "Admin::DataHealth", type: :request do
       registration = create(:event_registration, event: create(:event, :ended, facilitator_training: true),
                                                  registrant: person, status: "attended")
       create(:event_registration_organization, event_registration: registration, organization: create(:organization))
-      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      create(:affiliation, person: person, organization: organization, type: "facilitator",
                            start_date: 1.year.ago.to_date, event_registration: registration)
 
       get admin_data_health_path
@@ -184,7 +184,7 @@ RSpec.describe "Admin::DataHealth", type: :request do
 
     it "lists old-app role rows with their Facilitator twin, each opening the person's edit page" do
       person = create(:person)
-      twin = create(:affiliation, person:, organization:, title: "Facilitator")
+      twin = create(:affiliation, person:, organization:, type: "facilitator")
       leader = create(:affiliation, person:, organization:, title: "Leader", filemaker_code: "P0001")
 
       get admin_data_health_rows_path(check: "legacy_role_affiliations"),
@@ -200,7 +200,7 @@ RSpec.describe "Admin::DataHealth", type: :request do
     it "says when an old-app role row's person has no Facilitator row at its organization" do
       person = create(:person)
       create(:affiliation, person:, organization:, title: "Liaison")
-      create(:affiliation, person:, title: "Facilitator")
+      create(:affiliation, person:, type: "facilitator")
 
       get admin_data_health_rows_path(check: "legacy_role_affiliations"),
           headers: { "Turbo-Frame" => "data_health_rows_legacy_role_affiliations" }

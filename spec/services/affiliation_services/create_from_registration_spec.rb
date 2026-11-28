@@ -5,7 +5,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
   let(:organization) { create(:organization) }
 
   def titles
-    person.affiliations.where(organization: organization).pluck(:title)
+    person.affiliations.where(organization: organization).map(&:display_title)
   end
 
   it "creates a job affiliation and a facilitator affiliation when a title is given" do
@@ -42,7 +42,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     end
 
     it "leaves an existing facilitator affiliation alone rather than ending it" do
-      create(:affiliation, person: person, organization: organization, title: "Facilitator")
+      create(:affiliation, person: person, organization: organization, type: "facilitator")
 
       described_class.call(person: person, organization: organization,
                            job_title: "Counselor", facilitator_training: false)
@@ -64,7 +64,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
   end
 
   it "skips the facilitator affiliation when an active one already exists for the org" do
-    create(:affiliation, person: person, organization: organization, title: "Facilitator")
+    create(:affiliation, person: person, organization: organization, type: "facilitator")
 
     expect {
       described_class.call(person: person, organization: organization, job_title: "Counselor")
@@ -75,7 +75,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
 
   it "skips the facilitator affiliation when a pending (future-dated) one already exists for the org" do
     create(:affiliation, person: person, organization: organization,
-                         title: "Facilitator", start_date: 2.months.from_now.to_date)
+                         type: "facilitator", start_date: 2.months.from_now.to_date)
 
     described_class.call(person: person, organization: organization, job_title: nil)
 
@@ -84,7 +84,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
 
   it "adds a facilitator affiliation when the existing one for the org has ended" do
     create(:affiliation, person: person, organization: organization,
-                         title: "Facilitator", end_date: 1.month.ago.to_date)
+                         type: "facilitator", end_date: 1.month.ago.to_date)
 
     described_class.call(person: person, organization: organization, job_title: nil)
 
@@ -114,7 +114,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
                          job_title: "Counselor", organization_address: address)
 
     linked = person.affiliations.where(organization: organization)
-    expect(linked.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+    expect(linked.map(&:display_title)).to contain_exactly("Counselor", "Facilitator")
     expect(linked.map(&:organization_address)).to all(eq(address))
   end
 
@@ -137,7 +137,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     end
 
     it "links the address to an existing facilitator affiliation that has none" do
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: nil)
+      facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator", organization_address: nil)
 
       described_class.call(person: person, organization: organization, organization_address: address)
 
@@ -146,7 +146,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
 
     it "re-points an affiliation tied to another address at the submitted one and reports it" do
       other = create(:address, addressable: organization)
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: other)
+      facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator", organization_address: other)
 
       changes = described_class.call(person: person, organization: organization, organization_address: address)
 
@@ -158,7 +158,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     it "re-points the person's other current affiliations at the org, whatever their title" do
       other = create(:address, addressable: organization)
       old_job = create(:affiliation, person: person, organization: organization, title: "Counselor", organization_address: other)
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: other)
+      facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator", organization_address: other)
 
       described_class.call(person: person, organization: organization, job_title: "Program director",
                            organization_address: address, facilitator_training: false)
@@ -179,7 +179,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
 
     it "only fills a blank address when the address is a fallback rather than submitted" do
       other = create(:address, addressable: organization)
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: other)
+      facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator", organization_address: other)
 
       described_class.call(person: person, organization: organization, organization_address: address, repoint_address: false)
 
@@ -187,7 +187,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     end
 
     it "leaves the existing affiliation's address nil when no address is given" do
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: nil)
+      facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator", organization_address: nil)
 
       described_class.call(person: person, organization: organization)
 
@@ -203,7 +203,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
                            job_title: "Counselor", event_registration: registration)
 
       created = person.affiliations.where(organization: organization)
-      expect(created.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+      expect(created.map(&:display_title)).to contain_exactly("Counselor", "Facilitator")
       expect(created.map(&:event_registration)).to all(eq(registration))
     end
 
@@ -214,7 +214,7 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     end
 
     it "does not stamp an existing (manual) affiliation it only backfills" do
-      manual = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+      manual = create(:affiliation, person: person, organization: organization, type: "facilitator")
 
       described_class.call(person: person, organization: organization,
                            job_title: "Counselor", event_registration: registration)
@@ -234,14 +234,14 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     described_class.call(person: person, organization: organization,
                          job_title: "Counselor", training_date: Date.new(2026, 9, 17))
 
-    facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
+    facilitator = person.affiliations.find_by(organization: organization, type: "facilitator")
     expect(facilitator.start_date).to eq(Date.new(2026, 9, 17))
   end
 
   it "falls back to today for the facilitator affiliation when no training date is given" do
     described_class.call(person: person, organization: organization, job_title: nil)
 
-    facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
+    facilitator = person.affiliations.find_by(organization: organization, type: "facilitator")
     expect(facilitator.start_date).to eq(Date.current)
   end
 end

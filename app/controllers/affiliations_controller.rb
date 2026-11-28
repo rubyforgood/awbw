@@ -196,7 +196,7 @@ class AffiliationsController < ApplicationController
 
   def affiliation_params
     params.require(:affiliation).permit(
-      :person_id, :organization_id, :title, :start_date, :end_date, :inactive, :primary_contact,
+      :person_id, :organization_id, :type, :title, :start_date, :end_date, :inactive, :primary_contact,
       :organization_address_id, :filemaker_code, :event_registration_id,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES

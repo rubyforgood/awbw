@@ -419,7 +419,7 @@ RSpec.describe Person, type: :model do
     let(:person) { create(:person, profile_is_searchable: true) }
 
     context "when person is searchable with an active affiliation" do
-      before { create(:affiliation, person: person, inactive: false, end_date: nil) }
+      before { create(:affiliation, :facilitator, person: person, inactive: false, end_date: nil) }
 
       it "returns true" do
         expect(person.published?).to be true
@@ -473,8 +473,8 @@ RSpec.describe Person, type: :model do
     let!(:person_without) { create(:person) }
 
     before do
-      create(:affiliation, person: person_with_active, inactive: false, end_date: nil)
-      create(:affiliation, person: person_with_inactive, inactive: true, end_date: nil)
+      create(:affiliation, :facilitator, person: person_with_active, inactive: false, end_date: nil)
+      create(:affiliation, :facilitator, person: person_with_inactive, inactive: true, end_date: nil)
       create(:affiliation, person: person_non_facilitator, title: "Counselor", inactive: false, end_date: nil)
     end
 
@@ -624,13 +624,13 @@ RSpec.describe Person, type: :model do
 
     let!(:person_alice) do
       create(:person, first_name: 'Alice', last_name: 'Smith', email: 'alice@example.com').tap do |p|
-        create(:affiliation, person: p, organization: org_alpha)
+        create(:affiliation, :facilitator, person: p, organization: org_alpha)
       end
     end
 
     let!(:person_bob) do
       create(:person, first_name: 'Bob', last_name: 'Jones', email: 'bob@example.com').tap do |p|
-        create(:affiliation, person: p, organization: org_beta)
+        create(:affiliation, :facilitator, person: p, organization: org_beta)
       end
     end
 
@@ -892,7 +892,7 @@ RSpec.describe Person, type: :model do
 
       it "active: excludes people whose only facilitator affiliation starts in the future" do
         upcoming = create(:person, first_name: "Upcoming", last_name: "Fac")
-        create(:affiliation, person: upcoming, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+        create(:affiliation, person: upcoming, type: "facilitator", start_date: 1.month.from_now, end_date: nil)
 
         results = Person.search_by_params(facilitator_status: "active")
         expect(results).not_to include(upcoming)
@@ -900,7 +900,7 @@ RSpec.describe Person, type: :model do
 
       it "upcoming: includes people whose facilitator affiliation has not yet started" do
         upcoming = create(:person, first_name: "Upcoming", last_name: "Fac")
-        create(:affiliation, person: upcoming, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+        create(:affiliation, person: upcoming, type: "facilitator", start_date: 1.month.from_now, end_date: nil)
 
         results = Person.search_by_params(facilitator_status: "upcoming")
         expect(results).to include(upcoming)
@@ -909,8 +909,8 @@ RSpec.describe Person, type: :model do
 
       it "upcoming and active both include someone active at one org and upcoming at another" do
         both = create(:person, first_name: "Both", last_name: "Fac")
-        create(:affiliation, person: both, title: "Facilitator", start_date: 1.year.ago, end_date: nil)
-        create(:affiliation, person: both, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+        create(:affiliation, person: both, type: "facilitator", start_date: 1.year.ago, end_date: nil)
+        create(:affiliation, person: both, type: "facilitator", start_date: 1.month.from_now, end_date: nil)
 
         expect(Person.search_by_params(facilitator_status: "upcoming")).to include(both)
         expect(Person.search_by_params(facilitator_status: "active")).to include(both)
@@ -918,7 +918,7 @@ RSpec.describe Person, type: :model do
 
       it "inactive: includes people whose facilitator affiliations are all inactive" do
         lapsed = create(:person, first_name: "Lapsed", last_name: "Fac")
-        create(:affiliation, person: lapsed, title: "Facilitator", end_date: 1.year.ago)
+        create(:affiliation, person: lapsed, type: "facilitator", end_date: 1.year.ago)
 
         results = Person.search_by_params(facilitator_status: "inactive")
         expect(results).to include(lapsed)
@@ -937,7 +937,7 @@ RSpec.describe Person, type: :model do
 
       it "inactive: includes an upcoming (not-yet-started) facilitator — the not-active umbrella" do
         upcoming = create(:person, first_name: "Upcoming", last_name: "Fac")
-        create(:affiliation, person: upcoming, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+        create(:affiliation, person: upcoming, type: "facilitator", start_date: 1.month.from_now, end_date: nil)
 
         results = Person.search_by_params(facilitator_status: "inactive")
         expect(results).to include(upcoming)
@@ -945,9 +945,9 @@ RSpec.describe Person, type: :model do
 
       it "boomerang: includes people whose active term began after an earlier term ended" do
         returnee = create(:person, first_name: "Returnee", last_name: "Fac")
-        create(:affiliation, person: returnee, title: "Facilitator",
+        create(:affiliation, person: returnee, type: "facilitator",
                              start_date: 5.years.ago, end_date: 3.years.ago)
-        create(:affiliation, person: returnee, title: "Facilitator",
+        create(:affiliation, person: returnee, type: "facilitator",
                              start_date: 1.year.ago, end_date: nil)
 
         results = Person.search_by_params(facilitator_status: "boomerang")
@@ -957,9 +957,9 @@ RSpec.describe Person, type: :model do
 
       it "boomerang: excludes people serving two orgs concurrently who never left" do
         concurrent = create(:person, first_name: "Concurrent", last_name: "Fac")
-        create(:affiliation, person: concurrent, title: "Facilitator",
+        create(:affiliation, person: concurrent, type: "facilitator",
                              start_date: 5.years.ago, end_date: nil)
-        create(:affiliation, person: concurrent, title: "Facilitator",
+        create(:affiliation, person: concurrent, type: "facilitator",
                              start_date: 1.year.ago, end_date: nil)
 
         results = Person.search_by_params(facilitator_status: "boomerang")
@@ -968,9 +968,9 @@ RSpec.describe Person, type: :model do
 
       it "boomerang: excludes a continuous term overlapping a since-ended second org" do
         overlapper = create(:person, first_name: "Overlap", last_name: "Fac")
-        create(:affiliation, person: overlapper, title: "Facilitator",
+        create(:affiliation, person: overlapper, type: "facilitator",
                              start_date: 5.years.ago, end_date: nil)
-        create(:affiliation, person: overlapper, title: "Facilitator",
+        create(:affiliation, person: overlapper, type: "facilitator",
                              start_date: 3.years.ago, end_date: 1.year.ago)
 
         results = Person.search_by_params(facilitator_status: "boomerang")
@@ -979,7 +979,7 @@ RSpec.describe Person, type: :model do
 
       it "formerly_active: includes people whose facilitator term ended and none is active" do
         former = create(:person, first_name: "Former", last_name: "Fac")
-        create(:affiliation, person: former, title: "Facilitator", end_date: 1.year.ago)
+        create(:affiliation, person: former, type: "facilitator", end_date: 1.year.ago)
 
         results = Person.search_by_params(facilitator_status: "formerly_active")
         expect(results).to include(former)
@@ -1032,7 +1032,7 @@ RSpec.describe Person, type: :model do
   describe ".published" do
     let!(:searchable_with_active) do
       person = create(:person, profile_is_searchable: true)
-      create(:affiliation, person: person, inactive: false, end_date: nil)
+      create(:affiliation, :facilitator, person: person, inactive: false, end_date: nil)
       person
     end
 
@@ -1042,7 +1042,7 @@ RSpec.describe Person, type: :model do
 
     let!(:not_searchable_with_active) do
       person = create(:person, profile_is_searchable: false)
-      create(:affiliation, person: person, inactive: false, end_date: nil)
+      create(:affiliation, :facilitator, person: person, inactive: false, end_date: nil)
       person
     end
 
@@ -1087,7 +1087,7 @@ RSpec.describe Person, "scholarship index helpers" do
   describe "#program_organization" do
     it "returns the organization on the recipient's facilitator affiliation" do
       org = create(:organization, name: "Prevail")
-      create(:affiliation, person: person, organization: org, title: "Facilitator")
+      create(:affiliation, person: person, organization: org, type: "facilitator")
 
       expect(person.program_organization).to eq(org)
     end
@@ -1095,8 +1095,8 @@ RSpec.describe Person, "scholarship index helpers" do
     it "prefers an active facilitator affiliation over a lapsed one" do
       lapsed_org = create(:organization, name: "Old Program")
       active_org = create(:organization, name: "Current Program")
-      create(:affiliation, person: person, organization: lapsed_org, title: "Facilitator", end_date: 1.year.ago.to_date)
-      create(:affiliation, person: person, organization: active_org, title: "Facilitator")
+      create(:affiliation, person: person, organization: lapsed_org, type: "facilitator", end_date: 1.year.ago.to_date)
+      create(:affiliation, person: person, organization: active_org, type: "facilitator")
 
       expect(person.program_organization).to eq(active_org)
     end

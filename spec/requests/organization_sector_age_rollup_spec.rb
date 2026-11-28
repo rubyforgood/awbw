@@ -21,8 +21,8 @@ RSpec.describe "Organization sector and age-group roll-up", type: :request do
     end
   end
 
-  def affiliate(record, organization, title: Affiliation::FACILITATOR_TITLE, **attrs)
-    create(:affiliation, person: record, organization: organization, title: title, **attrs)
+  def affiliate(record, organization, type: "facilitator", **attrs)
+    create(:affiliation, person: record, organization: organization, type: type, **attrs)
   end
 
   # Primary + additional of each.
@@ -44,10 +44,10 @@ RSpec.describe "Organization sector and age-group roll-up", type: :request do
 
   before do
     [ ana, ben, cleo, dev, gus ].each { |record| affiliate(record, harbor) }
-    affiliate(eli, harbor, title: "Director")
+    affiliate(eli, harbor, type: "job", title: "Director")
     affiliate(fay, harbor, start_date: 3.years.ago, end_date: 1.year.ago)
     affiliate(gus, beacon, start_date: 3.years.ago, end_date: 1.year.ago)
-    affiliate(gus, cedar, title: "Director")
+    affiliate(gus, cedar, type: "job", title: "Director")
     affiliate(hal, beacon)
     sign_in admin
   end

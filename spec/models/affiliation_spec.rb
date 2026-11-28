@@ -12,11 +12,11 @@ RSpec.describe Affiliation, type: :model do
 
   describe "lifecycle tracking" do
     it "buffers an update.affiliation ahoy event when edited by a user" do
-      affiliation = create(:affiliation, title: "Facilitator")
+      affiliation = create(:affiliation, title: "Counselor")
       Current.user = create(:user, :admin)
       allow(Analytics::LifecycleBuffer).to receive(:push).and_call_original
 
-      affiliation.update!(title: "Lead facilitator")
+      affiliation.update!(title: "Lead counselor")
 
       expect(Analytics::LifecycleBuffer).to have_received(:push)
         .with(hash_including(name: "update.affiliation"))
@@ -148,39 +148,28 @@ RSpec.describe Affiliation, type: :model do
   end
 
   describe '#facilitator?' do
-    it 'is true for the exact title "Facilitator"' do
-      expect(build(:affiliation, title: "Facilitator").facilitator?).to be true
+    it 'is true for the facilitator type' do
+      expect(build(:affiliation, :facilitator).facilitator?).to be true
     end
 
-    it 'ignores surrounding whitespace' do
-      expect(build(:affiliation, title: "  Facilitator ").facilitator?).to be true
-    end
-
-    it 'is false for title variants like "Lead Facilitator"' do
-      expect(build(:affiliation, title: "Lead Facilitator").facilitator?).to be false
-    end
-
-    it 'is case-sensitive' do
-      expect(build(:affiliation, title: "facilitator").facilitator?).to be false
-      expect(build(:affiliation, title: "FACILITATOR").facilitator?).to be false
-    end
-
-    it 'is false when the title is blank' do
-      expect(build(:affiliation, title: nil).facilitator?).to be false
+    it 'is false for a job, whatever its title' do
+      expect(build(:affiliation, type: "job", title: "Lead Facilitator").facilitator?).to be false
+      expect(build(:affiliation, type: "job", title: "facilitator").facilitator?).to be false
+      expect(build(:affiliation, type: "job", title: nil).facilitator?).to be false
     end
   end
 
   describe '.facilitators' do
-    let!(:exact) { create(:affiliation, title: "Facilitator") }
-    let!(:whitespace) { create(:affiliation, title: "  Facilitator ") }
-    let!(:variant) { create(:affiliation, title: "Lead Facilitator") }
-    let!(:lowercase) { create(:affiliation, title: "facilitator") }
+    let!(:facilitator) { create(:affiliation, :facilitator) }
+    let!(:titled_facilitator) { create(:affiliation, :facilitator, title: "  Facilitator ") }
+    let!(:lead_facilitator_job) { create(:affiliation, title: "Lead Facilitator") }
+    let!(:lowercase_job) { create(:affiliation, title: "facilitator") }
 
-    it 'includes only the exact, case-sensitive title "Facilitator" (whitespace-trimmed)' do
-      expect(described_class.facilitators).to contain_exactly(exact, whitespace)
+    it 'includes facilitator-type rows only' do
+      expect(described_class.facilitators).to contain_exactly(facilitator, titled_facilitator)
     end
 
-    it 'qualifies title when joined with events (which also has title)' do
+    it 'qualifies type when joined with events (which also has a type column)' do
       expect {
         described_class.facilitators.joins(event_registration: :event).to_a
       }.not_to raise_error
@@ -216,21 +205,32 @@ RSpec.describe Affiliation, type: :model do
   end
 
   describe 'title normalization on write' do
-    it 'stores the title trimmed' do
-      affiliation = create(:affiliation, title: "  Facilitator ")
-      expect(affiliation.reload.title).to eq("Facilitator")
+    it 'stores a job title trimmed' do
+      affiliation = create(:affiliation, title: "  Counselor ")
+      expect(affiliation.reload.title).to eq("Counselor")
     end
 
-    it 'stores a blank title as nil' do
+    it 'stores a blank job title as nil' do
       affiliation = create(:affiliation, title: "   ")
       expect(affiliation.reload.title).to be_nil
+    end
+
+    it 'clears the title on a facilitator row' do
+      affiliation = create(:affiliation, :facilitator, type: "facilitator")
+      expect(affiliation.reload.title).to be_nil
+    end
+
+    it 'rejects "Facilitator" as a job title' do
+      affiliation = build(:affiliation, type: "job", title: "  Facilitator ")
+      expect(affiliation).not_to be_valid
+      expect(affiliation.errors[:title]).to be_present
     end
   end
 
   describe 'facilitator seam (#facilitator? <-> .facilitators agree)' do
     it '.facilitators returns exactly the saved rows whose #facilitator? is true' do
-      [ "Facilitator", "  Facilitator ", "Lead Facilitator", "facilitator", "FACILITATOR", "Volunteer", nil ]
-        .each { |t| create(:affiliation, title: t) }
+      [ [ "facilitator", nil ], [ "job", "Lead Facilitator" ], [ "job", "Volunteer" ], [ "job", nil ] ]
+        .each { |type, title| create(:affiliation, type: type, title: title) }
 
       in_ruby = described_class.all.select(&:facilitator?).map(&:id).sort
       expect(described_class.facilitators.ids.sort).to eq(in_ruby)
@@ -243,7 +243,7 @@ RSpec.describe Affiliation, type: :model do
 
     it 'sets the organization to Inactive when its last active affiliation goes inactive' do
       org = create(:organization, organization_status: active_status)
-      affiliation = create(:affiliation, organization: org, inactive: false, end_date: nil)
+      affiliation = create(:affiliation, :facilitator, organization: org, inactive: false, end_date: nil)
 
       affiliation.update!(inactive: true)
 
@@ -253,7 +253,7 @@ RSpec.describe Affiliation, type: :model do
     it 'sets an Inactive organization back to Active when it regains an active affiliation' do
       org = create(:organization, organization_status: inactive_status)
 
-      create(:affiliation, organization: org, inactive: false, end_date: nil)
+      create(:affiliation, :facilitator, organization: org, inactive: false, end_date: nil)
 
       expect(org.reload.organization_status).to eq(active_status)
     end
@@ -268,7 +268,7 @@ RSpec.describe Affiliation, type: :model do
     it 'leaves an organization alone when its only facilitator is dated to a future training' do
       org = create(:organization, organization_status: active_status)
 
-      create(:affiliation, organization: org, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      create(:affiliation, :facilitator, organization: org, start_date: 1.month.from_now, end_date: nil)
 
       expect(org.reload.organization_status).to eq(active_status)
     end
@@ -276,7 +276,7 @@ RSpec.describe Affiliation, type: :model do
     it 'leaves an Inactive organization alone when its new facilitator has not started yet' do
       org = create(:organization, organization_status: inactive_status)
 
-      create(:affiliation, organization: org, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      create(:affiliation, :facilitator, organization: org, start_date: 1.month.from_now, end_date: nil)
 
       expect(org.reload.organization_status).to eq(inactive_status)
     end
@@ -286,7 +286,7 @@ RSpec.describe Affiliation, type: :model do
         status = OrganizationStatus.find_or_create_by!(name: status_name)
         org = create(:organization, organization_status: status)
 
-        create(:affiliation, organization: org, inactive: false, end_date: nil)
+        create(:affiliation, :facilitator, organization: org, inactive: false, end_date: nil)
 
         expect(org.reload.organization_status).to eq(status)
       end

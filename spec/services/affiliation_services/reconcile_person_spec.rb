@@ -19,7 +19,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
     create(:affiliation,
            person: person,
            organization: organization,
-           title: "Facilitator",
+           type: "facilitator",
            start_date: start_date || registration.event.starts_on,
            event_registration: registration)
   end
@@ -142,7 +142,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       reg = training_registration(status: "no_show")
       owned_facilitator(registration: reg)
       elsewhere = create(:affiliation, person: person, organization: create(:organization),
-                                       title: "Facilitator", start_date: 1.year.ago.to_date)
+                                       type: "facilitator", start_date: 1.year.ago.to_date)
 
       reconcile(reg)
 
@@ -173,7 +173,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
     it "leaves an unowned (hand-created) facilitator affiliation untouched" do
       reg = training_registration(status: "no_show")
       hand_created = create(:affiliation, person: person, organization: organization,
-                            title: "Facilitator", start_date: 1.month.ago.to_date)
+                            type: "facilitator", start_date: 1.month.ago.to_date)
 
       reconcile(reg)
 
@@ -184,7 +184,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
     it "reconciles a hand-created affiliation when the caller opts in" do
       reg = training_registration(status: "no_show")
       hand_created = create(:affiliation, person: person, organization: organization,
-                            title: "Facilitator", start_date: 1.month.ago.to_date)
+                            type: "facilitator", start_date: 1.month.ago.to_date)
 
       reconcile(reg, include_unowned: true)
 
@@ -197,7 +197,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       reg = training_registration(status: "no_show")
       started_on = 2.years.ago.to_date
       hand_created = create(:affiliation, person: person, organization: organization,
-                            title: "Facilitator", start_date: started_on)
+                            type: "facilitator", start_date: started_on)
 
       reconcile(reg, include_unowned: true)
 
@@ -208,7 +208,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
     it "same-days an older affiliation that starts after the training rather than ending it before it began" do
       reg = training_registration(status: "no_show")
       later = create(:affiliation, person: person, organization: organization,
-                     title: "Facilitator", start_date: Date.current)
+                     type: "facilitator", start_date: Date.current)
 
       reconcile(reg, include_unowned: true)
 
@@ -222,7 +222,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       Current.user = user
       reg = training_registration(status: "no_show")
       older = create(:affiliation, person: person, organization: organization,
-                                   title: "Facilitator", start_date: 2.years.ago.to_date)
+                                   type: "facilitator", start_date: 2.years.ago.to_date)
 
       reconcile(reg, include_unowned: true)
 
@@ -254,7 +254,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
     end
 
     it "records why a returning facilitator's new row appeared" do
-      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      create(:affiliation, person: person, organization: organization, type: "facilitator",
              start_date: Date.new(2023, 1, 1), end_date: Date.new(2024, 1, 1))
       reg = training_registration(status: "attended")
 
@@ -267,7 +267,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
     it "distinguishes a row it ended from one an admin ended" do
       reg = training_registration(status: "no_show")
-      admin_ended = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      admin_ended = create(:affiliation, person: person, organization: organization, type: "facilitator",
                            start_date: 3.years.ago.to_date, end_date: 2.years.ago.to_date)
 
       plan = described_class.new(person: person, organization: organization, event: reg.event,
@@ -386,7 +386,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
     it "reopens the row it ended here once the person is marked attended, rather than adding a second" do
       reg = training_registration(status: "no_show")
-      older = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      older = create(:affiliation, person: person, organization: organization, type: "facilitator",
                                    start_date: 2.years.ago.to_date)
 
       described_class.call(person: person, organization: organization, event: reg.event,
@@ -412,7 +412,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
                              end_date: 12.days.ago.change(hour: 17), registration_close_date: 20.days.ago)
       reg = create(:event_registration, registrant: person, event: event, status: "no_show")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      create(:affiliation, person: person, organization: organization, type: "facilitator",
                            start_date: 2.years.ago.to_date)
       described_class.call(person: person, organization: organization, event: event,
                            registration: reg, include_unowned: true)
@@ -430,7 +430,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
     it "plans that reopen as :reactivate, with no create alongside it" do
       reg = training_registration(status: "no_show")
-      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      create(:affiliation, person: person, organization: organization, type: "facilitator",
                            start_date: 2.years.ago.to_date)
       described_class.call(person: person, organization: organization, event: reg.event,
                            registration: reg, include_unowned: true)
@@ -446,7 +446,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
     # lapse and the return belongs in its own row.
     it "does not reopen a row an admin ended, even when the date matches" do
       reg = training_registration(status: "attended")
-      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      create(:affiliation, person: person, organization: organization, type: "facilitator",
                            start_date: 3.years.ago.to_date,
                            end_date: reg.event.starts_on - 1.day)
 
@@ -458,7 +458,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
     end
 
     it "keeps the lapse visible instead of swallowing it into one unbroken stretch" do
-      lapsed = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      lapsed = create(:affiliation, person: person, organization: organization, type: "facilitator",
                       start_date: Date.new(2023, 1, 1), end_date: Date.new(2024, 1, 1))
       reg = training_registration(status: "attended")
 
@@ -470,7 +470,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
     end
 
     it "plans no action on a lapsed row, explaining why" do
-      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      create(:affiliation, person: person, organization: organization, type: "facilitator",
              start_date: Date.new(2023, 1, 1), end_date: Date.new(2024, 1, 1))
       reg = training_registration(status: "attended")
 
@@ -513,7 +513,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
     it "does not move an older row's end date on a second run" do
       reg = training_registration(status: "no_show")
       older = create(:affiliation, person: person, organization: organization,
-                                   title: "Facilitator", start_date: 2.years.ago.to_date)
+                                   type: "facilitator", start_date: 2.years.ago.to_date)
 
       reconcile(reg, include_unowned: true)
       first = older.reload.end_date
@@ -546,7 +546,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
     it "reports :deactivate for an older row, which is ended rather than deleted" do
       reg = training_registration(status: "no_show")
       older = create(:affiliation, person: person, organization: organization,
-                                   title: "Facilitator", start_date: 2.years.ago.to_date)
+                                   type: "facilitator", start_date: 2.years.ago.to_date)
 
       plan = described_class.new(person: person, organization: organization,
                                  event: reg.event, include_unowned: true).plan
@@ -582,7 +582,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       create(:event_registration_organization, event_registration: reg, organization: organization)
       off_this_event = owned_facilitator(registration: reg)
       hand_created = create(:affiliation, person: person, organization: organization,
-                            title: "Facilitator", start_date: 2.years.ago.to_date)
+                            type: "facilitator", start_date: 2.years.ago.to_date)
 
       reconcile(reg)
 

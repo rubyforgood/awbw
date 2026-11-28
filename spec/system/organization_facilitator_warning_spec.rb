@@ -9,7 +9,7 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
 
   before do
     driven_by(:selenium_chrome_headless)
-    create(:affiliation, organization: organization, person: facilitator_person, title: "Facilitator", start_date: "2019-05-01", end_date: nil)
+    create(:affiliation, organization: organization, person: facilitator_person, type: "facilitator", start_date: "2019-05-01", end_date: nil)
     create(:affiliation, organization: organization, person: volunteer_person, title: "Volunteer", start_date: "2021-09-15", end_date: nil)
     sign_in admin
   end
@@ -26,16 +26,14 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
     )
   end
 
-  def row_for(title)
-    all("#affiliations .nested-fields").find { |f|
-      f.find("input[name*='title']").value.include?(title)
-    }
+  def row_for(person)
+    all("#affiliations .nested-fields").find { |f| f.has_text?(person.full_name) }
   end
 
   it "warns and saves when a facilitator affiliation's date is edited and confirmed" do
     visit_and_wait edit_organization_path(organization, admin: true)
 
-    start_input = row_for("Facilitator").find("input[name*='start_date']")
+    start_input = row_for(facilitator_person).find("input[name*='start_date']")
     set_date_input(start_input, "2017-02-01")
 
     accept_confirm(/status with AWBW/) do
@@ -49,7 +47,7 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
   it "cancels the save when the warning is dismissed" do
     visit_and_wait edit_organization_path(organization, admin: true)
 
-    start_input = row_for("Facilitator").find("input[name*='start_date']")
+    start_input = row_for(facilitator_person).find("input[name*='start_date']")
     set_date_input(start_input, "2017-02-01")
 
     dismiss_confirm(/status with AWBW/) do
@@ -75,7 +73,7 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
   it "does not warn when only a non-facilitator affiliation is edited" do
     visit_and_wait edit_organization_path(organization, admin: true)
 
-    start_input = row_for("Volunteer").find("input[name*='start_date']")
+    start_input = row_for(volunteer_person).find("input[name*='start_date']")
     set_date_input(start_input, "2020-01-01")
 
     find("[type='submit']").click

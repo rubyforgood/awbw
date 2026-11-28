@@ -222,8 +222,8 @@ RSpec.describe PersonDecorator do
     it "returns sorted, unique org names for active facilitator affiliations" do
       beta = create(:organization, name: "Beta Org")
       alpha = create(:organization, name: "Alpha Org")
-      create(:affiliation, person: person, organization: beta, title: "Facilitator")
-      create(:affiliation, person: person, organization: alpha, title: "Facilitator")
+      create(:affiliation, person: person, organization: beta, type: "facilitator")
+      create(:affiliation, person: person, organization: alpha, type: "facilitator")
 
       expect(person.decorate.active_facilitator_organization_names).to eq([ "Alpha Org", "Beta Org" ])
     end
@@ -237,7 +237,7 @@ RSpec.describe PersonDecorator do
 
     it "excludes expired facilitator affiliations" do
       org = create(:organization, name: "Past Org")
-      create(:affiliation, person: person, organization: org, title: "Facilitator", end_date: 1.day.ago)
+      create(:affiliation, person: person, organization: org, type: "facilitator", end_date: 1.day.ago)
 
       expect(person.decorate.active_facilitator_organization_names).to be_empty
     end
@@ -273,13 +273,13 @@ RSpec.describe PersonDecorator do
 
     it "returns the earliest facilitator affiliation year, ignoring other roles" do
       create(:affiliation, person: person, title: "Volunteer", start_date: Date.new(2015, 1, 1))
-      create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2020, 6, 1))
+      create(:affiliation, person: person, type: "facilitator", start_date: Date.new(2020, 6, 1))
       expect(person.decorate.facilitator_since_year).to eq(2020)
     end
 
     it "falls back to member_since for a facilitator affiliation with no start date" do
       person.update!(member_since: Date.new(2018, 3, 1))
-      create(:affiliation, person: person, title: "Facilitator", start_date: nil)
+      create(:affiliation, person: person, type: "facilitator", start_date: nil)
       expect(person.decorate.facilitator_since_year).to eq(2018)
     end
 
@@ -304,17 +304,17 @@ RSpec.describe PersonDecorator do
     end
 
     it "is Active with a current facilitator affiliation" do
-      create(:affiliation, person: person, title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+      create(:affiliation, person: person, type: "facilitator", start_date: 1.year.ago, end_date: nil)
       expect(person.decorate.facilitator_status_label).to eq("Active")
     end
 
     it "is Upcoming when a facilitator affiliation is scheduled but none is active" do
-      create(:affiliation, person: person, title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
+      create(:affiliation, person: person, type: "facilitator", start_date: 1.month.from_now, end_date: nil)
       expect(person.decorate.facilitator_status_label).to eq("Upcoming")
     end
 
     it "is Inactive when every facilitator term has ended" do
-      create(:affiliation, person: person, title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      create(:affiliation, person: person, type: "facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
       expect(person.decorate.facilitator_status_label).to eq("Inactive")
     end
   end
@@ -324,13 +324,13 @@ RSpec.describe PersonDecorator do
 
     it "surfaces the affiliation start when it differs from the facilitator start" do
       create(:affiliation, person: person, title: "Board Member", start_date: Date.new(2015, 3, 1))
-      create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2018, 8, 1))
+      create(:affiliation, person: person, type: "facilitator", start_date: Date.new(2018, 8, 1))
 
       expect(person.decorate.affiliated_since_note).to eq("Affiliated since Mar 2015")
     end
 
     it "is nil when the affiliation and facilitator starts share a month and year" do
-      create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2018, 8, 1))
+      create(:affiliation, person: person, type: "facilitator", start_date: Date.new(2018, 8, 1))
 
       expect(person.decorate.affiliated_since_note).to be_nil
     end

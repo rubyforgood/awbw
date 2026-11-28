@@ -58,7 +58,7 @@ RSpec.describe "Organization profile events-attended section", type: :request do
   end
 
   it "shows the org program-status chip beside the name in an admin-only wrapper" do
-    create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+    create(:affiliation, organization: organization, person: create(:person), type: "facilitator", start_date: 1.year.ago, end_date: nil)
 
     get organization_path(organization)
 

@@ -8,7 +8,7 @@ RSpec.describe "People with profiles enabled", type: :request do
   let(:person) { owner_user.person }
   let(:published_person) do
     other = create(:person, profile_is_searchable: true)
-    create(:affiliation, person: other, organization: create(:organization))
+    create(:affiliation, :facilitator, person: other, organization: create(:organization), start_date: 1.year.ago)
     other
   end
 

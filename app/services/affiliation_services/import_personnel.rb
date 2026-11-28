@@ -179,7 +179,8 @@ module AffiliationServices
     def attributes_for(row)
       active = status(row) == ACTIVE
       {
-        title: Affiliation::FACILITATOR_TITLE,
+        type: Affiliation::TYPE_FACILITATOR,
+        title: nil,
         start_date: parse_date(row.data["DateEntered"]),
         end_date: active ? nil : ended_on(row).first,
         inactive: !active,

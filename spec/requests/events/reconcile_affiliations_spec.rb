@@ -12,7 +12,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
     reg = create(:event_registration, event: event, registrant: person, status: status)
     create(:event_registration_organization, event_registration: reg, organization: organization)
     affiliation = create(:affiliation, person: person, organization: organization,
-                         title: "Facilitator", start_date: 1.month.ago.to_date,
+                         type: "facilitator", start_date: 1.month.ago.to_date,
                          event_registration: reg)
     [ person, affiliation ]
   end
@@ -34,7 +34,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: event, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      create(:affiliation, person: person, organization: organization, type: "facilitator",
                            start_date: 2.years.ago.to_date)
 
       get reconcile_affiliations_event_path(event)
@@ -60,9 +60,9 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       [ cancelled, registered ].each do |reg|
         create(:event_registration_organization, event_registration: reg, organization: organization)
       end
-      minted = create(:affiliation, person: cancelled.registrant, organization: organization, title: "Facilitator",
+      minted = create(:affiliation, person: cancelled.registrant, organization: organization, type: "facilitator",
                                     start_date: upcoming.starts_on, event_registration: cancelled)
-      create(:affiliation, person: registered.registrant, organization: organization, title: "Facilitator",
+      create(:affiliation, person: registered.registrant, organization: organization, type: "facilitator",
                            start_date: upcoming.starts_on, event_registration: registered)
 
       get reconcile_affiliations_event_path(upcoming)
@@ -80,7 +80,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       with_job, without_job = Array.new(2) do
         reg = create(:event_registration, event: upcoming, status: "cancelled")
         create(:event_registration_organization, event_registration: reg, organization: organization)
-        create(:affiliation, person: reg.registrant, organization: organization, title: "Facilitator",
+        create(:affiliation, person: reg.registrant, organization: organization, type: "facilitator",
                              start_date: upcoming.starts_on, event_registration: reg)
         reg
       end
@@ -109,7 +109,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
     it "keeps the cancelled section and its job note after the event" do
       reg = create(:event_registration, event: event, status: "cancelled")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      create(:affiliation, person: reg.registrant, organization: organization, title: "Facilitator",
+      create(:affiliation, person: reg.registrant, organization: organization, type: "facilitator",
                            start_date: event.starts_on, event_registration: reg)
 
       get reconcile_affiliations_event_path(event)
@@ -169,7 +169,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: non_training, registrant: person, status: "attended")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      affiliation = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      affiliation = create(:affiliation, person: person, organization: organization, type: "facilitator",
                            start_date: 1.month.ago.to_date, event_registration: reg)
 
       get reconcile_affiliations_event_path(non_training)
@@ -192,7 +192,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: event, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago.to_date)
+      create(:affiliation, person: person, organization: organization, type: "facilitator", start_date: 1.year.ago.to_date)
 
       get reconcile_affiliations_event_path(event)
 
@@ -223,7 +223,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: event, registrant: person, status: "incomplete_attendance")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      create(:affiliation, person: person, organization: organization, type: "facilitator",
                            start_date: event.starts_on, event_registration: reg)
 
       get reconcile_affiliations_event_path(event)
@@ -281,7 +281,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: event, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      older = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      older = create(:affiliation, person: person, organization: organization, type: "facilitator",
                                    start_date: 2.years.ago.to_date)
       AffiliationServices::ReconcilePerson.call(person: person, organization: organization,
                                                 event: event, registration: reg, include_unowned: true)
@@ -366,7 +366,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: same_day, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      affiliation = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      affiliation = create(:affiliation, person: person, organization: organization, type: "facilitator",
                            start_date: same_day.starts_on, event_registration: reg)
 
       post perform_reconcile_affiliations_event_path(same_day), params: { outcome: { "aff:#{affiliation.id}" => "deactivate" } }
@@ -378,7 +378,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: event, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      older = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      older = create(:affiliation, person: person, organization: organization, type: "facilitator",
                                    start_date: 2.years.ago.to_date)
       AffiliationServices::ReconcilePerson.call(person: person, organization: organization,
                                                 event: event, registration: reg, include_unowned: true)
@@ -424,7 +424,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: event, registrant: person, status: "no_show")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      hand_entered = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago.to_date)
+      hand_entered = create(:affiliation, person: person, organization: organization, type: "facilitator", start_date: 1.year.ago.to_date)
 
       post perform_reconcile_affiliations_event_path(event), params: { outcome: { "aff:#{hand_entered.id}" => "deactivate" } }
 
@@ -436,7 +436,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       person = create(:person)
       reg = create(:event_registration, event: non_training, registrant: person, status: "attended")
       create(:event_registration_organization, event_registration: reg, organization: organization)
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator",
+      facilitator = create(:affiliation, person: person, organization: organization, type: "facilitator",
                            start_date: 1.month.ago.to_date, event_registration: reg)
       job = create(:affiliation, person: person, organization: organization, title: "Counselor",
                    event_registration: reg)

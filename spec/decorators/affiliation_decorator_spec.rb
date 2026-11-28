@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe AffiliationDecorator do
   describe "#display_title" do
     it "names a facilitator affiliation as an AWBW facilitator" do
-      expect(build_stubbed(:affiliation, title: "Facilitator").decorate.display_title).to eq("AWBW Facilitator")
+      expect(build_stubbed(:affiliation, type: "facilitator").decorate.display_title).to eq("AWBW Facilitator")
     end
 
     it "shows no title for an untitled affiliation" do

@@ -5,7 +5,7 @@ RSpec.describe "the comment icon on an affiliation row", type: :request do
   let(:organization) { create(:organization) }
   let!(:affiliation) do
     create(:affiliation, person: person, organization: organization,
-                         title: "Facilitator", start_date: 1.year.ago.to_date)
+                         type: "facilitator", start_date: 1.year.ago.to_date)
   end
 
   before { sign_in create(:user, :admin) }

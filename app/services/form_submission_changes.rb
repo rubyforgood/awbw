@@ -236,7 +236,7 @@ class FormSubmissionChanges
     return type.to_s if id.blank?
 
     record = type.safe_constantize&.find_by(id: id)
-    return "#{record.title} at #{record.organization&.name}" if record.is_a?(Affiliation)
+    return "#{record.display_title} at #{record.organization&.name}" if record.is_a?(Affiliation)
 
     record&.try(:full_name).presence || record&.try(:name).presence || "#{type} ##{id}"
   end

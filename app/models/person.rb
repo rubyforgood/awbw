@@ -381,7 +381,7 @@ class Person < ApplicationRecord
     returnees = Affiliation.facilitators.active.where.not(start_date: nil)
       .joins("INNER JOIN affiliations prior_terms " \
              "ON prior_terms.person_id = affiliations.person_id " \
-             "AND prior_terms.title = BINARY '#{Affiliation::FACILITATOR_TITLE}' " \
+             "AND prior_terms.type = '#{Affiliation::TYPE_FACILITATOR}' " \
              "AND prior_terms.end_date IS NOT NULL " \
              "AND prior_terms.end_date < affiliations.start_date")
       .select(:person_id)

@@ -416,11 +416,11 @@ RSpec.describe PersonPolicy, type: :policy do
       it "excludes people whose user account is locked" do
         regular = create(:user)
         searchable = create(:person, profile_is_searchable: true)
-        create(:affiliation, person: searchable, inactive: false, end_date: nil)
+        create(:affiliation, :facilitator, person: searchable, inactive: false, end_date: nil)
         locked = create(:person, profile_is_searchable: true, user: create(:user, :locked))
-        create(:affiliation, person: locked, inactive: false, end_date: nil)
+        create(:affiliation, :facilitator, person: locked, inactive: false, end_date: nil)
         unlinked = create(:person, profile_is_searchable: true, user: nil)
-        create(:affiliation, person: unlinked, inactive: false, end_date: nil)
+        create(:affiliation, :facilitator, person: unlinked, inactive: false, end_date: nil)
 
         policy = described_class.new(Person, user: regular)
         scope = policy.apply_scope(Person.all, type: :active_record_relation)

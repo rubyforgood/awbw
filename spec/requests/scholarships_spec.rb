@@ -458,7 +458,7 @@ RSpec.describe "GET /scholarships (index)", type: :request do
       org = create(:organization, name: "Prevail")
       create(:address, addressable: org, city: "Stockton", state: "CA")
       recipient = create(:person, first_name: "Carmen", last_name: "Gomez")
-      create(:affiliation, person: recipient, organization: org, title: "Facilitator")
+      create(:affiliation, person: recipient, organization: org, type: "facilitator")
       training = create(:event, title: "TAC251", facilitator_training: true)
       create(:event_registration, registrant: recipient, event: training, status: "attended")
 

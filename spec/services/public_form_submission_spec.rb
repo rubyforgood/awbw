@@ -69,7 +69,7 @@ RSpec.describe PublicFormSubmission do
         result = described_class.call(form: form, form_params: org_params)
 
         registration = EventRegistration.find_by!(event: training, registrant: result.person)
-        expect(result.person.affiliations.where(organization: org).pluck(:title, :event_registration_id))
+        expect(result.person.affiliations.where(organization: org).map { |a| [ a.display_title, a.event_registration_id ] })
           .to contain_exactly([ "Counselor", registration.id ], [ "Facilitator", registration.id ])
       end
     end
@@ -385,7 +385,7 @@ RSpec.describe PublicFormSubmission do
       expect(org.website_url).to eq("https://helpinghands.org")
       expect(org.organization_type).to eq("Nonprofit")
       expect(org.addresses.find_by(city: "Austin")).to be_present
-      expect(result.person.affiliations.where(organization: org).pluck(:title)).to contain_exactly("Counselor")
+      expect(result.person.affiliations.where(organization: org).map(&:display_title)).to contain_exactly("Counselor")
       expect(result.form_submission.reload.linked_organizations).to include(org)
     end
 
@@ -425,7 +425,7 @@ RSpec.describe PublicFormSubmission do
     it "adds no facilitator affiliation on a non-agreement form" do
       result = described_class.call(form: form, form_params: org_params)
 
-      expect(result.person.affiliations.where(organization: org).pluck(:title)).not_to include("Facilitator")
+      expect(result.person.affiliations.where(organization: org).map(&:display_title)).not_to include("Facilitator")
     end
 
     context "on an agreement form" do
@@ -434,13 +434,13 @@ RSpec.describe PublicFormSubmission do
       it "runs the reinstatement scenario: a Facilitator affiliation dated to the submission, other orgs untouched" do
         form.update!(role: "reinstatement")
         person = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
-        old_affiliation = create(:affiliation, person: person, organization: other_org, title: "Facilitator")
+        old_affiliation = create(:affiliation, person: person, organization: other_org, type: "facilitator")
 
         result = described_class.call(form: form, form_params: org_params)
         submission_date = result.form_submission.created_at.to_date
 
         affiliations = person.reload.affiliations.where(organization: org)
-        expect(affiliations.pluck(:title, :start_date))
+        expect(affiliations.map { |a| [ a.display_title, a.start_date ] })
           .to contain_exactly([ "Counselor", nil ], [ "Facilitator", submission_date ])
         expect(old_affiliation.reload.end_date).to be_nil
       end
@@ -450,7 +450,7 @@ RSpec.describe PublicFormSubmission do
 
         result = described_class.call(form: form, form_params: org_params)
 
-        expect(result.person.affiliations.where(organization: org).pluck(:title))
+        expect(result.person.affiliations.where(organization: org).map(&:display_title))
           .to include("Facilitator")
       end
 

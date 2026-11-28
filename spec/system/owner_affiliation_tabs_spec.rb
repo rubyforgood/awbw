@@ -7,9 +7,9 @@ RSpec.describe "Owner affiliation Active/Inactive tabs", type: :system do
   before do
     driven_by(:selenium_chrome_headless)
     create(:affiliation, person: person, organization: create(:organization, name: "Currently Facilitating"),
-                         title: "Facilitator", start_date: 2.years.ago.to_date)
+                         type: "facilitator", start_date: 2.years.ago.to_date)
     create(:affiliation, person: person, organization: create(:organization, name: "Long Since Ended"),
-                         title: "Facilitator", start_date: 4.years.ago.to_date, end_date: 1.year.ago.to_date)
+                         type: "facilitator", start_date: 4.years.ago.to_date, end_date: 1.year.ago.to_date)
     allow_any_instance_of(PersonPolicy).to receive(:edit?).and_return(true)
     sign_in owner_user
     visit edit_person_path(person)

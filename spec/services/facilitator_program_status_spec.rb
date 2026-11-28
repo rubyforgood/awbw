@@ -4,9 +4,9 @@ RSpec.describe FacilitatorProgramStatus do
   let(:organization) { create(:organization) }
   let(:anchor) { Date.new(2026, 6, 15) }
 
-  def facilitator(start_date:, end_date: nil, title: "Facilitator")
+  def facilitator(start_date:, end_date: nil, type: "facilitator")
     create(:affiliation, organization: organization, person: create(:person),
-                         title: title, start_date: start_date, end_date: end_date)
+                         type: type, start_date: start_date, end_date: end_date)
   end
 
   def status_on(date = anchor)
@@ -61,7 +61,7 @@ RSpec.describe FacilitatorProgramStatus do
     end
 
     it "ignores non-facilitator affiliations" do
-      facilitator(start_date: Date.new(2010, 1, 1), title: "Volunteer")
+      create(:affiliation, organization: organization, person: create(:person), type: "job", title: "Volunteer", start_date: Date.new(2010, 1, 1))
       expect(status_on.status).to eq(:new)
     end
   end
@@ -116,7 +116,7 @@ RSpec.describe FacilitatorProgramStatus do
       org = create(:organization)
       training_start = Date.new(2026, 9, 10)
       create(:affiliation, person: create(:person), organization: org,
-                           title: "Facilitator", start_date: training_start, end_date: nil)
+                           type: "facilitator", start_date: training_start, end_date: nil)
       org.reload
 
       [ training_start, training_start + 1.day, training_start + 2.days ].each do |viewed_on|

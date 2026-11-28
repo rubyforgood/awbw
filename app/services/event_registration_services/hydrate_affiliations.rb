@@ -46,7 +46,7 @@ module EventRegistrationServices
       @changes = []
       @for_a_look = []
       autofill = ActiveRecord::Base.transaction do
-        hydrate_job if @job_title && @job_title != Affiliation::FACILITATOR_TITLE
+        hydrate_job if @job_title && @job_title != Affiliation::FACILITATOR_LABEL
         hydrate_facilitator if @event.facilitator_training?
         AffiliationServices::PointAtAddress.call(person: @person, organization: @organization,
                                                  address: @organization_address)
@@ -65,7 +65,7 @@ module EventRegistrationServices
         look("holds #{jobs.pluck(:title).to_sentence} at #{@organization.name}, not “#{@job_title}”; left as is")
         return
       elsif job.nil?
-        job = new_affiliation(@job_title)
+        job = new_affiliation(@job_title, type: Affiliation::TYPE_JOB)
         job.event_registration = @registration
         note("added job affiliation “#{@job_title}”")
       end
@@ -92,7 +92,7 @@ module EventRegistrationServices
     end
 
     def add_facilitator
-      affiliation = new_affiliation(Affiliation::FACILITATOR_TITLE, start_date: training_date)
+      affiliation = new_affiliation(nil, type: Affiliation::TYPE_FACILITATOR, start_date: training_date)
       note("added facilitator affiliation from #{training_date}")
       tie(affiliation)
     end
@@ -127,7 +127,7 @@ module EventRegistrationServices
       affiliation.filemaker_code = Affiliation.join_filemaker_codes(affiliation.filemaker_code, codes)
       return unless affiliation.new_record? || affiliation.changed?
 
-      note("updated #{affiliation.title} affiliation: #{change_labels(affiliation).to_sentence}") if affiliation.persisted?
+      note("updated #{affiliation.display_title} affiliation: #{change_labels(affiliation).to_sentence}") if affiliation.persisted?
       affiliation.save!
     end
 
@@ -136,8 +136,8 @@ module EventRegistrationServices
         .map { |column| CHANGE_LABELS.fetch(column) { Affiliation.human_attribute_name(column).downcase } }
     end
 
-    def new_affiliation(title, start_date: nil)
-      @person.affiliations.build(organization: @organization, title: title, start_date: start_date,
+    def new_affiliation(title, type:, start_date: nil)
+      @person.affiliations.build(organization: @organization, type: type, title: title, start_date: start_date,
                                  organization_address: @organization_address)
     end
 

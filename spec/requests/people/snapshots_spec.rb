@@ -4,7 +4,7 @@ RSpec.describe "Person snapshots", type: :request do
   let(:person) do
     create(:person, first_name: "Jordan", last_name: "Sample", email: "jordan.sample@example.com").tap do |record|
       create(:affiliation, person: record, organization: create(:organization, name: "Harbor House"),
-             title: "Facilitator", start_date: 1.year.ago, inactive: false)
+             type: "facilitator", start_date: 1.year.ago, inactive: false)
     end
   end
 

@@ -1,17 +1,6 @@
 import { Controller } from "@hotwired/stimulus";
-import { isFacilitatorTitle } from "../lib/affiliation";
+import { isFacilitatorType } from "../lib/affiliation";
 
-// Connects to data-controller="affiliation-facilitator-warning"
-//
-// Warns before saving when a facilitator affiliation (one with "facilitator"
-// in its title) is added, removed, or edited. Those affiliations — together
-// with their start and end dates — determine the organization's status with
-// AWBW, which is calculated dynamically, so the user is asked to confirm
-// the change before the form submits.
-//
-// Attach to the <form> element. Snapshots the affiliation rows on connect and
-// compares them against the current state on submit; if a facilitator-relevant
-// change is detected the user must confirm or the submission is cancelled.
 export default class extends Controller {
   connect() {
     this.snapshots = this.captureSnapshots();
@@ -53,7 +42,7 @@ export default class extends Controller {
   }
 
   stateFor(row) {
-    const title = row.querySelector("[name*='[title]']")?.value || "";
+    const type = row.querySelector("select[name*='[type]'], input[name*='[type]']")?.value || "";
     const startDate = row.querySelector("[name*='[start_date]']")?.value || "";
     const endDate = row.querySelector("[name*='[end_date]']")?.value || "";
     const destroyInput = row.querySelector("input[name*='_destroy']");
@@ -62,11 +51,11 @@ export default class extends Controller {
       row.style.display === "none";
 
     return {
-      title,
+      type,
       startDate,
       endDate,
       destroyed,
-      facilitator: isFacilitatorTitle(title),
+      facilitator: isFacilitatorType(type),
     };
   }
 
@@ -94,7 +83,7 @@ export default class extends Controller {
       // Edit — relevant if the row is (or was) a facilitator and any field changed.
       const involvesFacilitator = previous.facilitator || current.facilitator;
       const changed =
-        current.title !== previous.title ||
+        current.type !== previous.type ||
         current.startDate !== previous.startDate ||
         current.endDate !== previous.endDate;
 

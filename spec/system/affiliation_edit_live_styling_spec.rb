@@ -8,7 +8,7 @@ RSpec.describe "Affiliation editor live styling", type: :system do
   let!(:organization) { create(:organization) }
   let!(:affiliation) do
     create(:affiliation, person: person, organization: organization,
-                         title: "Facilitator", start_date: 2.years.ago.to_date)
+                         type: "facilitator", start_date: 2.years.ago.to_date)
   end
 
   before do
@@ -141,12 +141,8 @@ RSpec.describe "Affiliation editor live styling", type: :system do
     end
   end
 
-  it "switches the hue when the title stops being Facilitator" do
-    title = find("[data-inactive-toggle-target~='title']")
-    page.execute_script(
-      "arguments[0].value = 'Counselor'; arguments[0].dispatchEvent(new Event('input', { bubbles: true }))",
-      title
-    )
+  it "switches the hue when the type changes from Facilitator to Job" do
+    find("select[name='affiliation[type]']").select("Job")
 
     expect(row[:class]).to include("bg-blue-50")
   end
@@ -158,11 +154,8 @@ RSpec.describe "Affiliation editor live styling", type: :system do
       expect(accent[:class]).to include("bg-purple-500")
     end
 
-    it "switches to blue when the title stops being Facilitator" do
-      page.execute_script(
-        "arguments[0].value = 'Counselor'; arguments[0].dispatchEvent(new Event('input', { bubbles: true }))",
-        find("[data-inactive-toggle-target~='title']")
-      )
+    it "switches to blue when the type changes from Facilitator to Job" do
+      find("select[name='affiliation[type]']").select("Job")
 
       expect(accent[:class]).to include("bg-blue-500")
     end

@@ -319,6 +319,7 @@ class OrganizationsController < ApplicationController
         :inactive,
         :inactive_supplied,
         :primary_contact,
+        :type,
         :title,
         :start_date,
         :end_date,

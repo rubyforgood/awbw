@@ -455,10 +455,10 @@ RSpec.describe "Events attendees", type: :request do
         end
 
         it "filters by affiliation status" do
-          create(:affiliation, person: attendee, organization: create(:organization), inactive: true, title: "Facilitator")
+          create(:affiliation, person: attendee, organization: create(:organization), inactive: true, type: "facilitator")
           active_person = create(:person, first_name: "Nora", last_name: "Active")
           create(:event_registration, event: recent_training, registrant: active_person, status: "attended")
-          create(:affiliation, person: active_person, organization: create(:organization), start_date: 1.year.ago, inactive: false, title: "Facilitator")
+          create(:affiliation, person: active_person, organization: create(:organization), start_date: 1.year.ago, inactive: false, type: "facilitator")
 
           get attendees_events_url(affiliation_status: "Inactive"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
@@ -466,13 +466,13 @@ RSpec.describe "Events attendees", type: :request do
         end
 
         it "filters by the combined Active & Upcoming status" do
-          create(:affiliation, person: attendee, organization: create(:organization), inactive: true, title: "Facilitator")
+          create(:affiliation, person: attendee, organization: create(:organization), inactive: true, type: "facilitator")
           active_person = create(:person, first_name: "Nora", last_name: "Active")
           create(:event_registration, event: recent_training, registrant: active_person, status: "attended")
-          create(:affiliation, person: active_person, organization: create(:organization), start_date: 1.year.ago, inactive: false, title: "Facilitator")
+          create(:affiliation, person: active_person, organization: create(:organization), start_date: 1.year.ago, inactive: false, type: "facilitator")
           upcoming_person = create(:person, first_name: "Uma", last_name: "Upcoming")
           create(:event_registration, event: recent_training, registrant: upcoming_person, status: "attended")
-          create(:affiliation, person: upcoming_person, organization: create(:organization), start_date: 1.month.from_now, inactive: false, title: "Facilitator")
+          create(:affiliation, person: upcoming_person, organization: create(:organization), start_date: 1.month.from_now, inactive: false, type: "facilitator")
 
           get attendees_events_url(affiliation_status: Affiliation::ACTIVE_OR_UPCOMING), headers: frame_headers
           expect(response.body).to include("Nora Active")
@@ -805,7 +805,7 @@ RSpec.describe "Events attendees", type: :request do
           ongoing = create(:person, first_name: "Zed", last_name: "Zulu")
           ongoing_registration = create(:event_registration, event: recent_training, registrant: ongoing, status: "attended")
           ongoing_org = create(:organization, name: "Established Org")
-          create(:affiliation, organization: ongoing_org, start_date: 2.years.ago, inactive: false, title: "Facilitator")
+          create(:affiliation, organization: ongoing_org, start_date: 2.years.ago, inactive: false, type: "facilitator")
           ongoing_registration.event_registration_organizations.create!(organization: ongoing_org)
 
           get attendees_events_url(program_status: "new"), headers: frame_headers

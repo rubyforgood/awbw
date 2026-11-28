@@ -158,14 +158,30 @@
         <div class="flex flex-wrap items-start gap-4 rounded-lg border p-3 <%= row_bg %> <%= 'aff-ended' if expired %>"
              data-inactive-toggle-target="row">
           <div class="min-w-[200px] flex-1">
-            <%= f.input :title,
-                  as: :string,
-                  label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
-                  hint: "\"Facilitator\" = AWBW Facilitator. Leave blank to keep them linked to the organization without being a facilitator.",
+            <%= f.input :type,
+                  label: "Role",
+                  collection: [ [ "Job", Affiliation::TYPE_JOB ], [ "Facilitator", Affiliation::TYPE_FACILITATOR ] ],
+                  include_blank: false,
+                  selected: @affiliation.type,
                   input_html: {
-                    class: title_class,
-                    data: { inactive_toggle_target: "title", action: "inactive-toggle#updateBorder" }
+                    class: "w-full rounded-md border-gray-300 text-sm",
+                    data: { inactive_toggle_target: "type", action: "change->inactive-toggle#updateBorder" }
                   } %>
+            <div class="<%= "hidden" if facilitator %>" data-inactive-toggle-target="titleField">
+              <%= f.input :title,
+                    as: :string,
+                    label: "Job title",
+                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                    hint: "Their job title at this organization.",
+                    input_html: {
+                      class: title_class,
+                      data: { inactive_toggle_target: "title", action: "inactive-toggle#updateBorder" }
+                    } %>
+            </div>
+            <span data-inactive-toggle-target="facilitatorLabel"
+                  class="<%= "hidden" unless facilitator %> h-[42px] items-center rounded-md border px-3 text-sm [&:not(.hidden)]:flex <%= title_class %>">
+              <%= Affiliation::FACILITATOR_LABEL %>
+            </span>
           </div>
           <div class="w-40">
             <%= f.input :start_date,

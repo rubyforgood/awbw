@@ -14,8 +14,8 @@ class AffiliationDeduper
 
   def self.identity(affiliation)
     [
-      affiliation.person_id, affiliation.organization_id, affiliation.title.to_s.strip,
-      affiliation.start_date, affiliation.end_date, affiliation.inactive
+      affiliation.person_id, affiliation.organization_id, affiliation.type,
+      affiliation.title.to_s.strip, affiliation.start_date, affiliation.end_date, affiliation.inactive
     ]
   end
 

@@ -14,8 +14,8 @@ RSpec.describe "Dedupe — affiliations", type: :request do
     organization = create(:organization)
     keep = create(:person, first_name: "Jane", last_name: "Doe", email: "jane@real.test")
     delete_rec = create(:person, first_name: "Jane", last_name: "Doe", email: "jane2@real.test")
-    create(:affiliation, person: keep, organization: organization, title: "Facilitator")
-    create(:affiliation, person: delete_rec, organization: organization, title: "Facilitator")
+    create(:affiliation, person: keep, organization: organization, type: "facilitator")
+    create(:affiliation, person: delete_rec, organization: organization, type: "facilitator")
 
     post dedupe_perform_people_path, params: { person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id }
 
@@ -27,8 +27,8 @@ RSpec.describe "Dedupe — affiliations", type: :request do
     person = create(:person)
     keep = create(:organization, name: "Keep Org")
     delete_rec = create(:organization, name: "Delete Org")
-    create(:affiliation, person: person, organization: keep, title: "Facilitator")
-    create(:affiliation, person: person, organization: delete_rec, title: "Facilitator")
+    create(:affiliation, person: person, organization: keep, type: "facilitator")
+    create(:affiliation, person: person, organization: delete_rec, type: "facilitator")
 
     post dedupe_perform_organizations_path, params: { organization_to_keep_id: keep.id, organization_to_delete_id: delete_rec.id }
 

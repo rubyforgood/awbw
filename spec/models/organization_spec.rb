@@ -186,25 +186,25 @@ RSpec.describe Organization do
     end
 
     it 'is :ongoing when an earlier facilitator affiliation is still active on the date' do
-      create(:affiliation, organization: organization, title: "Facilitator",
+      create(:affiliation, organization: organization, type: "facilitator",
              start_date: Date.new(2024, 1, 1), end_date: nil)
       expect(organization.facilitator_status_on(reference_date)).to eq(:ongoing)
     end
 
     it 'is :reinstated when all earlier facilitator affiliations ended before the date' do
-      create(:affiliation, organization: organization, title: "Facilitator",
+      create(:affiliation, organization: organization, type: "facilitator",
              start_date: Date.new(2022, 1, 1), end_date: Date.new(2023, 1, 1))
       expect(organization.facilitator_status_on(reference_date)).to eq(:reinstated)
     end
 
     it 'ignores an affiliation starting ON the date — the one that event mints' do
-      create(:affiliation, organization: organization, title: "Facilitator",
+      create(:affiliation, organization: organization, type: "facilitator",
              start_date: reference_date, end_date: nil)
       expect(organization.facilitator_status_on(reference_date)).to eq(:new)
     end
 
     it 'falls back to the start of the current year when given no date' do
-      create(:affiliation, organization: organization, title: "Facilitator",
+      create(:affiliation, organization: organization, type: "facilitator",
              start_date: Date.current.beginning_of_year - 1.day, end_date: nil)
       expect(organization.facilitator_status_on).to eq(:ongoing)
     end
@@ -352,7 +352,7 @@ RSpec.describe Organization do
 
     context 'with program status filter' do
       it 'filters to orgs with an active facilitator affiliation' do
-        create(:affiliation, organization: active_org, person: create(:person), title: "Facilitator", end_date: nil)
+        create(:affiliation, organization: active_org, person: create(:person), type: "facilitator", end_date: nil)
         results = Organization.search_by_params(program_status: "active")
         expect(results).to include(active_org)
         expect(results).not_to include(inactive_org)
@@ -367,7 +367,7 @@ RSpec.describe Organization do
     def org_with(status_name, **affiliation_attrs)
       create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: status_name)).tap do |org|
         next if affiliation_attrs.empty?
-        create(:affiliation, organization: org, person: create(:person), title: "Facilitator", **affiliation_attrs)
+        create(:affiliation, organization: org, person: create(:person), type: "facilitator", **affiliation_attrs)
       end
     end
 
@@ -417,17 +417,17 @@ RSpec.describe Organization do
       direct_org.sectorable_items.create!(sector: sector, is_primary: false)
 
       primary_person = create(:person)
-      create(:affiliation, organization: primary_person_org, person: primary_person)
+      create(:affiliation, :facilitator, organization: primary_person_org, person: primary_person)
       primary_person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
       primary_person.sectorable_items.create!(sector: sector, is_primary: true)
 
       additional_person = create(:person)
-      create(:affiliation, organization: additional_person_org, person: additional_person)
+      create(:affiliation, :facilitator, organization: additional_person_org, person: additional_person)
       additional_person.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
       additional_person.sectorable_items.create!(sector: sector, is_primary: false)
 
       former_person = create(:person)
-      create(:affiliation, organization: inactive_person_org, person: former_person, end_date: 1.year.ago)
+      create(:affiliation, :facilitator, organization: inactive_person_org, person: former_person, end_date: 1.year.ago)
       former_person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
       former_person.sectorable_items.create!(sector: sector, is_primary: true)
 
@@ -453,13 +453,13 @@ RSpec.describe Organization do
     def tagged_org(name, affiliation_attrs)
       create(:organization, name: name).tap do |organization|
         organization.categorizable_items.create!(category: clinical)
-        create(:affiliation, { organization: organization }.merge(affiliation_attrs))
+        create(:affiliation, { organization: organization, type: "facilitator" }.merge(affiliation_attrs))
       end
     end
 
     it "matches only organizations that also have an active facilitator, like the matrix counts" do
       facilitating = tagged_org("Facilitating Org", {})
-      tagged_org("Staff Only Org", title: "Director")
+      tagged_org("Staff Only Org", title: "Director", type: "job")
       tagged_org("Former Org", end_date: 1.year.ago)
 
       expect(Organization.category_names_all("Clinical setting")).to contain_exactly(facilitating)
@@ -477,11 +477,11 @@ RSpec.describe Organization do
     it "rolls up only active facilitators' primary sectors, ignoring the org's own tags and other staff" do
       organization.sectorable_items.create!(sector: housing, is_primary: true)
       person = create(:person)
-      create(:affiliation, organization: organization, person: person)
+      create(:affiliation, :facilitator, organization: organization, person: person)
       person.sectorable_items.create!(sector: legal, is_primary: true)
       person.sectorable_items.create!(sector: other, is_primary: false)
       former = create(:person)
-      create(:affiliation, organization: organization, person: former, end_date: 1.year.ago)
+      create(:affiliation, :facilitator, organization: organization, person: former, end_date: 1.year.ago)
       former.sectorable_items.create!(sector: housing, is_primary: true)
       staff = create(:person)
       create(:affiliation, organization: organization, person: staff, title: "Director")
@@ -503,7 +503,7 @@ RSpec.describe Organization do
     def version = Organization.find(organization.id).rollup_cache_version
 
     it "changes when an affiliated person is retagged" do
-      create(:affiliation, organization: organization, person: person)
+      create(:affiliation, :facilitator, organization: organization, person: person)
       before_version = version
 
       person.sectorable_items.create!(sector: sector, is_primary: true)
@@ -514,7 +514,7 @@ RSpec.describe Organization do
     it "changes when an affiliation is added" do
       before_version = version
 
-      create(:affiliation, organization: organization, person: person)
+      create(:affiliation, :facilitator, organization: organization, person: person)
 
       expect(version).not_to eq(before_version)
     end
@@ -530,7 +530,7 @@ RSpec.describe Organization do
 
     def facilitator(primary:, additional: [])
       person = create(:person)
-      create(:affiliation, organization: organization, person: person)
+      create(:affiliation, :facilitator, organization: organization, person: person)
       person.tag_age_groups(primary_ids: primary.map(&:id), additional_ids: additional.map(&:id))
     end
 
@@ -556,9 +556,9 @@ RSpec.describe Organization do
     let(:former) { create(:person) }
 
     before do
-      create(:affiliation, organization: organization, person: person_a)
-      create(:affiliation, organization: organization, person: person_b)
-      create(:affiliation, organization: organization, person: former, end_date: 1.year.ago)
+      create(:affiliation, :facilitator, organization: organization, person: person_a)
+      create(:affiliation, :facilitator, organization: organization, person: person_b)
+      create(:affiliation, :facilitator, organization: organization, person: former, end_date: 1.year.ago)
     end
 
     it "rolls up only active facilitators' primary age groups, ignoring the org's own tags and other staff" do
@@ -577,10 +577,10 @@ RSpec.describe Organization do
       person_a.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [])
       person_b.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
       third = create(:person)
-      create(:affiliation, organization: organization, person: third)
+      create(:affiliation, :facilitator, organization: organization, person: third)
       third.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
       fourth = create(:person)
-      create(:affiliation, organization: organization, person: fourth)
+      create(:affiliation, :facilitator, organization: organization, person: fourth)
       fourth.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
 
       expect(organization.active_facilitator_age_groups).to eq([ teen, young, adult ])
@@ -593,7 +593,7 @@ RSpec.describe Organization do
     let(:windows_type) { create(:windows_type, :adult) }
 
     before do
-      create(:affiliation, organization: organization, person: affiliated_person)
+      create(:affiliation, :facilitator, organization: organization, person: affiliated_person)
     end
 
     it "includes directly associated workshops and workshops authored by affiliated people without duplicates" do
@@ -617,7 +617,7 @@ RSpec.describe Organization do
     let(:admin) { create(:user, :admin) }
 
     before do
-      create(:affiliation, organization: organization, person: affiliated_person)
+      create(:affiliation, :facilitator, organization: organization, person: affiliated_person)
     end
 
     it "includes directly associated ideas and ideas authored by affiliated people without duplicates" do

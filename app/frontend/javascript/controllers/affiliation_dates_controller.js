@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { isFacilitatorTitle, isZeroLength } from "../lib/affiliation"
+import { isFacilitatorType, isZeroLength } from "../lib/affiliation"
 
 export default class extends Controller {
   static targets = ["facilitatorSince", "affiliatedNote", "affiliatedNoteText", "memberSinceFlag", "affiliationsContainer", "programStatus"]
@@ -39,7 +39,7 @@ export default class extends Controller {
     if (!this.hasAffiliationsContainerTarget) return
     const fields = this.affiliationsContainerTarget.querySelectorAll(".nested-fields")
     fields.forEach(field => {
-      const inputs = field.querySelectorAll("input[name*='start_date'], input[name*='end_date'], input[name*='title']")
+      const inputs = field.querySelectorAll("input[name*='start_date'], input[name*='end_date'], input[name*='[type]'], select[name*='[type]']")
       inputs.forEach(input => {
         input.addEventListener("change", this.boundRecalculate)
         input.addEventListener("input", this.boundRecalculate)
@@ -52,7 +52,7 @@ export default class extends Controller {
     const now = new Date()
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
 
-    const titled = affiliations.filter(a => isFacilitatorTitle(a.title))
+    const titled = affiliations.filter(a => isFacilitatorType(a.type))
     // The org form (mergedPeriods) reads the organization's program, which zero-length
     // rows play no part in (ADR-0001 D8a) — matching OrganizationDecorator. The person
     // form reports that person's own dates, so it keeps them.
@@ -159,7 +159,7 @@ export default class extends Controller {
       .map(field => ({
         startDate: field.querySelector("input[name*='start_date']")?.value || "",
         endDate: field.querySelector("input[name*='end_date']")?.value || "",
-        title: field.querySelector("input[name*='title']")?.value || ""
+        type: field.querySelector("select[name*='[type]'], input[name*='[type]']")?.value || ""
       }))
   }
 

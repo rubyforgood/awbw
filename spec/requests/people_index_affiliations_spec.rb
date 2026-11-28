@@ -9,7 +9,7 @@ RSpec.describe "People index affiliations", type: :request do
   it "shows one entry per organization, preferring the affiliation with a job title" do
     person = create(:person, first_name: "Dupe")
     org = create(:organization, name: "Shared Org")
-    create(:affiliation, person: person, organization: org, title: "Facilitator",
+    create(:affiliation, person: person, organization: org, type: "facilitator",
                          start_date: 1.year.ago.to_date)
     create(:affiliation, person: person, organization: org, title: "Counselor",
                          start_date: 1.year.ago.to_date)

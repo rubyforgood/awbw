@@ -8,7 +8,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
   before do
     driven_by(:selenium_chrome_headless)
-    create(:affiliation, person: person, organization: org1, title: "Facilitator", start_date: "2020-03-01", end_date: nil)
+    create(:affiliation, person: person, organization: org1, type: "facilitator", start_date: "2020-03-01", end_date: nil)
     create(:affiliation, person: person, organization: org2, title: "Volunteer", start_date: "2022-06-15", end_date: nil)
     sign_in admin
   end
@@ -25,16 +25,9 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     )
   end
 
-  def set_text_input(input, value)
-    page.execute_script(
-      "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', { bubbles: true }))",
-      input, value
-    )
-  end
-
   def facilitator_row
     all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("input[name*='title']").value.strip == "Facilitator"
+      f.find("input[name*='[type]'], select[name*='[type]']", visible: :all).value == "facilitator"
     }
   end
 
@@ -49,17 +42,18 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     expect(facilitator).to have_text("Jul 2019", wait: 5)
   end
 
-  it "updates Facilitator since when a title changes" do
+  it "updates Facilitator since when a new row's type changes to Facilitator" do
     visit_and_wait edit_person_path(person, admin: true)
 
     facilitator = find("[data-affiliation-dates-target='facilitatorSince']")
     expect(facilitator).to have_text("Mar 2020")
 
-    # Renaming the only exact "Facilitator" to a variant drops it — facilitator
-    # matching is exact and case-sensitive, so "Lead Facilitator" no longer counts.
-    set_text_input(facilitator_row.find("input[name*='title']"), "Lead Facilitator")
+    find("select[data-affiliation-add-type-target='select']").select("Facilitator")
+    click_link "Add Affiliation"
+    row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").last
+    set_date_input(row.find("input[name*='start_date']"), "2019-07-01")
 
-    expect(facilitator).to have_text("—", wait: 5)
+    expect(facilitator).to have_text("Jul 2019", wait: 5)
   end
 
   it "toggles the affiliated-since note live as the earliest start crosses the facilitator start" do
@@ -86,13 +80,13 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
   it "toggles the member-since flag live as the facilitator start crosses member_since" do
     flagged = create(:person, member_since: Date.new(2015, 6, 1))
-    create(:affiliation, person: flagged, organization: org1, title: "Facilitator", start_date: "2020-03-01")
+    create(:affiliation, person: flagged, organization: org1, type: "facilitator", start_date: "2020-03-01")
 
     visit_and_wait edit_person_path(flagged, admin: true)
     flag = "[data-affiliation-dates-target='memberSinceFlag']"
     fac_start = -> {
       all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-        f.find("input[name*='title']").value.strip == "Facilitator"
+        f.find("input[name*='[type]'], select[name*='[type]']", visible: :all).value == "facilitator"
       }.find("input[name*='start_date']")
     }
 
@@ -138,7 +132,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
   it "surfaces the affiliation start as a grey note when it differs from the facilitator start" do
     # Facilitator (Mar 2020) gone; the remaining Volunteer (Jun 2022) now surfaces
     # as the grey "Affiliated since" note beside an empty Facilitator since.
-    facilitator = person.affiliations.find_by!(title: "Facilitator")
+    facilitator = person.affiliations.find_by!(type: "facilitator")
     visit edit_affiliation_path(facilitator, return_to: "person", origin_id: person.id)
 
     accept_confirm { click_button "Delete" }
@@ -154,9 +148,9 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
     before do
       create(:affiliation, person: org_person, organization: merged_org,
-             title: "Facilitator", start_date: "2018-01-01", end_date: "2019-12-31")
+             type: "facilitator", start_date: "2018-01-01", end_date: "2019-12-31")
       create(:affiliation, person: org_person, organization: merged_org,
-             title: "Facilitator", start_date: "2022-01-01", end_date: nil)
+             type: "facilitator", start_date: "2022-01-01", end_date: nil)
     end
 
     it "live-updates 'Facilitators since' as month-precision periods" do
@@ -178,7 +172,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     # kept it, the chip would flip to "Formerly active" on load.
     it "ignores a zero-length facilitator row, matching the server render" do
       no_show_org = create(:organization)
-      create(:affiliation, person: org_person, organization: no_show_org, title: "Facilitator",
+      create(:affiliation, person: org_person, organization: no_show_org, type: "facilitator",
              start_date: "2026-08-01", end_date: "2026-08-01", inactive: true)
 
       visit_and_wait edit_organization_path(no_show_org)

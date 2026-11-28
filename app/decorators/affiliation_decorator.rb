@@ -54,11 +54,11 @@ class AffiliationDecorator < ApplicationDecorator
   end
 
   def detail(length: nil)
-    "#{[ person.full_name, title ].compact.join(": ")} - #{organization.name}"
+    "#{[ person.full_name, display_title ].compact.join(": ")} - #{organization.name}"
   end
 
   def display_title
-    facilitator? ? "AWBW #{Affiliation::FACILITATOR_TITLE}" : title
+    facilitator? ? "AWBW #{Affiliation::FACILITATOR_LABEL}" : title
   end
 
   def dedupe_label

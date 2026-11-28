@@ -3124,7 +3124,7 @@ RSpec.describe "Events", type: :request do
         registrant = create(:person)
         reg = create(:event_registration, event: event, registrant: registrant)
         org = create(:organization)
-        create(:affiliation, organization: org, person: registrant, title: "Facilitator", start_date: 1.year.ago)
+        create(:affiliation, organization: org, person: registrant, type: "facilitator", start_date: 1.year.ago)
         reg.event_registration_organizations.create!(organization: org)
       end
 
@@ -4306,7 +4306,7 @@ RSpec.describe "Events", type: :request do
       it "anchors the program-status breakdown on the event's start date" do
         org = create(:organization, name: "Anchored Org")
         create(:affiliation, organization: org, person: create(:person),
-                             title: "Facilitator", start_date: 2.weeks.from_now.to_date)
+                             type: "facilitator", start_date: 2.weeks.from_now.to_date)
         registration = EventRegistration.find_by!(registrant: applicant, event: event)
         create(:event_registration_organization, event_registration: registration, organization: org)
         # Anchor the start time at noon so the event's calendar date is the same in
@@ -4516,7 +4516,7 @@ RSpec.describe "Events", type: :request do
         create(:affiliation, person: applicant, organization: org,
                              title: "Prevention, Education, and Outreach Specialist", start_date: 1.year.ago)
         create(:affiliation, person: applicant, organization: create(:organization, name: "Facilitator Org"),
-                             title: "Facilitator", start_date: 1.year.ago)
+                             type: "facilitator", start_date: 1.year.ago)
 
         get recipients_event_path(event)
 
@@ -5079,7 +5079,7 @@ RSpec.describe "Events", type: :request do
     it "does not show the registrant's affiliation organization names (moved to the link-organization page)" do
       create(:affiliation, person: registration.registrant,
         organization: create(:organization, name: "Helping Hands Center"),
-        title: "Facilitator")
+        type: "facilitator")
 
       get registrants_event_path(event)
 

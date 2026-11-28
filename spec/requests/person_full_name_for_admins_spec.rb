@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Person names shown to admins", type: :request do
   let!(:person) do
     create(:person, first_name: "Dana", last_name: "Rivers", display_name_preference: "first_name_last_initial").tap do |p|
-      create(:affiliation, person: p, title: "Facilitator", start_date: 1.year.ago, inactive: false)
+      create(:affiliation, person: p, type: "facilitator", start_date: 1.year.ago, inactive: false)
     end
   end
   let(:people_frame) { { "Turbo-Frame" => "people_results" } }
