@@ -859,7 +859,7 @@ RSpec.describe "/story_share", type: :request do
     let(:banner) { "div[class~='aspect-[4/3]'][class~='sm:aspect-[2/1]']" }
     let(:standard) { "div[class~='aspect-[3/2]']" }
 
-    it "frames the home carousel as a banner and topic cards in the standard shape" do
+    it "frames home carousel cards and topic cards in the standard shape" do
       sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
       featured = create(:story, :published, :publicly_visible, title: "Carousel story", story_share_carousel_position: 1)
       topic = create(:story, :published, :publicly_visible, title: "Topic story")
@@ -868,7 +868,7 @@ RSpec.describe "/story_share", type: :request do
       get story_shares_path
 
       page = Capybara.string(response.body)
-      expect(page.find(".swiper-slide", text: featured.title)).to have_css(banner)
+      expect(page.find(".swiper-slide", text: featured.title)).to have_css(standard)
       expect(page.find("article", text: topic.title)).to have_css(standard)
     end
 
@@ -883,6 +883,30 @@ RSpec.describe "/story_share", type: :request do
       page = Capybara.string(response.body)
       expect(page).to have_css(banner, count: 1)
       expect(page.find("article", text: older.title)).to have_css(standard)
+    end
+  end
+
+  # ==========================================================
+  # PAGE GUTTERS
+  # ==========================================================
+  describe "page gutters" do
+    let(:gutter_canceling) { "[class~='-mx-2'], [class~='sm:-mx-6'], [class~='lg:-mx-8']" }
+
+    it "keeps every home section's side padding" do
+      create(:story, :published, :publicly_visible, title: "Featured", story_share_carousel_position: 1)
+      create(:story, :published, :publicly_visible, title: "Recent")
+
+      get story_shares_path
+
+      expect(Capybara.string(response.body).find_by_id("main")).to have_no_css(gutter_canceling)
+    end
+
+    it "keeps the browse page's side padding" do
+      create(:story, :published, :publicly_visible)
+
+      get story_shares_path(page: 1)
+
+      expect(Capybara.string(response.body).find_by_id("main")).to have_no_css(gutter_canceling)
     end
   end
 
@@ -955,7 +979,7 @@ RSpec.describe "/story_share", type: :request do
 
       page = Capybara.string(response.body)
       expect(page).to have_css("[data-controller='background-video'][data-background-video-carousel-outlet]")
-      expect(page.find("[data-controller='carousel']")).to have_css("button[aria-label='Pause videos and slideshows']")
+      expect(page.find("section", text: "Featured stories")).to have_css("button[aria-label='Pause videos and slideshows']")
       expect(page.find("section", text: "Stories of healing")).to have_no_css("button[aria-label='Pause videos and slideshows']")
     end
 

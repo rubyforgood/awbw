@@ -1,6 +1,6 @@
 <%# Hero: full-bleed photo or muted video (from a story outside the carousel) under a navy→purple wash, with the
     marketing site's big serif statement + gold accent + CTAs. %>
-<section class="relative -mx-2 overflow-hidden sm:-mx-6 lg:-mx-8">
+<section class="relative overflow-hidden">
   <% if @hero_story %>
     <%= image_tag @hero_story.display_image, alt: "", loading: "eager", class: "absolute inset-0 h-full w-full object-cover" %>
     <%= render "story_shares/banner_video", story: @hero_story %>
@@ -35,49 +35,64 @@
   <% end %>
 </section>
 
-<!-- Featured story carousel -->
+<%# Featured stories: marketing-site story row — header with CTA + arrows, then a peeking row of bordered cards. %>
 <% if @featured_stories.any? %>
-  <section class="bg-brand-cream -mx-2 py-14 sm:-mx-6 lg:-mx-8">
+  <section class="bg-brand-cream py-14">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <p class="text-brand-orange-600 mb-2 text-sm font-semibold tracking-widest uppercase">Story share</p>
+      <h2 class="font-display text-brand-navy-900 text-4xl tracking-tight sm:text-5xl">Featured stories</h2>
+      <div class="mt-4 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <p class="max-w-2xl text-lg leading-relaxed text-gray-600">
+          Stories from the shelters, schools, and community organizations putting Windows to work.
+        </p>
+        <div class="flex shrink-0 flex-wrap items-center gap-3">
+          <%= link_to "Browse all stories", story_shares_path(page: 1),
+                      class: "bg-brand-magenta-600 hover:bg-brand-magenta-700 border-brand-magenta-800 inline-flex items-center rounded-lg border-b-4 px-6 py-2.5 font-semibold text-white transition-colors" %>
+          <div class="flex items-center gap-2 sm:gap-3">
+            <%= render "story_shares/motion_toggle", button_class: StorySharesHelper::STORY_ROW_ARROW %>
+            <button id="featured-stories-prev" aria-label="Previous story" class="<%= StorySharesHelper::STORY_ROW_ARROW %>">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <button id="featured-stories-next" aria-label="Next story" class="<%= StorySharesHelper::STORY_ROW_ARROW %>">
+              <i class="fa-solid fa-chevron-right text-sm"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div data-controller="carousel"
-           class="swiper ring-brand-navy-900/10 relative overflow-hidden rounded-2xl shadow-lg ring-1"
-           data-carousel-options-value='{ "autoplay": { "delay": 5000, "pauseOnMouseEnter": true }, "slidesPerView": 1, "breakpoints": {} }'>
+           class="swiper -mx-1! mt-10 p-1!"
+           data-carousel-options-value='<%= { autoplay: { delay: 5000, pauseOnMouseEnter: true }, loop: false, spaceBetween: 32,
+                                              navigation: { nextEl: "#featured-stories-next", prevEl: "#featured-stories-prev" },
+                                              breakpoints: { 0 => { slidesPerView: 1.15 }, 640 => { slidesPerView: 2.15 }, 1024 => { slidesPerView: 3.15 } } }.to_json %>'>
         <div class="swiper-wrapper">
           <% @featured_stories.each do |story| %>
-            <div class="swiper-slide">
-              <%= link_to story_share_path(story), class: "block relative" do %>
-                <div class="bg-brand-navy-100 relative overflow-hidden <%= StorySharesHelper::STORY_BANNER_ASPECT %>">
-                  <%= render "assets/fitted_image", file: story.display_image, alt: story.title %>
-                  <%= render "story_shares/banner_video", story: story %>
+            <div class="swiper-slide h-auto!">
+              <div class="border-brand-navy-600 flex h-full flex-col overflow-hidden rounded-2xl border bg-white/40">
+                <%= link_to story_share_path(story), class: "border-brand-navy-600 block border-b" do %>
+                  <%= render "story_shares/story_image", story: story, pills: false, video: true %>
+                <% end %>
+                <div class="flex flex-1 flex-col p-6">
+                  <h3 class="text-brand-navy-900 font-display text-2xl leading-snug font-semibold">
+                    <%= link_to story.title, story_share_path(story), class: "hover:text-brand-magenta-700" %>
+                  </h3>
+                  <%= render "story_shares/primary_tag_pills", story: story, pad: "px-3 py-1", wrapper_class: "mt-4" %>
+                  <%= link_to story_share_path(story),
+                              class: "text-brand-magenta-600 hover:text-brand-magenta-800 mt-auto inline-flex items-center gap-1.5 pt-5 font-semibold" do %>
+                    Read the story <i class="fa-solid fa-arrow-right text-xs"></i>
+                  <% end %>
                 </div>
-                <%= render "story_shares/primary_tag_pills", story: story, pad: "px-4 py-1.5",
-                           wrapper_class: "absolute top-5 left-5 right-5 z-10" %>
-                <div class="from-brand-navy-950/85 absolute right-0 bottom-0 left-0 bg-gradient-to-t to-transparent p-6 text-white sm:p-8">
-                  <h2 class="font-display text-2xl sm:text-3xl"><%= story.title %></h2>
-                  <p class="mt-1 text-sm opacity-90">
-                    <%= story.organization_name %>
-                    <% if story.organization&.city_state.present? %>- <%= story.organization.city_state %><% end %>
-                  </p>
-                </div>
-              <% end %>
+              </div>
             </div>
           <% end %>
         </div>
-
-        <%= render "story_shares/motion_toggle", position_class: "top-4 right-4" %>
-        <button aria-label="Previous story" class="swiper-button-prev-custom text-brand-navy-900 absolute top-1/2 left-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white">
-          <i class="fa-solid fa-chevron-left"></i>
-        </button>
-        <button aria-label="Next story" class="swiper-button-next-custom text-brand-navy-900 absolute top-1/2 right-4 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white">
-          <i class="fa-solid fa-chevron-right"></i>
-        </button>
       </div>
     </div>
   </section>
 <% end %>
 
 <!-- Sector sections -->
-<section class="-mx-2 bg-white py-14 sm:-mx-6 lg:-mx-8">
+<section class="bg-white py-14">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-10 md:grid-cols-3">
       <% @stories_by_sector.each_with_index do |(sector, stories), index| %>
@@ -100,10 +115,10 @@
 
 <%# What others are reading: saturated color-wash tiles that lift on hover. %>
 <% if @recent_stories.any? %>
-  <section class="bg-brand-cream -mx-2 py-14 sm:-mx-6 lg:-mx-8">
+  <section class="bg-brand-cream py-14">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <p class="text-brand-orange-600 mb-2 text-sm font-semibold tracking-widest uppercase">Story share</p>
-      <h2 class="font-display text-brand-navy-900 mb-8 text-3xl tracking-tight">What others are reading</h2>
+      <h2 class="text-brand-navy-900 mb-8 font-display text-3xl tracking-tight">What others are reading</h2>
 
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <% @recent_stories.each_with_index do |story, index| %>
@@ -116,7 +131,7 @@
             <%= render "story_shares/play_badge", story: story %>
             <div class="absolute inset-x-0 bottom-0 p-5">
               <%= render "story_shares/primary_tag_pills", story: story, glass: true, pad: "px-2.5 py-0.5", wrapper_class: "mb-2" %>
-              <h3 class="font-display text-xl leading-snug text-white line-clamp-3"><%= story.title %></h3>
+              <h3 class="line-clamp-3 font-display text-xl leading-snug text-white"><%= story.title %></h3>
             </div>
           <% end %>
         <% end %>
