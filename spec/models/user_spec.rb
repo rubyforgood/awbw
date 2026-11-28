@@ -257,6 +257,16 @@ RSpec.describe User do
 
       expect(person.reload.email).to eq("new-login@example.com")
     end
+
+    it "drops the old login address when the secondary email is taken" do
+      user = create(:user, email: "first-login@example.com", person: person)
+      user.update!(email: "renamed@example.com")
+
+      user.confirm
+
+      expect(person.reload).to have_attributes(email: "renamed@example.com", email_2: "work@example.com")
+      expect(person.comments).to be_empty
+    end
   end
 
   describe "#person_id_must_be_present_if_previously_set" do
