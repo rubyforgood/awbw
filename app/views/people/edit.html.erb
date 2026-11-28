@@ -57,7 +57,8 @@
 <% end %>
 <%= render layout: "shared/form_page",
            locals: { domain: :people, icon: "fas fa-user", eyebrow: "Edit person",
-                     title: truncate(person_name(@person), length: 40),
+                     title: safe_join([ truncate(person_name(@person), length: 40),
+                                       person_snapshot_link(@person, link_class: "ms-1 align-middle") ].compact, " "),
                      back: back, actions: actions, width: "max-w-7xl",
                      sticky_header: true, card: false } do %>
   <% if allowed_to?(:index?, User) %>
