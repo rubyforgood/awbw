@@ -6,24 +6,22 @@
     <% events.each do |event| %>
       <% event = event.decorate %>
       <% unreconciled_count = local_assigns.fetch(:unreconciled_counts, {})[event.id].to_i %>
-      <li class="flex items-center gap-3 pr-4 hover:bg-gray-50">
-        <%= link_to event_path(event),
-                    class: "flex min-w-0 flex-1 items-center justify-between gap-4 py-2.5 pl-4",
-                    data: { turbo_prefetch: false, turbo: false } do %>
-          <span class="min-w-0 truncate text-sm font-medium text-gray-800 hover:underline">
-            <%= event.title %>
+      <%# The title link stretches over the whole row (after:inset-0) so the row
+          stays clickable; the chip sits above it (relative z-10) because links
+          can't nest. %>
+      <li class="relative flex items-center justify-between gap-4 px-4 py-2.5 hover:bg-gray-50">
+        <%= link_to event.title, event_path(event),
+                    class: "min-w-0 truncate text-sm font-medium text-gray-800 hover:underline after:absolute after:inset-0",
+                    data: { turbo_prefetch: false, turbo: false } %>
+        <span class="flex shrink-0 items-center gap-3 text-xs text-gray-500">
+          <% if unreconciled_count.positive? && allowed_to?(:dashboard?, event) %>
+            <span class="relative z-10"><%= render "events/unreconciled_chip", event: event, count: unreconciled_count %></span>
+          <% end %>
+          <span><%= event.short_date_range %></span>
+          <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600">
+            <%= event.archive_status_label %>
           </span>
-          <span class="flex shrink-0 items-center gap-3 text-xs text-gray-500">
-            <span><%= event.short_date_range %></span>
-            <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600">
-              <%= event.archive_status_label %>
-            </span>
-          </span>
-        <% end %>
-        <%# Outside the row link — links can't nest. %>
-        <% if unreconciled_count.positive? && allowed_to?(:dashboard?, event) %>
-          <%= render "events/unreconciled_chip", event: event, count: unreconciled_count %>
-        <% end %>
+        </span>
       </li>
     <% end %>
   </ul>
