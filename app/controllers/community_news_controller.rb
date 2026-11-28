@@ -106,6 +106,7 @@ class CommunityNewsController < ApplicationController
       redirect_to community_news_path(@community_news, no_redirect: true),
                   notice: "Community news was successfully updated.", status: :see_other
     else
+      @community_news = @community_news.decorate
       set_form_variables
       render :edit, status: :unprocessable_content
     end
