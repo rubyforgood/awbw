@@ -27,6 +27,20 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
   end
 
+  describe "#page_title_label" do
+    it "names the subject and recipient" do
+      notification = build_stubbed(:notification, email_subject: "Your ticket", person: nil, recipient_email: "kim@example.com")
+
+      expect(notification.decorate.page_title_label).to eq("Your ticket · kim@example.com")
+    end
+
+    it "marks a notification with no subject yet as undelivered" do
+      notification = build_stubbed(:notification, email_subject: nil, custom_subject: nil, person: nil, recipient_email: "kim@example.com")
+
+      expect(notification.decorate.page_title_label).to eq("Undelivered · kim@example.com")
+    end
+  end
+
   describe "#pending_label" do
     it "shows the created date since a pending send has no delivered date" do
       notification = build_stubbed(:notification, created_at: Time.utc(2026, 8, 12, 18))

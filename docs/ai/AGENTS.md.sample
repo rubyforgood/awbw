@@ -447,6 +447,8 @@ All inherit from `ApplicationDecorator` which provides:
 
 Shared decorator modules (`app/decorators/concerns/`): `Linkable` (external vs in-app link target), `EventChippable`, `StoryReferenceLinks` (story + story idea workshop/organization links — each linked only when the viewer passes the target's `show?`, a reference's own workshop title shown as the link text).
 
+**Browser tab titles** — `PageTitleHelper#page_title` (layout `<title>`) reads a view's `content_for(:title)`, else the controller's record, else the record the page belongs to (`CONTEXT_IVARS`: a ticket's registration, a nested page's event, a public form), else the controller's name (`RESOURCE_NAMES` fixes odd ones). A decorator names its record for the tab with `page_title_label` (people: profile name, plus the email for admins; events: abbreviation or title + dates; payments/scholarships/memberships: type + person).
+
 Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator, ScholarshipDecorator (derives the scholarship index's program/location/training/status columns), CommentDecorator (source chip label/link/theme + author + timestamp for the aggregated person-comments feed), FeatureDecorator (area/audience badges, release-date labels, and the "Check out this feature"/PR links for the Features & tips page).
 
 ## Policies (ActionPolicy)

@@ -1,4 +1,8 @@
 class WorkshopLogDecorator < ApplicationDecorator
+  def page_title_label
+    [ workshop&.title.presence || external_workshop_title, workshop_held_on&.strftime("%b %-d, %Y") ].compact_blank.join(" · ")
+  end
+
   def detail(length: nil)
     description = length ? object.description&.truncate(length) : object.description
     "#{description}<br>#{participants_table}".html_safe

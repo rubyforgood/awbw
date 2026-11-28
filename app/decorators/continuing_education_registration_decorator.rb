@@ -2,6 +2,10 @@ class ContinuingEducationRegistrationDecorator < ApplicationDecorator
   Badge = Struct.new(:label, :icon, :classes, keyword_init: true)
   Condition = Struct.new(:label, :met, keyword_init: true)
 
+  def page_title_label
+    [ "CE", event_registration&.decorate&.page_title_label ].compact_blank.join(" · ")
+  end
+
   PAYMENT_STATUS_BADGES = {
     "Paid" => Badge.new(label: "Paid", icon: "fa-solid fa-circle-check", classes: "bg-green-50 text-green-700 border-green-200"),
     "Partial" => Badge.new(label: "Partial", icon: "fa-solid fa-circle-half-stroke", classes: "bg-amber-50 text-amber-700 border-amber-200"),
