@@ -2,7 +2,7 @@ class NotificationDecorator < ApplicationDecorator
   include ::EventChippable
 
   def page_title_label
-    subject = email_subject.presence || custom_subject.presence || notification_type.to_s.humanize
+    subject = email_subject.presence || custom_subject.presence || "Undelivered"
     recipient = person ? h.person_name(person) : recipient_email
     [ subject, recipient ].compact_blank.join(" · ")
   end

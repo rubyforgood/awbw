@@ -1,6 +1,6 @@
 class PaymentDecorator < ApplicationDecorator
   def page_title_label
-    payer = person ? h.person_name(person) : organization&.name
-    [ object.model_name.human, h.dollars_from_cents(amount_cents), payer ].compact_blank.join(" · ")
+    payer_name = payer.is_a?(Person) ? h.person_name(payer) : payer&.name
+    [ object.model_name.human, h.dollars_from_cents(amount_cents), payer_name ].compact_blank.join(" · ")
   end
 end
