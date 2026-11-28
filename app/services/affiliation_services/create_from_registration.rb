@@ -24,9 +24,8 @@ module AffiliationServices
   # Start dates: the facilitator affiliation begins on the training date itself
   # (that's when they become a facilitator); from an on-demand registration it waits on
   # the training's end date until they're marked attended (EventRegistration#facilitator_start_on).
-  # The job affiliation is left without a start date — we don't know when the person
-  # began that role (they may have been with the org for years before this training),
-  # and dating it to registration would misrepresent that.
+  # The job affiliation starts the day the person registered (blank without a registration,
+  # or when the typed title is exactly "Facilitator").
   #
   # It then points every current affiliation the person holds at the org at the
   # submitted organization address, returning an OrganizationServices::AutofillChange
@@ -69,7 +68,12 @@ module AffiliationServices
 
       return if active_or_pending_affiliations_with_title(@job_title).exists?
 
-      create_affiliation(@job_title, start_date: nil)
+      create_affiliation(@job_title, start_date: job_start_date)
+    end
+
+    # A typed title of exactly "Facilitator" is an FA, which a registration doesn't date.
+    def job_start_date
+      @event_registration&.registered_on unless @job_title == Affiliation::FACILITATOR_TITLE
     end
 
     def create_facilitator_affiliation

@@ -892,6 +892,11 @@ class EventRegistration < ApplicationRecord
     status == "attended"
   end
 
+  # The day the person signed up — a transferred-in registration keeps its original's day.
+  def registered_on
+    transferred_from_registration ? transferred_from_registration.registered_on : created_at&.to_date
+  end
+
   def facilitator_start_on
     today = Time.current.in_time_zone(Event::PROGRAM_ZONE).to_date
     event&.facilitator_start_on(attended_on: (today if attended?))

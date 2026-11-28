@@ -223,11 +223,42 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     end
   end
 
-  it "leaves the job affiliation without a start date" do
-    described_class.call(person: person, organization: organization, job_title: "Counselor")
+  describe "the job affiliation's start date" do
+    def job
+      person.affiliations.find_by(organization: organization, title: "Counselor")
+    end
 
-    job = person.affiliations.find_by(organization: organization, title: "Counselor")
-    expect(job.start_date).to be_nil
+    it "is the day the person registered" do
+      registration = create(:event_registration, created_at: Time.zone.local(2026, 3, 4, 15))
+
+      described_class.call(person: person, organization: organization, job_title: "Counselor", event_registration: registration)
+
+      expect(job.start_date).to eq(Date.new(2026, 3, 4))
+    end
+
+    it "is the original registration's day for a transferred-in registration" do
+      original = create(:event_registration, status: "transferred_out", created_at: Time.zone.local(2026, 3, 4, 15))
+      transferred = create(:event_registration, transferred_from_registration: original, created_at: Time.zone.local(2026, 5, 1, 15))
+
+      described_class.call(person: person, organization: organization, job_title: "Counselor", event_registration: transferred)
+
+      expect(job.start_date).to eq(Date.new(2026, 3, 4))
+    end
+
+    it "is blank when the typed title is exactly Facilitator" do
+      registration = create(:event_registration, created_at: Time.zone.local(2026, 3, 4, 15))
+
+      described_class.call(person: person, organization: organization, job_title: "Facilitator",
+                           facilitator_training: false, event_registration: registration)
+
+      expect(person.affiliations.find_by(organization: organization, title: "Facilitator").start_date).to be_nil
+    end
+
+    it "is blank without a registration" do
+      described_class.call(person: person, organization: organization, job_title: "Counselor")
+
+      expect(job.start_date).to be_nil
+    end
   end
 
   it "starts the facilitator affiliation on the training date" do

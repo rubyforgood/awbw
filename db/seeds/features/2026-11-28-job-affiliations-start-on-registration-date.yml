@@ -1,0 +1,9 @@
+name: "Job affiliations from a registration start on the registration date"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-28
+action_path: "/affiliations"
+summary: >-
+  When someone registers, or an admin links their organization, the job
+  affiliation from their form now starts on the day they registered. A
+  transferred registration keeps the original registration's date.
