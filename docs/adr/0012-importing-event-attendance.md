@@ -2,6 +2,8 @@
 
 - **Status:** Proposed
 - **Date:** 2026-11-27
+- **Updated:** 2026-11-28 — March 2026 attendance and scholarships, the 2026 facilitator-affiliation
+  cleanup, and test data
 - **Builds on:** [ADR-0003](0003-affiliations-as-the-record-of-two-relationships.md) (what an
   affiliation records), [ADR-0005](0005-filemaker-code-archive-mapping.md) (FileMaker codes),
   [ADR-0011](0011-filemaker-affiliations-import-one-table-at-a-time.md) (Personnel as facilitator
@@ -20,6 +22,10 @@
   draft copy made to hold money is never the answer.
 - **Fees stay with the event they were paid for,** even when FileMaker later re-filed them under
   another training.
+- **Scholarships come from FileMaker's scholarship event,** mapped by hand to portal grants that
+  must have room for them.
+- **Test people move to the Test event** before an import; anyone with money on a real training
+  stays.
 - **Everything runs as a dry run first,** skips what it can't decide, and lists it.
 
 ## Context
@@ -66,8 +72,18 @@ affiliations) moves behind it rather than being duplicated in a FileMaker task.
   stay. A person registered on both keeps the registration on the kept event and gets the
   earlier sign-up date, which their ticket shows as "Registered on". The other copy is deleted
   only if it holds no money, attendance, or records worth keeping; otherwise the two are merged.
-- **Staff and test registrations** are removed at staff's request before anything is
-  imported, so they never pick up affiliations.
+- **Test registrations** move to the Test event (portal event 5) before anything is imported, so
+  they never pick up affiliations or count toward a real training (decided 2026-11-28):
+  - Their form submissions, form completions, topic subscriptions, emails, the local copies of
+    their Stripe charges, and the Ahoy history that names the training move with them. Changes
+    to the training's own record stay.
+  - Their FAs move too: dated to the Test event's start and tied to its registration.
+  - Someone holding a payment on a real training stays put: the money belongs to that training.
+  - Several registrations for one test person fold into one on the Test event (the registration
+    merge).
+  - Throwaway test people merge into one test person. Test people that act out a scenario
+    (a payer, a scholarship path, no organization) stay separate as examples.
+- **Staff registrations** are removed at staff's request, the same way.
 
 ### D3 — The person
 
@@ -86,6 +102,12 @@ affiliations) moves behind it rather than being duplicated in a FileMaker task.
 - **Completed** means attended in the portal, or FileMaker's status says "Attended". Attendance
   notes such as "Day 2 only" are ignored; the status decides (2026-11-27). A row that
   says "did not attend" is not completed.
+- **Recording it:** a registration still "registered" after the training becomes Attended when
+  FileMaker's `Attended` field is 1, with every day box ticked, so a later day toggle on
+  Onboarding can't walk the status back (2026-11-28).
+- **The portal's own outcome wins.** A registration already cancelled, transferred out, or
+  marked no-show keeps that status even when FileMaker says attended; it's listed instead. A
+  portal registration with no FileMaker row is left alone and listed (2026-11-28).
 - **Trained at a later session:** when FileMaker moved them to a later training, record a
   transfer. The first registration is transferred out, and the later one is attended. This also
   applies to someone who registered for one training and simply trained at the next.
@@ -146,6 +168,20 @@ facilitation). It is created when the registration is marked Attended, not when 
 - **Didn't complete, but holds an active one:** list it; don't change it.
 - **An ended FA is never deleted,** by an import, a merge, or a cleanup. It is the record of when
   someone facilitated, which program history depends on (decided 2026-11-27).
+- **An FA no training backs is deleted,** ended or not: someone who registered for a training
+  for that organization but completed none (no-show, cancelled, transferred out, partial) never
+  facilitated, so the row records nothing. Each deletion is its own `destroy.affiliation` Ahoy
+  event, which keeps the row's fields (decided 2026-11-28).
+  - Read completion from the person's training registrations for that organization, not from
+    the FA's own registration link. Training FAs made before 2026-08-14 have no link, so a
+    missing link doesn't mean hand-entered.
+  - Keep FileMaker FAs, FAs whose person is still "registered" for a training (upcoming, or
+    attendance not yet recorded), and FAs with no training registration at all.
+  - A partial attendance counts as not completed here, so its FA goes. The Reconcile
+    affiliations page still ends a partial attendee's FA rather than deleting it; the two
+    should agree.
+  - Deleting an organization's last active FA turns the organization Inactive (its own audit
+    event), so the dry run lists the organizations that would change.
 
 ### D8 — FileMaker codes on affiliations
 
@@ -163,8 +199,25 @@ added to any already there, never replacing them (decided 2026-11-27).
   for. Re-filed copies share a FileMaker code family and are merged, never double-counted.
 - Group payments (one payer, several trainees) are allocated per trainee, from FileMaker's
   notes or the bulk payment's linked registrations. Unclear ones are listed, never guessed.
-- Scholarships are recorded as scholarships, not as payments. FileMaker's fee on a scholarship
-  row is what the person owed after the scholarship.
+- Scholarships are recorded as scholarships, not as payments.
+
+### D9a — Scholarships (decided 2026-11-28)
+
+- **Amount and funder come from the training's scholarship event,** not the registration row.
+  Each row there reads like "$1000 Funder A". The registration row's fee doesn't hold up: some
+  say "Full Scholarship" beside a fee of 1000, and some fees are negative.
+  - "$400 Funder B/$1100 Funder B" is two awards.
+  - With no amount there, use the registration row's note ("Scholarship granted 750 [funder]").
+- **Funder to grant is mapped by hand.** Portal grants carry no FileMaker code, so each funder
+  name is matched to a portal grant before the run. "Unfunded" means no grant.
+- **A grant can't pay past its amount.** Check every grant's room in the dry run and stop if any
+  is over. When a grant is short, staff add an overflow grant; awards fill the first grant
+  exactly and the rest goes to the overflow, splitting an award in two where needed.
+- **Each award is** accepted and capped at what the registration still owes. For a training
+  that's over, its tasks are marked complete; open tasks would lock the attendee's certificate.
+- **It goes on that training's registration,** even when the portal has it cancelled or
+  transferred out. A transfer keeps one balance, so the award still counts where they went.
+- A registration that already has a scholarship is skipped.
 
 ### D10 — How every run behaves
 
@@ -190,6 +243,16 @@ Training 2026"). Some years kept a scholarship list ("2023 On-Demand Scholarship
 E3772; 2025, E3931), so check for one before importing a year. On-demand courses such as
 Trauma-Informed Practices are FileMaker "On-Demand Course" events, not facilitator trainings.
 
+## Data changed under this ADR
+
+Kinds of change only; the exact records are in the Ahoy audit log.
+
+- **2026-11-27:** the March 2026 duplicate events folded into one.
+- **2026-11-28:** facilitator affiliations created in 2026 with no completed training behind
+  them deleted (D7). March 2026 attendance recorded from FileMaker (D4). March 2026
+  scholarships created from its scholarship event (D9a). Test people moved to the Test event
+  and merged (D2).
+
 ## Consequences
 
 - **The CSV importer changes.** Its association code moves into the shared step, and gains D6's
@@ -201,3 +264,9 @@ Trauma-Informed Practices are FileMaker "On-Demand Course" events, not facilitat
   events and people, and taking stray FileMaker codes off organizations.
 - **Placeholder dates are fixed only for the trainings an import touches.** Older ones stay
   until their training is imported.
+- **March 2026 attendance was recorded without D7.** Marking a registration Attended doesn't
+  create or tie an FA yet, so March's attendees still need their FA tied to the March
+  registration and dated to the training when the attendance import runs.
+- **The CSV importer's scholarships fall short of D9a.** It awards with no grant and leaves
+  tasks open, so a past training's certificates lock until staff tick each one. The shared step
+  takes a funder-to-grant map and marks a past training's tasks complete.
