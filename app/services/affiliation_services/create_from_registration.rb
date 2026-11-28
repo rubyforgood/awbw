@@ -53,13 +53,12 @@ module AffiliationServices
     end
 
     def call
-      @repointed = []
       ActiveRecord::Base.transaction do
         create_job_affiliation
         create_facilitator_affiliation if @facilitator_training
-        point_at_submitted_address
+        PointAtAddress.call(person: @person, organization: @organization, address: @organization_address,
+                            repoint: @repoint_address)
       end
-      @repointed
     end
 
     private
@@ -78,29 +77,6 @@ module AffiliationServices
 
       affiliation = create_affiliation(Affiliation::FACILITATOR_TITLE, start_date: facilitator_start_date)
       FollowAttendance.note_start(affiliation) if on_demand? && @event_registration.attended?
-    end
-
-    # Every active-or-pending affiliation the person holds at the org takes the
-    # address this submission gave, whatever its title (the latest answer wins; the
-    # prior one stays in the Ahoy audit trail). Ended ones are history and keep theirs.
-    def point_at_submitted_address
-      return unless @organization_address
-
-      affiliations = @person.affiliations.active_or_pending.where(organization: @organization)
-      targets = affiliations.where(organization_address_id: nil)
-      targets = targets.or(affiliations.where.not(organization_address_id: @organization_address.id)) if @repoint_address
-      targets.includes(:organization_address).find_each do |affiliation|
-        previous = affiliation.organization_address
-        affiliation.update!(organization_address: @organization_address)
-        @repointed << repointed_change(affiliation, previous)
-      end
-    end
-
-    def repointed_change(affiliation, previous)
-      OrganizationServices::AutofillChange.new(
-        field: "affiliation_#{affiliation.id}_address", label: "#{affiliation.title} affiliation address",
-        value: @organization_address.name.squish, previous_value: previous&.name&.squish
-      )
     end
 
     def create_affiliation(title, start_date:)

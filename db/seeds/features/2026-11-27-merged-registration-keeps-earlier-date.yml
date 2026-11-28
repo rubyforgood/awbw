@@ -1,0 +1,9 @@
+name: "Merged registrations keep the earlier sign-up date"
+area: registration
+display_status: admin_facing
+released_on: 2026-11-27
+action_path: "/event_registrations/dedupe_index"
+pr_number: 3050
+summary: >-
+  Merging two registrations now keeps whichever sign-up date is earlier, so the
+  ticket's "Registered on" shows when the person really signed up.

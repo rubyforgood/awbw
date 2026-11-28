@@ -28,6 +28,26 @@ RSpec.describe EventRegistrationServices::RegistrationMerge do
     end
   end
 
+  describe "#prepare" do
+    it "gives the keeper the earlier sign-up date, which its ticket shows" do
+      keep.update!(created_at: 1.day.ago)
+      delete.update!(created_at: 30.days.ago)
+
+      described_class.new(keep, delete).prepare
+
+      expect(keep.created_at).to eq(delete.created_at)
+    end
+
+    it "keeps the keeper's date when it signed up first" do
+      keep.update!(created_at: 30.days.ago)
+      original = keep.created_at
+
+      described_class.new(keep, delete).prepare
+
+      expect(keep.created_at).to eq(original)
+    end
+  end
+
   describe "#carry_details" do
     it "keeps whichever copy has the attendance days and certificate date" do
       sent_at = 1.hour.ago.change(usec: 0)
