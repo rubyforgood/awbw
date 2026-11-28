@@ -23,7 +23,7 @@ RSpec.describe "Community news create redirect", type: :system do
     fill_and_submit
 
     # Advanced away from the form to a show page, and no duplicate created.
-    expect(page).to have_current_path(%r{/community_news/\d+\z}, wait: 10)
+    expect(page).to have_current_path(%r{/community_news/\d+}, wait: 10)
     expect(page).to have_no_field("community_news_title")
     expect(CommunityNews.count).to eq(1)
   end

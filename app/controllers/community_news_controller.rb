@@ -36,7 +36,7 @@ class CommunityNewsController < ApplicationController
     authorize! @community_news
     track_view(@community_news)
 
-    if @community_news.external_url.present?
+    if @community_news.external_link? && params[:no_redirect].blank?
       redirect_to_external @community_news.link_target
       nil
     end
@@ -79,7 +79,7 @@ class CommunityNewsController < ApplicationController
     end
 
     if success
-      redirect_to @community_news,
+      redirect_to community_news_path(@community_news, no_redirect: true),
                   notice: "Community news was successfully created.", status: :see_other
     else
       @community_news = @community_news.decorate
@@ -103,7 +103,7 @@ class CommunityNewsController < ApplicationController
     end
 
     if success
-      redirect_to @community_news,
+      redirect_to community_news_path(@community_news, no_redirect: true),
                   notice: "Community news was successfully updated.", status: :see_other
     else
       set_form_variables

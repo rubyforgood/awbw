@@ -36,7 +36,7 @@ class StoriesController < ApplicationController
     authorize! @story
     track_view(@story)
 
-    if @story.external_url.present? && !params[:no_redirect].present?
+    if @story.external_link? && params[:no_redirect].blank?
       redirect_to_external @story.link_target
       nil
     end
@@ -92,7 +92,8 @@ class StoriesController < ApplicationController
     end
 
     if success
-      redirect_to @story, notice: "Story was successfully created.", status: :see_other
+      redirect_to story_path(@story, no_redirect: true),
+                  notice: "Story was successfully created.", status: :see_other
     else
       @story = @story.decorate
       set_form_variables
@@ -121,7 +122,8 @@ class StoriesController < ApplicationController
     end
 
     if success
-      redirect_to @story, notice: "Story was successfully updated.", status: :see_other
+      redirect_to story_path(@story, no_redirect: true),
+                  notice: "Story was successfully updated.", status: :see_other
     else
       @story = @story.decorate
       set_form_variables

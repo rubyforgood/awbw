@@ -169,6 +169,6 @@
     <%= link_to "Cancel",
                 (allowed_to?(:index?, CommunityNews) ? community_news_index_path : root_path),
                 class: button_classes(:secondary_outline) %>
-    <%= f.button :submit, class: button_classes(:primary) %>
+    <%= f.button :submit, class: button_classes(:primary), data: { turbo_submits_with: "Saving…" } %>
   </div>
 <% end %>

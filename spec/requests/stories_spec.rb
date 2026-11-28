@@ -364,6 +364,33 @@ RSpec.describe "/stories", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it "redirects to the website_url when the story has an external link" do
+        private_story.update!(website_url: "https://example.com/article")
+
+        get story_url(private_story)
+
+        expect(response).to have_http_status(:found)
+        expect(response).to redirect_to("https://example.com/article")
+      end
+
+      it "renders the story instead of redirecting when no_redirect is set" do
+        private_story.update!(website_url: "https://example.com/article")
+
+        get story_url(private_story, no_redirect: true)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(private_story.title)
+      end
+
+      it "renders the story when website_url isn't a valid external link" do
+        private_story.update!(website_url: "AWBW newsletter")
+
+        get story_url(private_story)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(private_story.title)
+      end
+
       it "leads the image carousel with the story's video" do
         private_story.update!(youtube_url: "https://youtu.be/abc123")
         create(:primary_asset, owner: private_story).file.attach(io: StringIO.new("image"), filename: "art.png", content_type: "image/png")
@@ -398,7 +425,7 @@ RSpec.describe "/stories", type: :request do
           post stories_url, params: { story: base_attributes }
         }.to change(Story, :count).by(1)
 
-        expect(response).to redirect_to(story_url(Story.last))
+        expect(response).to redirect_to(story_url(Story.last, no_redirect: true))
       end
 
       it "redirects with 303 See Other so Turbo advances past the form" do
