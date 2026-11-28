@@ -43,6 +43,13 @@ RSpec.describe PageTitleHelper, type: :helper do
     expect(helper.page_title).to eq("Event registrations | AWBW")
   end
 
+  it "decodes HTML entities a title was stored with" do
+    workshop = create(:workshop, title: "A survivor&#39;s journey")
+    visit("workshops", "show", ivars: { workshop: workshop })
+
+    expect(helper.page_title).to eq("A survivor's journey | AWBW")
+  end
+
   it "names a new record's page" do
     visit("people", "new", ivars: { person: Person.new })
 

@@ -50,6 +50,6 @@ module PageTitleHelper
     name = LABEL_METHODS.lazy.filter_map { |method| record.try(method).presence }.first
     return record.model_name.human if name.blank?
 
-    strip_tags(name.to_s).squish.truncate(MAX_LABEL_LENGTH)
+    CGI.unescapeHTML(strip_tags(name.to_s)).squish.truncate(MAX_LABEL_LENGTH)
   end
 end
