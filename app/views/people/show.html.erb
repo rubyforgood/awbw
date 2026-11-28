@@ -77,6 +77,7 @@
           <% if @person.pronouns.present? && @person.profile_show_pronouns? %>
             <span class="font-sans text-base font-normal text-gray-500 italic">(<%= @person.pronouns %>)</span>
           <% end %>
+          <%= person_snapshot_link(@person, link_class: "ms-1 align-middle") %>
         </h1>
         <% if @person.profile_show_member_since? && (@person.facilitator_since_date || @person.affiliated_since_date).present? %>
           <p class="mt-1 text-sm text-gray-600"><%= render "people/profile_pieces/member_since", person: @person %></p>
