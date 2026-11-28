@@ -12,6 +12,13 @@ class PersonDecorator < ApplicationDecorator
     "#{first_name} #{last_name}"
   end
 
+  # Admins get the email too, so two people sharing a name get different tabs.
+  def page_title_label
+    return h.person_name(object) unless h.allowed_to?(:full_name?, object)
+
+    [ full_name, (email unless PlaceholderEmail.match?(email)) ].compact_blank.join(" · ")
+  end
+
   def detail(length: nil)
     text = affiliations.active.map { |affiliation| "#{affiliation.title}, #{affiliation.organization.name}" }.join(", ")
     length ? text&.truncate(length) : text

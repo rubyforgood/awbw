@@ -1,6 +1,10 @@
 class StoryIdeaDecorator < ApplicationDecorator
   include ::StoryReferenceLinks
 
+  def page_title_label
+    object.title
+  end
+
   def title
     name
   end

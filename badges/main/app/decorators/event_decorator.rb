@@ -141,6 +141,10 @@ class EventDecorator < ApplicationDecorator
     published? ? "Ended" : "Draft"
   end
 
+  def page_title_label
+    [ compact_label, (short_date_range if start_date) ].compact_blank.join(" · ")
+  end
+
   # Compact event label for tight/tabular or multi-event contexts: the admin-set
   # abbreviation (e.g. "TOS205") when present, otherwise the full title. Pair it
   # with the full title as a tooltip so the abbreviation is never ambiguous.

@@ -1,4 +1,8 @@
 class UserDecorator < ApplicationDecorator
+  def page_title_label
+    person ? person.decorate.page_title_label : email
+  end
+
   def title
     name
   end
