@@ -59,6 +59,7 @@ module Dedupable
 
     @possible_duplicate_groups = dedupe_candidate_groups(config)
     @dedupe = build_dedupe_vars(config)
+    @just_merged = dedupe_just_merged(config)
 
     render "dedupes/index"
   end
@@ -181,6 +182,9 @@ module Dedupable
       record_to_keep.save! if record_to_keep.changed?
     end
 
+    # The toast fades in seconds; this keeps the outcome on the index until the next merge.
+    flash[:dedupe_merged] = { "deleted_label" => dedupe_record_label(config, record_to_delete).to_s,
+                              "kept_id" => record_to_keep.id }
     label = mc.model_name.human.pluralize
     redirect_to dedupe_return&.dig(:path) || url_for(action: :dedupe_index),
       notice: "#{label} merged successfully. '#{dedupe_record_label(config, record_to_delete)}' was merged into '#{dedupe_record_label(config, record_to_keep)}'."
@@ -203,6 +207,19 @@ module Dedupable
     when "person_show" then { label: "Back to profile", path: person_path(person_id), params: carry }
     when "person_edit" then { label: "Back to edit person", path: edit_person_path(person_id), params: carry }
     end
+  end
+
+  # The merge that just redirected here: the deleted record's label and the surviving
+  # record (nil once it's gone), linked to its page when the model has one.
+  def dedupe_just_merged(config)
+    merged = flash[:dedupe_merged]
+    return unless merged.is_a?(Hash)
+
+    kept = config[:model_class].find_by(id: merged["kept_id"])
+    path_helper = "#{config[:model_class].model_name.singular_route_key}_path"
+    { deleted_label: merged["deleted_label"],
+      kept_label: kept && dedupe_record_label(config, kept),
+      kept_path: kept && respond_to?(path_helper, true) ? public_send(path_helper, kept) : nil }
   end
 
   def dedupe_linked_associations(config)
