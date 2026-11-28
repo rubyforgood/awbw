@@ -95,13 +95,22 @@ RSpec.describe PersonLoginEmailSync do
   end
 
   context "when the login email changes" do
-    it "drops the old login address instead of keeping it as the secondary email" do
+    it "moves the old login address to an empty secondary slot" do
       person.update!(email: "old-login@example.com")
       link
 
       described_class.call(user, previous_login_email: "Old-Login@example.com")
 
-      expect(person.reload).to have_attributes(email: "login@example.com", email_2: nil)
+      expect(person.reload).to have_attributes(email: "login@example.com", email_2: "old-login@example.com")
+    end
+
+    it "drops the old login address without a comment when the secondary slot holds another address" do
+      person.update!(email: "old-login@example.com", email_2: "other@example.com")
+      link
+
+      described_class.call(user, previous_login_email: "old-login@example.com")
+
+      expect(person.reload).to have_attributes(email: "login@example.com", email_2: "other@example.com")
       expect(person.comments).to be_empty
     end
 

@@ -2,8 +2,9 @@
 # to the secondary slot (swapping if that slot held the login email); when the secondary
 # slot holds a third address, the replaced one is kept in an admin comment instead.
 #
-# When the login email itself changes, the old login address is dropped rather than kept:
-# the primary email only mirrored it, and the auth.email_changed event records the change.
+# When the login email itself changes, the old login address only moves to an empty
+# secondary slot; otherwise it's dropped without a comment, since the primary email only
+# mirrored it and the auth.email_changed event records the change.
 # A failed save leaves an admin comment so the stale email shows on the person's page.
 class PersonLoginEmailSync
   def self.call(...)
@@ -20,7 +21,7 @@ class PersonLoginEmailSync
     return true if @person.blank? || @user.email.blank?
     return true if @person.email.to_s.casecmp?(@user.email)
 
-    replaced_email = @person.email.presence unless old_login?(@person.email)
+    replaced_email = @person.email.presence
     replaced_type = @person.email_type
     login_was_secondary = @person.email_2.to_s.casecmp?(@user.email)
     secondary_free = login_was_secondary || @person.email_2.blank?
@@ -31,7 +32,7 @@ class PersonLoginEmailSync
 
     return report_failure unless @person.save
 
-    note_replaced_email(replaced_email) if replaced_email && !secondary_free
+    note_replaced_email(replaced_email) if replaced_email && !secondary_free && !old_login?(replaced_email)
     true
   end
 
