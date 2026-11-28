@@ -42,15 +42,26 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response.body).to include("Deactivate affiliation")
     end
 
-    it "previews a missing affiliation as a creation before the event" do
+    it "previews a missing affiliation as a creation for someone already marked attended" do
       upcoming = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
       person = create(:person)
-      reg = create(:event_registration, event: upcoming, registrant: person, status: "registered")
+      reg = create(:event_registration, event: upcoming, registrant: person, status: "attended")
       create(:event_registration_organization, event_registration: reg, organization: organization)
 
       get reconcile_affiliations_event_path(upcoming)
 
       expect(response.body).to include("Create new")
+    end
+
+    it "creates nothing before the event for someone not yet marked attended" do
+      upcoming = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
+      reg = create(:event_registration, event: upcoming, status: "registered")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+
+      get reconcile_affiliations_event_path(upcoming)
+
+      expect(response.body).not_to include("Create new")
+      expect(response.body).to include(AffiliationServices::ReconcilePerson::AWAITING_ATTENDANCE)
     end
 
     it "gives cancelled registrants their own section before the event, with the deletion preselected" do
@@ -124,7 +135,7 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       create(:affiliation, person: no_show, organization: organization, title: "Counselor",
                            start_date: 1.year.ago.to_date)
       upcoming = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
-      reg = create(:event_registration, event: upcoming, status: "registered")
+      reg = create(:event_registration, event: upcoming, status: "attended")
       create(:event_registration_organization, event_registration: reg, organization: organization)
 
       get reconcile_affiliations_event_path(event)
@@ -401,10 +412,10 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(affiliation.reload).to be_active
     end
 
-    it "creates a missing affiliation before the event when chosen" do
+    it "creates a missing affiliation for an attended registrant when chosen" do
       upcoming = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
       person = create(:person)
-      reg = create(:event_registration, event: upcoming, registrant: person, status: "registered")
+      reg = create(:event_registration, event: upcoming, registrant: person, status: "attended")
       create(:event_registration_organization, event_registration: reg, organization: organization)
 
       expect {

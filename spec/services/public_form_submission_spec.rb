@@ -65,11 +65,15 @@ RSpec.describe PublicFormSubmission do
         expect(link.form_submission).to eq(result.form_submission)
       end
 
-      it "ties the job and facilitator affiliations to the on-demand registration" do
+      it "ties the job affiliation to the on-demand registration, and the facilitator one once attended" do
         result = described_class.call(form: form, form_params: org_params)
 
         registration = EventRegistration.find_by!(event: training, registrant: result.person)
-        expect(result.person.affiliations.where(organization: org).pluck(:title, :event_registration_id))
+        affiliations = result.person.affiliations.where(organization: org)
+        expect(affiliations.pluck(:title, :event_registration_id)).to contain_exactly([ "Counselor", registration.id ])
+
+        registration.update!(status: "attended")
+        expect(affiliations.pluck(:title, :event_registration_id))
           .to contain_exactly([ "Counselor", registration.id ], [ "Facilitator", registration.id ])
       end
     end

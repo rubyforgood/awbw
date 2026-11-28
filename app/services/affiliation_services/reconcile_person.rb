@@ -26,6 +26,7 @@ module AffiliationServices
     # ended without a dedicated column (ADR-0003 D6b).
     COMMENT_TOPIC = "Reconciliation".freeze
     NOT_ATTENDED = "Didn't attend — no affiliation created".freeze
+    AWAITING_ATTENDANCE = "Not marked attended yet — no affiliation until then".freeze
     CANCELLED = "Cancelled — no affiliation created".freeze
     # `registered` after the event is a gap in the record, not an outcome:
     # #attendance_recorded? deliberately excludes it. Acting on it would be acting
@@ -293,9 +294,13 @@ module AffiliationServices
       @event.ended? || cancelled_here?
     end
 
+    # Only attending this training confers its affiliation (ADR-0003 D6e) — normally
+    # already created by marking them attended; this catches one that wasn't.
     def creation_decision
-      return Decision.new(action: :noop, reason: CANCELLED) if cancelled_here? && !completed_training?
-      return Decision.new(action: :create) if !@event.ended? || completed_training?
+      return Decision.new(action: :create) if registration_here&.attended?
+      return Decision.new(action: :noop, reason: CANCELLED) if cancelled_here?
+      return Decision.new(action: :noop, reason: ATTENDANCE_NOT_RECORDED) if attendance_unrecorded?
+      return Decision.new(action: :noop, reason: AWAITING_ATTENDANCE) unless @event.ended?
 
       Decision.new(action: :noop, reason: NOT_ATTENDED)
     end

@@ -11,8 +11,9 @@
   <div class="text-sm text-gray-600 space-y-2 mb-6">
     <% if @event.facilitator_training? %>
       <p>
-        This step brings facilitator affiliations in line with who registered and attended. Before the training it
-        <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
+        This step brings facilitator affiliations in line with who attended. Marking someone attended already
+        creates theirs; this step <strong>creates</strong> any still missing for an attended registrant's linked
+        organizations. After the training it
         <strong>deletes</strong> the affiliation this training created for anyone who didn't turn up at all, and
         <strong>ends</strong> it for anyone who attended only part of it. If that person is
         later marked attended, an ending this step applied is <strong>undone</strong> rather than leaving them with a

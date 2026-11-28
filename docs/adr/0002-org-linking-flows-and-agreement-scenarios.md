@@ -55,10 +55,10 @@ in both editors belongs in the core, not a wrapper.
 
 | Scenario | Confers Facilitator | End-dating |
 |---|---|---|
-| `on_demand` (registration for an on-demand facilitator-training event; the standalone public registration-role form is the fallback, which auto-registers) | yes — dated to the event's end until marked attended, then that day (ADR-0003 D6e) | none |
+| `on_demand` (registration for an on-demand facilitator-training event; the standalone public registration-role form is the fallback, which auto-registers) | yes — once marked attended, dated to that day (ADR-0003 D6e) | none |
 | `reinstatement` (form role) | yes — dated to submission, only when no active one exists | none |
 | `new_job` (form role) | yes — dated to submission; the job affiliation is start-dated too | other orgs' affiliations |
-| `facilitator_training` (scheduled facilitator-training event) | yes — dated to event start | none |
+| `facilitator_training` (scheduled facilitator-training event) | yes — once marked attended, dated to event start (ADR-0003 D6e) | none |
 | `non_facilitator_training` (any other event) | no — job affiliation only | none |
 
 The on-demand path is **one scenario** however it arrives — registering on

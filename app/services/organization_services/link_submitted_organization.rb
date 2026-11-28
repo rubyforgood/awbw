@@ -69,10 +69,13 @@ module OrganizationServices
     # What linking an org from an editor does, as one plain-language list for the
     # editor's top-of-page note: the record link(s), then the affiliation .call
     # always records (titled by the submitted position, plus Facilitator when the
-    # scenario confers it).
-    def self.effects(record_noun:, person:, scenario:, position: nil, registration: nil)
+    # scenario confers it — from a training registration, only once it's marked
+    # attended, ADR-0003 D6e).
+    def self.effects(record_noun:, person:, scenario:, position: nil, registration: nil, awaiting_attendance: false)
       name = person.first_name.presence || person.full_name
-      roles = [ ("“#{position}”" if position.present?), ("a Facilitator" if FACILITATOR_CONFERRING_SCENARIOS.include?(scenario)) ].compact
+      facilitator = ("a Facilitator#{" once marked Attended" if awaiting_attendance}" if FACILITATOR_CONFERRING_SCENARIOS.include?(scenario))
+      position = nil if awaiting_attendance && position == Affiliation::FACILITATOR_TITLE
+      roles = [ ("“#{position}”" if position.present?), facilitator ].compact
       [
         "Links it to this #{record_noun}",
         ("Links it to their #{registration.event.title} registration" if registration),

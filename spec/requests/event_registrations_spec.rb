@@ -2181,6 +2181,7 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "links the org to the registration and the person, then returns to the edit page" do
+          existing_registration.update!(status: "attended")
           expect {
             post select_organization_event_registration_path(existing_registration),
               params: { organization_id: organization.id }
@@ -2218,6 +2219,7 @@ RSpec.describe "EventRegistrations", type: :request do
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Counselor")
+          existing_registration.update!(status: "attended")
 
           post select_organization_event_registration_path(existing_registration),
             params: { organization_id: organization.id }
@@ -2226,7 +2228,25 @@ RSpec.describe "EventRegistrations", type: :request do
             .to contain_exactly("Counselor", "Facilitator")
         end
 
+        it "leaves the facilitator affiliation for marking attended when they aren't yet" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER)
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Counselor")
+          existing_registration.update!(status: "registered")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title)).to contain_exactly("Counselor")
+
+          existing_registration.reload.update!(status: "attended")
+          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+            .to contain_exactly("Counselor", "Facilitator")
+        end
+
         it "creates a facilitator affiliation even when no position was submitted" do
+          existing_registration.update!(status: "attended")
           post select_organization_event_registration_path(existing_registration),
             params: { organization_id: organization.id }
 
@@ -2423,6 +2443,7 @@ RSpec.describe "EventRegistrations", type: :request do
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
 
+          existing_registration.update!(status: "attended")
           post select_organization_event_registration_path(existing_registration), params: { organization_id: other.id }
 
           expect(regular_user.person.affiliations.where(organization: other).pluck(:title)).to contain_exactly("Facilitator")
@@ -2594,6 +2615,7 @@ RSpec.describe "EventRegistrations", type: :request do
           submission = create(:form_submission, person: regular_user.person, form: reg_form, event: event)
           create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
           create(:form_answer, form_submission: submission, form_field: position_field, submitted_answer: "Counselor")
+          existing_registration.update!(status: "attended")
 
           post create_organization_event_registration_path(existing_registration)
 

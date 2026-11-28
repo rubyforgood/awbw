@@ -1,32 +1,35 @@
 module AffiliationServices
-  # Creates the affiliations we want whenever a person registers for an event or
-  # an admin links an organization to their registration:
+  # Creates the affiliations we want whenever a person registers for an event, an
+  # admin links an organization to their registration, or a training registration is
+  # marked attended:
   #
   #   1. a "job affiliation" with the title the person typed on their form, when
-  #      one was provided, and
+  #      one was provided — created at submission or org linking, and
   #   2. a standing "facilitator affiliation" titled "Facilitator" — but ONLY for
-  #      facilitator-training events (`facilitator_training: true`). A non-training
-  #      registration still gets its job affiliation; we don't mint a facilitator
-  #      affiliation off it, because being a facilitator is conferred by a training,
-  #      not by any org-linked event. (Manual/historical facilitator affiliations
-  #      are created directly, not through this service, so they're unaffected.)
+  #      facilitator-training events (`facilitator_training: true`), and from a
+  #      training registration only once it's marked attended (ADR-0003 D6e). Until
+  #      then the registration confers nothing: EventRegistration's attendance
+  #      callback (FollowAttendance) calls this again for every linked organization,
+  #      and linking an org to an already-attended registration creates it here. A
+  #      standalone agreement submission (no registration) confers it on arrival. A
+  #      non-training registration never gets one — being a facilitator is conferred
+  #      by a training, not by any org-linked event. (Manual/historical facilitator
+  #      affiliations are created directly, not through this service.)
   #
   # The facilitator affiliation is skipped only when the person already has an
   # active-or-pending affiliation titled exactly "Facilitator" with the
-  # organization (a current one, or one dated to a future training that hasn't
-  # started yet). An ended facilitator affiliation does NOT block a new one — a
-  # returning facilitator gets a second affiliation with the new start date.
-  # Because the job affiliation is created first, a job title of exactly
-  # "Facilitator" satisfies that check, so we don't add a redundant duplicate. A
-  # facilitator-ish job title that isn't exactly "Facilitator" (e.g. "Lead
-  # Facilitator") still gets its own standing "Facilitator" affiliation alongside it.
+  # organization. An ended facilitator affiliation does NOT block a new one — a
+  # returning facilitator gets a second affiliation with the new start date. A
+  # training registration's typed job title of exactly "Facilitator" is not created
+  # as a job affiliation: it would be a facilitator affiliation before attendance,
+  # and the attended one stands in for it.
   #
   # Start dates: the facilitator affiliation begins on the training date itself
-  # (that's when they become a facilitator); from an on-demand registration it waits on
-  # the training's end date until they're marked attended (EventRegistration#facilitator_start_on).
-  # The job affiliation is left without a start date — we don't know when the person
-  # began that role (they may have been with the org for years before this training),
-  # and dating it to registration would misrepresent that.
+  # (that's when they become a facilitator); an on-demand training's starts the day
+  # they're marked attended (EventRegistration#facilitator_start_on). The job
+  # affiliation is left without a start date — we don't know when the person began
+  # that role (they may have been with the org for years before this training), and
+  # dating it to registration would misrepresent that.
   #
   # It then points every current affiliation the person holds at the org at the
   # submitted organization address, returning an OrganizationServices::AutofillChange
@@ -56,7 +59,7 @@ module AffiliationServices
       @repointed = []
       ActiveRecord::Base.transaction do
         create_job_affiliation
-        create_facilitator_affiliation if @facilitator_training
+        create_facilitator_affiliation if confers_facilitator?
         point_at_submitted_address
       end
       @repointed
@@ -66,7 +69,7 @@ module AffiliationServices
 
     def create_job_affiliation
       return unless @job_title
-      return if on_demand? && @job_title == Affiliation::FACILITATOR_TITLE
+      return if training_registration? && @job_title == Affiliation::FACILITATOR_TITLE
 
       return if active_or_pending_affiliations_with_title(@job_title).exists?
 
@@ -77,7 +80,15 @@ module AffiliationServices
       return if active_or_pending_facilitator_affiliations.exists?
 
       affiliation = create_affiliation(Affiliation::FACILITATOR_TITLE, start_date: facilitator_start_date)
-      FollowAttendance.note_start(affiliation) if on_demand? && @event_registration.attended?
+      FollowAttendance.note_start(affiliation) if training_registration?
+    end
+
+    def confers_facilitator?
+      @facilitator_training && (!training_registration? || @event_registration.attended?)
+    end
+
+    def training_registration?
+      @facilitator_training && @event_registration&.event&.facilitator_training?
     end
 
     # Every active-or-pending affiliation the person holds at the org takes the
@@ -114,11 +125,7 @@ module AffiliationServices
     end
 
     def facilitator_start_date
-      (on_demand? ? @event_registration.facilitator_start_on : @training_date).presence&.to_date || Date.current
-    end
-
-    def on_demand?
-      @facilitator_training && @event_registration&.event&.on_demand_facilitator_training?
+      (training_registration? ? @event_registration.facilitator_start_on : @training_date).presence&.to_date || Date.current
     end
 
     def active_or_pending_affiliations_with_title(title)

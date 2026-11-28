@@ -715,7 +715,17 @@ RSpec.describe "FormSubmissions", type: :request do
           add_answer("organization_position", "SELS")
         end
 
-        it "adds the Facilitator affiliation a facilitator training confers, dated to the training" do
+        it "adds only the job affiliation while the registrant isn't marked attended" do
+          organization = create(:organization, name: "Acme Inc")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(person.affiliations.where(organization: organization).pluck(:title, :start_date))
+            .to contain_exactly([ "SELS", nil ])
+        end
+
+        it "adds the Facilitator affiliation for an attended registrant, dated to the training" do
+          registration.update!(status: "attended")
           organization = create(:organization, name: "Acme Inc")
 
           post select_organization_form_submission_path(submission, organization_id: organization.id)

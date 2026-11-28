@@ -234,10 +234,9 @@ basis the numbers don't have.
 ### D8 — Registration mints the facilitator affiliation, dated to the training
 
 A facilitator-training registration creates the registrant's Facilitator
-affiliation at submission time (`AffiliationServices::CreateFromRegistration`,
-from both the public registration flow and admin org-linking), with
-`start_date = event.start_date` — except an on-demand training's, which starts when the
-person is marked attended (ADR-0003 D6e). Dating it to the training rather than to the
+affiliation when it's marked attended (ADR-0003 D6e — or at org linking, if already
+attended), with `start_date = event.start_date` — except an on-demand training's,
+which starts the day the person is marked attended. Dating it to the training rather than to the
 submission is what lets D5 drop self-exclusion: the minted row is never "prior
 history" for its own training. An event with no start date is the one gap — the
 affiliation then falls back to the creation date. That event has no anchor either,
@@ -338,7 +337,7 @@ coincide when no organization attended twice.
   affiliations dated to the 1st that precede a training the same month before
   trusting a historical year's New figures.
 - **What creates a facilitator affiliation:** since #2194 only a facilitator
-  *training* registration mints one (non-training registrations get a job
+  *training* registration mints one — once it's marked attended, ADR-0003 D6e (non-training registrations get a job
   affiliation instead), and the row records its creating `event_registration_id`.
   That makes the D3 status buckets — which now key off facilitator affiliations
   alone — a read on training participation rather than on any registration.

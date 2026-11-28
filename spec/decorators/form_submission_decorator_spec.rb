@@ -54,8 +54,17 @@ RSpec.describe FormSubmissionDecorator do
       expect(submission.link_organization_effects).to eq([
         "Links it to this submission",
         "Links it to their On-Demand Training registration",
-        "Records it in #{person.first_name}'s affiliations as “Counselor” and as a Facilitator"
+        "Records it in #{person.first_name}'s affiliations as “Counselor” and as a Facilitator once marked Attended"
       ])
+    end
+
+    it "drops the wait once the registration is marked attended" do
+      training = create(:event, title: "On-Demand Training", facilitator_training: true, on_demand: true)
+      create(:event_registration, event: training, registrant: person, status: "attended")
+      submission = submission_for(create(:form, role: "registration"), event: training, position: "Counselor")
+
+      expect(submission.link_organization_effects.last)
+        .to eq("Records it in #{person.first_name}'s affiliations as “Counselor” and as a Facilitator")
     end
 
     it "names the Facilitator role a reinstatement confers" do

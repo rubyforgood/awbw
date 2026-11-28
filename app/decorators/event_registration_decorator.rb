@@ -33,7 +33,8 @@ class EventRegistrationDecorator < ApplicationDecorator
   def link_organization_effects(position:)
     OrganizationServices::LinkSubmittedOrganization.effects(
       record_noun: "registration", person: object.registrant,
-      scenario: object.event.linking_scenario, position: position
+      scenario: object.event.linking_scenario, position: position,
+      awaiting_attendance: object.event.facilitator_training? && !object.attended?
     )
   end
 

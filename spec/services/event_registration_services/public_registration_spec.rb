@@ -75,25 +75,33 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       Person.find_by(email: "sam@example.com")
     end
 
-    it "creates a job affiliation and a facilitator affiliation from the typed position" do
-      person = register_with(position: "Counselor")
+    def mark_attended(person)
+      event.event_registrations.find_by!(registrant: person).update!(status: "attended")
+      person
+    end
 
+    # Registering confers nothing yet: the facilitator affiliation waits for the
+    # registration to be marked attended (ADR-0003 D6e).
+    it "creates only the job affiliation from the typed position until they're marked attended" do
+      person = register_with(position: "Counselor")
+      expect(person.affiliations.where(organization: organization).pluck(:title)).to contain_exactly("Counselor")
+
+      mark_attended(person)
       expect(person.affiliations.where(organization: organization).pluck(:title))
         .to contain_exactly("Counselor", "Facilitator")
     end
 
-    it "creates only a facilitator affiliation when no position was typed" do
+    it "creates no affiliation at registration when no position was typed" do
       person = register_with(position: nil)
 
-      expect(person.affiliations.where(organization: organization).pluck(:title))
-        .to contain_exactly("Facilitator")
+      expect(person.affiliations).to be_empty
     end
 
-    # The facilitator affiliation is dated to the training, not to the day the form
-    # was submitted — the whole New/Ongoing/Reinstate rule leans on that, since an
+    # The facilitator affiliation is dated to the training, not to the day they were
+    # marked attended — the whole New/Ongoing/Reinstate rule leans on that, since an
     # affiliation starting ON the training isn't prior history (ADR-0001 D8).
-    it "dates the facilitator affiliation to the event's start date" do
-      person = register_with(position: nil)
+    it "dates the facilitator affiliation to the event's start date once marked attended" do
+      person = mark_attended(register_with(position: nil))
 
       facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
       expect(facilitator.start_date).to eq(event.starts_on)
@@ -105,7 +113,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     # off from its own training's anchor.
     it "dates the facilitator affiliation to the event's Pacific day, the dashboard's anchor" do
       event.update!(start_date: Time.utc(2026, 11, 14, 3, 0), end_date: Time.utc(2026, 11, 14, 6, 0))
-      person = register_with(position: nil)
+      person = mark_attended(register_with(position: nil))
 
       facilitator = person.affiliations.find_by(organization: organization, title: "Facilitator")
       expect(facilitator.start_date).to eq(Date.new(2026, 11, 13))
@@ -123,7 +131,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("organization_country") => "USA"
       )
       described_class.call(event: event, registration_form: form, form_params: params)
-      person = Person.find_by(email: "sam@example.com")
+      person = mark_attended(Person.find_by(email: "sam@example.com"))
 
       address = organization.addresses.find_by(city: "Austin")
       expect(address).to be_present
@@ -142,14 +150,14 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "creates only the job affiliation for a non-facilitator-training event" do
       event.update!(facilitator_training: false)
 
-      person = register_with(position: "Counselor")
+      person = mark_attended(register_with(position: "Counselor"))
 
       expect(person.affiliations.where(organization: organization).pluck(:title))
         .to contain_exactly("Counselor")
     end
 
     it "links the created affiliations to the resulting registration" do
-      person = register_with(position: "Counselor")
+      person = mark_attended(register_with(position: "Counselor"))
 
       registration = event.event_registrations.find_by(registrant: person)
       expect(person.affiliations.where(organization: organization).map(&:event_registration))

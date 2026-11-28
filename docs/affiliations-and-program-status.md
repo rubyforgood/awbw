@@ -45,10 +45,12 @@ They can legitimately disagree. An org can read **Ongoing** at a training in 202
 ## Where facilitator affiliations come from
 
 - **Registering someone for a facilitator training** and linking them to an
-  organization creates their facilitator affiliation, **dated to the training's start
-  date** — not to the day they registered.
-  - **On-demand training:** it's **Upcoming**, dated to the training's end date, until
-    you mark them **Attended**; then it starts that day. Un-marking Attended puts it back.
+  organization creates only their job affiliation.
+- **Marking them Attended** creates their facilitator affiliation with each linked
+  organization, **dated to the training's start date** — not to the day you marked it.
+  - **On-demand training:** it starts the day you mark them **Attended**.
+  - **Un-marking Attended** removes it, unless you've edited its start date since.
+  - **Linking an organization after they're marked Attended** creates it then.
 - **Registering for anything that isn't a facilitator training** creates the job
   affiliation only. Attending an event does not make anyone a facilitator.
 - **By hand** — you can add, edit, and end affiliations on the person's edit page, the

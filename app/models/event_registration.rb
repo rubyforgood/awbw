@@ -50,7 +50,7 @@ class EventRegistration < ApplicationRecord
   before_create :generate_slug
   before_save :capture_pre_transfer_status, if: :becoming_transferred_out?
   after_update :release_scholarships, if: :status_changed_to_cancelled?
-  after_update :redate_facilitator_affiliation, if: :attendance_gained_or_lost?
+  after_update :follow_attendance, if: :attendance_gained_or_lost?
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?, unless: :skip_cancellation_emails
 
   # Set by the spreadsheet importer, which records historical cancellations silently.
@@ -1378,12 +1378,14 @@ class EventRegistration < ApplicationRecord
     saved_change_to_status? && status == "cancelled"
   end
 
-  # A transfer out keeps the date: the affiliation moves with the transfer (ADR-0003 D6d).
+  # Marking a training registration attended creates its facilitator affiliations;
+  # taking it back removes them (ADR-0003 D6e). A transfer out keeps them: the
+  # affiliation moves with the transfer (D6d).
   def attendance_gained_or_lost?
     saved_change_to_status? && !transferred_out? && (attended? || status_before_last_save == "attended")
   end
 
-  def redate_facilitator_affiliation
+  def follow_attendance
     AffiliationServices::FollowAttendance.call(registration: self)
   end
 

@@ -262,7 +262,7 @@ RSpec.describe AffiliationServices::ReconcilePerson do
                            registration: reg, include_unowned: true)
 
       fresh = person.affiliations.facilitators.active.where(organization: organization).last
-      expect(fresh.comments.last.body).to include("Created by reconciliation")
+      expect(fresh.comments.map(&:body)).to include(a_string_including("Created by reconciliation"))
     end
 
     it "distinguishes a row it ended from one an admin ended" do

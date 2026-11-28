@@ -40,7 +40,7 @@ module AffiliationServices
     def reason_rank(reason)
       case reason
       when ReconcilePerson::ACTIVE_ATTENDED then 8
-      when ReconcilePerson::NOT_ATTENDED then 9
+      when ReconcilePerson::NOT_ATTENDED, ReconcilePerson::AWAITING_ATTENDANCE then 9
       else 0
       end
     end

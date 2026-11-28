@@ -1,0 +1,12 @@
+name: "Facilitator affiliations are created when marked Attended"
+area: people
+display_status: admin_facing
+released_on: 2026-11-28
+summary: >-
+  Registering for a facilitator training now creates only the job affiliation.
+  Marking someone Attended creates their facilitator affiliation, dated to the
+  training. Un-marking Attended removes it.
+pro_tips:
+  - "Linking an organization after someone is marked Attended creates the facilitator affiliation right away."
+  - "On-demand trainings start the affiliation the day you mark them Attended."
+  - "If you edited the start date, un-marking Attended keeps the affiliation."

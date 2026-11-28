@@ -49,7 +49,7 @@ normally does — a "Lead Facilitator" job affiliation plus a standing "Facilita
 one (`AffiliationServices::CreateFromRegistration`).
 
 **Being a facilitator is conferred by a training, not by attending an event.** Only
-a `facilitator_training` registration mints a facilitator affiliation; other
+an attended `facilitator_training` registration mints a facilitator affiliation; other
 org-linked registrations mint the job affiliation alone.
 
 ### D2 — `inactive` is an override, not a cache
@@ -367,22 +367,31 @@ This is deliberately *not* one of `LinkSubmittedOrganization::SCENARIOS`. Those
 describe what kind of linking is happening; a transfer moves an existing row, with
 nothing being linked.
 
-### D6e — An on-demand affiliation starts when the person is marked attended
+### D6e — A training's facilitator affiliation is created when the person is marked attended
 
-A live training has one date everyone trains on; an on-demand one runs all year, so
-its start date says nothing about when a person became a facilitator. The row is
-created at registration like any other, with a start date that waits on the event's
-**end date** (so it reads Upcoming), and moves when attendance does
-(`Event#facilitator_start_on`, `AffiliationServices::FollowAttendance`):
+Registering confers nothing: submission and org linking create only the job
+affiliation. The facilitator affiliation is created when the registration is marked
+**attended** (`AffiliationServices::FollowAttendance`, run by `EventRegistration`'s
+status change), once per organization linked to the registration. An organization
+linked after attendance gets its row from the linking (`CreateFromRegistration`).
 
-- **Marked attended** — the open row this registration created starts that day, kept
-  within the event's dates. A row that has already started isn't moved later.
-- **Attendance taken back** — it returns to the event's end date, only while it still
-  carries the date attendance gave it. A date staff entered since is kept.
-- **Transferred out** — keeps its date; D6d moves the row.
+- **Start date** — the training date (`Event#facilitator_start_on`). A live training
+  has one date everyone trains on; an on-demand one runs all year, so its row starts
+  the day they're marked attended, kept within the event's dates.
+- **Attendance taken back** — the open row attendance created is deleted, only while
+  it still carries the date attendance gave it. A date staff entered since keeps the
+  row for reconciliation to judge.
+- **A row reconciliation ended for this training** — left for the reconcile page to
+  reopen or replace (D6a); marking attended adds no second row.
+- **Transferred out** — keeps the row; D6d moves it.
+- **A typed job title of exactly "Facilitator"** on a training registration isn't
+  created as a job affiliation — it would confer facilitation before attendance.
+- **Rows created at registration before this rule** stay (no backfill). An on-demand
+  one waiting on the event's end date moves to the attended day.
 
-Each move leaves a system comment (topic "Attendance"), which is also how a date
-attendance set is told apart from one staff entered.
+Creating or moving a row leaves a system comment (topic "Attendance"), which is also
+how a date attendance set is told apart from one staff entered. Standalone agreement
+submissions with no registration (`reinstatement`) still confer it on linking.
 
 ### D7 — What has to be tested
 

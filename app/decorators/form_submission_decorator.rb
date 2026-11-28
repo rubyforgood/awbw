@@ -4,9 +4,11 @@ class FormSubmissionDecorator < ApplicationDecorator
   # What linking an organization from this submission's editor does, mirroring
   # FormSubmissionsController#link_and_report.
   def link_organization_effects
+    registration = event_registration_for_link
     OrganizationServices::LinkSubmittedOrganization.effects(
       record_noun: "submission", person: object.person, scenario: link_scenario,
-      position: org_entry[:position], registration: event_registration_for_link
+      position: org_entry[:position], registration: registration,
+      awaiting_attendance: registration&.event&.facilitator_training? && !registration.attended?
     ) + [ ("Replaces the organization's saved website, type, work address, and phone with this submission's answers — reapply any newer edits afterward" if org_profile_answers?) ].compact
   end
 
