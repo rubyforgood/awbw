@@ -3,13 +3,27 @@
 #
 # A view can name its page outright with `content_for(:title, "…")`. Otherwise the
 # title is read off the controller: the record it loaded (the instance variable named
-# for the controller, e.g. @person on PeopleController) on member pages, the
-# controller's name on index pages.
+# for the controller, e.g. @person on PeopleController); else the record the page
+# belongs to (a ticket's registration, a nested page's event); else the controller's name.
 module PageTitleHelper
   APP_TITLE = "AWBW".freeze
   SEPARATOR = " · ".freeze
   MAX_LABEL_LENGTH = 60
   LABEL_METHODS = %i[ name title display_name ].freeze
+  RECORD_IVARS = { "continuing_education_registrations" => :ce_registration }.freeze
+  CONTEXT_IVARS = %i[ event_registration event form ].freeze
+  # A nil name leaves the controller out; the record and action already say it.
+  RESOURCE_NAMES = {
+    "events/registrations" => "ticket",
+    "events/callouts" => nil,
+    "events/public_registrations" => "registration",
+    "public_forms" => nil,
+    "faqs" => "FAQs",
+    "fm_archives" => "FileMaker archives",
+    "admin/ahoy_activities" => "Activity"
+  }.freeze
+  ACTION_NAMES = { "ce" => "CE", "ce_certificate" => "CE certificate", "faq" => "FAQ" }.freeze
+  UNNAMED_ACTIONS = %w[ index show new create ].freeze
 
   def page_title
     specific = content_for(:title).presence || derived_page_title
@@ -19,24 +33,48 @@ module PageTitleHelper
   private
 
   def derived_page_title
-    record = page_title_record
-    resource = controller_name.humanize
-
-    case action_name
-    when "index" then resource
-    when "new", "create" then "New #{controller_name.singularize.humanize(capitalize: false)}"
+    if (record = page_title_ivar(RECORD_IVARS.fetch(controller_name) { controller_name.singularize }))
+      own_record_page_title(record)
+    elsif (context = CONTEXT_IVARS.lazy.filter_map { |name| page_title_ivar(name) }.first)
+      [ page_title_record_label(context), page_title_resource_name, page_title_action_name ].compact_blank.join(SEPARATOR)
     else
-      return [ resource, action_name.humanize(capitalize: false) ].join(SEPARATOR) unless record
-
-      label = page_title_record_label(record)
-      label = "Edit #{label}" if %w[ edit update ].include?(action_name)
-      label = [ label, action_name.humanize(capitalize: false) ].join(SEPARATOR) unless %w[ show edit update ].include?(action_name)
-      label
+      standalone_page_title
     end
   end
 
-  def page_title_record
-    record = controller.instance_variable_get("@#{controller_name.singularize}")
+  def own_record_page_title(record)
+    label = page_title_record_label(record)
+
+    case action_name
+    when "show" then label
+    when "edit", "update" then "Edit #{label}"
+    else [ label, page_title_action_name ].compact_blank.join(SEPARATOR)
+    end
+  end
+
+  def standalone_page_title
+    resource = page_title_resource_name&.upcase_first.presence || controller_name.humanize
+
+    case action_name
+    when "index", "show" then resource
+    when "new", "create" then "New #{controller_name.singularize.humanize(capitalize: false)}"
+    else [ resource, page_title_action_name ].join(SEPARATOR)
+    end
+  end
+
+  def page_title_resource_name
+    RESOURCE_NAMES.fetch(controller_path) { controller_name.humanize(capitalize: false) }
+  end
+
+  def page_title_action_name
+    return if UNNAMED_ACTIONS.include?(action_name)
+    return controller.instance_variable_get(:@callout)&.title if action_name == "callout"
+
+    ACTION_NAMES.fetch(action_name) { action_name.humanize(capitalize: false) }
+  end
+
+  def page_title_ivar(name)
+    record = controller.instance_variable_get("@#{name}")
     record = record.object if record.is_a?(Draper::Decorator)
     record if record.is_a?(ActiveRecord::Base) && record.persisted?
   end

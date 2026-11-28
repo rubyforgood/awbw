@@ -1,4 +1,8 @@
 class EventRegistrationDecorator < ApplicationDecorator
+  def page_title_label
+    [ (h.person_name(registrant) if registrant), event&.decorate&.compact_label ].compact_blank.join(" · ")
+  end
+
   # The merge preview's warning that this registration's ticket link dies with it.
   def ticket_merge_note(emails_sent)
     lead = "#{object.registrant&.full_name}'s ticket link stops working after the merge."
