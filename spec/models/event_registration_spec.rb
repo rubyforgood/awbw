@@ -96,6 +96,22 @@ RSpec.describe EventRegistration, type: :model do
     let(:source) { create(:event_registration, status: "transferred_out") }
     let!(:incoming) { create(:event_registration, status: "registered", transferred_from_registration: source) }
 
+    it "dates the incoming registration by the original one" do
+      source.update_columns(created_at: Time.zone.local(2026, 3, 4, 15))
+      incoming.update_columns(created_at: Time.zone.local(2026, 5, 1, 15))
+
+      expect(incoming.registered_on).to eq(Date.new(2026, 3, 4))
+      expect(source.registered_on).to eq(Date.new(2026, 3, 4))
+    end
+
+    it "dates a registration transferred twice by the first one" do
+      source.update_columns(created_at: Time.zone.local(2026, 3, 4, 15))
+      incoming.update_columns(status: "transferred_out")
+      again = create(:event_registration, transferred_from_registration: incoming)
+
+      expect(again.registered_on).to eq(Date.new(2026, 3, 4))
+    end
+
     it "links the incoming registration back to the one it came from" do
       expect(incoming.transferred_from_registration).to eq(source)
       expect(source.reload.transferred_to_registration).to eq(incoming)
