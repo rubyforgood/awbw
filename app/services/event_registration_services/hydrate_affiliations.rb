@@ -10,7 +10,8 @@ module EventRegistrationServices
   # - Facilitator affiliation (D7): only for someone who completed a facilitator training. One
   #   active one is tied to this registration and dated to the training; with none active, one
   #   is added beside any ended ones, which stay as program history. More than one active, one
-  #   tied to another registration, or one held without completing is listed.
+  #   tied to another registration, or one held without completing is listed. On-demand, it
+  #   starts the day it's marked attended and keeps that start on a rerun.
   # - FileMaker codes (D8): both carry the person's Personnel codes at the organization, added
   #   to any already there.
   class HydrateAffiliations
@@ -97,13 +98,23 @@ module EventRegistrationServices
         return
       end
 
-      affiliation.start_date = training_date
+      affiliation.start_date = training_date unless dated_by_attendance?(affiliation)
       tie(affiliation)
     end
 
     def tie(facilitator)
       facilitator.event_registration = @registration
       finish(facilitator, personnel_codes)
+      AffiliationServices::FollowAttendance.note_start(facilitator) if on_demand? && facilitator.saved_change_to_start_date?
+    end
+
+    # On-demand, FollowAttendance owns the start of the one this registration holds: the day it was marked attended.
+    def dated_by_attendance?(affiliation)
+      on_demand? && affiliation.event_registration_id == @registration.id
+    end
+
+    def on_demand?
+      @event.on_demand_facilitator_training?
     end
 
     def placeholder_start?(start_date)

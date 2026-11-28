@@ -11,3 +11,4 @@ summary: >-
 pro_tips:
   - "An existing facilitator affiliation is tied to the registration and dated to the training rather than duplicated."
   - "Both affiliations pick up the person's FileMaker personnel codes at that organization."
+  - "On an on-demand training, the facilitator affiliation starts the day the registration is marked attended, and a re-import keeps that date."

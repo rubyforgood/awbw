@@ -122,6 +122,33 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
     end
   end
 
+  describe "on an on-demand training" do
+    let(:zone) { Time.find_zone(Event::PROGRAM_ZONE) }
+    let(:event) do
+      create(:event, facilitator_training: true, on_demand: true,
+                     start_date: zone.local(2026, 1, 1, 9), end_date: zone.local(2026, 12, 31, 17))
+    end
+
+    before { travel_to(zone.local(2026, 3, 3, 12)) }
+    after { travel_back }
+
+    it "starts the facilitator affiliation the day it's marked attended, noted for taking attendance back" do
+      hydrate
+
+      facilitator = held("Facilitator").sole
+      expect(facilitator.start_date).to eq(Date.new(2026, 3, 3))
+      expect(facilitator.comments.map(&:topic)).to eq([ AffiliationServices::FollowAttendance::COMMENT_TOPIC ])
+    end
+
+    it "keeps that start when run again on a later day" do
+      hydrate
+      travel_to(zone.local(2026, 4, 9, 12))
+
+      expect { expect(hydrate.changes).to be_empty }
+        .not_to(change { held("Facilitator").sole.reload.start_date })
+    end
+  end
+
   it "puts the person's FileMaker personnel codes at the organization on both, added to any already there" do
     FmProject.create!(fm_id: "P0001", data: { "OrgID" => "ORG00001" })
     FmPersonnel.create!(fm_id: "PS9001", data: { "PersonID" => "00006", "ProjectID" => "P0001" })
