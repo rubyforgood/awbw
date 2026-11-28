@@ -117,6 +117,28 @@ RSpec.describe "/community_news", type: :request do
         expect(response).to have_http_status(:found)
         expect(response).to redirect_to("https://www.google.com")
       end
+
+      it "renders the post instead of redirecting when no_redirect is set" do
+        get community_news_url(community_news, no_redirect: true)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(community_news.title)
+      end
+    end
+
+    context "when community_news has a reference URL that isn't a valid external link" do
+      let(:community_news) do
+        CommunityNews.create!(
+          valid_attributes.merge(reference_url: "AWBW newsletter")
+        )
+      end
+
+      it "renders the post instead of redirecting to itself" do
+        get community_news_url(community_news)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(community_news.title)
+      end
     end
   end
 
@@ -146,7 +168,7 @@ RSpec.describe "/community_news", type: :request do
 
       it "redirects to the created community news" do
         post community_news_index_url, params: { community_news: valid_attributes }
-        expect(response).to redirect_to(community_news_url(CommunityNews.last))
+        expect(response).to redirect_to(community_news_url(CommunityNews.last, no_redirect: true))
       end
 
       it "redirects with 303 See Other so Turbo advances past the form" do
@@ -194,7 +216,7 @@ RSpec.describe "/community_news", type: :request do
 
       it "advances to the created record instead of re-rendering the form" do
         post community_news_index_url, params: { community_news: image_only_attributes }
-        expect(response).to redirect_to(community_news_url(CommunityNews.last))
+        expect(response).to redirect_to(community_news_url(CommunityNews.last, no_redirect: true))
       end
     end
 
@@ -236,7 +258,7 @@ RSpec.describe "/community_news", type: :request do
         community_news = CommunityNews.create! valid_attributes
         patch community_news_url(community_news), params: { community_news: new_attributes }
         community_news.reload
-        expect(response).to redirect_to(community_news_url(community_news))
+        expect(response).to redirect_to(community_news_url(community_news, no_redirect: true))
       end
     end
 

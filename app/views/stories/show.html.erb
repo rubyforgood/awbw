@@ -11,6 +11,10 @@
         <% if (tag_home = story_tag_home_path(@story)) %>
           <%= link_to "Tag home", tag_home, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
+        <% if @story.external_link? %>
+          <%= link_to "External URL", safe_url(@story.link_target), target: "_blank", rel: "noopener noreferrer",
+                      class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% end %>
         <% if allowed_to?(:edit?, @story) %>
           <%= link_to "Edit", edit_story_path(@story.id),
                       class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>

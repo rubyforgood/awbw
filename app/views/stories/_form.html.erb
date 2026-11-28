@@ -369,7 +369,7 @@
                   data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
     <%= link_to "Cancel", stories_path, class: button_classes(:secondary_outline, extra: "ms-2") %>
-    <%= f.button :submit, class: button_classes(:primary) %>
+    <%= f.button :submit, class: button_classes(:primary), data: { turbo_submits_with: "Saving…" } %>
   </div>
 
 <% end %>
