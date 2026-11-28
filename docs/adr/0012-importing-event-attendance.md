@@ -77,6 +77,7 @@ affiliations) moves behind it rather than being duplicated in a FileMaker task.
   - Their form submissions, form completions, topic subscriptions, emails, the local copies of
     their Stripe charges, and the Ahoy history that names the training move with them. Changes
     to the training's own record stay.
+  - Their FAs move too: dated to the Test event's start and tied to its registration.
   - Someone holding a payment on a real training stays put: the money belongs to that training.
   - Several registrations for one test person fold into one on the Test event (the registration
     merge).
@@ -176,6 +177,11 @@ facilitation). It is created when the registration is marked Attended, not when 
     missing link doesn't mean hand-entered.
   - Keep FileMaker FAs, FAs whose person is still "registered" for a training (upcoming, or
     attendance not yet recorded), and FAs with no training registration at all.
+  - A partial attendance counts as not completed here, so its FA goes. The Reconcile
+    affiliations page still ends a partial attendee's FA rather than deleting it; the two
+    should agree.
+  - Deleting an organization's last active FA turns the organization Inactive (its own audit
+    event), so the dry run lists the organizations that would change.
 
 ### D8 — FileMaker codes on affiliations
 
@@ -258,6 +264,9 @@ Kinds of change only; the exact records are in the Ahoy audit log.
   events and people, and taking stray FileMaker codes off organizations.
 - **Placeholder dates are fixed only for the trainings an import touches.** Older ones stay
   until their training is imported.
+- **March 2026 attendance was recorded without D7.** Marking a registration Attended doesn't
+  create or tie an FA yet, so March's attendees still need their FA tied to the March
+  registration and dated to the training when the attendance import runs.
 - **The CSV importer's scholarships fall short of D9a.** It awards with no grant and leaves
   tasks open, so a past training's certificates lock until staff tick each one. The shared step
   takes a funder-to-grant map and marks a past training's tasks complete.
