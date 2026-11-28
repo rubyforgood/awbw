@@ -22,7 +22,7 @@ RSpec.describe "community_news/edit", type: :view do
   before(:each) do
     sign_in admin
     allow(view).to receive(:current_user).and_return(admin)
-    assign(:community_news, community_news)
+    assign(:community_news, community_news.decorate)
     assign(:sectors, [])
     assign(:categories_grouped, [])
     assign(:people, [ community_news.author ])

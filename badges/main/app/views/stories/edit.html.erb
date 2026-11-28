@@ -3,8 +3,8 @@
         <div class="mb-4 flex flex-wrap justify-end gap-2">
           <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <%= link_to "Stories", stories_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-          <% if @story.external_url.present? %>
-            <%= link_to "External URL", safe_url(@story.external_url), target: "_blank", rel: "noopener noreferrer",
+          <% if @story.external_link? %>
+            <%= link_to "External URL", safe_url(@story.link_target), target: "_blank", rel: "noopener noreferrer",
                         class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <% end %>
           <%= link_to "View", story_path(@story, no_redirect: true),
