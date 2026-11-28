@@ -1,0 +1,9 @@
+name: "Open a person's snapshot from their profile or edit page"
+area: people
+display_status: admin_facing
+released_on: 2026-11-28
+action_path: "/people"
+summary: >-
+  The snapshot icon now sits beside the name at the top of a person's profile
+  and edit page, so you can check their affiliations, trainings, and membership
+  without going back to a list.
