@@ -2,13 +2,17 @@ require "rails_helper"
 
 RSpec.describe EventRegistrationServices::HydrateAffiliations do
   let(:training_date) { Date.new(2026, 3, 12) }
+  let(:signed_up_on) { Date.new(2026, 2, 3) }
   let(:event) do
     create(:event, facilitator_training: true,
                    start_date: Time.zone.local(2026, 3, 12, 9), end_date: Time.zone.local(2026, 3, 13, 16))
   end
   let(:person) { create(:person, filemaker_code: "00006") }
   let(:organization) { create(:organization, filemaker_code: "ORG00001") }
-  let(:registration) { create(:event_registration, event: event, registrant: person, status: "attended") }
+  let(:registration) do
+    create(:event_registration, event: event, registrant: person, status: "attended",
+                                created_at: Time.find_zone(Event::PROGRAM_ZONE).local(2026, 2, 3, 22))
+  end
 
   def hydrate(**options)
     described_class.call(registration: registration, organization: organization, **options)
@@ -19,11 +23,11 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
   end
 
   describe "job affiliation" do
-    it "adds one with the title, dated to the training and tied to the registration" do
+    it "adds one with the title, dated to the day they signed up and tied to the registration" do
       hydrate(job_title: "Counselor")
 
       job = held("Counselor").sole
-      expect(job.start_date).to eq(training_date)
+      expect(job.start_date).to eq(signed_up_on)
       expect(job.event_registration).to eq(registration)
     end
 
@@ -44,7 +48,7 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
       expect(job.reload.event_registration).to be_nil
     end
 
-    it "moves a placeholder start to the training date and keeps a real one" do
+    it "moves a placeholder start to the day they signed up and keeps a real one" do
       placeholder = create(:affiliation, person: person, organization: organization, title: "Counselor",
                                          start_date: Date.new(2026, 3, 1))
       real = create(:affiliation, person: person, organization: create(:organization), title: "Counselor",
@@ -53,7 +57,7 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
       hydrate(job_title: "Counselor")
       described_class.call(registration: registration, organization: real.organization, job_title: "Counselor")
 
-      expect(placeholder.reload.start_date).to eq(training_date)
+      expect(placeholder.reload.start_date).to eq(signed_up_on)
       expect(real.reload.start_date).to eq(Date.new(2019, 5, 6))
     end
 
@@ -93,6 +97,12 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
       expect(held("Facilitator").sole).to eq(existing)
       expect(existing.reload).to have_attributes(start_date: training_date, event_registration: registration,
                                                  filemaker_code: "PS1")
+    end
+
+    it "notes what it updated in plain words" do
+      create(:affiliation, person: person, organization: organization, start_date: Date.new(2026, 7, 1))
+
+      expect(hydrate.changes).to eq([ "updated Facilitator affiliation: start date and tied to this registration" ])
     end
 
     it "keeps an ended one as history and adds a new one for this training" do
@@ -138,6 +148,14 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
       facilitator = held("Facilitator").sole
       expect(facilitator.start_date).to eq(Date.new(2026, 3, 3))
       expect(facilitator.comments.map(&:topic)).to eq([ AffiliationServices::FollowAttendance::COMMENT_TOPIC ])
+    end
+
+    it "starts the job affiliation the day they signed up, attended or not" do
+      registration.update!(status: "registered")
+
+      hydrate(job_title: "Counselor")
+
+      expect(held("Counselor").sole.start_date).to eq(signed_up_on)
     end
 
     it "keeps that start when run again on a later day" do

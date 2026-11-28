@@ -6,7 +6,7 @@ module EventRegistrationServices
   #
   # - Job affiliation (D6): kept when held with the title, titled when an untitled one is held,
   #   listed when a different title is held, else added. A blank or placeholder start becomes
-  #   the training date. Only one this training adds is tied to the registration.
+  #   the day they signed up. Only one this training adds is tied to the registration.
   # - Facilitator affiliation (D7): only for someone who completed a facilitator training. One
   #   active one is tied to this registration and dated to the training; with none active, one
   #   is added beside any ended ones, which stay as program history. More than one active, one
@@ -16,6 +16,12 @@ module EventRegistrationServices
   #   to any already there.
   class HydrateAffiliations
     Result = Struct.new(:changes, :for_a_look, :autofill, keyword_init: true)
+    CHANGE_LABELS = {
+      "title" => "title",
+      "start_date" => "start date",
+      "event_registration_id" => "tied to this registration",
+      "filemaker_code" => "FileMaker code"
+    }.freeze
 
     # job_title_code: the FileMaker person-to-organization link the title came from, if any.
     # completed: defaults to the registration being attended.
@@ -64,7 +70,7 @@ module EventRegistrationServices
         note("added job affiliation “#{@job_title}”")
       end
 
-      job.start_date = training_date if placeholder_start?(job.start_date)
+      job.start_date = signed_up_on if placeholder_start?(job.start_date)
       finish(job, job_codes)
     end
 
@@ -118,15 +124,20 @@ module EventRegistrationServices
     end
 
     def placeholder_start?(start_date)
-      start_date.nil? || start_date == training_date.beginning_of_month
+      start_date.nil? || start_date == @event.starts_on.beginning_of_month
     end
 
     def finish(affiliation, codes)
       affiliation.filemaker_code = Affiliation.join_filemaker_codes(affiliation.filemaker_code, codes)
       return unless affiliation.new_record? || affiliation.changed?
 
-      note("updated #{affiliation.title} affiliation: #{affiliation.changed.to_sentence}") if affiliation.persisted?
+      note("updated #{affiliation.title} affiliation: #{change_labels(affiliation).to_sentence}") if affiliation.persisted?
       affiliation.save!
+    end
+
+    def change_labels(affiliation)
+      affiliation.changed.sort_by { |column| CHANGE_LABELS.keys.index(column) || CHANGE_LABELS.size }
+        .map { |column| CHANGE_LABELS.fetch(column) { Affiliation.human_attribute_name(column).downcase } }
     end
 
     def new_affiliation(title, start_date: nil)
@@ -136,6 +147,10 @@ module EventRegistrationServices
 
     def held
       @person.affiliations.active_or_pending.where(organization: @organization)
+    end
+
+    def signed_up_on
+      @registration.created_at.in_time_zone(Event::PROGRAM_ZONE).to_date
     end
 
     def training_date
