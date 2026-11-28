@@ -741,6 +741,18 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(affiliation.reload.person_id).to eq(keep.id)
       end
 
+      it "names who was just merged on the returned index and links the kept person's profile" do
+        post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+        follow_redirect!
+
+        banner = Nokogiri::HTML(response.body).at_css("[role=status]")
+        expect(banner.text.squish).to include("Duplicate Person was successfully merged into Keeper Person and deleted.")
+        expect(banner.at_css("a[href='#{person_path(keep)}']").text).to eq("Keeper Person")
+
+        get dedupe_index_people_path
+        expect(response.body).not_to include("successfully merged into")
+      end
+
       it "leaves the keeper's empty created by alone instead of filling it from the duplicate" do
         keep.update_columns(created_by_id: nil)
         delete_rec.update_columns(created_by_id: create(:user).id)
