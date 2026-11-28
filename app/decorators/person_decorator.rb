@@ -12,15 +12,11 @@ class PersonDecorator < ApplicationDecorator
     "#{first_name} #{last_name}"
   end
 
-  # Admins get the email too when someone else shares the name, so the two tabs differ.
+  # Admins get the email too, so two people sharing a name get different tabs.
   def page_title_label
     return h.person_name(object) unless h.allowed_to?(:full_name?, object)
 
-    [ full_name, (email if shares_name? && email.present? && !PlaceholderEmail.match?(email)) ].compact_blank.join(" · ")
-  end
-
-  def shares_name?
-    Person.where(first_name: first_name, last_name: last_name).where.not(id: id).exists?
+    [ full_name, (email unless PlaceholderEmail.match?(email)) ].compact_blank.join(" · ")
   end
 
   def detail(length: nil)

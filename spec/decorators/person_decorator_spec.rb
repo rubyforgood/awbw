@@ -122,19 +122,12 @@ RSpec.describe PersonDecorator do
     context "for an admin" do
       before { allow(view_context).to receive(:allowed_to?).with(:full_name?, anything).and_return(true) }
 
-      it "is the full name" do
-        expect(person.decorate.page_title_label).to eq("Pat Example")
-      end
-
-      it "adds the email when someone else shares the name" do
-        create(:person, first_name: "Pat", last_name: "Example", email: "other@example.org")
-
+      it "is the full name and email" do
         expect(person.decorate.page_title_label).to eq("Pat Example · pat@example.org")
       end
 
       it "leaves out a placeholder email" do
         person.update!(email: PlaceholderEmail.first)
-        create(:person, first_name: "Pat", last_name: "Example", email: "other@example.org")
 
         expect(person.decorate.page_title_label).to eq("Pat Example")
       end
@@ -142,7 +135,6 @@ RSpec.describe PersonDecorator do
 
     it "is the shown name, without an email, for everyone else" do
       allow(view_context).to receive(:allowed_to?).with(:full_name?, anything).and_return(false)
-      create(:person, first_name: "Pat", last_name: "Example", email: "other@example.org")
 
       expect(person.decorate.page_title_label).to eq(person.name)
     end
