@@ -19,7 +19,11 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
   end
 
   def held(title)
-    person.affiliations.where(organization: organization, title: title)
+    if title == Affiliation::FACILITATOR_LABEL
+      person.affiliations.facilitators.where(organization: organization)
+    else
+      person.affiliations.where(organization: organization, title: title)
+    end
   end
 
   describe "job affiliation" do
@@ -88,8 +92,8 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
     end
 
     it "ties and dates the one active one instead of adding a second, keeping its code" do
-      existing = create(:affiliation, person: person, organization: organization, start_date: Date.new(2026, 7, 1),
-                                      filemaker_code: "PS1")
+      existing = create(:affiliation, :facilitator, person: person, organization: organization,
+                                      start_date: Date.new(2026, 7, 1), filemaker_code: "PS1")
 
       hydrate
 
@@ -99,14 +103,14 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
     end
 
     it "notes what it updated in plain words" do
-      create(:affiliation, person: person, organization: organization, start_date: Date.new(2026, 7, 1))
+      create(:affiliation, :facilitator, person: person, organization: organization, start_date: Date.new(2026, 7, 1))
 
       expect(hydrate.changes).to eq([ "updated Facilitator affiliation: start date and tied to this registration" ])
     end
 
     it "keeps an ended one as history and adds a new one for this training" do
-      ended = create(:affiliation, person: person, organization: organization, start_date: Date.new(2020, 1, 1),
-                                   end_date: Date.new(2021, 1, 1))
+      ended = create(:affiliation, :facilitator, person: person, organization: organization,
+                                   start_date: Date.new(2020, 1, 1), end_date: Date.new(2021, 1, 1))
 
       hydrate
 
@@ -117,7 +121,7 @@ RSpec.describe EventRegistrationServices::HydrateAffiliations do
 
     it "lists an active one held by someone who didn't complete" do
       registration.update!(status: "registered")
-      create(:affiliation, person: person, organization: organization)
+      create(:affiliation, :facilitator, person: person, organization: organization)
 
       expect(hydrate.for_a_look.sole).to include("didn't complete")
     end

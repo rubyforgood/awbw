@@ -25,7 +25,7 @@ RSpec.describe PersonSnapshot do
       shared = create(:organization)
       solo = create(:organization)
       director = create(:affiliation, person:, organization: solo, title: "Director", start_date: 1.week.ago)
-      fa = create(:affiliation, person:, organization: shared, title: "Facilitator", start_date: 2.months.ago)
+      fa = create(:affiliation, :facilitator, person:, organization: shared, start_date: 2.months.ago)
       founder = create(:affiliation, person:, organization: shared, title: "Founder", start_date: 1.month.ago)
 
       rows = described_class.new(person).affiliation_rows

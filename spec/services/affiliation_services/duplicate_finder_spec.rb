@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe AffiliationServices::DuplicateFinder do
   let(:person) { create(:person) }
   let(:organization) { create(:organization) }
-  let!(:keep) { create(:affiliation, person: person, organization: organization, title: "Facilitator") }
+  let!(:keep) { create(:affiliation, person: person, organization: organization, title: "Coordinator") }
 
   def copy_of(original, **attrs)
     original.dup.tap do |copy|
@@ -15,7 +15,7 @@ RSpec.describe AffiliationServices::DuplicateFinder do
   end
 
   it "groups a person's identical affiliations, survivor first" do
-    copy = copy_of(keep, title: " Facilitator ")
+    copy = copy_of(keep, title: " Coordinator ")
 
     groups = described_class.new.groups
 
@@ -25,7 +25,7 @@ RSpec.describe AffiliationServices::DuplicateFinder do
   end
 
   it "skips affiliations that differ in title, dates, or status" do
-    copy_of(keep, title: "Coordinator")
+    copy_of(keep, title: "Director")
     copy_of(keep, start_date: Date.new(2025, 1, 1))
     copy_of(keep, inactive: true)
 

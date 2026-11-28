@@ -30,7 +30,7 @@ module AffiliationServices
     # Narrows the load to people with an exact copy in SQL; the Ruby pass applies the
     # deduper's own identity (e.g. a title differing only in surrounding spaces).
     def duplicated_person_ids
-      @scope.group(:person_id, :organization_id, :start_date, :end_date, :inactive)
+      @scope.group(:person_id, :organization_id, :type, :start_date, :end_date, :inactive)
         .having("COUNT(*) > 1").distinct.pluck(:person_id)
     end
 

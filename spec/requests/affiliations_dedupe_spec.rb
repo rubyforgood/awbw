@@ -6,8 +6,8 @@ RSpec.describe "Affiliation dedupe", type: :request do
   let(:organization) { create(:organization, name: "Duplicate Org") }
   let(:person) { create(:person) }
   let(:other_person) { create(:person) }
-  let!(:keep) { create(:affiliation, person: person, organization: organization, title: "Facilitator") }
-  let!(:other_keep) { create(:affiliation, person: other_person, organization: organization, title: "Facilitator") }
+  let!(:keep) { create(:affiliation, :facilitator, person: person, organization: organization) }
+  let!(:other_keep) { create(:affiliation, :facilitator, person: other_person, organization: organization) }
 
   # A merge moves rows with update_all, so identical copies land without
   # Affiliation#skip_if_duplicate ever running; save without validation to match.
