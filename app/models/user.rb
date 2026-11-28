@@ -440,8 +440,11 @@ class User < ApplicationRecord
     track_auth_event("auth.password_changed")
   end
 
+  # A login whose email changed while staying on the same person replaces its old address;
+  # a newly linked login keeps the person's own email (see PersonLoginEmailSync).
   def sync_email_to_person
-    PersonLoginEmailSync.call(self)
+    previous_login_email = saved_change_to_email&.first unless saved_change_to_person_id?
+    PersonLoginEmailSync.call(self, previous_login_email:)
   end
 
   # Emails a security notice to the new login address and to the one it replaced,

@@ -82,4 +82,35 @@ RSpec.describe PersonLoginEmailSync do
     expect(person.reload.email).to eq("work@example.com")
     expect(user.person).not_to be_changed
   end
+
+  it "leaves an admin comment naming the reason when the sync fails" do
+    create(:person, user: nil, first_name: "Jamie", last_name: "Rivera", email: "login@example.com")
+    link
+    allow(Rails.error).to receive(:report)
+
+    described_class.call(user)
+
+    expect(person.comments.sole).to have_attributes(topic: "Login email not copied")
+    expect(person.comments.sole.body).to include("login@example.com", "already exists")
+  end
+
+  context "when the login email changes" do
+    it "drops the old login address instead of keeping it as the secondary email" do
+      person.update!(email: "old-login@example.com")
+      link
+
+      described_class.call(user, previous_login_email: "Old-Login@example.com")
+
+      expect(person.reload).to have_attributes(email: "login@example.com", email_2: nil)
+      expect(person.comments).to be_empty
+    end
+
+    it "still keeps a primary email that wasn't the old login" do
+      link
+
+      described_class.call(user, previous_login_email: "old-login@example.com")
+
+      expect(person.reload).to have_attributes(email: "login@example.com", email_2: "work@example.com")
+    end
+  end
 end

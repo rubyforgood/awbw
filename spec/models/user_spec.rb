@@ -257,6 +257,18 @@ RSpec.describe User do
 
       expect(person.reload.email).to eq("new-login@example.com")
     end
+
+    it "replaces the old login address so searches stop finding it" do
+      user = create(:user, email: "first-login@example.com", person: person)
+      expect(person.reload).to have_attributes(email: "first-login@example.com", email_2: "work@example.com")
+      person.update!(email_2: nil)
+      user.update!(email: "renamed@example.com")
+
+      user.confirm
+
+      expect(person.reload).to have_attributes(email: "renamed@example.com", email_2: nil)
+      expect(Person.search_name_email("first-login")).to be_empty
+    end
   end
 
   describe "#person_id_must_be_present_if_previously_set" do
