@@ -616,6 +616,16 @@ class EventRegistration < ApplicationRecord
       end
   end
 
+  # Registrations still "registered" after their event ended — attendance never
+  # recorded — counted per event in one query. Upcoming events are skipped, since
+  # "registered" is expected before an event happens.
+  def self.unreconciled_counts_by_event(events)
+    ended_ids = events.select(&:ended?).map(&:id)
+    return {} if ended_ids.empty?
+
+    where(event_id: ended_ids, status: "registered").group(:event_id).count
+  end
+
   def self.search_by_params(params)
     registrations = is_a?(ActiveRecord::Relation) ? self : all
     if params[:registrant_id].present?

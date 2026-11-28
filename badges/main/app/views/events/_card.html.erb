@@ -57,6 +57,9 @@
       <!-- Actions -->
       <div class="flex shrink-0 flex-col items-end gap-2">
         <% if !on_home && allowed_to?(:dashboard?, event) %>
+          <% if local_assigns[:unreconciled_count].to_i.positive? %>
+            <%= render "events/unreconciled_chip", event: event, count: unreconciled_count %>
+          <% end %>
           <%= link_to "Dashboard",
                     dashboard_event_path(event),
                     data: { turbo_frame: "_top" },
