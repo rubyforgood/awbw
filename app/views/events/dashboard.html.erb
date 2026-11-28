@@ -304,7 +304,7 @@
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
         <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.registrant_count} active", path: registrants_event_path(@event, status_filter: "active") %><% if @dashboard.inactive_registration_count.positive? %> · <%= render "stat_link", label: "#{@dashboard.inactive_registration_count} inactive", path: registrants_event_path(@event, status_filter: "inactive") %><% end %></p>
-        <% unreconciled_count = allowed_to?(:reconcile_affiliations?, @event) ? @dashboard.unreconciled_person_count : 0 %>
+        <% unreconciled_count = @dashboard.unreconciled_registration_count %>
         <% if @dashboard.unlinked_registration_count.positive? || unreconciled_count.positive? %>
           <%# Rectangular amber callouts matching the "Unallocated bulk payments"
               card in the grand-total equation: same rounded-lg border, amber-50
@@ -319,12 +319,7 @@
               <% end %>
             <% end %>
             <% if unreconciled_count.positive? %>
-              <%# status_filter "all": no-shows and cancellations are inactive. %>
-              <%= link_to registrants_event_path(@event, status_filter: "all", registrant_ids: @dashboard.unreconciled_registrant_ids.join("-")),
-                    class: callout_class, title: "Registrants whose facilitator affiliations still need reconciling" do %>
-                <i class="fa-solid fa-circle-exclamation"></i>
-                <%= unreconciled_count %> unreconciled
-              <% end %>
+              <%= render "unreconciled_chip", event: @event, count: unreconciled_count %>
             <% end %>
           </div>
         <% end %>

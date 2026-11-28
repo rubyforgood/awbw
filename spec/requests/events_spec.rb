@@ -83,6 +83,31 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "as an admin with registrants left Registered after their event ended" do
+      let!(:recent_event) { create(:event, :published, start_date: 5.days.ago, end_date: 4.days.ago) }
+      let!(:old_event) { create(:event, :published, start_date: 3.months.ago, end_date: 3.months.ago + 1.day) }
+      let!(:upcoming_event) { create(:event, :published, start_date: 5.days.from_now, end_date: 6.days.from_now) }
+
+      before do
+        2.times { create(:event_registration, event: recent_event, status: "registered") }
+        create(:event_registration, event: recent_event, status: "attended")
+        create(:event_registration, event: old_event, status: "registered")
+        create(:event_registration, event: upcoming_event, status: "registered")
+        sign_in admin
+        get events_path
+      end
+
+      it "flags them on ended event cards and past-event rows, linked to the Registered filter" do
+        page = Capybara.string(response.body)
+        expect(page).to have_link("2 unreconciled", href: registrants_event_path(recent_event, attendance_status: "registered"))
+        expect(page).to have_link("1 unreconciled", href: registrants_event_path(old_event, attendance_status: "registered"))
+      end
+
+      it "doesn't flag an upcoming event" do
+        expect(response.body).not_to include(registrants_event_path(upcoming_event, attendance_status: "registered"))
+      end
+    end
+
     context "as a non-admin" do
       let!(:current_event) do
         create(:event, :published, :publicly_visible, title: "Public workshop",
@@ -93,6 +118,16 @@ RSpec.describe "Events", type: :request do
         sign_in user
         get events_path
         expect(response.body).not_to include("Drafts and past events")
+      end
+
+      it "never shows the unreconciled chip" do
+        ended = create(:event, :published, :publicly_visible, start_date: 5.days.ago, end_date: 4.days.ago)
+        create(:event_registration, event: ended, status: "registered")
+
+        sign_in user
+        get events_path
+
+        expect(response.body).not_to include("unreconciled")
       end
     end
 
@@ -3437,34 +3472,20 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("unlinked")
       end
 
-      it "flags an ended training's pending affiliation changes via an unreconciled badge" do
-        training = create(:event, :ended, facilitator_training: true)
-        reg = create(:event_registration, event: training, status: "no_show")
-        org = create(:organization)
-        create(:event_registration_organization, event_registration: reg, organization: org)
-        create(:affiliation, person: reg.registrant, organization: org, title: "Facilitator",
-                             start_date: 1.month.ago.to_date, event_registration: reg)
+      it "flags an ended event's still-registered registrants via an unreconciled badge" do
+        training = create(:event, :ended)
+        create(:event_registration, event: training, status: "registered")
+        create(:event_registration, event: training, status: "no_show")
 
         get dashboard_event_path(training)
 
         page = Capybara.string(response.body)
         expect(page).to have_link("1 unreconciled",
-                                  href: registrants_event_path(training, status_filter: "all", registrant_ids: reg.registrant_id.to_s),
+                                  href: registrants_event_path(training, attendance_status: "registered"),
                                   visible: :all)
       end
 
-      it "lists the unreconciled registrants, active or not, on the registrants page it links to" do
-        training = create(:event, :ended, facilitator_training: true)
-        no_show = create(:event_registration, event: training, status: "no_show")
-        attended = create(:event_registration, event: training, status: "attended")
-
-        get registrants_event_path(training, status_filter: "all", registrant_ids: no_show.registrant_id.to_s)
-
-        expect(response.body).to include(no_show.registrant.name)
-        expect(response.body).not_to include(attended.registrant.name)
-      end
-
-      it "omits the unreconciled badge when the event isn't an ended training" do
+      it "omits the unreconciled badge before the event ends" do
         get dashboard_event_path(event)
 
         expect(response.body).not_to include("unreconciled")

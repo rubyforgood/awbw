@@ -5,9 +5,10 @@
   <ul class="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
     <% events.each do |event| %>
       <% event = event.decorate %>
-      <li>
+      <% unreconciled_count = local_assigns.fetch(:unreconciled_counts, {})[event.id].to_i %>
+      <li class="flex items-center gap-3 pr-4 hover:bg-gray-50">
         <%= link_to event_path(event),
-                    class: "flex items-center justify-between gap-4 px-4 py-2.5 hover:bg-gray-50",
+                    class: "flex min-w-0 flex-1 items-center justify-between gap-4 py-2.5 pl-4",
                     data: { turbo_prefetch: false, turbo: false } do %>
           <span class="min-w-0 truncate text-sm font-medium text-gray-800 hover:underline">
             <%= event.title %>
@@ -18,6 +19,10 @@
               <%= event.archive_status_label %>
             </span>
           </span>
+        <% end %>
+        <%# Outside the row link — links can't nest. %>
+        <% if unreconciled_count.positive? && allowed_to?(:dashboard?, event) %>
+          <%= render "events/unreconciled_chip", event: event, count: unreconciled_count %>
         <% end %>
       </li>
     <% end %>

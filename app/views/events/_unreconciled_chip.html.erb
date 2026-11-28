@@ -1,0 +1,9 @@
+<%# Amber "N unreconciled" chip: registrants still "Registered" after the event
+    ended, linking to that attendance filter. Locals: event, count. %>
+<%= link_to registrants_event_path(event, attendance_status: "registered"),
+      data: { turbo_frame: "_top" },
+      class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors",
+      title: "Still Registered after the event ended — record their attendance" do %>
+  <i class="fa-solid fa-circle-exclamation"></i>
+  <%= count %> unreconciled
+<% end %>

@@ -26,19 +26,12 @@ class EventDashboard
     @unlinked_registration_count ||= active_registrations.where.not(id: linked_registration_ids).count
   end
 
-  # People the "Reconcile affiliations" page still has a change to offer for —
-  # only once a facilitator training has ended, when its outcomes are settled.
-  # Before that the page's proposals are provisional, so no flag.
-  def unreconciled_person_count
-    unreconciled_registrant_ids.size
-  end
+  # Registrations still "registered" after the event ended — attendance never
+  # recorded. Before it ends, "registered" is expected, so no flag.
+  def unreconciled_registration_count
+    return 0 unless event.ended?
 
-  # Person ids behind #unreconciled_person_count, for drilling into the roster.
-  def unreconciled_registrant_ids
-    return [] unless event.facilitator_training? && event.ended?
-
-    @unreconciled_registrant_ids ||= AffiliationServices::ReconcileEvent.new(event)
-      .actionable_person_groups.map { |group| group[:person].id }
+    attendance_count_for("registered")
   end
 
   # Registrant (Person) ids behind the inactive (cancelled / no-show)
