@@ -35,6 +35,7 @@ module EventRegistrationServices
     def prepare
       @delete_id = @delete.id
       @keep.filemaker_code = EventRegistration.join_filemaker_codes(@keep.filemaker_code, @delete.filemaker_code)
+      @keep.created_at = [ @keep.created_at, @delete.created_at ].compact.min
       @organization_pins = organization_pins
       self
     end
